@@ -13,7 +13,14 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
+from cmk.gui.graphing._graph_specification import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    MetricDefinition,
+    MetricExpression,
+    RPNExpression,
+    TemplateGraphSpecification,
+)
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.metrics.utils import (
@@ -33,15 +40,7 @@ from cmk.gui.plugins.metrics.utils import (
     stack_resolver,
     translated_metrics_from_row,
 )
-from cmk.gui.type_defs import (
-    GraphConsoldiationFunction,
-    GraphMetric,
-    MetricDefinition,
-    MetricExpression,
-    Row,
-    RPNExpression,
-    TranslatedMetrics,
-)
+from cmk.gui.type_defs import Row, TranslatedMetrics
 
 from .graph_recipe_builder import graph_recipe_builder_registry
 

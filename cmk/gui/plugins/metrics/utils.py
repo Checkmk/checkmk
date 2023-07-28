@@ -37,7 +37,15 @@ from cmk.gui.exceptions import MKHTTPException, MKUserError
 from cmk.gui.graphing._graph_specification import (
     CombinedGraphSpecification,
     ForecastGraphSpecification,
+    GraphConsoldiationFunction,
+    GraphMetric,
+    GraphPresentation,
     GraphSpecification,
+    HorizontalRule,
+    LineType,
+    MetricDefinition,
+    MetricDefinitionWithoutTitle,
+    MetricExpression,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
@@ -45,14 +53,6 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import (
     Choice,
     Choices,
-    GraphConsoldiationFunction,
-    GraphMetric,
-    GraphPresentation,
-    HorizontalRule,
-    LineType,
-    MetricDefinition,
-    MetricDefinitionWithoutTitle,
-    MetricExpression,
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,

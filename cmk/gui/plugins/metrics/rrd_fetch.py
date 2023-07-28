@@ -23,6 +23,11 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
+from cmk.gui.graphing._graph_specification import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    RPNExpression,
+)
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     CheckMetricEntry,
@@ -37,7 +42,7 @@ from cmk.gui.plugins.metrics.utils import (
     RRDDataKey,
     unit_info,
 )
-from cmk.gui.type_defs import ColumnName, GraphConsoldiationFunction, GraphMetric, RPNExpression
+from cmk.gui.type_defs import ColumnName
 
 
 def fetch_rrd_data_for_graph(

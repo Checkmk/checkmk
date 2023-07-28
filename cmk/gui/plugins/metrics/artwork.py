@@ -17,6 +17,7 @@ from pydantic import BaseModel
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
 
+from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -30,7 +31,7 @@ from cmk.gui.plugins.metrics.utils import (
     SizeEx,
     unit_info,
 )
-from cmk.gui.type_defs import GraphRenderOptions, HorizontalRule, UnitInfo, UnitRenderFunc
+from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 Label = tuple[float, str | None, int]

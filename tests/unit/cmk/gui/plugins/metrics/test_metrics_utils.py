@@ -14,13 +14,14 @@ from cmk.utils.metrics import MetricName
 
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.plugins.metrics.utils import (
     hex_color_to_rgb_color,
     NormalizedPerfData,
     TranslationInfo,
 )
-from cmk.gui.type_defs import HorizontalRule, Perfdata
+from cmk.gui.type_defs import Perfdata
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 

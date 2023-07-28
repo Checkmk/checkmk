@@ -11,13 +11,13 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
-from cmk.gui.plugins.metrics.utils import GraphRecipeBase, GraphTemplate
-from cmk.gui.type_defs import (
+from cmk.gui.graphing._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
     MetricExpression,
     RPNExpression,
 )
+from cmk.gui.plugins.metrics.utils import GraphRecipeBase, GraphTemplate
 
 
 @pytest.mark.parametrize(

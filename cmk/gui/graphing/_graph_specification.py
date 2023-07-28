@@ -14,15 +14,25 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import (
-    GraphConsoldiationFunction,
-    GraphMetric,
-    GraphPresentation,
-    HorizontalRule,
-    MetricDefinitionWithoutTitle,
-    SingleInfos,
-    VisualContext,
-)
+from cmk.gui.type_defs import SingleInfos, VisualContext
+
+GraphConsoldiationFunction = Literal["max", "min", "average"]
+GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+HorizontalRule = tuple[float, str, str, str]
+LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
+MetricExpression = str
+MetricDefinitionWithoutTitle = tuple[MetricExpression, LineType]
+MetricDefinition = MetricDefinitionWithoutTitle | tuple[MetricExpression, LineType, str]
+RPNExpression = tuple  # TODO: Improve this type
+
+
+class GraphMetric(BaseModel, frozen=True):
+    title: str
+    line_type: LineType
+    expression: RPNExpression
+    unit: str
+    color: str
+    visible: bool
 
 
 class TemplateGraphSpecification(BaseModel, frozen=True):

@@ -611,15 +611,9 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     color: str
 
 
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
-GraphConsoldiationFunction = Literal["max", "min", "average"]
-
 RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
-MetricExpression = str
-LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-MetricDefinitionWithoutTitle = tuple[MetricExpression, LineType]
-MetricDefinition = MetricDefinitionWithoutTitle | tuple[MetricExpression, LineType, str]
+
 PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
 Perfdata = list[PerfdataTuple]
@@ -631,20 +625,6 @@ class RowShading(TypedDict):
     odd: RGBColor
     even: RGBColor
     heading: RGBColor
-
-
-RPNExpression = tuple  # TODO: Improve this type
-
-HorizontalRule = tuple[float, str, str, str]
-
-
-class GraphMetric(BaseModel, frozen=True):
-    title: str
-    line_type: LineType
-    expression: RPNExpression
-    unit: str
-    color: str
-    visible: bool
 
 
 GraphRenderOptions = dict[str, Any]

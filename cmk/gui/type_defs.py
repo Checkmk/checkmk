@@ -10,11 +10,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NotRequired, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
 from pydantic import BaseModel
-
-from livestatus import SiteId
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import HashAlgorithm
@@ -26,11 +24,9 @@ from cmk.utils.crypto.certificate import (
     RsaPrivateKey,
 )
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
-from cmk.utils.servicename import ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
@@ -650,76 +646,6 @@ class GraphMetric(BaseModel, frozen=True):
     color: str
     visible: bool
 
-
-class GraphSpec(TypedDict):
-    pass
-
-
-class _TemplateGraphSpecMandatory(GraphSpec):
-    site: SiteId | None
-    host_name: HostName
-    service_description: ServiceName
-
-
-# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
-class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
-    graph_index: int | None
-    graph_id: str | None
-
-
-class ExplicitGraphSpec(GraphSpec):
-    title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
-    omit_zero_metrics: bool
-    horizontal_rules: Sequence[HorizontalRule]
-    metrics: Sequence[GraphMetric]
-
-
-class _CombinedGraphSpecMandatory(GraphSpec):
-    datasource: str
-    single_infos: SingleInfos
-    presentation: GraphPresentation
-    context: VisualContext
-    graph_template: str
-
-
-# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
-class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
-    selected_metric: MetricDefinitionWithoutTitle
-    consolidation_function: GraphConsoldiationFunction
-
-
-class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
-    site: str
-    metric: MetricName
-
-
-# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
-class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
-    host: HostName
-    service: ServiceName
-    service_description: ServiceName
-    color: str | None
-
-
-TemplateGraphIdentifier = tuple[Literal["template"], TemplateGraphSpec]
-CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
-CustomGraphIdentifier = tuple[Literal["custom"], str]
-ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
-SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
-ForecastGraphIdentifier = tuple[Literal["forecast"], str]
-
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-GraphIdentifier = Union[
-    CustomGraphIdentifier,
-    ForecastGraphIdentifier,
-    TemplateGraphIdentifier,
-    CombinedGraphIdentifier,
-    ExplicitGraphIdentifier,
-    SingleTimeseriesGraphIdentifier,
-]
 
 GraphRenderOptions = dict[str, Any]
 

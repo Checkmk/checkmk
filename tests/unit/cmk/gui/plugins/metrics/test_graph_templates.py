@@ -10,7 +10,6 @@ from pytest import MonkeyPatch
 
 from cmk.gui.plugins.metrics import graph_templates
 from cmk.gui.plugins.metrics.utils import GraphTemplate
-from cmk.gui.type_defs import TemplateGraphSpec
 
 _GRAPH_TEMPLATES = [
     GraphTemplate(
@@ -41,46 +40,47 @@ _GRAPH_TEMPLATES = [
 
 
 @pytest.mark.parametrize(
-    "graph_id_info, expected_result",
+    ("graph_id", "graph_index", "expected_result"),
     [
         pytest.param(
-            {},
+            None,
+            None,
             list(enumerate(_GRAPH_TEMPLATES)),
             id="no index and no id",
         ),
         pytest.param(
-            {"graph_index": 0},
+            None,
+            0,
             [(0, _GRAPH_TEMPLATES[0])],
             id="matching index and no id",
         ),
         pytest.param(
-            {"graph_index": 10},
+            None,
+            10,
             [],
             id="non-matching index and no id",
         ),
         pytest.param(
-            {"graph_id": "2"},
+            "2",
+            None,
             [(1, _GRAPH_TEMPLATES[1])],
             id="no index and matching id",
         ),
         pytest.param(
-            {"graph_id": "wrong"},
+            "wrong",
+            None,
             [],
             id="no index and non-matching id",
         ),
         pytest.param(
-            {
-                "graph_index": 0,
-                "graph_id": "1",
-            },
+            "1",
+            0,
             [(0, _GRAPH_TEMPLATES[0])],
             id="matching index and matching id",
         ),
         pytest.param(
-            {
-                "graph_index": 0,
-                "graph_id": "2",
-            },
+            "2",
+            0,
             [],
             id="inconsistent matching index and matching id",
         ),
@@ -88,7 +88,8 @@ _GRAPH_TEMPLATES = [
 )
 def test_matching_graph_templates(
     monkeypatch: MonkeyPatch,
-    graph_id_info: TemplateGraphSpec,
+    graph_id: str | None,
+    graph_index: int | None,
     expected_result: Sequence[tuple[int, GraphTemplate]],
 ) -> None:
     monkeypatch.setattr(
@@ -96,4 +97,13 @@ def test_matching_graph_templates(
         "get_graph_templates",
         lambda _metrics: _GRAPH_TEMPLATES,
     )
-    assert list(graph_templates.matching_graph_templates(graph_id_info, {})) == expected_result
+    assert (
+        list(
+            graph_templates.matching_graph_templates(
+                graph_id=graph_id,
+                graph_index=graph_index,
+                translated_metrics={},
+            )
+        )
+        == expected_result
+    )

@@ -39,7 +39,6 @@ from cmk.gui.type_defs import (
     MetricExpression,
     Row,
     RPNExpression,
-    TemplateGraphSpec,
     TranslatedMetrics,
 )
 from cmk.gui.utils.graph_specification import TemplateGraphSpecification
@@ -57,8 +56,9 @@ class TemplateGraphRecipeBuilder:
         return [
             recipe
             for index, graph_template in matching_graph_templates(
-                spec.to_legacy_format(),
-                translated_metrics,
+                graph_id=spec.graph_id,
+                graph_index=spec.graph_index,
+                translated_metrics=translated_metrics,
             )
             if (
                 recipe := self._build_recipe_from_template(
@@ -138,14 +138,11 @@ graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
 # build a corresponding transform, so even after switching to graph_id everywhere, we will need to
 # keep this functionality here for some time to support already created dashlets, reports etc.
 def matching_graph_templates(
-    graph_identification_info: TemplateGraphSpec,
+    *,
+    graph_id: str | None,
+    graph_index: int | None,
     translated_metrics: TranslatedMetrics,
 ) -> Iterable[tuple[int, GraphTemplate]]:
-    graph_index = graph_identification_info.get(
-        "graph_index"
-    )  # can be None -> no restriction by index
-    graph_id = graph_identification_info.get("graph_id")  # can be None -> no restriction by id
-
     # Single metrics
     if (
         isinstance(graph_id, str)

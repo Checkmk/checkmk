@@ -4,7 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {d3SelectionDiv, d3SelectionG, NodevisWorld} from "nodevis/type_defs";
+import {
+    d3SelectionDiv,
+    d3SelectionG,
+    NodevisNode,
+    NodevisWorld,
+} from "nodevis/type_defs";
 import {AbstractClassRegistry, TypeWithName} from "nodevis/utils";
 
 export interface LayerSelections {
@@ -12,10 +17,19 @@ export interface LayerSelections {
     svg: d3SelectionG;
 }
 
-export type OverlayConfig = {
+export interface OverlayElement {
+    node: NodevisNode;
+    type: string;
+    image: string;
+    call: d3.DragBehavior<any, any, any>;
+    onclick?: () => void;
+}
+
+type OverlayConfigMandatory = Record<string, number | string | boolean>;
+
+export interface OverlayConfig extends OverlayConfigMandatory {
     active: boolean;
-    [name: string]: number | string | boolean;
-};
+}
 
 export class AbstractLayer extends Object implements TypeWithName {
     enabled = false;

@@ -100,7 +100,7 @@ export class AbstractGUINode implements TypeWithName {
         this._external_quickinfo_data = null;
     }
 
-    update_node_data(node, selection) {
+    update_node_data(node: NodevisNode, selection: d3SelectionG) {
         // TODO: make this obsolete. this class should only know the id, not the data reference
         this._clear_cached_data();
         node.data.selection = selection;
@@ -165,7 +165,7 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     render_text(): void {
-        if (this.node.data.show_text == false) {
+        if (!this.node.data.show_text) {
             if (this._text_selection) this.text_selection().remove();
             this._text_selection = null;
             return;
@@ -208,13 +208,23 @@ export class AbstractGUINode implements TypeWithName {
             );
         } else {
             this.add_optional_transition(this.text_selection()).call(
-                selection =>
-                    this._default_text_positioning(selection, this.radius)
+                //@ts-ignore
+                (
+                    selection: d3.Selection<
+                        SVGTextElement,
+                        string,
+                        SVGGElement,
+                        any
+                    >
+                ) => this._default_text_positioning(selection, this.radius)
             );
         }
     }
 
-    _default_text_positioning(selection, radius) {
+    _default_text_positioning(
+        selection: d3.Selection<SVGTextElement, string, SVGGElement, any>,
+        radius: number
+    ) {
         selection.attr(
             "transform",
             "translate(" + (radius + 3) + "," + (radius + 3) + ")"
@@ -277,7 +287,7 @@ export class AbstractGUINode implements TypeWithName {
         return elements;
     }
 
-    _filter_root_cause(node) {
+    _filter_root_cause(node: NodevisNode) {
         // TODO: looks like duplicate (viewport.ts)
         if (!node._children) return;
         const critical_children: NodevisNode[] = [];
@@ -294,7 +304,7 @@ export class AbstractGUINode implements TypeWithName {
         this.update_collapsed_indicator(node);
     }
 
-    _clear_node_positioning_of_tree(tree_root) {
+    _clear_node_positioning_of_tree(tree_root: NodevisNode) {
         tree_root.data.node_positioning = {};
         if (!tree_root._children) return;
 
@@ -323,7 +333,7 @@ export class AbstractGUINode implements TypeWithName {
         this.update_collapsed_indicator(this.node);
     }
 
-    expand_node_including_children(node) {
+    expand_node_including_children(node: NodevisNode) {
         if (node._children) {
             node.children = node._children;
             node.children.forEach(child_node =>
@@ -334,7 +344,7 @@ export class AbstractGUINode implements TypeWithName {
         this.update_collapsed_indicator(node);
     }
 
-    update_collapsed_indicator(node) {
+    update_collapsed_indicator(node: NodevisNode) {
         if (!node._children) return;
 
         const collapsed = node.children != node._children;
@@ -466,7 +476,7 @@ export class AbstractGUINode implements TypeWithName {
         this.update_quickinfo_position();
     }
 
-    _got_quickinfo(json_data) {
+    _got_quickinfo(json_data: Record<string, any>) {
         const now = Math.floor(new Date().getTime() / 1000);
         this._external_quickinfo_data = {
             fetched_at_timestamp: now,
@@ -476,7 +486,7 @@ export class AbstractGUINode implements TypeWithName {
         if (this._quickinfo_selection) this._show_quickinfo();
     }
 
-    _state_to_text(state) {
+    _state_to_text(state: 0 | 1 | 2 | 3) {
         const monitoring_states = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"};
         return monitoring_states[state];
     }
@@ -547,7 +557,10 @@ export class AbstractGUINode implements TypeWithName {
             .style("top", coords.y + "px");
     }
 
-    add_optional_transition(selection, enforce_transition = false) {
+    add_optional_transition<GType extends d3.BaseType, Data>(
+        selection: d3.Selection<GType, Data, SVGGElement, any>,
+        enforce_transition = false
+    ) {
         // TODO: remove
         if (this._world.layout_manager.skip_optional_transitions)
             return selection;

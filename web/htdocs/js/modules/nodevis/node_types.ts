@@ -10,11 +10,16 @@ import {
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
-import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
+import {
+    ContextMenuElement,
+    d3SelectionG,
+    NodevisNode,
+    NodevisWorld,
+} from "nodevis/type_defs";
 import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
-    constructor(world: NodevisWorld, node) {
+    constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 9;
         this._provides_external_quickinfo_data = true;
@@ -52,7 +57,7 @@ export class TopologyNode extends AbstractGUINode {
         this.update_growth_indicators();
     }
 
-    override update_node_data(node, selection) {
+    override update_node_data(node: NodevisNode, selection: d3SelectionG) {
         AbstractGUINode.prototype.update_node_data.call(this, node, selection);
         this.update_growth_indicators();
     }
@@ -422,7 +427,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             elements.push({
                 text: "Below this node, expand all nodes",
                 on: event => {
-                    event.stopPropagation();
+                    event!.stopPropagation();
                     this.expand_node_including_children(this.node);
                     this._world.viewport.recompute_node_chunk_descendants_and_links(
                         this.node.data.chunk
@@ -435,7 +440,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             elements.push({
                 text: "Collapse this node",
                 on: event => {
-                    event.stopPropagation();
+                    event!.stopPropagation();
                     this.collapse_node();
                 },
                 href: "",
@@ -445,7 +450,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         elements.push({
             text: "Expand all nodes",
             on: event => {
-                event.stopPropagation();
+                event!.stopPropagation();
                 this.expand_node_including_children(this.node.data.chunk.tree);
                 this._world.viewport.recompute_node_chunk_descendants_and_links(
                     this.node.data.chunk
@@ -458,7 +463,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         elements.push({
             text: "Below this node, show only problems",
             on: event => {
-                event.stopPropagation();
+                event!.stopPropagation();
                 this._filter_root_cause(this.node);
                 this._world.viewport.recompute_node_chunk_descendants_and_links(
                     this.node.data.chunk

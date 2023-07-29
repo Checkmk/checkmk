@@ -4,6 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import * as d3 from "d3";
+import {BaseType, Transition} from "d3";
 import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
@@ -49,7 +51,9 @@ export class AbstractLink implements TypeWithName {
         return compute_link_id(this._link_data);
     }
 
-    render_into(selection): void {
+    render_into<GType extends d3.BaseType, Data>(
+        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         // Straigth line style
         const line_selection = selection
             .selectAll("line")
@@ -57,6 +61,7 @@ export class AbstractLink implements TypeWithName {
             .join("line")
             .attr("marker-end", "url(#triangle)")
             .attr("stroke-width", function (d) {
+                // @ts-ignore
                 return Math.max(1, 2 - d.depth);
             })
             .style("stroke", this._color());
@@ -70,6 +75,7 @@ export class AbstractLink implements TypeWithName {
             .attr("stroke-width", 1)
             .style("stroke", this._color());
 
+        // @ts-ignore
         this._selection =
             this._line_config.style == "straight"
                 ? line_selection
@@ -106,7 +112,6 @@ export class AbstractLink implements TypeWithName {
             return;
         }
         this.selection().style("stroke-opacity", 0.3);
-
         const x1 = source.data.target_coords.x;
         const y1 = source.data.target_coords.y;
         const x2 = target.data.target_coords.x;
@@ -117,8 +122,14 @@ export class AbstractLink implements TypeWithName {
         const tmp_selection = this.add_optional_transition(this.selection());
         switch (this._line_config.style) {
             case "straight": {
-                tmp_selection
-                    .attr("x1", x1)
+                (
+                    tmp_selection.attr("x1", x1) as Transition<
+                        SVGGElement,
+                        unknown,
+                        BaseType,
+                        unknown
+                    >
+                )
                     .attr("y1", y1)
                     .attr("x2", x2)
                     .attr("y2", y2);
@@ -165,7 +176,12 @@ export class AbstractLink implements TypeWithName {
         );
     }
 
-    elbow(source_x, source_y, target_x, target_y) {
+    elbow(
+        source_x: number,
+        source_y: number,
+        target_x: number,
+        target_y: number
+    ) {
         return (
             "M" + source_x + "," + source_y + "V" + target_y + "H" + target_x
         );

@@ -187,7 +187,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
             .text("X: " + last_zoom.x + " / Y:" + last_zoom.y);
     }
 
-    mousemove(event) {
+    mousemove(event: MouseEvent) {
         const coords = d3.pointer(event);
         this._div_selection
             .selectAll("td#Mouse")
@@ -264,9 +264,9 @@ export class LayeredIconOverlay extends ToggleableLayer {
 //#   +--------------------------------------------------------------------+
 
 export class LayeredNodesLayer extends FixLayer {
-    node_instances: {[name: string]: AbstractGUINode};
-    link_instances: {[name: string]: AbstractLink};
-    _links_for_node: {[name: string]: AbstractLink[]} = {};
+    node_instances: Record<string, AbstractGUINode>;
+    link_instances: Record<string, AbstractLink>;
+    _links_for_node: Record<string, AbstractLink[]> = {};
     last_scale: number;
 
     nodes_selection: d3SelectionG;
@@ -339,7 +339,9 @@ export class LayeredNodesLayer extends FixLayer {
         return;
     }
 
-    render_line_style(into_selection: d3SelectionG): void {
+    render_line_style<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         const line_style_row = into_selection
             .selectAll("table.line_style tr")
             .data([null])
@@ -381,8 +383,10 @@ export class LayeredNodesLayer extends FixLayer {
             .text(d => d);
     }
 
-    _change_line_style(event): void {
-        const new_line_style = d3.select(event.target).property("value");
+    _change_line_style(event: Event): void {
+        const new_line_style = d3
+            .select(event.target as HTMLElement)
+            .property("value");
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
             // @ts-ignore
             node_chunk.layout_instance.line_config.style = new_line_style;
@@ -421,7 +425,7 @@ export class LayeredNodesLayer extends FixLayer {
             .get_all_nodes()
             .filter(d => !d.data.invisible);
 
-        const old_node_instances: {[name: string]: AbstractGUINode} =
+        const old_node_instances: Record<string, AbstractGUINode> =
             this.node_instances;
         this.node_instances = {};
 
@@ -458,7 +462,11 @@ export class LayeredNodesLayer extends FixLayer {
             });
     }
 
-    _add_node_vanish_animation(node, node_id, old_node_instances) {
+    _add_node_vanish_animation(
+        node: d3.Selection<SVGGElement, unknown, null, undefined>,
+        node_id: string,
+        old_node_instances: Record<string, AbstractGUINode>
+    ) {
         const old_instance = old_node_instances[node_id];
         if (!old_instance) {
             node.remove();
@@ -533,6 +541,7 @@ export class LayeredNodesLayer extends FixLayer {
         const link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
+
         return new link_class(this._world, link_data);
     }
 

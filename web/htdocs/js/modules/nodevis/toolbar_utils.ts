@@ -11,6 +11,7 @@ export class ToolbarPluginBase {
     _div_selection: d3SelectionDiv | null = null;
     active: boolean;
     description = "";
+    content_selection: d3SelectionDiv | undefined = undefined;
 
     constructor(world: NodevisWorld, description: string) {
         this._world = world;

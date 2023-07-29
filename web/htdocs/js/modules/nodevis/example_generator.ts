@@ -32,6 +32,12 @@ import {
 } from "nodevis/type_defs";
 import {get_bounding_rect} from "nodevis/utils";
 
+type _ExampleOptions = Record<string, number>;
+interface ExampleOptions extends _ExampleOptions {
+    total_nodes: number;
+    depth: number;
+}
+
 export class LayoutStyleExampleGenerator {
     _varprefix: string;
     _viewport_width = 600;
@@ -51,10 +57,7 @@ export class LayoutStyleExampleGenerator {
         total_nodes: StyleOptionSpec;
         depth: StyleOptionSpec;
     };
-    _example_options: {
-        total_nodes: number;
-        depth: number;
-    };
+    _example_options: ExampleOptions;
 
     _style_config: StyleConfig;
     _style_hierarchy: NodevisNode;
@@ -62,7 +65,7 @@ export class LayoutStyleExampleGenerator {
 
     _fake_world: NodevisWorld;
 
-    constructor(varprefix) {
+    constructor(varprefix: string) {
         this._varprefix = varprefix;
         this._example_generator_div = d3.select("#" + this._varprefix);
         const options = this._example_generator_div
@@ -209,6 +212,7 @@ export class LayoutStyleExampleGenerator {
             this._fake_world,
             this._style_config,
             this._style_hierarchy,
+            //@ts-ignore
             this._viewport_selection
         );
         this._style_instance.show_style_configuration = () => null;
@@ -408,7 +412,7 @@ export class LayoutStyleExampleGenerator {
     }
 
     _create_example_hierarchy(
-        example_settings: {
+        _example_settings: {
             [name: string]: StyleOptionSpec;
         },
         example_options: StyleOptionValues
@@ -420,13 +424,12 @@ export class LayoutStyleExampleGenerator {
         let generated_nodes = 0;
 
         function _add_hierarchy_children(
-            parent_node,
-            cancel_delta,
-            cancel_chance
+            parent_node: NodeData,
+            cancel_delta: number,
+            cancel_chance: number
         ) {
             parent_node.children = [];
-            /* eslint-disable no-constant-condition */
-            while (true) {
+            for (;;) {
                 if (
                     generated_nodes >= maximum_nodes ||
                     (cancel_chance < 1 && cancel_chance - Math.random() <= 0)
@@ -435,7 +438,7 @@ export class LayoutStyleExampleGenerator {
                         delete parent_node.children;
                     break;
                 }
-                const new_child = {name: "child"};
+                const new_child = {name: "child"} as NodeData;
                 generated_nodes += 1;
                 _add_hierarchy_children(
                     new_child,

@@ -6,6 +6,7 @@
 
 import * as d3 from "d3";
 import {ForceOptions} from "nodevis/force_simulation";
+import {OverlayElement} from "nodevis/layer_utils";
 import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {
@@ -23,6 +24,8 @@ import {
     log,
     TypeWithName,
 } from "nodevis/utils";
+
+import {LayeredViewport} from "./viewport";
 
 export class LineConfig {
     style: "straight" | "elbow" | "round" = "round";
@@ -43,7 +46,7 @@ export class NodeVisualizationLayout {
     style_configs: StyleConfig[];
     line_config: LineConfig;
 
-    constructor(viewport, id) {
+    constructor(_viewport: LayeredViewport, id: string) {
         this.id = id;
         this.reference_size = {height: 0, width: 0};
         this.style_configs = [];
@@ -108,7 +111,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         world: NodevisWorld,
         style_config: StyleConfig,
         node: NodevisNode,
-        selection
+        selection: d3SelectionDiv
     ) {
         // Contains all configurable options for this style
         this._world = world;
@@ -143,7 +146,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         return "abstract description";
     }
 
-    _compute_svg_vertex(x, y): [number, number] {
+    _compute_svg_vertex(x: number, y: number): [number, number] {
         // TODO: check actual/upcoming usage
         return [x, y];
     }
@@ -203,11 +206,14 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         return default_options;
     }
 
-    reset_default_options(event): void {
+    reset_default_options(event: d3.D3DragEvent<any, any, any>): void {
         this.changed_options(event, this.get_default_options());
     }
 
-    changed_options(event, new_options: StyleOptionValues) {
+    changed_options(
+        _event: d3.D3DragEvent<any, any, any>,
+        new_options: StyleOptionValues
+    ) {
         this._world.layout_manager.skip_optional_transitions = true;
         this.style_config.options = new_options;
         this.force_style_translation();
@@ -250,7 +256,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         return rotation;
     }
 
-    _find_parent_with_style(node): NodevisNode | null {
+    _find_parent_with_style(node: NodevisNode): NodevisNode | null {
         if (!node.parent) return null;
         if (node.parent.data.use_style) return node.parent;
         else return this._find_parent_with_style(node.parent);
@@ -311,6 +317,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         // Override default options with user customized settings.
         // May disable match types and modify match texts
         for (const idx in this.style_config.matcher) {
+            //@ts-ignore
             matcher_conditions[idx] = this.style_config.matcher[idx];
         }
         return matcher_conditions;
@@ -411,12 +418,14 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         this.update_style_indicator(false);
     }
 
-    add_option_icons(coords: Coords, elements): void {
+    add_option_icons(coords: Coords, elements: OverlayElement[]): void {
         for (const idx in elements) {
             const idx_num = Number.parseInt(idx);
             const element = elements[idx];
             let img = this.get_div_selection()
-                .selectAll<HTMLImageElement, NodevisNode>("img." + element.type)
+                .selectAll<HTMLImageElement, OverlayElement>(
+                    "img." + element.type
+                )
                 .data([element], d => d.node.data.id);
             img = img
                 .enter()
@@ -457,7 +466,15 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             .merge(div_selection);
     }
 
-    add_enclosing_hull(into_selection, vertices) {
+    add_enclosing_hull(
+        into_selection: d3.Selection<
+            HTMLDivElement,
+            unknown,
+            HTMLElement,
+            unknown
+        >,
+        vertices: [number, number][]
+    ) {
         if (vertices.length < 2) {
             into_selection.selectAll("path.style_overlay").remove();
             return;
@@ -472,7 +489,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             hull_vertices.push([entry[0] - boundary, entry[1] + boundary]);
         });
         let hull = into_selection
-            .selectAll("path.style_overlay")
+            .selectAll<SVGPathElement, unknown>("path.style_overlay")
             .data([d3.polygonHull(hull_vertices)]);
         hull = hull
             .enter()
@@ -481,14 +498,23 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             .style("opacity", 0)
             .merge(hull);
         hull.interrupt();
+
         this.add_optional_transition(
             hull.attr("d", function (d) {
-                return "M" + d.join("L") + "Z";
+                return "M" + d!.join("L") + "Z";
             })
+            // @ts-ignore
         ).style("opacity", null);
     }
 
-    add_optional_transition(selection_with_node_data) {
+    add_optional_transition<GType extends d3.BaseType, Data>(
+        selection_with_node_data: d3.Selection<
+            GType,
+            Data,
+            d3.BaseType,
+            unknown
+        >
+    ) {
         if (this._world.layout_manager.skip_optional_transitions)
             return selection_with_node_data;
 
@@ -523,17 +549,27 @@ export class LayoutStyleFactory {
     }
 
     // Creates a style instance with the given style_config
-    instantiate_style(style_config, node, selection) {
-        // @ts-ignore
+    instantiate_style(
+        style_config: {type: string},
+        node: NodevisNode,
+        selection:
+            | d3SelectionDiv
+            | d3.Selection<SVGGElement, unknown, null, undefined>
+    ) {
         return new (layout_style_class_registry.get_class(style_config.type))(
             this._world,
+            //@ts-ignore
             style_config,
             node,
             selection
         );
     }
 
-    instantiate_style_name(style_name, node, selection): AbstractLayoutStyle {
+    instantiate_style_name(
+        style_name: string,
+        node: NodevisNode,
+        selection: d3SelectionDiv
+    ): AbstractLayoutStyle {
         return this.instantiate_style({type: style_name}, node, selection);
     }
 
@@ -551,7 +587,7 @@ export class LayoutStyleFactory {
 }
 
 export type StyleOptionValue = boolean | number;
-export type StyleOptionValues = {[name: string]: StyleOptionValue};
+export type StyleOptionValues = Record<string, StyleOptionValue>;
 
 export interface StyleOptionSpec {
     id: string;
@@ -597,15 +633,13 @@ export interface NodeForce {
     fx?: number;
     fy?: number;
     use_transition?: boolean;
-    text_positioning?: (x, y) => any;
+    text_positioning?: (x?: any, y?: any) => any;
     hide_node_link?: boolean;
     weight: number;
     type: string;
 }
 
-export interface NodePositioning {
-    [name: string]: NodeForce;
-}
+export type NodePositioning = Record<string, NodeForce>;
 
 export interface LayoutHistoryStep {
     origin_info: string;
@@ -622,8 +656,13 @@ export function render_style_options(
     into_selection: d3SelectionDiv,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    options_changed_callback,
-    reset_default_options_callback: (event) => void = _event => {
+    options_changed_callback: (
+        event: d3.D3DragEvent<any, any, any>,
+        styleOptionValues: StyleOptionValues
+    ) => void,
+    reset_default_options_callback: (
+        event: d3.D3DragEvent<any, any, any>
+    ) => void = _event => {
         return;
     }
 ) {
@@ -696,7 +735,10 @@ function _render_range_options(
     table: d3.Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    option_changed_callback: (any, StyleOptionValues) => void
+    option_changed_callback: (
+        event: d3.D3DragEvent<any, any, any>,
+        styleOptionValues: StyleOptionValues
+    ) => void
 ): void {
     const rows = table
         .selectAll<HTMLTableRowElement, StyleOptionSpecRange>("tr.range_option")
@@ -767,7 +809,10 @@ function _render_checkbox_options(
     table: d3.Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    options_changed_callback: (any, StyleOptionValues) => void
+    options_changed_callback: (
+        event: d3.D3DragEvent<any, any, any>,
+        styleOptionValues: StyleOptionValues
+    ) => void
 ): void {
     const rows = table
         .selectAll<HTMLTableRowElement, StyleOptionSpecCheckbox>(

@@ -18,7 +18,6 @@
         "web/htdocs/js/index.ts",
         "web/htdocs/js/mobile.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_figures_plugins_cee.ts",
-        "web/htdocs/js/modules/nodevis/**/*",
         "node_modules"
     ]
 }

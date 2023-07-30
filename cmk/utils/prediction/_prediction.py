@@ -21,8 +21,6 @@ import cmk.utils.paths
 from cmk.utils import dateutils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -83,7 +81,7 @@ class PredictionInfo(BaseModel, frozen=True):
     time: int
     range: tuple[Timestamp, Timestamp]
     cf: ConsolidationFunctionName
-    dsname: MetricName
+    dsname: str
     slice: int
     params: PredictionParameters
 
@@ -269,7 +267,7 @@ def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
 def livestatus_lql(
     host_names: list[str],
     columns: list[str],
-    service_description: ServiceName | None = None,
+    service_description: str | None = None,
 ) -> str:
     query_filter = "Columns: %s\n" % " ".join(columns)
     query_filter += lq_logic(

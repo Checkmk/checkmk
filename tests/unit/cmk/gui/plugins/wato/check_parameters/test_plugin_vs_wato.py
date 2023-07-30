@@ -984,11 +984,6 @@ class ErrorReporter:
             "websphere_mq_channels",
             RuleGroup.CheckgroupParameters("websphere_mq_channels"),
         ),
-        (
-            "check",
-            "windows_multipath",
-            RuleGroup.CheckgroupParameters("windows_multipath"),
-        ),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
         ("discovery", "mssql_datafiles", "mssql_transactionlogs_discovery"),

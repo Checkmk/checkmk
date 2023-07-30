@@ -29,8 +29,9 @@ def check_windows_multipath(item, params, info):
 
     yield 0, "Paths active: %s" % (num_active)
 
-    if isinstance(params, tuple):
-        num_paths, warn, crit = params
+    levels = params["active_paths"]
+    if isinstance(levels, tuple):
+        num_paths, warn, crit = levels
         warn_num = (warn / 100.0) * num_paths
         crit_num = (crit / 100.0) * num_paths
         if num_active < crit_num:
@@ -43,16 +44,11 @@ def check_windows_multipath(item, params, info):
         if state > 0:
             yield state, "(warn/crit below %d/%d)" % (warn_num, crit_num)
     else:
-        if isinstance(params, int):
-            num_paths = params
-        else:
-            num_paths = 4
-
-        yield 0, "Expected paths: %s" % num_paths
-        if num_active < num_paths:
-            yield 2, "(crit below %d)" % num_paths
-        elif num_active > num_paths:
-            yield 1, "(warn at %d)" % num_paths
+        yield 0, "Expected paths: %s" % levels
+        if num_active < levels:
+            yield 2, "(crit below %d)" % levels
+        elif num_active > levels:
+            yield 1, "(warn at %d)" % levels
 
 
 check_info["windows_multipath"] = LegacyCheckDefinition(
@@ -60,4 +56,5 @@ check_info["windows_multipath"] = LegacyCheckDefinition(
     discovery_function=inventory_windows_multipath,
     check_function=check_windows_multipath,
     check_ruleset_name="windows_multipath",
+    check_default_parameters={"active_paths": 4},
 )

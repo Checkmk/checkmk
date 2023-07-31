@@ -33,7 +33,7 @@ import json
 from collections.abc import Callable, Mapping
 from typing import Any, Literal
 
-from cmk.utils.livestatus_helpers.expressions import And, Or
+from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
@@ -439,19 +439,22 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
 def delete_downtime(params: Mapping[str, Any]) -> Response:
     """Delete a scheduled downtime"""
     body = params["body"]
-    live = sites.live()
-    delete_type = body["delete_type"]
+    delete_type: Literal["query", "by_id", "params"] = body["delete_type"]
+
+    query_expr: QueryExpression
+
     if delete_type == "query":
-        downtime_commands.delete_downtime_with_query(live, body["query"])
+        query_expr = body["query"]
+
     elif delete_type == "by_id":
-        downtime_commands.delete_downtime(live, body["downtime_id"])
-    elif delete_type == "params":
+        query_expr = Downtimes.id == body["downtime_id"]
+
+    else:
         hostname = body["host_name"]
         if "service_descriptions" not in body:
-            host_expr = And(Downtimes.host_name.op("=", hostname), Downtimes.is_service.op("=", 0))
-            downtime_commands.delete_downtime_with_query(live, host_expr)
+            query_expr = And(Downtimes.host_name.op("=", hostname), Downtimes.is_service.op("=", 0))
         else:
-            services_expr = And(
+            query_expr = And(
                 Downtimes.host_name.op("=", hostname),
                 Or(
                     *[
@@ -460,13 +463,8 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
                     ]
                 ),
             )
-            downtime_commands.delete_downtime_with_query(live, services_expr)
-    else:
-        return problem(
-            status=400,
-            title="Unhandled delete_type.",
-            detail=f"The downtime-type {delete_type!r} is not supported.",
-        )
+
+    downtime_commands.delete_downtime(sites.live(), query_expr, body["site_id"])
     return Response(status=204)
 
 

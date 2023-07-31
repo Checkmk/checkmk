@@ -190,6 +190,13 @@ class CreateServiceRelatedDowntime(OneOfSchema):
 
 
 class DeleteDowntimeBase(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="The site from which you want to delete a downtime.",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
+
     delete_type = fields.String(
         required=True,
         description="The option how to delete a downtime.",

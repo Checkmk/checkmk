@@ -14,6 +14,12 @@ from cmk import fields
 
 
 class DowntimeAttributes(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="The site id of the downtime.",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     host_name = gui_fields.HostField(
         required=True,
         description="The host name.",

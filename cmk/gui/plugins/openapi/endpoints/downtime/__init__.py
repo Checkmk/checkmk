@@ -343,10 +343,7 @@ def _show_downtimes(param):
         []
 
     """
-    live = sites.live()
-    sites_to_query = param.get("sites")
-    if sites_to_query:
-        live.only_sites = sites_to_query
+
     q = Query(
         [
             Downtimes.id,
@@ -377,8 +374,11 @@ def _show_downtimes(param):
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
-    gen_downtimes = q.iterate(live)
-    return serve_json(_serialize_downtimes(gen_downtimes))
+    live = sites.live()
+    with detailed_connection(live) as conn:
+        downtimes = q.fetchall(conn)
+
+    return serve_json(_serialize_downtimes(downtimes))
 
 
 @Endpoint(
@@ -529,6 +529,7 @@ def _serialize_single_downtime(downtime):
 
 def _downtime_properties(info):
     return {
+        "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
         "is_service": "yes" if info["is_service"] else "no",

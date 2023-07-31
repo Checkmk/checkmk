@@ -43,6 +43,7 @@ def test_openapi_list_all_downtimes(
             status=200,
         )
         assert len(resp.json["value"]) == 1
+        assert resp.json["value"][0]["extensions"]["site_id"] == "NO_SITE"
 
 
 @pytest.mark.usefixtures("with_groups")

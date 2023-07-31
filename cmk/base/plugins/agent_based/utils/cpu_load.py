@@ -31,6 +31,7 @@ def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
         "15",
         section.num_cpus,
         _processor_type_info(section.type),
+        notice_only=False,
     )
 
     for level_name, level_value in section.load._asdict().items():
@@ -52,17 +53,22 @@ def _check_cpu_load_type(
     avg: Literal["15"],
     num_cpus: int,
     proc_name: str,
+    *,
+    notice_only: bool,
 ) -> CheckResult:
     label = f"{avg} min load"
 
     if isinstance(levels, dict):
         # predictive levels
-        yield from check_levels_predictive(
+        for e in check_levels_predictive(
             value,
             levels=levels,
             metric_name=f"load{avg}",
             label=label,
-        )
+        ):
+            yield Result(state=e.state, notice=e.details) if notice_only and isinstance(
+                e, Result
+            ) else e
     else:
         # warning and critical levels are dependent on cpu count;
         # rule defines levels for one cpu.
@@ -74,8 +80,11 @@ def _check_cpu_load_type(
             metric_name=f"load{avg}",
             levels_upper=levels_upper,
             label=label,
+            notice_only=notice_only,
         )
 
     # provide additional info text
     per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
-    yield Result(state=State.OK, summary=per_core_txt)
+    yield Result(state=State.OK, notice=per_core_txt) if notice_only else Result(
+        state=State.OK, summary=per_core_txt
+    )

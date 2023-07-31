@@ -297,7 +297,7 @@ def _get_timeperiod_name(timeofday: Sequence[TimeRange]) -> str:
 def _create_timeperiod(name: str, timeofday: Sequence[TimeRange]) -> None:
     periods = [_transform_time_range(t) for t in timeofday]
     periods_alias = ", ".join((f"{b}-{e}" for b, e in periods))
-    timeperiods.save_timeperiod(
+    timeperiods.create_timeperiod(
         name,
         {
             "alias": f"Created by migration of timeofday parameter ({periods_alias})",

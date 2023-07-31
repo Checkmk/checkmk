@@ -18,7 +18,6 @@ from cmk.utils.timeperiod import timeperiod_spec_alias
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
-import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
@@ -56,7 +55,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.timeperiods import find_usages_of_timeperiod
 
 logger = logging.getLogger(__name__)
 
@@ -212,23 +210,23 @@ class ModeTimeperiods(WatoMode):
         if not transactions.check_transaction():
             return redirect(mode_url("timeperiods"))
 
-        if delname in watolib.timeperiods.builtin_timeperiods():
+        try:
+            watolib.timeperiods.delete_timeperiod(delname)
+            self._timeperiods = watolib.timeperiods.load_timeperiods()
+
+        except watolib.timeperiods.TimePeriodBuiltInError:
             raise MKUserError("_delete", _("Builtin time periods can not be modified"))
 
-        usages = find_usages_of_timeperiod(delname)
-        if usages:
+        except watolib.timeperiods.TimePeriodInUseError as exception:
             message = "<b>{}</b><br>{}:<ul>".format(
                 _("You cannot delete this time period."),
                 _("It is still in use by"),
             )
-            for title, link in usages:
+            for title, link in exception.usages:
                 message += f'<li><a href="{link}">{title}</a></li>\n'
             message += "</ul>"
             raise MKUserError(None, message)
 
-        del self._timeperiods[delname]
-        watolib.timeperiods.save_timeperiods(self._timeperiods)
-        _changes.add_change("edit-timeperiods", _("Deleted time period %s") % delname)
         return redirect(mode_url("timeperiods"))
 
     def page(self) -> None:
@@ -689,13 +687,14 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             self._name = vs_spec["name"]
-            _changes.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
-        else:
-            _changes.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
+            assert self._name is not None
+            watolib.timeperiods.create_timeperiod(self._name, self._timeperiod)
 
-        assert self._name is not None
-        self._timeperiods[self._name] = self._timeperiod
-        watolib.timeperiods.save_timeperiods(self._timeperiods)
+        else:
+            assert self._name is not None
+            watolib.timeperiods.modify_timeperiod(self._name, self._timeperiod)
+
+        self._timeperiods = watolib.timeperiods.load_timeperiods()
         return redirect(mode_url("timeperiods"))
 
     def page(self) -> None:

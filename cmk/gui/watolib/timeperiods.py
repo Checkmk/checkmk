@@ -12,6 +12,7 @@ from cmk.utils.user import UserId
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -31,6 +32,14 @@ TimeperiodUsage = tuple[str, str]
 
 
 class TimePeriodNotFoundError(KeyError):
+    pass
+
+
+class TimePeriodAlreadyExistsError(KeyError):
+    pass
+
+
+class TimePeriodBuiltInError(Exception):
     pass
 
 
@@ -78,10 +87,13 @@ def delete_timeperiod(name: str) -> None:
     time_period_alias = time_period_details["alias"]
     # TODO: introduce at least TypedDict for TimeperiodSpecs to remove assertion
     assert isinstance(time_period_alias, str)
+    if name in builtin_timeperiods():
+        raise TimePeriodBuiltInError()
     if usages := find_usages_of_timeperiod(time_period_alias):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods)
+    _changes.add_change("edit-timeperiods", _("Deleted time period %s") % name)
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
@@ -95,10 +107,24 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 
-def save_timeperiod(name, timeperiod) -> None:  # type: ignore[no-untyped-def]
+def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
     existing_timeperiods = load_timeperiods()
+    if name not in existing_timeperiods:
+        raise TimePeriodNotFoundError()
+
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
+
+
+def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
+    existing_timeperiods = load_timeperiods()
+    if name in existing_timeperiods:
+        raise TimePeriodAlreadyExistsError()
+
+    existing_timeperiods[name] = timeperiod
+    save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Created new time period %s") % name)
 
 
 def verify_timeperiod_name_exists(name):

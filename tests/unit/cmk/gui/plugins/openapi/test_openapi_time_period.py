@@ -220,6 +220,10 @@ def test_openapi_timeperiod_builtin(clients: ClientRegistry) -> None:
     )
     assert resp.status_code == 405
 
+    resp = clients.TimePeriod.delete(time_period_id="24X7", expect_ok=False).assert_status_code(405)
+    assert resp.json["title"] == "Builtin time periods can not be deleted"
+    assert resp.json["detail"] == "The built-in time period '24X7' cannot be deleted."
+
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_timeperiod_unmodified_update(clients: ClientRegistry) -> None:

@@ -33,6 +33,8 @@ import json
 from collections.abc import Mapping
 from typing import Any, Callable, Literal
 
+from livestatus import SiteId
+
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
@@ -392,6 +394,16 @@ def _show_downtimes(param):
             )
         }
     ],
+    query_params=[
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+                required=True,
+            )
+        }
+    ],
     response_schema=DowntimeObject,
     permissions_required=PERMISSIONS,
 )
@@ -415,7 +427,7 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
     )
 
     try:
-        downtime = q.fetchone(live)
+        downtime = q.fetchone(live, SiteId(params["site_id"]))
     except ValueError:
         return problem(
             status=404,

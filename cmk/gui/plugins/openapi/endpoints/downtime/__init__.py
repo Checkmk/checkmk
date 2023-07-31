@@ -50,12 +50,11 @@ from cmk.gui.plugins.openapi.endpoints.downtime.request_schemas import (
     CreateServiceRelatedDowntime,
     DeleteDowntime,
 )
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.downtime.response_schemas import (
+    DowntimeCollection,
+    DowntimeObject,
 )
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
@@ -318,7 +317,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
         DowntimeParameter,
         DOWNTIME_TYPE,
     ],
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=DowntimeCollection,
     permissions_required=PERMISSIONS,
 )
 def show_downtimes(param):
@@ -393,7 +392,7 @@ def _show_downtimes(param):
             )
         }
     ],
-    response_schema=response_schemas.DomainObject,
+    response_schema=DowntimeObject,
     permissions_required=PERMISSIONS,
 )
 def show_downtime(params: Mapping[str, Any]) -> Response:
@@ -523,12 +522,8 @@ def _downtime_properties(info):
         "host_name": info["host_name"],
         "author": info["author"],
         "is_service": "yes" if info["is_service"] else "no",
-        "start_time": _time_utc(dt.datetime.fromtimestamp(info["start_time"])),
-        "end_time": _time_utc(dt.datetime.fromtimestamp(info["end_time"])),
+        "start_time": info["start_time"],
+        "end_time": info["end_time"],
         "recurring": "yes" if info["recurring"] else "no",
         "comment": info["comment"],
     }
-
-
-def _time_utc(time_dt):
-    return time_dt.strftime("%Y-%m-%dT%H:%M:%S%z")

@@ -1,0 +1,16 @@
+Title: ntop: interface and vlan dropdown
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1690790448
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When selecting a new interface or vlan id via the dropdown
+the data was not automatically updated and the page had to
+be refreshed manually.
+
+Now the data is updated after selecting the interface or vlan.
+

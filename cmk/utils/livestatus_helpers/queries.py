@@ -7,7 +7,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
-from livestatus import LivestatusResponse, MultiSiteConnection, SiteId
+from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
@@ -290,10 +290,28 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             return list(entry.values())[0]
         return None
 
-    def fetchall(self, sites: MultiSiteConnection) -> list[ResultRow]:
-        return list(self.iterate(sites))
+    def fetchall(
+        self,
+        sites: MultiSiteConnection,
+        include_site_ids: bool = False,
+        only_sites: OnlySites = None,
+    ) -> list[ResultRow]:
+        sites.set_only_sites(only_sites)
+        if include_site_ids:
+            with detailed_connection(sites) as conn:
+                result = list(self.iterate(conn))
+        else:
+            result = list(self.iterate(sites))
 
-    def fetchone(self, sites: MultiSiteConnection, site_id: SiteId | None = None) -> ResultRow:
+        sites.set_only_sites()
+        return result
+
+    def fetchone(
+        self,
+        sites: MultiSiteConnection,
+        include_site_ids: bool = False,
+        only_site: SiteId | None = None,
+    ) -> ResultRow:
         """Fetch one row of the result.
 
         If the result from livestatus is more or less than exactly one row long it
@@ -302,7 +320,8 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         Args:
             sites: MultiSiteConnection
-            site_id: SiteId | None
+            include_site_ids: include the site in the result or not,
+            only_site: query all sites or only the site with the site_id passed in.,
 
         Returns:
             One ResultRow entry.
@@ -338,15 +357,14 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ValueError: Expected one row, got 2 row(s).
 
         """
-
-        if site_id:
-            sites.set_only_sites([site_id])
+        sites.set_only_sites(None if only_site is None else [only_site])
+        if include_site_ids:
             with detailed_connection(sites) as conn:
                 result = list(self.iterate(conn))
-            sites.set_only_sites()  # Sets sites.only_sites = None like it was before.
         else:
             result = list(self.iterate(sites))
 
+        sites.set_only_sites()
         if len(result) != 1:
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]

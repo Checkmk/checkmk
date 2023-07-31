@@ -110,23 +110,21 @@ def _del_service_downtime(  # type: ignore[no-untyped-def]
 def delete_downtime(
     connection: MultiSiteConnection,
     query: QueryExpression,
-    site_id: str,
+    site_id: SiteId,
 ) -> None:
     """Delete a scheduled downtime"""
     _user.need_permission("action.downtimes")
 
-    with detailed_connection(connection) as conn:
-        downtimes = Query(
-            [Downtimes.id, Downtimes.is_service],
-            query,
-        ).fetchall(conn)
+    downtimes = Query(
+        [Downtimes.id, Downtimes.is_service],
+        query,
+    ).fetchall(connection, True, [site_id])
 
     for downtime in downtimes:
-        if site_id == downtime["site"]:
-            if downtime["is_service"]:
-                _del_service_downtime(connection, downtime["id"], downtime["site"])
-            else:
-                _del_host_downtime(connection, downtime["id"], downtime["site"])
+        if downtime["is_service"]:
+            _del_service_downtime(connection, downtime["id"], downtime["site"])
+        else:
+            _del_host_downtime(connection, downtime["id"], downtime["site"])
 
 
 def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]

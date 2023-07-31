@@ -318,6 +318,13 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
         SERVICE_DESCRIPTION_SHOW,
         DowntimeParameter,
         DOWNTIME_TYPE,
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+            )
+        },
     ],
     response_schema=DowntimeCollection,
     permissions_required=PERMISSIONS,
@@ -374,11 +381,12 @@ def _show_downtimes(param):
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
-    live = sites.live()
-    with detailed_connection(live) as conn:
-        downtimes = q.fetchall(conn)
-
-    return serve_json(_serialize_downtimes(downtimes))
+    _site_id: SiteId | None = param.get("site_id")
+    return serve_json(
+        _serialize_downtimes(
+            q.fetchall(sites.live(), True, [_site_id] if _site_id is not None else _site_id)
+        )
+    )
 
 
 @Endpoint(
@@ -427,7 +435,7 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
     )
 
     try:
-        downtime = q.fetchone(live, SiteId(params["site_id"]))
+        downtime = q.fetchone(live, True, SiteId(params["site_id"]))
     except ValueError:
         return problem(
             status=404,
@@ -476,7 +484,7 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
                 ),
             )
 
-    downtime_commands.delete_downtime(sites.live(), query_expr, body["site_id"])
+    downtime_commands.delete_downtime(sites.live(), query_expr, SiteId(body["site_id"]))
     return Response(status=204)
 
 

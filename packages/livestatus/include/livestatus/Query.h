@@ -33,6 +33,14 @@ class Column;
 class Logger;
 class Table;
 
+using ColumnCreator =
+    std::function<std::shared_ptr<Column>(const std::string &)>;
+
+using FilterStack = Filters;
+
+using LogicalConnective =
+    std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
+
 struct ParsedQuery {
     ParsedQuery() : user{std::make_unique<NoAuthUser>()} {}
 
@@ -56,6 +64,32 @@ struct ParsedQuery {
     Triggers::Kind wait_trigger{Triggers::Kind::all};
     Row wait_object{nullptr};
     std::chrono::seconds timezone_offset{0};
+
+    void parseFilterLine(char *line, FilterStack &filters,
+                         const ColumnCreator &make_column);
+    void parseStatsLine(char *line, const ColumnCreator &make_column);
+    static void parseAndOrLine(char *line, Filter::Kind kind,
+                               const LogicalConnective &connective,
+                               FilterStack &filters);
+    static void parseNegateLine(char *line, FilterStack &filters);
+    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
+    void parseStatsNegateLine(char *line);
+    void parseColumnsLine(const char *line, const ColumnCreator &make_column);
+    void parseColumnHeadersLine(char *line);
+    void parseLimitLine(char *line);
+    void parseTimelimitLine(char *line);
+    void parseSeparatorsLine(char *line);
+    void parseOutputFormatLine(const char *line);
+    void parseKeepAliveLine(char *line);
+    void parseResponseHeaderLine(char *line);
+    void parseAuthUserHeader(const char *line,
+                             const std::function<std::unique_ptr<const User>(
+                                 const std::string &name)> &find_user);
+    void parseWaitTimeoutLine(char *line);
+    void parseWaitTriggerLine(char *line);
+    void parseWaitObjectLine(
+        const char *line, const std::function<Row(const std::string &)> &get);
+    void parseLocaltimeLine(char *line);
 };
 
 class Query {
@@ -94,49 +128,17 @@ public:
 private:
     ParsedQuery parsed_query_;
 
-    using LogicalConnective =
-        std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
-
     const Encoding _data_encoding;
     const size_t _max_response_size;
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
     Table &_table;
-    using FilterStack = Filters;
     unsigned _current_line;
     Logger *const _logger;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
 
     bool doStats() const;
-    using ColumnCreator =
-        std::function<std::shared_ptr<Column>(const std::string &)>;
-    void parseFilterLine(char *line, FilterStack &filters,
-                         const ColumnCreator &make_column);
-    void parseStatsLine(char *line, const ColumnCreator &make_column);
-    static void parseAndOrLine(char *line, Filter::Kind kind,
-                               const LogicalConnective &connective,
-                               FilterStack &filters);
-    static void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
-    void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line, const ColumnCreator &make_column);
-    void parseColumnHeadersLine(char *line);
-    void parseLimitLine(char *line);
-    void parseTimelimitLine(char *line);
-    void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(const char *line);
-    void parseKeepAliveLine(char *line);
-    void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(const char *line,
-                             const std::function<std::unique_ptr<const User>(
-                                 const std::string &name)> &find_user);
-    void parseWaitTimeoutLine(char *line);
-    void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(
-        const char *line, const std::function<Row(const std::string &)> &get);
-    void parseLocaltimeLine(char *line);
-
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
     void doWait();

@@ -53,16 +53,9 @@ void checkNoArguments(const char *line) {
 }
 }  // namespace
 
-Query::Query(const std::list<std::string> &lines, Table &table,
-             Encoding data_encoding, size_t max_response_size,
-             OutputBuffer &output, Logger *logger)
-    : _data_encoding(data_encoding)
-    , _max_response_size(max_response_size)
-    , _output(output)
-    , _renderer_query(nullptr)
-    , _table(table)
-    , _current_line(0)
-    , _logger(logger) {
+ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
+                         const Table &table, OutputBuffer &output)
+    : user{std::make_unique<NoAuthUser>()} {
     FilterStack filters;
     FilterStack wait_conditions;
     auto make_column = [&table](const std::string &colname) {
@@ -93,89 +86,97 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         char *arguments = rest_copy.data();
         try {
             if (header == "Filter") {
-                parsed_query_.parseFilterLine(arguments, filters, make_column);
+                parseFilterLine(arguments, filters, make_column);
             } else if (header == "Or") {
-                ParsedQuery::parseAndOrLine(arguments, Filter::Kind::row,
-                                            OringFilter::make, filters);
+                parseAndOrLine(arguments, Filter::Kind::row, OringFilter::make,
+                               filters);
             } else if (header == "And") {
-                ParsedQuery::parseAndOrLine(arguments, Filter::Kind::row,
-                                            AndingFilter::make, filters);
+                parseAndOrLine(arguments, Filter::Kind::row, AndingFilter::make,
+                               filters);
             } else if (header == "Negate") {
-                ParsedQuery::parseNegateLine(arguments, filters);
+                parseNegateLine(arguments, filters);
             } else if (header == "StatsOr") {
-                parsed_query_.parseStatsAndOrLine(arguments, OringFilter::make);
+                parseStatsAndOrLine(arguments, OringFilter::make);
             } else if (header == "StatsAnd") {
-                parsed_query_.parseStatsAndOrLine(arguments,
-                                                  AndingFilter::make);
+                parseStatsAndOrLine(arguments, AndingFilter::make);
             } else if (header == "StatsNegate") {
-                parsed_query_.parseStatsNegateLine(arguments);
+                parseStatsNegateLine(arguments);
             } else if (header == "Stats") {
-                parsed_query_.parseStatsLine(arguments, make_column);
+                parseStatsLine(arguments, make_column);
             } else if (header == "Columns") {
-                parsed_query_.parseColumnsLine(arguments, make_column);
+                parseColumnsLine(arguments, make_column);
             } else if (header == "ColumnHeaders") {
-                parsed_query_.parseColumnHeadersLine(arguments);
+                parseColumnHeadersLine(arguments);
             } else if (header == "Limit") {
-                parsed_query_.parseLimitLine(arguments);
+                parseLimitLine(arguments);
             } else if (header == "Timelimit") {
-                parsed_query_.parseTimelimitLine(arguments);
+                parseTimelimitLine(arguments);
             } else if (header == "AuthUser") {
-                parsed_query_.parseAuthUserHeader(arguments, find_user);
+                parseAuthUserHeader(arguments, find_user);
             } else if (header == "Separators") {
-                parsed_query_.parseSeparatorsLine(arguments);
+                parseSeparatorsLine(arguments);
             } else if (header == "OutputFormat") {
-                parsed_query_.parseOutputFormatLine(arguments);
+                parseOutputFormatLine(arguments);
             } else if (header == "ResponseHeader") {
-                parsed_query_.parseResponseHeaderLine(arguments);
+                parseResponseHeaderLine(arguments);
             } else if (header == "KeepAlive") {
-                parsed_query_.parseKeepAliveLine(arguments);
+                parseKeepAliveLine(arguments);
             } else if (header == "WaitCondition") {
-                parsed_query_.parseFilterLine(arguments, wait_conditions,
-                                              make_column);
+                parseFilterLine(arguments, wait_conditions, make_column);
             } else if (header == "WaitConditionAnd") {
-                ParsedQuery::parseAndOrLine(
-                    arguments, Filter::Kind::wait_condition, AndingFilter::make,
-                    wait_conditions);
+                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+                               AndingFilter::make, wait_conditions);
             } else if (header == "WaitConditionOr") {
-                ParsedQuery::parseAndOrLine(arguments,
-                                            Filter::Kind::wait_condition,
-                                            OringFilter::make, wait_conditions);
+                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+                               OringFilter::make, wait_conditions);
             } else if (header == "WaitConditionNegate") {
                 ParsedQuery::parseNegateLine(arguments, wait_conditions);
             } else if (header == "WaitTrigger") {
-                parsed_query_.parseWaitTriggerLine(arguments);
+                parseWaitTriggerLine(arguments);
             } else if (header == "WaitObject") {
-                parsed_query_.parseWaitObjectLine(arguments, get);
+                parseWaitObjectLine(arguments, get);
             } else if (header == "WaitTimeout") {
-                parsed_query_.parseWaitTimeoutLine(arguments);
+                parseWaitTimeoutLine(arguments);
             } else if (header == "Localtime") {
-                parsed_query_.parseLocaltimeLine(arguments);
+                parseLocaltimeLine(arguments);
             } else {
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
-            _output.setError(OutputBuffer::ResponseCode::bad_request,
-                             "while processing header '" + header +
-                                 "' for table '" + _table.name() +
-                                 "': " + e.what());
+            output.setError(OutputBuffer::ResponseCode::bad_request,
+                            "while processing header '" + header +
+                                "' for table '" + table.name() +
+                                "': " + e.what());
         }
     }
 
-    if (parsed_query_.columns.empty() && !doStats()) {
+    if (columns.empty() && stats_columns.empty()) {
         table.any_column([this](const auto &c) {
-            return parsed_query_.columns.push_back(c),
-                   parsed_query_.all_column_names.insert(c->name()), false;
+            return columns.push_back(c), all_column_names.insert(c->name()),
+                   false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
-        parsed_query_.show_column_headers = true;
+        show_column_headers = true;
     }
 
-    parsed_query_.filter = AndingFilter::make(Filter::Kind::row, filters);
-    parsed_query_.wait_condition =
+    filter = AndingFilter::make(Filter::Kind::row, filters);
+    wait_condition =
         AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
-    _output.setResponseHeader(parsed_query_.response_header);
+    output.setResponseHeader(response_header);
 }
+
+Query::Query(const std::list<std::string> &lines, Table &table,
+             Encoding data_encoding, size_t max_response_size,
+             OutputBuffer &output, Logger *logger)
+    : parsed_query_{lines, table, output}
+    , _data_encoding(data_encoding)
+    , _max_response_size(max_response_size)
+    , _output(output)
+    , _renderer_query(nullptr)
+    , _table(table)
+    , _current_line(0)
+    , _logger(logger) {}
 
 void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);

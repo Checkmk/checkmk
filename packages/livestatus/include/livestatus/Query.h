@@ -33,16 +33,9 @@ class Column;
 class Logger;
 class Table;
 
-using ColumnCreator =
-    std::function<std::shared_ptr<Column>(const std::string &)>;
-
-using FilterStack = Filters;
-
-using LogicalConnective =
-    std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
-
 struct ParsedQuery {
-    ParsedQuery() : user{std::make_unique<NoAuthUser>()} {}
+    ParsedQuery(const std::list<std::string> &lines, const Table &table,
+                OutputBuffer &output);
 
     std::unordered_set<std::string> all_column_names;
     std::vector<std::shared_ptr<Column>> columns;
@@ -64,6 +57,15 @@ struct ParsedQuery {
     Triggers::Kind wait_trigger{Triggers::Kind::all};
     Row wait_object{nullptr};
     std::chrono::seconds timezone_offset{0};
+
+private:
+    using ColumnCreator =
+        std::function<std::shared_ptr<Column>(const std::string &)>;
+
+    using FilterStack = Filters;
+
+    using LogicalConnective =
+        std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
 
     void parseFilterLine(char *line, FilterStack &filters,
                          const ColumnCreator &make_column);
@@ -127,7 +129,6 @@ public:
 
 private:
     ParsedQuery parsed_query_;
-
     const Encoding _data_encoding;
     const size_t _max_response_size;
     OutputBuffer &_output;

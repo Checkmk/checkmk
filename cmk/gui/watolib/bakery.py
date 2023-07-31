@@ -20,6 +20,10 @@ def try_bake_agents_for_hosts(hosts: Sequence[HostName]) -> None:
         import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 
         try:
-            agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
+            agent_bakery.start_bake_agents(
+                host_names=hosts,
+                signing_credentials=None,
+                call_site="Host creation",
+            )
         except BackgroundJobAlreadyRunning:
             pass

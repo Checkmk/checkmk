@@ -737,6 +737,7 @@ def test_openapi_delete_downtime_with_query(
             content_type="application/json",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "delete_type": "query",
                     "query": {"op": "~", "left": "downtimes.host_name", "right": "heute"},
                 }
@@ -785,7 +786,7 @@ def test_openapi_delete_downtime_by_id(
     live.expect_query(
         [
             "GET downtimes",
-            "Columns: is_service",
+            "Columns: id is_service",
             "Filter: id = 123",
         ]
     )
@@ -797,6 +798,7 @@ def test_openapi_delete_downtime_by_id(
             content_type="application/json",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "delete_type": "by_id",
                     "downtime_id": "123",
                 }
@@ -863,6 +865,7 @@ def test_openapi_delete_downtime_with_params(
             content_type="application/json",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "delete_type": "params",
                     "host_name": "heute",
                     "service_descriptions": ["CPU load", "Memory"],
@@ -903,6 +906,7 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
             content_type="application/json",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "delete_type": "params",
                     "host_name": "heute",
                     "service_descriptions": ["CPU load"],

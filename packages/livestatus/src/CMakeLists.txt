@@ -55,6 +55,7 @@ set(livestatus_headers
     ${header_location}/OStreamStateSaver.h
     ${header_location}/OutputBuffer.h
     ${header_location}/overload.h
+    ${header_location}/ParsedQuery.h
     ${header_location}/PerfdataAggregator.h
     ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
@@ -147,6 +148,7 @@ set(livestatus_sources
     opids.cc
     OringFilter.cc
     OutputBuffer.cc
+    ParsedQuery.cc
     PerfdataAggregator.cc
     PnpUtils.cc
     POSIXUtils.cc

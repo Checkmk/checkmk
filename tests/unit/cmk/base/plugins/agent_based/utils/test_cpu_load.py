@@ -18,7 +18,11 @@ from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
 def test_cpu_loads_fixed_levels() -> None:
     assert list(
         check_cpu_load(
-            {"levels": (2.0, 4.0)},
+            {
+                "levels1": None,
+                "levels5": None,
+                "levels15": (2.0, 4.0),
+            },
             Section(
                 load=Load(0.5, 1.0, 1.5),
                 num_cpus=4,
@@ -30,8 +34,12 @@ def test_cpu_loads_fixed_levels() -> None:
         Result(state=State.OK, summary="15 min load: 1.50"),
         Metric("load15", 1.5, levels=(8.0, 16.0)),  # levels multiplied by num_cpus
         Result(state=State.OK, summary="15 min load per core: 0.38 (4 physical cores)"),
-        Metric("load1", 0.5, boundaries=(0, 4.0)),
-        Metric("load5", 1.0, boundaries=(0, 4.0)),
+        Result(state=State.OK, notice="1 min load: 0.50"),
+        Metric("load1", 0.5, boundaries=(0, 4)),  # levels multiplied by num_cpus
+        Result(state=State.OK, notice="1 min load per core: 0.12 (4 physical cores)"),
+        Result(state=State.OK, notice="5 min load: 1.00"),
+        Metric("load5", 1.0),  # levels multiplied by num_cpus
+        Result(state=State.OK, notice="5 min load per core: 0.25 (4 physical cores)"),
     ]
 
 
@@ -45,11 +53,13 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         assert list(
             check_cpu_load(
                 {
-                    "levels": {
+                    "levels1": None,
+                    "levels5": None,
+                    "levels15": {
                         "period": "minute",
                         "horizon": 1,
                         "levels_upper": ("absolute", (2.0, 4.0)),
-                    }
+                    },
                 },
                 Section(
                     load=Load(0.5, 1.0, 1.5),
@@ -61,6 +71,10 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
             Result(state=State.OK, summary="15 min load: 1.50 (no reference for prediction yet)"),
             Metric("load15", 1.5, levels=(2.2, 4.2)),  # those are the predicted values
             Result(state=State.OK, summary="15 min load per core: 0.38 (4 cores)"),
-            Metric("load1", 0.5, boundaries=(0, 4.0)),
-            Metric("load5", 1.0, boundaries=(0, 4.0)),
+            Result(state=State.OK, notice="1 min load: 0.50"),
+            Metric("load1", 0.5, boundaries=(0, 4)),
+            Result(state=State.OK, notice="1 min load per core: 0.12 (4 cores)"),
+            Result(state=State.OK, notice="5 min load: 1.00"),
+            Metric("load5", 1.0),
+            Result(state=State.OK, notice="5 min load per core: 0.25 (4 cores)"),
         ]

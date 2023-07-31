@@ -134,6 +134,10 @@ register.check_plugin(
     discovery_function=discover_wmi_cpuload,
     check_function=check_wmi_cpuload,
     service_name="Processor Queue",
-    check_default_parameters={},
+    check_default_parameters={
+        "levels1": None,
+        "levels5": None,
+        "levels15": None,
+    },
     check_ruleset_name="cpu_load",
 )

@@ -16,7 +16,7 @@ def test_basic_cpu_loads() -> None:
     assert section
     result = list(
         check_cpu_load(
-            params={"levels": (5.0, 10.0)},
+            params={"levels1": None, "levels5": None, "levels15": (5.0, 10.0)},
             section=section,
         )
     )
@@ -24,6 +24,10 @@ def test_basic_cpu_loads() -> None:
         Result(state=State.OK, summary="15 min load: 0.87"),
         Metric("load15", 0.87, levels=(40.0, 80.0)),
         Result(state=State.OK, summary="15 min load per core: 0.11 (8 cores)"),
-        Metric("load1", 0.88, boundaries=(0.0, 8.0)),
-        Metric("load5", 0.83, boundaries=(0.0, 8.0)),
+        Result(state=State.OK, notice="1 min load: 0.88"),
+        Metric("load1", 0.88, boundaries=(0, 8)),
+        Result(state=State.OK, notice="1 min load per core: 0.11 (8 cores)"),
+        Result(state=State.OK, notice="5 min load: 0.83"),
+        Metric("load5", 0.83),
+        Result(state=State.OK, notice="5 min load per core: 0.10 (8 cores)"),
     ]

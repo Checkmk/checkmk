@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -10,33 +12,52 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary
+from cmk.gui.valuespec import Dictionary, Migrate
 
 
-def _parameter_valuespec_cpu_load() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "levels",
-                Levels(
-                    title=_("Levels on CPU load"),
-                    help=_(
-                        "The CPU load of a system is the number of processes currently being "
-                        "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
-                        "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
-                        "5 or 15 minutes. The following levels will be applied on the average "
-                        "load. On Linux system the 15-minute average load is used when applying "
-                        "those levels. The configured levels are multiplied with the number of "
-                        "CPUs, so you should configure the levels based on the value you want to "
-                        'be warned "per CPU".'
+def _parameter_valuespec_cpu_load() -> Migrate[dict[str, Any]]:
+    return Migrate(
+        valuespec=Dictionary(
+            help=_(
+                "The CPU load of a system is the number of processes currently being "
+                "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
+                "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
+                "5 or 15 minutes. The following levels will be applied on the average "
+                "load. The configured levels are multiplied with the number of "
+                "CPUs, so you should configure the levels based on the value you want to "
+                'be warned "per CPU".'
+            ),
+            elements=[
+                (
+                    "levels1",
+                    Levels(
+                        title=_("Levels on CPU load: 1 minute average"),
+                        unit="per core",
+                        default_difference=(2.0, 4.0),
+                        default_levels=(5.0, 10.0),
                     ),
-                    unit="per core",
-                    default_difference=(2.0, 4.0),
-                    default_levels=(5.0, 10.0),
                 ),
-            )
-        ],
-        optional_keys=False,
+                (
+                    "levels5",
+                    Levels(
+                        title=_("Levels on CPU load: 5 minutes average"),
+                        unit="per core",
+                        default_difference=(2.0, 4.0),
+                        default_levels=(5.0, 10.0),
+                    ),
+                ),
+                (
+                    "levels15",
+                    Levels(
+                        title=_("Levels on CPU load: 15 minutes average"),
+                        unit="per core",
+                        default_difference=(2.0, 4.0),
+                        default_levels=(5.0, 10.0),
+                    ),
+                ),
+            ],
+        ),
+        migrate=lambda p: {"levels15": p["levels"]} if "levels" in p else p,
     )
 
 

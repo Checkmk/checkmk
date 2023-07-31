@@ -5,13 +5,15 @@
 
 from typing import Any, Dict, Literal, Tuple, TypedDict, Union
 
-from ..agent_based_api.v1 import check_levels, check_levels_predictive, Metric, Result, State
+from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 from .cpu import ProcessorType, Section
 
 
-class CPULoadParams(TypedDict, total=False):
-    levels: Union[None, Tuple[float, float], Dict[str, Any]]
+class CPULoadParams(TypedDict):
+    levels1: Union[None, Tuple[float, float], Dict[str, Any]]
+    levels5: Union[None, Tuple[float, float], Dict[str, Any]]
+    levels15: Union[None, Tuple[float, float], Dict[str, Any]]
 
 
 def _processor_type_info(proc_type: ProcessorType) -> str:
@@ -25,32 +27,39 @@ def _processor_type_info(proc_type: ProcessorType) -> str:
 
 
 def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
+    proc_info = _processor_type_info(section.type)
     yield from _check_cpu_load_type(
-        params.get("levels"),
+        params["levels15"],
         section.load.load15,
         "15",
         section.num_cpus,
-        _processor_type_info(section.type),
+        proc_info,
         notice_only=False,
     )
 
-    for level_name, level_value in section.load._asdict().items():
-        if level_name == "load15":
-            # we already yielded this metric by check_levels or check_levels_predictive.
-            continue
+    yield from _check_cpu_load_type(
+        params["levels1"],
+        section.load.load1,
+        "1",
+        section.num_cpus,
+        proc_info,
+        notice_only=True,
+    )
 
-        yield Metric(
-            level_name,
-            level_value,
-            # upper bound of load1 is used for displaying cpu count in graph title
-            boundaries=(0, section.num_cpus),
-        )
+    yield from _check_cpu_load_type(
+        params["levels5"],
+        section.load.load5,
+        "5",
+        section.num_cpus,
+        proc_info,
+        notice_only=True,
+    )
 
 
 def _check_cpu_load_type(
     levels: dict[str, Any] | tuple[float, float] | None,
     value: float,
-    avg: Literal["15"],
+    avg: Literal["1", "5", "15"],
     num_cpus: int,
     proc_name: str,
     *,
@@ -65,6 +74,7 @@ def _check_cpu_load_type(
             levels=levels,
             metric_name=f"load{avg}",
             label=label,
+            boundaries=(0, num_cpus) if avg == "1" else None,
         ):
             yield Result(state=e.state, notice=e.details) if notice_only and isinstance(
                 e, Result
@@ -81,6 +91,7 @@ def _check_cpu_load_type(
             levels_upper=levels_upper,
             label=label,
             notice_only=notice_only,
+            boundaries=(0, num_cpus) if avg == "1" else None,
         )
 
     # provide additional info text

@@ -46,6 +46,33 @@ def test_openapi_list_all_downtimes(
         assert resp.json["value"][0]["extensions"]["site_id"] == "NO_SITE"
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_openapi_list_all_downtimes_for_a_specific_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    live.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+        ],
+        sites=["NO_SITE"],
+    )
+
+    with live:
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            base + "/domain-types/downtime/collections/all?site_id=NO_SITE",
+            headers={"Accept": "application/json"},
+            status=200,
+        )
+        assert len(resp.json["value"]) == 1
+
+
 @pytest.mark.usefixtures("with_groups")
 def test_openapi_schedule_hostgroup_downtime(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -726,6 +753,7 @@ def test_openapi_delete_downtime_with_query(
 
     live.expect_query(
         ["GET downtimes", "Columns: id is_service", "Filter: host_name ~ heute"],
+        sites=["NO_SITE"],
     )
     live.expect_query(
         "COMMAND [...] DEL_SVC_DOWNTIME;123",
@@ -789,7 +817,8 @@ def test_openapi_delete_downtime_by_id(
             "GET downtimes",
             "Columns: id is_service",
             "Filter: id = 123",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
     live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;123", match_type="ellipsis")
 
@@ -855,7 +884,8 @@ def test_openapi_delete_downtime_with_params(
             "Filter: service_description = Memory",
             "Or: 2",
             "And: 2",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
     live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;123", match_type="ellipsis")
     live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;124", match_type="ellipsis")
@@ -898,7 +928,8 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
             "Filter: host_name = heute",
             "Filter: service_description = CPU load",
             "And: 2",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
 
     with live:

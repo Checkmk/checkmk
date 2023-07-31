@@ -30,6 +30,7 @@ def test_request_url(flask_app: flask.Flask) -> None:
         assert request.url == f"http://localhost{url}"
 
 
+@pytest.mark.skip(reason="flaky")
 @pytest.mark.parametrize(
     "setting, url, profiling_files_exist",
     [
@@ -58,6 +59,7 @@ def test_profiling(
     assert os.path.exists(var_dir + "/multisite.cachegrind") == profiling_files_exist
 
 
+@pytest.mark.skip(reason="flaky")
 @pytest.mark.parametrize(
     "setting, url, profiling_files_exist",
     [

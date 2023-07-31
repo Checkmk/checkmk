@@ -6,7 +6,6 @@
 #include "livestatus/Query.h"
 
 #include <cassert>
-#include <ratio>
 #include <sstream>
 #include <utility>
 
@@ -23,10 +22,9 @@
 
 using namespace std::chrono_literals;
 
-Query::Query(const std::list<std::string> &lines, Table &table,
-             Encoding data_encoding, size_t max_response_size,
-             OutputBuffer &output, Logger *logger)
-    : parsed_query_{lines, table, output}
+Query::Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
+             size_t max_response_size, OutputBuffer &output, Logger *logger)
+    : parsed_query_{std::move(parsed_query)}
     , _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
     , _output(output)
@@ -273,18 +271,19 @@ void Query::doWait() {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
     }
-    if (!parsed_query_.wait_condition->is_tautology() &&
-        parsed_query_.wait_object.isNull()) {
-        parsed_query_.wait_object = _table.getDefault();
-        if (parsed_query_.wait_object.isNull()) {
+    auto wait_object = parsed_query_.wait_object;
+    if (!parsed_query_.wait_condition->is_tautology() && wait_object.isNull()) {
+        wait_object = _table.getDefault();
+        if (wait_object.isNull()) {
             invalidRequest("missing WaitObject");
             return;
         }
     }
     _table.core()->triggers().wait_for(
-        parsed_query_.wait_trigger, parsed_query_.wait_timeout, [this] {
+        parsed_query_.wait_trigger, parsed_query_.wait_timeout,
+        [this, &wait_object] {
             return parsed_query_.wait_condition->accepts(
-                parsed_query_.wait_object, *parsed_query_.user,
+                wait_object, *parsed_query_.user,
                 parsed_query_.timezone_offset);
         });
 }

@@ -9,6 +9,7 @@
 
 #include "livestatus/ICore.h"
 #include "livestatus/OutputBuffer.h"
+#include "livestatus/ParsedQuery.h"
 #include "livestatus/Query.h"
 #include "livestatus/Table.h"
 
@@ -75,8 +76,9 @@ size_t Store::numCachedLogMessages() {
 bool Store::answerGetRequest(const std::list<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
-    return Query{lines,
-                 findTable(output, tablename),
+    auto &table = findTable(output, tablename);
+    return Query{ParsedQuery{lines, table, output},
+                 table,
                  _mc->dataEncoding(),
                  _mc->maxResponseSize(),
                  output,

@@ -10,7 +10,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <list>
 #include <map>
 #include <memory>
 #include <optional>
@@ -29,9 +28,8 @@ class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table &table,
-          Encoding data_encoding, size_t max_response_size,
-          OutputBuffer &output, Logger *logger);
+    Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
+          size_t max_response_size, OutputBuffer &output, Logger *logger);
 
     bool process();
 
@@ -61,7 +59,7 @@ public:
     const std::unordered_set<std::string> &allColumnNames() const;
 
 private:
-    ParsedQuery parsed_query_;
+    const ParsedQuery parsed_query_;
     const Encoding _data_encoding;
     const size_t _max_response_size;
     OutputBuffer &_output;

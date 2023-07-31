@@ -4,18 +4,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Tuple as _Tuple
+
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodSpec, TimeperiodSpecs
 
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
 
+TimeperiodUsage = _Tuple[str, str]
+
 
 class TimePeriodNotFoundError(KeyError):
     pass
+
+
+class TimePeriodAlreadyExistsError(KeyError):
+    pass
+
+
+class TimePeriodBuiltInError(Exception):
+    pass
+
+
+class TimePeriodInUseError(Exception):
+    def __init__(self, usages: list[TimeperiodUsage]) -> None:
+        super().__init__()
+        self.usages = usages
 
 
 def builtin_timeperiods() -> TimeperiodSpecs:
@@ -49,12 +68,18 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
 
 
 def delete_timeperiod(name: str) -> None:
-    try:
-        timeperiods = load_timeperiods()
-        del timeperiods[name]
-    except KeyError:
+    time_periods = load_timeperiods()
+    if name not in time_periods:
         raise TimePeriodNotFoundError
-    save_timeperiods(timeperiods)
+    time_period_details = time_periods[name]
+    time_period_alias = time_period_details["alias"]
+    # TODO: introduce at least TypedDict for TimeperiodSpecs to remove assertion
+    assert isinstance(time_period_alias, str)
+    if name in builtin_timeperiods():
+        raise TimePeriodBuiltInError()
+    del time_periods[name]
+    save_timeperiods(time_periods)
+    _changes.add_change("edit-timeperiods", _("Deleted time period %s") % name)
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
@@ -68,10 +93,24 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     load_timeperiods.cache_clear()
 
 
-def save_timeperiod(name, timeperiod) -> None:
+def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
     existing_timeperiods = load_timeperiods()
+    if name not in existing_timeperiods:
+        raise TimePeriodNotFoundError()
+
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
+
+
+def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
+    existing_timeperiods = load_timeperiods()
+    if name in existing_timeperiods:
+        raise TimePeriodAlreadyExistsError()
+
+    existing_timeperiods[name] = timeperiod
+    save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Created new time period %s") % name)
 
 
 def verify_timeperiod_name_exists(name):

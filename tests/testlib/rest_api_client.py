@@ -786,14 +786,16 @@ class TimePeriodTestClient(RestApiClient):
             TimePeriodCollectionResponse(**resp.json)
         return resp
 
-    def delete(self, time_period_id: str) -> Response:
+    def delete(self, time_period_id: str, expect_ok: bool = True) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
         resp = self.request(
             "delete",
             url=f"/objects/{self.domain}/{time_period_id}",
             headers={"If-Match": etag, "Accept": "application/json"},
+            expect_ok=expect_ok,
         )
-        resp.assert_status_code(204)
+        if expect_ok:
+            resp.assert_status_code(204)
         return resp
 
     def create(self, time_period_data: dict[str, object], expect_ok: bool = True) -> Response:

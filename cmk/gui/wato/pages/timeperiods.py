@@ -133,23 +133,23 @@ class ModeTimeperiods(WatoMode):
         if not transactions.check_transaction():
             return redirect(mode_url("timeperiods"))
 
-        if delname in watolib.timeperiods.builtin_timeperiods():
-            raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+        try:
+            watolib.timeperiods.delete_timeperiod(delname)
+            self._timeperiods = watolib.timeperiods.load_timeperiods()
 
-        usages = self._find_usages_of_timeperiod(delname)
-        if usages:
-            message = "<b>%s</b><br>%s:<ul>" % (
-                _("You cannot delete this timeperiod."),
+        except watolib.timeperiods.TimePeriodBuiltInError:
+            raise MKUserError("_delete", _("Builtin time periods can not be modified"))
+
+        except watolib.timeperiods.TimePeriodInUseError as exception:
+            message = "<b>{}</b><br>{}:<ul>".format(
+                _("You cannot delete this time period."),
                 _("It is still in use by"),
             )
-            for title, link in usages:
-                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            for title, link in exception.usages:
+                message += f'<li><a href="{link}">{title}</a></li>\n'
             message += "</ul>"
             raise MKUserError(None, message)
 
-        del self._timeperiods[delname]
-        watolib.timeperiods.save_timeperiods(self._timeperiods)
-        watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
         return redirect(mode_url("timeperiods"))
 
     # Check if a timeperiod is currently in use and cannot be deleted
@@ -918,13 +918,14 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             self._name = vs_spec["name"]
-            watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
-        else:
-            watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
+            assert self._name is not None
+            watolib.timeperiods.create_timeperiod(self._name, self._timeperiod)
 
-        assert self._name is not None
-        self._timeperiods[self._name] = self._timeperiod
-        watolib.timeperiods.save_timeperiods(self._timeperiods)
+        else:
+            assert self._name is not None
+            watolib.timeperiods.modify_timeperiod(self._name, self._timeperiod)
+
+        self._timeperiods = watolib.timeperiods.load_timeperiods()
         return redirect(mode_url("timeperiods"))
 
     def page(self):

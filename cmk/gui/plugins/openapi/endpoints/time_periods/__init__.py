@@ -35,11 +35,14 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
     load_timeperiods,
-    save_timeperiod,
+    modify_timeperiod,
+    TimePeriodBuiltInError,
+    TimePeriodInUseError,
     TimePeriodNotFoundError,
 )
 
@@ -97,7 +100,7 @@ def create_timeperiod(params):
     time_period = _to_checkmk_format(
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
-    save_timeperiod(name, time_period)
+    _create_timeperiod(name, time_period)
     return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
 
 
@@ -137,7 +140,7 @@ def update_timeperiod(params):
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
     api_format_response = _to_api_format(updated_time_period)
-    save_timeperiod(name, updated_time_period)
+    modify_timeperiod(name, updated_time_period)
     return _serve_time_period(_get_time_period_domain_object(name, api_format_response))
 
 
@@ -149,6 +152,7 @@ def update_timeperiod(params):
     etag="input",
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[405, 409],
 )
 def delete(params):
     """Delete a time period"""
@@ -159,6 +163,18 @@ def delete(params):
         delete_timeperiod(name)
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
+    except TimePeriodBuiltInError:
+        return problem(
+            status=405,
+            title="Builtin time periods can not be deleted",
+            detail=f"The built-in time period '{name}' cannot be deleted.",
+        )
+    except TimePeriodInUseError as e:
+        return problem(
+            status=409,
+            title="The time period is still in use",
+            detail=f"The time period is still in use ({', '.join(u[0] for u in e.usages)}).",
+        )
 
     return Response(status=204)
 

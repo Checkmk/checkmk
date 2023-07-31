@@ -7,7 +7,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
-from livestatus import LivestatusResponse, MultiSiteConnection
+from livestatus import LivestatusResponse, MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
@@ -293,14 +293,16 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def fetchall(self, sites: MultiSiteConnection) -> list[ResultRow]:
         return list(self.iterate(sites))
 
-    def fetchone(self, sites: MultiSiteConnection) -> ResultRow:
+    def fetchone(self, sites: MultiSiteConnection, site_id: SiteId | None = None) -> ResultRow:
         """Fetch one row of the result.
 
         If the result from livestatus is more or less than exactly one row long it
         will throw an Exception.
+        If the site_id is passed, we only query that site + the site will be included in the result.
 
         Args:
-            sites:
+            sites: MultiSiteConnection
+            site_id: SiteId | None
 
         Returns:
             One ResultRow entry.
@@ -336,7 +338,15 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ValueError: Expected one row, got 2 row(s).
 
         """
-        result = list(self.iterate(sites))
+
+        if site_id:
+            sites.set_only_sites([site_id])
+            with detailed_connection(sites) as conn:
+                result = list(self.iterate(conn))
+            sites.set_only_sites()  # Sets sites.only_sites = None like it was before.
+        else:
+            result = list(self.iterate(sites))
+
         if len(result) != 1:
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]

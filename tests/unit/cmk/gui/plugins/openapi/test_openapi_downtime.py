@@ -1012,14 +1012,15 @@ def test_openapi_downtime_get_single(
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
             "Filter: id = 123",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
 
     with live:
         with set_config(wato_enabled=wato_enabled):
             resp = aut_user_auth_wsgi_app.call_method(
                 "get",
-                base + "/objects/downtime/123",
+                base + "/objects/downtime/123?site_id=NO_SITE",
                 headers={"Accept": "application/json"},
                 status=200,
             )
@@ -1040,13 +1041,14 @@ def test_openapi_downtime_invalid_single(
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
             "Filter: id = 123",
-        ]
+        ],
+        sites=["NO_SITE"],
     )
 
     with live:
         _ = aut_user_auth_wsgi_app.call_method(
             "get",
-            base + "/objects/downtime/123",
+            base + "/objects/downtime/123?site_id=NO_SITE",
             headers={"Accept": "application/json"},
             status=404,
         )

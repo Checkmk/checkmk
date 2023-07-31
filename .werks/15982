@@ -1,0 +1,14 @@
+Title: time_period: Creation, modification or deletion of time periods from the API now adds entries to activate changes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1690884316
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p8
+
+Before this werk, making modifications to time periods from the API did not add entries to activation changes. This werk fixes this behaviour and now the API generates the corresponding entries.
+
+

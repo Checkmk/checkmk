@@ -44,10 +44,6 @@ msgstr " (期間: %s、%sIO: %s/s)"
 msgid " (copy)"
 msgstr " (複製)"
 
-#, python-format
-msgid " (day %d)"
-msgstr " (日 %d)"
-
 #, fuzzy
 msgid " (in discards per second)"
 msgstr " (1秒あたりのエラー数)"
@@ -6507,6 +6503,10 @@ msgstr "属性"
 msgid "Attribute Sync Plugins"
 msgstr "属性同期プラグイン"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "設定する属性"
+
 msgid "Attribute sync plugins"
 msgstr "属性同期プラグイン"
 
@@ -12416,6 +12416,10 @@ msgstr "連絡先"
 msgid "Contact group (effective)"
 msgstr "連絡先グループ(有効)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "連絡先グループ属性"
+
 msgid "Contact groups"
 msgstr "連絡先グループ"
 
@@ -12438,10 +12442,6 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "連絡先グループは、ユーザーをホストとサービスに割り当てるために使用されます"
-
-#, fuzzy
-msgid "Contact groups attribute"
-msgstr "連絡先グループ"
 
 msgid "Contact groups defined in rule"
 msgstr "ルールで定義された連絡先グループ"
@@ -16675,6 +16675,13 @@ msgstr "カラムを表示"
 msgid "Display the host alias"
 msgstr "ホストエイリアスを表示する"
 
+msgid ""
+"Display the last log message that lead to the worst state (i.e., the current "
+"state of the service) and choose the display location. Please note that log "
+"messages may contain sensitive information, so displaying them on a service "
+"can lead to a security risk."
+msgstr ""
+
 msgid "Display the services of this host"
 msgstr "このホストのサービスを表示します"
 
@@ -17273,6 +17280,10 @@ msgstr "タイトルを表示しない"
 msgid "Do not status data inventory"
 msgstr "データインベントリのステータスを設定しない"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "コンタクトグループメンバーシップ"
+
 msgid "Do not transfer context"
 msgstr "コンテキストを転送しない"
 
@@ -17420,6 +17431,10 @@ msgstr "他のユーザーに公開しないでください"
 
 msgid "Don't remove matching vanished services"
 msgstr "一致する消失したサービスを削除しない"
+
+#, fuzzy
+msgid "Don't show"
+msgstr "要約を表示しない"
 
 msgid "Don't show Summary"
 msgstr "要約を表示しない"
@@ -19014,6 +19029,29 @@ msgstr ""
 "mycheckmkserver.com IDプロバイダからアクセスできる必要はありません。このエン"
 "ドポイントでは、信頼できる証明書を指定する HTTPS のみをサポートしています。"
 
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
+"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
+"とに注意してください。"
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
 
@@ -20344,10 +20382,6 @@ msgstr "JSONリクエストの解析に失敗しました: '%s':%s"
 #, python-format
 msgid "Failed to parse Python request: '%s': %s"
 msgstr "Pythonリクエストの解析に失敗しました: '%s':%s"
-
-#, python-format
-msgid "Failed to parse file: %s"
-msgstr "ファイルの解析に失敗しました:%s"
 
 #, python-format
 msgid "Failed to parse labels: %s"
@@ -27432,6 +27466,14 @@ msgstr "通常のチェック間隔に関連して"
 msgid "In relation to standard deviation"
 msgstr "標準偏差に関連して"
 
+#, fuzzy
+msgid "In service details"
+msgstr "BIサービスの詳細"
+
+#, fuzzy
+msgid "In service summary"
+msgstr "Systemdサービス概要"
+
 msgid ""
 "In some places like e.g. the main menu Checkmk divides features, filters, "
 "input fields etc. in two categories, showing more or less entries. With this "
@@ -32507,6 +32549,14 @@ msgstr "管理状態(<tt> ifAdminStatus </tt>)を監視状態にマップしま�
 msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "連絡先グループと一致する"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "明示的に指定されたグループ"
 
 msgid "Mapped data"
 msgstr "マップされたデータ"
@@ -46981,6 +47031,10 @@ msgstr "事前通知のみを表示する"
 msgid "Show label for"
 msgstr "のラベルを表示する"
 
+#, fuzzy
+msgid "Show last log message"
+msgstr "ログインメッセージを表示する"
+
 msgid "Show last rename result"
 msgstr "最後の名前変更結果を表示する"
 
@@ -48206,6 +48260,10 @@ msgstr "スペアディスク"
 
 msgid "Special Agent"
 msgstr "特別なエージェント"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "特定のサイト"
 
 msgid "Specific date"
 msgstr "特定の日付"
@@ -52192,16 +52250,6 @@ msgstr ""
 
 msgid "The attribute used to identify users group memberships."
 msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
-
-#, fuzzy
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
-"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
-"とに注意してください。"
 
 #, python-format
 msgid ""
@@ -57336,11 +57384,13 @@ msgstr "このパッケージはインストールされていません。"
 msgid "This package type is not supported."
 msgstr "このパッケージは存在しません。"
 
+#, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
-"used to import events like holidays, therefore only single whole day "
-"appointments are handled by this import."
+"used to import events as exceptions. Time ranges and recurring events are "
+"supported, however, currently the total number of 75 exceptions can not be "
+"exceeded."
 msgstr ""
 "このページを使用して、iCalendar (<tt>*.ics</tt>)ファイルの予定に基づいて新し"
 "い期間定義を生成できます。このインポートは通常、休日などのイベントをインポー"
@@ -59811,9 +59861,6 @@ msgstr "タイムフレーム"
 
 msgid "Time horizon"
 msgstr "期間"
-
-msgid "Time horizon for repeated events"
-msgstr "繰り返されるイベントの期間"
 
 msgid "Time horizon to keep in cache"
 msgstr "キャッシュに保持する期間"
@@ -62807,6 +62854,9 @@ msgstr ""
 "<tt>\\1</tt>, <tt>\\2</tt>などを使用して一致するサブグループを置き換え、<tt>"
 "\\0</tt>を使用して元のホスト名に挿入します"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 #, fuzzy
 msgid "Use CSV export"
 msgstr "使用されるSNATポート"
@@ -62966,6 +63016,10 @@ msgstr "サービスに代替表示名を使用する"
 #, fuzzy
 msgid "Use any network address"
 msgstr "ネットワークアドレス"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "ユーザーID属性"
 
 msgid "Use backup code"
 msgstr "バックアップコードを使用"
@@ -63167,12 +63221,6 @@ msgstr "サイトIDを使用する"
 
 msgid "Use site ID prefix"
 msgstr "サイトIDプレフィックスを使用する"
-
-msgid "Use specific times"
-msgstr "特定の時間を使用する"
-
-msgid "Use specific times instead of whole day"
-msgstr "一日ではなく特定の時間を使用する"
 
 msgid "Use system wide CAs"
 msgstr "システム全体のCAを使用する"
@@ -65687,14 +65735,6 @@ msgstr ""
 "に設定されます。"
 
 msgid ""
-"When the iCalendar file contains definitions of repeating events, these "
-"repeating events will be resolved to single events for the number of years "
-"you specify here."
-msgstr ""
-"iCalendarファイルに繰り返しイベントの定義が含まれている場合、これらの繰り返し"
-"イベントは、ここで指定した年数の間、単一のイベントに解決されます。"
-
-msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -66009,14 +66049,6 @@ msgstr ""
 "と、マルチサイトはこの秒数をタイムアウトとして使用します。モニタリングコアが"
 "この時間内にチェックを実行しなかった場合、エラーが表示され、ページはリロード"
 "されません。"
-
-msgid ""
-"When you specify explicit time definitions here, these will be added to each "
-"date which is added to the resulting time period. By default the whole day "
-"is used."
-msgstr ""
-"ここで明示的な時間定義を指定すると、これらは結果の期間に追加される各日付に追"
-"加されます。デフォルトでは、1日が使用されます。"
 
 msgid ""
 "When you use subgroups in the regular expression of your match text then you "
@@ -70720,9 +70752,6 @@ msgstr "y"
 msgid "year"
 msgstr "年"
 
-msgid "years"
-msgstr "年"
-
 msgid "yes"
 msgstr "はい"
 
@@ -70748,45 +70777,51 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid " (day %d)"
+#~ msgstr " (日 %d)"
+
+#, fuzzy
+#~| msgid "Contact groups"
+#~ msgid "Contact groups attribute"
+#~ msgstr "連絡先グループ"
+
+#, python-format
+#~ msgid "Failed to parse file: %s"
+#~ msgstr "ファイルの解析に失敗しました:%s"
+
+#~ msgid "Time horizon for repeated events"
+#~ msgstr "繰り返されるイベントの期間"
+
+#~ msgid "Use specific times"
+#~ msgstr "特定の時間を使用する"
+
+#~ msgid "Use specific times instead of whole day"
+#~ msgstr "一日ではなく特定の時間を使用する"
+
+#~ msgid ""
+#~ "When the iCalendar file contains definitions of repeating events, these "
+#~ "repeating events will be resolved to single events for the number of "
+#~ "years you specify here."
+#~ msgstr ""
+#~ "iCalendarファイルに繰り返しイベントの定義が含まれている場合、これらの繰り"
+#~ "返しイベントは、ここで指定した年数の間、単一のイベントに解決されます。"
+
+#~ msgid ""
+#~ "When you specify explicit time definitions here, these will be added to "
+#~ "each date which is added to the resulting time period. By default the "
+#~ "whole day is used."
+#~ msgstr ""
+#~ "ここで明示的な時間定義を指定すると、これらは結果の期間に追加される各日付に"
+#~ "追加されます。デフォルトでは、1日が使用されます。"
+
+#~ msgid "years"
+#~ msgstr "年"
+
 #, fuzzy
 #~| msgid "The labels %s are not required."
 #~ msgid "Request IDs are not equal"
 #~ msgstr "ラベル \"%s\" は必須ではありません。"
-
-#, fuzzy
-#~| msgid "Attribute to set"
-#~ msgid "Attribute match value"
-#~ msgstr "設定する属性"
-
-#, fuzzy
-#~| msgid "Contact groups attribute"
-#~ msgid "Contact group claim name"
-#~ msgstr "連絡先グループ属性"
-
-#, fuzzy
-#~| msgid "Contactgroup Membership"
-#~ msgid "Do not synchronize contact group memberships"
-#~ msgstr "コンタクトグループメンバーシップ"
-
-#, fuzzy
-#~| msgid "Match contact groups"
-#~ msgid "Map to contact groups"
-#~ msgstr "連絡先グループと一致する"
-
-#, fuzzy
-#~| msgid "explicitly specified groups"
-#~ msgid "Map value to specific groups"
-#~ msgstr "明示的に指定されたグループ"
-
-#, fuzzy
-#~| msgid "Specific sites"
-#~ msgid "Specific Mappings"
-#~ msgstr "特定のサイト"
-
-#, fuzzy
-#~| msgid "User ID attribute"
-#~ msgid "Use attribute value"
-#~ msgstr "ユーザーID属性"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "省略した場合、IPアドレスが使用されます。"

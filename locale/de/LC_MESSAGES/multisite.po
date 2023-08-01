@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-07-19 09:43+0000\n"
+"PO-Revision-Date: 2023-07-31 23:08+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -42,10 +42,6 @@ msgstr " (Dauer: %s, %sIO: %s/s)"
 
 msgid " (copy)"
 msgstr " (Kopie)"
-
-#, python-format
-msgid " (day %d)"
-msgstr " (Tag %d)"
 
 msgid " (in discards per second)"
 msgstr " (in Abweisungen pro Sekunde)"
@@ -6646,6 +6642,9 @@ msgstr "Attribut"
 msgid "Attribute Sync Plugins"
 msgstr "Sync-Plugins für Attribute"
 
+msgid "Attribute match value"
+msgstr "Attribut-Match-Wert"
+
 msgid "Attribute sync plugins"
 msgstr "Sync-Plugins für Attribute"
 
@@ -12656,6 +12655,9 @@ msgstr "Kontaktname"
 msgid "Contact group (effective)"
 msgstr "Kontakgruppe (effektiv)"
 
+msgid "Contact group claim name"
+msgstr "Kontaktgruppen-Claim-Name"
+
 msgid "Contact groups"
 msgstr "Kontaktgruppen"
 
@@ -12679,9 +12681,6 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Kontaktgruppen werden benutzt, um Benutzer zu Hosts/Services zuzuordnen"
-
-msgid "Contact groups attribute"
-msgstr "Kontaktgruppenattribut"
 
 msgid "Contact groups defined in rule"
 msgstr "In der Regel definierte Kontaktgruppen"
@@ -16956,6 +16955,17 @@ msgstr "Spalte anzeigen"
 msgid "Display the host alias"
 msgstr "Host-Alias anzeigen"
 
+msgid ""
+"Display the last log message that lead to the worst state (i.e., the current "
+"state of the service) and choose the display location. Please note that log "
+"messages may contain sensitive information, so displaying them on a service "
+"can lead to a security risk."
+msgstr ""
+"Zeige die letzte Log-Meldung an, die zum schlechtesten Zustand (d.h. dem "
+"aktuellen Zustand des Service) geführt hat, und wähle den Anzeigeort. Bitte "
+"beachten Sie, dass Log-Meldungen sensible Informationen enthalten können, so "
+"dass ihre Anzeige auf einem Dienst zu einem Sicherheitsrisiko führen kann."
+
 msgid "Display the services of this host"
 msgstr "Services dieses Hosts anzeigen"
 
@@ -17566,6 +17576,9 @@ msgstr "Titel nicht anzeigen"
 msgid "Do not status data inventory"
 msgstr "Führe keine Statusdaten-Inventur durch"
 
+msgid "Do not synchronize contact group memberships"
+msgstr "Kontaktgruppenmitgliedschaften nicht synchronisieren"
+
 msgid "Do not transfer context"
 msgstr "Kontext nicht übermitteln"
 
@@ -17712,6 +17725,9 @@ msgstr "Nicht für andere Benutzer veröffentlichen"
 
 msgid "Don't remove matching vanished services"
 msgstr "Passende verschwundene Dienste nicht entfernen"
+
+msgid "Don't show"
+msgstr "Nicht anzeigen"
 
 msgid "Don't show Summary"
 msgstr "Zusammenfassung nicht anzeigen"
@@ -19315,6 +19331,37 @@ msgstr ""
 "sein. Wir unterstützen nur HTTPS für diesen Endpunkt, wodurch ein "
 "vertrauenswürdiges Zertifikat angegeben wird."
 
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+"Geben Sie den Claim-Namen ein, dessen Attributwert Sie als Distinguished "
+"Name (DN) erwarten und dessen Common Name (CN) Sie als Kontaktgruppe "
+"verwenden möchten. Eine Kontaktgruppe mit dem gleichen Namen muss in Checkmk "
+"existieren. Andernfalls können sie nicht verknüpft werden."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"Geben Sie den Claim-Namen ein, dessen Attributwert Sie verwenden möchten, um "
+"Ihren Identitätsanbieter einer Kontaktgruppe zuzuordnen. Eine Kontaktgruppe "
+"mit dem gleichen Namen muss in Checkmk existieren. Andernfalls können sie "
+"nicht verknüpft werden."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
+"Geben Sie den Claim-Namen ein, dessen Attributwert Sie verwenden möchten. "
+"Der Benutzer wird nur dann einer Kontaktgruppe zugeordnet, wenn der "
+"angegebene Attributwert mit dem zurückgegebenen Attributwert des Claims "
+"übereinstimmt."
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Den Exitcode als 10-stellige, kleingeschriebenen Hexwert eingeben, z.B. "
@@ -20665,10 +20712,6 @@ msgstr "JSON-Anfrage konnte nicht verarbeitet werden: '%s': %s"
 #, python-format
 msgid "Failed to parse Python request: '%s': %s"
 msgstr "Python-Anfrage konnte nicht verarbeitet werden: '%s': %s"
-
-#, python-format
-msgid "Failed to parse file: %s"
-msgstr "Die Datei kann nicht eingelesen werden: %s"
 
 #, python-format
 msgid "Failed to parse labels: %s"
@@ -27942,6 +27985,12 @@ msgstr "Im Verhältnis zum normalen Checkintervall"
 msgid "In relation to standard deviation"
 msgstr "im Verhältnis zur Standardabweichung"
 
+msgid "In service details"
+msgstr "In den Service-Details"
+
+msgid "In service summary"
+msgstr "In der Service-Zusammenfassung"
+
 msgid ""
 "In some places like e.g. the main menu Checkmk divides features, filters, "
 "input fields etc. in two categories, showing more or less entries. With this "
@@ -33021,6 +33070,12 @@ msgid ""
 msgstr ""
 "Bildet den Betriebszustand (<tt>ifOperStatus</tt>) auf einen "
 "Monitoringzustand ab."
+
+msgid "Map to contact groups"
+msgstr "Kontaktgruppen zuordnen"
+
+msgid "Map value to specific groups"
+msgstr "Wert bestimmten Gruppen zuordnen"
 
 msgid "Mapped data"
 msgstr "Zugeordnete Daten"
@@ -47583,6 +47638,9 @@ msgstr "Nur vorläufige Alarme anzeigen"
 msgid "Show label for"
 msgstr "Label anzeigen für"
 
+msgid "Show last log message"
+msgstr "Letzte Log-Nachricht anzeigen"
+
 msgid "Show last rename result"
 msgstr "Letztes Umbenennungsergebnis anzeigen"
 
@@ -48843,6 +48901,9 @@ msgstr "Freie Platten"
 
 msgid "Special Agent"
 msgstr "Spezialagent"
+
+msgid "Specific Mappings"
+msgstr "Bestimmte Zuordnungen"
 
 msgid "Specific date"
 msgstr "Bestimmten Datum"
@@ -52938,16 +52999,6 @@ msgstr ""
 
 msgid "The attribute used to identify users group memberships."
 msgstr "Merkmal um Gruppenmitgliedschaften festzustellen."
-
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"Das Attribut, das für die Zuordnung von Kontaktgruppen zwischen Ihrem "
-"Identitätsanbieter und Checkmk verwendet wird. Beachten Sie, dass "
-"Kontaktgruppen in Checkmk vorhanden sein müssen, damit sie zugeordnet werden "
-"können."
 
 #, python-format
 msgid ""
@@ -58392,14 +58443,16 @@ msgstr "Dieser Pakettyp wird nicht unterstützt."
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
-"used to import events like holidays, therefore only single whole day "
-"appointments are handled by this import."
+"used to import events as exceptions. Time ranges and recurring events are "
+"supported, however, currently the total number of 75 exceptions can not be "
+"exceeded."
 msgstr ""
-"Diese Seite kann verwendet werden, um eine neue Zeitspanne zu definieren, "
+"Diese Seite kann verwendet werden, um eine neue Zeitperiode zu definieren, "
 "die auf den Terminen einer iCalendar-Datei (<tt>*.ics</tt>) basiert. Dieser "
-"Import wird normalerweise verwendet, um Ereignisse wie Feiertage zu "
-"importieren, daher werden nur einzelne ganztägige Termine von diesem Import "
-"behandelt."
+"Import wird normalerweise verwendet, um Ereignisse als Ausnahmen zu "
+"importieren. Zeiträume und wiederkehrende Ereignisse werden unterstützt, "
+"allerdings kann die Gesamtzahl von 75 Ausnahmen derzeit nicht überschritten "
+"werden."
 
 msgid "This page does not provide an inline help."
 msgstr "Diese Seite bietet keine Inline-Hilfe."
@@ -61047,9 +61100,6 @@ msgstr "Zeitrahmen"
 
 msgid "Time horizon"
 msgstr "Zeitraum"
-
-msgid "Time horizon for repeated events"
-msgstr "Zeithorizont für periodische Termine"
 
 msgid "Time horizon to keep in cache"
 msgstr "Zeithorizont, der gegacht werden soll"
@@ -64061,6 +64111,9 @@ msgstr ""
 "Verwenden Sie <tt>\\1</tt>, <tt>\\2</tt> etc um die gematchten Subgruppen zu "
 "ersetzen, <tt>\\0</tt> um den Originalhostname einzufügen"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr "CN aus LDAP Distinguished Name (DN) String verwenden"
+
 msgid "Use CSV export"
 msgstr "CSV Export verwenden"
 
@@ -64216,6 +64269,9 @@ msgstr "Alternativen Anzeigenamen für Services verwenden"
 
 msgid "Use any network address"
 msgstr "Beliebige Netzwerkadresse verwenden"
+
+msgid "Use attribute value"
+msgstr "Attributwert verwenden"
 
 msgid "Use backup code"
 msgstr "Backup-Codes verwenden"
@@ -64432,12 +64488,6 @@ msgstr "Instanz-ID verwenden"
 
 msgid "Use site ID prefix"
 msgstr "Präfix für Instanz-ID verwenden"
-
-msgid "Use specific times"
-msgstr "Bestimmte Tageszeiten verwenden"
-
-msgid "Use specific times instead of whole day"
-msgstr "Nur bestimmte Tageszeiten verwenden"
 
 msgid "Use system wide CAs"
 msgstr "Systemweite CAs nutzen"
@@ -67040,14 +67090,6 @@ msgstr ""
 "wird der Status auf WARNUNG gesetzt."
 
 msgid ""
-"When the iCalendar file contains definitions of repeating events, these "
-"repeating events will be resolved to single events for the number of years "
-"you specify here."
-msgstr ""
-"Wenn die iCalender-Datei wiederkehrende Termine enthält, dann werden diese "
-"Termine für die Anzahl von Jahren berücksichtigt, die Sie hier einstellen."
-
-msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -67382,15 +67424,6 @@ msgstr ""
 "ansetzen wird Multisite die Anzahl der Sekunden als Verzögerung verwenden. "
 "Wenn der Check nicht innerhalb dieser Zeit ausgeführt wurde, dann erfolgt "
 "die Anzeige einer Fehlermeldung und die Seite wird nicht neu geladen."
-
-msgid ""
-"When you specify explicit time definitions here, these will be added to each "
-"date which is added to the resulting time period. By default the whole day "
-"is used."
-msgstr ""
-"Wenn Sie hier explizite Zeitangaben machen, werden diese zu jedem Datum "
-"hinzugefügt, das dem resultierenden Zeitabschnitt hinzugefügt wird. "
-"Standardmäßig wird der ganze Tag verwendet."
 
 msgid ""
 "When you use subgroups in the regular expression of your match text then you "
@@ -72255,9 +72288,6 @@ msgstr "j"
 msgid "year"
 msgstr "Jahr"
 
-msgid "years"
-msgstr "Jahre"
-
 msgid "yes"
 msgstr "ja"
 
@@ -72283,53 +72313,59 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#, python-format
+#~ msgid " (day %d)"
+#~ msgstr " (Tag %d)"
+
+#~ msgid "Contact groups attribute"
+#~ msgstr "Kontaktgruppenattribut"
+
+#, python-format
+#~ msgid "Failed to parse file: %s"
+#~ msgstr "Die Datei kann nicht eingelesen werden: %s"
+
+#~ msgid ""
+#~ "The attribute used to map contact groups between your identity provider "
+#~ "and Checkmk. Note that contact groups need to exist in Checkmk to be able "
+#~ "to be mapped."
+#~ msgstr ""
+#~ "Das Attribut, das für die Zuordnung von Kontaktgruppen zwischen Ihrem "
+#~ "Identitätsanbieter und Checkmk verwendet wird. Beachten Sie, dass "
+#~ "Kontaktgruppen in Checkmk vorhanden sein müssen, damit sie zugeordnet "
+#~ "werden können."
+
+#~ msgid "Time horizon for repeated events"
+#~ msgstr "Zeithorizont für periodische Termine"
+
+#~ msgid "Use specific times"
+#~ msgstr "Bestimmte Tageszeiten verwenden"
+
+#~ msgid "Use specific times instead of whole day"
+#~ msgstr "Nur bestimmte Tageszeiten verwenden"
+
+#~ msgid ""
+#~ "When the iCalendar file contains definitions of repeating events, these "
+#~ "repeating events will be resolved to single events for the number of "
+#~ "years you specify here."
+#~ msgstr ""
+#~ "Wenn die iCalender-Datei wiederkehrende Termine enthält, dann werden "
+#~ "diese Termine für die Anzahl von Jahren berücksichtigt, die Sie hier "
+#~ "einstellen."
+
+#~ msgid ""
+#~ "When you specify explicit time definitions here, these will be added to "
+#~ "each date which is added to the resulting time period. By default the "
+#~ "whole day is used."
+#~ msgstr ""
+#~ "Wenn Sie hier explizite Zeitangaben machen, werden diese zu jedem Datum "
+#~ "hinzugefügt, das dem resultierenden Zeitabschnitt hinzugefügt wird. "
+#~ "Standardmäßig wird der ganze Tag verwendet."
+
+#~ msgid "years"
+#~ msgstr "Jahre"
+
 #~ msgid "Request IDs are not equal"
 #~ msgstr "Anfrage-IDs sind nicht gleich"
-
-#~ msgid "Attribute match value"
-#~ msgstr "Attribut-Match-Wert"
-
-#~ msgid "Contact group claim name"
-#~ msgstr "Kontaktgruppen-Claim-Name"
-
-#~ msgid "Do not synchronize contact group memberships"
-#~ msgstr "Kontaktgruppenmitgliedschaften nicht synchronisieren"
-
-#~ msgid ""
-#~ "Enter the claim name whose attribute value you expect to be a "
-#~ "distinguished name (DN) and whose common name (CN) you want to use as "
-#~ "contact group. A contact group with the identical name must exist in "
-#~ "Checkmk. Otherwise they can't be mapped."
-#~ msgstr ""
-#~ "Geben Sie den Claim-Namen ein, dessen Attributwert Sie als Distinguished "
-#~ "Name (DN) erwarten und dessen Common Name (CN) Sie als Kontaktgruppe "
-#~ "verwenden möchten. Eine Kontaktgruppe mit dem gleichen Namen muss in "
-#~ "Checkmk existieren. Andernfalls können sie nicht verknüpft werden."
-
-#~ msgid ""
-#~ "Enter the claim name whose attribute value you want to use. The user will "
-#~ "only be assigned to contact groups in case of a match between the "
-#~ "specified attribute match value and the returned claim attribute value."
-#~ msgstr ""
-#~ "Geben Sie den Claim-Namen ein, dessen Attributwert Sie verwenden möchten. "
-#~ "Der Benutzer wird nur dann einer Kontaktgruppe zugeordnet, wenn der "
-#~ "angegebene Attributwert mit dem zurückgegebenen Attributwert des Claims "
-#~ "übereinstimmt."
-
-#~ msgid "Map to contact groups"
-#~ msgstr "Kontaktgruppen zuordnen"
-
-#~ msgid "Map value to specific groups"
-#~ msgstr "Wert bestimmten Gruppen zuordnen"
-
-#~ msgid "Specific Mappings"
-#~ msgstr "Bestimmte Zuordnungen"
-
-#~ msgid "Use CN from LDAP distinguished name (DN) string"
-#~ msgstr "CN aus LDAP Distinguished Name (DN) String verwenden"
-
-#~ msgid "Use attribute value"
-#~ msgstr "Attributwert verwenden"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr ""

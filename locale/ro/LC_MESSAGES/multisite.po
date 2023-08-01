@@ -44,10 +44,6 @@ msgstr " (Durata: %s, %sIO: %s/s)"
 msgid " (copy)"
 msgstr " (copie)"
 
-#, python-format
-msgid " (day %d)"
-msgstr " (zi %d)"
-
 msgid " (in discards per second)"
 msgstr " (în aruncări pe secundă)"
 
@@ -6689,6 +6685,10 @@ msgstr "Atributul"
 msgid "Attribute Sync Plugins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "Atributul de setat"
+
 msgid "Attribute sync plugins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
@@ -12739,6 +12739,10 @@ msgstr "Nume de contact"
 msgid "Contact group (effective)"
 msgstr "Grupul de contact (efectiv)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "Atributul grupurilor de contacte"
+
 msgid "Contact groups"
 msgstr "Grupuri de contact"
 
@@ -12763,10 +12767,6 @@ msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Grupurile de contact sunt utilizate pentru a atribui utilizatori la gazde și "
 "servicii."
-
-#, fuzzy
-msgid "Contact groups attribute"
-msgstr "Grupuri de contact"
 
 msgid "Contact groups defined in rule"
 msgstr "Grupuri de contacte definite în regulă"
@@ -17063,6 +17063,13 @@ msgstr "Afișați coloana"
 msgid "Display the host alias"
 msgstr "Afișarea aliasului de gazdă"
 
+msgid ""
+"Display the last log message that lead to the worst state (i.e., the current "
+"state of the service) and choose the display location. Please note that log "
+"messages may contain sensitive information, so displaying them on a service "
+"can lead to a security risk."
+msgstr ""
+
 msgid "Display the services of this host"
 msgstr "Afișează serviciile acestei gazde"
 
@@ -17678,6 +17685,10 @@ msgstr "Nu afișați titlul"
 msgid "Do not status data inventory"
 msgstr "Nu faceți inventarul datelor de stare"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "Membru al grupului de contact"
+
 msgid "Do not transfer context"
 msgstr "Nu transferați contextul"
 
@@ -17824,6 +17835,10 @@ msgstr "Nu publicați pentru alți utilizatori"
 
 msgid "Don't remove matching vanished services"
 msgstr "Nu eliminați serviciile dispărute corespunzătoare"
+
+#, fuzzy
+msgid "Don't show"
+msgstr "Nu arăta Rezumat"
 
 msgid "Don't show Summary"
 msgstr "Nu arăta Rezumat"
@@ -19436,6 +19451,29 @@ msgstr ""
 "identitate. Acceptăm doar HTTPS pentru acest punct final, care specifică un "
 "certificat de încredere."
 
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"Atributul utilizat pentru a cartografia grupurile de contacte între "
+"furnizorul dvs. de identitate și Checkmk. Rețineți că grupurile de contacte "
+"trebuie să existe în Checkmk pentru a putea fi mapate."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Introduceți codul de ieșire ca valoare hexagonală de 10 cifre, cu minuscule, "
@@ -20796,10 +20834,6 @@ msgstr "Nu s-a reușit analizarea cererii JSON: '%s': %s."
 #, python-format
 msgid "Failed to parse Python request: '%s': %s"
 msgstr "Nu a reușit să analizeze cererea Python: '%s': %s."
-
-#, python-format
-msgid "Failed to parse file: %s"
-msgstr "Nu a reușit să analizeze fișierul: %s."
 
 #, python-format
 msgid "Failed to parse labels: %s"
@@ -28116,6 +28150,14 @@ msgstr "În raport cu intervalul normal de verificare"
 msgid "In relation to standard deviation"
 msgstr "În raport cu abaterea standard"
 
+#, fuzzy
+msgid "In service details"
+msgstr "Detalii despre serviciul BI"
+
+#, fuzzy
+msgid "In service summary"
+msgstr "Rezumatul serviciilor Systemd"
+
 msgid ""
 "In some places like e.g. the main menu Checkmk divides features, filters, "
 "input fields etc. in two categories, showing more or less entries. With this "
@@ -33250,6 +33292,14 @@ msgid ""
 msgstr ""
 "Maparea stării operaționale (<tt>ifOperStatus</tt>) într-o stare de "
 "monitorizare."
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "Potriviți grupurile de contact"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "grupuri specificate în mod explicit"
 
 msgid "Mapped data"
 msgstr "Date cartografiate"
@@ -47941,6 +47991,10 @@ msgstr "Afișați doar notificările preliminare"
 msgid "Show label for"
 msgstr "Afișați eticheta pentru"
 
+#, fuzzy
+msgid "Show last log message"
+msgstr "Afișați un mesaj de autentificare"
+
 msgid "Show last rename result"
 msgstr "Afișează ultimul rezultat al redenumirii"
 
@@ -49207,6 +49261,10 @@ msgstr "Discul de rezervă"
 
 msgid "Special Agent"
 msgstr "Agent special"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "Situri specifice"
 
 msgid "Specific date"
 msgstr "Data specifică"
@@ -53354,16 +53412,6 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Atributul utilizat pentru a identifica apartenența utilizatorilor la grupuri."
-
-#, fuzzy
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"Atributul utilizat pentru a cartografia grupurile de contacte între "
-"furnizorul dvs. de identitate și Checkmk. Rețineți că grupurile de contacte "
-"trebuie să existe în Checkmk pentru a putea fi mapate."
 
 #, python-format
 msgid ""
@@ -58843,11 +58891,13 @@ msgstr "Acest pachet nu este instalat."
 msgid "This package type is not supported."
 msgstr "Acest tip de pachet nu este acceptat."
 
+#, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
-"used to import events like holidays, therefore only single whole day "
-"appointments are handled by this import."
+"used to import events as exceptions. Time ranges and recurring events are "
+"supported, however, currently the total number of 75 exceptions can not be "
+"exceeded."
 msgstr ""
 "Această pagină poate fi utilizată pentru a genera o nouă definiție a "
 "perioadei de timp pe baza numirilor dintr-un fișier iCalendar (<tt>*.ics</"
@@ -61530,9 +61580,6 @@ msgstr "Perioada de timp"
 
 msgid "Time horizon"
 msgstr "Orizont de timp"
-
-msgid "Time horizon for repeated events"
-msgstr "Orizontul de timp pentru evenimente repetate"
 
 msgid "Time horizon to keep in cache"
 msgstr "Orizontul de timp de păstrat în memoria cache"
@@ -64562,6 +64609,9 @@ msgstr ""
 "Utilizați <tt>\\1</tt>, <tt>\\2</tt> etc. pentru a înlocui subgrupurile "
 "potrivite, <tt>\\0</tt> pentru a insera la numele original al gazdei"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 msgid "Use CSV export"
 msgstr "Utilizați exportul CSV"
 
@@ -64718,6 +64768,10 @@ msgstr "Utilizați un nume de afișare alternativ pentru servicii"
 #, fuzzy
 msgid "Use any network address"
 msgstr "Adresa de rețea"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "Atributul ID utilizator"
 
 msgid "Use backup code"
 msgstr "Utilizați codul de rezervă"
@@ -64926,12 +64980,6 @@ msgstr "Utilizați ID-ul site-ului"
 
 msgid "Use site ID prefix"
 msgstr "Utilizați prefixul ID al site-ului"
-
-msgid "Use specific times"
-msgstr "Utilizați momente specifice"
-
-msgid "Use specific times instead of whole day"
-msgstr "Folosiți momente specifice în loc de întreaga zi"
 
 msgid "Use system wide CAs"
 msgstr "Utilizați CA-uri la nivel de sistem"
@@ -67567,15 +67615,6 @@ msgstr ""
 "evenimentelor este setată la AVERTISMENT."
 
 msgid ""
-"When the iCalendar file contains definitions of repeating events, these "
-"repeating events will be resolved to single events for the number of years "
-"you specify here."
-msgstr ""
-"În cazul în care fișierul iCalendar conține definiții ale evenimentelor care "
-"se repetă, aceste evenimente care se repetă vor fi transformate în "
-"evenimente unice pentru numărul de ani pe care îl specificați aici."
-
-msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -67913,15 +67952,6 @@ msgstr ""
 "atunci Multisite va folosi acest număr de secunde ca timp de așteptare. Dacă "
 "nucleul de monitorizare nu a executat verificarea în acest interval de timp, "
 "se va afișa o eroare și pagina nu va fi reîncărcată."
-
-msgid ""
-"When you specify explicit time definitions here, these will be added to each "
-"date which is added to the resulting time period. By default the whole day "
-"is used."
-msgstr ""
-"Atunci când specificați aici definiții explicite ale timpului, acestea vor "
-"fi adăugate la fiecare dată care este adăugată la perioada de timp "
-"rezultată. În mod implicit, se utilizează întreaga zi."
 
 msgid ""
 "When you use subgroups in the regular expression of your match text then you "
@@ -72809,9 +72839,6 @@ msgstr "y"
 msgid "year"
 msgstr "an"
 
-msgid "years"
-msgstr "ani"
-
 msgid "yes"
 msgstr "da"
 
@@ -72837,43 +72864,51 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#, python-format
+#~ msgid " (day %d)"
+#~ msgstr " (zi %d)"
+
+#, fuzzy
+#~| msgid "Contact groups"
+#~ msgid "Contact groups attribute"
+#~ msgstr "Grupuri de contact"
+
+#, python-format
+#~ msgid "Failed to parse file: %s"
+#~ msgstr "Nu a reușit să analizeze fișierul: %s."
+
+#~ msgid "Time horizon for repeated events"
+#~ msgstr "Orizontul de timp pentru evenimente repetate"
+
+#~ msgid "Use specific times"
+#~ msgstr "Utilizați momente specifice"
+
+#~ msgid "Use specific times instead of whole day"
+#~ msgstr "Folosiți momente specifice în loc de întreaga zi"
+
+#~ msgid ""
+#~ "When the iCalendar file contains definitions of repeating events, these "
+#~ "repeating events will be resolved to single events for the number of "
+#~ "years you specify here."
+#~ msgstr ""
+#~ "În cazul în care fișierul iCalendar conține definiții ale evenimentelor "
+#~ "care se repetă, aceste evenimente care se repetă vor fi transformate în "
+#~ "evenimente unice pentru numărul de ani pe care îl specificați aici."
+
+#~ msgid ""
+#~ "When you specify explicit time definitions here, these will be added to "
+#~ "each date which is added to the resulting time period. By default the "
+#~ "whole day is used."
+#~ msgstr ""
+#~ "Atunci când specificați aici definiții explicite ale timpului, acestea "
+#~ "vor fi adăugate la fiecare dată care este adăugată la perioada de timp "
+#~ "rezultată. În mod implicit, se utilizează întreaga zi."
+
+#~ msgid "years"
+#~ msgstr "ani"
+
 #~ msgid "Request IDs are not equal"
 #~ msgstr "ID-urile cererilor nu sunt egale"
-
-#, fuzzy
-#~| msgid "Attribute to set"
-#~ msgid "Attribute match value"
-#~ msgstr "Atributul de setat"
-
-#, fuzzy
-#~| msgid "Contact groups attribute"
-#~ msgid "Contact group claim name"
-#~ msgstr "Atributul grupurilor de contacte"
-
-#, fuzzy
-#~| msgid "Contactgroup Membership"
-#~ msgid "Do not synchronize contact group memberships"
-#~ msgstr "Membru al grupului de contact"
-
-#, fuzzy
-#~| msgid "Match contact groups"
-#~ msgid "Map to contact groups"
-#~ msgstr "Potriviți grupurile de contact"
-
-#, fuzzy
-#~| msgid "explicitly specified groups"
-#~ msgid "Map value to specific groups"
-#~ msgstr "grupuri specificate în mod explicit"
-
-#, fuzzy
-#~| msgid "Specific sites"
-#~ msgid "Specific Mappings"
-#~ msgstr "Situri specifice"
-
-#, fuzzy
-#~| msgid "User ID attribute"
-#~ msgid "Use attribute value"
-#~ msgstr "Atributul ID utilizator"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Dacă este omisă, se utilizează adresa IP."

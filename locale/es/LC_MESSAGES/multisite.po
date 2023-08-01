@@ -43,10 +43,6 @@ msgstr " (Duración: %s, %sIO: %s/s)"
 msgid " (copy)"
 msgstr " (copia)"
 
-#, python-format
-msgid " (day %d)"
-msgstr " (día %d)"
-
 msgid " (in discards per second)"
 msgstr " (en descartes por segundo)"
 
@@ -6693,6 +6689,10 @@ msgstr "Atributo"
 msgid "Attribute Sync Plugins"
 msgstr "Plugins de sincronización de atributos"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "Atributo a fijar"
+
 msgid "Attribute sync plugins"
 msgstr "Sincronización de atributos"
 
@@ -12738,6 +12738,10 @@ msgstr "Nombre de contacto"
 msgid "Contact group (effective)"
 msgstr "Grupo de contacto (efectivo)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "Atributo de grupos de contacto"
+
 msgid "Contact groups"
 msgstr "Grupos de contacto"
 
@@ -12761,10 +12765,6 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Los grupos de contacto se utilizan para asignar usuarios a hosts y servicios"
-
-#, fuzzy
-msgid "Contact groups attribute"
-msgstr "Grupos de contacto"
 
 msgid "Contact groups defined in rule"
 msgstr "Grupos de contactos definidos en la norma"
@@ -17063,6 +17063,13 @@ msgstr "Visualizar la columna"
 msgid "Display the host alias"
 msgstr "Mostrar el alias de host"
 
+msgid ""
+"Display the last log message that lead to the worst state (i.e., the current "
+"state of the service) and choose the display location. Please note that log "
+"messages may contain sensitive information, so displaying them on a service "
+"can lead to a security risk."
+msgstr ""
+
 msgid "Display the services of this host"
 msgstr "Mostrar los servicios de este host"
 
@@ -17671,6 +17678,10 @@ msgstr "No mostrar el título"
 msgid "Do not status data inventory"
 msgstr "No se trata de un inventario de datos"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "Afiliación al grupo de contacto"
+
 msgid "Do not transfer context"
 msgstr "No transferir el contexto"
 
@@ -17817,6 +17828,10 @@ msgstr "No publicar a otros usuarios"
 
 msgid "Don't remove matching vanished services"
 msgstr "No elimine los servicios desaparecidos correspondientes"
+
+#, fuzzy
+msgid "Don't show"
+msgstr "No mostrar Resumen"
 
 msgid "Don't show Summary"
 msgstr "No mostrar Resumen"
@@ -19429,6 +19444,29 @@ msgstr ""
 "pueda acceder a él. Sólo admitimos HTTPS para este punto final, que "
 "especifica un certificado de confianza."
 
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"Atributo utilizado para asignar grupos de contactos entre su proveedor de "
+"identidad y Checkmk. Tenga en cuenta que los grupos de contactos deben "
+"existir en Checkmk para poder asignarse."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Introduzca el código de salida como valor hexadecimal de 10 dígitos en "
@@ -20782,10 +20820,6 @@ msgstr "Fallo al analizar la solicitud JSON: '%s': %s"
 #, python-format
 msgid "Failed to parse Python request: '%s': %s"
 msgstr "Fallo al analizar la petición de Python: '%s': %s"
-
-#, python-format
-msgid "Failed to parse file: %s"
-msgstr "No se ha podido analizar el archivo: %s"
 
 #, python-format
 msgid "Failed to parse labels: %s"
@@ -28094,6 +28128,14 @@ msgstr "En relación con el intervalo de control normal"
 msgid "In relation to standard deviation"
 msgstr "En relación con la desviación estándar"
 
+#, fuzzy
+msgid "In service details"
+msgstr "Detalles del servicio BI"
+
+#, fuzzy
+msgid "In service summary"
+msgstr "Resumen de los servicios Systemd"
+
 msgid ""
 "In some places like e.g. the main menu Checkmk divides features, filters, "
 "input fields etc. in two categories, showing more or less entries. With this "
@@ -33236,6 +33278,14 @@ msgid ""
 msgstr ""
 "Asigna el estado operativo (<tt>ifOperStatus</tt>) a un estado de "
 "supervisión."
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "Coincidir con los grupos de contacto"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "grupos especificados explícitamente"
 
 msgid "Mapped data"
 msgstr "Datos mapeados"
@@ -47895,6 +47945,10 @@ msgstr "Mostrar sólo las notificaciones preliminares"
 msgid "Show label for"
 msgstr "Mostrar etiqueta para"
 
+#, fuzzy
+msgid "Show last log message"
+msgstr "Mostrar un mensaje de inicio de sesión"
+
 msgid "Show last rename result"
 msgstr "Mostrar el resultado del último cambio de nombre"
 
@@ -49158,6 +49212,10 @@ msgstr "Disco de repuesto"
 
 msgid "Special Agent"
 msgstr "Agente especial"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "Sitios específicos"
 
 msgid "Specific date"
 msgstr "Fecha específica"
@@ -53302,16 +53360,6 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Atributo utilizado para identificar la pertenencia a grupos de usuarios."
-
-#, fuzzy
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"Atributo utilizado para asignar grupos de contactos entre su proveedor de "
-"identidad y Checkmk. Tenga en cuenta que los grupos de contactos deben "
-"existir en Checkmk para poder asignarse."
 
 #, python-format
 msgid ""
@@ -58784,11 +58832,13 @@ msgstr "Este paquete no está instalado."
 msgid "This package type is not supported."
 msgstr "Este tipo de paquete no es compatible."
 
+#, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
-"used to import events like holidays, therefore only single whole day "
-"appointments are handled by this import."
+"used to import events as exceptions. Time ranges and recurring events are "
+"supported, however, currently the total number of 75 exceptions can not be "
+"exceeded."
 msgstr ""
 "Esta página puede utilizarse para generar una nueva definición de periodo de "
 "tiempo basada en las citas de un archivo iCalendar (<tt>*.ics</tt>). Esta "
@@ -61454,9 +61504,6 @@ msgstr "Tiempo de espera"
 
 msgid "Time horizon"
 msgstr "Horizonte de tiempo"
-
-msgid "Time horizon for repeated events"
-msgstr "Horizonte temporal para eventos repetidos"
 
 msgid "Time horizon to keep in cache"
 msgstr "Horizonte temporal a tener en cuenta"
@@ -64495,6 +64542,9 @@ msgstr ""
 "Utilice <tt>1</tt>, <tt>2</tt> etc. para reemplazar los subgrupos "
 "coincidentes, <tt>0</tt> para insertar al nombre original del host"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 msgid "Use CSV export"
 msgstr "Utilizar la exportación CSV"
 
@@ -64651,6 +64701,10 @@ msgstr "Utilizar un nombre de visualización alternativo para los servicios"
 #, fuzzy
 msgid "Use any network address"
 msgstr "Dirección de la red"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "Atributo User-ID"
 
 msgid "Use backup code"
 msgstr "Utilizar el código de reserva"
@@ -64860,12 +64914,6 @@ msgstr "Utilizar el ID del sitio"
 
 msgid "Use site ID prefix"
 msgstr "Utilizar el prefijo de identificación del sitio"
-
-msgid "Use specific times"
-msgstr "Utilizar horarios específicos"
-
-msgid "Use specific times instead of whole day"
-msgstr "Utilizar horas específicas en lugar de todo el día"
 
 msgid "Use system wide CAs"
 msgstr "Utilizar las CA de todo el sistema"
@@ -67490,15 +67538,6 @@ msgstr ""
 "los eventos se establece como ADVERTENCIA."
 
 msgid ""
-"When the iCalendar file contains definitions of repeating events, these "
-"repeating events will be resolved to single events for the number of years "
-"you specify here."
-msgstr ""
-"Cuando el archivo de iCalendar contiene definiciones de eventos que se "
-"repiten, estos eventos que se repiten se resolverán en eventos únicos para "
-"el número de años que usted especifique aquí."
-
-msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -67833,15 +67872,6 @@ msgstr ""
 "\", Multisite utilizará este número de segundos como tiempo de espera. Si el "
 "núcleo de monitorización no ha ejecutado la comprobación en este tiempo, se "
 "mostrará un error y la página no se recargará."
-
-msgid ""
-"When you specify explicit time definitions here, these will be added to each "
-"date which is added to the resulting time period. By default the whole day "
-"is used."
-msgstr ""
-"Si especifica aquí definiciones de tiempo explícitas, éstas se añadirán a "
-"cada fecha que se añada al periodo de tiempo resultante. Por defecto se "
-"utiliza el día completo."
 
 msgid ""
 "When you use subgroups in the regular expression of your match text then you "
@@ -72714,9 +72744,6 @@ msgstr "y"
 msgid "year"
 msgstr "año"
 
-msgid "years"
-msgstr "años"
-
 msgid "yes"
 msgstr "sí"
 
@@ -72742,43 +72769,51 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
+#, python-format
+#~ msgid " (day %d)"
+#~ msgstr " (día %d)"
+
+#, fuzzy
+#~| msgid "Contact groups"
+#~ msgid "Contact groups attribute"
+#~ msgstr "Grupos de contacto"
+
+#, python-format
+#~ msgid "Failed to parse file: %s"
+#~ msgstr "No se ha podido analizar el archivo: %s"
+
+#~ msgid "Time horizon for repeated events"
+#~ msgstr "Horizonte temporal para eventos repetidos"
+
+#~ msgid "Use specific times"
+#~ msgstr "Utilizar horarios específicos"
+
+#~ msgid "Use specific times instead of whole day"
+#~ msgstr "Utilizar horas específicas en lugar de todo el día"
+
+#~ msgid ""
+#~ "When the iCalendar file contains definitions of repeating events, these "
+#~ "repeating events will be resolved to single events for the number of "
+#~ "years you specify here."
+#~ msgstr ""
+#~ "Cuando el archivo de iCalendar contiene definiciones de eventos que se "
+#~ "repiten, estos eventos que se repiten se resolverán en eventos únicos "
+#~ "para el número de años que usted especifique aquí."
+
+#~ msgid ""
+#~ "When you specify explicit time definitions here, these will be added to "
+#~ "each date which is added to the resulting time period. By default the "
+#~ "whole day is used."
+#~ msgstr ""
+#~ "Si especifica aquí definiciones de tiempo explícitas, éstas se añadirán a "
+#~ "cada fecha que se añada al periodo de tiempo resultante. Por defecto se "
+#~ "utiliza el día completo."
+
+#~ msgid "years"
+#~ msgstr "años"
+
 #~ msgid "Request IDs are not equal"
 #~ msgstr "Los ID de solicitud no son iguales"
-
-#, fuzzy
-#~| msgid "Attribute to set"
-#~ msgid "Attribute match value"
-#~ msgstr "Atributo a fijar"
-
-#, fuzzy
-#~| msgid "Contact groups attribute"
-#~ msgid "Contact group claim name"
-#~ msgstr "Atributo de grupos de contacto"
-
-#, fuzzy
-#~| msgid "Contactgroup Membership"
-#~ msgid "Do not synchronize contact group memberships"
-#~ msgstr "Afiliación al grupo de contacto"
-
-#, fuzzy
-#~| msgid "Match contact groups"
-#~ msgid "Map to contact groups"
-#~ msgstr "Coincidir con los grupos de contacto"
-
-#, fuzzy
-#~| msgid "explicitly specified groups"
-#~ msgid "Map value to specific groups"
-#~ msgstr "grupos especificados explícitamente"
-
-#, fuzzy
-#~| msgid "Specific sites"
-#~ msgid "Specific Mappings"
-#~ msgstr "Sitios específicos"
-
-#, fuzzy
-#~| msgid "User ID attribute"
-#~ msgid "Use attribute value"
-#~ msgstr "Atributo User-ID"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Si se omite, se utiliza la dirección IP."

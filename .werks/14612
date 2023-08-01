@@ -1,0 +1,15 @@
+Title: CheckMK Server discovers wrong items as service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1690874098
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Due to missing grouping delimiter `Failed Fencing Actions` the `heartbeat_crm` would discover invalid
+items as service.
+This change adds the missing delimiter making `heartbeat_crm` discover valid items only.
+

@@ -30,7 +30,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 KNOWN_RESOURCES_HEADERS = {"full list of resources:"}
-KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {"failed actions:", "failed resource actions:"}
+KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
+    "failed actions:",
+    "failed resource actions:",
+    "failed fencing actions:",
+}
 
 
 class _Cluster(NamedTuple):

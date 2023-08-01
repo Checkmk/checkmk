@@ -17,9 +17,6 @@ public:
     explicit NebServiceGroup(const servicegroup &service_group)
         : service_group_{service_group} {}
 
-    [[nodiscard]] const void *handle() const override {
-        return &service_group_;
-    }
     [[nodiscard]] std::string name() const override {
         return service_group_.group_name;
     }

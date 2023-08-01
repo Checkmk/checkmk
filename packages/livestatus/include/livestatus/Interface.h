@@ -76,7 +76,6 @@ public:
 class IContactGroup {
 public:
     virtual ~IContactGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
@@ -322,7 +321,6 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string notes() const = 0;
@@ -334,7 +332,6 @@ public:
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string notes() const = 0;

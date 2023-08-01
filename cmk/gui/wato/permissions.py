@@ -56,7 +56,7 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="activate",
-        title=_l("Activate Configuration"),
+        title=_l("Activate configuration"),
         description=_l(
             "This permission is needed for activating the "
             "current configuration (and thus rewriting the "
@@ -70,13 +70,40 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="activateforeign",
-        title=_l("Activate Foreign Changes"),
+        title=_l("Activate foreign changes"),
         description=_l(
             "When several users work in parallel with Setup then "
             "several pending changes of different users might pile up "
-            "before changes are activate. Only with this permission "
+            "before changes are activated. Only with this permission "
             "a user will be allowed to activate the current configuration "
             "if this situation appears."
+        ),
+        defaults=["admin"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="discard",
+        title=_l("Discard changes"),
+        description=_l(
+            "This permission allows to discard pending changes. Beware that this holds only for "
+            "the user's own pending changes, not for those of other users (foreign changes)."
+        ),
+        defaults=["admin", "user"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="discardforeign",
+        title=_l("Discard foreign changes"),
+        description=_l(
+            "When several users work in parallel with Setup then several pending changes of "
+            "different users might pile up before changes are activated. Only with this permission "
+            "a user will be allowed to discard all pending changes, including foreign ones."
         ),
         defaults=["admin"],
     )

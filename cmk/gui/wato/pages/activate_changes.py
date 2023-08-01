@@ -180,7 +180,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
 
     def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_activate_changes():
+        if not self._may_discard_changes():
             return
 
         yield PageMenuEntry(
@@ -195,21 +195,26 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self._may_activate_changes():
             return
 
-        if self._may_activate_changes():
-            yield PageMenuEntry(
-                title=_("Activate on selected sites"),
-                icon_name={
-                    "icon": "save",
-                    "emblem": "refresh",
-                },
-                item=make_javascript_link('cmk.activation.activate_changes("selected")'),
-                name="activate_selected",
-                is_shortcut=True,
-                is_suggested=True,
-                is_enabled=self.has_changes(),
-            )
+        yield PageMenuEntry(
+            title=_("Activate on selected sites"),
+            icon_name={
+                "icon": "save",
+                "emblem": "refresh",
+            },
+            item=make_javascript_link('cmk.activation.activate_changes("selected")'),
+            name="activate_selected",
+            is_shortcut=True,
+            is_suggested=True,
+            is_enabled=self.has_changes(),
+        )
 
     def _may_discard_changes(self) -> bool:
+        if not user.may("wato.discard"):
+            return False
+
+        if not user.may("wato.discardforeign") and self._has_foreign_changes_on_any_site():
+            return False
+
         if not self._may_activate_changes():
             return False
 

@@ -77,7 +77,6 @@ def get_predictive_levels(
     timegroup, rel_time = period_info.groupby(now)
 
     prediction_store = PredictionStore(hostname, service_description, dsname)
-    prediction_store.clean_prediction_files(timegroup)
 
     if (
         data_for_pred := _get_prediction(

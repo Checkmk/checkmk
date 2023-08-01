@@ -416,9 +416,6 @@ class PredictionStore:
             return PredictionInfo.loads(file_path.read_text(), name=timegroup)
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
-        except ValueError:
-            logger.log(VERBOSE, "Invalid prediction info file %s", file_path)
-            self.clean_prediction_files(timegroup, force=True)
         return None
 
     def get_data(self, timegroup: Timegroup) -> PredictionData | None:
@@ -427,9 +424,6 @@ class PredictionStore:
             return PredictionData.loads(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction for group %s available.", timegroup)
-        except ValueError:
-            logger.log(VERBOSE, "Invalid prediction file %s", file_path)
-            self.clean_prediction_files(timegroup, force=True)
         return None
 
 

@@ -10,7 +10,6 @@ from collections.abc import Collection, Mapping, Sequence
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.site import omd_site
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -47,8 +46,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-from cmk.gui.watolib.activate_changes import confirm_all_local_changes
+from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.host_rename import (
+    group_renamings_by_site,
     perform_rename_hosts,
     RenameHostBackgroundJob,
     RenameHostsBackgroundJob,
@@ -134,8 +134,10 @@ class ModeBulkRenameHost(WatoMode):
         message = HTMLWriter.render_b(
             _(
                 "Do you really want to rename the following hosts? "
-                "This involves a restart of the monitoring core!"
+                "This involves a restart of the monitoring core and blocks %s "
+                "until the next activation!"
             )
+            % HTMLWriter.render_tt("Discard Changes")
         )
 
         rows = []
@@ -370,7 +372,10 @@ def rename_hosts_background_job(
     actions, auth_problems = rename_hosts(
         renamings, job_interface=job_interface
     )  # Already activates the changes!
-    confirm_all_local_changes()  # All activated by the underlying rename automation
+
+    for site_id in group_renamings_by_site(renamings):
+        ActivateChanges().confirm_site_changes(site_id)
+
     action_txt = "".join(["<li>%s</li>" % a for a in actions])
     message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
         len(renamings),
@@ -457,17 +462,15 @@ class ModeRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        local_site = omd_site()
         renamed_host_site = self._host.site_id()
-        if SiteChanges(local_site).read() or SiteChanges(renamed_host_site).read():
+        if SiteChanges(renamed_host_site).read():
             raise MKUserError(
                 "newname",
                 _(
                     "You cannot rename a host while you have "
-                    "pending changes on the central site (%s) or the "
-                    "site the host is monitored on (%s)."
+                    "pending changes on the site the host is monitored on (%s)."
                 )
-                % (local_site, renamed_host_site),
+                % renamed_host_site,
             )
 
         newname = HostName(request.get_ascii_input_mandatory("newname"))
@@ -510,10 +513,13 @@ class ModeRenameHost(WatoMode):
         html.add_confirm_on_submit(
             "rename_host",
             _(
-                "Are you sure you want to rename the host <b>%s</b>? "
-                "This involves a restart of the monitoring core!"
-            )
-            % (self._host.name()),
+                "Rename host?<br>"
+                "Info: Renaming the host includes a restart of the monitoring core. "
+                "While this change is pending on the central site, the reverting of pending "
+                "changes is blocked."
+            ),
+            _("Yes, rename"),
+            _("No, keep current name"),
         )
         forms.header(_("Rename host %s") % self._host.name())
         forms.section(_("Current name"))

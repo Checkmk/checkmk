@@ -96,7 +96,7 @@ def perform_rename_hosts(
     # 2. Checkmk stuff ------------------------------------------------
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
     update_interface(_("This might take some time and involves a core restart..."))
-    renamings_by_site = _group_renamings_by_site(successful_renamings)
+    renamings_by_site = group_renamings_by_site(successful_renamings)
     action_counts = _rename_hosts_in_check_mk(renamings_by_site)
 
     # 3. Notification settings ----------------------------------------------
@@ -229,7 +229,13 @@ def _rename_hosts_in_check_mk(
 
         # Restart is done by remote automation (below), so don't do it during rename/sync
         # The sync is automatically done by the remote automation call
-        add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
+        add_change(
+            "renamed-hosts",
+            message,
+            sites=[site_id],
+            need_restart=False,
+            prevent_discard_changes=True,
+        )
 
         new_counts = rename_hosts(
             site_id,
@@ -344,7 +350,7 @@ def _merge_action_counts(action_counts: dict[str, int], new_counts: Mapping[str,
         action_counts[key] += count
 
 
-def _group_renamings_by_site(
+def group_renamings_by_site(
     renamings: Iterable[tuple[Folder, HostName, HostName]]
 ) -> dict[SiteId, list[tuple[HostName, HostName]]]:
     renamings_per_site: dict[SiteId, list[tuple[HostName, HostName]]] = {}

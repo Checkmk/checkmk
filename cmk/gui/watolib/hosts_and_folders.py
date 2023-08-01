@@ -2530,12 +2530,6 @@ class Folder(FolderProtocol):
         assert self._hosts is not None
         del self._hosts[oldname]
         self._hosts[newname] = host
-        add_change(
-            "rename-host",
-            _l("Renamed host from %s to %s") % (oldname, newname),
-            object_ref=host.object_ref(),
-            sites=[host.site_id()],
-        )
 
         folder_lookup_cache().delete_hosts([oldname])
         folder_lookup_cache().add_hosts([(newname, self.path())])
@@ -3413,7 +3407,8 @@ class Host:
             "rename-host",
             _l("Renamed host from %s into %s.") % (self.name(), new_name),
             object_ref=self.object_ref(),
-            sites=[self.site_id()],
+            sites=[self.site_id(), omd_site()],
+            prevent_discard_changes=True,
         )
         self._name = new_name
 

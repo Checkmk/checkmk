@@ -7,12 +7,9 @@ import math
 
 import pytest
 
-import cmk.utils.totp as one_time_pin
+from cmk.utils.totp import TOTP, TotpVersion
 
-
-@pytest.fixture(name="totp")
-def totp_fixture() -> one_time_pin.TOTP:
-    return one_time_pin.TOTP("12345678901234567890".encode())
+SECRET = "12345678901234567890".encode()
 
 
 @pytest.mark.parametrize(
@@ -30,9 +27,9 @@ def totp_fixture() -> one_time_pin.TOTP:
         (9, "1637409809a679dc698207310c8c7fc07290d9e5", 520489),
     ],
 )
-def test_hotp(count: int, hash_object: str, otp: int, totp: one_time_pin.TOTP) -> None:
+def test_hotp(count: int, hash_object: str, otp: int) -> None:
+    totp = TOTP(SECRET, TotpVersion.one)
     hmac_sha1 = totp.hmac_hash(count)
-    totp.code_length = 6
     hotp = totp.generate_hotp(hmac_sha1)
     assert hmac_sha1.hexdigest() == hash_object
     assert hotp == otp
@@ -49,7 +46,8 @@ def test_hotp(count: int, hash_object: str, otp: int, totp: one_time_pin.TOTP) -
         (20000000000, "65353130"),
     ],
 )
-def test_totp_generate(time: int, otp: str, totp: one_time_pin.TOTP) -> None:
+def test_totp_generate(time: int, otp: str) -> None:
+    totp = TOTP(SECRET, TotpVersion.rfc_totp)
     gen_time = math.floor(time / 30)
     code = totp.generate_totp(gen_time)
     assert code == otp
@@ -62,7 +60,8 @@ def test_totp_generate(time: int, otp: str, totp: one_time_pin.TOTP) -> None:
         (60, "94287082"),
     ],
 )
-def test_totp_check(time: int, otp: str, totp: one_time_pin.TOTP) -> None:
+def test_totp_check(time: int, otp: str) -> None:
+    totp = TOTP(SECRET, TotpVersion.rfc_totp)
     gen_time = math.floor(time / 30)
     status = totp.check_totp(otp, gen_time)
     assert status is True

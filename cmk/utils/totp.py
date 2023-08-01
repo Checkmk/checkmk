@@ -7,8 +7,14 @@ import datetime
 import hmac
 import math
 import secrets
+from enum import Enum
 
 from cmk.utils.crypto import HashAlgorithm
+
+
+class TotpVersion(Enum):
+    one = 1
+    rfc_totp = 0
 
 
 class TOTP:
@@ -20,17 +26,19 @@ class TOTP:
     def __init__(
         self,
         secret: bytes,
-        alogrithm: HashAlgorithm = HashAlgorithm.Sha1,
-        code_length: int = 8,
-        time_step: int = 30,
+        version: TotpVersion = TotpVersion.one,
     ) -> None:
         self.secret = secret
-        if alogrithm is not HashAlgorithm.Sha1:
-            raise ValueError(f"Hashing alogrithm must be in {HashAlgorithm.Sha1.value.name}")
-        self.algorithm = alogrithm
-        self.code_length = code_length
-        self.time_step = time_step
+        self.time_step = 30
         self.allowed_drift = 1
+        if version == TotpVersion.one:
+            self.algorithm = HashAlgorithm.Sha1
+            self.code_length = 6
+        elif version == TotpVersion.rfc_totp:
+            self.algorithm = HashAlgorithm.Sha1
+            self.code_length = 8
+        else:
+            raise ValueError(f"Unknown version {version}")
 
     @classmethod
     def generate_secret(cls, length: int = 10) -> bytes:
@@ -53,7 +61,7 @@ class TOTP:
         Then pull the 4 bytes of 1: offset ... 4 offset+3
         Then return the last x int characters where x is the code length (currently 6)
 
-        >>> TOTP("secret", code_length=6).generate_hotp(hmac.HMAC(b"key", b"msg", HashAlgorithm.Sha1.to_hashlib))
+        >>> TOTP("secret",TotpVersion.one).generate_hotp(hmac.HMAC(b"key", b"msg", HashAlgorithm.Sha1.to_hashlib))
         823142
 
         """
@@ -88,7 +96,7 @@ class TOTP:
         time (T), T - step_time   seconds before and T + step_time seconds after.
         """
         for generation in range(
-            generation_time - self.allowed_drift, generation_time + self.allowed_drift
+            generation_time - self.allowed_drift, generation_time + 1 + self.allowed_drift
         ):
             if totp == self.generate_totp_by_generation(generation):
                 return True

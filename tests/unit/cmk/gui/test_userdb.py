@@ -33,7 +33,13 @@ from cmk.gui import http
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.session import session
-from cmk.gui.type_defs import SessionId, SessionInfo, TwoFactorCredentials, WebAuthnCredential
+from cmk.gui.type_defs import (
+    SessionId,
+    SessionInfo,
+    TotpCredential,
+    TwoFactorCredentials,
+    WebAuthnCredential,
+)
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
@@ -752,6 +758,7 @@ def test_load_two_factor_credentials_unset(user_id: UserId) -> None:
     assert userdb.load_two_factor_credentials(user_id) == {
         "webauthn_credentials": {},
         "backup_codes": [],
+        "totp_credentials": {},
     }
 
 
@@ -770,13 +777,24 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                 PasswordHash("asdr2ar2a2ra2rara2"),
                 PasswordHash("dddddddddddddddddd"),
             ],
+            "totp_credentials": {
+                "uuid": TotpCredential(
+                    {
+                        "credential_id": "uuid",
+                        "secret": b"whatever",
+                        "version": 1,
+                        "registered_at": 1337,
+                        "alias": "Steckding",
+                    }
+                ),
+            },
         }
     )
     save_two_factor_credentials(user_id, credentials)
     assert userdb.load_two_factor_credentials(user_id) == credentials
 
 
-def test_disable_two_factor_authentication(user_id: UserId) -> None:
+def test_disable_web_authentication(user_id: UserId) -> None:
     credentials = TwoFactorCredentials(
         {
             "webauthn_credentials": {
@@ -790,6 +808,17 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
                 ),
             },
             "backup_codes": [],
+            "totp_credentials": {
+                "uuid": TotpCredential(
+                    {
+                        "credential_id": "uuid",
+                        "secret": b"whatever",
+                        "version": 1,
+                        "registered_at": 1337,
+                        "alias": "Steckding",
+                    }
+                ),
+            },
         }
     )
     save_two_factor_credentials(user_id, credentials)

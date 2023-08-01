@@ -272,12 +272,16 @@ def need_to_change_pw(username: UserId, now: datetime) -> str | None:
 
 def is_two_factor_login_enabled(user_id: UserId) -> bool:
     """Whether or not 2FA is enabled for the given user"""
-    return bool(load_two_factor_credentials(user_id)["webauthn_credentials"])
+    return bool(
+        load_two_factor_credentials(user_id)["webauthn_credentials"]
+        or load_two_factor_credentials(user_id)["totp_credentials"]
+    )
 
 
 def disable_two_factor_authentication(user_id: UserId) -> None:
     credentials = load_two_factor_credentials(user_id, lock=True)
     credentials["webauthn_credentials"].clear()
+    credentials["totp_credentials"].clear()
     save_two_factor_credentials(user_id, credentials)
 
 
@@ -285,7 +289,11 @@ def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFacto
     cred = load_custom_attr(
         user_id=user_id, key="two_factor_credentials", parser=ast.literal_eval, lock=lock
     )
-    return TwoFactorCredentials(webauthn_credentials={}, backup_codes=[]) if cred is None else cred
+    return (
+        TwoFactorCredentials(webauthn_credentials={}, backup_codes=[], totp_credentials={})
+        if cred is None
+        else cred
+    )
 
 
 def make_two_factor_backup_codes(

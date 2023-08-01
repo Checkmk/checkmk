@@ -59,7 +59,7 @@ export function register() {
             if (e.name == "SecurityError") {
                 show_error(
                     "Can not enable two-factor authentication. You have to use HTTPS and access " +
-                        "the GUI thourgh a valid domain name (See #13325 for further information)."
+                        "the GUI through a valid domain name (See #13325 for further information)."
                 );
             } else if (e.name == "AbortError") {
                 show_error(

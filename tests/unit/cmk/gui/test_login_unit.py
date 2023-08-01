@@ -48,6 +48,7 @@ def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
         "two_factor_credentials": {
             "webauthn_credentials": {"foo": auth_struct},
             "backup_codes": [],
+            "totp_credentials": {},
         },
     }
     with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
@@ -78,6 +79,7 @@ def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestA
         "two_factor_credentials": {
             "webauthn_credentials": {"foo": auth_struct},
             "backup_codes": [],
+            "totp_credentials": {},
         },
     }
     with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:

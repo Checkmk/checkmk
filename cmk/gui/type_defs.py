@@ -83,9 +83,18 @@ class WebAuthnCredential(TypedDict):
     credential_data: bytes
 
 
+class TotpCredential(TypedDict):
+    credential_id: str
+    secret: bytes
+    version: int
+    registered_at: int
+    alias: str
+
+
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: dict[str, WebAuthnCredential]
     backup_codes: list[PasswordHash]
+    totp_credentials: dict[str, TotpCredential]
 
 
 SessionId = str

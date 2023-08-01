@@ -79,7 +79,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
@@ -109,11 +109,15 @@ from cmk.gui.watolib.sites import (
 )
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
+    mode_registry.register(ModeEditSite)
+    mode_registry.register(ModeDistributedMonitoring)
+    mode_registry.register(ModeEditSiteGlobals)
+    mode_registry.register(ModeEditSiteGlobalSetting)
+    mode_registry.register(ModeSiteLivestatusEncryption)
 
 
-@mode_registry.register
 class ModeEditSite(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -536,7 +540,6 @@ class ModeEditSite(WatoMode):
         ]
 
 
-@mode_registry.register
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -1069,7 +1072,6 @@ class ReplicationStatusFetcher:
             result_queue.join()
 
 
-@mode_registry.register
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -1212,7 +1214,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-@mode_registry.register
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -1258,7 +1259,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-@mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
     def name(cls) -> str:

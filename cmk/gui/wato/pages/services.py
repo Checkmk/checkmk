@@ -60,7 +60,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -103,12 +103,12 @@ class TableGroupEntry(NamedTuple):
     help_text: str
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("ajax_service_discovery")(ModeAjaxServiceDiscovery)
     page_registry.register_page("wato_ajax_execute_check")(ModeAjaxExecuteCheck)
+    mode_registry.register(ModeDiscovery)
 
 
-@mode_registry.register
 class ModeDiscovery(WatoMode):
     """This mode is the entry point to the discovery page.
 

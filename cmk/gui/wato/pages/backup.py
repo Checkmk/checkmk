@@ -15,15 +15,24 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.audit_log import log_audit
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("ajax_backup_job_state")(PageAjaxBackupJobState)
+    mode_registry.register(ModeBackup)
+    mode_registry.register(ModeBackupTargets)
+    mode_registry.register(ModeEditBackupTarget)
+    mode_registry.register(ModeEditBackupJob)
+    mode_registry.register(ModeBackupJobState)
+    mode_registry.register(ModeBackupKeyManagement)
+    mode_registry.register(ModeBackupEditKey)
+    mode_registry.register(ModeBackupUploadKey)
+    mode_registry.register(ModeBackupDownloadKey)
+    mode_registry.register(ModeBackupRestore)
 
 
-@mode_registry.register
 class ModeBackup(backup.PageBackup, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -40,7 +49,6 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return _("Site backup")
 
 
-@mode_registry.register
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -55,7 +63,6 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return ModeBackup
 
 
-@mode_registry.register
 class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -70,7 +77,6 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
         return ModeBackupTargets
 
 
-@mode_registry.register
 class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -88,7 +94,6 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-@mode_registry.register
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -123,7 +128,6 @@ def make_site_backup_keypair_store() -> backup.BackupKeypairStore:
     return backup.BackupKeypairStore(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
-@mode_registry.register
 class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -141,7 +145,6 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-@mode_registry.register
 class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -159,7 +162,6 @@ class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-@mode_registry.register
 class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -181,7 +183,6 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
         super()._upload_key(key_file, alias, passphrase)
 
 
-@mode_registry.register
 class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -199,7 +200,6 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-@mode_registry.register
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     @classmethod
     def name(cls) -> str:

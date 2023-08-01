@@ -59,7 +59,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
@@ -68,9 +68,10 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tre
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("ajax_start_activation")(PageAjaxStartActivation)
     page_registry.register_page("ajax_activation_state")(PageAjaxActivationState)
+    mode_registry.register(ModeActivateChanges)
 
 
 class ActivationState(enum.Enum):
@@ -104,7 +105,6 @@ def _show_activation_state_messages(
     html.close_div()  # activation_state_message_container
 
 
-@mode_registry.register
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     @classmethod
     def name(cls) -> str:

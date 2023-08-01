@@ -134,6 +134,7 @@ def register() -> None:
         automation_command_registry,
         job_registry,
         filter_registry,
+        mode_registry,
     )
     bi_registration.register(
         data_source_registry,

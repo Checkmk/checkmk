@@ -64,7 +64,7 @@ from cmk.gui.utils.urls import (
     YouTubeReference,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -90,9 +90,12 @@ from cmk.gui.watolib.main_menu import MenuItem
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("ajax_popup_move_to_folder")(PageAjaxPopupMoveToFolder)
     page_registry.register_page("ajax_set_foldertree")(PageAjaxSetFoldertree)
+    mode_registry.register(ModeFolder)
+    mode_registry.register(ModeEditFolder)
+    mode_registry.register(ModeCreateFolder)
 
 
 def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
@@ -109,7 +112,6 @@ def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
     )
 
 
-@mode_registry.register
 class ModeFolder(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -1284,7 +1286,6 @@ class ABCFolderMode(WatoMode, abc.ABC):
         html.end_form()
 
 
-@mode_registry.register
 class ModeEditFolder(ABCFolderMode):
     @classmethod
     def name(cls) -> str:
@@ -1307,7 +1308,6 @@ class ModeEditFolder(ABCFolderMode):
         self._folder.edit(title, attributes)
 
 
-@mode_registry.register
 class ModeCreateFolder(ABCFolderMode):
     @classmethod
     def name(cls) -> str:

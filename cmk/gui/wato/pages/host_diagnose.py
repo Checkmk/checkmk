@@ -36,7 +36,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
 from cmk.gui.valuespec import HostAddress as VSHostAddress
 from cmk.gui.valuespec import Integer, Password
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
@@ -55,11 +55,11 @@ class HostSpec(TypedDict):
     snmp_v3_credentials: NotRequired[SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv]
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("wato_ajax_diag_host")(PageAjaxDiagHost)
+    mode_registry.register(ModeDiagHost)
 
 
-@mode_registry.register
 class ModeDiagHost(WatoMode):
     @classmethod
     def name(cls) -> str:

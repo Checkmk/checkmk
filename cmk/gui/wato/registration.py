@@ -15,20 +15,9 @@ from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 
-from . import filters
+from . import filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
-from .pages import (
-    activate_changes,
-    automation,
-    backup,
-    diagnostics,
-    fetch_agent_output,
-    folders,
-    host_diagnose,
-    services,
-    sites,
-    user_profile,
-)
+from .mode import ModeRegistry
 from .views import (
     PainterHostFilename,
     PainterWatoFolderAbs,
@@ -48,6 +37,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
     filter_registry: FilterRegistry,
+    mode_registry: ModeRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -63,22 +53,7 @@ def register(
 
     page_registry.register_page_handler("wato", page_handler)
     page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
-    diagnostics.register(page_registry)
-    user_profile.mega_menu.register(page_registry)
-    user_profile.two_factor.register(page_registry)
-    user_profile.two_factor.register(page_registry)
-    user_profile.edit_profile.register(page_registry)
-    user_profile.change_password.register(page_registry)
-    user_profile.async_replication.register(page_registry)
-    user_profile.replicate.register(page_registry)
-    services.register(page_registry)
-    host_diagnose.register(page_registry)
-    activate_changes.register(page_registry)
-    backup.register(page_registry)
-    folders.register(page_registry)
-    automation.register(page_registry)
-    sites.register(page_registry)
-    fetch_agent_output.register(page_registry)
 
     sync_remote_sites.register(automation_command_registry, job_registry)
     filters.register(filter_registry)
+    pages.register(page_registry, mode_registry)

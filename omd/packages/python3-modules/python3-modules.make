@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 12
+PYTHON3_MODULES_BUILD_ID := 13
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -86,7 +86,7 @@ PYTHON3_MODULES_LIST += oauthlib-3.1.0.tar.gz # needed for requests-oauthlib and
 PYTHON3_MODULES_LIST += requests-oauthlib-1.3.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += PyJWT-2.4.0.tar.gz # needed for jira
-PYTHON3_MODULES_LIST += docutils-0.15.2.tar.gz # needed by boto3, jira
+PYTHON3_MODULES_LIST += docutils-0.20.1.tar.gz # needed by boto3, jira
 PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure

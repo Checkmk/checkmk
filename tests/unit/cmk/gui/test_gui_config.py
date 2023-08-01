@@ -674,6 +674,8 @@ def test_registered_permissions():
         "wato.custom_attributes",
         "wato.diag_host",
         "wato.diagnostics",
+        "wato.discard",
+        "wato.discardforeign",
         "wato.download_agent_output",
         "wato.download_agents",
         "wato.edit",

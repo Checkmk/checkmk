@@ -47,7 +47,6 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
-from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.valuespec import autocompleter_registry
@@ -62,6 +61,7 @@ from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.wato.mode import mode_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,

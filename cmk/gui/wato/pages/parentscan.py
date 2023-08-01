@@ -39,9 +39,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes, mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes

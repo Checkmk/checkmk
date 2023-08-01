@@ -19,7 +19,6 @@ from cmk.gui.plugins.wato.utils import (
     site_rule_match_condition,
     valuespec_check_plugin_selection,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -32,6 +31,7 @@ from cmk.gui.valuespec import (
     RegExp,
     Tuple,
 )
+from cmk.gui.wato.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
 

@@ -27,13 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    flash,
-    make_confirm_delete_link,
-    mode_registry,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import flash, make_confirm_delete_link
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserSelection
@@ -51,6 +45,7 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
 )
+from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link

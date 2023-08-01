@@ -58,10 +58,7 @@ from cmk.gui.plugins.wato.utils import (
     HostTagCondition,
     LabelCondition,
     make_confirm_delete_link,
-    mode_registry,
-    redirect,
     search_form,
-    WatoMode,
 )
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
@@ -85,6 +82,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
+from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
 from cmk.gui.watolib.config_hostname import ConfigHostname

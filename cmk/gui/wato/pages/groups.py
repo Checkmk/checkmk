@@ -36,13 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    make_confirm_delete_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
@@ -56,6 +50,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 

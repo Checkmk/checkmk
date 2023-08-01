@@ -102,15 +102,11 @@ from cmk.gui.plugins.wato.utils import (
     get_search_expression,
     HostRulespec,
     MainModuleTopicEvents,
-    mode_url,
-    redirect,
     RulespecGroup,
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
     ServiceRulespec,
-    WatoMode,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -155,6 +151,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,

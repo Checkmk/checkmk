@@ -26,17 +26,12 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    make_confirm_delete_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,

@@ -48,10 +48,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import search_form as search_form
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.plugins.wato.utils.base_modes import mode_registry as mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import mode_url as mode_url
-from cmk.gui.plugins.wato.utils.base_modes import redirect as redirect
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode as WatoMode
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu as MainMenu
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicAgents as MainModuleTopicAgents
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicBI as MainModuleTopicBI

@@ -46,7 +46,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.session import session
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import WebAuthnCredential
@@ -68,6 +67,7 @@ from cmk.gui.utils.urls import (
 )
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
+from cmk.gui.wato.mode import redirect
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related

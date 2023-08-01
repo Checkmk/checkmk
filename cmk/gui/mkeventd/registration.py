@@ -8,10 +8,10 @@ from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.sidebar.utils import snapin_registry
 from cmk.gui.plugins.wato.utils import notification_parameter_registry
-from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.wato.mode import ModeRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,

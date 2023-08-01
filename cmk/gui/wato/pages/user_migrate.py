@@ -31,12 +31,12 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     get_user_attributes,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName, Users
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 
 
 @mode_registry.register

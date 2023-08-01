@@ -27,13 +27,7 @@ from cmk.gui.plugins.userdb.utils import (
     load_connection_config,
     save_connection_config,
 )
-from cmk.gui.plugins.wato.utils import (
-    MigrateNotUpdatedToIndividualOrStoredPassword,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import MigrateNotUpdatedToIndividualOrStoredPassword
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.ldap_connector import (
@@ -64,6 +58,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,

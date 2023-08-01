@@ -39,13 +39,13 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,

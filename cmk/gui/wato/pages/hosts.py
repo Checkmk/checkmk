@@ -30,8 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import configure_attributes, make_confirm_delete_link, mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import configure_attributes, make_confirm_delete_link
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -40,6 +39,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url

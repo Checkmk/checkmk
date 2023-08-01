@@ -7,9 +7,8 @@ from collections.abc import Collection
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.wato.mode import mode_registry, WatoMode
 
 
 @mode_registry.register

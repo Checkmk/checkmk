@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
     TextInput,
     UploadOrPasteTextFile,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry

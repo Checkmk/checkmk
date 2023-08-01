@@ -4,14 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import http.client
 from collections.abc import Collection, Iterable
 from typing import final
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -22,7 +18,6 @@ from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionN
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry
-from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 
 
 class WatoMode(abc.ABC):
@@ -175,32 +170,3 @@ class WatoMode(abc.ABC):
 
     def handle_page(self) -> None:
         return self.page()
-
-
-class ModeRegistry(Registry[type[WatoMode]]):
-    def plugin_name(self, instance: type[WatoMode]) -> str:
-        return instance.name()
-
-    def register(self, instance: type[WatoMode]) -> type[WatoMode]:
-        super().register(instance)
-        mode_permissions_ensurance_registry.register(instance)
-        return instance
-
-
-mode_registry = ModeRegistry()
-
-
-def mode_url(mode_name: str, **kwargs: str) -> str:
-    """Returns an URL pointing to the given Setup mode
-
-    To be able to link some modes, there are context information needed, which are need to be
-    gathered from the current request variables.
-    """
-    return mode_registry[mode_name].mode_url(**kwargs)
-
-
-def redirect(location: str, code: int = http.client.FOUND) -> HTTPRedirect:
-    """Returns an object triggering a redirect to another page
-    Similar to flasks redirect method.
-    """
-    return HTTPRedirect(location, code=code)

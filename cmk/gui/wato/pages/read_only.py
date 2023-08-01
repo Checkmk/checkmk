@@ -16,7 +16,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -27,6 +27,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
 
 

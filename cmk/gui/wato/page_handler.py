@@ -15,8 +15,6 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
     wato_html_footer,
@@ -29,6 +27,8 @@ from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
+
+from .mode import mode_registry, WatoMode
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

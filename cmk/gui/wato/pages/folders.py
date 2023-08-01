@@ -42,12 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import (
-    configure_attributes,
-    get_hostnames_from_checkboxes,
-    mode_registry,
-)
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import configure_attributes, get_hostnames_from_checkboxes
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import show_row_count, Table, table_element
@@ -69,6 +64,7 @@ from cmk.gui.utils.urls import (
     YouTubeReference,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts

@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+from cmk.gui.wato.mode import mode_url
 
 
 class KeypairStore:
@@ -252,14 +253,6 @@ class PageEditKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value["alias"], PasswordType(value["passphrase"]))
-            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
-            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
-            #  is obviously a very simple module-layer violation. This whole module should either
-            #    * be moved into cmk.gui.cee.plugins.wato
-            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
-            #  Either way, this is outside my scope right now and shall be fixed.
-            from cmk.gui.plugins.wato.utils.base_modes import mode_url
-
             return HTTPRedirect(mode_url(self.back_mode))
         return None
 
@@ -341,15 +334,6 @@ class PageUploadKey:
                 self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
             except InvalidPEMError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
-
-            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
-            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
-            #  is obviously a very simple module-layer violation. This whole module should either
-            #    * be moved into cmk.gui.cee.plugins.wato
-            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
-            #  Either way, this is outside my scope right now and shall be fixed.
-            from cmk.gui.plugins.wato.utils.base_modes import mode_url
-
             return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 

@@ -26,14 +26,11 @@ from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     main_module_registry,
     MainModuleTopicMaintenance,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
 )
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.main_menu import MainModuleTopic
 
 

@@ -8,10 +8,9 @@ from collections.abc import Collection, Iterable
 import pytest
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.plugins.wato.utils import base_modes
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicHosts
 from cmk.gui.type_defs import Icon, PermissionName
+from cmk.gui.wato.mode import _base, WatoMode
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
 module_registry = MainModuleRegistry()
@@ -64,11 +63,7 @@ class SomeMainModule(ABCMainModule):
 
 @pytest.fixture(name="main_module_registry", scope="function", autouse=True)
 def fixture_main_module_registry(monkeypatch):
-    monkeypatch.setattr(
-        base_modes,
-        "main_module_registry",
-        module_registry,
-    )
+    monkeypatch.setattr(_base, "main_module_registry", module_registry)
 
 
 class TestWatoMode:

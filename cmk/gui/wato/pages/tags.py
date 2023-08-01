@@ -28,14 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    flash,
-    make_confirm_delete_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import flash, make_confirm_delete_link
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import Table, table_element
@@ -56,6 +49,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,

@@ -20,12 +20,11 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
-    mode_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,

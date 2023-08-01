@@ -61,7 +61,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
@@ -75,6 +74,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
+from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump

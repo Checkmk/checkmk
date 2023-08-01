@@ -50,7 +50,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, Table, table_element
@@ -61,6 +60,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url

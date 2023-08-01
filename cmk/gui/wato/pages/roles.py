@@ -45,20 +45,14 @@ from cmk.gui.permissions import (
     permission_registry,
     permission_section_registry,
 )
-from cmk.gui.plugins.wato.utils import (
-    get_search_expression,
-    make_confirm_delete_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import get_search_expression, make_confirm_delete_link
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.userroles import RoleID

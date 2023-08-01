@@ -24,9 +24,9 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 

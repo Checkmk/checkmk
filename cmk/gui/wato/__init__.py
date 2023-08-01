@@ -63,11 +63,9 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
-import cmk.gui.backup as backup
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.wato.utils
-import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -105,7 +103,6 @@ from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato import sync_remote_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
@@ -194,7 +191,6 @@ from cmk.gui.plugins.wato.utils import (
     get_hosts_from_checkboxes,
     get_search_expression,
     Levels,
-    mode_registry,
     monitoring_macro_help,
     PredictiveLevels,
     register_check_parameters,
@@ -233,10 +229,6 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.watolib.sites import LivestatusViaTCP
-
-modes: dict[Any, Any] = {}
-
 from cmk.gui.page_menu import search_form
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
@@ -251,6 +243,9 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.sites import LivestatusViaTCP
+
+from .mode import mode_registry, mode_url, redirect, WatoMode
 
 # .
 #   .--Plugins-------------------------------------------------------------.
@@ -264,7 +259,7 @@ from cmk.gui.watolib.main_menu import MenuItem
 #   | Prepare plugin-datastructures and load Setup plugins                  |
 #   '----------------------------------------------------------------------'
 
-modes = {}
+modes: dict[str, Any] = {}
 
 
 def load_plugins() -> None:
@@ -338,8 +333,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "make_confirm_link",
         "ManualCheckParameterRulespec",
         "MenuItem",
-        "mode_registry",
-        "mode_url",
         "monitoring_macro_help",
         "multifolder_host_rule_match_conditions",
         "notification_parameter_registry",
@@ -348,7 +341,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "PermissionSectionWATO",
         "PluginCommandLine",
         "PredictiveLevels",
-        "redirect",
         "register_check_parameters",
         "register_hook",
         "register_modules",
@@ -381,10 +373,16 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "sort_sites",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
-        "WatoMode",
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in (
+        "mode_registry",
+        "mode_url",
+        "redirect",
+        "WatoMode",
+    ):
+        api_module.__dict__[name] = globals()[name]
     for name in (
         "IPMIParameters",
         "SNMPCredentials",

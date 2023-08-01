@@ -46,10 +46,8 @@ from cmk.gui.plugins.wato.utils import (
     ContactGroupSelection,
     flash,
     make_confirm_delete_link,
-    mode_registry,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -78,6 +76,7 @@ from cmk.gui.valuespec import (
     Tuple,
     UUID,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related

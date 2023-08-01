@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
@@ -45,6 +45,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes

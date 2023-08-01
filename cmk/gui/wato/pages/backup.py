@@ -14,8 +14,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.watolib.audit_log import log_audit
 
 

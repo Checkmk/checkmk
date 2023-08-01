@@ -13,13 +13,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    SimpleEditMode,
-    SimpleListMode,
-    SimpleModeType,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
@@ -31,6 +25,7 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_tree

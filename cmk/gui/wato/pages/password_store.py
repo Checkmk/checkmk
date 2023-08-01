@@ -11,13 +11,7 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    SimpleEditMode,
-    SimpleListMode,
-    SimpleModeType,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import (
@@ -29,6 +23,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.wato.mode import mode_registry, WatoMode
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import PasswordStore

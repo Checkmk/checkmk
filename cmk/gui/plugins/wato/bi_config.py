@@ -64,11 +64,7 @@ from cmk.gui.plugins.wato.utils import (
     MainMenu,
     MainModuleTopicBI,
     MenuItem,
-    mode_registry,
-    mode_url,
     PermissionSectionWATO,
-    redirect,
-    WatoMode,
 )
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
@@ -105,6 +101,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 from cmk.bi.actions import BICallARuleAction

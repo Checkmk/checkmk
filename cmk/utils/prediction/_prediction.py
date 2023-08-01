@@ -411,22 +411,25 @@ class PredictionStore:
                     logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
 
     def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
-        raw = self._read_file(self._info_file(timegroup))
-        return None if raw is None else PredictionInfo.loads(raw, name=timegroup)
+        file_path = self._info_file(timegroup)
+        try:
+            return PredictionInfo.loads(file_path.read_text(), name=timegroup)
+        except FileNotFoundError:
+            logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
+        except ValueError:
+            logger.log(VERBOSE, "Invalid prediction info file %s", file_path)
+            self.clean_prediction_files(timegroup, force=True)
+        return None
 
     def get_data(self, timegroup: Timegroup) -> PredictionData | None:
-        raw = self._read_file(self._data_file(timegroup))
-        return None if raw is None else PredictionData.loads(raw)
-
-    def _read_file(self, file_path: Path) -> str | None:
+        file_path = self._data_file(timegroup)
         try:
-            with file_path.open() as fh:
-                return fh.read()
-        except OSError:
-            logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
+            return PredictionData.loads(file_path.read_text())
+        except FileNotFoundError:
+            logger.log(VERBOSE, "No prediction for group %s available.", timegroup)
         except ValueError:
-            logger.log(VERBOSE, "Invalid prediction file %s, old format", file_path)
-            self.clean_prediction_files(Timegroup(file_path.stem), force=True)
+            logger.log(VERBOSE, "Invalid prediction file %s", file_path)
+            self.clean_prediction_files(timegroup, force=True)
         return None
 
 

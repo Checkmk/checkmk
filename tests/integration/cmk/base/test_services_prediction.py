@@ -122,13 +122,14 @@ def test_get_rrd_data(
             int(timestamp), _prediction.PREDICTION_PERIODS[period]
         )
 
-    timeseries = _prediction.get_rrd_data(
+    rrd_respose = _prediction.get_rrd_data(
         site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
-    assert timeseries.start <= from_time
-    assert timeseries.end >= until_time
-    assert (timeseries.step, len(timeseries.values)) == result
+    assert rrd_respose.window_start <= from_time
+    assert rrd_respose.query_interval == (from_time, until_time)
+    assert rrd_respose.window_end >= until_time
+    assert (rrd_respose.window_step, len(rrd_respose.values)) == result
 
 
 # This test has a conflict with daemon usage. Since we now don't use
@@ -141,7 +142,7 @@ def test_get_rrd_data(
 )
 def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int, int]) -> None:
     from_time, until_time = 1543430040, 1543502040
-    timeseries = _prediction.get_rrd_data(
+    rrd_response = _prediction.get_rrd_data(
         site.live,
         HostName("test-prediction"),
         "CPU load",
@@ -151,9 +152,10 @@ def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int,
         until_time,
         max_entries,
     )
-    assert timeseries.start <= from_time
-    assert timeseries.end >= until_time
-    assert (timeseries.step, len(timeseries.values)) == result
+    assert rrd_response.window_start <= from_time
+    assert rrd_response.window_end >= until_time
+    assert rrd_response.query_interval == (from_time, until_time)
+    assert (rrd_response.window_step, len(rrd_response.values)) == result
 
 
 @pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
@@ -437,7 +439,7 @@ def test_retieve_grouped_data_from_rrd(
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
     from_time = time_windows[0][0]
-    slices = [
+    rrd_responses = [
         (
             _prediction.get_rrd_data(
                 site.live, hostname, service_description, dsname, "MAX", start, end
@@ -446,6 +448,11 @@ def test_retieve_grouped_data_from_rrd(
         )
         for start, end in time_windows
     ]
+    slices = [
+        (_prediction.TimeSeries(list(rrd_response.values), rrd_response.window), offset)
+        for rrd_response, offset in rrd_responses
+    ]
+
     result = _prediction._upsample(slices)
 
     assert result == reference
@@ -502,13 +509,16 @@ def test_calculate_data_for_prediction(
 
     from_time = time_windows[0][0]
     raw_slices = [
-        (
-            _prediction.get_rrd_data(
-                site.live, hostname, service_description, dsname, "MAX", start, end
-            ),
-            from_time - start,
+        (_prediction.TimeSeries(list(rrd_response.values), rrd_response.window), offset)
+        for rrd_response, offset in (
+            (
+                _prediction.get_rrd_data(
+                    site.live, hostname, service_description, dsname, "MAX", start, end
+                ),
+                from_time - start,
+            )
+            for start, end in time_windows
         )
-        for start, end in time_windows
     ]
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
@@ -546,13 +556,14 @@ def test_get_rrd_data_incomplete(
     site: Site, timerange: tuple[int, int], result: tuple[int, Sequence[float | None]]
 ) -> None:
     from_time, until_time = timerange
-    timeseries = _prediction.get_rrd_data(
+    rrd_response = _prediction.get_rrd_data(
         site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
-    assert timeseries.start <= from_time
-    assert timeseries.end >= until_time
-    assert (timeseries.step, timeseries.values) == result
+    assert rrd_response.window_start <= from_time
+    assert rrd_response.window_end >= until_time
+    assert rrd_response.query_interval == (from_time, until_time)
+    assert (rrd_response.window_step, rrd_response.values) == result
 
 
 @pytest.mark.usefixtures("cfg_setup")
@@ -585,4 +596,10 @@ def test_get_rrd_data_fails(site: Site) -> None:
         until_time,
     )
 
-    assert timeseries == _prediction.TimeSeries([0, 0, 0])
+    assert timeseries == _prediction._RRDResponse(
+        query_interval=(from_time, until_time),
+        window_start=0,
+        window_end=0,
+        window_step=0,
+        values=[],
+    )

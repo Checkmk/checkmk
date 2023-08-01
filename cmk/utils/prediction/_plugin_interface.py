@@ -16,7 +16,6 @@ from ._prediction import (
     ConsolidationFunctionName,
     PREDICTION_PERIODS,
     PredictionData,
-    PredictionInfo,
     PredictionParameters,
     PredictionStore,
     Timegroup,
@@ -30,33 +29,34 @@ EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
 logger = logging.getLogger("cmk.prediction")
 
 
-def _is_prediction_up_to_date(
-    last_info: PredictionInfo | None,
+def _get_prediction(
+    store: PredictionStore,
     timegroup: Timegroup,
     params: PredictionParameters,
-) -> bool:
-    """Check, if we need to (re-)compute the prediction file.
+) -> PredictionData | None:
+    """Return a valid prediction, if available
 
-    This is the case if:
-    - no prediction has been made yet for this time group
-    - the prediction from the last time is outdated
-    - the prediction from the last time was made with other parameters
+    No prediction is available if
+    * no prediction meta data file is found
+    * the prediction is outdated
+    * no prediction for these parameters (time group) has been made yet
+    * no prediction data file is found
     """
-    if last_info is None:
-        return False
+    if (last_info := store.get_info(timegroup)) is None:
+        return None
 
     period_info = PREDICTION_PERIODS[params["period"]]
     now = time.time()
     if last_info.time + period_info.valid * period_info.slice < now:
         logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
-        return False
+        return None
 
     jsonized_params = json.loads(json.dumps(params))
     if last_info.params != jsonized_params:
         logger.log(VERBOSE, "Prediction parameters have changed.")
-        return False
+        return None
 
-    return True
+    return store.get_data(timegroup)
 
 
 # cf: consilidation function (MAX, MIN, AVERAGE)
@@ -79,15 +79,13 @@ def get_predictive_levels(
     prediction_store = PredictionStore(hostname, service_description, dsname)
     prediction_store.clean_prediction_files(timegroup)
 
-    data_for_pred: PredictionData | None = None
-    if _is_prediction_up_to_date(
-        last_info=prediction_store.get_info(timegroup),
-        timegroup=timegroup,
-        params=params,
-    ):
-        data_for_pred = prediction_store.get_data(timegroup)
-
-    if data_for_pred is None:
+    if (
+        data_for_pred := _get_prediction(
+            store=prediction_store,
+            timegroup=timegroup,
+            params=params,
+        )
+    ) is None:
         data_for_pred = compute_prediction(
             timegroup,
             prediction_store,

@@ -50,8 +50,17 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeHostgroups)
+    mode_registry.register(ModeServicegroups)
+    mode_registry.register(ModeContactgroups)
+    mode_registry.register(ModeEditServicegroup)
+    mode_registry.register(ModeEditHostgroup)
+    mode_registry.register(ModeEditContactgroup)
 
 
 class ModeGroups(WatoMode, abc.ABC):
@@ -295,7 +304,6 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         html.end_form()
 
 
-@mode_registry.register
 class ModeHostgroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -326,7 +334,6 @@ class ModeHostgroups(ModeGroups):
         return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")])
 
 
-@mode_registry.register
 class ModeServicegroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -357,7 +364,6 @@ class ModeServicegroups(ModeGroups):
         return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")])
 
 
-@mode_registry.register
 class ModeContactgroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -415,7 +421,6 @@ class ModeContactgroups(ModeGroups):
         )
 
 
-@mode_registry.register
 class ModeEditServicegroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:
@@ -442,7 +447,6 @@ class ModeEditServicegroup(ABCModeEditGroup):
         return _("Edit service group")
 
 
-@mode_registry.register
 class ModeEditHostgroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:
@@ -469,7 +473,6 @@ class ModeEditHostgroup(ABCModeEditGroup):
         return _("Edit host group")
 
 
-@mode_registry.register
 class ModeEditContactgroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:

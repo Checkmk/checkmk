@@ -16,12 +16,15 @@ from cmk.gui.plugins.wato.utils import configure_attributes
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeSearch)
+
+
 class ModeSearch(WatoMode):
     @classmethod
     def name(cls) -> str:

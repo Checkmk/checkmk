@@ -47,7 +47,7 @@ from cmk.gui.valuespec import (
     TextInput,
     UploadOrPasteTextFile,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -56,8 +56,13 @@ from cmk.gui.watolib.hosts_and_folders import folder_from_request
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
 
+from cmk.gui.wato.mode import ModeRegistry
 
-@mode_registry.register
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkImport)
+
+
 class ModeBulkImport(WatoMode):
     @classmethod
     def name(cls) -> str:

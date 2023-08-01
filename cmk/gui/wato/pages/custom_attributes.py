@@ -31,7 +31,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -41,6 +41,13 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeEditCustomUserAttr)
+    mode_registry.register(ModeEditCustomHostAttr)
+    mode_registry.register(ModeCustomUserAttrs)
+    mode_registry.register(ModeCustomHostAttrs)
 
 
 def custom_attr_types() -> Choices:
@@ -253,7 +260,6 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         html.end_form()
 
 
-@mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls) -> str:
@@ -326,7 +332,6 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Edit user attribute")
 
 
-@mode_registry.register
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls) -> str:
@@ -502,7 +507,6 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 table.cell(_("Type"), dict(custom_attr_types())[custom_attr["type"]])
 
 
-@mode_registry.register
 class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls) -> str:
@@ -536,7 +540,6 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         )
 
 
-@mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls) -> str:

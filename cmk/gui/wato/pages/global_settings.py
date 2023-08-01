@@ -43,7 +43,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -60,6 +60,11 @@ from cmk.gui.watolib.search import (
     MatchItem,
     MatchItems,
 )
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeEditGlobals)
+    mode_registry.register(ModeEditGlobalSetting)
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -410,7 +415,6 @@ class ABCEditGlobalSettingMode(WatoMode):
         pass
 
 
-@mode_registry.register
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -531,7 +535,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-@mode_registry.register
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:

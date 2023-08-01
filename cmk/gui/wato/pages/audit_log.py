@@ -45,14 +45,17 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
 )
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.objref import ObjectRefType
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeAuditLog)
+
+
 class ModeAuditLog(WatoMode):
     @classmethod
     def name(cls) -> str:

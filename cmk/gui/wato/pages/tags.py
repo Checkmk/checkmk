@@ -49,7 +49,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -71,6 +71,13 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     TagConfigFile,
 )
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeTags)
+    mode_registry.register(ModeTagUsage)
+    mode_registry.register(ModeEditAuxtag)
+    mode_registry.register(ModeEditTagGroup)
 
 
 class ABCTagMode(WatoMode, abc.ABC):
@@ -109,7 +116,6 @@ class ABCTagMode(WatoMode, abc.ABC):
         }
 
 
-@mode_registry.register
 class ModeTags(ABCTagMode):
     @classmethod
     def name(cls) -> str:
@@ -521,7 +527,6 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
         )
 
 
-@mode_registry.register
 class ModeTagUsage(ABCTagMode):
     @classmethod
     def name(cls) -> str:
@@ -639,7 +644,6 @@ class ModeTagUsage(ABCTagMode):
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
 
 
-@mode_registry.register
 class ModeEditAuxtag(ABCEditTagMode):
     @classmethod
     def name(cls) -> str:
@@ -721,7 +725,6 @@ class ModeEditAuxtag(ABCEditTagMode):
         )
 
 
-@mode_registry.register
 class ModeEditTagGroup(ABCEditTagMode):
     @classmethod
     def name(cls) -> str:

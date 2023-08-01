@@ -39,7 +39,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -52,6 +52,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     validate_all_hosts,
 )
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeEditHost)
+    mode_registry.register(ModeCreateHost)
+    mode_registry.register(ModeCreateCluster)
 
 
 class ABCHostMode(WatoMode, abc.ABC):
@@ -294,7 +300,6 @@ class ABCHostMode(WatoMode, abc.ABC):
 # we simply don't know whether or not a cluster or regular host is about to be edited. The GUI code
 # simply wants to link to the "host edit page". We could try to use some factory to decide this when
 # the edit_host mode is called.
-@mode_registry.register
 class ModeEditHost(ABCHostMode):
     @classmethod
     def name(cls) -> str:
@@ -665,7 +670,6 @@ class CreateHostMode(ABCHostMode):
         )
 
 
-@mode_registry.register
 class ModeCreateHost(CreateHostMode):
     @classmethod
     def name(cls) -> str:
@@ -695,7 +699,6 @@ class ModeCreateHost(CreateHostMode):
             raise MKGeneralException(_("Can not clone a cluster host as regular host"))
 
 
-@mode_registry.register
 class ModeCreateCluster(CreateHostMode):
     @classmethod
     def name(cls) -> str:

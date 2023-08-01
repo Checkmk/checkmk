@@ -82,7 +82,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
 from cmk.gui.watolib.config_hostname import ConfigHostname
@@ -124,6 +124,17 @@ if bakery.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore[assignment]
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeRuleSearch)
+    mode_registry.register(ModeRulesetGroup)
+    mode_registry.register(ModeEditRuleset)
+    mode_registry.register(ModeRuleSearchForm)
+    mode_registry.register(ModeEditRule)
+    mode_registry.register(ModeCloneRule)
+    mode_registry.register(ModeNewRule)
+    mode_registry.register(ModeExportRule)
 
 
 def _group_rulesets(
@@ -325,7 +336,6 @@ class ABCRulesetMode(WatoMode):
         html.close_div()
 
 
-@mode_registry.register
 class ModeRuleSearch(ABCRulesetMode):
     @classmethod
     def name(cls) -> str:
@@ -543,7 +553,6 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
         )
 
 
-@mode_registry.register
 class ModeRulesetGroup(ABCRulesetMode):
     """Lists rulesets in a ruleset group"""
 
@@ -737,7 +746,6 @@ def _is_used_rulesets_page(search_options) -> bool:  # type: ignore[no-untyped-d
     )
 
 
-@mode_registry.register
 class ModeEditRuleset(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -1409,7 +1417,6 @@ class ModeEditRuleset(WatoMode):
         html.end_form()
 
 
-@mode_registry.register
 class ModeRuleSearchForm(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -2707,7 +2714,6 @@ class RuleConditionRenderer:
             yield condition
 
 
-@mode_registry.register
 class ModeEditRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
@@ -2719,7 +2725,6 @@ class ModeEditRule(ABCEditRuleMode):
         self._rulesets.save_folder()
 
 
-@mode_registry.register
 class ModeCloneRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
@@ -2740,7 +2745,6 @@ class ModeCloneRule(ABCEditRuleMode):
         pass  # Cloned rule is not yet in folder, don't try to remove
 
 
-@mode_registry.register
 class ModeNewRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
@@ -2824,7 +2828,6 @@ class ModeNewRule(ABCEditRuleMode):
         )
 
 
-@mode_registry.register
 class ModeExportRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:

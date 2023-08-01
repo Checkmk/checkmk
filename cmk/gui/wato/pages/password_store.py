@@ -23,11 +23,16 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePasswords)
+    mode_registry.register(ModeEditPassword)
 
 
 class PasswordStoreModeType(SimpleModeType[Password]):
@@ -47,7 +52,6 @@ class PasswordStoreModeType(SimpleModeType[Password]):
         return [ConfigDomainCore]
 
 
-@mode_registry.register
 class ModePasswords(SimpleListMode):
     @classmethod
     def name(cls) -> str:
@@ -119,7 +123,6 @@ class ModePasswords(SimpleListMode):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-@mode_registry.register
 class ModeEditPassword(SimpleEditMode):
     @classmethod
     def name(cls) -> str:

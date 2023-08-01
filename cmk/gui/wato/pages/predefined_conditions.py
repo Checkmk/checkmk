@@ -25,13 +25,18 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePredefinedConditions)
+    mode_registry.register(ModeEditPredefinedCondition)
 
 
 class DummyRulespecGroup(RulespecGroup):
@@ -82,7 +87,6 @@ class PredefinedConditionModeType(SimpleModeType):
         return [ConfigDomainCore]
 
 
-@mode_registry.register
 class ModePredefinedConditions(SimpleListMode):
     @classmethod
     def name(cls) -> str:
@@ -190,7 +194,6 @@ class ModePredefinedConditions(SimpleListMode):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-@mode_registry.register
 class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
     def name(cls) -> str:

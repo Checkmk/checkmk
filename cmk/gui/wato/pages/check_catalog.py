@@ -39,13 +39,19 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeCheckPlugins)
+    mode_registry.register(ModeCheckPluginSearch)
+    mode_registry.register(ModeCheckPluginTopic)
+    mode_registry.register(ModeCheckManPage)
+
+
 class ModeCheckPlugins(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -95,7 +101,6 @@ class ModeCheckPlugins(WatoMode):
         menu.show()
 
 
-@mode_registry.register
 class ModeCheckPluginSearch(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -174,7 +179,6 @@ class ModeCheckPluginSearch(WatoMode):
         return list(collection.items())
 
 
-@mode_registry.register
 class ModeCheckPluginTopic(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -428,7 +432,6 @@ def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
     return tree
 
 
-@mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
     def name(cls) -> str:

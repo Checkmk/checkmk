@@ -26,8 +26,14 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeDownloadAgentsOther)
+    mode_registry.register(ModeDownloadAgentsWindows)
+    mode_registry.register(ModeDownloadAgentsLinux)
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -180,7 +186,6 @@ class ABCModeDownloadAgents(WatoMode):
         forms.end()
 
 
-@mode_registry.register
 class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:
@@ -219,7 +224,6 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return exclude
 
 
-@mode_registry.register
 class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:
@@ -235,7 +239,6 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
         return cmk.utils.paths.agents_dir + "/windows"
 
 
-@mode_registry.register
 class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:

@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
@@ -47,7 +47,10 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.utils import mk_repr
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeObjectParameters)
+
+
 class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN: list = []
     _PARAMETERS_OMIT: list = []

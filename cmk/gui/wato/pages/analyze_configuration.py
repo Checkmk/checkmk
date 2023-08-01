@@ -45,7 +45,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,
@@ -55,7 +55,10 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.automations import do_remote_automation
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeAnalyzeConfig)
+
+
 class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
 

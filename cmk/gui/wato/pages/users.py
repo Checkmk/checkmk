@@ -61,7 +61,7 @@ from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -80,7 +80,11 @@ else:
     managed = None  # type: ignore[assignment]
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeUsers)
+    mode_registry.register(ModeEditUser)
+
+
 class ModeUsers(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -565,7 +569,6 @@ class ModeUsers(WatoMode):
 # TODO: Create separate ModeCreateUser()
 # TODO: Move CME specific stuff to CME related class
 # TODO: Refactor action / page to use less hand crafted logic (valuespecs instead?)
-@mode_registry.register
 class ModeEditUser(WatoMode):
     @classmethod
     def name(cls) -> str:

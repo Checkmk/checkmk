@@ -76,7 +76,7 @@ from cmk.gui.valuespec import (
     Tuple,
     UUID,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
@@ -97,6 +97,15 @@ from cmk.gui.watolib.sample_config import get_default_notification_rule, new_not
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeNotifications)
+    mode_registry.register(ModeUserNotifications)
+    mode_registry.register(ModePersonalUserNotifications)
+    mode_registry.register(ModeEditNotificationRule)
+    mode_registry.register(ModeEditUserNotificationRule)
+    mode_registry.register(ModeEditPersonalNotificationRule)
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -507,7 +516,6 @@ class NotificationRuleLinks(NamedTuple):
     clone: str
 
 
-@mode_registry.register
 class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -977,7 +985,6 @@ def _get_notification_sync_sites():
     return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
 
 
-@mode_registry.register
 class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -1064,7 +1071,6 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         )
 
 
-@mode_registry.register
 class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -1674,7 +1680,6 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         html.end_form()
 
 
-@mode_registry.register
 class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     """Edit a global notification rule"""
 
@@ -1740,7 +1745,6 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
 
 
-@mode_registry.register
 class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     """Edit notification rule of a given user"""
 
@@ -1768,7 +1772,6 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
 
 
-@mode_registry.register
 class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
     def name(cls) -> str:

@@ -25,11 +25,14 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeIcons)
+
+
 class ModeIcons(WatoMode):
     @classmethod
     def name(cls) -> str:

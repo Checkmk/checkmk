@@ -71,16 +71,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
-import cmk.gui.wato.pages.activate_changes
-import cmk.gui.wato.pages.automation
-import cmk.gui.wato.pages.backup
-import cmk.gui.wato.pages.diagnostics
-import cmk.gui.wato.pages.fetch_agent_output
-import cmk.gui.wato.pages.folders
-import cmk.gui.wato.pages.host_diagnose
-import cmk.gui.wato.pages.services
-import cmk.gui.wato.pages.sites
-import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
@@ -107,78 +97,6 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
-from cmk.gui.wato.pages.audit_log import ModeAuditLog
-from cmk.gui.wato.pages.backup import (
-    ModeBackup,
-    ModeBackupDownloadKey,
-    ModeBackupEditKey,
-    ModeBackupJobState,
-    ModeBackupKeyManagement,
-    ModeBackupRestore,
-    ModeBackupTargets,
-    ModeBackupUploadKey,
-    ModeEditBackupJob,
-    ModeEditBackupTarget,
-)
-from cmk.gui.wato.pages.bulk_discovery import ModeBulkDiscovery
-from cmk.gui.wato.pages.bulk_edit import ModeBulkCleanup, ModeBulkEdit
-from cmk.gui.wato.pages.bulk_import import ModeBulkImport
-from cmk.gui.wato.pages.check_catalog import ModeCheckManPage, ModeCheckPlugins
-from cmk.gui.wato.pages.custom_attributes import (
-    ModeCustomAttrs,
-    ModeCustomHostAttrs,
-    ModeCustomUserAttrs,
-    ModeEditCustomAttr,
-    ModeEditCustomHostAttr,
-    ModeEditCustomUserAttr,
-)
-from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
-from cmk.gui.wato.pages.folders import ModeCreateFolder, ModeEditFolder, ModeFolder
-from cmk.gui.wato.pages.global_settings import ModeEditGlobals, ModeEditGlobalSetting
-from cmk.gui.wato.pages.groups import (
-    ModeContactgroups,
-    ModeEditContactgroup,
-    ModeEditHostgroup,
-    ModeEditServicegroup,
-    ModeGroups,
-    ModeHostgroups,
-    ModeServicegroups,
-)
-from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
-from cmk.gui.wato.pages.hosts import ModeCreateCluster, ModeCreateHost, ModeEditHost
-from cmk.gui.wato.pages.icons import ModeIcons
-from cmk.gui.wato.pages.ldap import ModeEditLDAPConnection, ModeLDAPConfig
-from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
-from cmk.gui.wato.pages.notifications import (
-    ModeEditNotificationRule,
-    ModeEditPersonalNotificationRule,
-    ModeNotifications,
-    ModePersonalUserNotifications,
-    ModeUserNotifications,
-)
-from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
-from cmk.gui.wato.pages.parentscan import ModeParentScan
-from cmk.gui.wato.pages.password_store import ModeEditPassword, ModePasswords
-from cmk.gui.wato.pages.pattern_editor import ModePatternEditor
-from cmk.gui.wato.pages.predefined_conditions import (
-    ModeEditPredefinedCondition,
-    ModePredefinedConditions,
-)
-from cmk.gui.wato.pages.random_hosts import ModeRandomHosts
-from cmk.gui.wato.pages.read_only import ModeManageReadOnly
-from cmk.gui.wato.pages.roles import ModeEditRole, ModeRoleMatrix, ModeRoles
-from cmk.gui.wato.pages.rulesets import ModeCloneRule, ModeEditRule, ModeEditRuleset, ModeNewRule
-from cmk.gui.wato.pages.search import ModeSearch
-from cmk.gui.wato.pages.sites import ModeDistributedMonitoring, ModeEditSite, ModeEditSiteGlobals
-from cmk.gui.wato.pages.tags import ModeEditAuxtag, ModeEditTagGroup, ModeTags
-from cmk.gui.wato.pages.timeperiods import (
-    ModeEditTimeperiod,
-    ModeTimeperiodImportICal,
-    ModeTimeperiods,
-)
-from cmk.gui.wato.pages.user_migrate import ModeUserMigrate
-from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 from cmk.gui.watolib.activate_changes import update_config_generation
 
 if cmk_version.edition() is cmk_version.Edition.CME:

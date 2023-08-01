@@ -36,7 +36,7 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.mode import mode_registry, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
@@ -51,7 +51,10 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.utils import mk_repr
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePatternEditor)
+
+
 class ModePatternEditor(WatoMode):
     @classmethod
     def name(cls) -> str:

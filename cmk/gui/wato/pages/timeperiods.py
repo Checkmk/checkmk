@@ -53,7 +53,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.timeperiods import find_usages_of_timeperiod
@@ -61,6 +61,14 @@ from cmk.gui.watolib.timeperiods import find_usages_of_timeperiod
 logger = logging.getLogger(__name__)
 
 TimeperiodUsage = tuple[str, str]
+
+from cmk.gui.wato.mode import ModeRegistry
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeTimeperiods)
+    mode_registry.register(ModeTimeperiodImportICal)
+    mode_registry.register(ModeEditTimeperiod)
 
 
 class ICalEvent(Event):
@@ -141,7 +149,6 @@ class ICalEvent(Event):
         return f"{self.__class__.__name__}({super().__repr__()})"
 
 
-@mode_registry.register
 class ModeTimeperiods(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -275,7 +282,6 @@ class ModeTimeperiods(WatoMode):
 # be used to generate timeperiod exceptions etc. and then finally
 # open the edit_timeperiod page to create a new timeperiod using
 # these information
-@mode_registry.register
 class ModeTimeperiodImportICal(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -443,7 +449,6 @@ class ModeTimeperiodImportICal(WatoMode):
         ModeEditTimeperiod().page()
 
 
-@mode_registry.register
 class ModeEditTimeperiod(WatoMode):
     @classmethod
     def name(cls) -> str:

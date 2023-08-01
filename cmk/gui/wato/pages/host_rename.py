@@ -45,7 +45,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
@@ -63,7 +63,11 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.site_changes import SiteChanges
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkRenameHost)
+    mode_registry.register(ModeRenameHost)
+
+
 class ModeBulkRenameHost(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -380,7 +384,6 @@ def rename_hosts_background_job(
     job_interface.send_result_message(message)
 
 
-@mode_registry.register
 class ModeRenameHost(WatoMode):
     @classmethod
     def name(cls) -> str:

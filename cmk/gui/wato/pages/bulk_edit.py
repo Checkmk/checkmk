@@ -24,7 +24,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.wato.mode import mode_registry, redirect, WatoMode
+from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -39,7 +39,11 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkEdit)
+    mode_registry.register(ModeBulkCleanup)
+
+
 class ModeBulkEdit(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -127,7 +131,6 @@ class ModeBulkEdit(WatoMode):
         html.end_form()
 
 
-@mode_registry.register
 class ModeBulkCleanup(WatoMode):
     @classmethod
     def name(cls) -> str:

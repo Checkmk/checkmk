@@ -27,11 +27,14 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeManageReadOnly)
+
+
 class ModeManageReadOnly(WatoMode):
     @classmethod
     def name(cls) -> str:

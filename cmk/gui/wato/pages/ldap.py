@@ -58,7 +58,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,
@@ -69,6 +69,14 @@ from cmk.gui.wato.pages.userdb_common import (
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+from cmk.gui.wato.mode import ModeRegistry
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeLDAPConfig)
+    mode_registry.register(ModeEditLDAPConnection)
+
 
 # .
 #   .--Valuespec-----------------------------------------------------------.
@@ -672,7 +680,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 )
 
 
-@mode_registry.register
 class ModeLDAPConfig(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -710,7 +717,6 @@ class ModeLDAPConfig(WatoMode):
         )
 
 
-@mode_registry.register
 class ModeEditLDAPConnection(WatoMode):
     @classmethod
     def name(cls) -> str:

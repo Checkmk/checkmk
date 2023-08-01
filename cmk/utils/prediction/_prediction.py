@@ -48,19 +48,6 @@ DataStats = list[_DataStat]
 _GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
 
 
-@dataclass(frozen=True)
-class _RRDResponse:
-    query_interval: tuple[int, int]
-    window_start: int
-    window_end: int
-    window_step: int
-    values: Sequence[float | None]
-
-    @property
-    def window(self) -> tuple[int, int, int]:
-        return self.window_start, self.window_end, self.window_step
-
-
 class _PeriodInfo(NamedTuple):
     slice: int
     groupby: _GroupByFunction
@@ -313,7 +300,7 @@ def get_rrd_data(
     fromtime: Timestamp,
     untiltime: Timestamp,
     max_entries: int = 400,
-) -> _RRDResponse:
+) -> TimeSeries:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -355,8 +342,7 @@ def get_rrd_data(
     if response is None:
         raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
-    raw_start, raw_end, raw_step, *values = response
-    return _RRDResponse((fromtime, untiltime), int(raw_start), int(raw_end), int(raw_step), values)
+    return TimeSeries(response)
 
 
 class PredictionStore:
@@ -445,7 +431,7 @@ def compute_prediction(
     time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
     from_time = time_windows[0][0]
-    rrd_responses = [
+    raw_slices = [
         (
             get_rrd_data(
                 livestatus.LocalConnection(), hostname, service_description, dsname, cf, start, end
@@ -455,17 +441,12 @@ def compute_prediction(
         for start, end in time_windows
     ]
 
-    raw_slices = [
-        (TimeSeries(list(rrd_response.values), rrd_response.window), offset)
-        for rrd_response, offset in rrd_responses
-    ]
-
     data_for_pred = _calculate_data_for_prediction(raw_slices)
 
     info = PredictionInfo(
         name=timegroup,
         time=now,
-        range=rrd_responses[0][0].query_interval,
+        range=time_windows[0],
         cf=cf,
         dsname=dsname,
         slice=period_info.slice,

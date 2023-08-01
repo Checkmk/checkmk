@@ -5,8 +5,8 @@
 import typing
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._utils import MetricName
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     filter_kubernetes_namespace_element,

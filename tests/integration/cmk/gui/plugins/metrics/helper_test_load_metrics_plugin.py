@@ -6,6 +6,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-from cmk.gui.plugins.metrics.utils import metric_info
+from cmk.gui.graphing._utils import metric_info
 
 print("test" in metric_info)

@@ -28,15 +28,9 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._graph_specification import MetricExpression, parse_raw_graph_specification
-from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.html_render import (
-    host_service_graph_dashlet_cmk,
-    host_service_graph_popup_cmk,
-)
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
     evaluate,
@@ -45,6 +39,13 @@ from cmk.gui.plugins.metrics.utils import (
     perfometer_info,
     translate_metrics,
     unit_info,
+)
+from cmk.gui.http import request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.metrics.html_render import (
+    host_service_graph_dashlet_cmk,
+    host_service_graph_popup_cmk,
 )
 from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -86,8 +87,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.metrics as api_module
-    import cmk.gui.plugins.metrics.utils as plugin_utils
+    import cmk.gui.plugins.metrics as legacy_api_module
+    import cmk.gui.plugins.metrics.utils as legacy_plugin_utils
 
     for name in (
         "check_metrics",
@@ -121,15 +122,16 @@ def _register_pre_21_plugin_api() -> None:
         "time_series_expression_registry",
         "unit_info",
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
+        legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
+        legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
 
     # Avoid needed imports, see CMK-12147
     globals().update(
         {
-            "indexed_color": plugin_utils.indexed_color,
-            "metric_info": plugin_utils.metric_info,
-            "check_metrics": plugin_utils.check_metrics,
-            "graph_info": plugin_utils.graph_info,
+            "indexed_color": graphing_utils.indexed_color,
+            "metric_info": graphing_utils.metric_info,
+            "check_metrics": graphing_utils.check_metrics,
+            "graph_info": graphing_utils.graph_info,
         }
     )
 

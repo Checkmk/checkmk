@@ -25,6 +25,13 @@ from cmk.gui.graphing._graph_specification import (
     parse_raw_graph_specification,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._utils import (
+    CombinedGraphMetric,
+    CombinedSingleMetricSpec,
+    get_graph_data_from_livestatus,
+    GraphDataRange,
+    GraphRecipe,
+)
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -35,13 +42,6 @@ from cmk.gui.plugins.metrics.graph_pdf import (
     get_mm_per_ex,
     graph_legend_height,
     render_graph_pdf,
-)
-from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetric,
-    CombinedSingleMetricSpec,
-    get_graph_data_from_livestatus,
-    GraphDataRange,
-    GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import GraphRenderOptions

@@ -9,6 +9,13 @@ from typing import TypeGuard
 
 from cmk.utils.prediction import Timestamp
 
+from cmk.gui.graphing._utils import (
+    darken_color,
+    ForecastGraphRecipe,
+    GraphDataRange,
+    lighten_color,
+    parse_color,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.artwork import (
@@ -16,13 +23,6 @@ from cmk.gui.plugins.metrics.artwork import (
     GraphArtwork,
     LayoutedCurve,
     LayoutedCurveArea,
-)
-from cmk.gui.plugins.metrics.utils import (
-    darken_color,
-    ForecastGraphRecipe,
-    GraphDataRange,
-    lighten_color,
-    parse_color,
 )
 from cmk.gui.type_defs import GraphRenderOptions, RGBColor, SizeMM
 

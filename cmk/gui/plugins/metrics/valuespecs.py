@@ -7,11 +7,11 @@ import json
 from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
+from cmk.gui.graphing._utils import metric_info, unit_info
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.utils import metric_info, unit_info
 from cmk.gui.type_defs import GraphTitleFormat
 from cmk.gui.valuespec import (
     CascadingDropdown,

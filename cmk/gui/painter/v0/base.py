@@ -21,12 +21,12 @@ from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
+from cmk.gui.graphing._utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,

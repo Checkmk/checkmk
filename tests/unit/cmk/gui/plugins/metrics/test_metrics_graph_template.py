@@ -17,7 +17,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricExpression,
     RPNExpression,
 )
-from cmk.gui.plugins.metrics.utils import GraphRecipeBase, GraphTemplate
+from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 
 
 @pytest.mark.parametrize(

@@ -13,7 +13,7 @@ from tests.testlib.users import create_and_destroy_user
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.plugins.metrics.utils import unit_info
+from cmk.gui.graphing._utils import unit_info
 
 
 def test_temperature_unit_default() -> None:

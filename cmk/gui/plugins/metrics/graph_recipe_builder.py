@@ -10,9 +10,8 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._graph_specification import GraphSpecification
+from cmk.gui.graphing._utils import GraphRecipe
 from cmk.gui.i18n import _
-
-from .utils import GraphRecipe
 
 _TGraphSpecification_contra = TypeVar(
     "_TGraphSpecification_contra",

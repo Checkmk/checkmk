@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.plugins.metrics.utils import MetricName
+from cmk.gui.graphing._utils import MetricName
 
 from .utils import expect_validate_failure, expect_validate_success
 

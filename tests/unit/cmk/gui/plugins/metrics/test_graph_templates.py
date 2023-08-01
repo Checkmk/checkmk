@@ -8,8 +8,8 @@ from collections.abc import Sequence
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.gui.graphing._utils import GraphTemplate
 from cmk.gui.plugins.metrics import graph_templates
-from cmk.gui.plugins.metrics.utils import GraphTemplate
 
 _GRAPH_TEMPLATES = [
     GraphTemplate(

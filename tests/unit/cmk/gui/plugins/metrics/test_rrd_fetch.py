@@ -18,7 +18,7 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
-from cmk.gui.plugins.metrics.utils import GraphDataRange, GraphRecipe
+from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 

@@ -28,8 +28,7 @@ from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     RPNExpression,
 )
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     CheckMetricEntry,
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
@@ -42,6 +41,7 @@ from cmk.gui.plugins.metrics.utils import (
     RRDDataKey,
     unit_info,
 )
+from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 
 

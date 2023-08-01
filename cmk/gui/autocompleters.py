@@ -16,9 +16,7 @@ from cmk.utils.regex import regex
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     get_graph_templates,
     graph_templates_internal,
     metric_info,
@@ -26,6 +24,8 @@ from cmk.gui.plugins.metrics.utils import (
     registered_metrics,
     translated_metrics_from_row,
 )
+from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors

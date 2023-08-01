@@ -21,9 +21,7 @@ from cmk.gui.graphing._graph_specification import (
     RPNExpression,
     TemplateGraphSpecification,
 )
-from cmk.gui.i18n import _
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
@@ -40,6 +38,8 @@ from cmk.gui.plugins.metrics.utils import (
     stack_resolver,
     translated_metrics_from_row,
 )
+from cmk.gui.i18n import _
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, TranslatedMetrics
 
 from .graph_recipe_builder import graph_recipe_builder_registry

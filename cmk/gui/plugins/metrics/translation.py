@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.plugins.metrics.utils import check_metrics, CheckMetricEntry, KB, m, MB
+from cmk.gui.graphing._utils import check_metrics, CheckMetricEntry, KB, m, MB
 
 # .
 #   .--Checks--------------------------------------------------------------.

@@ -19,6 +19,17 @@ from cmk.utils.prediction import TimeRange
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
+from cmk.gui.graphing._utils import (
+    CombinedGraphMetric,
+    CombinedSingleMetricSpec,
+    ForecastGraphRecipe,
+    GraphDataRange,
+    GraphRecipe,
+    parse_raw_graph_recipe,
+    render_color_icon,
+    Scalar,
+    SizeEx,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -30,17 +41,6 @@ from cmk.gui.plugins.metrics.artwork import (
     graph_curves_to_be_painted,
     GraphArtwork,
     order_graph_curves_for_legend_and_mouse_hover,
-)
-from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetric,
-    CombinedSingleMetricSpec,
-    ForecastGraphRecipe,
-    GraphDataRange,
-    GraphRecipe,
-    parse_raw_graph_recipe,
-    render_color_icon,
-    Scalar,
-    SizeEx,
 )
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host

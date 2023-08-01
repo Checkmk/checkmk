@@ -19,17 +19,17 @@ import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
+from cmk.gui.graphing._utils import (
+    graph_templates_internal,
+    metric_info,
+    MKCombinedGraphLimitExceededError,
+)
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.graph_recipe_builder import build_graph_recipes
 from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     GraphDestinations,
-)
-from cmk.gui.plugins.metrics.utils import (
-    graph_templates_internal,
-    metric_info,
-    MKCombinedGraphLimitExceededError,
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import Choices, SingleInfos, VisualContext

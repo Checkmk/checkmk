@@ -15,8 +15,7 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.graphing._graph_specification import GraphMetric, RPNExpression
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     AugmentedTimeSeries,
     Curve,
     ExpressionParams,
@@ -26,6 +25,7 @@ from cmk.gui.plugins.metrics.utils import (
     RRDData,
     time_series_expression_registry,
 )
+from cmk.gui.i18n import _
 
 # .
 #   .--Curves--------------------------------------------------------------.

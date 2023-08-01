@@ -5,14 +5,14 @@
 
 import cmk.utils.render
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     graph_info,
     indexed_color,
     MAX_NUMBER_HOPS,
     metric_info,
     parse_color_into_hexrgb,
 )
+from cmk.gui.i18n import _
 
 # .
 #   .--Metrics-------------------------------------------------------------.

@@ -14,7 +14,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Final, Literal, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, NamedTuple, overload, TypedDict, TypeVar, Union
 
 from pydantic import BaseModel, parse_obj_as
 
@@ -42,7 +42,6 @@ from cmk.gui.type_defs import (
     Choices,
     Perfdata,
     PerfometerSpec,
-    RenderableRecipe,
     RGBColor,
     Row,
     TranslatedMetric,
@@ -1210,6 +1209,17 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 def metric_title(metric_name: MetricName_) -> str:
     return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
+
+
+RenderingExpression = tuple[Any, ...]
+
+
+class RenderableRecipe(NamedTuple):
+    title: str
+    expression: RenderingExpression
+    color: str
+    line_type: str
+    visible: bool
 
 
 def metric_recipe_and_unit(

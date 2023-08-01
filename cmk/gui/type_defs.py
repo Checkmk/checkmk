@@ -611,7 +611,6 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     color: str
 
 
-RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
 
 PerfometerSpec = dict[str, Any]
@@ -628,14 +627,6 @@ class RowShading(TypedDict):
 
 
 GraphRenderOptions = dict[str, Any]
-
-
-class RenderableRecipe(NamedTuple):
-    title: str
-    expression: RenderingExpression
-    color: str
-    line_type: str
-    visible: bool
 
 
 ActionResult = FinalizeRequest | None

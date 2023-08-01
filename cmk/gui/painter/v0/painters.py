@@ -138,7 +138,6 @@ def register(
     painter_registry.register(PainterSvcCustomNotes)
     painter_registry.register(PainterSvcStaleness)
     painter_registry.register(PainterSvcIsStale)
-    painter_registry.register(PainterSvcServicelevel)
     painter_registry.register(PainterServiceCustomVariables)
     painter_registry.register(PainterServiceCustomVariable)
     painter_registry.register(PainterHostCustomVariable)
@@ -197,7 +196,6 @@ def register(
     painter_registry.register(PainterHostAcknowledged)
     painter_registry.register(PainterHostStaleness)
     painter_registry.register(PainterHostIsStale)
-    painter_registry.register(PainterHostServicelevel)
     painter_registry.register(PainterHostCustomVariables)
     painter_registry.register(PainterServiceDiscoveryState)
     painter_registry.register(PainterServiceDiscoveryCheck)
@@ -373,7 +371,7 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def _paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
+def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
     if choices is None:
         choices = []
 
@@ -1676,29 +1674,6 @@ class PainterSvcIsStale(Painter):
         return _paint_is_stale(row)
 
 
-class PainterSvcServicelevel(Painter):
-    @property
-    def ident(self) -> str:
-        return "svc_servicelevel"
-
-    def title(self, cell: Cell) -> str:
-        return _("Service service level")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["service_custom_variable_names", "service_custom_variable_values"]
-
-    @property
-    def sorter(self) -> SorterName:
-        return "servicelevel"
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
-
-
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
     if blacklist is None:
         blacklist = []
@@ -1791,7 +1766,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
-        return _paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
+        return paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
 
 
 class PainterServiceCustomVariable(ABCPainterCustomVariable):
@@ -2558,7 +2533,7 @@ class PainterHostIpv4Address(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_4", row)
+        return paint_custom_var("host", "ADDRESS_4", row)
 
 
 class PainterHostIpv6Address(Painter):
@@ -2577,7 +2552,7 @@ class PainterHostIpv6Address(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_6", row)
+        return paint_custom_var("host", "ADDRESS_6", row)
 
 
 class PainterHostAddresses(Painter):
@@ -2660,7 +2635,7 @@ class PainterHostAddressFamily(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_FAMILY", row)
+        return paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
 class PainterHostAddressFamilies(Painter):
@@ -3195,29 +3170,6 @@ class PainterHostIsStale(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_is_stale(row)
-
-
-class PainterHostServicelevel(Painter):
-    @property
-    def ident(self) -> str:
-        return "host_servicelevel"
-
-    def title(self, cell: Cell) -> str:
-        return _("Host service level")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_custom_variable_names", "host_custom_variable_values"]
-
-    @property
-    def sorter(self) -> SorterName:
-        return "servicelevel"
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 class PainterHostCustomVariables(Painter):

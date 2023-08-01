@@ -9,7 +9,9 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.sidebar.utils import snapin_registry
 from cmk.gui.plugins.wato.utils import notification_parameter_registry
 from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.icon import IconRegistry
+from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.mode import ModeRegistry
 from cmk.gui.watolib.config_domain_name import (
@@ -37,6 +39,8 @@ def register(
     permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
+    command_registry: CommandRegistry,
+    sorter_registry: SorterRegistry,
     icon_registry: IconRegistry,
     config_domain_registry: ConfigDomainRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
@@ -49,7 +53,13 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     filter_registry: FilterRegistry,
 ) -> None:
-    views.register(data_source_registry, painter_registry, permission_registry)
+    views.register(
+        data_source_registry,
+        painter_registry,
+        command_registry,
+        sorter_registry,
+        permission_registry,
+    )
     icon_registry.register(MkeventdIcon)
     wato.register(
         permission_registry,

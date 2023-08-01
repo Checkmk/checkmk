@@ -111,6 +111,8 @@ def register() -> None:
             permission_registry,
             data_source_registry,
             painter_registry,
+            command_registry,
+            sorter_registry,
             icon_and_action_registry,
             config_domain_registry,
             sample_config_generator_registry,

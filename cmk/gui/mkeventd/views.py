@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from collections.abc import Callable, Sequence
-from typing import Literal, TypeGuard, TypeVar
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Literal, TypeGuard, TypeVar
 
 from livestatus import OnlySites, SiteId
 
@@ -24,6 +24,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
+from cmk.gui.painter.v0.painters import paint_custom_var
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.type_defs import (
@@ -33,6 +34,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     SingleInfos,
+    SorterName,
     SorterSpec,
     ViewSpec,
     VisualContext,
@@ -43,12 +45,15 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
+from cmk.gui.views.command import Command, CommandActionResult, CommandRegistry, CommandSpec
 from cmk.gui.views.sorter import (
+    cmp_custom_variable,
     cmp_num_split,
     cmp_simple_number,
     cmp_simple_string,
     declare_1to1_sorter,
+    Sorter,
+    SorterRegistry,
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals.filter import Filter
@@ -62,6 +67,8 @@ from .permission_section import PermissionSectionEventConsole
 def register(
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
+    command_registry: CommandRegistry,
+    sorter_registry: SorterRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
     data_source_registry.register(DataSourceECEvents)
@@ -78,6 +85,8 @@ def register(
     multisite_builtin_views["ec_event_mobile"] = EC_EVENT_MOBILE
     multisite_builtin_views["ec_events_mobile"] = EC_EVENTS_MOBILE
 
+    painter_registry.register(PainterSvcServicelevel)
+    painter_registry.register(PainterHostServicelevel)
     painter_registry.register(PainterEventId)
     painter_registry.register(PainterEventCount)
     painter_registry.register(PainterEventText)
@@ -115,6 +124,10 @@ def register(
     command_registry.register(CommandECArchiveEvent)
     command_registry.register(CommandECArchiveEventsOfHost)
 
+    sorter_registry.register(SorterServicelevel)
+
+    declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
+    declare_1to1_sorter("host_servicelevel", cmp_simple_number)
     declare_1to1_sorter("event_id", cmp_simple_number)
     declare_1to1_sorter("event_count", cmp_simple_number)
     declare_1to1_sorter("event_text", cmp_simple_string)
@@ -365,6 +378,52 @@ class DataSourceECEventHistory(ABCDataSource):
 #   |                |_|   \__,_|_|_| |_|\__\___|_|  |___/                 |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class PainterSvcServicelevel(Painter):
+    @property
+    def ident(self) -> str:
+        return "svc_servicelevel"
+
+    def title(self, cell: Cell) -> str:
+        return _("Service service level")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Service Level")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["service_custom_variable_names", "service_custom_variable_values"]
+
+    @property
+    def sorter(self) -> SorterName:
+        return "servicelevel"
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
+
+
+class PainterHostServicelevel(Painter):
+    @property
+    def ident(self) -> str:
+        return "host_servicelevel"
+
+    def title(self, cell: Cell) -> str:
+        return _("Host service level")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Service Level")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_custom_variable_names", "host_custom_variable_values"]
+
+    @property
+    def sorter(self) -> SorterName:
+        return "servicelevel"
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 class PainterEventId(Painter):
@@ -1443,6 +1502,23 @@ class CommandECArchiveEventsOfHost(ECCommand):
 #   |                 |____/ \___/|_|   \__\___|_|  |___/                  |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class SorterServicelevel(Sorter):
+    @property
+    def ident(self) -> str:
+        return "servicelevel"
+
+    @property
+    def title(self) -> str:
+        return _("Servicelevel")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["custom_variables"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
 def cmp_simple_state(column, ra, rb):

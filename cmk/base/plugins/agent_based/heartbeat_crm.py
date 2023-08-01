@@ -30,7 +30,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 KNOWN_RESOURCES_HEADERS = {"full list of resources:"}
-KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {"failed actions:", "failed resource actions:"}
+KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
+    "failed actions:",
+    "failed resource actions:",
+    "failed fencing actions:",
+}
 
 
 class _Cluster(NamedTuple):
@@ -321,7 +325,6 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:

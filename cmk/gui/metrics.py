@@ -28,6 +28,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -46,7 +47,6 @@ from cmk.gui.plugins.metrics.utils import (
     unit_info,
 )
 from cmk.gui.type_defs import MetricExpression, PerfometerSpec, TranslatedMetrics, UnitInfo
-from cmk.gui.utils.graph_specification import parse_raw_graph_specification
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float

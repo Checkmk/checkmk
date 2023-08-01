@@ -34,6 +34,11 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKHTTPException, MKUserError
+from cmk.gui.graphing._graph_specification import (
+    CombinedGraphSpecification,
+    ForecastGraphSpecification,
+    GraphSpecification,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -59,11 +64,6 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
-from cmk.gui.utils.graph_specification import (
-    CombinedGraphSpecification,
-    ForecastGraphSpecification,
-    GraphSpecification,
-)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints

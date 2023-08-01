@@ -21,6 +21,10 @@ from cmk.utils.prediction import Timestamp
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
+from cmk.gui.graphing._graph_specification import (
+    parse_raw_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -41,10 +45,6 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import GraphRenderOptions
-from cmk.gui.utils.graph_specification import (
-    parse_raw_graph_specification,
-    TemplateGraphSpecification,
-)
 
 from .graph_recipe_builder import build_graph_recipes
 

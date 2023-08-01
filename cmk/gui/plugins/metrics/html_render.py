@@ -18,6 +18,7 @@ from cmk.utils.prediction import TimeRange
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -44,7 +45,6 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import GraphRenderOptions
-from cmk.gui.utils.graph_specification import GraphSpecification, TemplateGraphSpecification
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax

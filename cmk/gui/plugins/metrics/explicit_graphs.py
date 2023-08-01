@@ -5,8 +5,8 @@
 
 from typing import Final
 
+from cmk.gui.graphing._graph_specification import ExplicitGraphSpecification
 from cmk.gui.plugins.metrics.utils import GraphRecipe
-from cmk.gui.utils.graph_specification import ExplicitGraphSpecification
 
 from .graph_recipe_builder import graph_recipe_builder_registry
 

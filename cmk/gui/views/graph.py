@@ -12,6 +12,7 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.base import Cell, Painter2
@@ -32,7 +33,6 @@ from cmk.gui.type_defs import (
     Row,
     VisualLinkSpec,
 )
-from cmk.gui.utils.graph_specification import TemplateGraphSpecification
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless

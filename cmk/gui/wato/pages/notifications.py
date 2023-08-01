@@ -19,7 +19,6 @@ import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
@@ -44,7 +43,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    ABCEventsMode,
     ContactGroupSelection,
     flash,
     make_confirm_delete_link,
@@ -80,6 +78,7 @@ from cmk.gui.valuespec import (
     Tuple,
     UUID,
 )
+from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
@@ -96,6 +95,7 @@ from cmk.gui.watolib.notifications import (
     save_notification_rules,
 )
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
@@ -1399,7 +1399,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         timeperiod_entry: list[DictionaryEntry] = [
             (
                 "timeperiod",
-                watolib.timeperiods.TimeperiodSelection(
+                TimeperiodSelection(
                     title=_("Only bulk notifications during the following time period"),
                 ),
             ),

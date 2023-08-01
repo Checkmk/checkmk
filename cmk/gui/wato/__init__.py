@@ -301,7 +301,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.plugins.wato.datasource_programs as datasource_programs
 
     for name in (
-        "ABCEventsMode",
         "ABCHostAttributeNagiosText",
         "ABCHostAttributeValueSpec",
         "ABCMainModule",

@@ -8,7 +8,6 @@ import logging
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator
-from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from statistics import fmean
@@ -389,7 +388,7 @@ class PredictionStore:
     def _info_file(self, timegroup: Timegroup) -> Path:
         return self._dir / f"{timegroup}.info"
 
-    def save_predictions(
+    def save_prediction(
         self,
         info: PredictionInfo,
         data_for_pred: PredictionData,
@@ -400,15 +399,9 @@ class PredictionStore:
         with self._data_file(info.name).open("w") as fname:
             fname.write(data_for_pred.dumps())
 
-    def clean_prediction_files(self, timegroup: Timegroup, force: bool = False) -> None:
-        # In previous versions it could happen that the files were created with 0 bytes of size
-        # which was never handled correctly so that the prediction could never be used again until
-        # manual removal of the files. Clean this up.
-        for file_path in [self._data_file(timegroup), self._info_file(timegroup)]:
-            with suppress(FileNotFoundError):
-                if force or file_path.stat().st_size == 0:
-                    file_path.unlink()
-                    logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
+    def remove_prediction(self, timegroup: Timegroup) -> None:
+        self._data_file(timegroup).unlink(missing_ok=True)
+        self._info_file(timegroup).unlink(missing_ok=True)
 
     def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
         file_path = self._info_file(timegroup)
@@ -439,7 +432,7 @@ def compute_prediction(
     cf: ConsolidationFunctionName,
 ) -> PredictionData:
     logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
-    prediction_store.clean_prediction_files(timegroup, force=True)
+    prediction_store.remove_prediction(timegroup)
 
     time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
@@ -470,7 +463,7 @@ def compute_prediction(
         slice=period_info.slice,
         params=params,
     )
-    prediction_store.save_predictions(info, data_for_pred)
+    prediction_store.save_prediction(info, data_for_pred)
 
     return data_for_pred
 

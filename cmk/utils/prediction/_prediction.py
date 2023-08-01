@@ -78,11 +78,11 @@ class PredictionInfo:
     params: PredictionParameters
 
     @classmethod
-    def loads(cls, raw: str, *, name: Timegroup) -> "PredictionInfo":
+    def loads(cls, raw: str) -> "PredictionInfo":
         data = json.loads(raw)
         range_ = data["range"]
         return cls(
-            name=name,  # explicitly passed. (not in `data` before 2.1)
+            name=data["name"],
             time=int(data["time"]),
             range=(Timestamp(range_[0]), Timestamp(range_[1])),
             cf=ConsolidationFunctionName(data["cf"]),
@@ -413,7 +413,7 @@ class PredictionStore:
     def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
         file_path = self._info_file(timegroup)
         try:
-            return PredictionInfo.loads(file_path.read_text(), name=timegroup)
+            return PredictionInfo.loads(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
         return None

@@ -74,14 +74,9 @@ void PluginsBaseProvider::updateSyncTimeout() {
 
 static void LogExecuteExtensions(std::string_view title,
                                  const std::vector<std::string> &arr) {
-    std::string formatted_string;
-    for (const auto &s : arr) {
-        formatted_string += s + ",";
-    }
-    if (!arr.empty()) {
-        formatted_string.pop_back();
-    }
-
+    auto joined = arr | std::views::join_with(',');
+    auto formatted_string =
+        std::accumulate(joined.begin(), joined.end(), std::string{});
     XLOG::d.i("{} [{}]", title, formatted_string);
 }
 
@@ -99,7 +94,7 @@ void PluginsBaseProvider::updateCommandLine() {
 
 void PluginsBaseProvider::UpdatePluginMapCmdLine(PluginMap &pm,
                                                  srv::ServiceProcessor *sp) {
-    for (auto &[name, entry] : pm) {
+    for (auto &entry : pm | std::views::values) {
         XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
         if (entry.path().empty()) {
@@ -112,16 +107,16 @@ void PluginsBaseProvider::UpdatePluginMapCmdLine(PluginMap &pm,
         }
 
         auto &mc = sp->getModuleCommander();
-        auto fname = wtools::ToStr(entry.path());
+        auto file_name = wtools::ToStr(entry.path());
         XLOG::t.i("checking our script");
 
-        if (!mc.isModuleScript(fname)) {
+        if (!mc.isModuleScript(file_name)) {
             continue;
         }
 
         XLOG::t.i("building command line");
 
-        auto cmd_line = mc.buildCommandLine(fname);
+        auto cmd_line = mc.buildCommandLine(file_name);
         if (!cmd_line.empty()) {
             XLOG::t.i("A Module changes command line of the plugin '{}'",
                       wtools::ToUtf8(cmd_line));

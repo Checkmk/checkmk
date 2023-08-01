@@ -101,7 +101,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 from cmk.bi.actions import BICallARuleAction
@@ -111,6 +111,16 @@ from cmk.bi.compiler import BICompiler
 from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPack
 from cmk.bi.rule import BIRule, BIRuleSchema
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBIEditPack)
+    mode_registry.register(ModeBIPacks)
+    mode_registry.register(ModeBIRules)
+    mode_registry.register(ModeBIEditRule)
+    mode_registry.register(BIModeEditAggregation)
+    mode_registry.register(BIModeAggregations)
+    mode_registry.register(ModeBIRuleTree)
 
 
 @main_module_registry.register
@@ -271,7 +281,6 @@ class ABCBIMode(WatoMode):
         return allowed_rules
 
 
-@mode_registry.register
 class ModeBIEditPack(ABCBIMode):
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -407,7 +416,6 @@ class ModeBIEditPack(ABCBIMode):
 #   +----------------------------------------------------------------------+
 
 
-@mode_registry.register
 class ModeBIPacks(ABCBIMode):
     def __init__(self) -> None:
         super().__init__()
@@ -592,7 +600,6 @@ def _get_pack_confirm_message(pack: BIAggregationPack) -> str:
 #   +----------------------------------------------------------------------+
 
 
-@mode_registry.register
 class ModeBIRules(ABCBIMode):
     @classmethod
     def name(cls) -> str:
@@ -1060,7 +1067,6 @@ class ModeBIRules(ABCBIMode):
         ]
 
 
-@mode_registry.register
 class ModeBIEditRule(ABCBIMode):
     @classmethod
     def name(cls) -> str:
@@ -1595,7 +1601,6 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
 #   '----------------------------------------------------------------------'
 
 
-@mode_registry.register
 class BIModeEditAggregation(ABCBIMode):
     @classmethod
     def name(cls) -> str:
@@ -1918,7 +1923,6 @@ class BIModeEditAggregation(ABCBIMode):
 #   '----------------------------------------------------------------------'
 
 
-@mode_registry.register
 class BIModeAggregations(ABCBIMode):
     @classmethod
     def name(cls) -> str:
@@ -2253,7 +2257,6 @@ class BIModeAggregations(ABCBIMode):
 #   '----------------------------------------------------------------------'
 
 
-@mode_registry.register
 class ModeBIRuleTree(ABCBIMode):
     @classmethod
     def name(cls) -> str:

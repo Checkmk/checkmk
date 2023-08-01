@@ -30,8 +30,13 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.main_menu import MainModuleTopic
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBackgroundJobsOverview)
+    mode_registry.register(ModeBackgroundJobDetails)
 
 
 @main_module_registry.register
@@ -69,7 +74,6 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return True
 
 
-@mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -98,7 +102,6 @@ class ModeBackgroundJobsOverview(WatoMode):
         return None
 
 
-@mode_registry.register
 class ModeBackgroundJobDetails(WatoMode):
     @classmethod
     def name(cls) -> str:

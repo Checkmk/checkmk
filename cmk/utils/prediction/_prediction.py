@@ -99,6 +99,7 @@ class PredictionInfo:
 class PredictionData:
     columns: list[str]
     points: DataStats
+    num_points: int
     data_twindow: list[Timestamp]
     step: Seconds
 
@@ -108,16 +109,13 @@ class PredictionData:
         return cls(
             columns=[str(e) for e in data["columns"]],
             points=[[None if e is None else float(e) for e in elist] for elist in data["points"]],
+            num_points=int(data["num_points"]),
             data_twindow=[Timestamp(e) for e in data["data_twindow"]],
             step=Seconds(data["step"]),
         )
 
     def dumps(self) -> str:
         return json.dumps(asdict(self))
-
-    @property
-    def num_points(self) -> int:
-        return len(self.points)
 
 
 def is_dst(timestamp: float) -> bool:
@@ -578,9 +576,12 @@ def _calculate_data_for_prediction(
 ) -> PredictionData:
     twindow, slices = _upsample(raw_slices)
 
+    descriptors = _data_stats(slices)
+
     return PredictionData(
         columns=["average", "min", "max", "stdev"],
-        points=_data_stats(slices),
+        points=descriptors,
+        num_points=len(descriptors),
         data_twindow=list(twindow[:2]),
         step=twindow[2],
     )

@@ -586,7 +586,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
         )
 
     # Empty response, because non-existent perf_data variable
-    timeseries = _prediction.get_rrd_data(
+    rrd_response = _prediction.get_rrd_data(
         site.live,
         HostName("test-prediction"),
         "CPU load",
@@ -596,7 +596,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
         until_time,
     )
 
-    assert timeseries == _prediction._RRDResponse(
+    assert rrd_response == _prediction._RRDResponse(
         query_interval=(from_time, until_time),
         window_start=0,
         window_end=0,

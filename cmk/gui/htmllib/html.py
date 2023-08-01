@@ -380,11 +380,26 @@ class HTMLGenerator(HTMLWriter):
         self.close_form()
         self.form_name = None
 
-    def add_confirm_on_submit(self, form_name: str, msg: str) -> None:
+    def add_confirm_on_submit(
+        self, form_name: str, msg: str, confirm_text: str = "Yes", cancel_text: str = "No"
+    ) -> None:
         """Adds a confirm dialog to a form that is shown before executing a form submission"""
         self.javascript(
-            "cmk.forms.add_confirm_on_submit(%s, %s)"
-            % (json.dumps("form_%s" % form_name), json.dumps(escaping.escape_text(msg)))
+            "cmk.forms.add_confirm_on_submit(%s, %s, %s)"
+            % (
+                json.dumps("form_%s" % form_name),
+                json.dumps(escaping.escape_text(msg)),
+                json.dumps(
+                    {
+                        "confirmButtonText": confirm_text,
+                        "cancelButtonText": cancel_text,
+                        "customClass": {
+                            "confirmButton": "confirm_question",
+                            "icon": "confirm_icon confirm_question",
+                        },
+                    }
+                ),
+            )
         )
 
     def in_form(self) -> bool:

@@ -38,6 +38,7 @@ def add_change(
     domains: Sequence[type[ABCConfigDomain]] | None = None,
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
+    prevent_discard_changes: bool = False,
 ) -> None:
     """
     config_domains:
@@ -64,6 +65,7 @@ def add_change(
         domains,
         sites,
         domain_settings,
+        prevent_discard_changes,
     )
 
 
@@ -90,6 +92,7 @@ class ActivateChangesWriter:
         domains: Sequence[type[ABCConfigDomain]] | None,
         sites: Iterable[SiteId] | None,
         domain_settings: DomainSettings | None,
+        prevent_discard_changes: bool = False,
     ) -> None:
         if not ActivateChangesWriter._enabled:
             return
@@ -116,6 +119,7 @@ class ActivateChangesWriter:
                 need_restart,
                 domains,
                 domain_settings,
+                prevent_discard_changes,
             )
 
     def _new_change_id(self) -> str:
@@ -133,6 +137,7 @@ class ActivateChangesWriter:
         need_restart: bool | None,
         domains: Sequence[type[ABCConfigDomain]],
         domain_settings: DomainSettings | None,
+        prevent_discard_changes: bool,
     ) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
@@ -165,6 +170,7 @@ class ActivateChangesWriter:
                 "need_sync": need_sync,
                 "need_restart": need_restart,
                 "domain_settings": domain_settings or {},
+                "prevent_discard_changes": prevent_discard_changes,
             }
         )
 

@@ -475,6 +475,13 @@ class ActivateChanges:
         message = self._make_changes_message(number_of_changes)
         return PendingChangesInfo(number=number_of_changes, message=message)
 
+    def discard_changes_forbidden(self):
+        for site_id in set(activation_sites()):
+            for change in SiteChanges(SiteChanges.make_path(site_id)).read():
+                if change.get("prevent_discard_changes", False):
+                    return True
+        return False
+
     def grouped_changes(self):
         return self._changes
 
@@ -555,6 +562,9 @@ class ActivateChanges:
 
     def _is_foreign(self, change) -> bool:  # type:ignore[no-untyped-def]
         return change["user_id"] and change["user_id"] != user.id
+
+    def _prevent_discard_changes(self, change) -> bool:  # type:ignore[no-untyped-def]
+        return change.get("prevent_discard_changes", False)
 
     def _affects_all_sites(self, change):
         return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))

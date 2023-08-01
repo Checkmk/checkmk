@@ -2693,12 +2693,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         host.rename(newname)
         del self._hosts[oldname]
         self._hosts[newname] = host
-        add_change(
-            "rename-host",
-            _l("Renamed host from %s to %s") % (oldname, newname),
-            object_ref=host.object_ref(),
-            sites=[host.site_id()],
-        )
 
         Folder.delete_hosts_from_lookup_cache([oldname])
         Folder.add_hosts_to_lookup_cache([(newname, self.path())])
@@ -3465,7 +3459,8 @@ class CREHost(WithPermissions, WithAttributes):
             "rename-host",
             _l("Renamed host from %s into %s.") % (self.name(), new_name),
             object_ref=self.object_ref(),
-            sites=[self.site_id()],
+            sites=[self.site_id(), omd_site()],
+            prevent_discard_changes=True,
         )
         self._name = new_name
 

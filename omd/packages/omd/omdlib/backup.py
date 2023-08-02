@@ -60,6 +60,10 @@ def backup_site_to_tarfile(
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:
     excludes = []
+
+    # exclude the "cache" / working directory for the agent bakery
+    excludes.append("var/check_mk/agents/.files_cache/*")
+
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")

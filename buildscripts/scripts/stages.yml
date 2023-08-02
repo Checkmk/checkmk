@@ -149,7 +149,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         SHELLCHECK_OUTPUT_ARGS: -e SC1091
-      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      COMMAND: "make test-shellcheck-docker &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 

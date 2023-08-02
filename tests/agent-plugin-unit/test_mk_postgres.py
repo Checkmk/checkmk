@@ -40,7 +40,7 @@ VALID_CONFIG_WITH_INSTANCES = [
     "",
     "not a comment but trash",
     "DBUSER=user_yz",
-    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass",
+    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass{sep}",
 ]
 VALID_CONFIG_WITH_PG_BINARY_PATH = [
     "PG_BINARY_PATH=C:\\PostgreSQL\\15\\bin\\psql.exe",

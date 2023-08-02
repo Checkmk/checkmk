@@ -66,7 +66,7 @@ def mobile_html_head(title: str) -> None:
     html.stylesheet(href="jquery/jquery.mobile-1.4.5.min.css")
     html.stylesheet(href="themes/facelift/theme.css")
 
-    html.link(rel="apple-touch-icon", href="themes/facelift/images/ios_logo.png")
+    html.link(rel="apple-touch-icon", href="themes/facelift/images/favicon.ico")
     html.javascript_file(src="js/mobile_min.js")
     html.set_js_csrf_token()
 

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from time import time
 from typing import get_args, Literal
 
-from livestatus import MultiSiteConnection, SiteId
+from livestatus import MultiSiteConnection, OnlySites, SiteId
 
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -42,6 +42,7 @@ ServiceLevelType = Literal[
 
 @dataclass
 class ECEvent:
+    site: str
     event_id: int
     event_state: int
     event_sl: int
@@ -63,8 +64,8 @@ class ECEvent:
         """return a dict representation of the ECEvent object to
         send back via the response schema.
 
-        >>> dict(ECEvent(1, 1, 10, "heute", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
-        {'state': 'warning', 'service_level': 'silver', 'host': 'heute', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
+        >>> dict(ECEvent("heute", 1, 1, 10, "heute", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
+        {'site_id': 'heute', 'state': 'warning', 'service_level': 'silver', 'host': 'heute', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
 
         """
 
@@ -90,6 +91,10 @@ class ECEvent:
                 continue
 
             if k == "id":
+                continue
+
+            if k == "site":
+                yield "site_id", v
                 continue
 
             yield k, v
@@ -154,13 +159,18 @@ def filter_event_table(
     return q
 
 
-def get_all_events(connection: MultiSiteConnection, q: Query) -> dict[int, ECEvent]:
-    return {ev["event_id"]: ECEvent(**ev) for ev in q.iterate(connection)}
+def get_all_events(
+    connection: MultiSiteConnection, q: Query, site_id: SiteId | None
+) -> dict[int, ECEvent]:
+    _site_id: OnlySites = [site_id] if site_id is not None else None
+    return {ev["event_id"]: ECEvent(**ev) for ev in q.fetchall(connection, True, _site_id)}
 
 
-def get_single_event_by_id(connection: MultiSiteConnection, event_id: int) -> ECEvent:
+def get_single_event_by_id(
+    connection: MultiSiteConnection, event_id: int, site_id: SiteId
+) -> ECEvent:
     try:
-        ev = ECEvent(**filter_event_table(event_id=event_id).fetchone(connection))
+        ev = ECEvent(**filter_event_table(event_id=event_id).fetchone(connection, True, site_id))
     except ValueError:
         raise EventNotFoundError
 

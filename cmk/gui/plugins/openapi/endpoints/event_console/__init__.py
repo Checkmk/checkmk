@@ -159,12 +159,22 @@ def _serialize_event(event: ECEvent) -> DomainObject:
     method="get",
     tag_group="Monitoring",
     path_params=[EventID],
+    query_params=[
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+                required=True,
+            )
+        }
+    ],
     response_schema=ECEventResponse,
 )
 def show_event(params: Mapping[str, Any]) -> Response:
     """Show an event"""
     try:
-        event = get_single_event_by_id(sites.live(), int(params["event_id"]))
+        event = get_single_event_by_id(sites.live(), int(params["event_id"]), params["site_id"])
     except EventNotFoundError:
         return event_id_not_found_problem(params["event_id"])
     return serve_json(data=_serialize_event(event))
@@ -177,7 +187,20 @@ def show_event(params: Mapping[str, Any]) -> Response:
     tag_group="Monitoring",
     response_schema=EventConsoleResponseCollection,
     update_config_generation=False,
-    query_params=[FilterEventsByQuery, HostName, AppName, EventState, EventPhase],
+    query_params=[
+        FilterEventsByQuery,
+        HostName,
+        AppName,
+        EventState,
+        EventPhase,
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+            )
+        },
+    ],
 )
 def show_events(params: Mapping[str, Any]) -> Response:
     """Show events"""
@@ -191,7 +214,10 @@ def show_events(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="event_console",
-            value=[_serialize_event(ev) for _, ev in get_all_events(sites.live(), query).items()],
+            value=[
+                _serialize_event(ev)
+                for _, ev in get_all_events(sites.live(), query, params.get("site_id")).items()
+            ],
         )
     )
 

@@ -325,6 +325,14 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
+    def bulk_delete_hosts(self, hostnames: list[str]) -> None:
+        response = self.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
         response = self.put(
             f"/objects/host_config/{hostname_old}/actions/rename/invoke",

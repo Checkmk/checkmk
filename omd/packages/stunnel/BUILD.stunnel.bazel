@@ -52,8 +52,7 @@ configure_make(
 genrule(
     name = "skel",
     srcs = [
-        "@omd_packages//omd/packages/stunnel/skel",
-        "@omd_packages//omd/packages/stunnel/skel:skel_root",
+        "@omd_packages//omd/packages/stunnel:skel",
     ],
     outs = [
         "skel/etc/init.d/stunnel",
@@ -63,6 +62,6 @@ genrule(
         "skel/etc/stunnel/conf.d",
     ],
     cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
+        cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))
     """,
 )

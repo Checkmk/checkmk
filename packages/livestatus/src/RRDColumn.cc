@@ -317,7 +317,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     if (rrd_xport(static_cast<int>(argv_s.size()),
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
-        std::string rrd_error{rrd_get_error()};
+        const std::string rrd_error{rrd_get_error()};
         if (mk::starts_with(rrd_error, "don't understand ")) {
             // The error msg "don't understand '<metric_name>'" is logged on
             // info lvl only as preventing such queries for non-given metrics is

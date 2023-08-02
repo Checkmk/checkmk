@@ -199,7 +199,8 @@ InputBuffer::Result InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                std::string_view s(&_readahead_buffer[_read_index], length);
+                const std::string_view s(&_readahead_buffer[_read_index],
+                                         length);
                 if (!mk::is_utf8(s)) {
                     return Result::invalid_utf8;
                 }

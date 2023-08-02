@@ -538,3 +538,80 @@ def test_openapi_time_period_24h_is_end_of_day(clients: ClientRegistry) -> None:
         resp.json["fields"]["active_time_ranges"]["0"]["time_ranges"]["0"]["_schema"][0]
         == "Start time (24:00) must be before end time (00:00)."
     )
+
+
+def test_openapi_exclude_field(clients: ClientRegistry) -> None:
+    time_period_1: dict[str, object] = {
+        "name": "time_period_1",
+        "alias": "Time Period 1",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    dependent_time_period: dict[str, object] = {
+        "name": "time_period_2",
+        "alias": "Time Period 2",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "12:00", "end": "14:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": ["Time Period 1"],
+    }
+
+    name_dependent_time_period: dict[str, object] = {
+        "name": "time_period_3",
+        "alias": "Time Period 3",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "12:00", "end": "14:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": ["time_period_1"],
+    }
+
+    referenced_time_period_does_not_exist = clients.TimePeriod.create(
+        time_period_data=dependent_time_period, expect_ok=False
+    ).assert_status_code(400)
+    assert (
+        referenced_time_period_does_not_exist.json["detail"]
+        == "These fields have problems: exclude"
+    )
+    assert referenced_time_period_does_not_exist.json["title"] == "Bad Request"
+    assert "exclude" in referenced_time_period_does_not_exist.json["fields"]
+    assert len(referenced_time_period_does_not_exist.json["fields"]["exclude"]) == 1
+    assert referenced_time_period_does_not_exist.json["fields"]["exclude"]["0"] == [
+        "Time period alias does not exist: 'Time Period 1'"
+    ]
+
+    clients.TimePeriod.create(time_period_data=time_period_1)
+    clients.TimePeriod.create(time_period_data=dependent_time_period)
+    response_dependent_time_period = clients.TimePeriod.get(time_period_id="time_period_2")
+    assert (
+        response_dependent_time_period.json["extensions"]["exclude"]
+        == dependent_time_period["exclude"]
+    )
+
+    internal_time_period = load_timeperiod(name="time_period_2")
+    assert internal_time_period["exclude"] == ["time_period_1"]
+
+    referenced_time_period_by_name = clients.TimePeriod.create(
+        time_period_data=name_dependent_time_period, expect_ok=False
+    ).assert_status_code(400)
+    assert referenced_time_period_by_name.json["detail"] == "These fields have problems: exclude"
+    assert referenced_time_period_by_name.json["title"] == "Bad Request"
+    assert "exclude" in referenced_time_period_by_name.json["fields"]
+    assert len(referenced_time_period_by_name.json["fields"]["exclude"]) == 1
+    assert referenced_time_period_by_name.json["fields"]["exclude"]["0"] == [
+        "Time period alias does not exist: 'time_period_1'"
+    ]

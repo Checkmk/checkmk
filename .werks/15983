@@ -1,0 +1,13 @@
+Title: time_period: verify time_period usage before deletion and fix the reference for time_periods being saved to the configuration file in exclude field.
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1690962200
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API did not correctly check if a time period to be deleted was being referenced by another object. This werk fixes this and prevents the REST API from deleting a time period that is currently being referenced.
+
+Also, prior to this werk, the REST API was incorrectly storing the reference to other time periods in the exlusion field. This werk fixes this and now the REST API stores the correct values in the configuration files.

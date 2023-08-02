@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import TimeperiodSpec
+from cmk.utils.timeperiod import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -249,7 +249,12 @@ def _to_api_format(  # type: ignore[no-untyped-def]
     """
     time_period_readable: dict[str, Any] = {"alias": time_period["alias"]}
     if not builtin_period:
-        time_period_readable["exclude"] = time_period.get("exclude", [])
+        time_period_readable["exclude"] = []
+        all_time_periods = load_timeperiods()
+        time_period_readable["exclude"] = [
+            _time_period_alias_from_name(time_period_name, all_time_periods)  # type: ignore
+            for time_period_name in time_period.get("exclude", [])  # type: ignore
+        ]
 
     active_time_ranges = _active_time_ranges_readable(
         {key: time_period[key] for key in time_period if key in dateutils.weekday_ids()}
@@ -409,10 +414,37 @@ def _to_checkmk_format(
     exceptions: dict[str, Any],
     exclude: list[str],
 ) -> TimeperiodSpec:
-    time_period: dict[str, Any] = {"alias": alias}
+    time_period: dict[str, Any] = {"alias": alias, "exclude": []}
     time_period.update(exceptions)
     time_period.update(periods)
-    if exclude is None:
-        exclude = []
-    time_period["exclude"] = exclude
+
+    if exclude:
+        time_periods_by_alias: dict[str, str] = {
+            time_period["alias"]: name for name, time_period in load_timeperiods().items()  # type: ignore
+        }
+
+        time_period["exclude"] = [
+            _time_period_name_from_alias(time_period_alias, time_periods_by_alias)
+            for time_period_alias in exclude
+        ]
+
     return time_period
+
+
+def _time_period_name_from_alias(alias: str, time_periods_by_alias: Mapping[str, str]) -> str:
+    if alias not in time_periods_by_alias:
+        raise TimePeriodNotFoundError(alias)
+
+    return time_periods_by_alias[alias]
+
+
+def _time_period_alias_from_name(name: str, time_periods: TimeperiodSpecs) -> str:
+    if name not in time_periods:
+        raise TimePeriodNotFoundError(name)
+
+    alias = time_periods[name]["alias"]
+
+    if isinstance(alias, list):
+        raise ValueError("Alias is not a string")
+
+    return alias

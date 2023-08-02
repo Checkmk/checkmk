@@ -659,7 +659,8 @@ bool IsVectorMarkedAsUTF16(const std::vector<T> &data) noexcept {
 }
 
 template <typename T>
-std::string SmartConvertUtf16toUtf8(const std::vector<T> &original_data) {
+std::string ConvertUtf16toUtf8Conditionally(
+    const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
 
     if (IsVectorMarkedAsUTF16(original_data)) {
@@ -698,7 +699,7 @@ std::string ConditionallyConvertFromUtf16(const std::vector<T> &original_data) {
         return {};
     }
 
-    auto d = SmartConvertUtf16toUtf8(original_data);
+    auto d = ConvertUtf16toUtf8Conditionally(original_data);
     AddSafetyEndingNull(d);
 
     return d;

@@ -84,16 +84,12 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
 
 
 def delete_timeperiod(name: str) -> None:
+    if name in builtin_timeperiods():
+        raise TimePeriodBuiltInError()
     time_periods = load_timeperiods()
     if name not in time_periods:
         raise TimePeriodNotFoundError
-    time_period_details = time_periods[name]
-    time_period_alias = time_period_details["alias"]
-    # TODO: introduce at least TypedDict for TimeperiodSpecs to remove assertion
-    assert isinstance(time_period_alias, str)
-    if name in builtin_timeperiods():
-        raise TimePeriodBuiltInError()
-    if usages := find_usages_of_timeperiod(time_period_alias):
+    if usages := find_usages_of_timeperiod(name):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods)

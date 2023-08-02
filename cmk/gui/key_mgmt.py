@@ -49,7 +49,6 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
-from cmk.gui.wato.mode import mode_url
 
 
 class KeypairStore:
@@ -253,7 +252,9 @@ class PageEditKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value["alias"], PasswordType(value["passphrase"]))
-            return HTTPRedirect(mode_url(self.back_mode))
+            return HTTPRedirect(
+                makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py")
+            )
         return None
 
     def _create_key(self, alias: str, passphrase: PasswordType) -> None:
@@ -334,7 +335,10 @@ class PageUploadKey:
                 self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
             except InvalidPEMError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
-            return HTTPRedirect(mode_url(self.back_mode), code=302)
+            return HTTPRedirect(
+                makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
+                code=302,
+            )
         return None
 
     def _get_uploaded(

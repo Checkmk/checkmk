@@ -49,6 +49,20 @@ inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     return std::towlower(lhs) == std::towlower(rhs);
 }
 
+/// Checks basically whether we have vector(ContiguousContainer)
+/// C++ concepts library doesn't support now ContiguosContainer
+template <typename C>
+concept VectorLike = requires(C c) {
+                         c[0];
+                         c.data();
+                         c.size();
+                     };
+template <VectorLike Data>
+std::string_view ToView(const Data &input) {
+    return {reinterpret_cast<const char *>(input.data()),
+            sizeof(input[0]) * input.size()};
+}
+
 template <class T>
 concept StringLike = std::is_convertible_v<T, std::string_view>;
 template <class T>

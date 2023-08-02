@@ -49,6 +49,16 @@ bool AreFilesSame(const std::filesystem::path &tgt,
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t *argv[], int pos,
                        std::string_view value) noexcept;
+
+/// divide view into two parts gor delimitter and after
+std::pair<std::string_view, std::optional<std::string_view>> SplitView(
+    std::string_view data, std::string_view delimiter);
+using ScanViewCallback = std::function<void(std::string_view work)>;
+
+/// call callback for every string between begin, delimiter and end
+void ScanView(std::string_view data, std::string_view delimiter,
+              ScanViewCallback callback);
+
 }  // namespace tools
 using PathVector = std::vector<std::filesystem::path>;
 PathVector GatherAllFiles(const PathVector &folders);

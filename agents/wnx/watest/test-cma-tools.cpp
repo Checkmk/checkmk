@@ -10,6 +10,7 @@
 #include "test_tools.h"
 
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 namespace cma::tools {
 TEST(CmaTools, CheckArgvForValue) {
@@ -257,6 +258,24 @@ TEST(CmaTools, StringCache) {
     ASSERT_TRUE(cache.size() == 3);
     EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
     ASSERT_TRUE(cache.size() == 4);
+}
+
+TEST(CmaTools, ToView) {
+    EXPECT_EQ(ToView(L"a"s), "a\x0"sv);
+    EXPECT_EQ(ToView("A\0Z\x0"s), "A\0Z\0"sv);
+    const std::vector data = {L'A', L'b', L'c'};
+    EXPECT_EQ(ToView(data), "A\0b\0c\0"sv);
+}
+
+TEST(CmaTools, ScanView) {
+    constexpr auto haystack{"markline2mark markline4markz"sv};
+    constexpr auto needle{"mark"sv};
+    std::vector<std::string> result;
+    const std::vector<std::string> expected = {"", "line2", " ", "line4", "z"};
+
+    ScanView(haystack, needle,
+             [&](auto s) { result.emplace_back(std::string{s}); });
+    EXPECT_EQ(result, expected);
 }
 
 namespace win {

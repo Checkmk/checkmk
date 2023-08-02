@@ -116,6 +116,28 @@ bool CheckArgvForValue(int argc, const wchar_t *argv[], int pos,
            std::wstring(argv[pos]) == wtools::ConvertToUtf16(value);
 }
 
+std::pair<std::string_view, std::optional<std::string_view>> SplitView(
+    std::string_view data, std::string_view delimiter) {
+    const auto found = std::ranges::search(data.begin(), data.end(),
+                                           delimiter.begin(), delimiter.end());
+    if (found.empty()) {
+        return std::pair{std::string_view{data.begin(), data.end()},
+                         std::nullopt};
+    }
+    return std::pair{std::string_view{data.begin(), found.begin()},
+                     std::string_view{found.end(), data.end()}};
+}
+
+void ScanView(std::string_view data, std::string_view delimiter,
+              ScanViewCallback callback) {
+    std::optional left = data;
+    while (left) {
+        auto [work, l] = SplitView(*left, delimiter);
+        left = l;
+        callback(work);
+    }
+}
+
 }  // namespace tools
 
 bool MatchNameOrAbsolutePath(const std::string &input,

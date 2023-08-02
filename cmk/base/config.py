@@ -1507,7 +1507,8 @@ def _prepare_check_command(
             raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
 
     if passwords:
-        formatted = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formatted
+        pw_store_arg = "--pwstore=%s" % ",".join(["@".join(p) for p in passwords])
+        formatted = [shlex.quote(pw_store_arg)] + formatted
 
     return " ".join(formatted)
 

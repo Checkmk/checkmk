@@ -2874,6 +2874,18 @@ def test_commandline_arguments_not_existing_password(  # type:ignore[no-untyped-
     assert 'The stored password "pw-id" used by service "blub" on host "bla"' in stderr
 
 
+def test_active_check_arguments_password_store_sanitization() -> None:
+    """Check that the --pwstore argument is properly sanitized.
+    This is a regression test for CMK-14149.
+    """
+    pw_id = "pw-id; echo HI;"
+    pw = "the password"
+    password_store.save({pw_id: pw})
+    assert config.commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", pw_id, "--password=%s"), "arg3"]
+    ) == "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=%s' arg3" % ("*" * len(pw))
+
+
 def test_commandline_arguments_wrong_types() -> None:
     with pytest.raises(MKGeneralException):
         config.commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]

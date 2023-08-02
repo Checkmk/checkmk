@@ -79,6 +79,12 @@ ec_filters = fields.Nested(
 
 
 class DeleteFilterBase(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     filter_type = fields.String(
         enum=["by_id", "query", "params"],
         required=True,
@@ -114,17 +120,31 @@ class DeleteECEvents(OneOfSchema):
 
 
 class ChangeEventState(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     new_state = StateField(
         required=True,
     )
 
 
-class ChangeStateFilter(ChangeEventState):
+class ChangeStateFilter(BaseSchema):
     filter_type = fields.String(
         enum=["query", "params"],
         required=True,
         example="params",
         description="The way you would like to filter events.",
+    )
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+    )
+    new_state = StateField(
+        required=True,
     )
 
 
@@ -165,12 +185,26 @@ class UpdateAndAcknowledgeEvent(BaseSchema):
     )
 
 
+class UpdateAndAcknowledeEventSiteIDRequired(UpdateAndAcknowledgeEvent):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
+
+
 class UpdateAndAcknowledgeFilter(UpdateAndAcknowledgeEvent):
     filter_type = fields.String(
         enum=["query", "params", "all"],
         required=True,
         example="all",
         description="The way you would like to filter events.",
+    )
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
     )
 
 

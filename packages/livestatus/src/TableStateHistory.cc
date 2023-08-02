@@ -385,7 +385,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             entry->kind() != LogEntryKind::state_host_initial) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
-                HostServiceState *hst = it_hst.second;
+                auto &hst = it_hst.second;
                 if (hst->_may_no_longer_exist) {
                     hst->_has_vanished = true;
                 }
@@ -597,7 +597,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     auto it_hst = state_info.begin();
     if (!_abort_query) {
         while (it_hst != state_info.end()) {
-            HostServiceState *hst = it_hst->second;
+            auto &hst = it_hst->second;
 
             // No trace since the last two nagios startup -> host/service has
             // vanished
@@ -622,14 +622,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         }
     }
 
-    // Cleanup !
-    it_hst = state_info.begin();
-    while (it_hst != state_info.end()) {
-        delete it_hst->second;
-        ++it_hst;
+    for (auto &[key, hss] : state_info) {
+        delete hss;
     }
-    state_info.clear();
-    object_blacklist.clear();
 }
 
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(

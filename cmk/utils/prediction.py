@@ -331,7 +331,8 @@ def _get_levels_from_params(
     this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
     if what == "upper" and "levels_upper_min" in params:
         limit_warn, limit_crit = params["levels_upper_min"]
-        this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+        this_levels = (max(limit_warn * levels_factor,
+                           this_levels[0]), max(limit_crit * levels_factor, this_levels[1]))
     return this_levels
 
 

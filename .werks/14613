@@ -1,0 +1,37 @@
+Title: Fix "Limit for upper bound dynamic levels" for predictive levels
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1690967905
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p39
+
+You are affected by this change if you use the option "Limit for upper bound
+dynamic levels" for "Predictive Levels" for "CPU load".
+
+If the predictive levels predict a very low value, it's easy to overshoot those
+levels. Therefore the "Limit for upper bound dynamic levels" can define warn
+and crit levels which are used when the predictive values are below this
+defined warn and crit levels.
+
+The "CPU load" has a special mechanism that considers the number of CPUs,
+otherwise you would have to write special rules for servers with different
+number of CPU cores, as the load value is dependent on the number of cores.
+A high load for a 4 CPU computer may be a very low load for a 32 CPU computer.
+
+That's why checkmks' load values are divided by the number of CPUs to be able to
+define one rule for all your computers independent of the number of CPUs.
+
+The option "Limit for upper bound dynamic levels" did miss this adaption to the
+number of CPUs.
+
+This has been fixed and now the "Limit for upper bound dynamic levels" is
+internally multiplied by the number of CPUs.
+
+If you use the argument "Limit for upper bound dynamic levels" for "Predictive
+Levels" for "CPU load" and want to keep the current behaviour, you have to
+create different rules depending on the CPU count of your systems and divide
+the level entered by the number of CPUs. This is, of course not practical.
+We consider the old behaviour as not correct.

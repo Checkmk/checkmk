@@ -123,6 +123,18 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
     ),
     (
         {
+            'average': 200,
+            'stdev': 3,
+        },
+        {
+            'levels_upper': ('relative', (20, 40)),
+            'levels_upper_min': (2, 4),
+        },
+        100,
+        (200, (240, 400, None, None)),
+    ),
+    (
+        {
             'average': None
         },
         {},

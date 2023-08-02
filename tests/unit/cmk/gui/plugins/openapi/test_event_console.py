@@ -262,23 +262,26 @@ def test_get_ec_event_that_doesnt_exist_by_id(
 def test_delete_event_by_id(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1;test123-...", match_type="ellipsis")
     with mock_livestatus:
-        delete(params=json.dumps({"filter_type": "by_id", "event_id": 1}))
+        delete(params=json.dumps({"site_id": "NO_SITE", "filter_type": "by_id", "event_id": 1}))
 
 
 def test_delete_event_by_query(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1;test123-...", match_type="ellipsis")
     with mock_livestatus:
         delete(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "query",
                     "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
                 }
@@ -291,13 +294,15 @@ def test_delete_event_by_params_all(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_host = heute\nAnd: 2"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_host = heute\nAnd: 2",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;5;test123-...", match_type="ellipsis")
     with mock_livestatus:
         delete(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "params",
                     "filters": {
                         "state": "warning",
@@ -312,7 +317,8 @@ def test_delete_event_by_params_all(
 def test_delete_event_by_phase(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;2,4,6;test123-...", match_type="ellipsis")
 
@@ -320,6 +326,7 @@ def test_delete_event_by_phase(mock_livestatus: MockLiveStatusConnection, delete
         delete(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "params",
                     "filters": {
                         "phase": "ack",
@@ -330,7 +337,7 @@ def test_delete_event_by_phase(mock_livestatus: MockLiveStatusConnection, delete
 
 
 def test_delete_event_no_params(delete: Callable) -> None:
-    delete(params=json.dumps({"filter_type": "params"}), status=400)
+    delete(params=json.dumps({"site_id": "NO_SITE", "filter_type": "params"}), status=400)
 
 
 def test_change_existing_event_state_by_id(
@@ -340,7 +347,8 @@ def test_change_existing_event_state_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_CHANGESTATE;1;test123-...;1", match_type="ellipsis"
@@ -349,7 +357,7 @@ def test_change_existing_event_state_by_id(
     with mock_livestatus:
         change_state_or_update_and_acknowledge(
             url=object_base_url + "1/actions/change_state/invoke",
-            params=json.dumps({"new_state": "warning"}),
+            params=json.dumps({"site_id": "NO_SITE", "new_state": "warning"}),
         )
 
 
@@ -360,14 +368,15 @@ def test_change_non_existing_event_state_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7",
+        sites=["NO_SITE"],
     )
 
     with mock_livestatus:
         change_state_or_update_and_acknowledge(
             status=404,
             url=object_base_url + "7/actions/change_state/invoke",
-            params=json.dumps({"new_state": "warning"}),
+            params=json.dumps({"site_id": "NO_SITE", "new_state": "warning"}),
         )
 
 
@@ -377,7 +386,8 @@ def test_change_existing_event_states_query_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_CHANGESTATE;1;test123-...;3", match_type="ellipsis"
@@ -387,6 +397,7 @@ def test_change_existing_event_states_query_filter(
         change_multiple_event_states(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "query",
                     "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
                     "new_state": "unknown",
@@ -401,7 +412,8 @@ def test_change_existing_event_states_params_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_CHANGESTATE;5;test123-...;3", match_type="ellipsis"
@@ -411,6 +423,7 @@ def test_change_existing_event_states_params_filter(
         change_multiple_event_states(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "params",
                     "new_state": "unknown",
                     "filters": {
@@ -445,7 +458,8 @@ def test_update_and_acknowledge_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;1;test123-...;1;comment_changed;Checkmk", match_type="ellipsis"
@@ -456,6 +470,7 @@ def test_update_and_acknowledge_by_id(
             url=object_base_url + "1/actions/update_and_acknowledge/invoke",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "change_comment": "comment_changed",
                     "change_contact": "Checkmk",
                 }
@@ -470,7 +485,8 @@ def test_update_and_acknowledge_withdrawal_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 4"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 4",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;Checkmk", match_type="ellipsis"
@@ -481,6 +497,7 @@ def test_update_and_acknowledge_withdrawal_by_id(
             url=object_base_url + "4/actions/update_and_acknowledge/invoke",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "change_comment": "comment_changed",
                     "change_contact": "Checkmk",
                     "phase": "open",
@@ -496,7 +513,8 @@ def test_update_and_acknowledge_non_existing_event_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7",
+        sites=["NO_SITE"],
     )
 
     with mock_livestatus:
@@ -505,6 +523,7 @@ def test_update_and_acknowledge_non_existing_event_by_id(
             url=object_base_url + "7/actions/update_and_acknowledge/invoke",
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "change_contact": "testcontact",
                     "change_comment": "testcomment",
                 }
@@ -518,7 +537,8 @@ def test_update_and_acknowledge_query_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host\nFilter: event_phase = open\nAnd: 2"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host\nFilter: event_phase = open\nAnd: 2",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;1;test123-...;1;testcomment;testcontact", match_type="ellipsis"
@@ -528,6 +548,7 @@ def test_update_and_acknowledge_query_filter(
         update_and_acknowledge_multiple_events(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "query",
                     "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
                     "change_contact": "testcontact",
@@ -543,7 +564,8 @@ def test_update_and_acknowledge_params_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
@@ -553,6 +575,7 @@ def test_update_and_acknowledge_params_filter(
         update_and_acknowledge_multiple_events(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "params",
                     "filters": {
                         "state": "warning",
@@ -572,7 +595,8 @@ def test_update_and_acknowledge_all_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
@@ -582,6 +606,7 @@ def test_update_and_acknowledge_all_filter(
         update_and_acknowledge_multiple_events(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "all",
                     "change_contact": "testcontact",
                     "change_comment": "testcomment",
@@ -596,7 +621,8 @@ def test_update_and_acknowledge_withdrawal_params_filter(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack",
+        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_UPDATE;2,4,6;test123-...;0;;", match_type="ellipsis"
@@ -606,6 +632,7 @@ def test_update_and_acknowledge_withdrawal_params_filter(
         update_and_acknowledge_multiple_events(
             params=json.dumps(
                 {
+                    "site_id": "NO_SITE",
                     "filter_type": "all",
                     "phase": "open",
                 },
@@ -626,3 +653,87 @@ def test_update_and_acknowledge_no_filters(
         ),
         status=400,
     )
+
+
+def test_update_and_acknowledge_all_filter_no_site_id(
+    mock_livestatus: MockLiveStatusConnection,
+    update_and_acknowledge_multiple_events: Callable,
+) -> None:
+    add_event_console_events_to_live_status_table(mock_livestatus)
+    mock_livestatus.expect_query(
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open",
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+    )
+
+    with mock_livestatus:
+        update_and_acknowledge_multiple_events(
+            params=json.dumps(
+                {
+                    "filter_type": "all",
+                    "change_contact": "testcontact",
+                    "change_comment": "testcomment",
+                },
+            ),
+        )
+
+
+def test_change_existing_event_states_params_filter_no_site_id(
+    mock_livestatus: MockLiveStatusConnection,
+    change_multiple_event_states: Callable,
+) -> None:
+    add_event_console_events_to_live_status_table(mock_livestatus)
+    mock_livestatus.expect_query(
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2",
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_CHANGESTATE;5;test123-...;3", match_type="ellipsis"
+    )
+
+    with mock_livestatus:
+        change_multiple_event_states(
+            params=json.dumps(
+                {
+                    "filter_type": "params",
+                    "new_state": "unknown",
+                    "filters": {
+                        "state": "warning",
+                        "host": "heute",
+                        "application": "App5",
+                        "phase": "open",
+                    },
+                }
+            ),
+        )
+
+
+def test_update_and_acknowledge_by_id_but_no_site_id(
+    object_base_url: str,
+    change_state_or_update_and_acknowledge: Callable,
+) -> None:
+    resp = change_state_or_update_and_acknowledge(
+        url=object_base_url + "1/actions/update_and_acknowledge/invoke",
+        params=json.dumps(
+            {
+                "change_comment": "comment_changed",
+                "change_contact": "Checkmk",
+            }
+        ),
+        status=400,
+    )
+    assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}
+
+
+def test_change_existing_event_state_by_id_no_site_id(
+    object_base_url: str,
+    change_state_or_update_and_acknowledge: Callable,
+) -> None:
+    # add_event_console_events_to_live_status_table(mock_livestatus)
+
+    resp = change_state_or_update_and_acknowledge(
+        url=object_base_url + "1/actions/change_state/invoke",
+        params=json.dumps({"new_state": "warning"}),
+        status=400,
+    )
+    assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}

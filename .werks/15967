@@ -1,0 +1,25 @@
+Title: event console: add site property to the event console endpoints
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1691385508
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Event console IDs are integers beginning from 1, both for the main site & for
+remote sites.  This means that the same event console ID can exist on more
+than one site at the same time. This caused problems when calling the DELETE
+endpoint as we weren't sure which ID the client wanted to delete. To get around
+this problem, we have introduced a "site_id" field. The site_id together with
+the event console ID combination is unique and therefore solves this issue.
+
+show_event: site_id is now mandatory
+show_events: site_id is now optional
+update_and_acknowlege: site_id is now mandatory
+update_and_acknowledge_multiple: site_id is now optional
+change_state: site_id is now mandatory
+change_state_multiple: site_id is now optional
+archive_events: site_id is now mandatory
+

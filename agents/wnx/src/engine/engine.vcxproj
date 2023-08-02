@@ -148,6 +148,7 @@
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <EnablePREfast>false</EnablePREfast>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -182,6 +183,7 @@ cd $(ProjectDir)</Command>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -217,6 +219,7 @@ cd $(ProjectDir)</Command>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -253,6 +256,7 @@ cd $(ProjectDir)</Command>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

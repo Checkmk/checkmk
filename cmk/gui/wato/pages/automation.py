@@ -65,7 +65,9 @@ class ModeAutomationLogin(AjaxPage):
         if not request.has_var("_version"):
             raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
-        verify_request_compatibility(ignore_license_compatibility=False)
+        # allow login even with incompatible license, otherwise we cannot distribute license
+        # information to make remote sites compatible
+        verify_request_compatibility(ignore_license_compatibility=True)
 
         response.set_data(
             repr(
@@ -90,8 +92,12 @@ class ModeAutomation(AjaxPage):
     def _from_vars(self):
         self._authenticate()
         _set_version_headers()
-        verify_request_compatibility(ignore_license_compatibility=False)
         self._command = request.get_str_input_mandatory("command")
+        # licensing information has to be distributed before checking for compatibility
+        # to deal with remote sites in license state "free"
+        verify_request_compatibility(
+            ignore_license_compatibility=self._command == "distribute-verification-response"
+        )
 
     def _authenticate(self):
         secret = request.var("secret")

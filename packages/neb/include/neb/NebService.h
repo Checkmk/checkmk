@@ -73,11 +73,11 @@ public:
         return service_.display_name == nullptr ? "" : service_.display_name;
     }
 
-    [[nodiscard]] virtual std::string check_command() const override {
+    [[nodiscard]] std::string check_command() const override {
         auto *cc = nagios_compat_service_check_command(service_);
         return cc == nullptr ? "" : cc;
     }
-    [[nodiscard]] virtual std::string check_command_expanded() const override {
+    [[nodiscard]] std::string check_command_expanded() const override {
         return ServiceMacroExpander::make(service_)->expandMacros(
             nagios_compat_service_check_command(service_));
     }
@@ -85,60 +85,60 @@ public:
         return std::filesystem::path{service_.host_ptr->name} /
                service_.description;
     }
-    [[nodiscard]] virtual std::string event_handler() const override {
+    [[nodiscard]] std::string event_handler() const override {
         return service_.event_handler == nullptr ? "" : service_.event_handler;
     }
     [[nodiscard]] std::string plugin_output() const override {
         return service_.plugin_output == nullptr ? "" : service_.plugin_output;
     }
-    [[nodiscard]] virtual std::string long_plugin_output() const override {
+    [[nodiscard]] std::string long_plugin_output() const override {
         return service_.long_plugin_output == nullptr
                    ? ""
                    : service_.long_plugin_output;
     }
-    [[nodiscard]] virtual std::string perf_data() const override {
+    [[nodiscard]] std::string perf_data() const override {
         return service_.perf_data == nullptr ? "" : service_.perf_data;
     }
     [[nodiscard]] std::string notificationPeriodName() const override {
         const auto *np = service_.notification_period;
         return np == nullptr ? "" : np;
     }
-    [[nodiscard]] virtual std::string check_period() const override {
+    [[nodiscard]] std::string check_period() const override {
         return service_.check_period == nullptr ? "" : service_.check_period;
     }
-    [[nodiscard]] virtual std::string notes() const override {
+    [[nodiscard]] std::string notes() const override {
         return service_.notes == nullptr ? "" : service_.notes;
     }
-    [[nodiscard]] virtual std::string notes_expanded() const override {
+    [[nodiscard]] std::string notes_expanded() const override {
         return ServiceMacroExpander::make(service_)->expandMacros(
             service_.notes);
     }
-    [[nodiscard]] virtual std::string notes_url() const override {
+    [[nodiscard]] std::string notes_url() const override {
         return service_.notes_url == nullptr ? "" : service_.notes_url;
     }
-    [[nodiscard]] virtual std::string notes_url_expanded() const override {
+    [[nodiscard]] std::string notes_url_expanded() const override {
         return ServiceMacroExpander::make(service_)->expandMacros(
             service_.notes_url);
     }
-    [[nodiscard]] virtual std::string action_url() const override {
+    [[nodiscard]] std::string action_url() const override {
         return service_.action_url == nullptr ? "" : service_.action_url;
     }
-    [[nodiscard]] virtual std::string action_url_expanded() const override {
+    [[nodiscard]] std::string action_url_expanded() const override {
         return ServiceMacroExpander::make(service_)->expandMacros(
             service_.action_url);
     }
-    [[nodiscard]] virtual std::string icon_image() const override {
+    [[nodiscard]] std::string icon_image() const override {
         return service_.icon_image == nullptr ? "" : service_.icon_image;
     }
-    [[nodiscard]] virtual std::string icon_image_expanded() const override {
+    [[nodiscard]] std::string icon_image_expanded() const override {
         return ServiceMacroExpander::make(service_)->expandMacros(
             service_.icon_image);
     }
-    [[nodiscard]] virtual std::string icon_image_alt() const override {
+    [[nodiscard]] std::string icon_image_alt() const override {
         return service_.icon_image_alt == nullptr ? ""
                                                   : service_.icon_image_alt;
     }
-    [[nodiscard]] virtual int32_t initial_state() const override {
+    [[nodiscard]] int32_t initial_state() const override {
         return service_.initial_state;
     }
     [[nodiscard]] int32_t max_check_attempts() const override {
@@ -153,25 +153,25 @@ public:
     [[nodiscard]] bool has_been_checked() const override {
         return service_.has_been_checked != 0;
     }
-    [[nodiscard]] virtual int32_t last_state() const override {
+    [[nodiscard]] int32_t last_state() const override {
         return service_.last_state;
     }
     [[nodiscard]] int32_t last_hard_state() const override {
         return service_.last_hard_state;
     }
-    [[nodiscard]] virtual int32_t state_type() const override {
+    [[nodiscard]] int32_t state_type() const override {
         return service_.state_type;
     }
-    [[nodiscard]] virtual int32_t check_type() const override {
+    [[nodiscard]] int32_t check_type() const override {
         return service_.check_type;
     }
     [[nodiscard]] bool problem_has_been_acknowledged() const override {
         return service_.problem_has_been_acknowledged != 0;
     }
-    [[nodiscard]] virtual int32_t acknowledgement_type() const override {
+    [[nodiscard]] int32_t acknowledgement_type() const override {
         return service_.acknowledgement_type;
     }
-    [[nodiscard]] virtual bool no_more_notifications() const override {
+    [[nodiscard]] bool no_more_notifications() const override {
         return service_.no_more_notifications != 0;
     }
     [[nodiscard]] virtual std::chrono::system_clock::time_point last_time_ok()
@@ -211,7 +211,7 @@ public:
         return std::chrono::system_clock::from_time_t(
             service_.next_notification);
     }
-    [[nodiscard]] virtual int32_t current_notification_number() const override {
+    [[nodiscard]] int32_t current_notification_number() const override {
         return service_.current_notification_number;
     }
     [[nodiscard]] virtual std::chrono::system_clock::time_point
@@ -227,46 +227,46 @@ public:
     [[nodiscard]] int32_t scheduled_downtime_depth() const override {
         return service_.scheduled_downtime_depth;
     }
-    [[nodiscard]] virtual bool is_flapping() const override {
+    [[nodiscard]] bool is_flapping() const override {
         return service_.is_flapping != 0;
     }
-    [[nodiscard]] virtual bool checks_enabled() const override {
+    [[nodiscard]] bool checks_enabled() const override {
         return service_.checks_enabled != 0;
     }
-    [[nodiscard]] virtual bool accept_passive_checks() const override {
+    [[nodiscard]] bool accept_passive_checks() const override {
         return nagios_compat_accept_passive_service_checks(service_) != 0;
     }
-    [[nodiscard]] virtual bool event_handler_enabled() const override {
+    [[nodiscard]] bool event_handler_enabled() const override {
         return service_.event_handler_enabled != 0;
     }
-    [[nodiscard]] virtual bool notifications_enabled() const override {
+    [[nodiscard]] bool notifications_enabled() const override {
         return service_.notifications_enabled;
     }
-    [[nodiscard]] virtual bool process_performance_data() const override {
+    [[nodiscard]] bool process_performance_data() const override {
         return service_.process_performance_data != 0;
     }
-    [[nodiscard]] virtual bool is_executing() const override {
+    [[nodiscard]] bool is_executing() const override {
         return service_.is_executing != 0;
     }
-    [[nodiscard]] virtual bool active_checks_enabled() const override {
+    [[nodiscard]] bool active_checks_enabled() const override {
         return service_.checks_enabled;
     }
-    [[nodiscard]] virtual int32_t check_options() const override {
+    [[nodiscard]] int32_t check_options() const override {
         return service_.check_options;
     }
-    [[nodiscard]] virtual bool flap_detection_enabled() const override {
+    [[nodiscard]] bool flap_detection_enabled() const override {
         return service_.flap_detection_enabled != 0;
     }
-    [[nodiscard]] virtual bool check_freshness() const override {
+    [[nodiscard]] bool check_freshness() const override {
         return service_.check_freshness != 0;
     }
-    [[nodiscard]] virtual bool obsess_over_service() const override {
+    [[nodiscard]] bool obsess_over_service() const override {
         return nagios_compat_obsess_over_service(service_) != 0;
     }
-    [[nodiscard]] virtual uint32_t modified_attributes() const override {
+    [[nodiscard]] uint32_t modified_attributes() const override {
         return service_.modified_attributes;
     }
-    [[nodiscard]] virtual int32_t hard_state() const override {
+    [[nodiscard]] int32_t hard_state() const override {
         if (service_.current_state == STATE_OK) {
             return 0;
         }
@@ -330,10 +330,10 @@ public:
     [[nodiscard]] double percent_state_change() const override {
         return service_.percent_state_change;
     }
-    [[nodiscard]] virtual bool in_check_period() const override {
+    [[nodiscard]] bool in_check_period() const override {
         return g_timeperiods_cache->inTimeperiod(service_.check_period_ptr);
     }
-    [[nodiscard]] virtual bool in_service_period() const override {
+    [[nodiscard]] bool in_service_period() const override {
         if (auto tpname = findCustomAttributeValue(
                 service_.custom_variables, AttributeKind::custom_variables,
                 "SERVICE_PERIOD")) {
@@ -341,10 +341,10 @@ public:
         }
         return true;  // assume 24X7
     }
-    [[nodiscard]] virtual bool in_notification_period() const override {
+    [[nodiscard]] bool in_notification_period() const override {
         return g_timeperiods_cache->inTimeperiod(notificationPeriodName());
     }
-    [[nodiscard]] virtual std::vector<std::string> contacts() const override {
+    [[nodiscard]] std::vector<std::string> contacts() const override {
         std::unordered_set<std::string> names;
         for (auto *cm = service_.contacts; cm != nullptr; cm = cm->next) {
             names.insert(cm->contact_ptr->name);
@@ -372,24 +372,20 @@ public:
         const override {
         return {};
     }
-    [[nodiscard]] virtual int32_t cache_interval() const override { return 0; }
-    [[nodiscard]] virtual bool in_passive_check_period() const override {
-        return true;
-    }
-    [[nodiscard]] virtual std::string passive_check_period() const override {
+    [[nodiscard]] int32_t cache_interval() const override { return 0; }
+    [[nodiscard]] bool in_passive_check_period() const override { return true; }
+    [[nodiscard]] std::string passive_check_period() const override {
         return "24x7";
     }
-    [[nodiscard]] virtual double flappiness() const override {
+    [[nodiscard]] double flappiness() const override {
         return service_.percent_state_change;
     }
     [[nodiscard]] virtual std::string notification_postponement_reason()
         const override {
         return "";
     }
-    [[nodiscard]] virtual int32_t previous_hard_state() const override {
-        return -1;
-    }
-    [[nodiscard]] virtual int32_t pending_flex_downtime() const override {
+    [[nodiscard]] int32_t previous_hard_state() const override { return -1; }
+    [[nodiscard]] int32_t pending_flex_downtime() const override {
         return service_.pending_flex_downtime;
     }
     [[nodiscard]] virtual bool check_flapping_recovery_notification()

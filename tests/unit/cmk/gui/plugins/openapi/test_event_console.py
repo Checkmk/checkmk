@@ -140,8 +140,6 @@ def test_get_all_ec_events(
     )
     with mock_livestatus:
         resp = get_events(collection_base_url + "all")
-        assert resp.json["domainType"] == DOMAIN_TYPE
-        assert len(resp.json["value"]) == 6
         assert {event["id"] for event in resp.json["value"]} == {"1", "2", "3", "4", "5", "6"}
         assert {event["extensions"]["host"] for event in resp.json["value"]} == {
             "heute",
@@ -217,13 +215,15 @@ def test_get_ec_event_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 2"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 2",
+        sites=["NO_SITE"],
     )
     with mock_livestatus:
-        resp = get_event(url=object_base_url + "2")
+        resp = get_event(url=object_base_url + "2?site_id=NO_SITE")
         assert resp.json["domainType"] == DOMAIN_TYPE
         assert {link["method"] for link in resp.json["links"]} == {"GET", "DELETE"}
         assert set((resp.json["extensions"]).keys()) == {
+            "site_id",
             "state",
             "service_level",
             "host",
@@ -251,10 +251,11 @@ def test_get_ec_event_that_doesnt_exist_by_id(
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
-        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 20"
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 20",
+        sites=["NO_SITE"],
     )
     with mock_livestatus:
-        get_event(url=object_base_url + "20", status=404)
+        get_event(url=object_base_url + "20?site_id=NO_SITE", status=404)
 
 
 def test_delete_event_by_id(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:

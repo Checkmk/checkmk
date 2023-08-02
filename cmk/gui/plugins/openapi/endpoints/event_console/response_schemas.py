@@ -10,7 +10,7 @@ from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
     SyslogPriority,
 )
 
-from cmk.gui.fields import Timestamp
+from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.event_console import ServiceLevelType
 from cmk.gui.plugins.openapi.endpoints.event_console.common_fields import (
@@ -27,6 +27,12 @@ from cmk import fields
 
 
 class ECEventAttributes(BaseSchema):
+    site_id = SiteField(
+        description="The site id of the EC event.",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     state = StateField(
         required=True,
     )

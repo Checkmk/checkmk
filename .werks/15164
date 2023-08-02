@@ -1,0 +1,13 @@
+Title: Let host and service deletion cancel its downtime
+Class: fix
+Compatible: compat
+Component: core
+Date: 1691062224
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p8
+
+Activate change now cancels the downtime of vanished hosts and services.
+

@@ -678,14 +678,16 @@ def _update_bi_pack(params, must_exist: bool) -> Response:  # type: ignore[no-un
     if not existing_pack and must_exist:
         raise _make_error("This pack_id does not exist: %s" % pack_id)
 
-    pack_config = {}
     if existing_pack:
         # Serialize the old pack
         # Rules and aggregations will be transferred to the new pack
-        pack_config.update(existing_pack.serialize())
+        pack_config = existing_pack.serialize()
+        pack_config.update(BIPackEndpointSchema().dump(params["body"]))
+    else:
+        pack_config = BIPackEndpointSchema().dump(params["body"])
 
     pack_config["id"] = pack_id
-    pack_config.update(BIPackEndpointSchema().dump(params["body"]))
+
     new_pack = BIAggregationPack(pack_config)
     bi_packs.add_pack(new_pack)
     bi_packs.save_config()

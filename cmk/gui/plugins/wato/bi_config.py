@@ -889,7 +889,7 @@ class ModeBIRules(ABCBIMode):
 
             return HTML(output_funnel.drain())
 
-    def _show_bulk_move_choices(self):
+    def _show_bulk_move_choices(self) -> list[tuple[str, str]]:
         return [
             (pack_id, bi_pack.title)
             for pack_id, bi_pack in self._bi_packs.get_packs().items()
@@ -1696,7 +1696,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._bi_packs.save_config()
         redirect_kwargs = {"pack": self.bi_pack.id}
         if had_previous_aggregations != (self._bi_packs.get_num_enabled_aggregations() > 0):
-            redirect_kwargs["reload_page"] = 1
+            redirect_kwargs["reload_page"] = "1"
 
         if self._new:
             self._add_change(

@@ -6,7 +6,7 @@
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, NotRequired, TypedDict
 
 from marshmallow import fields, pre_dump
 
@@ -14,6 +14,7 @@ from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.paths import var_dir
+from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk.bi.actions import (
     BICallARuleAction,
@@ -29,6 +30,7 @@ from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.sample_configs import bi_sample_config
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
+from cmk.bi.type_defs import AggrConfigDict
 from cmk.fields import String
 
 
@@ -64,8 +66,18 @@ class RuleReferencesResult(NamedTuple):
 #   +----------------------------------------------------------------------+
 
 
+class BIPackConfig(TypedDict):
+    id: str
+    title: str
+    comment: NotRequired[str]
+    contact_groups: list[ContactgroupName]
+    public: bool
+    rules: NotRequired[list[dict[str, Any]]]
+    aggregations: NotRequired[list[AggrConfigDict]]
+
+
 class BIAggregationPack:
-    def __init__(self, pack_config: dict[str, Any]) -> None:
+    def __init__(self, pack_config: BIPackConfig) -> None:
         super().__init__()
         self.id = pack_config["id"]
         self.title = pack_config["title"]
@@ -82,16 +94,16 @@ class BIAggregationPack:
     def schema(cls) -> type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
 
-    def serialize(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "comment": self.comment,
-            "contact_groups": self.contact_groups,
-            "public": self.public,
-            "rules": [rule.serialize() for rule in self.rules.values()],
-            "aggregations": [aggr.serialize() for aggr in self.aggregations.values()],
-        }
+    def serialize(self) -> BIPackConfig:
+        return BIPackConfig(
+            id=self.id,
+            title=self.title,
+            comment=self.comment,
+            contact_groups=self.contact_groups,
+            public=self.public,
+            rules=[rule.serialize() for rule in self.rules.values()],
+            aggregations=[aggr.serialize() for aggr in self.aggregations.values()],
+        )
 
     def num_aggregations(self) -> int:
         return len(self.aggregations)
@@ -294,7 +306,7 @@ class BIAggregationPacks:
         self.cleanup()
         self._instantiate_packs(config["packs"])
 
-    def _instantiate_packs(self, packs_data: list[dict[str, Any]]) -> None:
+    def _instantiate_packs(self, packs_data: list[BIPackConfig]) -> None:
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
 
     def save_config(self) -> None:

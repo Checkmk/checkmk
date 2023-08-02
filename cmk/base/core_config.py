@@ -509,7 +509,8 @@ def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostNa
             raise MKGeneralException("Invalid argument for command line: %r" % (arg,))
 
     if passwords:
-        formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
+        pw_store_arg = "--pwstore=%s" % ",".join(["@".join(p) for p in passwords])
+        formated = [cmk.utils.quote_shell_string(pw_store_arg)] + formated
 
     return " ".join(formated)
 

@@ -265,10 +265,10 @@ std::vector<Command> NebCore::commands() const {
 
 std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IHost &hst) const {
+    const auto &h = static_cast<const NebHost &>(hst).handle();
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
-        if (co->_host == static_cast<const host *>(hst.handle()) &&
-            co->_service == nullptr) {
+        if (co->_host == &h && co->_service == nullptr) {
             result.emplace_back(std::make_unique<NebComment>(*co));
         }
     }
@@ -283,10 +283,10 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments(
 
 std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IService &svc) const {
+    const auto &s = static_cast<const NebService &>(svc).handle();
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
-        if (co->_host == static_cast<const service *>(svc.handle())->host_ptr &&
-            co->_service == static_cast<const service *>(svc.handle())) {
+        if (co->_host == s.host_ptr && co->_service == &s) {
             result.emplace_back(std::make_unique<NebComment>(*co));
         }
     }
@@ -310,10 +310,10 @@ bool NebCore::all_of_comments(
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IHost &hst) const {
+    const auto &h = static_cast<const NebHost &>(hst).handle();
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
-        if (dt->_host == static_cast<const host *>(hst.handle()) &&
-            dt->_service == nullptr) {
+        if (dt->_host == &h && dt->_service == nullptr) {
             result.emplace_back(std::make_unique<NebDowntime>(*dt));
         }
     }
@@ -328,10 +328,10 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IService &svc) const {
+    const auto &s = static_cast<const NebService &>(svc).handle();
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
-        if (dt->_host == static_cast<const service *>(svc.handle())->host_ptr &&
-            dt->_service == static_cast<const service *>(svc.handle())) {
+        if (dt->_host == s.host_ptr && dt->_service == &s) {
             result.emplace_back(std::make_unique<NebDowntime>(*dt));
         }
     }

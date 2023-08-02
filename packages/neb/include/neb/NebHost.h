@@ -26,7 +26,11 @@ class NebHost : public IHost {
 public:
     explicit NebHost(const ::host &host) : host_{host} {}
 
-    [[nodiscard]] const void *handle() const override { return &host_; }
+    [[nodiscard]] const ::host &handle() const { return host_; }
+
+    [[nodiscard]] const void *handleForStateHistory() const override {
+        return &host_;
+    }
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
         auto ctc = static_cast<const NebContact &>(contact).handle();

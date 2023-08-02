@@ -33,7 +33,11 @@ public:
     explicit NebService(const ::service &svc)
         : service_{svc}, host_{NebHost{*svc.host_ptr}} {}
 
-    [[nodiscard]] const void *handle() const override { return &service_; }
+    [[nodiscard]] const ::service &handle() const { return service_; }
+
+    [[nodiscard]] const void *handleForStateHistory() const override {
+        return &service_;
+    }
 
     [[nodiscard]] const IHost &host() const override { return host_; }
 

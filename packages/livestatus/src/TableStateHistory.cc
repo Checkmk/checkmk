@@ -411,8 +411,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                key = entry_service != nullptr ? entry_service->handle()
-                                               : nullptr;
+                key = entry_service != nullptr
+                          ? entry_service->handleForStateHistory()
+                          : nullptr;
                 is_service = true;
             // fall-through
             case LogEntryKind::alert_host:
@@ -421,8 +422,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host: {
                 if (!is_service) {
-                    key =
-                        entry_host == nullptr ? nullptr : entry_host->handle();
+                    key = entry_host == nullptr
+                              ? nullptr
+                              : entry_host->handleForStateHistory();
                 }
 
                 if (key == nullptr) {
@@ -464,13 +466,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     if (state->_is_host) {
                         for (auto &it_inh : state_info) {
                             if (it_inh.second->_host != nullptr &&
-                                it_inh.second->_host->handle() ==
-                                    state->_host->handle()) {
+                                it_inh.second->_host->handleForStateHistory() ==
+                                    state->_host->handleForStateHistory()) {
                                 state->_services.push_back(it_inh.second);
                             }
                         }
                     } else {
-                        auto it_inh = state_info.find(state->_host->handle());
+                        auto it_inh = state_info.find(
+                            state->_host->handleForStateHistory());
                         if (it_inh != state_info.end()) {
                             it_inh->second->_services.push_back(state);
                         }
@@ -518,7 +521,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // If this key is a service try to find its host and apply
                     // its _in_host_downtime and _host_down parameters
                     if (!state->_is_host) {
-                        auto my_host = state_info.find(state->_host->handle());
+                        auto my_host = state_info.find(
+                            state->_host->handleForStateHistory());
                         if (my_host != state_info.end()) {
                             state->_in_host_downtime =
                                 my_host->second->_in_host_downtime;

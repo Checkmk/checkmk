@@ -1316,57 +1316,145 @@ class AgentClient(RestApiClient):
 class DowntimeClient(RestApiClient):
     domain: API_DOMAIN = "downtime"
 
+    def get(self, downtime_id: int, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{downtime_id}?site_id={site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        host_name: str | None = None,
+        service_description: str | None = None,
+        query: str | None = None,
+        downtime_type: Literal["host", "service", "both"] = "both",
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query_params = urllib.parse.urlencode(
+            _only_set_keys(
+                {
+                    "downtime_type": downtime_type,
+                    "host_name": host_name,
+                    "service_description": service_description,
+                    "query": query,
+                    "site_id": site_id,
+                }
+            )
+        )
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all?{query_params}",
+            expect_ok=expect_ok,
+        )
+
     def create_for_host(
         self,
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        recur: str,
-        duration: int,
-        comment: str,
-        host_name: str,
+        start_time: datetime.datetime | str,
+        end_time: datetime.datetime | str,
+        recur: str | None = None,
+        duration: int | None = None,
+        comment: str | None = None,
+        host_name: str | None = None,
+        hostgroup_name: str | None = None,
+        query: str | None = None,
+        downtime_type: Literal["host", "hostgroup", "host_by_query"] = "host",
         expect_ok: bool = True,
     ) -> Response:
         body = {
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
+            "downtime_type": downtime_type,
+            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
-            "duration": duration,
             "comment": comment,
-            "host_name": host_name,
-            "downtime_type": "host",
+            "duration": duration,
         }
+
+        if downtime_type == "host":
+            body.update({"host_name": host_name})
+
+        elif downtime_type == "hostgroup":
+            body.update({"hostgroup_name": hostgroup_name})
+
+        else:
+            body.update({"query": query})
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/host",
-            body=body,
+            body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
 
     def create_for_services(
         self,
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        recur: str,
-        duration: int,
-        comment: str,
-        host_name: str,
-        service_descriptions: list[str],
+        start_time: datetime.datetime | str,
+        end_time: datetime.datetime | str,
+        recur: str | None = None,
+        duration: int | None = None,
+        comment: str | None = None,
+        host_name: str | None = None,
+        servicegroup_name: str | None = None,
+        query: str | None = None,
+        service_descriptions: list[str] | None = None,
+        downtime_type: Literal["service", "servicegroup", "service_by_query"] = "service",
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
+        body: dict[str, Any] = {
+            "downtime_type": downtime_type,
+            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "duration": duration,
             "comment": comment,
             "host_name": host_name,
-            "service_descriptions": service_descriptions,
-            "downtime_type": "service",
         }
+
+        if downtime_type == "service":
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+
+        elif downtime_type == "servicegroup":
+            body.update({"servicegroup_name": servicegroup_name})
+
+        else:
+            body.update({"query": query})
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/service",
-            body=body,
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        site_id: str,
+        delete_type: Literal["by_id", "query", "params"],
+        downtime_id: str | None = None,
+        query: str | None = None,
+        host_name: str | None = None,
+        service_descriptions: list[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "delete_type": delete_type,
+        }
+
+        if delete_type == "by_id":
+            body.update({"downtime_id": downtime_id})
+
+        elif delete_type == "query":
+            body.update({"query": query})
+
+        else:
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
 

@@ -6,17 +6,18 @@
 
 import copy
 import json
-from collections.abc import Collection
-from typing import Any, overload
+from collections.abc import Collection, Iterable
+from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.type_defs import Icon, PermissionName
+from cmk.gui.type_defs import HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.main_menu import MainModuleTopic
 
@@ -102,6 +103,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 from cmk.bi.actions import BICallARuleAction
@@ -109,8 +111,9 @@ from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.compiler import BICompiler
 from cmk.bi.lib import SitesCallback
-from cmk.bi.packs import BIAggregationPack
+from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
+from cmk.bi.type_defs import AggrConfigDict
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -192,7 +195,7 @@ class ABCBIMode(WatoMode):
         assert self._bi_pack is not None
         return self._bi_pack
 
-    def verify_pack_permission(self, bi_pack):
+    def verify_pack_permission(self, bi_pack: BIAggregationPack) -> None:
         if not bi_valuespecs.is_contact_for_pack(bi_pack):
             raise MKAuthException(
                 _("You have no permission for changes in this BI pack %s.") % bi_pack.title
@@ -201,17 +204,17 @@ class ABCBIMode(WatoMode):
     def title(self) -> str:
         return _("Business Intelligence")
 
-    def title_for_pack(self, bi_pack):
+    def title_for_pack(self, bi_pack: BIAggregationPack) -> str:
         return escaping.escape_attribute(bi_pack.title)
 
-    def _add_change(self, action_name, text):
+    def _add_change(self, action_name: str, text: LogMessage) -> None:
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
         _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=site_ids)
 
-    def url_to_pack(self, addvars, bi_pack):
+    def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])
 
-    def _get_selection(self, _type):
+    def _get_selection(self, _type: str) -> list[str]:
         checkbox_name = "_c_%s_" % _type
         return [
             varname.split(checkbox_name)[-1]  #
@@ -219,9 +222,7 @@ class ABCBIMode(WatoMode):
             if html.get_checkbox(varname)
         ]
 
-    def render_rule_tree(  # type: ignore[no-untyped-def]
-        self, rule_id, tree_path, tree_prefix=""
-    ) -> None:
+    def render_rule_tree(self, rule_id: str, tree_path: str, tree_prefix: str = "") -> None:
         bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
         if bi_pack is None:
             raise MKUserError("pack", _("This BI pack does not exist."))
@@ -253,14 +254,16 @@ class ABCBIMode(WatoMode):
                 for sub_rule_id in sub_rule_ids:
                     self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
 
-    def aggregation_sub_rule_ids(self, bi_rule):
+    def aggregation_sub_rule_ids(self, bi_rule: BIRule) -> list[str]:
         sub_rule_ids = []
         for bi_node in bi_rule.get_nodes():
             if bi_node.action.kind() == BICallARuleAction.kind():
-                sub_rule_ids.append(bi_node.action.rule_id)
+                action = bi_node.action
+                assert isinstance(action, BICallARuleAction)
+                sub_rule_ids.append(action.rule_id)
         return sub_rule_ids
 
-    def _add_rule_arguments_lookup(self):
+    def _add_rule_arguments_lookup(self) -> None:
         allowed_rules = self._allowed_rules()
         lookup = {}
         for bi_rule in allowed_rules.values():
@@ -273,7 +276,7 @@ class ABCBIMode(WatoMode):
             % json.dumps(lookup)
         )
 
-    def _allowed_rules(self):
+    def _allowed_rules(self) -> dict[str, BIRule]:
         allowed_rules = {}
         for bi_pack in sorted(self._bi_packs.get_packs().values(), key=lambda p: p.title):
             if bi_valuespecs.may_use_rules_in_pack(bi_pack):
@@ -315,7 +318,19 @@ class ModeBIEditPack(ABCBIMode):
                 self._add_change("bi-new-pack", _("Added new BI pack %s") % vs_config["id"])
                 vs_config["rules"] = {}
                 vs_config["aggregations"] = {}
-                self._bi_packs.add_pack(BIAggregationPack(vs_config))
+                self._bi_packs.add_pack(
+                    BIAggregationPack(
+                        BIPackConfig(
+                            id=vs_config["id"],
+                            title=vs_config["title"],
+                            comment=vs_config["comment"],
+                            contact_groups=vs_config["contact_groups"],
+                            public=vs_config["public"],
+                            rules=[],
+                            aggregations=[],
+                        )
+                    )
+                )
             self._bi_packs.save_config()
 
         return redirect(mode_url("bi_packs"))
@@ -351,7 +366,7 @@ class ModeBIEditPack(ABCBIMode):
             html.set_focus("bi_pack_p_id")
         html.end_form()
 
-    def _vs_pack(self):
+    def _vs_pack(self) -> Dictionary:
         if self._bi_pack:
             id_element = FixedValue(title=_("Pack ID"), value=self.bi_pack.id)
         else:
@@ -567,7 +582,7 @@ class ModeBIPacks(ABCBIMode):
                     HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
                 )
 
-    def _render_contact_group(self, c) -> HTML:  # type: ignore[no-untyped-def]
+    def _render_contact_group(self, c: GroupName) -> HTML:
         display_name = self._contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -788,7 +803,7 @@ class ModeBIRules(ABCBIMode):
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
         self._bi_packs.save_config()
 
-    def _check_delete_rule_id_permission(self, rule_id) -> None:  # type: ignore[no-untyped-def]
+    def _check_delete_rule_id_permission(self, rule_id: str) -> None:
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(
@@ -896,7 +911,7 @@ class ModeBIRules(ABCBIMode):
             if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
         ]
 
-    def render_rules(self, title, only_unused) -> None:  # type: ignore[no-untyped-def]
+    def render_rules(self, title: str, only_unused: bool) -> None:
         aggregations_that_use_rule = self._find_aggregation_rule_usages()
 
         rules = self.bi_pack.get_rules().items()
@@ -981,14 +996,14 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Parameters"), " ".join(bi_rule.params.arguments))
 
                     if bi_rule.properties.icon:
-                        title = (
+                        cell_title: HTML | str = (
                             html.render_icon(bi_rule.properties.icon)
                             + HTML("&nbsp;")
                             + escaping.escape_to_html(bi_rule.properties.title)
                         )
                     else:
-                        title = escaping.escape_to_html(bi_rule.properties.title)
-                    table.cell(_("Title"), title)
+                        cell_title = escaping.escape_to_html(bi_rule.properties.title)
+                    table.cell(_("Title"), cell_title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(
                         bi_rule.aggregation_function
@@ -1020,13 +1035,15 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Comment"), bi_rule.properties.comment or "")
                     table.cell(_("Documentation URL"), bi_rule.properties.docu_url or "")
 
-    def _aggregation_title(self, bi_aggregation):
-        rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
+    def _aggregation_title(self, bi_aggregation: BIAggregation) -> str:
+        action = bi_aggregation.node.action
+        assert isinstance(action, BICallARuleAction)
+        rule = self._bi_packs.get_rule(action.rule_id)
         assert rule is not None
         return f"{rule.properties.title} ({rule.id})"
 
-    def _find_aggregation_rule_usages(self):
-        aggregations_that_use_rule: dict[str, list] = {}
+    def _find_aggregation_rule_usages(self) -> dict[str, list[tuple[str, str, BIAggregation]]]:
+        aggregations_that_use_rule: dict[str, list[tuple[str, str, BIAggregation]]] = {}
         for pack_id, bi_pack in self._bi_packs.get_packs().items():
             for aggr_id, bi_aggregation in bi_pack.get_aggregations().items():
                 action = bi_aggregation.node.action
@@ -1044,12 +1061,13 @@ class ModeBIRules(ABCBIMode):
                     )
         return aggregations_that_use_rule
 
-    def _aggregation_recursive_sub_rule_ids(self, rule_id):
+    def _aggregation_recursive_sub_rule_ids(self, rule_id: str) -> list[str]:
         bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
         if bi_pack is None:
             return []
 
         bi_rule = bi_pack.get_rule(rule_id)
+        assert bi_rule is not None
         sub_rule_ids = self._get_sub_rule_ids(bi_rule)
         if not sub_rule_ids:
             return []
@@ -1059,7 +1077,7 @@ class ModeBIRules(ABCBIMode):
             result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
         return result
 
-    def _get_sub_rule_ids(self, bi_rule):
+    def _get_sub_rule_ids(self, bi_rule: BIRule) -> list[str]:
         return [
             bi_node.action.rule_id
             for bi_node in bi_rule.get_nodes()
@@ -1121,7 +1139,7 @@ class ModeBIEditRule(ABCBIMode):
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
-    def _action_modify_rule(self, new_bi_rule):
+    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
         if self._new:
             self._rule_id = new_bi_rule.id
 
@@ -1149,7 +1167,7 @@ class ModeBIEditRule(ABCBIMode):
         else:
             self._add_change("bi-edit-rule", _("Modified BI rule %s") % new_bi_rule.id)
 
-    def _get_forbidden_packs_using_rule(self):
+    def _get_forbidden_packs_using_rule(self) -> set[str]:
         forbidden_packs = set()
         for pack_id, bi_pack in self._bi_packs.get_packs().items():
             uses_rule = False
@@ -1229,17 +1247,14 @@ class ModeBIEditRule(ABCBIMode):
                 _("You have no permission for changes in this rule using %s.") % message
             )
 
-    def _transform_back_vs_call_rule(self, choice):
-        return choice[1]
-
-    def _transform_forth_vs_call_rule(self, rule_id):
+    def _transform_forth_vs_call_rule(self, rule_id: str) -> tuple[str, str] | None:
         bi_pack = self._bi_packs.get_rule(rule_id)
         if bi_pack:
             return (bi_pack.id, rule_id)
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: str | None):  # type: ignore[no-untyped-def]
+    def valuespec(cls, rule_id: str | None) -> Transform:
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1382,7 +1397,7 @@ class ModeBIEditRule(ABCBIMode):
             ("aggregation_function", bi_valuespecs.get_aggregation_function_choices()),
         ]
 
-        def convert_to_vs(value):
+        def convert_to_vs(value: dict) -> dict:
             for what in ["title", "state_messages", "docu_url", "icon", "comment"]:
                 value[what] = value["properties"].pop(what)
             value["disabled"] = value["computation_options"].pop("disabled")
@@ -1395,7 +1410,7 @@ class ModeBIEditRule(ABCBIMode):
             del value["computation_options"]
             return value
 
-        def convert_from_vs(value):
+        def convert_from_vs(value: dict) -> dict:
             value["properties"] = {}
             for what in ["title", "docu_url", "icon", "comment"]:
                 value["properties"][what] = value.pop(what) or ""
@@ -1461,7 +1476,7 @@ class AjaxBIRulePreview(AjaxPage):
 
         # Create preview rule
         vs = ModeBIEditRule.valuespec(rule_id=None)
-        varprefix = request.var("varprefix")
+        varprefix = request.get_str_input_mandatory("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
 
@@ -1503,10 +1518,19 @@ class AjaxBIAggregationPreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview aggr
-        varprefix = request.var("varprefix")
+        varprefix = request.get_str_input_mandatory("varprefix")
         vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
         preview_config = vs.from_html_vars(varprefix)
-        preview_bi_aggr = BIAggregation(preview_config)
+        preview_bi_aggr = BIAggregation(
+            AggrConfigDict(
+                id=preview_config["id"],
+                comment=preview_config["comment"],
+                groups=preview_config["groups"],
+                node=preview_config["node"],
+                computation_options=preview_config["computation_options"],
+                aggregation_visualization=preview_config["aggregation_visualization"],
+            )
+        )
 
         response = []
         try:
@@ -1523,7 +1547,7 @@ class AjaxBIAggregationPreview(AjaxPage):
         }
 
 
-def _finalize_preview_response(response):
+def _finalize_preview_response(response: list[dict]) -> list[dict]:
     if len(response) == 0:
         return [{_("No matches"): ""}]
     if len(response) == 1 and response[0] == {}:
@@ -1654,7 +1678,7 @@ class BIModeEditAggregation(ABCBIMode):
             save_is_enabled=bi_valuespecs.is_contact_for_pack(self.bi_pack),
         )
 
-    def _get_aggregations_by_id(self):
+    def _get_aggregations_by_id(self) -> dict[str, tuple[BIAggregationPack, BIAggregation]]:
         ids = {}
         for bi_pack in self._bi_packs.get_packs().values():
             for bi_aggregation in bi_pack.get_aggregations().values():
@@ -1724,7 +1748,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: str | None):  # type: ignore[no-untyped-def]
+    def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
         if cmk_version.edition() is cmk_version.Edition.CME:
             cme_elements = managed.customer_choice_element()
         else:
@@ -1767,7 +1791,7 @@ class BIModeEditAggregation(ABCBIMode):
         )
 
     @classmethod
-    def _validate_aggregation_id(cls, value, varprefix):
+    def _validate_aggregation_id(cls, value: str, varprefix: str) -> None:
         if value.endswith(".new"):
             raise MKUserError(
                 varprefix,
@@ -1775,15 +1799,19 @@ class BIModeEditAggregation(ABCBIMode):
             )
 
     @classmethod
-    def _get_vs_aggregation_groups(cls):
-        def convert_to_vs(value):
+    def _get_vs_aggregation_groups(cls) -> Transform:
+        class _ConvertedValueSpec(TypedDict):
+            names: list[str]
+            paths: list[list[str]]
+
+        def convert_to_vs(value: _ConvertedValueSpec) -> list[str | list[str]]:
             return value.get("names", []) + value.get("paths", [])
 
-        def convert_from_vs(value):
-            result = {}
-            result["names"] = [x for x in value if not isinstance(x, list)]
-            result["paths"] = [x for x in value if isinstance(x, list)]
-            return result
+        def convert_from_vs(value: Iterable[str | list[str]]) -> _ConvertedValueSpec:
+            return _ConvertedValueSpec(
+                names=[x for x in value if not isinstance(x, list)],
+                paths=[x for x in value if isinstance(x, list)],
+            )
 
         return Transform(
             valuespec=ListOf(
@@ -1806,7 +1834,7 @@ class BIModeEditAggregation(ABCBIMode):
         )
 
     @classmethod
-    def _get_vs_computation_options(cls):
+    def _get_vs_computation_options(cls) -> Dictionary:
         return Dictionary(
             elements=[
                 (
@@ -1864,7 +1892,7 @@ class BIModeEditAggregation(ABCBIMode):
         )
 
     @classmethod
-    def _get_vs_aggregation_visualization(cls):
+    def _get_vs_aggregation_visualization(cls) -> Dictionary:
         return Dictionary(
             title=_("BI Visualization"),
             elements=[
@@ -2006,6 +2034,7 @@ class BIModeAggregations(ABCBIMode):
         target_pack = None
         if target in self._bi_packs.get_packs():
             target_pack = self._bi_packs.get_pack(target)
+            assert target_pack is not None
             self.verify_pack_permission(target_pack)
 
         selection = list(map(str, self._get_selection("aggregation")))
@@ -2236,8 +2265,10 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_aggregation_rule_tree(bi_aggregation)
 
-    def render_aggregation_rule_tree(self, bi_aggregation) -> None:  # type: ignore[no-untyped-def]
-        toplevel_rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
+    def render_aggregation_rule_tree(self, bi_aggregation: BIAggregation) -> None:
+        action = bi_aggregation.node.action
+        assert isinstance(action, BICallARuleAction)
+        toplevel_rule = self._bi_packs.get_rule(action.rule_id)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
             return
@@ -2273,9 +2304,9 @@ class ModeBIRuleTree(ABCBIMode):
     def __init__(self) -> None:
         super().__init__()
         self._rule_id = request.get_str_input_mandatory("id")
-        self._rule_tree_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id)
-        if not self._rule_tree_bi_pack:
+        if not (rule_tree_bi_pack := self._bi_packs.get_pack_of_rule(self._rule_id)):
             raise MKUserError("id", _("This BI rule does not exist"))
+        self._rule_tree_bi_pack = rule_tree_bi_pack
 
     def title(self) -> str:
         return (

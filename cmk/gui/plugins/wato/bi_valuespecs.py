@@ -718,7 +718,7 @@ class BIConfigStateOfRemainingServicesAction(
 #   +----------------------------------------------------------------------+
 
 
-def get_aggregation_function_choices():
+def get_aggregation_function_choices() -> Transform:
     choices: list[Any] = []
     for aggr_func_id, bi_aggr_func in bi_config_aggregation_function_registry.items():
         choices.append((aggr_func_id, bi_aggr_func.title(), bi_aggr_func.valuespec()))

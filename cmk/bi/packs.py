@@ -333,7 +333,7 @@ class BIAggregationPacks:
         return os.path.join(cls._num_enabled_aggregations_dir(), "num_enabled_aggregations")
 
     @classmethod
-    def get_num_enabled_aggregations(cls):
+    def get_num_enabled_aggregations(cls) -> int:
         try:
             return int(store.load_text_from_file(cls._num_enabled_aggregations_path()))
         except (TypeError, ValueError):

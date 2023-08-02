@@ -51,7 +51,6 @@ enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 class IContact {
 public:
     virtual ~IContact() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string email() const = 0;

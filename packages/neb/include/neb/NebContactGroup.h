@@ -9,6 +9,7 @@
 #include <string>
 
 #include "livestatus/Interface.h"
+#include "neb/NebContact.h"
 #include "neb/nagios.h"
 
 class NebContactGroup : public IContactGroup {
@@ -17,11 +18,11 @@ public:
         : contact_group_{contact_group} {}
 
     [[nodiscard]] bool isMember(const IContact &contact) const override {
+        auto ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
         return ::is_contact_member_of_contactgroup(
                    const_cast<contactgroup *>(&contact_group_),
-                   const_cast<::contact *>(
-                       static_cast<const ::contact *>(contact.handle()))) != 0;
+                   const_cast<::contact *>(&ctc)) != 0;
     }
     [[nodiscard]] std::string name() const override {
         return contact_group_.group_name;

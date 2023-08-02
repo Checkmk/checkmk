@@ -9,14 +9,16 @@
 #include <algorithm>
 
 #include "livestatus/Interface.h"
+#include "neb/NebCore.h"
 #include "neb/TimeperiodsCache.h"
 #include "neb/nagios.h"
 
 class NebContact : public IContact {
 public:
-    explicit NebContact(const contact &contact) : contact_{contact} {}
+    explicit NebContact(const ::contact &contact) : contact_{contact} {}
 
-    [[nodiscard]] const void *handle() const override { return &contact_; };
+    [[nodiscard]] const ::contact &handle() const { return contact_; };
+
     [[nodiscard]] std::string name() const override {
         return contact_.name == nullptr ? "" : contact_.name;
     }

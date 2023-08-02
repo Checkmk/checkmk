@@ -22,6 +22,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
 #include "neb/MacroExpander.h"
+#include "neb/NebContact.h"
 #include "neb/NebCore.h"
 #include "neb/NebHost.h"
 #include "neb/TimeperiodsCache.h"
@@ -36,11 +37,11 @@ public:
 
     [[nodiscard]] const IHost &host() const override { return host_; }
 
-    // Older Nagios headers are not const-correct... :-P
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
+        auto ctc = static_cast<const NebContact &>(contact).handle();
+        // Older Nagios headers are not const-correct... :-P
         auto *s = const_cast<::service *>(&service_);
-        auto *c = const_cast<::contact *>(
-            static_cast<const ::contact *>(contact.handle()));
+        auto *c = const_cast<::contact *>(static_cast<const ::contact *>(&ctc));
         return is_contact_for_service(s, c) != 0 ||
                is_escalated_contact_for_service(s, c) != 0;
     }

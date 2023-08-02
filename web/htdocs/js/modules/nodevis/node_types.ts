@@ -14,12 +14,14 @@ import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
-    static class_name = "topology";
-
     constructor(world: NodevisWorld, node) {
         super(world, node);
         this.radius = 9;
         this._provides_external_quickinfo_data = true;
+    }
+
+    override class_name(): string {
+        return "topology";
     }
 
     static id() {
@@ -220,12 +222,14 @@ function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
 }
 
 export class TopologyCentralNode extends TopologyNode {
-    static override class_name = "topology_center";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 30;
         this._has_quickinfo = false;
+    }
+
+    override class_name(): string {
+        return "topology_center";
     }
 
     static override id() {
@@ -259,12 +263,14 @@ export class TopologyCentralNode extends TopologyNode {
 }
 
 export class TopologySiteNode extends TopologyNode {
-    static override class_name = "topology_site";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 16;
         this._has_quickinfo = false;
+    }
+
+    override class_name(): string {
+        return "topology_site";
     }
 
     static override id() {
@@ -294,12 +300,14 @@ export class TopologySiteNode extends TopologyNode {
 }
 
 export class BILeafNode extends AbstractGUINode implements TypeWithName {
-    static class_name = "bi_leaf";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 9;
         this._provides_external_quickinfo_data = true;
+    }
+
+    override class_name(): string {
+        return "bi_leaf";
     }
 
     static id() {
@@ -356,14 +364,16 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
 }
 
 export class BIAggregatorNode extends AbstractGUINode {
-    static class_name = "bi_aggregator";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 12;
         if (!this.node.parent)
             // the root node gets a bigger radius
             this.radius = 16;
+    }
+
+    override class_name(): string {
+        return "bi_aggregator";
     }
 
     static id() {

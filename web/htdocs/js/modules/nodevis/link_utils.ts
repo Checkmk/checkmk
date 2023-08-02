@@ -11,14 +11,17 @@ import {
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import {AbstractClassRegistry, DefaultTransition} from "nodevis/utils";
+import {
+    AbstractClassRegistry,
+    DefaultTransition,
+    TypeWithName,
+} from "nodevis/utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;
 }
 
-export class AbstractLink {
-    static class_name = "abstract";
+export class AbstractLink implements TypeWithName {
     _world: NodevisWorld;
     _link_data: NodevisLink;
     _selection: d3SelectionG | null;
@@ -30,6 +33,10 @@ export class AbstractLink {
         this._selection = null;
         this._line_config =
             this._link_data.source.data.chunk.layout_settings.config.line_config;
+    }
+
+    class_name() {
+        return "abstract";
     }
 
     selection(): d3SelectionG {
@@ -208,8 +215,6 @@ export class AbstractLink {
     }
 }
 
-class LinkTypeClassRegistry extends AbstractClassRegistry<
-    typeof AbstractLink
-> {}
+class LinkTypeClassRegistry extends AbstractClassRegistry<AbstractLink> {}
 
 export const link_type_class_registry = new LinkTypeClassRegistry();

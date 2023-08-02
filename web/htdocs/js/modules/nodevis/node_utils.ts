@@ -31,7 +31,6 @@ export type BasicQuickinfo = {
 };
 
 export class AbstractGUINode implements TypeWithName {
-    class_name = "abstract";
     _world: NodevisWorld;
     _id: string;
     node: NodevisNode;
@@ -69,6 +68,10 @@ export class AbstractGUINode implements TypeWithName {
         this._provides_external_quickinfo_data = false;
         this._quickinfo_fetch_in_progress = false;
         this._external_quickinfo_data = null;
+    }
+
+    class_name() {
+        return "abstract";
     }
 
     selection(): d3SelectionG {
@@ -621,8 +624,6 @@ export function get_custom_node_settings(node: NodevisNode) {
 }
 
 // Stores node visualization classes
-class NodeTypeClassRegistry extends AbstractClassRegistry<
-    typeof AbstractGUINode
-> {}
+class NodeTypeClassRegistry extends AbstractClassRegistry<AbstractGUINode> {}
 
 export const node_type_class_registry = new NodeTypeClassRegistry();

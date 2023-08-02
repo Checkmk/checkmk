@@ -193,8 +193,11 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
-    static override class_name = "hierarchy";
     static override description = "Hierarchical style";
+
+    override class_name(): string {
+        return "hierarchy";
+    }
 
     override type(): string {
         return "hierarchy";
@@ -255,9 +258,8 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
             const node_style: null | AbstractLayoutStyle = node.data.use_style;
             if (node_style && node != this.style_root_node) {
                 if (
-                    // @ts-ignore
-                    node_style.constructor.class_name ==
-                    LayoutStyleBlock.class_name
+                    node_style.class_name() ==
+                    LayoutStyleBlock.prototype.class_name()
                 ) {
                     return node_style.get_size();
                 }
@@ -300,9 +302,8 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
                 let extra_width = 0;
                 if (
-                    // @ts-ignore
-                    node_style.constructor.class_name ==
-                    LayoutStyleHierarchy.class_name
+                    node_style.class_name() ==
+                    LayoutStyleHierarchy.prototype.class_name()
                 )
                     extra_width =
                         Math.abs(bounding_rect.height * Math.sin(node_rad)) *
@@ -552,9 +553,12 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
-    static override class_name = "radial";
     static override description = "Radial style";
     _text_rotations: number[] = [];
+
+    override class_name(): string {
+        return "radial";
+    }
 
     override type(): string {
         return "radial";
@@ -864,8 +868,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleFixed extends AbstractLayoutStyle {
-    static override class_name = "fixed";
     static override description = "Fixed position style";
+
+    override class_name(): string {
+        return "fixed";
+    }
 
     override type(): string {
         return "fixed";
@@ -885,11 +892,14 @@ export class LayoutStyleFixed extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
-    static override class_name = "block";
     static override description = "Leaf-Nodes Block style";
     _width = 0;
     _height = 0;
     _leaf_childs: NodevisNode[] = [];
+
+    override class_name(): string {
+        return "block";
+    }
 
     override type(): string {
         return "block";

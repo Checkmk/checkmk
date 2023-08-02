@@ -33,8 +33,11 @@ import {
 import {DefaultTransition} from "nodevis/utils";
 
 export class LayeredDebugLayer extends ToggleableLayer {
-    static override class_name = "debug_layer";
     _anchor_info?: d3SelectionG;
+
+    override class_name(): string {
+        return "debug_layer";
+    }
 
     override id() {
         return "debug_layer";
@@ -193,7 +196,9 @@ export class LayeredDebugLayer extends ToggleableLayer {
 }
 
 export class LayeredIconOverlay extends ToggleableLayer {
-    static override class_name = "node_icon_overlay";
+    override class_name(): string {
+        return "node_icon_overlay";
+    }
 
     override id() {
         return "node_icon_overlay";
@@ -259,7 +264,6 @@ export class LayeredIconOverlay extends ToggleableLayer {
 //#   +--------------------------------------------------------------------+
 
 export class LayeredNodesLayer extends FixLayer {
-    static override class_name = "nodes";
     node_instances: {[name: string]: AbstractGUINode};
     link_instances: {[name: string]: AbstractLink};
     _links_for_node: {[name: string]: AbstractLink[]} = {};
@@ -293,6 +297,10 @@ export class LayeredNodesLayer extends FixLayer {
             .style("position", "absolute")
             .classed("popup_menu", true)
             .style("display", "none");
+    }
+
+    override class_name(): string {
+        return "nodes";
     }
 
     override id() {
@@ -518,7 +526,6 @@ export class LayeredNodesLayer extends FixLayer {
         const node_class = node_type_class_registry.get_class(
             node_data.data.node_type
         );
-        // @ts-ignore
         return new node_class(this._world, node_data);
     }
 
@@ -542,8 +549,9 @@ export class LayeredNodesLayer extends FixLayer {
         for (const idx in this.node_instances)
             this.node_instances[idx].update_position();
 
-        for (const idx in this.link_instances)
+        for (const idx in this.link_instances) {
             this.link_instances[idx].update_position();
+        }
 
         // Disable node transitions after each update step
         for (const idx in this.node_instances)

@@ -5,6 +5,7 @@
  */
 
 import * as d3 from "d3";
+import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
 import {StyleMatcherConditions} from "nodevis/layout_utils";
 import {
     BoundingRect,
@@ -31,22 +32,21 @@ export class DefaultTransition {
 
 // Stores node visualization classes
 export type TypeWithName = {
-    class_name: string;
+    class_name: () => string;
 };
 
-export class AbstractClassRegistry<Type> {
-    _classes: {[name: string]: Type} = {};
+export class AbstractClassRegistry<Type extends TypeWithName> {
+    _classes: {[name: string]: AbstractNodeVisConstructor<Type>} = {};
 
-    register(class_template: TypeWithName) {
-        // @ts-ignore
-        this._classes[class_template.class_name] = class_template as Type;
+    register(class_template: AbstractNodeVisConstructor<Type>) {
+        this._classes[class_template.prototype.class_name()] = class_template;
     }
 
-    get_class(class_name: string): Type {
-        return this._classes[class_name] as unknown as Type;
+    get_class(class_name: string): AbstractNodeVisConstructor<Type> {
+        return this._classes[class_name];
     }
 
-    get_classes(): {[name: string]: Type} {
+    get_classes(): {[name: string]: AbstractNodeVisConstructor<Type>} {
         return this._classes;
     }
 }

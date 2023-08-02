@@ -6,6 +6,7 @@
 
 import * as d3 from "d3";
 import {ForceOptions} from "nodevis/force_simulation";
+import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {
     Coords,
@@ -20,6 +21,7 @@ import {
     DefaultTransition,
     get_bounding_rect,
     log,
+    TypeWithName,
 } from "nodevis/utils";
 
 export class LineConfig {
@@ -78,14 +80,13 @@ export class NodeVisualizationLayout {
 }
 
 export function compute_style_id(
-    style_class: typeof AbstractLayoutStyle,
+    style_class: AbstractNodeVisConstructor<AbstractLayoutStyle>,
     node: NodevisNode
 ) {
-    return style_class.class_name + "_" + node.data.id;
+    return style_class.prototype.class_name() + "_" + node.data.id;
 }
 
-export class AbstractLayoutStyle extends Object {
-    static class_name = "abstract";
+export class AbstractLayoutStyle implements TypeWithName {
     static description = "abstract description";
     _world: NodevisWorld;
     style_config: StyleConfig;
@@ -106,7 +107,6 @@ export class AbstractLayoutStyle extends Object {
         node: NodevisNode,
         selection
     ) {
-        super();
         // Contains all configurable options for this style
         this._world = world;
         this.style_config = style_config;
@@ -169,7 +169,7 @@ export class AbstractLayoutStyle extends Object {
 
     id(): string {
         return compute_style_id(
-            this.constructor as typeof AbstractLayoutStyle,
+            this.constructor as AbstractNodeVisConstructor<AbstractLayoutStyle>,
             this.style_root_node
         );
     }
@@ -351,8 +351,7 @@ export class AbstractLayoutStyle extends Object {
             if (
                 !node.parent &&
                 (!node.data.use_style ||
-                    // @ts-ignore
-                    node.data.use_style.constructor.class_name == "force")
+                    node.data.use_style.class_name() == "force")
             )
                 return false;
         }
@@ -494,6 +493,10 @@ export class AbstractLayoutStyle extends Object {
             .transition()
             .duration(DefaultTransition.duration());
     }
+
+    class_name(): string {
+        return "abstract";
+    }
 }
 
 // TODO: finalize
@@ -504,7 +507,9 @@ export class LayoutStyleFactory {
         this._world = world;
     }
 
-    get_styles(): {[name: string]: typeof AbstractLayoutStyle} {
+    get_styles(): {
+        [name: string]: AbstractNodeVisConstructor<AbstractLayoutStyle>;
+    } {
         if (this._world.current_datasource == "topology")
             return {fixed: layout_style_class_registry.get_class("fixed")};
         return layout_style_class_registry.get_classes();
@@ -526,12 +531,12 @@ export class LayoutStyleFactory {
     }
 
     instantiate_style_class(
-        style_class: typeof AbstractLayoutStyle,
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle>,
         node: NodevisNode,
         selection: d3SelectionDiv
     ): AbstractLayoutStyle {
         return this.instantiate_style(
-            {type: style_class.class_name},
+            {type: style_class.prototype.class_name()},
             node,
             selection
         );
@@ -601,9 +606,7 @@ export interface LayoutHistoryStep {
     config: SerializedNodevisLayout;
 }
 
-class LayoutStyleClassRegistry extends AbstractClassRegistry<
-    typeof AbstractLayoutStyle
-> {}
+class LayoutStyleClassRegistry extends AbstractClassRegistry<AbstractLayoutStyle> {}
 
 export const layout_style_class_registry = new LayoutStyleClassRegistry();
 

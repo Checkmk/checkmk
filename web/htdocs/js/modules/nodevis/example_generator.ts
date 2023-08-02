@@ -187,15 +187,15 @@ export class LayoutStyleExampleGenerator {
                 style_class = null;
                 break;
             }
-            case LayoutStyleHierarchy.class_name: {
+            case LayoutStyleHierarchy.prototype.class_name(): {
                 style_class = LayoutStyleHierarchy;
                 break;
             }
-            case LayoutStyleRadial.class_name: {
+            case LayoutStyleRadial.prototype.class_name(): {
                 style_class = LayoutStyleRadial;
                 break;
             }
-            case LayoutStyleBlock.class_name: {
+            case LayoutStyleBlock.prototype.class_name(): {
                 style_class = LayoutStyleBlock;
                 break;
             }
@@ -248,7 +248,10 @@ export class LayoutStyleExampleGenerator {
             LayoutStyleBlock,
         ];
         use_styles.forEach(style => {
-            style_choices.push([style.class_name, style.description]);
+            style_choices.push([
+                style.prototype.class_name(),
+                style.description,
+            ]);
         });
 
         style_choice_selection
@@ -299,7 +302,7 @@ export class LayoutStyleExampleGenerator {
 
         const options: StyleOptionSpec[] = [];
         options.push(this._example_options_spec.total_nodes);
-        if (this._style_config.type != LayoutStyleBlock.class_name)
+        if (this._style_config.type != LayoutStyleBlock.prototype.class_name())
             options.push(this._example_options_spec.depth);
 
         let rows = table
@@ -449,7 +452,7 @@ export class LayoutStyleExampleGenerator {
         } as unknown as NodeData;
         let cancel_delta = 1 / (example_options.depth as number);
         // Maximum depth of block style is 1
-        if (this._style_config.type == LayoutStyleBlock.class_name)
+        if (this._style_config.type == LayoutStyleBlock.prototype.class_name())
             cancel_delta = 1;
 
         _add_hierarchy_children(hierarchy_raw, cancel_delta, 1);

@@ -7,6 +7,7 @@
 import * as ajax from "ajax";
 import * as d3 from "d3";
 import {
+    AbstractNodeVisConstructor,
     FixLayer,
     layer_class_registry,
     LayerSelections,
@@ -125,7 +126,6 @@ export function compute_node_position(node: NodevisNode) {
 }
 
 export class LayoutManagerLayer extends FixLayer {
-    static override class_name = "layout_manager";
     _mouse_events_overlay: LayoutingMouseEventsOverlay;
     layout_applier: LayoutApplier;
     toolbar_plugin: LayoutingToolbarPlugin;
@@ -158,6 +158,10 @@ export class LayoutManagerLayer extends FixLayer {
         this.styles_selection = this._svg_selection
             .append("g")
             .attr("id", "hierarchies");
+    }
+
+    override class_name() {
+        return "layout_manager";
     }
 
     override id(): string {
@@ -1414,6 +1418,7 @@ class LayoutApplier {
         for (const [_key, style] of Object.entries(styles)) {
             if (node) {
                 elements.push({
+                    //@ts-ignore
                     text: "Convert to " + style.description,
                     on: () => this._convert_node(node, style),
                     href: "",
@@ -1421,6 +1426,7 @@ class LayoutApplier {
                 });
             } else {
                 elements.push({
+                    //@ts-ignore
                     text: "Convert all nodes to " + style.description,
                     on: () => this._convert_all(style),
                     href: "",
@@ -1451,7 +1457,7 @@ class LayoutApplier {
 
     _convert_node(
         node: NodevisNode,
-        style_class: typeof AbstractLayoutStyle | null
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
     ) {
         const chunk_layout = node.data.chunk.layout_instance;
         if (chunk_layout == null) return;
@@ -1461,7 +1467,7 @@ class LayoutApplier {
         if (
             current_style &&
             style_class != null &&
-            current_style.type() == style_class.constructor.prototype.class_name
+            current_style.class_name() == style_class.prototype.class_name()
         )
             return;
 
@@ -1489,7 +1495,9 @@ class LayoutApplier {
         this._world.layout_manager.create_undo_step();
     }
 
-    _convert_all(style_class: typeof AbstractLayoutStyle | null) {
+    _convert_all(
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
+    ) {
         const used_style: AbstractLayoutStyle[] = [];
         const current_style: AbstractLayoutStyle | null = null;
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {

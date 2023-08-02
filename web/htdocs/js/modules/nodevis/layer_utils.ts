@@ -5,7 +5,7 @@
  */
 
 import {d3SelectionDiv, d3SelectionG, NodevisWorld} from "nodevis/type_defs";
-import {AbstractClassRegistry} from "nodevis/utils";
+import {AbstractClassRegistry, TypeWithName} from "nodevis/utils";
 
 export interface LayerSelections {
     div: d3SelectionDiv;
@@ -17,8 +17,7 @@ export type OverlayConfig = {
     [name: string]: number | string | boolean;
 };
 
-export class AbstractLayer extends Object {
-    static class_name = "abstract_layer";
+export class AbstractLayer extends Object implements TypeWithName {
     enabled = false;
     _world: NodevisWorld;
     _div_selection: d3SelectionDiv;
@@ -32,6 +31,10 @@ export class AbstractLayer extends Object {
 
         // TODO: sort index for div and svg layers
         // d3js can rearrange dom with sorting
+    }
+
+    class_name() {
+        return "abstract_layer";
     }
 
     id(): string {
@@ -131,6 +134,13 @@ export class ToggleableLayer extends AbstractLayer {
 }
 
 export class FixLayer extends AbstractLayer {}
-class LayerClassRegistry extends AbstractClassRegistry<typeof AbstractLayer> {}
+class LayerClassRegistry extends AbstractClassRegistry<AbstractLayer> {}
 
 export const layer_class_registry = new LayerClassRegistry();
+
+export type AbstractNodeVisConstructor<Type extends TypeWithName> = new (
+    a?: any,
+    b?: any,
+    c?: any,
+    d?: any
+) => Type;

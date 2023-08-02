@@ -7,7 +7,9 @@
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 
 export class DefaultLinkNode extends AbstractLink {
-    static override class_name = "default";
+    override class_name(): string {
+        return "default";
+    }
 }
 
 link_type_class_registry.register(DefaultLinkNode);

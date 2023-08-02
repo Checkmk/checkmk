@@ -57,15 +57,19 @@ template <class T>
 concept UniStringLike = StringLike<T> || WideStringLike<T>;
 
 template <class T>
-requires StringLike<T>
-[[nodiscard]] auto AsView(const T &p) noexcept { return std::string_view{p}; }
+    requires StringLike<T>
+[[nodiscard]] auto AsView(const T &p) noexcept {
+    return std::string_view{p};
+}
 
 template <class T>
-requires WideStringLike<T>
-[[nodiscard]] auto AsView(const T &p) noexcept { return std::wstring_view{p}; }
+    requires WideStringLike<T>
+[[nodiscard]] auto AsView(const T &p) noexcept {
+    return std::wstring_view{p};
+}
 
 template <class T, class V>
-requires UniStringLike<T> && UniStringLike<V>
+    requires UniStringLike<T> && UniStringLike<V>
 [[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
         return CompareIgnoreCase(l, r);
@@ -343,11 +347,6 @@ inline void RightTrim(std::string &str) noexcept {
 inline void AllTrim(std::string &str) {
     LeftTrim(str);
     RightTrim(str);
-}
-
-inline std::vector<std::string_view> ToView(
-    const std::vector<std::string> &table) {
-    return {table.begin(), table.end()};
 }
 
 /// max_count == 0 means inifinite parsing

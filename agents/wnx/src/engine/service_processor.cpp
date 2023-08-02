@@ -306,10 +306,11 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
         return;
     }
 
-    auto s_view = tools::ToView(sections);
+    const std::vector<std::string_view> s_view{sections.begin(),
+                                               sections.end()};
 
     const auto rt_port = cfg::groups::g_global.realtimePort();
-    auto password = cfg::groups::g_global.realtimePassword();
+    const auto password = cfg::groups::g_global.realtimePassword();
     const auto rt_timeout = cfg::groups::g_global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);

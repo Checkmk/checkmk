@@ -109,6 +109,7 @@ class HostExtensions(BaseSchema):
         required=False,
         description="All attributes of this host and all parent folders.",
         example={"tag_snmp_ds": None},
+        allow_none=True,
     )
     is_cluster = fields.Boolean(
         description="If this is a cluster host, i.e. a container for other hosts.",

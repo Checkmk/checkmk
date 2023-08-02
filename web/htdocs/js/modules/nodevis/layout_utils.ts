@@ -86,8 +86,11 @@ export function compute_style_id(
     return style_class.prototype.class_name() + "_" + node.data.id;
 }
 
-export class AbstractLayoutStyle implements TypeWithName {
-    static description = "abstract description";
+interface StyleWithDescription {
+    description: () => string;
+}
+
+export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
     _world: NodevisWorld;
     style_config: StyleConfig;
     style_root_node: NodevisNode;
@@ -134,6 +137,10 @@ export class AbstractLayoutStyle implements TypeWithName {
         style_options.forEach(option => {
             this._default_options[option.id] = option.values.default;
         });
+    }
+
+    description() {
+        return "abstract description";
     }
 
     _compute_svg_vertex(x, y): [number, number] {

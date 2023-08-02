@@ -193,7 +193,9 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
-    static override description = "Hierarchical style";
+    override description(): string {
+        return "Hierarchical style";
+    }
 
     override class_name(): string {
         return "hierarchy";
@@ -553,8 +555,11 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
-    static override description = "Radial style";
     _text_rotations: number[] = [];
+
+    override description(): string {
+        return "Radial style";
+    }
 
     override class_name(): string {
         return "radial";
@@ -868,7 +873,9 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleFixed extends AbstractLayoutStyle {
-    static override description = "Fixed position style";
+    override description(): string {
+        return "Fixed position style";
+    }
 
     override class_name(): string {
         return "fixed";
@@ -892,10 +899,13 @@ export class LayoutStyleFixed extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
-    static override description = "Leaf-Nodes Block style";
     _width = 0;
     _height = 0;
     _leaf_childs: NodevisNode[] = [];
+
+    override description(): string {
+        return "Leaf-Nodes Block style";
+    }
 
     override class_name(): string {
         return "block";

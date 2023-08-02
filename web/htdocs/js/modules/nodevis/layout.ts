@@ -1418,16 +1418,15 @@ class LayoutApplier {
         for (const [_key, style] of Object.entries(styles)) {
             if (node) {
                 elements.push({
-                    //@ts-ignore
-                    text: "Convert to " + style.description,
+                    text: "Convert to " + style.prototype.description(),
                     on: () => this._convert_node(node, style),
                     href: "",
                     img: "themes/facelift/images/icon_aggr.svg",
                 });
             } else {
                 elements.push({
-                    //@ts-ignore
-                    text: "Convert all nodes to " + style.description,
+                    text:
+                        "Convert all nodes to " + style.prototype.description(),
                     on: () => this._convert_all(style),
                     href: "",
                     img: "themes/facelift/images/icon_aggr.svg",

@@ -250,7 +250,7 @@ export class LayoutStyleExampleGenerator {
         use_styles.forEach(style => {
             style_choices.push([
                 style.prototype.class_name(),
-                style.description,
+                style.prototype.description(),
             ]);
         });
 

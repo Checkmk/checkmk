@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Iterator, Sequence
 from datetime import datetime
-from pathlib import Path
 from typing import Literal
 
 import pytest
@@ -131,7 +129,6 @@ def test_get_rrd_data(
     )
 
     assert rrd_respose.window_start <= from_time
-    assert rrd_respose.query_interval == (from_time, until_time)
     assert rrd_respose.window_end >= until_time
     assert (rrd_respose.window_step, len(rrd_respose.values)) == result
 
@@ -158,7 +155,6 @@ def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int,
     )
     assert rrd_response.window_start <= from_time
     assert rrd_response.window_end >= until_time
-    assert rrd_response.query_interval == (from_time, until_time)
     assert (rrd_response.window_step, len(rrd_response.values)) == result
 
 
@@ -449,10 +445,6 @@ def test_retieve_grouped_data_from_rrd(
     assert result == reference
 
 
-def _load_expected_result(path: Path) -> object:
-    return json.loads(path.open().read())
-
-
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
@@ -553,7 +545,6 @@ def test_get_rrd_data_incomplete(
 
     assert rrd_response.window_start <= from_time
     assert rrd_response.window_end >= until_time
-    assert rrd_response.query_interval == (from_time, until_time)
     assert (rrd_response.window_step, rrd_response.values) == result
 
 
@@ -588,7 +579,6 @@ def test_get_rrd_data_fails(site: Site) -> None:
     )
 
     assert rrd_response == _prediction._RRDResponse(
-        query_interval=(from_time, until_time),
         window_start=0,
         window_end=0,
         window_step=0,

@@ -59,7 +59,6 @@ _GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
 
 @dataclass(frozen=True)
 class _RRDResponse:
-    query_interval: tuple[int, int]
     window_start: int
     window_end: int
     window_step: int
@@ -335,7 +334,7 @@ def get_rrd_data(
         raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
     raw_start, raw_end, raw_step, *values = response
-    return _RRDResponse((fromtime, untiltime), int(raw_start), int(raw_end), int(raw_step), values)
+    return _RRDResponse(int(raw_start), int(raw_end), int(raw_step), values)
 
 
 class PredictionStore:

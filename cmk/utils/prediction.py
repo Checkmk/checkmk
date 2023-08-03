@@ -427,16 +427,13 @@ class PredictionStore:
 
 def estimate_levels(
     *,
-    reference_value: float | None,
+    reference_value: float,
     stdev: float | None,
     levels_lower: _LevelsSpec | None,
     levels_upper: _LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
     levels_factor: float,
 ) -> EstimatedLevels:
-    if not reference_value:  # No reference data available
-        return (None, None, None, None)
-
     estimated_upper_warn, estimated_upper_crit = (
         _get_levels_from_params(
             levels=levels_upper,
@@ -490,6 +487,8 @@ def _get_levels_from_params(
     match levels_type:
         case "absolute":
             reference_deviation = levels_factor
+        case "relative" if reference == 0:
+            return (None, None)
         case "relative":
             reference_deviation = reference / 100.0
         case "stdev":

@@ -390,7 +390,7 @@ def check_levels_predictive(
             levels,
             "MAX",
         )
-        if ref_value:
+        if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
         else:
             predictive_levels_msg = " (no reference for prediction yet)"
@@ -427,7 +427,7 @@ def check_levels_predictive(
 
     yield Result(state=value_state, summary=info_text + levels_text)
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
-    if ref_value:
+    if ref_value is not None:
         yield Metric("predict_%s" % metric_name, ref_value)
 
 

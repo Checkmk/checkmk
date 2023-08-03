@@ -121,7 +121,7 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 if bakery.has_agent_bakery():
-    import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+    import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore[assignment]
 

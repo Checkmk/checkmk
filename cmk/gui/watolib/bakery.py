@@ -17,10 +17,12 @@ def has_agent_bakery() -> bool:
 
 def try_bake_agents_for_hosts(hosts: Sequence[HostName]) -> None:
     if has_agent_bakery():
-        import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+        from cmk.gui.cee.agent_bakery._misc import (  # pylint: disable=import-error,no-name-in-module
+            start_bake_agents,
+        )
 
         try:
-            agent_bakery.start_bake_agents(
+            start_bake_agents(
                 host_names=hosts,
                 signing_credentials=None,
                 call_site="Host creation",

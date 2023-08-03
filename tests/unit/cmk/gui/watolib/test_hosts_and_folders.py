@@ -74,7 +74,7 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
     if not has_agent_bakery():
         return
 
-    import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=no-name-in-module
+    import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
 
     def _fake_start_bake_agents(host_names, signing_credentials):
         pass

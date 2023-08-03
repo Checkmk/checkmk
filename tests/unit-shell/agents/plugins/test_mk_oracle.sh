@@ -718,7 +718,7 @@ test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing() {
     DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
     ORACLE_SID="ut_sid_two"
     CONNECTION=$(mk_ora_db_connect)
-    assertEquals "ut_username/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid_two)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+    assertEquals "ut_username/ut_password@ut_tnsalias as ut_role" "${CONNECTION}"
 
     teardown_tnsping
 }
@@ -729,7 +729,7 @@ test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing_1() {
     # shellcheck disable=SC2034 # variable appears unused
     REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:"
     CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
-    assertEquals "/@ut_hostname:ut_port/ut_sid as ut_role" "${CONNECTION}"
+    assertEquals "/@ut_sid as ut_role" "${CONNECTION}"
     # TODO: this is a BUG! username/password should be set!
 
     teardown_tnsping
@@ -741,7 +741,7 @@ test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing_1_tnsalias() {
     # shellcheck disable=SC2034 # variable appears unused
     REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:ut_tnsalias"
     CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
-    assertEquals "/@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+    assertEquals "/@ut_tnsalias as ut_role" "${CONNECTION}"
     # TODO: this is a BUG! username/password should be set!
 
     teardown_tnsping

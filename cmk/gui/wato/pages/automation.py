@@ -15,7 +15,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -32,13 +31,12 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.compatibility import make_incompatible_info
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
-    compatible_with_central_site,
     local_automation_failure,
+    verify_request_compatibility,
 )
 
 
@@ -67,45 +65,7 @@ class ModeAutomationLogin(AjaxPage):
         if not request.has_var("_version"):
             raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
-        # - _version and _edition_short were added with 1.5.0p10 to the login call only
-        # - x-checkmk-version and x-checkmk-edition were added with 2.0.0p1
-        # Prefer the headers and fall back to the request variables for now.
-        central_version = (
-            request.headers["x-checkmk-version"]
-            if "x-checkmk-version" in request.headers
-            else request.get_ascii_input_mandatory("_version")
-        )
-        central_edition_short = (
-            request.headers["x-checkmk-edition"]
-            if "x-checkmk-edition" in request.headers
-            else request.get_ascii_input_mandatory("_edition_short")
-        )
-        central_license_state = get_license_state()
-        remote_version = cmk_version.__version__
-        remote_edition_short = cmk_version.edition().short
-        remote_license_state = get_license_state()
-        if not isinstance(
-            compatibility := compatible_with_central_site(
-                central_version,
-                central_edition_short,
-                central_license_state,
-                remote_version,
-                remote_edition_short,
-                remote_license_state,
-            ),
-            cmk_version.VersionsCompatible,
-        ):
-            raise MKGeneralException(
-                make_incompatible_info(
-                    central_version,
-                    central_edition_short,
-                    central_license_state,
-                    remote_version,
-                    remote_edition_short,
-                    remote_license_state,
-                    compatibility,
-                )
-            )
+        verify_request_compatibility(ignore_license_compatibility=False)
 
         response.set_data(
             repr(
@@ -130,7 +90,7 @@ class ModeAutomation(AjaxPage):
     def _from_vars(self):
         self._authenticate()
         _set_version_headers()
-        self._verify_compatibility()
+        verify_request_compatibility(ignore_license_compatibility=False)
         self._command = request.get_str_input_mandatory("command")
 
     def _authenticate(self):
@@ -141,36 +101,6 @@ class ModeAutomation(AjaxPage):
 
         if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
-
-    def _verify_compatibility(self) -> None:
-        central_version = request.headers.get("x-checkmk-version", "")
-        central_edition_short = request.headers.get("x-checkmk-edition", "")
-        central_license_state = get_license_state()
-        remote_version = cmk_version.__version__
-        remote_edition_short = cmk_version.edition().short
-        remote_license_state = get_license_state()
-        if not isinstance(
-            compatibility := compatible_with_central_site(
-                central_version,
-                central_edition_short,
-                central_license_state,
-                remote_version,
-                remote_edition_short,
-                remote_license_state,
-            ),
-            cmk_version.VersionsCompatible,
-        ):
-            raise MKGeneralException(
-                make_incompatible_info(
-                    central_version,
-                    central_edition_short,
-                    central_license_state,
-                    remote_version,
-                    remote_edition_short,
-                    remote_license_state,
-                    compatibility,
-                )
-            )
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.

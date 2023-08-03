@@ -30,7 +30,7 @@ def test_registered_jobs() -> None:
             "cmk.gui.cee.reporting.cleanup_stored_reports",
             "cmk.gui.cee.reporting.do_scheduled_reports",
             "cmk.gui.cee.ntop.connector.ntop_instance_check",
-            "cmk.gui.cee.plugins.wato.licensing.background_jobs.execute_licensing_online_verification_background_job",
+            "cmk.gui.cee.licensing._background_jobs.execute_licensing_online_verification_background_job",
             "cmk.gui.watolib.host_label_sync.execute_host_label_sync_job",
             "cmk.gui.cee.userdb.saml2.config.replace_builtin_signature_cert",
         ]

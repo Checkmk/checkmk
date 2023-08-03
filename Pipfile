@@ -105,7 +105,6 @@ multidict = "==6.0.4"  # needed by yarl
 idna = "==3.4"  # needed by yarl
 vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions
 pycparser = "==2.21"  # needed by cffi
-pynacl = "==1.5.0"  # needed by paramiko
 cryptography = "~=37.0"  # needed by paramiko.
 bcrypt = "==3.2.2"  # needed by paramiko.
 paramiko = "==2.10.3"

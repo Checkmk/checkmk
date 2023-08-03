@@ -122,7 +122,7 @@ def test_get_rrd_data(
 ) -> None:
     with on_time(utcdate, timezone):
         timestamp = time.time()
-        _, from_time, until_time, _ = _prediction._get_prediction_timegroup(
+        _, from_time, until_time, _ = _prediction.get_timegroup_relative_time(
             int(timestamp), _prediction.PREDICTION_PERIODS[period]
         )
 
@@ -560,7 +560,7 @@ def test_get_rrd_data_incomplete(
 @pytest.mark.usefixtures("cfg_setup")
 def test_get_rrd_data_fails(site: Site) -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
-    _, from_time, until_time, _ = _prediction._get_prediction_timegroup(
+    _, from_time, until_time, _ = _prediction.get_timegroup_relative_time(
         int(timestamp), _prediction.PREDICTION_PERIODS["hour"]
     )
 

@@ -514,13 +514,13 @@ def _time_slices(
 
     # Have fun understanding the tests for this function.
     for begin in range(timestamp, abs_begin, -period_info.slice):
-        tg, start, end = _get_prediction_timegroup(begin, period_info)[:3]
+        tg, start, end = get_timegroup_relative_time(begin, period_info)[:3]
         if tg == timegroup:
             slices.append((start, end))
     return slices
 
 
-def _get_prediction_timegroup(
+def get_timegroup_relative_time(
     t: Timestamp,
     period_info: _PeriodInfo,
 ) -> tuple[Timegroup, Timestamp, Timestamp, Seconds]:

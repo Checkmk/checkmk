@@ -1,0 +1,16 @@
+Title: Add Sha256 signing for agents
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1691147232
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0p8
+
+The signature of baked agents uses SHA1 which is no longer state of the art.
+With this Werk we add SHA256 signatures.
+So if packages are signed now a SHA1 and a SHA256 signature is generated for that package.
+The agent updater can already validate these SHA256 signatures since version 2.2.0b9 but will also validate SHA1 signatures for compatibility reasons.
+Checkmk 2.3.0 won't generate SHA1 signatures anymore so make sure the agents are properly updated to version 2.2.0p8 or later.
+For the removal of SHA1 signatures in Checkmk 2.3.0 another Werk will be created and added here.

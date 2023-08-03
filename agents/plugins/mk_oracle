@@ -2627,10 +2627,17 @@ mk_ora_db_connect() {
 
         logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
 
-        if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
-            TNSPINGOK=yes
+        if [ -f "${ORACLE_HOME}"/bin/tnsping ]; then
+            if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
+                TNSPINGOK=yes
+            else
+                unset TNSALIAS
+            fi
         else
-            unset TNSALIAS
+            # if the binary tnsping does not exist we can not check whether the
+            # database is reachable or not, so we assume the database is
+            # reachable:
+            TNSPINGOK=yes
         fi
     else
         if [ -z "$CFGTNSALIAS" ]; then

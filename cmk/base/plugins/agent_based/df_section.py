@@ -142,12 +142,16 @@ def _parse_lsblk_v2_row(row: Sequence[str]) -> tuple[str, str | None]:
     ('/dev/nvme0n1', None)
     >>> _parse_lsblk_v2_row(["/dev/nvme0n1p1", "C5CD-A9E8"])
     ('/dev/nvme0n1p1', 'C5CD-A9E8')
+    >>> _parse_lsblk_v2_row(["/dev/sda","HPE", "\\x10"])
+    ('/dev/sda', 'HPE \\x10')
     """
     match row:
         case [name]:
             return name, None
         case [name, uuid]:
             return name, uuid
+        case [name, *uuid_with_spaces]:
+            return name, " ".join(uuid_with_spaces)
     raise ValueError(f"An error occured while parsing {row}")
 
 

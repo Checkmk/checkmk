@@ -1,0 +1,11 @@
+Title: Add support for Debian 12
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1691045591
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this werk, Checkmk is build for Debian 12 Bookworm.

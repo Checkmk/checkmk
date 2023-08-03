@@ -144,12 +144,14 @@ def _parse_lsblk_v2_row(row: Sequence[str]) -> Tuple[str, Union[str, None]]:
     ('/dev/nvme0n1', None)
     >>> _parse_lsblk_v2_row(["/dev/nvme0n1p1", "C5CD-A9E8"])
     ('/dev/nvme0n1p1', 'C5CD-A9E8')
+    >>> _parse_lsblk_v2_row(["/dev/sda","HPE", "\\x10"])
+    ('/dev/sda', 'HPE \\x10')
     """
     if len(row) == 1:
         return row[0], None
     if len(row) == 2:
         return row[0], row[1]
-    raise ValueError(f"An error occured while parsing {row}")
+    return row[0], " ".join(row[1:])
 
 
 def _parse_lsblk_v2_subsection(lsblk_subsection: StringTable) -> LsblkMap:

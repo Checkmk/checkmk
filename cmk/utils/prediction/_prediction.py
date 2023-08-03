@@ -398,6 +398,7 @@ class PredictionStore:
 
 def compute_prediction(
     timegroup: Timegroup,
+    current_slice: tuple[int, int],
     prediction_store: PredictionStore,
     params: PredictionParameters,
     now: int,
@@ -433,7 +434,7 @@ def compute_prediction(
     info = PredictionInfo(
         name=timegroup,
         time=now,
-        range=rrd_responses[0][0].query_interval,
+        range=current_slice,
         cf=cf,
         dsname=dsname,
         slice=period_info.slice,

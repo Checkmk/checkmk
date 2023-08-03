@@ -13,6 +13,7 @@ from cmk.utils.log import VERBOSE
 from ._prediction import (
     compute_prediction,
     ConsolidationFunctionName,
+    get_timegroup_relative_time,
     LevelsSpec,
     PREDICTION_PERIODS,
     PredictionData,
@@ -70,7 +71,9 @@ def get_predictive_levels(
     now = int(time.time())
     period_info = PREDICTION_PERIODS[params.period]
 
-    timegroup, rel_time = period_info.groupby(now)
+    timegroup, current_slice_start, current_slice_end, rel_time = get_timegroup_relative_time(
+        now, period_info
+    )
 
     prediction_store = PredictionStore(hostname, service_description, dsname)
 
@@ -83,6 +86,7 @@ def get_predictive_levels(
     ) is None:
         data_for_pred = compute_prediction(
             timegroup,
+            (current_slice_start, current_slice_end),
             prediction_store,
             params,
             now,

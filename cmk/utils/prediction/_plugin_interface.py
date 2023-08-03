@@ -17,6 +17,7 @@ from ._prediction import (
     LevelsSpec,
     PREDICTION_PERIODS,
     PredictionData,
+    PredictionInfo,
     PredictionParameters,
     PredictionStore,
     Timegroup,
@@ -84,17 +85,22 @@ def get_predictive_levels(
             params=params,
         )
     ) is None:
+        info = PredictionInfo(
+            name=timegroup,
+            time=now,
+            range=(current_slice_start, current_slice_end),
+            cf=cf,
+            dsname=dsname,
+            slice=period_info.slice,
+            params=params,
+        )
         data_for_pred = compute_prediction(
-            timegroup,
-            (current_slice_start, current_slice_end),
+            info,
             prediction_store,
-            params,
             now,
             period_info,
             hostname,
             service_description,
-            dsname,
-            cf,
         )
 
     # Find reference value in data_for_pred

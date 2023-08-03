@@ -397,27 +397,29 @@ class PredictionStore:
 
 
 def compute_prediction(
-    timegroup: Timegroup,
-    current_slice: tuple[int, int],
+    info: PredictionInfo,
     prediction_store: PredictionStore,
-    params: PredictionParameters,
     now: int,
     period_info: _PeriodInfo,
     hostname: str,
     service_description: str,
-    dsname: str,
-    cf: ConsolidationFunctionName,
 ) -> PredictionData:
-    logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
-    prediction_store.remove_prediction(timegroup)
+    logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
+    prediction_store.remove_prediction(info.name)
 
-    time_windows = _time_slices(now, params.horizon * 86400, period_info, timegroup)
+    time_windows = _time_slices(now, info.params.horizon * 86400, period_info, info.name)
 
     from_time = time_windows[0][0]
     rrd_responses = [
         (
             get_rrd_data(
-                livestatus.LocalConnection(), hostname, service_description, dsname, cf, start, end
+                livestatus.LocalConnection(),
+                hostname,
+                service_description,
+                info.dsname,
+                info.cf,
+                start,
+                end,
             ),
             from_time - start,
         )
@@ -431,15 +433,6 @@ def compute_prediction(
 
     data_for_pred = _calculate_data_for_prediction(raw_slices)
 
-    info = PredictionInfo(
-        name=timegroup,
-        time=now,
-        range=current_slice,
-        cf=cf,
-        dsname=dsname,
-        slice=period_info.slice,
-        params=params,
-    )
     prediction_store.save_prediction(info, data_for_pred)
 
     return data_for_pred

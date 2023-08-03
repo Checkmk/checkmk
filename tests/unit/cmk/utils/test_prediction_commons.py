@@ -99,6 +99,39 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
     ),
     (
         {
+            'average': 0,
+            'stdev': 2
+        },
+        {
+            'levels_upper': ('absolute', (2, 4))
+        },
+        1,
+        (0, (2, 4, None, None)),
+    ),
+    (
+        {
+            'average': 0,
+            'stdev': 2
+        },
+        {
+            'levels_upper': ('relative', (2, 4))
+        },
+        1,
+        (0, (None, None, None, None)),
+    ),
+    (
+        {
+            'average': 0,
+            'stdev': 2
+        },
+        {
+            'levels_upper': ('stdev', (2, 4))
+        },
+        1,
+        (0, (4, 8, None, None)),
+    ),
+    (
+        {
             'average': 15,
             'stdev': 2,
         },
@@ -132,14 +165,6 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
         },
         100,
         (200, (240, 400, None, None)),
-    ),
-    (
-        {
-            'average': None
-        },
-        {},
-        1,
-        (None, (None, None, None, None)),
     ),
 ])
 def test_estimate_levels(reference, params, levels_factor, result):

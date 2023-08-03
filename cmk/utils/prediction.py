@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Callable, List, Optional, Tuple, Iterator
+from typing import Dict, Callable, List, Optional, Tuple, Iterator, Union
 
 from six import ensure_str
 
@@ -306,7 +306,7 @@ def estimate_levels(
     levels_factor: float,
 ) -> Tuple[Optional[float], EstimatedLevels]:
     ref_value = reference["average"]
-    if not ref_value:  # No reference data available
+    if ref_value is None:  # No reference data available
         return ref_value, (None, None, None, None)
 
     stdev = reference["stdev"]
@@ -342,13 +342,15 @@ def estimate_level_bounds(
     sig: int,
     params: Tuple[str, Tuple[float, float]],
     levels_factor: float,
-) -> Tuple[float, float]:
+) -> Union[Tuple[float, float], Tuple[None, None]]:
     how, (warn, crit) = params
     if how == "absolute":
         return (
             ref_value + (sig * warn * levels_factor),
             ref_value + (sig * crit * levels_factor),
         )
+    if how == "relative" and ref_value == 0:
+        return (None, None)
     if how == "relative":
         return (
             ref_value + sig * (ref_value * warn / 100.0),

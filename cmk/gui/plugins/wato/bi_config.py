@@ -7,6 +7,7 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
+from types import ModuleType
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
@@ -22,9 +23,10 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.main_menu import MainModuleTopic
 
 try:
+    managed: ModuleType | None
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 except ImportError:
-    managed = None  # type: ignore[assignment]
+    managed = None
 
 import cmk.gui.forms as forms
 
@@ -1750,6 +1752,7 @@ class BIModeEditAggregation(ABCBIMode):
     @classmethod
     def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
         if cmk_version.edition() is cmk_version.Edition.CME:
+            assert managed is not None
             cme_elements = managed.customer_choice_element()
         else:
             cme_elements = []
@@ -2229,6 +2232,7 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("ID"), aggregation_id)
 
                 if cmk_version.edition() is cmk_version.Edition.CME:
+                    assert managed is not None
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
                         html.write_text(managed.get_customer_name_by_id(bi_aggregation.customer))

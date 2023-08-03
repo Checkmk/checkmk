@@ -22,9 +22,9 @@ from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.utils import wato_root_dir
 
 try:
-    import cmk.gui.cee.plugins.wato as cee_wato
+    import cmk.gui.cee.alert_handling as alert_handling
 except ImportError:
-    cee_wato = None  # type: ignore[assignment]
+    alert_handling = None  # type: ignore[assignment]
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+$"
 TimeperiodUsage = tuple[str, str]
@@ -246,7 +246,7 @@ def _find_usages_in_alert_handler_rules(time_period_name: str) -> list[Timeperio
     used_in: list[TimeperiodUsage] = []
     if version.edition() is version.Edition.CRE:
         return used_in
-    for index, rule in enumerate(cee_wato.alert_handling.load_alert_handler_rules()):
+    for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
         if rule.get("match_timeperiod") == time_period_name:
             url = folder_preserving_link(
                 [

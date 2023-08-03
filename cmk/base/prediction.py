@@ -296,6 +296,9 @@ def get_levels(
     index = int(rel_time / data_for_pred.step)
     reference = dict(zip(data_for_pred.columns, data_for_pred.points[index]))
 
+    if reference["average"] is None:
+        return None, (None, None, None, None)
+
     return reference["average"], cmk.utils.prediction.estimate_levels(
         reference_value=reference["average"],
         stdev=reference["stdev"],

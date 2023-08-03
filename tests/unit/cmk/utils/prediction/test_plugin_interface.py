@@ -21,6 +21,27 @@ from cmk.utils.prediction import _plugin_interface
             (None, None, 3, 1),
         ),
         (
+            0,
+            2,
+            {"levels_upper": ("absolute", (2, 4))},
+            1,
+            (None, None, None, None),
+        ),
+        (
+            0,
+            2,
+            {"levels_upper": ("relative", (2, 4))},
+            1,
+            (None, None, None, None),
+        ),
+        (
+            0,
+            2,
+            {"levels_upper": ("stdev", (2, 4))},
+            1,
+            (None, None, None, None),
+        ),
+        (
             15,
             2,
             {

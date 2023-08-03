@@ -148,6 +148,15 @@ CONFIGURATION CUSTOM SQLS:
   overwrite the global ones.
   The variable "\$ORACLE_SID" can be used within every section.
 
+  SQLS_DBUSER="<username>"
+  SQLS_DBPASSWORD="<password>"
+  SQLS_DBSYSCONNECT="SYSDBA|SYSOPER"
+  SQLS_TNSALIAS="<tnsalias>"
+                        Dedicated credentials that can be configured per
+                        section for custom_sqls.
+                        SQLS_DBSYSCONNECT needs to be set if the user is
+                        sysdba or sysoper. Otherwise just skip this option.
+
   SQLS_SECTIONS="<section>,..."
                         Registry of custom SQL sections. If this configuration
                         variable is not set or empty then no custom SQL sections

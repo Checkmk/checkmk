@@ -9,7 +9,7 @@
 
 set -e
 
-COMMAND=$*
+CMD="${*:-bash}"
 REPO_DIR="$(git rev-parse --show-toplevel)"
 
 # in case of worktrees $REPO_DIR might not contain the actual repository clone
@@ -17,11 +17,13 @@ GIT_COMMON_DIR="$(realpath $(git rev-parse --git-common-dir))"
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
+: "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
 echo "Running in Docker container from image ${IMAGE_ID} (workdir=${PWD})"
 
 docker run -t -a stdout -a stderr \
     --rm \
+    ${TERMINAL_FLAG} \
     --init \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \
@@ -39,5 +41,5 @@ docker run -t -a stdout -a stderr \
     -e WORKDIR \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
-    ${COMMAND}
+    sh -c "${CMD}"
 

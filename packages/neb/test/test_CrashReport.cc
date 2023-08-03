@@ -46,21 +46,28 @@ std::string random_string(const std::string::size_type length) {
 
 class CrashReportFixture : public ::testing::Test {
 public:
-    const std::string uuid{"8966a88e-e369-11e9-981a-acbc328d0e0b"};
-    const std::string component{"gui"};
-    const std::string crash_info{"crash.info"};
-    const std::string json{"{}\n"};
-    const fs::path basepath{fs::temp_directory_path() / "crash_report_tests" /
-                            random_string(12)};
-    const fs::path fullpath{basepath / component / uuid / crash_info};
+    std::string uuid;
+    std::string component;
+    std::string crash_info;
+    std::string json;
+    fs::path basepath;
+    fs::path fullpath;
 
-    void SetUp() override {
+    CrashReportFixture()
+        : uuid{"8966a88e-e369-11e9-981a-acbc328d0e0b"}
+        , component{"gui"}
+        , crash_info{"crash.info"}
+        , json{"{}\n"}
+        , basepath{fs::temp_directory_path() / "crash_report_tests" /
+                   random_string(12)}
+        , fullpath{basepath / component / uuid / crash_info} {
         fs::create_directories(fullpath.parent_path());
         std::ofstream ofs(fullpath);
         ofs << json;
         ofs.close();
     }
-    void TearDown() override { fs::remove_all(basepath); }
+
+    ~CrashReportFixture() override { fs::remove_all(basepath); }
 };
 
 TEST_F(CrashReportFixture, DirectoryAndFileExist) {
@@ -119,7 +126,6 @@ public:
                  "enterprise",
                  {}};
     TableCrashReports table{&core};
-    const std::string header{"component;id\n"};
 
 private:
     [[nodiscard]] NagiosPathConfig paths_() const {
@@ -137,7 +143,7 @@ TEST_F(CrashReportTableFixture, TestTable) {
 
 TEST_F(CrashReportTableFixture, TestListCrashReports) {
     ASSERT_TRUE(fs::exists(basepath));
-    EXPECT_EQ(header + component + ";" + uuid + "\n",
+    EXPECT_EQ("component;id\n" + component + ";" + uuid + "\n",
               mk::test::query(table, {}));
 }
 

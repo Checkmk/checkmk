@@ -375,45 +375,46 @@ private:
     }
 };
 
+namespace {
 // Our basic "building blocks"
-static ColumnDefinitions columns_columns();
-static ColumnDefinitions commands_columns();
-static ColumnDefinitions comments_columns();
-static ColumnDefinitions contact_groups_columns();
-static ColumnDefinitions contacts_columns();
-static ColumnDefinitions crash_reports_columns();
-static ColumnDefinitions downtimes_columns();
-static ColumnDefinitions event_console_events_columns();
-static ColumnDefinitions event_console_history_columns();
-static ColumnDefinitions event_console_rules_columns();
-static ColumnDefinitions event_console_status_columns();
-static ColumnDefinitions service_groups_columns();
-static ColumnDefinitions host_groups_columns();
-static ColumnDefinitions hosts_and_services_columns();
-static ColumnDefinitions hosts_columns();
-static ColumnDefinitions log_columns();
-static ColumnDefinitions services_columns();
-static ColumnDefinitions state_history_columns();
-static ColumnDefinitions status_columns();
-static ColumnDefinitions timeperiods_columns();
+ColumnDefinitions columns_columns();
+ColumnDefinitions commands_columns();
+ColumnDefinitions comments_columns();
+ColumnDefinitions contact_groups_columns();
+ColumnDefinitions contacts_columns();
+ColumnDefinitions crash_reports_columns();
+ColumnDefinitions downtimes_columns();
+ColumnDefinitions event_console_events_columns();
+ColumnDefinitions event_console_history_columns();
+ColumnDefinitions event_console_rules_columns();
+ColumnDefinitions event_console_status_columns();
+ColumnDefinitions service_groups_columns();
+ColumnDefinitions host_groups_columns();
+ColumnDefinitions hosts_and_services_columns();
+ColumnDefinitions hosts_columns();
+ColumnDefinitions log_columns();
+ColumnDefinitions services_columns();
+ColumnDefinitions state_history_columns();
+ColumnDefinitions status_columns();
+ColumnDefinitions timeperiods_columns();
 
-static ColumnDefinitions all_hosts_columns() {
+ColumnDefinitions all_hosts_columns() {
     return hosts_columns() +  //
            hosts_and_services_columns();
 }
 
-static ColumnDefinitions all_services_columns() {
+ColumnDefinitions all_services_columns() {
     return services_columns() +  //
            hosts_and_services_columns();
 }
 
-static ColumnDefinitions all_state_history_columns() {
+ColumnDefinitions all_state_history_columns() {
     return state_history_columns() +  //
            "current_host_" / all_hosts_columns() +
            "current_service_" / all_services_columns();
 }
 
-static ColumnDefinitions columns_columns() {
+ColumnDefinitions columns_columns() {
     return {
         {"description", ColumnType::string},
         {"name", ColumnType::string},
@@ -421,25 +422,29 @@ static ColumnDefinitions columns_columns() {
         {"type", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableColumns) {
     EXPECT_EQ(columns_columns(),  //
               ColumnDefinitions(TableColumns{&mc_}));
 }
 
-static ColumnDefinitions commands_columns() {
+namespace {
+ColumnDefinitions commands_columns() {
     return {
         {"line", ColumnType::string},
         {"name", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableCommands) {
     EXPECT_EQ(commands_columns(),  //
               ColumnDefinitions(TableCommands{&mc_}));
 }
 
-static ColumnDefinitions comments_columns() {
+namespace {
+ColumnDefinitions comments_columns() {
     return {
         {"author", ColumnType::string},     //
         {"comment", ColumnType::string},    //
@@ -454,6 +459,7 @@ static ColumnDefinitions comments_columns() {
         {"type", ColumnType::int_},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableComments) {
     EXPECT_EQ(comments_columns() +                 //
@@ -462,20 +468,23 @@ TEST_F(ColumnNamesAndTypesTest, TableComments) {
               ColumnDefinitions(TableComments{&mc_}));
 }
 
-static ColumnDefinitions contact_groups_columns() {
+namespace {
+ColumnDefinitions contact_groups_columns() {
     return {
         {"alias", ColumnType::string},
         {"members", ColumnType::list},
         {"name", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableContactGroups) {
     EXPECT_EQ(contact_groups_columns(),
               ColumnDefinitions(TableContactGroups{&mc_}));
 }
 
-static ColumnDefinitions contacts_columns() {
+namespace {
+ColumnDefinitions contacts_columns() {
     return {
         {"address1", ColumnType::string},
         {"address2", ColumnType::string},
@@ -510,25 +519,29 @@ static ColumnDefinitions contacts_columns() {
         {"tags", ColumnType::dict},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableContacts) {
     EXPECT_EQ(contacts_columns(),  //
               ColumnDefinitions(TableContacts{&mc_}));
 }
 
-static ColumnDefinitions crash_reports_columns() {
+namespace {
+ColumnDefinitions crash_reports_columns() {
     return {
         {"component", ColumnType::string},
         {"id", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableCrashReports) {
     EXPECT_EQ(crash_reports_columns(),
               ColumnDefinitions(TableCrashReports{&mc_}));
 }
 
-static ColumnDefinitions downtimes_columns() {
+namespace {
+ColumnDefinitions downtimes_columns() {
     return {
         {"author", ColumnType::string},    //
         {"comment", ColumnType::string},   //
@@ -546,6 +559,7 @@ static ColumnDefinitions downtimes_columns() {
         {"type", ColumnType::int_},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableDowntimes) {
     EXPECT_EQ(downtimes_columns() +                //
@@ -554,7 +568,8 @@ TEST_F(ColumnNamesAndTypesTest, TableDowntimes) {
               ColumnDefinitions(TableDowntimes{&mc_}));
 }
 
-static ColumnDefinitions event_console_events_columns() {
+namespace {
+ColumnDefinitions event_console_events_columns() {
     return {
         {"event_application", ColumnType::string},
         {"event_comment", ColumnType::string},
@@ -583,6 +598,7 @@ static ColumnDefinitions event_console_events_columns() {
         {"event_text", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleEvents) {
     EXPECT_EQ(event_console_events_columns() +  //
@@ -590,7 +606,8 @@ TEST_F(ColumnNamesAndTypesTest, TableEventConsoleEvents) {
               ColumnDefinitions(TableEventConsoleEvents{&mc_}));
 }
 
-static ColumnDefinitions event_console_history_columns() {
+namespace {
+ColumnDefinitions event_console_history_columns() {
     return {
         {"history_addinfo", ColumnType::string},
         {"history_line", ColumnType::int_},
@@ -599,6 +616,7 @@ static ColumnDefinitions event_console_history_columns() {
         {"history_who", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleHistory) {
     EXPECT_EQ(event_console_history_columns() +     //
@@ -607,20 +625,23 @@ TEST_F(ColumnNamesAndTypesTest, TableEventConsoleHistory) {
               ColumnDefinitions(TableEventConsoleHistory{&mc_}));
 }
 
-static ColumnDefinitions event_console_rules_columns() {
+namespace {
+ColumnDefinitions event_console_rules_columns() {
     return {
         {"rule_hits", ColumnType::int_},
         {"rule_id", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleRules) {
     EXPECT_EQ(event_console_rules_columns(),
               ColumnDefinitions(TableEventConsoleRules{&mc_}));
 }
 
+namespace {
 // Why on earth do all column names have a "status_" prefix here?
-static ColumnDefinitions event_console_status_columns() {
+ColumnDefinitions event_console_status_columns() {
     return {
         {"status_average_connect_rate", ColumnType::double_},
         {"status_average_drop_rate", ColumnType::double_},
@@ -660,13 +681,15 @@ static ColumnDefinitions event_console_status_columns() {
         {"status_virtual_memory_size", ColumnType::int_},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleStatus) {
     EXPECT_EQ(event_console_status_columns(),
               ColumnDefinitions(TableEventConsoleStatus{&mc_}));
 }
 
-static ColumnDefinitions service_groups_columns() {
+namespace {
+ColumnDefinitions service_groups_columns() {
     return {
         {"action_url", ColumnType::string},
         {"alias", ColumnType::string},
@@ -691,7 +714,7 @@ static ColumnDefinitions service_groups_columns() {
     };
 }
 
-static ColumnDefinitions host_groups_columns() {
+ColumnDefinitions host_groups_columns() {
     return {
         {"num_hosts", ColumnType::int_},
         {"num_hosts_down", ColumnType::int_},
@@ -705,6 +728,7 @@ static ColumnDefinitions host_groups_columns() {
         {"worst_service_hard_state", ColumnType::int_},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableHostGroups) {
     EXPECT_EQ(host_groups_columns() +  //
@@ -712,7 +736,8 @@ TEST_F(ColumnNamesAndTypesTest, TableHostGroups) {
               ColumnDefinitions(TableHostGroups{&mc_}));
 }
 
-static ColumnDefinitions hosts_and_services_columns() {
+namespace {
+ColumnDefinitions hosts_and_services_columns() {
     return {
         {"accept_passive_checks", ColumnType::int_},
         {"acknowledged", ColumnType::int_},
@@ -810,7 +835,7 @@ static ColumnDefinitions hosts_and_services_columns() {
     };
 }
 
-static ColumnDefinitions hosts_columns() {
+ColumnDefinitions hosts_columns() {
     return {
         {"address", ColumnType::string},
         {"alias", ColumnType::string},
@@ -854,6 +879,7 @@ static ColumnDefinitions hosts_columns() {
         {"z_3d", ColumnType::double_},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableHosts) {
     EXPECT_EQ(all_hosts_columns(),  //
@@ -867,7 +893,8 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
               ColumnDefinitions(TableHostsByGroup{&mc_}));
 }
 
-static ColumnDefinitions labels_columns() {
+namespace {}  // namespace
+ColumnDefinitions labels_columns() {
     return {
         {"name", ColumnType::string},
         {"value", ColumnType::string},
@@ -878,7 +905,9 @@ TEST_F(ColumnNamesAndTypesTest, TableLabels) {
     EXPECT_EQ(labels_columns(),  //
               ColumnDefinitions(TableLabels{&mc_}));
 }
-static ColumnDefinitions log_columns() {
+
+namespace {
+ColumnDefinitions log_columns() {
     return {
         {"attempt", ColumnType::int_},
         {"class", ColumnType::int_},
@@ -899,6 +928,7 @@ static ColumnDefinitions log_columns() {
         {"type", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableLog) {
     EXPECT_EQ(log_columns() +  //
@@ -914,7 +944,8 @@ TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
               ColumnDefinitions(TableServiceGroups{&mc_}));
 }
 
-static ColumnDefinitions services_columns() {
+namespace {
+ColumnDefinitions services_columns() {
     return {
         {"cache_interval", ColumnType::int_},
         {"cached_at", ColumnType::time},
@@ -933,6 +964,7 @@ static ColumnDefinitions services_columns() {
         {"robotmk_last_log_gz", ColumnType::blob},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableServices) {
     EXPECT_EQ(all_services_columns() +  //
@@ -955,7 +987,8 @@ TEST_F(ColumnNamesAndTypesTest, TableServicesByHostGroup) {
               ColumnDefinitions(TableServicesByHostGroup{&mc_}));
 }
 
-static ColumnDefinitions state_history_columns() {
+namespace {
+ColumnDefinitions state_history_columns() {
     return {
         {"debug_info", ColumnType::string},
         {"duration", ColumnType::int_},
@@ -989,13 +1022,15 @@ static ColumnDefinitions state_history_columns() {
         {"until", ColumnType::time},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableStateHistory) {
     EXPECT_EQ(all_state_history_columns(),
               ColumnDefinitions(TableStateHistory{&mc_, &log_cache_}));
 }
 
-static ColumnDefinitions status_columns() {
+namespace {
+ColumnDefinitions status_columns() {
     return {
         {"accept_passive_host_checks", ColumnType::int_},
         {"accept_passive_service_checks", ColumnType::int_},
@@ -1089,13 +1124,15 @@ static ColumnDefinitions status_columns() {
         {"state_file_created", ColumnType::time},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableStatus) {
     EXPECT_EQ(status_columns(),  //
               ColumnDefinitions(TableStatus{&mc_}));
 }
 
-static ColumnDefinitions timeperiods_columns() {
+namespace {
+ColumnDefinitions timeperiods_columns() {
     return {
         {"alias", ColumnType::string},
         {"in", ColumnType::int_},
@@ -1106,6 +1143,7 @@ static ColumnDefinitions timeperiods_columns() {
         {"transitions", ColumnType::list},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableTimeperiods) {
     EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{&mc_}));

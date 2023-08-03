@@ -176,7 +176,7 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
         fcntl_impl(l_type, F_SETLKW, msg);
         return true;
     }
-    do {
+    while (true) {
         if (fcntl_impl(l_type, F_SETLK, msg, true)) {
             return true;
         }
@@ -184,7 +184,7 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
             return false;
         }
         std::this_thread::sleep_for(10ms);
-    } while (true);
+    }
 }
 
 ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,

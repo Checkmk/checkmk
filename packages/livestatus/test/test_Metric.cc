@@ -15,30 +15,34 @@
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
 
-namespace fs = std::filesystem;
-
 bool operator<(const Metric::MangledName &x, const Metric::MangledName &y) {
     return x.string() < y.string();
 }
 
+namespace {
+const std::filesystem::path basepath{std::filesystem::temp_directory_path() /
+                                     "metric_tests"};
+const std::string ext = ".xml";
+
+const std::string desc = "Service Description";
+const Metric::Names metrics = {Metric::MangledName{"abc 1"},
+                               Metric::MangledName{"def 2"},
+                               Metric::MangledName{"ghi 3"}};
+
+const std::string desc_other = "Service Description Other";
+const Metric::Names metrics_other = {Metric::MangledName{"jkl 4"},
+                                     Metric::MangledName{"mno 5"},
+                                     Metric::MangledName{"pqr 6"}};
+}  // namespace
+
 class MetricFixture : public ::testing::Test {
 public:
-    const std::string ext = ".xml";
-    const std::string desc = "Service Description";
-    const Metric::Names metrics = {Metric::MangledName{"abc 1"},
-                                   Metric::MangledName{"def 2"},
-                                   Metric::MangledName{"ghi 3"}};
-    const std::string desc_other = "Service Description Other";
-    const Metric::Names metrics_other = {Metric::MangledName{"jkl 4"},
-                                         Metric::MangledName{"mno 5"},
-                                         Metric::MangledName{"pqr 6"}};
-    const fs::path basepath{fs::temp_directory_path() / "metric_tests"};
-
-    static void dump(fs::path &&path, const Metric::Names &metrics) {
+    static void dump(const std::filesystem::path &path,
+                     const Metric::Names &metrics) {
         auto out = std::ofstream{path};
         out << "<?xml version=\"1.0\">\n"
                "<NAGIOS>\n";
-        for (auto &&m : metrics) {
+        for (const auto &m : metrics) {
             out << "  <DATASOURCE>\n";
             out << "    <TEMPLATE>template</TEMPLATE>\n";
             out << "    <NAME>" + m.string() + "</NAME>\n";
@@ -53,13 +57,13 @@ public:
     }
 
     void SetUp() override {
-        fs::create_directories(basepath);
+        std::filesystem::create_directories(basepath);
         // Create the metrics we use for the test.
         dump(basepath / pnp_cleanup(desc + ext), metrics);
         // Add non-matching metrics to the directory.
         dump(basepath / pnp_cleanup(desc_other + ext), metrics_other);
     }
-    void TearDown() override { fs::remove_all(basepath); }
+    void TearDown() override { std::filesystem::remove_all(basepath); }
 };
 
 /// Return sorted string vectors to make the diff readable.
@@ -72,8 +76,8 @@ std::vector<std::string> human_readable(const Metric::Names &in) {
 }
 
 TEST_F(MetricFixture, ScanRRDFindsMetrics) {
-    ASSERT_TRUE(fs::exists(basepath));
-    ASSERT_FALSE(fs::is_empty(basepath));
+    ASSERT_TRUE(std::filesystem::exists(basepath));
+    ASSERT_FALSE(std::filesystem::is_empty(basepath));
     Logger *const logger{Logger::getLogger("test")};
 
     const auto names = scan_rrd(basepath, desc, logger);

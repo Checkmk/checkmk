@@ -81,9 +81,9 @@ info_table notification_state_types(const table<T> &states) {
         }
     }
     for (const auto &[code_name, code, info] : exit_codes) {
-        result.push_back({parens("ALERTHANDLER", code_name),  //
-                          code,                               //
-                          parens("EXIT_CODE", info)});
+        result.emplace_back(parens("ALERTHANDLER", code_name),  //
+                            code,                               //
+                            parens("EXIT_CODE", info));
     }
     return result;
 }

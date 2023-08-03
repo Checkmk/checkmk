@@ -25,7 +25,7 @@ from cmk.utils.prediction import _plugin_interface
             2,
             {"levels_upper": ("absolute", (2, 4))},
             1,
-            (None, None, None, None),
+            (2, 4, None, None),
         ),
         (
             0,
@@ -39,7 +39,7 @@ from cmk.utils.prediction import _plugin_interface
             2,
             {"levels_upper": ("stdev", (2, 4))},
             1,
-            (None, None, None, None),
+            (4, 8, None, None),
         ),
         (
             15,
@@ -61,17 +61,10 @@ from cmk.utils.prediction import _plugin_interface
             1,
             (2.4, 4, None, None),
         ),
-        (
-            None,
-            object(),  # should never be used
-            {},
-            1,
-            (None, None, None, None),
-        ),
     ],
 )
 def test_estimate_levels(
-    reference_value: float | None,
+    reference_value: float,
     reference_deviation: float | None,
     params: Mapping,
     levels_factor: float,

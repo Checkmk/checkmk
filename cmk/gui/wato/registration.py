@@ -7,7 +7,7 @@
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
-from cmk.gui.plugins.wato import background_job, bi_config, sync_remote_sites
+from cmk.gui.plugins.wato import bi_config, sync_remote_sites
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -55,7 +55,6 @@ def register(
     page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
 
     sync_remote_sites.register(automation_command_registry, job_registry)
-    background_job.register(mode_registry)
     bi_config.register(mode_registry)
     filters.register(filter_registry)
     pages.register(page_registry, mode_registry)

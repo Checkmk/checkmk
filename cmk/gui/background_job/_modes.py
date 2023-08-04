@@ -21,25 +21,26 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import (
-    ABCMainModule,
-    main_module_registry,
-    MainModuleTopicMaintenance,
-)
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.plugins.wato.utils import MainModuleTopicMaintenance
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.main_menu import MainModuleTopic
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    main_module_registry: MainModuleRegistry,
+) -> None:
+    page_registry.register_page("ajax_background_job_details")(ModeAjaxBackgroundJobDetails)
     mode_registry.register(ModeBackgroundJobsOverview)
     mode_registry.register(ModeBackgroundJobDetails)
+    main_module_registry.register(MainModuleBackgroundJobs)
 
 
-@main_module_registry.register
 class MainModuleBackgroundJobs(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -168,7 +169,6 @@ class ModeBackgroundJobDetails(WatoMode):
                 html.show_message(_("Background job info is not available"))
 
 
-@page_registry.register_page("ajax_background_job_details")
 class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 

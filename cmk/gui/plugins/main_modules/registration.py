@@ -167,7 +167,9 @@ def register() -> None:
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
-    background_job_registration.register()
+    background_job_registration.register(
+        cmk.gui.pages.page_registry, mode_registry, main_module_registry
+    )
 
 
 register()

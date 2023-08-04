@@ -3579,7 +3579,6 @@ class EventStatus:
                     event["owner"] = user
                 self._history.add(event, "DELETE", user)
                 self.remove_event(event)
-                self._count_event_remove(event)
 
     def get_events(self):
         return self._events

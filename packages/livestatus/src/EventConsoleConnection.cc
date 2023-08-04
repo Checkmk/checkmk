@@ -5,7 +5,7 @@
 
 #include "livestatus/EventConsoleConnection.h"
 
-#include <asio/basic_socket_streambuf.hpp>
+#include <asio/basic_socket.hpp>
 #include <asio/buffer.hpp>
 #include <asio/detail/impl/reactive_socket_service_base.ipp>
 #include <asio/error.hpp>
@@ -55,7 +55,7 @@ void EventConsoleConnection::run() {
     stream << std::nounitbuf;
     sendRequest(stream);
     stream.flush();
-    stream.rdbuf()->shutdown(asio::socket_base::shutdown_send);
+    stream.socket().shutdown(asio::socket_base::shutdown_send);
     check(stream, "send request");
 
     receiveReply(stream);

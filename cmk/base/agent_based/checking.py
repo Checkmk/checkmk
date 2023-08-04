@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
-import functools
 import itertools
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import NamedTuple
@@ -29,12 +28,7 @@ from cmk.snmplib import SNMPRawData
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName
-from cmk.checkengine.checkresults import (
-    ActiveCheckResult,
-    MetricTuple,
-    ServiceCheckResult,
-    state_markers,
-)
+from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
@@ -63,18 +57,11 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
-from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
-from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
-from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.api.agent_based import plugin_contexts
+from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.config import ConfigCache
 
-__all__ = [
-    "execute_checkmk_checks",
-    "check_host_services",
-    "get_aggregated_result",
-    "get_check_function",
-]
+__all__ = ["execute_checkmk_checks", "check_host_services", "get_aggregated_result"]
 
 
 class AggregatedResult(NamedTuple):
@@ -101,6 +88,8 @@ def execute_checkmk_checks(
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    # TODO(ml): check function should be available as `CheckPlugin.function`.
+    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
@@ -108,7 +97,6 @@ def execute_checkmk_checks(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
-    dry_run: bool,
     submitter: Submitter,
     exit_spec: ExitSpec,
 ) -> ActiveCheckResult:
@@ -119,36 +107,26 @@ def execute_checkmk_checks(
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(host_sections_by_host, section_plugins)
     with plugin_contexts.current_host(hostname):
-        with value_store.load_host_value_store(
-            hostname, store_changes=not dry_run
-        ) as value_store_manager:
-            service_results = list(
-                check_host_services(
-                    hostname,
-                    is_cluster=is_cluster,
-                    cluster_nodes=cluster_nodes,
-                    config_cache=config_cache,
-                    providers=providers,
-                    services=services,
-                    check_plugins=check_plugins,
-                    check_function=lambda service: get_check_function(
-                        config_cache,
-                        hostname,
-                        is_cluster=is_cluster,
-                        plugin=check_plugins[service.check_plugin_name],
-                        service=service,
-                        value_store_manager=value_store_manager,
-                    ),
-                    run_plugin_names=run_plugin_names,
-                    get_effective_host=get_effective_host,
-                    get_check_period=get_check_period,
-                    rtc_package=None,
-                )
+        service_results = list(
+            check_host_services(
+                hostname,
+                is_cluster=is_cluster,
+                cluster_nodes=cluster_nodes,
+                config_cache=config_cache,
+                providers=providers,
+                services=services,
+                check_plugins=check_plugins,
+                check_function=check_function,
+                run_plugin_names=run_plugin_names,
+                get_effective_host=get_effective_host,
+                get_check_period=get_check_period,
+                rtc_package=None,
             )
-            submitter.submit(
-                Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-                for s in service_results
-            )
+        )
+        submitter.submit(
+            Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
+            for s in service_results
+        )
 
     if run_plugin_names is EVERYTHING:
         _do_inventory_actions_during_checking_for(
@@ -300,35 +278,6 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
         return False
     console.verbose("Skipping service %s: currently not in time period %s.\n", description, period)
     return True
-
-
-def get_check_function(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    is_cluster: bool,
-    plugin: CheckPlugin,
-    service: ConfiguredService,
-    value_store_manager: value_store.ValueStoreManager,
-) -> Callable[..., ServiceCheckResult]:
-    check_function = (
-        cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
-            plugin=plugin,
-            service_id=service.id(),
-            value_store_manager=value_store_manager,
-        )
-        if is_cluster
-        else plugin.function
-    )
-
-    @functools.wraps(check_function)
-    def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
-        with plugin_contexts.current_service(
-            service.check_plugin_name, service.description
-        ), value_store_manager.namespace(service.id()):
-            return _aggregate_results(consume_check_results(check_function(*args, **kw)))
-
-    return __check_function
 
 
 def get_aggregated_result(
@@ -508,49 +457,3 @@ def _final_read_only_check_parameters(
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
     return Parameters(wrap_parameters(raw_parameters))
-
-
-def _add_state_marker(
-    result_str: str,
-    state_marker: str,
-) -> str:
-    return result_str if state_marker in result_str else result_str + state_marker
-
-
-def _aggregate_results(
-    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
-) -> ServiceCheckResult:
-    # Impedance matching part of `get_check_function()`.
-    perfdata, results = subresults
-    needs_marker = len(results) > 1
-    summaries: list[str] = []
-    details: list[str] = []
-    status = State.OK
-    for result in results:
-        status = State.worst(status, result.state)
-        state_marker = state_markers[int(result.state)] if needs_marker else ""
-        if result.summary:
-            summaries.append(
-                _add_state_marker(
-                    result.summary,
-                    state_marker,
-                )
-            )
-        details.append(
-            _add_state_marker(
-                result.details,
-                state_marker,
-            )
-        )
-
-    # Empty list? Check returned nothing
-    if not details:
-        return ServiceCheckResult.item_not_found()
-
-    if not summaries:
-        count = len(details)
-        summaries.append(
-            "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
-        )
-    all_text = [", ".join(summaries)] + details
-    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)

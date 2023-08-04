@@ -7,11 +7,12 @@
 
 from __future__ import annotations
 
+import functools
 import itertools
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final
+from typing import Callable, Final
 
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
@@ -29,8 +30,14 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
+from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName
-from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.checkresults import (
+    ActiveCheckResult,
+    MetricTuple,
+    ServiceCheckResult,
+    state_markers,
+)
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import SourceInfo
@@ -43,6 +50,10 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
+from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
+from cmk.base.api.agent_based.checking_classes import consume_check_results
+from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
+from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources, Source
 
@@ -52,6 +63,7 @@ __all__ = [
     "CMKParser",
     "CMKSummarizer",
     "DiscoveryPluginMapper",
+    "get_check_function",
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
@@ -339,6 +351,78 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
 
     def __len__(self) -> int:
         return len(_api.registered_check_plugins)
+
+
+def get_check_function(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    is_cluster: bool,
+    plugin: CheckPlugin,
+    service: ConfiguredService,
+    value_store_manager: value_store.ValueStoreManager,
+) -> Callable[..., ServiceCheckResult]:
+    check_function = (
+        cluster_mode.get_cluster_check_function(
+            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            plugin=plugin,
+            service_id=service.id(),
+            value_store_manager=value_store_manager,
+        )
+        if is_cluster
+        else plugin.function
+    )
+
+    @functools.wraps(check_function)
+    def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
+        with plugin_contexts.current_service(
+            service.check_plugin_name, service.description
+        ), value_store_manager.namespace(service.id()):
+            return _aggregate_results(consume_check_results(check_function(*args, **kw)))
+
+    return __check_function
+
+
+def _aggregate_results(
+    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+) -> ServiceCheckResult:
+    # Impedance matching part of `get_check_function()`.
+    perfdata, results = subresults
+    needs_marker = len(results) > 1
+    summaries: list[str] = []
+    details: list[str] = []
+    status = State.OK
+
+    def _add_state_marker(result_str: str, state_marker: str) -> str:
+        return result_str if state_marker in result_str else result_str + state_marker
+
+    for result_ in results:
+        status = State.worst(status, result_.state)
+        state_marker = state_markers[int(result_.state)] if needs_marker else ""
+        if result_.summary:
+            summaries.append(
+                _add_state_marker(
+                    result_.summary,
+                    state_marker,
+                )
+            )
+        details.append(
+            _add_state_marker(
+                result_.details,
+                state_marker,
+            )
+        )
+
+    # Empty list? Check returned nothing
+    if not details:
+        return ServiceCheckResult.item_not_found()
+
+    if not summaries:
+        count = len(details)
+        summaries.append(
+            "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
+        )
+    all_text = [", ".join(summaries)] + details
+    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

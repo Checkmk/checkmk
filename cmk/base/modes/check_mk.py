@@ -93,12 +93,14 @@ import cmk.base.sources as sources
 from cmk.base.agent_based.checking import execute_checkmk_checks
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.api.agent_based.value_store import load_host_value_store
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,
     CMKParser,
     CMKSummarizer,
     DiscoveryPluginMapper,
+    get_check_function,
     HostLabelPluginMapper,
     InventoryPluginMapper,
     SectionPluginMapper,
@@ -2066,19 +2068,31 @@ def mode_check(
             Snapshot,
         ]
     ] = ()
-    with error_handler, CPUTracker() as tracker:
+    with error_handler, CPUTracker() as tracker, load_host_value_store(
+        hostname, store_changes=not dry_run
+    ) as value_store_manager:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
+        is_cluster = config_cache.is_cluster(hostname)
+        check_plugins = CheckPluginMapper()
         check_result = execute_checkmk_checks(
             hostname=hostname,
-            is_cluster=config_cache.is_cluster(hostname),
+            is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes_of(hostname) or (),
             config_cache=config_cache,
             fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
             summarizer=summarizer,
             section_plugins=SectionPluginMapper(),
-            check_plugins=CheckPluginMapper(),
+            check_plugins=check_plugins,
+            check_function=lambda service: get_check_function(
+                config_cache,
+                hostname,
+                is_cluster,
+                plugin=check_plugins[service.check_plugin_name],
+                service=service,
+                value_store_manager=value_store_manager,
+            ),
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             params=config_cache.hwsw_inventory_parameters(hostname),
@@ -2086,7 +2100,6 @@ def mode_check(
             run_plugin_names=run_plugin_names,
             get_effective_host=config_cache.effective_host,
             get_check_period=partial(config_cache.check_period_of_service, hostname),
-            dry_run=dry_run,
             submitter=get_submitter_(
                 check_submission=config.check_submission,
                 monitoring_core=config.monitoring_core,

@@ -43,9 +43,10 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-import cmk.base.agent_based.checking as checking
+from cmk.base.agent_based.checking import get_aggregated_result
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
+from cmk.base.checkers import get_check_function
 from cmk.base.config import ConfigCache
 
 __all__ = ["CheckPreview", "get_check_preview"]
@@ -217,7 +218,7 @@ def _check_preview_table_row(
     )
 
     result = (
-        checking.get_aggregated_result(
+        get_aggregated_result(
             host_name,
             is_cluster,
             cluster_nodes,
@@ -226,7 +227,7 @@ def _check_preview_table_row(
             service,
             check_plugin,
             get_effective_host=get_effective_host,
-            check_function=checking.get_check_function(
+            check_function=get_check_function(
                 config_cache,
                 host_name,
                 is_cluster,

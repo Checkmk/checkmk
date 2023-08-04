@@ -21,7 +21,9 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
+__version__ = "2.3.0b1"
 
+USER_AGENT = f"checkmk-special-purefa-{__version__}"
 
 class _RestVersion(NamedTuple):
     major: int
@@ -172,6 +174,7 @@ class PureStorageFlashArray:
                 f"{_REST_VERSION}/login",
                 {
                     "Content-Type": "application/json",
+                    "User-Agent": USER_AGENT,
                     "api-token": api_token,
                 },
             )
@@ -220,6 +223,7 @@ class PureStorageFlashArray:
                 f"{latest_version}/{spec.path}",
                 headers={
                     "Content-Type": "application/json",
+                    "User-Agent": USER_AGENT,
                     "x-auth-token": self._x_auth_token,
                 },
                 params=spec.params,

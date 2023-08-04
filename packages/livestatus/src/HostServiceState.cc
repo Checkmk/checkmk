@@ -67,5 +67,8 @@ void HostServiceState::computePerStateDurations() {
             _duration_unknown = _duration;
             _duration_part_unknown = _duration_part;
             break;
+        default:
+            // TODO(sp) Should we really ignore invalid log entries?
+            break;
     }
 }

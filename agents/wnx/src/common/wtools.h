@@ -667,12 +667,9 @@ std::string ConvertUtf16toUtf8Conditionally(
         const auto *raw_data =
             reinterpret_cast<const wchar_t *>(original_data.data() + 2);
 
-        std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
-        if (wdata.empty()) {
-            return {};
-        }
-
-        return wtools::ToUtf8(wdata);
+        std::wstring_view wide_string(
+            raw_data, raw_data + (original_data.size() - 2) / 2);
+        return wtools::ToUtf8(wide_string);
     }
 
     std::string data;
@@ -691,7 +688,6 @@ inline void AddSafetyEndingNull(std::string &data) {
     data[length] = 0;
 }
 
-// generic to support uint8_t and int8_t and char and unsigned char
 template <typename T>
 std::string ConditionallyConvertFromUtf16(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");

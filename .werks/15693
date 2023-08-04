@@ -1,0 +1,19 @@
+Title: Disable SHA1 signatures for agents
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1691149245
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+tl,dr; Update agents to 2.2.0b8 or later before updating the site to 2.3.0!
+
+With this Werk Checkmk will no longer generate and validate SHA1 signatures for agent packages.
+With Werk #15692 Checkmk generated SHA256 signatures and the agent-updater is capable to verify SHA256 signatures since 2.2.0b8.
+
+If you have agent updaters older than 2.2.0b8 these will not be able to verify agent packages anymore and therefore need manual updating after this Werk.
+We recommend to install at least 2.2.0p8 and update all agents before updating to 2.3.0.
+
+If you were on 2.2.0p8 or beyond and all agents are up-to-date then no intervention will be necessary.

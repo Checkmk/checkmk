@@ -44,8 +44,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from cmk.base.agent_based.checking import get_aggregated_result
-from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.checkers import get_check_function
 from cmk.base.config import ConfigCache
 
 __all__ = ["CheckPreview", "get_check_preview"]
@@ -73,6 +71,7 @@ def get_check_preview(
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
@@ -144,47 +143,46 @@ def get_check_preview(
         on_error=on_error,
     )
 
-    with load_host_value_store(host_name, store_changes=False) as value_store_manager:
-        passive_rows = [
-            _check_preview_table_row(
-                host_name,
-                is_cluster=is_cluster,
-                cluster_nodes=cluster_nodes,
-                config_cache=config_cache,
-                check_plugins=check_plugins,
-                service=ConfiguredService(
-                    check_plugin_name=entry.check_plugin_name,
-                    item=entry.item,
-                    description=find_service_description(host_name, *entry.id()),
-                    parameters=compute_check_parameters(host_name, entry),
-                    discovered_parameters=entry.parameters,
-                    service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
-                    is_enforced=False,
-                ),
-                check_source=check_source,
-                providers=providers,
-                get_effective_host=get_effective_host,
-                found_on_nodes=found_on_nodes,
-                value_store_manager=value_store_manager,
-            )
-            for check_source, services_with_nodes in grouped_services.items()
-            for entry, found_on_nodes in services_with_nodes
-        ] + [
-            _check_preview_table_row(
-                host_name,
-                is_cluster=is_cluster,
-                cluster_nodes=cluster_nodes,
-                config_cache=config_cache,
-                service=service,
-                check_plugins=check_plugins,
-                check_source="manual",  # "enforced" would be nicer
-                providers=providers,
-                found_on_nodes=[host_name],
-                get_effective_host=get_effective_host,
-                value_store_manager=value_store_manager,
-            )
-            for _ruleset_name, service in enforced_services.values()
-        ]
+    passive_rows = [
+        _check_preview_table_row(
+            host_name,
+            is_cluster=is_cluster,
+            cluster_nodes=cluster_nodes,
+            config_cache=config_cache,
+            check_plugins=check_plugins,
+            check_function=check_function,
+            service=ConfiguredService(
+                check_plugin_name=entry.check_plugin_name,
+                item=entry.item,
+                description=find_service_description(host_name, *entry.id()),
+                parameters=compute_check_parameters(host_name, entry),
+                discovered_parameters=entry.parameters,
+                service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
+                is_enforced=False,
+            ),
+            check_source=check_source,
+            providers=providers,
+            get_effective_host=get_effective_host,
+            found_on_nodes=found_on_nodes,
+        )
+        for check_source, services_with_nodes in grouped_services.items()
+        for entry, found_on_nodes in services_with_nodes
+    ] + [
+        _check_preview_table_row(
+            host_name,
+            is_cluster=is_cluster,
+            cluster_nodes=cluster_nodes,
+            config_cache=config_cache,
+            service=service,
+            check_plugins=check_plugins,
+            check_function=check_function,
+            check_source="manual",  # "enforced" would be nicer
+            providers=providers,
+            found_on_nodes=[host_name],
+            get_effective_host=get_effective_host,
+        )
+        for _ruleset_name, service in enforced_services.values()
+    ]
 
     return CheckPreview(
         table=[*passive_rows],
@@ -204,11 +202,11 @@ def _check_preview_table_row(
     config_cache: ConfigCache,
     service: ConfiguredService,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
-    value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
@@ -225,14 +223,7 @@ def _check_preview_table_row(
             service,
             check_plugin,
             get_effective_host=get_effective_host,
-            check_function=get_check_function(
-                config_cache,
-                host_name,
-                is_cluster,
-                plugin=check_plugin,
-                service=service,
-                value_store_manager=value_store_manager,
-            ),
+            check_function=check_function(service),
             rtc_package=None,
         ).result
         if check_plugin is not None

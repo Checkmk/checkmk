@@ -138,6 +138,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
 from cmk.base.api.agent_based import plugin_contexts
+from cmk.base.api.agent_based.value_store import load_host_value_store
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -145,6 +146,7 @@ from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
     DiscoveryPluginMapper,
+    get_check_function,
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
@@ -421,11 +423,15 @@ def _execute_discovery(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    with plugin_contexts.current_host(host_name):
+    with plugin_contexts.current_host(host_name), load_host_value_store(
+        host_name, store_changes=False
+    ) as value_store_manager:
+        is_cluster = config_cache.is_cluster(host_name)
+        check_plugins = CheckPluginMapper()
         passive_check_preview = discovery.get_check_preview(
             host_name,
             ip_address,
-            is_cluster=config_cache.is_cluster(host_name),
+            is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes_of(host_name) or (),
             config_cache=config_cache,
             parser=parser,
@@ -438,6 +444,14 @@ def _execute_discovery(
             section_plugins=SectionPluginMapper(),
             host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
             check_plugins=CheckPluginMapper(),
+            check_function=lambda service: get_check_function(
+                config_cache,
+                host_name,
+                is_cluster,
+                plugin=check_plugins[service.check_plugin_name],
+                service=service,
+                value_store_manager=value_store_manager,
+            ),
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
                     host_name,

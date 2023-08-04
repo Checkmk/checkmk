@@ -5,5 +5,6 @@
 
 from ._checking import CheckPluginName, CheckPluginNameStr, Item
 from ._plugin import CheckPlugin
+from ._timing import make_timing_results
 
-__all__ = ["CheckPlugin", "CheckPluginName", "CheckPluginNameStr", "Item"]
+__all__ = ["CheckPlugin", "CheckPluginName", "CheckPluginNameStr", "Item", "make_timing_results"]

@@ -6,16 +6,13 @@
 
 import functools
 import itertools
-from collections import defaultdict
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
-from contextlib import suppress
-from typing import DefaultDict, NamedTuple
+from typing import NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import wrap_parameters
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.hostaddress import HostName
@@ -28,8 +25,6 @@ from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
-
-from cmk.fetchers import FetcherType
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.check_table import ConfiguredService
@@ -80,7 +75,6 @@ __all__ = [
     "check_host_services",
     "get_aggregated_result",
     "get_check_function",
-    "timing_results",
 ]
 
 
@@ -196,48 +190,6 @@ def _do_inventory_actions_during_checking_for(
 
     if status_data_tree:
         tree_store.save(host_name=host_name, tree=status_data_tree)
-
-
-def timing_results(
-    total_times: Snapshot,
-    fetched: Sequence[tuple[SourceInfo, Snapshot]],
-    *,
-    perfdata_with_times: bool,
-) -> ActiveCheckResult:
-    for duration in (f[1] for f in fetched):
-        total_times += duration
-
-    infotext = "execution time %.1f sec" % total_times.process.elapsed
-    if not perfdata_with_times:
-        return ActiveCheckResult(
-            0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
-        )
-
-    perfdata = [
-        "execution_time=%.3f" % total_times.process.elapsed,
-        "user_time=%.3f" % total_times.process.user,
-        "system_time=%.3f" % total_times.process.system,
-        "children_user_time=%.3f" % total_times.process.children_user,
-        "children_system_time=%.3f" % total_times.process.children_system,
-    ]
-
-    summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-    for source, duration in fetched:
-        with suppress(KeyError):
-            summary[
-                {
-                    FetcherType.PIGGYBACK: "agent",
-                    FetcherType.PROGRAM: "ds",
-                    FetcherType.SPECIAL_AGENT: "ds",
-                    FetcherType.SNMP: "snmp",
-                    FetcherType.TCP: "agent",
-                }[source.fetcher_type]
-            ] += duration
-
-    for phase, duration in summary.items():
-        perfdata.append(f"cmk_time_{phase}={duration.idle:.3f}")
-
-    return ActiveCheckResult(0, infotext, (), perfdata)
 
 
 def _check_plugins_missing_data(

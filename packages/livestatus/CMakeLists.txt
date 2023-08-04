@@ -8,6 +8,8 @@ add_compile_options(
   -Wextra
   -Werror
   -DHAVE_RE2
+  -DASIO_DISABLE_CONCEPTS
+  -DASIO_NO_DEPRECATED
   -fPIC
   -gdwarf-4
   -std=c++17

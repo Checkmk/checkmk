@@ -7,7 +7,6 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
-from types import ModuleType
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
@@ -23,10 +22,9 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.main_menu import MainModuleTopic
 
 try:
-    managed: ModuleType | None
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 except ImportError:
-    managed = None
+    managed = None  # type: ignore[assignment, unused-ignore]
 
 import cmk.gui.forms as forms
 

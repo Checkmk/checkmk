@@ -87,6 +87,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
+from cmk.base.agent_based.checking import execute_checkmk_checks
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.checkers import (
@@ -2012,8 +2013,6 @@ def mode_check(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
-    import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
-
     file_cache_options = _handle_fetcher_options(options)
 
     # handle adhoc-check
@@ -2059,7 +2058,7 @@ def mode_check(
     with error_handler:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
-        check_result = checking.execute_checkmk_checks(
+        check_result = execute_checkmk_checks(
             hostname=hostname,
             is_cluster=config_cache.is_cluster(hostname),
             cluster_nodes=config_cache.nodes_of(hostname) or (),

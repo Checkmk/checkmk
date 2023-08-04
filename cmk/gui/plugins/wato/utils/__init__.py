@@ -241,17 +241,6 @@ from cmk.gui.watolib.translation import translation_elements as translation_elem
 from cmk.gui.watolib.users import notification_script_title
 
 
-@permission_section_registry.register
-class PermissionSectionWATO(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "wato"
-
-    @property
-    def title(self) -> str:
-        return _("Setup")
-
-
 def PluginCommandLine() -> ValueSpec:
     def _validate_custom_check_command_line(value, varprefix):
         if "--pwstore=" in value:

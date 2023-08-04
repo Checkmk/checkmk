@@ -71,7 +71,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
-import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
@@ -164,6 +163,8 @@ from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
+from ._permissions import PermissionSectionWATO as PermissionSectionWATO
+
 # .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -212,6 +213,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.plugins.wato as api_module
     import cmk.gui.plugins.wato.datasource_programs as datasource_programs
 
+    for name, value in [
+        ("PermissionSectionWATO", PermissionSectionWATO),
+    ]:
+        api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name] = value
+
     for name in (
         "ABCHostAttributeNagiosText",
         "ABCHostAttributeValueSpec",
@@ -255,7 +261,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "notification_parameter_registry",
         "NotificationParameter",
         "IndividualOrStoredPassword",
-        "PermissionSectionWATO",
         "PluginCommandLine",
         "PredictiveLevels",
         "register_check_parameters",

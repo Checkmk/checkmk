@@ -7,6 +7,7 @@
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.wato import bi_config, sync_remote_sites
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
@@ -16,7 +17,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import filters, pages
+from . import _permissions, filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (
     PainterHostFilename,
@@ -38,6 +39,8 @@ def register(
     job_registry: BackgroundJobRegistry,
     filter_registry: FilterRegistry,
     mode_registry: ModeRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -58,3 +61,4 @@ def register(
     bi_config.register(mode_registry)
     filters.register(filter_registry)
     pages.register(page_registry, mode_registry)
+    _permissions.register(permission_section_registry, permission_registry)

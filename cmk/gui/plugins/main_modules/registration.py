@@ -152,6 +152,8 @@ def register() -> None:
         job_registry,
         filter_registry,
         mode_registry,
+        permission_section_registry,
+        permission_registry,
     )
     bi_registration.register(
         data_source_registry,

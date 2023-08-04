@@ -177,7 +177,7 @@ class TimeSeries:
     def twindow(self) -> TimeWindow:
         return self.start, self.end, self.step
 
-    def bfill_upsample(self, twindow: TimeWindow, shift: Seconds) -> TimeSeriesValues:
+    def bfill_upsample(self, twindow: TimeWindow) -> TimeSeriesValues:
         """Upsample by backward filling values
 
         twindow : 3-tuple, (start, end, step)
@@ -190,7 +190,7 @@ class TimeSeries:
         i = 0
         current_times = rrd_timestamps(self.twindow)
         for t in range(*twindow):
-            if t >= current_times[i] + shift:
+            if t >= current_times[i]:
                 i += 1
             upsa.append(self.values[i])
 
@@ -595,4 +595,7 @@ def _upsample(
     finest resolution.
     """
     twindow = slices[0][0].twindow
-    return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
+    return twindow, [
+        ts.bfill_upsample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
+        for ts, shift in slices
+    ]

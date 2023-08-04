@@ -77,34 +77,30 @@ def test_rrdtimestamps(twindow: _prediction.TimeWindow, result: list[int]) -> No
 
 
 @pytest.mark.parametrize(
-    "rrddata, twindow, shift, upsampled",
+    "rrddata, twindow, upsampled",
     [
-        ([10, 20, 10, 20], (10, 20, 10), 0, [20]),
-        ([10, 20, 10, 20], (10, 20, 5), 0, [20, 20]),
-        ([10, 20, 10, 20], (20, 30, 5), 10, [20, 20]),
+        ([10, 20, 10, 20], (10, 20, 10), [20]),
+        ([10, 20, 10, 20], (10, 20, 5), [20, 20]),
         (
             [0, 120, 40, 25, 65, 105],
-            (300, 400, 10),
-            300,
+            (0, 100, 10),
             [25, 25, 25, 25, 65, 65, 65, 65, 105, 105],
         ),
         (
             [0, 120, 40, 25, None, 105],
-            (300, 400, 10),
-            300,
+            (0, 100, 10),
             [25, 25, 25, 25, None, None, None, None, 105, 105],
         ),
-        ([0, 120, 40, 25, 65, 105], (330, 410, 10), 300, [25, 65, 65, 65, 65, 105, 105, 105]),
+        ([0, 120, 40, 25, 65, 105], (30, 110, 10), [25, 65, 65, 65, 65, 105, 105, 105]),
     ],
 )
 def test_time_series_upsampling(
     rrddata: _prediction.TimeSeriesValues,
     twindow: _prediction.TimeWindow,
-    shift: int,
     upsampled: _prediction.TimeSeriesValues,
 ) -> None:
     ts = _prediction.TimeSeries(rrddata)
-    assert ts.bfill_upsample(twindow, shift) == upsampled
+    assert ts.bfill_upsample(twindow) == upsampled
 
 
 @pytest.mark.parametrize(

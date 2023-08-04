@@ -1266,6 +1266,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     for (int i = 0; i < 4; i++) {
         EXPECT_TRUE(exe_units[2].run());
         EXPECT_EQ(exe_units[2].retry(), 0);
+        EXPECT_FALSE(exe_units[2].repairInvalidUtf());
     }
 
     EXPECT_EQ(exe_units[3].pattern(), "s_eq_a_2600");
@@ -1275,6 +1276,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     EXPECT_EQ(exe_units[4].pattern(), "s_2");
     EXPECT_EQ(exe_units[4].run(), false);
     EXPECT_EQ(exe_units[4].retry(), 1);
+    EXPECT_FALSE(exe_units[2].repairInvalidUtf());
 }
 
 TEST(AgentConfig, ApplyValueIfScalar) {
@@ -1284,7 +1286,8 @@ TEST(AgentConfig, ApplyValueIfScalar) {
         "async: yes\n"
         "cache_age: 193\n"
         "timeout: 77\n"
-        "retry_count: 7\n");
+        "retry_count: 7\n"
+        "repair_invalid_utf: yes\n");
     auto e_ = YAML::Load(
         "pattern: '*'\n"
         "_run: no\n"
@@ -1297,6 +1300,7 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     int cache_age = 0;
     int timeout = kDefaultPluginTimeout;
     int retry = 0;
+    bool repair_invalid_utf = false;
     EXPECT_NO_THROW(ApplyValueIfScalar(YAML::Node(), run, ""));
     EXPECT_NO_THROW(ApplyValueIfScalar(e, run, ""));
     EXPECT_TRUE(run);
@@ -1324,6 +1328,9 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     EXPECT_EQ(timeout, 77);
     EXPECT_NO_THROW(ApplyValueIfScalar(e, cache_age, vars::kPluginCacheAge));
     EXPECT_EQ(cache_age, 193);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, repair_invalid_utf,
+                                       vars::kPluginRepairInvalidUtf));
+    EXPECT_TRUE(repair_invalid_utf);
 }
 
 TEST(AgentConfig, ExeUnitTest) {
@@ -1334,6 +1341,7 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
+    EXPECT_FALSE(e.repairInvalidUtf());
     EXPECT_TRUE(e.group().empty());
     EXPECT_TRUE(e.user().empty());
 
@@ -1350,6 +1358,7 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.timeout(), 1);
     EXPECT_EQ(e.cacheAge(), 1111);
     EXPECT_EQ(e.retry(), 3);
+    EXPECT_FALSE(e.repairInvalidUtf());
 
     EXPECT_EQ(e.group(), "g");
     EXPECT_EQ(e.user(), "u u");
@@ -1372,22 +1381,26 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         "- pattern     : '1'\n"
         "  timeout     : 1\n"
         "  run         : yes\n"
+        "  repair_invalid_utf: yes\n"
         "\n"
         "- pattern     : '2'\n"
         "  timeout     : 2\n"
         "  run         : no\n"
+        "  repair_invalid_utf: yes\n"
         "\n"
         "- pattern     : '3'\n"
         "  group       : SomeUsers\n"
         "\n"
         "- pattern     : '4'\n"
         "  retry_count : 4\n"
+        "  repair_invalid_utf: no\n"
         "  user        : users_\n"
         "\n"
         "- pattern     : '5'\n"
         "  run         : false\n"
         "  async       : true\n"
         "  cache_age   : 5\n"
+        "  repair_invalid_utf: yes\n"
         "  group       : 'a a a '\n"
         "\n"
 
@@ -1405,14 +1418,15 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         int timeout;
         int cache_age;
         int retry;
+        bool repair_invalid_utf;
         std::string group;
         std::string user;
     } data[5] = {
-        {"1", false, true, 1, 0, 0, "", ""},
-        {"2", false, false, 2, 0, 0, "", ""},
-        {"3", false, true, kDefaultPluginTimeout, 0, 0, "SomeUsers", ""},
-        {"4", false, true, kDefaultPluginTimeout, 0, 4, "", "users_"},
-        {"5", true, false, kDefaultPluginTimeout, 120, 0, "a a a ", ""},
+        {"1", false, true, 1, 0, 0, true, "", ""},
+        {"2", false, false, 2, 0, 0, true, "", ""},
+        {"3", false, true, kDefaultPluginTimeout, 0, 0, false, "SomeUsers", ""},
+        {"4", false, true, kDefaultPluginTimeout, 0, 4, false, "", "users_"},
+        {"5", true, false, kDefaultPluginTimeout, 120, 0, true, "a a a ", ""},
     };
 
     int i = 0;
@@ -1423,6 +1437,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         EXPECT_EQ(exe_units[i].timeout(), d.timeout);
         EXPECT_EQ(exe_units[i].cacheAge(), d.cache_age);
         EXPECT_EQ(exe_units[i].retry(), d.retry);
+        EXPECT_EQ(exe_units[i].repairInvalidUtf(), d.repair_invalid_utf);
         EXPECT_EQ(exe_units[i].group(), d.group);
         EXPECT_EQ(exe_units[i].user(), d.user);
         ++i;

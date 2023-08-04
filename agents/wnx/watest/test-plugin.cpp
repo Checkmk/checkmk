@@ -119,18 +119,19 @@ void RemoveFolder(const fs::path &path) {
 // because PluginMap is relative complicated(PluginEntry is not trivial)
 // we will use special method to insert artificial data in map
 void InsertEntry(PluginMap &pm, const std::string &name, int timeout,
-                 bool async, int cache_age) {
+                 bool async, int cache_age, bool repair_invalid_utf) {
     pm.emplace(std::make_pair(name, fs::path{name}));
     auto it = pm.find(name);
     cfg::PluginInfo e{timeout,
-                      async || cache_age ? cache_age : std::optional<int>{}, 1};
+                      async || cache_age ? cache_age : std::optional<int>{}, 1,
+                      repair_invalid_utf};
     it->second.applyConfigUnit(e, ExecType::plugin, nullptr);
 }
 }  // namespace
 
 TEST(PluginTest, Entry) {
     PluginMap pm;
-    InsertEntry(pm, "a1", 5, true, 0);
+    InsertEntry(pm, "a1", 5, true, 0, false);
     const auto entry = GetEntrySafe(pm, "a1"s);
     ASSERT_TRUE(entry != nullptr);
     EXPECT_TRUE(entry->cmd_line_.empty());
@@ -151,26 +152,26 @@ TEST(PluginTest, TimeoutCalc) {
     {
         // test failures on parameter change
         PluginMap pm;
-        InsertEntry(pm, "a1", 5, true, 0);
+        InsertEntry(pm, "a1", 5, true, 0, false);
         auto entry = GetEntrySafe(pm, "a1"s);
         ASSERT_TRUE(entry != nullptr);
         EXPECT_EQ(entry->failures(), 0);
         entry->failures_++;
-        InsertEntry(pm, "a1", 5, true, 200);
+        InsertEntry(pm, "a1", 5, true, 200, false);
         EXPECT_EQ(entry->failures(), 0);  // reset bevcause of new retry_count
-        InsertEntry(pm, "a1", 3, true, 200);
+        InsertEntry(pm, "a1", 3, true, 200, false);
         EXPECT_EQ(entry->failures(), 0);
         entry->failures_++;
-        InsertEntry(pm, "a1", 3, true, 250);
+        InsertEntry(pm, "a1", 3, true, 250, false);
         EXPECT_EQ(entry->failures(), 1);
-        InsertEntry(pm, "a1", 3, false, 0);
+        InsertEntry(pm, "a1", 3, false, 0, false);
         EXPECT_EQ(entry->failures(), 0);
     }
 
     // test async
     {
         PluginMap pm;
-        InsertEntry(pm, "a1", 5, true, 0);
+        InsertEntry(pm, "a1", 5, true, 0, false);
         {
             auto &e = pm.at("a1");
             EXPECT_TRUE(e.defined());
@@ -179,16 +180,16 @@ TEST(PluginTest, TimeoutCalc) {
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
-        InsertEntry(pm, "a2", 15, true, 0);
+        InsertEntry(pm, "a2", 15, true, 0, false);
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
-        InsertEntry(pm, "a3", 25, false, 100);
+        InsertEntry(pm, "a3", 25, false, 100, false);
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
 
-        InsertEntry(pm, "a4", 7, true, 100);
+        InsertEntry(pm, "a4", 7, true, 100, false);
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
@@ -198,7 +199,7 @@ TEST(PluginTest, TimeoutCalc) {
             EXPECT_TRUE(e.async());
         }
 
-        InsertEntry(pm, "a4", 100, false, 0);  // sync
+        InsertEntry(pm, "a4", 100, false, 0, false);  // sync
         {
             auto &e = pm.at("a4");
             EXPECT_TRUE(e.defined());
@@ -212,16 +213,16 @@ TEST(PluginTest, TimeoutCalc) {
     // test sync
     {
         PluginMap pm;
-        InsertEntry(pm, "a1", 5, false, 0);
+        InsertEntry(pm, "a1", 5, false, 0, false);
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::sync));
-        InsertEntry(pm, "a2", 15, false, 0);
+        InsertEntry(pm, "a2", 15, false, 0, false);
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::all));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::sync));
 
-        InsertEntry(pm, "a3", 25, false, 100);
+        InsertEntry(pm, "a3", 25, false, 100, false);
         {
             auto &e = pm.at("a3");
             EXPECT_TRUE(e.defined());
@@ -325,16 +326,17 @@ TEST(PluginTest, PluginInfoEmpty) {
 }
 
 TEST(PluginTest, PluginInfoStandard) {
-    PluginInfo e(10, 2, 1);
+    PluginInfo e(10, 2, 1, true);
     EXPECT_TRUE(e.defined());
     EXPECT_TRUE(e.async());
     EXPECT_EQ(e.timeout(), 10);
     EXPECT_EQ(e.retry(), 1);
     EXPECT_EQ(e.cacheAge(), 2);
+    EXPECT_TRUE(e.repairInvalidUtf());
 }
 
 TEST(PluginTest, PluginInfoExtend) {
-    PluginInfo e(10, 2, 1);
+    PluginInfo e(10, 2, 1, false);
     e.extend("g", "u");
     EXPECT_EQ(e.user(), "u");
     EXPECT_EQ(e.group(), "g");
@@ -391,12 +393,13 @@ TEST(PluginTest, ApplyConfig) {
     EXPECT_EQ(pe.isTooManyRetries(), true);
 
     {
-        cfg::PluginInfo e = {10, 1, 1};
+        cfg::PluginInfo e{10, 1, 1, true};
         pe.applyConfigUnit(e, ExecType::plugin, nullptr);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), true);
         EXPECT_EQ(pe.local(), false);
         EXPECT_EQ(pe.retry(), 1);
+        EXPECT_TRUE(pe.repairInvalidUtf());
         EXPECT_EQ(pe.timeout(), 10);
         EXPECT_EQ(pe.cacheAge(), cma::cfg::kMinimumCacheAge);
         EXPECT_TRUE(pe.user().empty());
@@ -416,13 +419,14 @@ TEST(PluginTest, ApplyConfig) {
         pe.data_.resize(10);
         pe.failures_ = 5;
         EXPECT_EQ(pe.data().size(), 10);
-        cfg::PluginInfo e{10, {}, 11};
+        cfg::PluginInfo e{10, {}, 11, true};
         pe.applyConfigUnit(e, ExecType::local, nullptr);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), false);
         EXPECT_EQ(pe.local(), true);
         EXPECT_EQ(pe.cacheAge(), 0);
         EXPECT_EQ(pe.retry(), 11);
+        EXPECT_TRUE(pe.repairInvalidUtf());
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_TRUE(pe.data().empty());
     }
@@ -484,24 +488,25 @@ static void RemoveFolderStructure(const PathVector &paths) {
 }
 
 TEST(PluginTest, ExeUnitSyncCtor) {
-    cfg::Plugins::ExeUnit e("Plugin", 1, {}, 2, true);
+    cfg::Plugins::ExeUnit e("Plugin", 1, true, {}, 2, true);
     EXPECT_EQ(e.async(), false);
     EXPECT_EQ(e.retry(), 2);
     EXPECT_EQ(e.timeout(), 1);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.run(), true);
+    EXPECT_TRUE(e.repairInvalidUtf());
 }
 
 constexpr int unit_async_timeout = 120;
 TEST(PluginTest, ExeUnitAsyncCtor) {
-    cfg::Plugins::ExeUnit e("Plugin", 1, unit_async_timeout, 2, true);
+    cfg::Plugins::ExeUnit e("Plugin", 1, true, unit_async_timeout, 2, true);
     EXPECT_EQ(e.async(), true);
     EXPECT_EQ(e.cacheAge(), unit_async_timeout);
 }
 
 TEST(PluginTest, ExeUnitAsyncCtorNotSoValid) {
-    cfg::Plugins::ExeUnit e("Plugin", 1, cma::cfg::kMinimumCacheAge - 1, 2,
-                            true);
+    cfg::Plugins::ExeUnit e("Plugin", 1, true, cma::cfg::kMinimumCacheAge - 1,
+                            2, true);
     EXPECT_EQ(e.async(), true);
     EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
 }
@@ -631,6 +636,7 @@ TEST(PluginTest, FilesAndFoldersComponent) {
         EXPECT_EQ(exe_units[0].cacheAge(), 0);
         EXPECT_EQ(exe_units[0].async(), false);
         EXPECT_EQ(exe_units[0].retry(), 0);
+        EXPECT_FALSE(exe_units[0].repairInvalidUtf());
     }
 
     {
@@ -1052,6 +1058,7 @@ TEST(PluginTest, ApplyEverything) {
             EXPECT_EQ(entry.cacheAge(), 0);
             EXPECT_EQ(entry.retry(), 5);
             EXPECT_EQ(entry.async(), false);
+            EXPECT_FALSE(entry.repairInvalidUtf());
             EXPECT_EQ(entry.timeout(), 11);
             EXPECT_EQ(entry.defined(), true);
         }
@@ -1068,10 +1075,11 @@ TEST(PluginTest, ApplyEverything) {
             auto expected_index = valid_entries[index++];
             auto end_path = entry.path();
             EXPECT_EQ(end_path, typical_files[expected_index]);
-            EXPECT_EQ(entry.cacheAge(), 0);   // default
-            EXPECT_EQ(entry.retry(), 0);      // default
-            EXPECT_EQ(entry.async(), false);  // default
-            EXPECT_EQ(entry.timeout(), 13);   // set
+            EXPECT_EQ(entry.cacheAge(), 0);          // default
+            EXPECT_EQ(entry.retry(), 0);             // default
+            EXPECT_EQ(entry.async(), false);         // default
+            EXPECT_FALSE(entry.repairInvalidUtf());  // default
+            EXPECT_EQ(entry.timeout(), 13);          // set
         }
     }
 
@@ -1097,6 +1105,7 @@ TEST(PluginTest, ApplyEverything) {
                 EXPECT_EQ(entry.cacheAge(), 0);
                 EXPECT_EQ(entry.retry(), 1);
                 EXPECT_EQ(entry.async(), false);
+                EXPECT_FALSE(entry.repairInvalidUtf());
                 EXPECT_EQ(entry.timeout(), 1);
                 EXPECT_EQ(entry.defined(), true);
             }
@@ -1143,8 +1152,8 @@ TEST(PluginTest, SyncStartSimulationFuture_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     const std::vector<cfg::Plugins::ExeUnit> units = {
-        {"*.cmd", 10, {}, 3, true},  //
-        {"*", 10, 0, 3, false},      //
+        {"*.cmd", 10, true, {}, 3, true},  //
+        {"*", 10, true, 0, 3, false},      //
     };
 
     const fs::path temp_folder = cfg::GetTempDir();
@@ -1990,7 +1999,7 @@ const std::vector<cfg::Plugins::ExeUnit> plugins_file_group_param = {
     //       Async  Timeout CacheAge              Retry  Run
     {"*.cmd",
      fmt::format(
-         "async: no\ntimeout: 11\ncache_age: 120\nretry_count: 4\nrun: yes\ngroup: {}\n",
+         "async: no\ntimeout: 11\ncache_age: 120\nretry_count: 4\nrun: yes\ngroup: {}\nrepair_invalid_utf: yes\n",
          wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup)))},
     {"*", "run: no"},
 };
@@ -2004,6 +2013,7 @@ TEST(PluginTest, ExeUnitApply) {
     EXPECT_EQ(u.cacheAge(), 120);
     EXPECT_EQ(u.timeout(), 11);
     EXPECT_EQ(u.retry(), 4);
+    EXPECT_TRUE(u.repairInvalidUtf());
 }
 
 // Check that plugin is started from the valid user in group

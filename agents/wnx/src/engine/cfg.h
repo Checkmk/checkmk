@@ -850,12 +850,14 @@ class PluginInfo {
 public:
     PluginInfo() = default;
 
-    PluginInfo(int the_timeout, std::optional<int> age, int retry)
+    PluginInfo(int the_timeout, std::optional<int> age, int retry,
+               bool repair_invalid_utf)
         : defined_(true)
         , async_(age.has_value())
         , timeout_(the_timeout)
         , cache_age_(age.value_or(0))
-        , retry_(retry) {
+        , retry_(retry)
+        , repair_invalid_utf_(repair_invalid_utf) {
         // validation
     }
 
@@ -864,6 +866,9 @@ public:
     [[nodiscard]] int cacheAge() const noexcept { return cache_age_; }
     [[nodiscard]] int retry() const noexcept { return retry_; }
     [[nodiscard]] bool defined() const noexcept { return defined_; }
+    [[nodiscard]] bool repairInvalidUtf() const noexcept {
+        return repair_invalid_utf_;
+    }
 
     void extend(std::string_view group, std::string_view user) noexcept {
         group_ = group;
@@ -879,6 +884,7 @@ protected:
     int timeout_ = kDefaultPluginTimeout;  // from the config, #TODO chrono
     int cache_age_ = 0;                    // from the config, #TODO chrono
     int retry_ = 0;                        // from the config
+    bool repair_invalid_utf_{false};
 
     std::string user_;   // from the config
     std::string group_;  // from the config
@@ -909,8 +915,9 @@ public:
         ExeUnit() = default;
 
         ExeUnit(std::string_view pattern, int the_timeout,
-                std::optional<int> age, int retry, bool run_mode)
-            : PluginInfo(the_timeout, age, retry)  //
+                bool repair_invalid_utf, std::optional<int> age, int retry,
+                bool run_mode)
+            : PluginInfo(the_timeout, age, retry, repair_invalid_utf)  //
             , pattern_{pattern}
             , run_{run_mode} {
             validateAndFix();

@@ -98,13 +98,14 @@ constexpr std::string_view kPluginBuiltinFolder = yml_var::kBuiltinPlugins;
 constexpr std::string_view kProgramDataFolder = yml_var::kAgent;
 
 // plugins.execution
-const char *const kPluginPattern = "pattern";     // string
-const char *const kPluginTimeout = "timeout";     // int
-const char *const kPluginAsync = "async";         // bool
-const char *const kPluginRetry = "retry_count";   // int
-const char *const kPluginCacheAge = "cache_age";  // int
-const char *const kPluginExe = "exe";             // string
-const char *const kPluginRun = "run";             // bool
+const char *const kPluginPattern = "pattern";                      // string
+const char *const kPluginTimeout = "timeout";                      // int
+const char *const kPluginAsync = "async";                          // bool
+const char *const kPluginRetry = "retry_count";                    // int
+const char *const kPluginCacheAge = "cache_age";                   // int
+const char *const kPluginExe = "exe";                              // string
+const char *const kPluginRun = "run";                              // bool
+const char *const kPluginRepairInvalidUtf = "repair_invalid_utf";  // bool
 
 const char *const kPluginGroup = "group";  // string
 const char *const kPluginUser = "user";    // string

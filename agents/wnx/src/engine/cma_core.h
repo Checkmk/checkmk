@@ -483,6 +483,7 @@ public:
         }
 
         retry_ = unit.retry();
+        repair_invalid_utf_ = unit.repairInvalidUtf();
         cache_age_ = unit.cacheAge();
         timeout_ = unit.timeout();
         group_ = unit.group();

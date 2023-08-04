@@ -32,7 +32,6 @@ from cmk.gui import (
     user_message,
     userdb,
     valuespec,
-    views,
     visuals,
     watolib,
     werks,
@@ -50,6 +49,7 @@ from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
@@ -85,7 +85,7 @@ def register_sites_options() -> None:
 def register() -> None:
     register_cre_licensing_handler()
     visuals.register(cmk.gui.pages.page_registry, visual_info_registry, filter_registry)
-    views.register(
+    views_registration.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,
         visual_type_registry,

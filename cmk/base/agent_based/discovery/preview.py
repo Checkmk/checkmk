@@ -44,7 +44,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from cmk.base.agent_based.checking import get_aggregated_result
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.checkers import get_check_function
 from cmk.base.config import ConfigCache
@@ -131,20 +130,19 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
-    with plugin_contexts.current_host(host_name):
-        grouped_services = get_host_services(
-            host_name,
-            is_cluster=is_cluster,
-            cluster_nodes=cluster_nodes,
-            providers=providers,
-            plugins=discovery_plugins,
-            ignore_service=ignore_service,
-            ignore_plugin=ignore_plugin,
-            get_effective_host=get_effective_host,
-            get_service_description=find_service_description,
-            enforced_services=enforced_services,
-            on_error=on_error,
-        )
+    grouped_services = get_host_services(
+        host_name,
+        is_cluster=is_cluster,
+        cluster_nodes=cluster_nodes,
+        providers=providers,
+        plugins=discovery_plugins,
+        ignore_service=ignore_service,
+        ignore_plugin=ignore_plugin,
+        get_effective_host=get_effective_host,
+        get_service_description=find_service_description,
+        enforced_services=enforced_services,
+        on_error=on_error,
+    )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [

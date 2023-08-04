@@ -1,0 +1,17 @@
+Title: Prevent event removal counted twice
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1691134601
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p38
+
+A limit for Events did not work because
+the archive operation would count Event
+deletion twice. In some cases the number
+of Events would become negative which prevented
+the Event limit from doing it`s job.
+this was a regression introduced in 2.0.0p30 and 2.1.0p15

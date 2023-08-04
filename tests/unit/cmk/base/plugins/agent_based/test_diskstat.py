@@ -11,7 +11,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.agent_based import plugin_contexts
+from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,

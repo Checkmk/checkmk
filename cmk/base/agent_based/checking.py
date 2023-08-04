@@ -68,8 +68,7 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.base.agent_based import plugin_contexts
-from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State

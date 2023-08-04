@@ -36,9 +36,9 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-from cmk.base.agent_based.plugin_contexts import host_name as _internal_host_name
-from cmk.base.agent_based.plugin_contexts import service_description
 from cmk.base.api.agent_based import render as _render
+from cmk.base.api.agent_based.plugin_contexts import host_name as _internal_host_name
+from cmk.base.api.agent_based.plugin_contexts import service_description
 
 # pylint: disable=unused-import
 from cmk.base.api.agent_based.register.utils_legacy import (

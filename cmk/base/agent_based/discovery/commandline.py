@@ -40,7 +40,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
-from cmk.base.agent_based import plugin_contexts
+from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.config import ConfigCache
 
 __all__ = ["commandline_discovery"]

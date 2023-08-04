@@ -42,7 +42,7 @@ from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-modu
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (

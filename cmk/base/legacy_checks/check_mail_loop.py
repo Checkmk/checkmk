@@ -10,7 +10,7 @@ from cmk.base.config import active_check_info
 
 def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     """
-    >>> from cmk.base.agent_based.plugin_contexts import current_host
+    >>> from cmk.base.api.agent_based.plugin_contexts import current_host
     >>> with current_host("hurz"):
     ...     for a in check_mail_loop_arguments(
     ...         {

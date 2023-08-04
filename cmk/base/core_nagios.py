@@ -43,7 +43,7 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.agent_based import plugin_contexts
+from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,

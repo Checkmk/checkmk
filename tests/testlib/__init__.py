@@ -329,9 +329,9 @@ class BaseCheck(abc.ABC):
         self.name = name
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
-        import cmk.base.agent_based.plugin_contexts  # pylint: disable=import-outside-toplevel
+        import cmk.base.api.agent_based.plugin_contexts  # pylint: disable=import-outside-toplevel
 
-        cmk.base.agent_based.plugin_contexts._hostname = HostName("non-existent-testhost")
+        cmk.base.api.agent_based.plugin_contexts._hostname = HostName("non-existent-testhost")
 
 
 class Check(BaseCheck):

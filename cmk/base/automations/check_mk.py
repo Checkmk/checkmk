@@ -137,7 +137,7 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.agent_based import plugin_contexts
+from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,

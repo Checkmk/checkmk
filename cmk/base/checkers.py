@@ -51,9 +51,11 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
+from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.checking_classes import consume_check_results
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources, Source
 
@@ -63,7 +65,6 @@ __all__ = [
     "CMKParser",
     "CMKSummarizer",
     "DiscoveryPluginMapper",
-    "get_check_function",
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
@@ -333,15 +334,25 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
 
 class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     # See comment to SectionPluginMapper.
+    def __init__(self, config_cache: ConfigCache, value_store_manager: ValueStoreManager):
+        self.config_cache: Final = config_cache
+        self.value_store_manager: Final = value_store_manager
+
     def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
         plugin = _api.get_check_plugin(__key)
         if plugin is None:
             raise KeyError(__key)
 
+        def check_function(
+            host_name: HostName, service: ConfiguredService
+        ) -> Callable[..., ServiceCheckResult]:
+            return _get_check_function(
+                plugin, self.config_cache, host_name, service, self.value_store_manager
+            )
+
         return CheckPlugin(
             sections=plugin.sections,
-            function=plugin.check_function,
-            cluster_function=plugin.cluster_check_function,
+            function=check_function,
             default_parameters=plugin.check_default_parameters,
             ruleset_name=plugin.check_ruleset_name,
         )
@@ -353,14 +364,14 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         return len(_api.registered_check_plugins)
 
 
-def get_check_function(
+def _get_check_function(
+    plugin: CheckPluginAPI,
     config_cache: ConfigCache,
     host_name: HostName,
-    is_cluster: bool,
-    plugin: CheckPlugin,
     service: ConfiguredService,
     value_store_manager: value_store.ValueStoreManager,
 ) -> Callable[..., ServiceCheckResult]:
+    assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),
@@ -368,8 +379,8 @@ def get_check_function(
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if is_cluster
-        else plugin.function
+        if config_cache.is_cluster(host_name)
+        else plugin.check_function
     )
 
     @functools.wraps(check_function)

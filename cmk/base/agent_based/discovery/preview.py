@@ -71,7 +71,6 @@ def get_check_preview(
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
@@ -150,7 +149,6 @@ def get_check_preview(
             cluster_nodes=cluster_nodes,
             config_cache=config_cache,
             check_plugins=check_plugins,
-            check_function=check_function,
             service=ConfiguredService(
                 check_plugin_name=entry.check_plugin_name,
                 item=entry.item,
@@ -175,7 +173,6 @@ def get_check_preview(
             config_cache=config_cache,
             service=service,
             check_plugins=check_plugins,
-            check_function=check_function,
             check_source="manual",  # "enforced" would be nicer
             providers=providers,
             found_on_nodes=[host_name],
@@ -202,7 +199,6 @@ def _check_preview_table_row(
     config_cache: ConfigCache,
     service: ConfiguredService,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
@@ -223,7 +219,7 @@ def _check_preview_table_row(
             service,
             check_plugin,
             get_effective_host=get_effective_host,
-            check_function=check_function(service),
+            check_function=check_plugin.function(host_name, service),
             rtc_package=None,
         ).result
         if check_plugin is not None

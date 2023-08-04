@@ -146,7 +146,6 @@ from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
     DiscoveryPluginMapper,
-    get_check_function,
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
@@ -427,7 +426,7 @@ def _execute_discovery(
         host_name, store_changes=False
     ) as value_store_manager:
         is_cluster = config_cache.is_cluster(host_name)
-        check_plugins = CheckPluginMapper()
+        check_plugins = CheckPluginMapper(config_cache, value_store_manager)
         passive_check_preview = discovery.get_check_preview(
             host_name,
             ip_address,
@@ -443,15 +442,7 @@ def _execute_discovery(
             ),
             section_plugins=SectionPluginMapper(),
             host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-            check_plugins=CheckPluginMapper(),
-            check_function=lambda service: get_check_function(
-                config_cache,
-                host_name,
-                is_cluster,
-                plugin=check_plugins[service.check_plugin_name],
-                service=service,
-                value_store_manager=value_store_manager,
-            ),
+            check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
                     host_name,

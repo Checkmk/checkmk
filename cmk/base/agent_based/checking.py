@@ -88,8 +88,6 @@ def execute_checkmk_checks(
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    # TODO(ml): check function should be available as `CheckPlugin.function`.
-    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
@@ -116,7 +114,6 @@ def execute_checkmk_checks(
                 providers=providers,
                 services=services,
                 check_plugins=check_plugins,
-                check_function=check_function,
                 run_plugin_names=run_plugin_names,
                 get_effective_host=get_effective_host,
                 get_check_period=get_check_period,
@@ -232,8 +229,6 @@ def check_host_services(
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    # TODO(ml): check function should be available as `CheckPlugin.function`.
-    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     run_plugin_names: Container[CheckPluginName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
@@ -266,7 +261,7 @@ def check_host_services(
                 plugin,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
-                check_function=check_function(service),
+                check_function=plugin.function(host_name, service),
             )
 
 

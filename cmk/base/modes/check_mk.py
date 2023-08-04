@@ -100,7 +100,6 @@ from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
     DiscoveryPluginMapper,
-    get_check_function,
     HostLabelPluginMapper,
     InventoryPluginMapper,
     SectionPluginMapper,
@@ -2074,7 +2073,7 @@ def mode_check(
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
         is_cluster = config_cache.is_cluster(hostname)
-        check_plugins = CheckPluginMapper()
+        check_plugins = CheckPluginMapper(config_cache, value_store_manager)
         with CPUTracker() as tracker:
             check_result = execute_checkmk_checks(
                 hostname=hostname,
@@ -2086,14 +2085,6 @@ def mode_check(
                 summarizer=summarizer,
                 section_plugins=SectionPluginMapper(),
                 check_plugins=check_plugins,
-                check_function=lambda service: get_check_function(
-                    config_cache,
-                    hostname,
-                    is_cluster,
-                    plugin=check_plugins[service.check_plugin_name],
-                    service=service,
-                    value_store_manager=value_store_manager,
-                ),
                 inventory_plugins=InventoryPluginMapper(),
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),

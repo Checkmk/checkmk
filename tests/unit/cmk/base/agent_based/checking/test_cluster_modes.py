@@ -12,11 +12,12 @@ import pytest
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
+    CheckPlugin,
     CheckResult,
     IgnoreResults,
     IgnoreResultsError,
@@ -37,11 +38,18 @@ def _vsm():
 
 def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-def]
     return CheckPlugin(
-        sections=kwargs.get("sections", ()),
-        function=kwargs.get("check_function", lambda *args, **kw: object),
-        cluster_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
-        default_parameters=kwargs.get("check_default_parameters"),
-        ruleset_name=kwargs.get("check_ruleset_name"),
+        name=CheckPluginName("name"),
+        sections=kwargs.get("sections", []),
+        service_name="service_name",
+        discovery_function=lambda *args, **kw: (),
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="all",
+        check_function=kwargs.get("check_function", lambda *args, **kw: object),
+        cluster_check_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
+        check_default_parameters=kwargs.get("check_default_parameters"),
+        check_ruleset_name=kwargs.get("check_ruleset_name"),
+        module=None,
     )
 
 

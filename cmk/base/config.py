@@ -124,7 +124,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName, CheckPluginNameStr, Item
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutochecksManager,
@@ -1990,18 +1990,13 @@ def compute_check_parameters(
     if check_plugin is None:  # handle vanished check plugin
         return TimespecificParameters()
 
-    plugin = CheckPlugin(
-        sections=check_plugin.sections,
-        function=check_plugin.check_function,
-        cluster_function=check_plugin.cluster_check_function,
-        default_parameters=check_plugin.check_default_parameters,
-        ruleset_name=check_plugin.check_ruleset_name,
-    )
     if configured_parameters is None:
-        configured_parameters = _get_configured_parameters(host, plugin_name, plugin, item)
+        configured_parameters = _get_configured_parameters(
+            host, plugin_name, check_plugin.check_ruleset_name, item
+        )
 
     return _update_with_configured_check_parameters(
-        _update_with_default_check_parameters(plugin.default_parameters, params),
+        _update_with_default_check_parameters(check_plugin.check_default_parameters, params),
         configured_parameters,
     )
 
@@ -2052,7 +2047,7 @@ def _update_with_configured_check_parameters(
 def _get_configured_parameters(
     host: HostName,
     plugin_name: CheckPluginName,
-    plugin: CheckPlugin,
+    ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
     config_cache = get_config_cache()
@@ -2064,16 +2059,14 @@ def _get_configured_parameters(
         for p in config_cache.service_extra_conf(host, descr, check_parameters)
     ]
 
-    if plugin.ruleset_name is None:
+    if ruleset_name is None:
         return TimespecificParameters(extra)
 
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(cast(LegacyCheckParameters, p))
-            for p in _get_checkgroup_parameters(
-                config_cache, host, str(plugin.ruleset_name), item, descr
-            )
+            for p in _get_checkgroup_parameters(config_cache, host, str(ruleset_name), item, descr)
         ]
         + extra
     )

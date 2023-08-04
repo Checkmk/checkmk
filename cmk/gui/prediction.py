@@ -5,7 +5,7 @@
 
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import livestatus
@@ -114,7 +114,7 @@ def page_graph() -> None:
 
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
-    vert_scala = compute_vertical_scala(vscala_low, vscala_high)
+    vert_scala = _compute_vertical_scala(vscala_low, vscala_high)
     time_scala = [[timegroup.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
     render_coordinates(vert_scala, time_scala)
 
@@ -159,7 +159,9 @@ vranges = [
 ]
 
 
-def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
+def _compute_vertical_scala(  # pylint: disable=too-many-branches
+    low: float, high: float
+) -> Sequence[tuple[float, str]]:
     m = max(abs(low), abs(high))
     for letter, factor in vranges:
         if m <= 99 * factor:
@@ -169,8 +171,7 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
         factor = 1024.0**5
 
     v = 0.0
-    vert_scala: list[list[Any]] = []
-    steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
+    steps = (max(0, high) - min(0, low)) / factor
     if steps < 3:
         step = 0.2 * factor
     elif steps < 6:
@@ -182,13 +183,14 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
     else:
         step = factor
 
+    vert_scala = []
     while v <= max(0, high):
-        vert_scala.append([v, f"{v / factor:.1f}{letter}"])  # fixed: true-division
+        vert_scala.append((v, f"{v / factor:.1f}{letter}"))
         v += step
 
     v = -factor
     while v >= min(0, low):
-        vert_scala = [[v, f"{v / factor:.1f}{letter}"]] + vert_scala  # fixed: true-division
+        vert_scala = [(v, f"{v / factor:.1f}{letter}")] + vert_scala
         v -= step
 
     # Remove trailing ".0", if that is present for *all* entries
@@ -196,7 +198,7 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
         if not entry[1].endswith(".0"):
             break
     else:
-        vert_scala = [[e[0], e[1][:-2]] for e in vert_scala]
+        vert_scala = [(e[0], e[1][:-2]) for e in vert_scala]
 
     return vert_scala
 
@@ -215,9 +217,11 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | N
 
 
 # Compute check levels from prediction data and check parameters
-def swap_and_compute_levels(tg_data, tg_info):
+def swap_and_compute_levels(
+    tg_data: _prediction.PredictionData, params: _prediction.PredictionParameters
+) -> Mapping[str, list[Any]]:
     columns = tg_data.columns
-    swapped: dict[Any, list[Any]] = {c: [] for c in columns}
+    swapped: dict[str, list[Any]] = {c: [] for c in columns}
     for step in tg_data.points:
         row = dict(zip(columns, step))
         for k, v in row.items():
@@ -226,9 +230,9 @@ def swap_and_compute_levels(tg_data, tg_info):
             upper_0, upper_1, lower_0, lower_1 = _prediction.estimate_levels(
                 reference_value=row["average"],
                 stdev=row["stdev"],
-                levels_lower=tg_info.get("levels_lower"),
-                levels_upper=tg_info.get("levels_upper"),
-                levels_upper_lower_bound=tg_info.get("levels_upper_min"),
+                levels_lower=params.levels_lower,
+                levels_upper=params.levels_upper,
+                levels_upper_lower_bound=params.levels_upper_min,
                 levels_factor=1.0,
             )
             swapped.setdefault("upper_warn", []).append(upper_0 or 0)
@@ -242,10 +246,6 @@ def swap_and_compute_levels(tg_data, tg_info):
             swapped.setdefault("lower_crit", []).append(0)
 
     return swapped
-
-
-def stack(apoints, bpoints, scale):
-    return [a + scale * b for (a, b) in zip(apoints, bpoints)]
 
 
 def compute_vertical_range(swapped):

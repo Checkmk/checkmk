@@ -442,7 +442,11 @@ def _runtime_volumes() -> Mapping[str, _VolumeInfo]:
         os.path.join(os.environ["HOME"], ".cmk-credentials"): _VolumeInfo(
             bind="/root/.cmk-credentials",
             mode="ro",
-        )
+        ),
+        os.path.join(os.environ["HOME"], "git_reference_clones", "check_mk.git"): _VolumeInfo(
+            bind=os.path.join(os.environ["HOME"], "git_reference_clones", "check_mk.git"),
+            mode="ro",
+        ),
     }
     volumes.update(_git_repos())
     return volumes

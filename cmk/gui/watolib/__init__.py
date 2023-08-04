@@ -136,7 +136,6 @@ def _register_pages():
 
 def _register_cronjobs() -> None:
     _register_job(_execute_activation_cleanup_background_job)
-    _register_job(_background_job.execute_housekeeping_job)
     _register_job(_execute_network_scan_job)
     _register_job(_rebuild_folder_lookup_cache)
     _register_job(_automatic_host_removal.execute_host_removal_background_job)

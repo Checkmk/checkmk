@@ -37,6 +37,7 @@ from cmk.gui import (
     werks,
 )
 from cmk.gui.background_job import job_registry
+from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
@@ -166,6 +167,7 @@ def register() -> None:
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
+    background_job_registration.register()
 
 
 register()

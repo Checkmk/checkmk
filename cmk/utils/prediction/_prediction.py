@@ -68,14 +68,8 @@ _GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
 
 @dataclass(frozen=True)
 class _RRDResponse:
-    window_start: int
-    window_end: int
-    window_step: int
+    window: range
     values: Sequence[float | None]
-
-    @property
-    def window(self) -> tuple[int, int, int]:
-        return self.window_start, self.window_end, self.window_step
 
 
 class _PeriodInfo(NamedTuple):
@@ -342,7 +336,15 @@ def get_rrd_data(
         raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
     raw_start, raw_end, raw_step, *values = response
-    return _RRDResponse(int(raw_start), int(raw_end), int(raw_step), values)
+
+    return (
+        # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
+        # However, it is zero for empty responses (non existing metrics, for instance).
+        # Not sure if we shouldn't rather raise.
+        _RRDResponse(range(0), [])
+        if (step := int(raw_step)) == 0
+        else _RRDResponse(range(int(raw_start), int(raw_end), step), values)
+    )
 
 
 class PredictionStore:
@@ -427,7 +429,13 @@ def compute_prediction(
     ]
 
     raw_slices = [
-        (TimeSeries(list(rrd_response.values), rrd_response.window), offset)
+        (
+            TimeSeries(
+                list(rrd_response.values),
+                (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
+            ),
+            offset,
+        )
         for rrd_response, offset in rrd_responses
     ]
 
@@ -588,7 +596,4 @@ def _upsample(
     finest resolution.
     """
     twindow = slices[0][0].twindow
-    if twindow[2] == 0:
-        raise RuntimeError("Got no historic metrics")
-
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]

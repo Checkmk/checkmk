@@ -128,9 +128,9 @@ def test_get_rrd_data(
         site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
-    assert rrd_respose.window_start <= from_time
-    assert rrd_respose.window_end >= until_time
-    assert (rrd_respose.window_step, len(rrd_respose.values)) == result
+    assert rrd_respose.window.start <= from_time
+    assert rrd_respose.window.stop >= until_time
+    assert (rrd_respose.window.step, len(rrd_respose.values)) == result
 
 
 # This test has a conflict with daemon usage. Since we now don't use
@@ -153,9 +153,9 @@ def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int,
         until_time,
         max_entries,
     )
-    assert rrd_response.window_start <= from_time
-    assert rrd_response.window_end >= until_time
-    assert (rrd_response.window_step, len(rrd_response.values)) == result
+    assert rrd_response.window.start <= from_time
+    assert rrd_response.window.stop >= until_time
+    assert (rrd_response.window.step, len(rrd_response.values)) == result
 
 
 @pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
@@ -436,7 +436,13 @@ def test_retieve_grouped_data_from_rrd(
         for start, end in time_windows
     ]
     slices = [
-        (_prediction.TimeSeries(list(rrd_response.values), rrd_response.window), offset)
+        (
+            _prediction.TimeSeries(
+                list(rrd_response.values),
+                (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
+            ),
+            offset,
+        )
         for rrd_response, offset in rrd_responses
     ]
 
@@ -494,7 +500,13 @@ def test_calculate_data_for_prediction(
 
     from_time = time_windows[0][0]
     raw_slices = [
-        (_prediction.TimeSeries(list(rrd_response.values), rrd_response.window), offset)
+        (
+            _prediction.TimeSeries(
+                list(rrd_response.values),
+                (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
+            ),
+            offset,
+        )
         for rrd_response, offset in (
             (
                 _prediction.get_rrd_data(
@@ -551,9 +563,9 @@ def test_get_rrd_data_incomplete(
         site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
-    assert rrd_response.window_start <= from_time
-    assert rrd_response.window_end >= until_time
-    assert (rrd_response.window_step, rrd_response.values) == result
+    assert rrd_response.window.start <= from_time
+    assert rrd_response.window.stop >= until_time
+    assert (rrd_response.window.step, rrd_response.values) == result
 
 
 @pytest.mark.usefixtures("cfg_setup")
@@ -587,8 +599,6 @@ def test_get_rrd_data_fails(site: Site) -> None:
     )
 
     assert rrd_response == _prediction._RRDResponse(
-        window_start=0,
-        window_end=0,
-        window_step=0,
+        window=range(0),
         values=[],
     )

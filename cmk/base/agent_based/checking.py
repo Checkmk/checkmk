@@ -67,7 +67,6 @@ from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 
 __all__ = [
@@ -132,10 +131,17 @@ def execute_checkmk_checks(
                     providers=providers,
                     services=services,
                     check_plugins=check_plugins,
+                    check_function=lambda service: get_check_function(
+                        config_cache,
+                        hostname,
+                        is_cluster=is_cluster,
+                        plugin=check_plugins[service.check_plugin_name],
+                        service=service,
+                        value_store_manager=value_store_manager,
+                    ),
                     run_plugin_names=run_plugin_names,
                     get_effective_host=get_effective_host,
                     get_check_period=get_check_period,
-                    value_store_manager=value_store_manager,
                     rtc_package=None,
                 )
             )
@@ -248,11 +254,12 @@ def check_host_services(
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    # TODO(ml): check function should be available as `CheckPlugin.function`.
+    check_function: Callable[[ConfiguredService], Callable[..., ServiceCheckResult]],
     run_plugin_names: Container[CheckPluginName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     rtc_package: AgentRawData | None,
-    value_store_manager: ValueStoreManager,
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
@@ -281,14 +288,7 @@ def check_host_services(
                 plugin,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
-                check_function=get_check_function(
-                    config_cache,
-                    host_name,
-                    is_cluster=is_cluster,
-                    plugin=plugin,
-                    service=service,
-                    value_store_manager=value_store_manager,
-                ),
+                check_function=check_function(service),
             )
 
 
@@ -520,8 +520,7 @@ def _add_state_marker(
 def _aggregate_results(
     subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
 ) -> ServiceCheckResult:
-    # This is more impedance matching.  The CheckFunction should
-    # probably just return a CheckResult.
+    # Impedance matching part of `get_check_function()`.
     perfdata, results = subresults
     needs_marker = len(results) > 1
     summaries: list[str] = []

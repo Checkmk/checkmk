@@ -24,8 +24,10 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
@@ -39,6 +41,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console, section
+from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -51,7 +54,7 @@ from cmk.utils.structured_data import (
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
 
-from cmk.snmplib import get_single_oid, OID, oids_to_walk, SNMPBackend, walk_for_export
+from cmk.snmplib import get_single_oid, OID, oids_to_walk, SNMPBackend, SNMPRawData, walk_for_export
 
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import FetcherType, get_raw_data
@@ -63,7 +66,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
-from cmk.checkengine.fetcher import FetcherFunction, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -87,7 +90,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.checking import execute_checkmk_checks
+from cmk.base.agent_based.checking import execute_checkmk_checks, timing_results
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.checkers import (
@@ -2055,7 +2058,15 @@ def mode_check(
     )
     state, text = (3, "unknown error")
     dry_run = options.get("no-submit", False)
-    with error_handler:
+    check_result = ActiveCheckResult()
+    fetched: Sequence[
+        tuple[
+            SourceInfo,
+            Result[AgentRawData | SNMPRawData, Exception],
+            Snapshot,
+        ]
+    ] = ()
+    with error_handler, CPUTracker() as tracker:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_result = execute_checkmk_checks(
@@ -2063,7 +2074,7 @@ def mode_check(
             is_cluster=config_cache.is_cluster(hostname),
             cluster_nodes=config_cache.nodes_of(hostname) or (),
             config_cache=config_cache,
-            fetched=fetched,
+            fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
             summarizer=summarizer,
             section_plugins=SectionPluginMapper(),
@@ -2084,13 +2095,21 @@ def mode_check(
                 perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
                 show_perfdata=options.get("perfdata", False),
             ),
-            perfdata_with_times=config.check_mk_perfdata_with_times,
             exit_spec=config_cache.exit_code_spec(hostname),
         )
         state, text = check_result.state, check_result.as_text()
 
     if error_handler.result is not None:
         state, text = error_handler.result
+
+    check_result = ActiveCheckResult.from_subresults(
+        check_result,
+        timing_results(
+            tracker.duration,
+            tuple((f[0], f[2]) for f in fetched),
+            perfdata_with_times=config.check_mk_perfdata_with_times,
+        ),
+    )
 
     active_check_handler(hostname, text)
     if keepalive:

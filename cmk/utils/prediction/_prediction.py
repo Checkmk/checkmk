@@ -183,19 +183,18 @@ class TimeSeries:
         twindow : 3-tuple, (start, end, step)
              description of target time interval
         """
+        if twindow == self.twindow:
+            return self.values
+
         upsa = []
         i = 0
-        start, end, step = twindow
         current_times = rrd_timestamps(self.twindow)
-        if start != self.start or end != self.end or step != self.step:
-            for t in range(start, end, step):
-                if t >= current_times[i] + shift:
-                    i += 1
-                upsa.append(self.values[i])
+        for t in range(*twindow):
+            if t >= current_times[i] + shift:
+                i += 1
+            upsa.append(self.values[i])
 
-            return upsa
-
-        return self.values
+        return upsa
 
     def downsample(
         self, twindow: TimeWindow, cf: ConsolidationFunctionName | None = "max"
@@ -207,26 +206,26 @@ class TimeSeries:
         cf : str ('max', 'average', 'min')
              consolidation function imitating RRD methods
         """
+        if twindow == self.twindow:
+            return self.values
+
         dwsa = []
         co: TimeSeriesValues = []
-        start, end, step = twindow
         desired_times = rrd_timestamps(twindow)
-        if start != self.start or end != self.end or step != self.step:
-            i = 0
-            for t, val in self.time_data_pairs():
-                if t > desired_times[i]:
-                    dwsa.append(aggregation_functions(co, cf))
-                    co = []
-                    i += 1
-                co.append(val)
-
-            diff_len = len(desired_times) - len(dwsa)
-            if diff_len > 0:
+        i = 0
+        for t, val in self.time_data_pairs():
+            if t > desired_times[i]:
                 dwsa.append(aggregation_functions(co, cf))
-                dwsa += [None] * (diff_len - 1)
+                co = []
+                i += 1
+            co.append(val)
 
-            return dwsa
-        return self.values
+        diff_len = len(desired_times) - len(dwsa)
+        if diff_len > 0:
+            dwsa.append(aggregation_functions(co, cf))
+            dwsa += [None] * (diff_len - 1)
+
+        return dwsa
 
     def time_data_pairs(self) -> list[tuple[Timestamp, TimeSeriesValue]]:
         return list(zip(rrd_timestamps(self.twindow), self.values))

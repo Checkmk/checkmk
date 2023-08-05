@@ -9,16 +9,27 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, TextInput, Tuple
+from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput, Tuple
 
 
 def _parameter_valuespec_veeam_tapejobs():
-    return Tuple(
-        title=_("Levels for duration of backup job"),
-        elements=[
-            Age(title="Warning at"),
-            Age(title="Critical at"),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_upper",
+                    Tuple(
+                        title=_("Levels for duration of backup job"),
+                        elements=[
+                            Age(title="Warning at"),
+                            Age(title="Critical at"),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_upper": p},
     )
 
 

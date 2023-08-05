@@ -15,9 +15,9 @@ from cmk.base.check_api import (
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
-veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
-
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
+
+_DAY = 3600 * 24
 
 
 def parse_veeam_tapejobs(string_table):
@@ -41,7 +41,7 @@ def parse_veeam_tapejobs(string_table):
 
 def inventory_veeam_tapejobs(parsed):
     for job in parsed:
-        yield job, veeam_tapejobs_default_levels
+        yield job, {}
 
 
 def check_veeam_tapejobs(item, params, parsed):
@@ -73,7 +73,7 @@ def check_veeam_tapejobs(item, params, parsed):
     yield check_levels(
         running_time,
         None,
-        params,
+        params["levels_upper"],
         human_readable_func=get_age_human_readable,
         infoname="Running time",
     )
@@ -85,4 +85,7 @@ check_info["veeam_tapejobs"] = LegacyCheckDefinition(
     discovery_function=inventory_veeam_tapejobs,
     check_function=check_veeam_tapejobs,
     check_ruleset_name="veeam_tapejobs",
+    check_default_parameters={
+        "levels_upper": (1 * _DAY, 2 * _DAY),
+    },
 )

@@ -961,11 +961,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "veeam_tapejobs",
-            RuleGroup.CheckgroupParameters("veeam_tapejobs"),
-        ),
-        (
-            "check",
             "wagner_titanus_topsense_airflow_deviation",
             RuleGroup.CheckgroupParameters("airflow_deviation"),
         ),

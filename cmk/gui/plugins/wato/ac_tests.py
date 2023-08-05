@@ -24,7 +24,7 @@ from cmk.utils.user import UserId
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
-from cmk.gui.backup import Config as BackupConfig
+from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import active_connections as active_connections_

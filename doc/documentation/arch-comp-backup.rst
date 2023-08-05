@@ -95,7 +95,7 @@ It is stored in `[omd_root]/etc/check_mk/backup.mk`.
 
 The Setup integration is implemented in:
 
-* `cmk.gui.backup`: Shared code with the Appliance UI
+* `cmk.gui.backup.backup`: Shared code with the Appliance UI
 * `cmk.gui.wato.pages.backup`: Configuration views
 
 The backup targets configured in the *system backup* can be used by the *site

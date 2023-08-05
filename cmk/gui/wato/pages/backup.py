@@ -9,7 +9,7 @@ from collections.abc import Collection
 import cmk.utils.paths
 from cmk.utils.crypto.password import Password
 
-import cmk.gui.backup as backup
+import cmk.gui.backup.handler as handler
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -33,7 +33,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeBackupRestore)
 
 
-class ModeBackup(backup.PageBackup, WatoMode):
+class ModeBackup(handler.PageBackup, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup"
@@ -49,7 +49,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return _("Site backup")
 
 
-class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
+class ModeBackupTargets(handler.PageBackupTargets, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_targets"
@@ -63,7 +63,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return ModeBackup
 
 
-class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
+class ModeEditBackupTarget(handler.PageEditBackupTarget, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "edit_backup_target"
@@ -77,7 +77,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
         return ModeBackupTargets
 
 
-class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
+class ModeEditBackupJob(handler.PageEditBackupJob, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "edit_backup_job"
@@ -94,7 +94,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
+class ModeBackupJobState(handler.PageBackupJobState, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_job_state"
@@ -117,18 +117,20 @@ class PageAjaxBackupJobState(AjaxPage):
     def page(self) -> PageResult:  # pylint: disable=useless-return
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
-            page: backup.PageAbstractMKBackupJobState = backup.PageBackupRestoreState()
+            page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()
         page.show_job_details()
         return None
 
 
-def make_site_backup_keypair_store() -> backup.BackupKeypairStore:
-    return backup.BackupKeypairStore(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
+def make_site_backup_keypair_store() -> handler.BackupKeypairStore:
+    return handler.BackupKeypairStore(
+        cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys"
+    )
 
 
-class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
+class ModeBackupKeyManagement(handler.PageBackupKeyManagement, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_keys"
@@ -145,7 +147,7 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
+class ModeBackupEditKey(handler.PageBackupEditKey, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_edit_key"
@@ -162,7 +164,7 @@ class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
+class ModeBackupUploadKey(handler.PageBackupUploadKey, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_upload_key"
@@ -183,7 +185,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
         super()._upload_key(key_file, alias, passphrase)
 
 
-class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
+class ModeBackupDownloadKey(handler.PageBackupDownloadKey, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_download_key"
@@ -200,7 +202,7 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
+class ModeBackupRestore(handler.PageBackupRestore, WatoMode):
     @classmethod
     def name(cls) -> str:
         return "backup_restore"

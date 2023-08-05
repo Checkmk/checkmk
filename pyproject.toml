@@ -2,14 +2,14 @@
 src = ["cmk", "tests"]
 target-version = "py311"
 ignore = [
-    "E402",  # module level import not on top of the file
-    "E501",  # line too long, 100s of fails. Fixable.
-    "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E741",  # amgiguous variable name (l, x, etc.)
-    "E713",  # Test for membership should be `not in`
-    "E999",  # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
+    "E402", # module level import not on top of the file
+    "E501", # line too long, 100s of fails. Fixable.
+    "E731", # Do not assign a `lambda` expression, use a `def`
+    "E741", # amgiguous variable name (l, x, etc.)
+    "E713", # Test for membership should be `not in`
+    "E999", # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
 
-    "S101",  # assert detected
+    "S101", # assert detected
 
     # Ignored in .flake8 but not here.
     # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
@@ -35,13 +35,10 @@ select = ["E", "F", "YTT"]
 #   "D" - enforces docstring writing style. Ignore "D10,D4" for now.
 #   "COM" - enforce trailing comma. Lots of matches.
 unfixable = [
-    "F401",  # pylint: disable=unused-import. Clean up by hand.
+    "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
 [per-file-ignores]
-"cmk/gui/config.py" = [
-    "F403",
-    "F405",
-]
+"cmk/gui/config.py" = ["F403", "F405"]
 [flake8-annotations]
 suppress-dummy-args = true
 [mccabe]
@@ -96,26 +93,26 @@ target-version = ['py311']
 plugins = ["pydantic.mypy"]
 # When all of these are true, we can enable --strict
 check_untyped_defs = true
-disallow_any_generics = false  # 1904 errors in 507 files
+disallow_any_generics = false      # 1904 errors in 507 files
 disallow_incomplete_defs = true
-disallow_subclassing_any = false  # 11 errors in 10 files
-disallow_untyped_calls = false  # 6427 errors in 1077 files
+disallow_subclassing_any = false   # 11 errors in 10 files
+disallow_untyped_calls = false     # 6427 errors in 1077 files
 disallow_untyped_decorators = true
-disallow_untyped_defs = false  # 6738 errors in 1571
+disallow_untyped_defs = false      # 6738 errors in 1571
 no_implicit_optional = true
 no_implicit_reexport = true
 strict_concatenate = true
 strict_equality = true
 warn_redundant_casts = true
-warn_return_any = false  # 622 errors in 267 files
+warn_return_any = false            # 622 errors in 267 files
 warn_unused_configs = true
-warn_unused_ignores = false  # 25 errors in 8 files
+warn_unused_ignores = false        # 25 errors in 8 files
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
-disallow_any_explicit = false  # 2854 errors in 836 files
-disallow_any_expr = false  # 112427 errors in 3304 files
-disallow_any_unimported = false  # 291 errors in 46 files
-warn_unreachable = false  # 240 errors in 133 files
+disallow_any_explicit = false   # 2854 errors in 836 files
+disallow_any_expr = false       # 112427 errors in 3304 files
+disallow_any_unimported = false # 291 errors in 46 files
+warn_unreachable = false        # 240 errors in 133 files
 # hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
 disable_bytearray_promotion = true
 disable_memoryview_promotion = true
@@ -124,7 +121,7 @@ disable_memoryview_promotion = true
 module = [
     "cmk.cee.bakery.*",
     "cmk.gui.background_job",
-    "cmk.gui.backup",
+    "cmk.gui.backup.backup",
     "cmk.gui.mobile.views",
     "cmk.gui.plugins.wato.bi_config",
     "cmk.gui.plugins.wato.utils.main_menu",
@@ -160,9 +157,7 @@ warn_untyped_fields = true
 testpaths = ["tests"]
 # --durations=20: Show the 20 slowest tests
 addopts = "--log-cli-level=INFO --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
-markers = [
-    "checks: Run all existing test cases for checks.",
-]
+markers = ["checks: Run all existing test cases for checks."]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [
     # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759

@@ -55151,6 +55151,11 @@ msgstr ""
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "El nombre de la entrada, por ejemplo <tt>Fase 1</tt>"
 
+msgid ""
+"The name of the instance to be monitored. If not specified, then the plugin "
+"will attempt to determine the instance name based on the .env file."
+msgstr ""
+
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr "El nombre de la interfaz (interfaz de red pública/privada IPv4/IPv6)"
 

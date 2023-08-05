@@ -966,11 +966,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "vms_system_procs",
-            RuleGroup.CheckgroupParameters("vms_procs"),
-        ),
-        (
-            "check",
             "wagner_titanus_topsense_airflow_deviation",
             RuleGroup.CheckgroupParameters("airflow_deviation"),
         ),

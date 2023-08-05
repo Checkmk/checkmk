@@ -11,7 +11,6 @@ from . import (
     analyze_configuration,
     audit_log,
     automation,
-    backup,
     bulk_discovery,
     bulk_edit,
     bulk_import,
@@ -55,7 +54,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     analyze_configuration.register(mode_registry)
     audit_log.register(mode_registry)
     automation.register(page_registry)
-    backup.register(page_registry, mode_registry)
     bulk_discovery.register(mode_registry)
     bulk_edit.register(mode_registry)
     bulk_import.register(mode_registry)

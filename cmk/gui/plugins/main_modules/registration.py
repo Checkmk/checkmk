@@ -39,6 +39,7 @@ from cmk.gui import (
 )
 from cmk.gui.background_job import job_registry
 from cmk.gui.background_job import registration as background_job_registration
+from cmk.gui.backup.registration import backup_register
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
@@ -107,6 +108,8 @@ def register() -> None:
         sorter_registry,
         command_registry,
     )
+    backup_register(cmk.gui.pages.page_registry, mode_registry)
+
     if edition() is not Edition.CSE:  # disabled in CSE
         mkeventd_registration.register(
             permission_section_registry,

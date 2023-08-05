@@ -17,7 +17,6 @@ from typing import Any, Literal
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
@@ -525,7 +524,7 @@ class Cell:
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
-    def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
+    def render_for_pdf(self, row: Row, time_range: tuple[int, int]) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             themes = theme.icon_themes()

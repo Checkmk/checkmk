@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 import cmk.utils.render
-from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
+from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
 
 from cmk.gui.graphing._color import fade_color, parse_color, render_color
 from cmk.gui.graphing._unit_info import unit_info
@@ -72,7 +72,7 @@ class VerticalAxis(TypedDict):
 
 class TimeAxis(TypedDict):
     labels: Sequence[Label]
-    range: TimeRange
+    range: tuple[int, int]
     title: str
 
 

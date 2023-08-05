@@ -8,8 +8,9 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from livestatus import lqencode, SiteId
+from livestatus import lqencode, MKLivestatusNotFoundError, SiteId
 
+import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
@@ -163,16 +164,23 @@ def page_graph() -> None:
     from_time, until_time = selected_prediction_info.range
     now = time.time()
     if from_time <= now <= until_time:
-        timeseries = get_rrd_data(
-            prediction_data_querier.livestatus_connection,
-            prediction_data_querier.host_name,
-            prediction_data_querier.service_name,
-            prediction_data_querier.metric_name,
-            "MAX",
-            from_time,
-            until_time,
-        )
-        rrd_data = timeseries.values
+        try:
+            response = get_rrd_data(
+                prediction_data_querier.livestatus_connection,
+                prediction_data_querier.host_name,
+                prediction_data_querier.service_name,
+                f"{prediction_data_querier.metric_name}.max",
+                from_time,
+                until_time,
+            )
+        except MKLivestatusNotFoundError as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
+        if response is None:
+            raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+
+        rrd_data = response.values
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:

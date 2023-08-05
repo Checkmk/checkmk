@@ -14,7 +14,6 @@ import livestatus
 
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.prediction import TimeRange
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -919,7 +918,7 @@ def _render_time_range_selection(
 
 
 def make_graph_data_range(
-    time_range: TimeRange, graph_render_options: GraphRenderOptions
+    time_range: tuple[int, int], graph_render_options: GraphRenderOptions
 ) -> GraphDataRange:
     return GraphDataRange(
         {
@@ -930,7 +929,7 @@ def make_graph_data_range(
 
 
 def estimate_graph_step_for_html(
-    time_range: TimeRange, graph_render_options: GraphRenderOptions
+    time_range: tuple[int, int], graph_render_options: GraphRenderOptions
 ) -> int:
     graph_render_options = add_default_render_options(graph_render_options)
     width_in_ex = graph_render_options["size"][1]

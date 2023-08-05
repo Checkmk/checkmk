@@ -31,7 +31,6 @@ logger = logging.getLogger("cmk.prediction")
 
 Seconds = int
 Timestamp = int
-TimeRange = tuple[int, int]
 
 TimeWindow = tuple[Timestamp, Timestamp, Seconds]
 RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
@@ -287,12 +286,11 @@ def get_rrd_data(
     connection: livestatus.SingleSiteConnection,
     host_name: HostName,
     service_description: ServiceName,
-    metric_name: str,
-    cf: ConsolidationFunctionName,
+    rpn: str,
     fromtime: Timestamp,
     untiltime: Timestamp,
     max_entries: int = 400,
-) -> _RRDResponse:
+) -> _RRDResponse | None:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -316,7 +314,6 @@ def get_rrd_data(
     """
 
     step = 1
-    rpn = f"{metric_name}.{cf.lower()}"  # "MAX" -> "max"
     point_range = ":".join(
         livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries)
     )
@@ -324,15 +321,9 @@ def get_rrd_data(
 
     lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
-    try:
-        response = connection.query_value(lql)
-    except livestatus.MKLivestatusNotFoundError as e:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
-
-    if response is None:
-        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+    if (response := connection.query_value(lql)) is None:
+        # I think we should rather raise something here, but I am not sure what.
+        return None
 
     raw_start, raw_end, raw_step, *values = response
 
@@ -344,6 +335,35 @@ def get_rrd_data(
         if (step := int(raw_step)) == 0
         else _RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )
+
+
+def get_rrd_data_with_mk_general_exception(
+    host_name: HostName,
+    service_description: str,
+    metric_name: str,
+    cf: ConsolidationFunctionName,
+    fromtime: Timestamp,
+    untiltime: Timestamp,
+) -> _RRDResponse:
+    """Wrapper to raise MKGeneralException."""
+    try:
+        response = get_rrd_data(
+            livestatus.LocalConnection(),
+            host_name,
+            service_description,
+            f"{metric_name}.{cf.lower()}",
+            fromtime,
+            untiltime,
+        )
+    except livestatus.MKLivestatusNotFoundError as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
+
+    if response is None:
+        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+
+    return response
 
 
 class PredictionStore:
@@ -413,8 +433,7 @@ def compute_prediction(
     from_time = time_windows[0][0]
     rrd_responses = [
         (
-            get_rrd_data(
-                livestatus.LocalConnection(),
+            get_rrd_data_with_mk_general_exception(
                 host_name,
                 service_description,
                 info.dsname,

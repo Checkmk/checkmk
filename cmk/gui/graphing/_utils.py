@@ -24,7 +24,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName as MetricName_
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import livestatus_lql, Seconds, TimeRange, TimeSeries, TimeSeriesValue
+from cmk.utils.prediction import livestatus_lql, Seconds, TimeSeries, TimeSeriesValue
 from cmk.utils.servicename import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
@@ -88,7 +88,7 @@ class Curve(_CurveMandatory, total=False):
 
 
 class _GraphDataRangeMandatory(TypedDict):
-    time_range: TimeRange
+    time_range: tuple[int, int]
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
     # colon separated [step length]:[rrd point count]
     step: Seconds | str

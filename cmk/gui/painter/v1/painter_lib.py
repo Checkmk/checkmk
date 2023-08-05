@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import cmk.utils
-from cmk.utils.prediction import TimeRange
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
@@ -22,7 +21,7 @@ class PainterConfiguration:
     columns: Sequence[ColumnName]
     parameters: PainterParameters | None  # configured via valuespec
     painter_options: PainterOptions | None = None
-    time_range: TimeRange | None = None  # provided from external view/dashlet
+    time_range: tuple[int, int] | None = None  # provided from external view/dashlet
     dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None
 
 

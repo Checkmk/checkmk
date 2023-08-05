@@ -12,7 +12,6 @@ from typing import Any
 
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import TimeRange, Timestamp
 
 import cmk.gui.forms as forms
 import cmk.gui.valuespec as valuespec
@@ -239,7 +238,7 @@ class PainterOptionNumColumns(PainterOption):
         )
 
 
-def get_graph_timerange_from_painter_options() -> TimeRange:
+def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     # Function has a single caller.
     painter_options = PainterOptions.get_instance()
     value = painter_options.get("pnp_timerange")
@@ -250,7 +249,7 @@ def get_graph_timerange_from_painter_options() -> TimeRange:
 
 
 def paint_age(
-    timestamp: Timestamp,
+    timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
     mode: str | None = None,

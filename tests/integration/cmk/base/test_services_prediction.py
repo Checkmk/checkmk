@@ -13,7 +13,8 @@ import pytest
 from tests.testlib import create_linux_test_host, on_time, repo_path
 from tests.testlib.site import Site
 
-from cmk.utils.exceptions import MKGeneralException
+import livestatus
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import _prediction
 
@@ -125,9 +126,9 @@ def test_get_rrd_data(
         )
 
     rrd_respose = _prediction.get_rrd_data(
-        site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
+        site.live, HostName("test-prediction"), "CPU load", "load15.max", from_time, until_time
     )
-
+    assert rrd_respose is not None
     assert rrd_respose.window.start <= from_time
     assert rrd_respose.window.stop >= until_time
     assert (rrd_respose.window.step, len(rrd_respose.values)) == result
@@ -147,12 +148,12 @@ def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int,
         site.live,
         HostName("test-prediction"),
         "CPU load",
-        "load15",
-        "MAX",
+        "load15.max",
         from_time,
         until_time,
         max_entries,
     )
+    assert rrd_response is not None
     assert rrd_response.window.start <= from_time
     assert rrd_response.window.stop >= until_time
     assert (rrd_response.window.step, len(rrd_response.values)) == result
@@ -429,7 +430,7 @@ def test_retieve_grouped_data_from_rrd(
     rrd_responses = [
         (
             _prediction.get_rrd_data(
-                site.live, hostname, service_description, dsname, "MAX", start, end
+                site.live, hostname, service_description, f"{dsname}.max", start, end
             ),
             from_time - start,
         )
@@ -444,6 +445,7 @@ def test_retieve_grouped_data_from_rrd(
             offset,
         )
         for rrd_response, offset in rrd_responses
+        if rrd_response is not None
     ]
 
     result = _prediction._upsample(slices)
@@ -510,12 +512,13 @@ def test_calculate_data_for_prediction(
         for rrd_response, offset in (
             (
                 _prediction.get_rrd_data(
-                    site.live, hostname, service_description, dsname, "MAX", start, end
+                    site.live, hostname, service_description, f"{dsname}.max", start, end
                 ),
                 from_time - start,
             )
             for start, end in time_windows
         )
+        if rrd_response is not None
     ]
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
@@ -560,9 +563,10 @@ def test_get_rrd_data_incomplete(
 ) -> None:
     from_time, until_time = timerange
     rrd_response = _prediction.get_rrd_data(
-        site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
+        site.live, HostName("test-prediction"), "CPU load", "load15.max", from_time, until_time
     )
 
+    assert rrd_response is not None
     assert rrd_response.window.start <= from_time
     assert rrd_response.window.stop >= until_time
     assert (rrd_response.window.step, rrd_response.values) == result
@@ -576,13 +580,12 @@ def test_get_rrd_data_fails(site: Site) -> None:
     )
 
     # Fail to get data, because non-existent check
-    with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):
+    with pytest.raises(livestatus.MKLivestatusNotFoundError):
         _prediction.get_rrd_data(
             site.live,
             HostName("test-prediction"),
             "Nonexistent check",
-            "util",
-            "MAX",
+            "util.max",
             from_time,
             until_time,
         )
@@ -592,8 +595,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
         site.live,
         HostName("test-prediction"),
         "CPU load",
-        "untracked_prefdata",
-        "MAX",
+        "untracked_prefdata.max",
         from_time,
         until_time,
     )

@@ -7,8 +7,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import TimeRange
-
 import cmk.gui.valuespec as vs
 
 
@@ -46,7 +44,7 @@ import cmk.gui.valuespec as vs
         (("pnp_view", 5), ((1533142200, 1567702200), "Last 400 days")),
     ],
 )
-def test_timerange(entry: vs.TimerangeValue, result: tuple[TimeRange, str]) -> None:
+def test_timerange(entry: vs.TimerangeValue, result: tuple[tuple[int, int], str]) -> None:
     with on_time("2019-09-05 16:50", "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)
 
@@ -73,7 +71,7 @@ def test_timerange(entry: vs.TimerangeValue, result: tuple[TimeRange, str]) -> N
     ],
 )
 def test_timerange2(
-    entry: vs.TimerangeValue, refutcdate: str, result: tuple[TimeRange, str]
+    entry: vs.TimerangeValue, refutcdate: str, result: tuple[tuple[int, int], str]
 ) -> None:
     with on_time(refutcdate, "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)

@@ -89,15 +89,12 @@ class TimeSeries:
         if twindow == self.twindow:
             return self.values
 
-        upsa = []
-        i = 0
-        current_times = rrd_timestamps(self.twindow)
-        for t in range(*twindow):
-            if t >= current_times[i]:
-                i += 1
-            upsa.append(self.values[i])
+        idx_max = len(self.values) - 1
 
-        return upsa
+        return [
+            self.values[max(0, min(int((t - self.start) / self.step), idx_max))]
+            for t in range(*twindow)
+        ]
 
     def downsample(self, twindow: TimeWindow, cf: str | None = "max") -> TimeSeriesValues:
         """Downsample time series by consolidation function

@@ -47,6 +47,7 @@ API_DOMAIN = Literal[
     "site_connection",
     "notification_rule",
     "comment",
+    "event_console",
 ]
 
 
@@ -1645,6 +1646,195 @@ class RuleNotificationClient(RestApiClient):
         )
 
 
+class EventConsoleClient(RestApiClient):
+    domain: API_DOMAIN = "event_console"
+
+    def get(
+        self,
+        event_id: str,
+        site_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{event_id}?site_id={site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query_params = urllib.parse.urlencode(
+            _only_set_keys(
+                {
+                    "query": query,
+                    "host": host,
+                    "application": application,
+                    "state": state,
+                    "phase": phase,
+                    "site_id": site_id,
+                }
+            )
+        )
+
+        url = f"/domain-types/{self.domain}/collections/all"
+        if query_params:
+            url = f"{url}?{query_params}"
+
+        return self.request(
+            "get",
+            url=url,
+            expect_ok=expect_ok,
+        )
+
+    def update_and_acknowledge(
+        self,
+        event_id: str,
+        site_id: str | None = None,
+        change_comment: str | None = None,
+        change_contact: str | None = None,
+        expect_ok: bool = True,
+        phase: Literal["open", "ack"] | None = None,
+    ) -> Response:
+        body = {
+            "change_comment": change_comment,
+            "change_contact": change_contact,
+            "phase": phase,
+        }
+
+        if site_id is not None:
+            body.update({"site_id": site_id})
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{event_id}/actions/update_and_acknowledge/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def update_and_acknowledge_multiple(
+        self,
+        filter_type: Literal["query", "params", "all"],
+        site_id: str | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        change_comment: str | None = None,
+        change_contact: str | None = None,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "filter_type": filter_type,
+            "change_comment": change_comment,
+            "change_contact": change_contact,
+            "phase": phase,
+        }
+
+        if filter_type == "query":
+            body.update({"query": query})
+        elif filter_type == "params":
+            filters = {"state": state, "host": host, "application": application}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/update_and_acknowledge/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def change_event_state(
+        self,
+        event_id: str,
+        site_id: str | None = None,
+        new_state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "new_state": new_state,
+            "site_id": site_id,
+        }
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{event_id}/actions/change_state/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def change_multiple_event_states(
+        self,
+        filter_type: Literal["query", "params"],
+        new_state: Literal["warning", "ok", "critical", "unknown"],
+        site_id: str | None = None,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "filter_type": filter_type,
+            "new_state": new_state,
+        }
+
+        if filter_type == "query":
+            body.update({"query": query})
+        else:
+            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/change_state/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        filter_type: Literal["by_id", "query", "params"],
+        site_id: str,
+        query: str | None = None,
+        event_id: int | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"site_id": site_id, "filter_type": filter_type}
+
+        if filter_type == "by_id":
+            body.update({"event_id": event_id})
+
+        elif filter_type == "query":
+            body.update({"query": query})
+
+        else:
+            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+
 class CommentClient(RestApiClient):
     domain: API_DOMAIN = "comment"
 
@@ -1810,6 +2000,7 @@ class ClientRegistry:
     SiteManagement: SiteManagementClient
     RuleNotification: RuleNotificationClient
     Comment: CommentClient
+    EventConsole: EventConsoleClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -1834,4 +2025,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         SiteManagement=SiteManagementClient(request_handler, url_prefix),
         RuleNotification=RuleNotificationClient(request_handler, url_prefix),
         Comment=CommentClient(request_handler, url_prefix),
+        EventConsole=EventConsoleClient(request_handler, url_prefix),
     )

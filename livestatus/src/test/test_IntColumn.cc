@@ -4,6 +4,7 @@
 // source code package.
 
 #include <string>
+#include <variant>
 
 #include "IntLambdaColumn.h"
 #include "Row.h"

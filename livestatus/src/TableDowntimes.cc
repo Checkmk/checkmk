@@ -8,6 +8,7 @@
 #include <chrono>
 #include <memory>
 #include <utility>
+#include <variant>
 
 #include "BoolColumn.h"
 #include "Column.h"

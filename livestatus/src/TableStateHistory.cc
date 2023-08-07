@@ -13,6 +13,7 @@
 #include <set>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "Column.h"

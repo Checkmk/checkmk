@@ -9,6 +9,7 @@
 #include <cctype>
 #include <map>
 #include <utility>
+#include <variant>
 
 #include "IntFilter.h"
 #include "Logger.h"

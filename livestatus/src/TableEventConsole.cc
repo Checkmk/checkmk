@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 #include "Column.h"
 #include "DoubleColumn.h"

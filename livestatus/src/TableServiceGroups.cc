@@ -6,6 +6,7 @@
 #include "TableServiceGroups.h"
 
 #include <memory>
+#include <variant>
 
 #include "Column.h"
 #include "IntLambdaColumn.h"

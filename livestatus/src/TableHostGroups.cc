@@ -6,6 +6,7 @@
 #include "TableHostGroups.h"
 
 #include <memory>
+#include <variant>
 
 #include "Column.h"
 #include "HostListColumn.h"

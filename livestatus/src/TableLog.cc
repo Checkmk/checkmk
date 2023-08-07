@@ -13,6 +13,7 @@
 #include <optional>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 
 #include "Column.h"
 #include "IntLambdaColumn.h"

@@ -1,5 +1,5 @@
 title: Java Virtual Machine: Number of Threads
-agents: linux
+agents: linux, windows
 catalog: app/java
 license: GPLv2
 distribution: check_mk

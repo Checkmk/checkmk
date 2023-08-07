@@ -2067,7 +2067,7 @@ def mode_check(
             Snapshot,
         ]
     ] = ()
-    with error_handler, load_host_value_store(
+    with error_handler, plugin_contexts.current_host(hostname), load_host_value_store(
         hostname, store_changes=not dry_run
     ) as value_store_manager:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)

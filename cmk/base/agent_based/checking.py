@@ -57,7 +57,6 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.config import ConfigCache
 
@@ -104,26 +103,25 @@ def execute_checkmk_checks(
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(host_sections_by_host, section_plugins)
-    with plugin_contexts.current_host(hostname):
-        service_results = list(
-            check_host_services(
-                hostname,
-                is_cluster=is_cluster,
-                cluster_nodes=cluster_nodes,
-                config_cache=config_cache,
-                providers=providers,
-                services=services,
-                check_plugins=check_plugins,
-                run_plugin_names=run_plugin_names,
-                get_effective_host=get_effective_host,
-                get_check_period=get_check_period,
-                rtc_package=None,
-            )
+    service_results = list(
+        check_host_services(
+            hostname,
+            is_cluster=is_cluster,
+            cluster_nodes=cluster_nodes,
+            config_cache=config_cache,
+            providers=providers,
+            services=services,
+            check_plugins=check_plugins,
+            run_plugin_names=run_plugin_names,
+            get_effective_host=get_effective_host,
+            get_check_period=get_check_period,
+            rtc_package=None,
         )
-        submitter.submit(
-            Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-            for s in service_results
-        )
+    )
+    submitter.submit(
+        Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
+        for s in service_results
+    )
 
     if run_plugin_names is EVERYTHING:
         _do_inventory_actions_during_checking_for(

@@ -1,0 +1,14 @@
+Title: Agent Bakery: "Bake revision" is now configurable
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1691413732
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+* Make bake revision optional.
+  Default to false.
+  Only affects package versions so far.
+

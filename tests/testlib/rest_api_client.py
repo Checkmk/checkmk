@@ -691,7 +691,7 @@ class HostConfigClient(RestApiClient):
         self,
         host_name: str,
         folder: str = "/",
-        attributes: Mapping[str, Any] | None = None,
+        attributes: Mapping[str, Any] | Any | None = None,
         bake_agent: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
@@ -707,10 +707,19 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def bulk_create(self, entries: list[dict[str, Any]], expect_ok: bool = True) -> Response:
+    def bulk_create(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: Literal["0", "1"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        url = f"/domain-types/{self.domain}/actions/bulk-create/invoke"
+        if bake_agent is not None:
+            url += "?bake_agent=" + bake_agent
+
         return self.request(
             "post",
-            url=f"/domain-types/{self.domain}/actions/bulk-create/invoke",
+            url=url,
             body={"entries": entries},
             expect_ok=expect_ok,
         )
@@ -799,14 +808,13 @@ class HostConfigClient(RestApiClient):
         property_name: str,
         property_value: Any,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-        headers = {"IF-Match": etag}
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{host_name}/properties/{property_name}",
             body=property_value,
-            headers=headers,
+            headers=self._set_etag_header(host_name, etag),
             expect_ok=expect_ok,
         )
 
@@ -816,35 +824,36 @@ class HostConfigClient(RestApiClient):
             url=f"/objects/{self.domain}/{host_name}",
         )
 
-    def move(self, host_name: str, target_folder: str, expect_ok: bool = True) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-
+    def move(
+        self,
+        host_name: str,
+        target_folder: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{host_name}/actions/move/invoke",
             body={"target_folder": target_folder},
             expect_ok=expect_ok,
-            headers={"IF-Match": etag, "Accept": "application/json"},
+            headers=self._set_etag_header(host_name, etag),
         )
 
     def rename(
         self,
         host_name: str,
         new_name: str,
-        etag: str | None = None,
         expect_ok: bool = True,
         follow_redirects: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        if etag is None:
-            etag = self.get(host_name).headers["ETag"]
-
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{host_name}/actions/rename/invoke",
             body={"new_name": new_name},
             expect_ok=expect_ok,
             follow_redirects=follow_redirects,
-            headers={"IF-Match": etag, "Accept": "application/json"},
+            headers=self._set_etag_header(host_name, etag),
         )
 
     def rename_wait_for_completion(self, expect_ok: bool = True) -> Response:

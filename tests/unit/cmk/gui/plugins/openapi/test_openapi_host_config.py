@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
-import json
 from collections.abc import Iterator, Sequence
-from typing import Tuple
+from typing import Literal, Tuple
 from unittest.mock import MagicMock
 
 import pytest
@@ -214,46 +213,38 @@ def test_openapi_add_cluster_bake_agent_parameter(
 
 
 @pytest.mark.parametrize(
-    "query,called",
+    "bake_agent,called",
     [
-        ("?bake_agent=1", True),
-        ("?bake_agent=0", False),
-        ("", False),
+        ("1", True),
+        ("0", False),
+        (None, False),
     ],
 )
 def test_openapi_bulk_add_hosts_bake_agent_parameter(
-    base: str,
-    query: str,
+    clients: ClientRegistry,
+    bake_agent: Literal["0", "1"] | None,
     called: bool,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
     try_bake_agents_for_hosts: MagicMock,
 ) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/actions/bulk-create/invoke{query}",
-        params=json.dumps(
+    resp = clients.HostConfig.bulk_create(
+        entries=[
             {
-                "entries": [
-                    {
-                        "host_name": "foobar",
-                        "folder": "/",
-                        "attributes": {"ipaddress": "127.0.0.2"},
-                    },
-                    {
-                        "host_name": "sample",
-                        "folder": "/",
-                        "attributes": {
-                            "ipaddress": "127.0.0.2",
-                            "site": "NO_SITE",
-                        },
-                    },
-                ]
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+                "host_name": "foobar",
+                "folder": "/",
+                "attributes": {"ipaddress": "127.0.0.2"},
+            },
+            {
+                "host_name": "sample",
+                "folder": "/",
+                "attributes": {
+                    "ipaddress": "127.0.0.2",
+                    "site": "NO_SITE",
+                },
+            },
+        ],
+        bake_agent=bake_agent,
     )
+
     assert len(resp.json["value"]) == 2
 
     if called:
@@ -430,22 +421,15 @@ def test_openapi_bulk_hosts(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/actions/bulk-create/invoke",
-        params=json.dumps(
-            {"entries": [{"host_name": "example.com", "folder": "/", "attributes": {}}]}
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_bulk_simple(clients: ClientRegistry) -> None:
+    clients.HostConfig.bulk_create(
+        entries=[{"host_name": "example.com", "folder": "/", "attributes": {}}],
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_bulk_with_failed(
+    clients: ClientRegistry,
     base: str,
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -459,21 +443,14 @@ def test_openapi_bulk_with_failed(
         "cmk.gui.watolib.hosts_and_folders.Folder.verify_and_update_host_details", _raise
     )
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/actions/bulk-create/invoke",
-        params=json.dumps(
-            {
-                "entries": [
-                    {"host_name": "foobar", "folder": "/", "attributes": {}},
-                    {"host_name": "example.com", "folder": "/", "attributes": {}},
-                ]
-            }
-        ),
-        status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    resp = clients.HostConfig.bulk_create(
+        entries=[
+            {"host_name": "foobar", "folder": "/", "attributes": {}},
+            {"host_name": "example.com", "folder": "/", "attributes": {}},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
     assert resp.json["ext"]["failed_hosts"] == {"foobar": "Validation failed: fail"}
     assert [e["id"] for e in resp.json["ext"]["succeeded_hosts"]["value"]] == ["example.com"]
 
@@ -541,122 +518,57 @@ def test_openapi_host_created_timestamp(clients: ClientRegistry) -> None:
 
 @pytest.mark.usefixtures("custom_host_attribute")
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_has_deleted_custom_attributes(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+def test_openapi_host_has_deleted_custom_attributes(clients: ClientRegistry) -> None:
     # Known custom attribute
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/example.com",
-        status=200,
-        headers={
-            "Accept": "application/json",
-        },
-    )
+    clients.HostConfig.get(host_name="example.com")
 
     # Set the attribute on the host
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/example.com",
-        status=200,
-        params='{"attributes": {"foo": "bar"}}',
-        headers={
-            "If-Match": resp.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-    )
+    clients.HostConfig.edit(host_name="example.com", attributes={"foo": "bar"})
 
     # Try to get it with the attribute already deleted
     with custom_host_attribute_ctx({}):
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host_config/example.com",
-            status=200,
-            headers={
-                "Accept": "application/json",
-            },
-        )
+        resp = clients.HostConfig.get(host_name="example.com")
+
         # foo will still show up in the response, even though it is deleted.
         assert "foo" in resp.json["extensions"]["attributes"]
 
 
 @pytest.mark.usefixtures("custom_host_attribute")
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_custom_attributes(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+def test_openapi_host_custom_attributes(clients: ClientRegistry) -> None:
     # Known custom attribute
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/example.com",
-        status=200,
-        headers={
-            "Accept": "application/json",
-        },
+    clients.HostConfig.get(
+        host_name="example.com",
     )
 
-    update1 = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/example.com",
-        status=200,
-        params='{"attributes": {"foo": "bar"}}',
-        headers={
-            "If-Match": resp.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
+    clients.HostConfig.edit(
+        host_name="example.com",
+        attributes={"foo": "bar"},
     )
 
     # Internal, non-editable attributes shall not be settable.
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/example.com",
-        status=400,
-        params='{"attributes": {"meta_data": "bar"}}',
-        headers={
-            "If-Match": update1.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-    )
+    clients.HostConfig.edit(
+        host_name="example.com",
+        attributes={"meta_data": "bar"},
+        expect_ok=False,
+    ).assert_status_code(400)
 
     # Unknown custom attribute
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/example.com",
-        status=200,
-        headers={
-            "Accept": "application/json",
-        },
+    clients.HostConfig.get(
+        host_name="example.com",
     )
 
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/example.com",
-        status=400,
-        params='{"attributes": {"foo2": "bar"}}',
-        headers={
-            "If-Match": resp.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-    )
+    clients.HostConfig.edit(
+        host_name="example.com",
+        attributes={"foo2": "bar"},
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_collection(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/domain-types/host_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_host_collection(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.get_all()
+
     for host in resp.json["value"]:
         # Check that all entries are domain objects
         assert "extensions" in host
@@ -667,26 +579,13 @@ def test_openapi_host_collection(
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_collection_effective_attributes(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/domain-types/host_config/collections/all?effective_attributes=true",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    for host in resp.json["value"]:
+def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -> None:
+    resp1 = clients.HostConfig.get_all(effective_attributes=True)
+    for host in resp1.json["value"]:
         assert isinstance(host["extensions"]["effective_attributes"], dict)
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/domain-types/host_config/collections/all?effective_attributes=false",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    for host in resp.json["value"]:
+    resp2 = clients.HostConfig.get_all(effective_attributes=False)
+    for host in resp2.json["value"]:
         assert host["extensions"]["effective_attributes"] is None
 
 
@@ -731,11 +630,10 @@ def test_openapi_host_rename_error_on_not_existing_host(
         host_name="foobar",
         folder="/",
     )
-    resp = clients.HostConfig.get("foobar")
+    clients.HostConfig.get("foobar")
     clients.HostConfig.rename(
         host_name="fooba",
         new_name="foobaz",
-        etag=resp.headers["ETag"],
         follow_redirects=False,
         expect_ok=False,
     )
@@ -764,21 +662,9 @@ def test_openapi_host_rename_on_invalid_hostname(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_folder_config_normalization(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
+def test_openapi_host_folder_config_normalization(clients: ClientRegistry) -> None:
     def _create_folder(fname: str, parent: str) -> None:
-        params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
-        aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/folder_config/collections/all",
-            params=params,
-            status=200,
-            headers={"Accept": "application/json"},
-            content_type="application/json",
-        )
+        clients.Folder.create(folder_name=fname, title=fname, parent=parent)
         parent += f"{fname}~"
 
     def _create_folders_recursive(folders: Sequence[str]) -> None:
@@ -790,54 +676,27 @@ def test_openapi_host_folder_config_normalization(
 
     _create_folders_recursive(["I", "want", "those"])
 
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/I/want/those"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
-
-    response = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    assert response.json["extensions"]["folder"] == "/I/want/those"
+    clients.HostConfig.create(host_name="foobar", folder="/I/want/those")
+    resp = clients.HostConfig.get(host_name="foobar")
+    assert resp.json["extensions"]["folder"] == "/I/want/those"
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_with_pending_activate_changes(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
+    clients.HostConfig.get(
+        host_name="foobar",
     )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar/actions/rename/invoke",
-        params='{"new_name": "foobaz"}',
-        content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=409,
-    )
+    clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobaz",
+        expect_ok=False,
+    ).assert_status_code(409)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -880,65 +739,40 @@ def test_openapi_host_move_to_non_valid_folder(clients: ClientRegistry) -> None:
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_of_non_existing_host(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/objects/host_config/foobaz/actions/move/invoke",
-        params='{"target_folder": "/"}',
-        content_type="application/json",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_host_move_of_non_existing_host(clients: ClientRegistry) -> None:
+    clients.HostConfig.move(
+        host_name="foobaz",
+        target_folder="/",
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_update_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "example.com", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_host_update_invalid(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
     )
-
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=400,
-        params=json.dumps(
-            {
-                "attributes": {"ipaddress": "192.168.0.123"},
-                "update_attributes": {"ipaddress": "192.168.0.123"},
-                "remove_attributes": ["tag_foobar"],
-            }
-        ),
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-    )
+    clients.HostConfig.edit(
+        host_name="example.com",
+        attributes={"ipaddress": "192.168.0.123"},
+        update_attributes={"ipaddress": "192.168.0.123"},
+        remove_attributes=["tag_foobar"],
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 @managedtest
-def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    group = {"name": "code_monkeys", "alias": "banana team", "customer": "global"}
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/contact_group_config/collections/all",
-        params=json.dumps(group),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
+def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="code_monkeys",
+        alias="banana_team",
+        customer="global",
     )
-
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {
+    clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
+        attributes={
             "ipaddress": "192.168.0.123",
             "contactgroups": {
                 "groups": ["code_monkeys"],
@@ -948,14 +782,6 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
                 "recurse_perms": False,
             },
         },
-    }
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
     )
 
 
@@ -983,93 +809,47 @@ def test_openapi_host_with_custom_attributes(
 
 
 @managedtest
-def test_openapi_host_with_inventory_failed(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {
+def test_openapi_host_with_inventory_failed(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
+        attributes={
             "ipaddress": "192.168.0.123",
             "inventory_failed": True,
         },
-    }
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
 
 
-def test_openapi_host_with_invalid_labels(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {"labels": {"label": ["invalid_label_entry", "another_one"]}},
-    }
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=400,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"label": ["invalid_label_entry", "another_one"]}},
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_openapi_host_with_labels(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {
-            "labels": {
-                "label": "value",
-            }
-        },
-    }
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
+def test_openapi_host_with_labels(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"label": "value"}},
     )
     assert resp.json["extensions"]["attributes"]["labels"] == {"label": "value"}
 
 
-def test_openapi_host_with_invalid_snmp_community_option(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {
-            "snmp_community": {
-                "type": "v1_v2_community",
-            }
-        },
-    }
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=400,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_host_with_invalid_snmp_community_option(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"snmp_community": {"type": "v1_v2_community"}},
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 def test_openapi_all_hosts_with_non_existing_site(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def mock_all_hosts_recursively(_cls):
@@ -1083,17 +863,11 @@ def test_openapi_all_hosts_with_non_existing_site(
         }
 
     monkeypatch.setattr(Folder, "all_hosts_recursively", mock_all_hosts_recursively)
-
-    aut_user_auth_wsgi_app.get(
-        f"{base}/domain-types/host_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    clients.HostConfig.get_all()
 
 
 def test_openapi_host_with_non_existing_site(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def mock_host(_hostname):
@@ -1105,13 +879,7 @@ def test_openapi_host_with_non_existing_site(
         )
 
     monkeypatch.setattr(Host, "host", mock_host)
-
-    resp = aut_user_auth_wsgi_app.get(
-        f"{base}/objects/host_config/foo",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
+    resp = clients.HostConfig.get(host_name="foo")
     assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"
 
 
@@ -1119,22 +887,15 @@ def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegi
     clients.HostConfig.bulk_create(entries=[])
 
 
-def test_openapi_host_config_attributes_as_string_crash_regression(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
-) -> None:
-    resp = aut_user_auth_wsgi_app.post(
-        f"{base}/domain-types/host_config/collections/all",
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-        params=json.dumps(
-            {
-                "folder": "/",
-                "host_name": "example.com",
-                "attributes": "{'ipaddress':'192.168.0.123'}",  # note that this is a str
-            }
-        ),
-        status=400,
+def test_openapi_host_config_attributes_as_string_crash_regression(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes="{'ipaddress':'192.168.0.123'}",  # note that this is a str
+        expect_ok=False,
     )
+    resp.assert_status_code(400)
+
     assert resp.json["fields"]["attributes"] == [
         "Incompatible data type. Received a(n) 'str', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
     ]

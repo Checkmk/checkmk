@@ -556,7 +556,6 @@ class ErrorReporter:
             "eltek_fans",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
-        ("check", "emcvnx_sp_util", RuleGroup.CheckgroupParameters("sp_util")),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
         (
             "check",

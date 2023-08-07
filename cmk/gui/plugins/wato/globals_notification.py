@@ -9,7 +9,6 @@
 
 
 import cmk.utils.paths
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -53,13 +52,9 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
                 "will be sent to this address. This makes sure that in that case at least <i>someone</i> "
                 "gets notified. Furthermore this email address will be used in notifications as a "
                 "contact for any host or service that is not known to the monitoring. "
-            )
-            + (
-                _("This can happen when you forward notifications from the Event Console. ")
-                if edition() is not Edition.CSE
-                else ""
-            )
-            + _("<br><br>Notification fallback can also be configured in single user profiles."),
+                "This can happen when you forward notifications from the Event Console. "
+                "<br><br>Notification fallback can also be configured in single user profiles."
+            ),
             empty_text=_("(No fallback email address configured!)"),
             make_clickable=False,
         )

@@ -1181,13 +1181,7 @@ class ModeEditUser(WatoMode):
                 "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
                 "gets notified. Furthermore this contact will be used for notifications to any host or service "
                 "that is not known to the monitoring. "
-            )
-            + (
-                _("This can happen when you forward notifications from the Event Console. ")
-                if edition() is not Edition.CSE
-                else ""
-            )
-            + _(
+                "This can happen when you forward notifications from the Event Console. "
                 "<br><br>Notification fallback can also configured in the global "
                 'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
                 "Fallback email address for notifications</a>."

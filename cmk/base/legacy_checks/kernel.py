@@ -50,7 +50,7 @@ def check_kernel(item, params, parsed):
 
     counter, value = item_values[0]
     per_sec = get_rate(get_value_store(), "counter", timestamp, value)
-    return check_levels(per_sec, counter, params, unit="/s", boundaries=(0, None))
+    return check_levels(per_sec, counter, params["levels"], unit="/s", boundaries=(0, None))
 
 
 # This check is deprecated. Please have a look at werk #8969.
@@ -58,6 +58,7 @@ check_info["kernel"] = LegacyCheckDefinition(
     service_name="Kernel %s",
     check_function=check_kernel,
     check_ruleset_name="vm_counter",
+    check_default_parameters={"levels": None},
 )
 
 # .

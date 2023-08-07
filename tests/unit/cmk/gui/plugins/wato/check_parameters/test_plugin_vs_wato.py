@@ -737,7 +737,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("juniper_mem"),
         ),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        ("check", "kernel", RuleGroup.CheckgroupParameters("vm_counter")),
         (
             "check",
             "knuerr_rms_humidity",

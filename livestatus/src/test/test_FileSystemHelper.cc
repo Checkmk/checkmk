@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <memory>
 #include <tuple>
-#include <utility>
 
 #include "FileSystemHelper.h"
 #include "gtest/gtest.h"

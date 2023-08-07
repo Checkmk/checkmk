@@ -136,38 +136,37 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     )
 
 
-def test_openapi_bulk_add_hosts_with_attributes(
-    clients: ClientRegistry,
-) -> None:
+def test_openapi_bulk_add_hosts_with_attributes(clients: ClientRegistry) -> None:
     response = clients.HostConfig.bulk_create(
-        {
-            "host_name": "ding",
-            "folder": "/",
-            "attributes": {"ipaddress": "127.0.0.2"},
-        },
-        {
-            "host_name": "dong",
-            "folder": "/",
-            "attributes": {
-                "ipaddress": "127.0.0.2",
-                "site": "NO_SITE",
+        entries=[
+            {
+                "host_name": "ding",
+                "folder": "/",
+                "attributes": {"ipaddress": "127.0.0.2"},
             },
-        },
+            {
+                "host_name": "dong",
+                "folder": "/",
+                "attributes": {"ipaddress": "127.0.0.2", "site": "NO_SITE"},
+            },
+        ]
     ).assert_status_code(200)
     assert len(response.json["value"]) == 2
 
     clients.HostConfig.bulk_edit(
-        {
-            "host_name": "ding",
-            "update_attributes": {
-                "locked_by": {
-                    "site_id": "site_id",
-                    "program_id": "dcd",
-                    "instance_id": "connection_id",
+        entries=[
+            {
+                "host_name": "ding",
+                "update_attributes": {
+                    "locked_by": {
+                        "site_id": "site_id",
+                        "program_id": "dcd",
+                        "instance_id": "connection_id",
+                    },
+                    "locked_attributes": ["alias"],
                 },
-                "locked_attributes": ["alias"],
             },
-        }
+        ]
     ).assert_status_code(200)
 
     # verify attribute ipaddress is set corretly
@@ -369,119 +368,65 @@ def test_openapi_host_update_after_move(
 
 
 def test_openapi_bulk_hosts(
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/actions/bulk-create/invoke",
-        params=json.dumps(
+    resp = clients.HostConfig.bulk_create(
+        entries=[
             {
-                "entries": [
-                    {
-                        "host_name": "foobar",
-                        "folder": "/",
-                        "attributes": {"ipaddress": "127.0.0.2"},
-                    },
-                    {
-                        "host_name": "sample",
-                        "folder": "/",
-                        "attributes": {
-                            "ipaddress": "127.0.0.2",
-                            "site": "NO_SITE",
-                        },
-                    },
-                ]
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+                "host_name": "foobar",
+                "folder": "/",
+                "attributes": {"ipaddress": "127.0.0.2"},
+            },
+            {
+                "host_name": "sample",
+                "folder": "/",
+                "attributes": {
+                    "ipaddress": "127.0.0.2",
+                    "site": "NO_SITE",
+                },
+            },
+        ]
     )
     assert len(resp.json["value"]) == 2
 
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/host_config/actions/bulk-update/invoke",
-        params=json.dumps(
+    clients.HostConfig.bulk_edit(
+        entries=[
             {
-                "entries": [
-                    {
-                        "host_name": "foobar",
-                        "attributes": {
-                            "ipaddress": "192.168.1.1",
-                            "tag_address_family": "ip-v4-only",
-                        },
-                    }
-                ],
+                "host_name": "foobar",
+                "attributes": {
+                    "ipaddress": "192.168.1.1",
+                    "tag_address_family": "ip-v4-only",
+                },
             }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+        ]
     )
 
-    # verify attribute ipaddress is set corretly
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    assert resp.json["extensions"]["attributes"]["ipaddress"] == "192.168.1.1"
+    # verify attribute ipaddress is set correctly
+    resp2 = clients.HostConfig.get(host_name="foobar")
+    assert resp2.json["extensions"]["attributes"]["ipaddress"] == "192.168.1.1"
 
     # remove attribute ipaddress via bulk request
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/host_config/actions/bulk-update/invoke",
-        params=json.dumps(
-            {
-                "entries": [{"host_name": "foobar", "remove_attributes": ["ipaddress"]}],
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "foobar", "remove_attributes": ["ipaddress"]}],
     )
 
     # verify attribute ipaddress was removed correctly
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    assert "ipaddress" not in resp.json["extensions"]["attributes"]
+    resp3 = clients.HostConfig.get(host_name="foobar")
+    assert "ipaddress" not in resp3.json["extensions"]["attributes"]
 
     # adding invalid attribute should fail
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/host_config/actions/bulk-update/invoke",
-        params=json.dumps(
-            {
-                "entries": [{"host_name": "foobar", "attributes": {"foobaz": "bar"}}],
-            }
-        ),
-        status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "foobar", "attributes": {"foobaz": "bar"}}], expect_ok=False
+    ).assert_status_code(400)
 
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/actions/bulk-delete/invoke",
-        params=json.dumps({"entries": ["foobar", "sample"]}),
-        status=204,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    # delete host with bulk delete
+    clients.HostConfig.bulk_delete(entries=["foobar", "sample"])
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1171,7 +1116,7 @@ def test_openapi_host_with_non_existing_site(
 
 
 def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegistry) -> None:
-    clients.HostConfig.bulk_create()
+    clients.HostConfig.bulk_create(entries=[])
 
 
 def test_openapi_host_config_attributes_as_string_crash_regression(
@@ -1628,3 +1573,57 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_snmp_ds": "no-snmp",
         }
     )
+
+
+@managedtest
+def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        host_name="test_host",
+        folder="/",
+        attributes={"ipaddress": "192.168.0.123"},
+    )
+
+    expected_error_msg = (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+    )
+
+    resp1 = clients.HostConfig.edit(
+        host_name="test_host",
+        attributes={"ipaddress": "192.168.0.123"},
+        update_attributes={"ipaddress": "192.168.0.124"},
+        remove_attributes=["tag_foobar"],
+        etag=None,
+        expect_ok=False,
+    )
+    resp1.assert_status_code(400)
+    assert expected_error_msg in resp1.json["fields"]["_schema"][0]
+
+    resp2 = clients.HostConfig.edit(
+        host_name="test_host",
+        update_attributes={"ipaddress": "192.168.0.124"},
+        remove_attributes=["tag_foobar"],
+        etag=None,
+        expect_ok=False,
+    )
+    resp2.assert_status_code(400)
+    assert expected_error_msg in resp2.json["fields"]["_schema"][0]
+
+    resp3 = clients.HostConfig.edit(
+        host_name="test_host",
+        attributes={"ipaddress": "192.168.0.124"},
+        update_attributes={"ipaddress": "192.168.0.125"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp3.assert_status_code(400)
+    assert expected_error_msg in resp3.json["fields"]["_schema"][0]
+
+    resp4 = clients.HostConfig.edit(
+        host_name="test_host",
+        attributes={"ipaddress": "192.168.0.123"},
+        remove_attributes=["tag_foobar"],
+        etag=None,
+        expect_ok=False,
+    )
+    resp4.assert_status_code(400)
+    assert expected_error_msg in resp4.json["fields"]["_schema"][0]

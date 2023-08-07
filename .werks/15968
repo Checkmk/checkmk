@@ -1,0 +1,53 @@
+Title: host_config: update endpoint now only allows one of replace, update or delete
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1691402148
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously when calling update host, you could pass any combination of
+
+replace all attributes
+update some attributes
+delete some attributes
+
+Some of these combinations didn't make much sense and could lead to
+errors. This werk simplifies this by only allowing one of the options
+when calling update host or bulk update host.
+
+For update_host, previously you could to the following
+
+C+:
+{
+    "attributes": {"ipaddress": "192.168.9.123"},
+    "update_attributes" {"ipaddress": "192.168.0.124"},
+    "remove_attributes": ["tag_foobar],
+}
+C-:
+
+This werk modifies this behaviour by forcing the client to select only
+one action.
+
+C+:
+{
+    "attributes": {"ipaddress": "192.168.9.123"},
+}
+C-:
+
+OR
+
+C+:
+{
+    "update_attributes": {"ipaddress": "192.168.9.124"},
+}
+C-:
+
+OR
+
+C+:
+    "remove_attributes": ["tag_foobar"],
+C-:
+

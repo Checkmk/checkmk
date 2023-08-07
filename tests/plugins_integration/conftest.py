@@ -89,7 +89,7 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in get_site_factory(prefix="plugins_", update_from_git=False).get_test_site():
+    for site in get_site_factory(prefix="plugins_").get_test_site():
         dump_path = site.path(f"var/check_mk/{constants.DUMP_DIR}")
         # NOTE: the snmpwalks folder cannot be changed!
         walk_path = site.path("var/check_mk/snmpwalks")

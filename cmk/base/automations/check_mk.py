@@ -432,7 +432,6 @@ def _execute_discovery(
             ip_address,
             is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes_of(host_name) or (),
-            config_cache=config_cache,
             parser=parser,
             fetcher=fetcher,
             summarizer=CMKSummarizer(
@@ -458,6 +457,7 @@ def _execute_discovery(
             find_service_description=config.service_description,
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
+            snmp_backend=config_cache.get_snmp_backend(host_name),
         )
     return discovery.CheckPreview(
         table=[

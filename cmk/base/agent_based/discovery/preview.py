@@ -19,6 +19,8 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.automations.results import CheckPreviewEntry
 
+from cmk.snmplib import SNMPBackendEnum
+
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
@@ -44,7 +46,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from cmk.base.agent_based.checking import get_aggregated_result
-from cmk.base.config import ConfigCache
 
 __all__ = ["CheckPreview", "get_check_preview"]
 
@@ -63,7 +64,6 @@ def get_check_preview(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
@@ -77,6 +77,7 @@ def get_check_preview(
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
+    snmp_backend: SNMPBackendEnum,
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -147,7 +148,6 @@ def get_check_preview(
             host_name,
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            config_cache=config_cache,
             check_plugins=check_plugins,
             service=ConfiguredService(
                 check_plugin_name=entry.check_plugin_name,
@@ -162,6 +162,7 @@ def get_check_preview(
             providers=providers,
             get_effective_host=get_effective_host,
             found_on_nodes=found_on_nodes,
+            snmp_backend=snmp_backend,
         )
         for check_source, services_with_nodes in grouped_services.items()
         for entry, found_on_nodes in services_with_nodes
@@ -170,13 +171,13 @@ def get_check_preview(
             host_name,
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            config_cache=config_cache,
             service=service,
             check_plugins=check_plugins,
             check_source="manual",  # "enforced" would be nicer
             providers=providers,
             found_on_nodes=[host_name],
             get_effective_host=get_effective_host,
+            snmp_backend=snmp_backend,
         )
         for _ruleset_name, service in enforced_services.values()
     ]
@@ -196,13 +197,13 @@ def _check_preview_table_row(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     service: ConfiguredService,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
+    snmp_backend: SNMPBackendEnum,
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
@@ -214,12 +215,12 @@ def _check_preview_table_row(
             host_name,
             is_cluster,
             cluster_nodes,
-            config_cache,
             providers,
             service,
             check_plugin,
             get_effective_host=get_effective_host,
             check_function=check_plugin.function(host_name, service),
+            snmp_backend=snmp_backend,
             rtc_package=None,
         ).result
         if check_plugin is not None

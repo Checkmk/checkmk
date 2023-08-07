@@ -23,7 +23,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.check_table import ConfiguredService
@@ -58,7 +58,6 @@ from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
-from cmk.base.config import ConfigCache
 
 __all__ = ["execute_checkmk_checks", "check_host_services", "get_aggregated_result"]
 
@@ -76,7 +75,6 @@ def execute_checkmk_checks(
     hostname: HostName,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     fetched: Iterable[
         tuple[
             SourceInfo,
@@ -96,6 +94,7 @@ def execute_checkmk_checks(
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
+    snmp_backend: SNMPBackendEnum,
 ) -> ActiveCheckResult:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
@@ -108,13 +107,13 @@ def execute_checkmk_checks(
             hostname,
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            config_cache=config_cache,
             providers=providers,
             services=services,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             get_effective_host=get_effective_host,
             get_check_period=get_check_period,
+            snmp_backend=snmp_backend,
             rtc_package=None,
         )
     )
@@ -223,7 +222,6 @@ def check_host_services(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -231,6 +229,7 @@ def check_host_services(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     rtc_package: AgentRawData | None,
+    snmp_backend: SNMPBackendEnum,
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
@@ -253,13 +252,13 @@ def check_host_services(
                 host_name,
                 is_cluster,
                 cluster_nodes,
-                config_cache,
                 providers,
                 service,
                 plugin,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
                 check_function=plugin.function(host_name, service),
+                snmp_backend=snmp_backend,
             )
 
 
@@ -277,7 +276,6 @@ def get_aggregated_result(
     host_name: HostName,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
     plugin: CheckPlugin,
@@ -285,6 +283,7 @@ def get_aggregated_result(
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     check_function: Callable[..., ServiceCheckResult],
+    snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -340,7 +339,7 @@ def get_aggregated_result(
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_cluster=is_cluster,
                 is_enforced=service.is_enforced,
-                snmp_backend=config_cache.get_snmp_backend(host_name),
+                snmp_backend=snmp_backend,
                 rtc_package=rtc_package,
             ),
         )

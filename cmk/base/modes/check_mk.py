@@ -2079,7 +2079,6 @@ def mode_check(
                 hostname=hostname,
                 is_cluster=is_cluster,
                 cluster_nodes=config_cache.nodes_of(hostname) or (),
-                config_cache=config_cache,
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
                 summarizer=summarizer,
@@ -2101,6 +2100,7 @@ def mode_check(
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
+                snmp_backend=config_cache.get_snmp_backend(hostname),
             )
 
         check_result = ActiveCheckResult.from_subresults(

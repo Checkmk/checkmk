@@ -10,11 +10,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
 
-knuerr_rms_humidity_default_levels = (30, 40, 70, 75)
-
 
 def inventory_knuerr_rms_humidity(info):
-    return [(None, knuerr_rms_humidity_default_levels)]
+    yield None, {}
 
 
 def check_knuerr_rms_humidity(_no_item, params, info):
@@ -32,4 +30,8 @@ check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_knuerr_rms_humidity,
     check_function=check_knuerr_rms_humidity,
     check_ruleset_name="single_humidity",
+    check_default_parameters={
+        "levels_lower": (40, 30),
+        "levels": (70, 75),
+    },
 )

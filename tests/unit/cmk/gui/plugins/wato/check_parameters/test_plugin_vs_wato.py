@@ -738,11 +738,6 @@ class ErrorReporter:
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
         (
             "check",
-            "knuerr_rms_humidity",
-            RuleGroup.CheckgroupParameters("single_humidity"),
-        ),
-        (
-            "check",
             "liebert_cooling",
             RuleGroup.CheckgroupParameters("liebert_cooling"),
         ),

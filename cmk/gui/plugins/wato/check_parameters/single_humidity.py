@@ -3,24 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
+
+
+def _migrate_quadruple(
+    p: Mapping[str, tuple] | tuple[float, float, float, float]
+) -> Mapping[str, tuple]:
+    if isinstance(p, dict):
+        return p
+    cl, wl, cu, wu = p
+    return {"levels_lower": (wl, cl), "levels": (wu, cu)}
 
 
 def _parameter_valuespec_single_humidity():
-    return Tuple(
-        help=_("This Ruleset sets the threshold limits for humidity sensors"),
-        elements=[
-            Integer(title=_("Critical at or below"), unit="%"),
-            Integer(title=_("Warning at or below"), unit="%"),
-            Integer(title=_("Warning at or above"), unit="%"),
-            Integer(title=_("Critical at or above"), unit="%"),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            help=_("This Ruleset sets the threshold limits for humidity sensors"),
+            elements=[
+                (
+                    "levels_lower",
+                    Tuple(
+                        title=_("Lower levels"),
+                        elements=[
+                            Integer(title=_("Warning at or below"), unit="%"),
+                            Integer(title=_("Critical at or below"), unit="%"),
+                        ],
+                    ),
+                ),
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Upper levels"),
+                        elements=[
+                            Integer(title=_("Warning at or above"), unit="%"),
+                            Integer(title=_("Critical at or above"), unit="%"),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        migrate=_migrate_quadruple,
     )
 
 

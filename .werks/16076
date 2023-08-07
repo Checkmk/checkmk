@@ -10,5 +10,4 @@ Version: 2.3.0b1
 
 * Make bake revision optional.
   Default to false.
-  Only affects package versions so far.
-
+* Skip baking if we have no bake revision.

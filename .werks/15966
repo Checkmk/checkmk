@@ -1,6 +1,6 @@
 Title: downtimes: add site property to the downtimes endpoints
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: rest-api
 Date: 1690799512
 Edition: cre

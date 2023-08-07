@@ -4,18 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
-from functools import partial
 from time import time
-from typing import Any, Callable
+from typing import Any
 
-import pytest
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
-DOMAIN_TYPE = "event_console"
 
 
 def add_event_console_events_to_live_status_table(live: MockLiveStatusConnection) -> None:
@@ -54,92 +48,16 @@ def add_event_console_events_to_live_status_table(live: MockLiveStatusConnection
     )
 
 
-@pytest.fixture(name="object_base_url")
-def object_url(base: str) -> str:
-    return f"{base}/objects/{DOMAIN_TYPE}/"
-
-
-@pytest.fixture(name="collection_base_url")
-def collection_url(base: str) -> str:
-    return f"{base}/domain-types/{DOMAIN_TYPE}/collections/"
-
-
-@pytest.fixture(name="get_event")
-def partial_get(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.get,
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="get_events")
-def partial_list(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.get,
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="delete")
-def partial_delete_with_filters(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        url=f"{base}/domain-types/{DOMAIN_TYPE}/actions/delete/invoke",
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="change_multiple_event_states")
-def partial_change_multiple_event_states(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
-) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        url=f"{base}/domain-types/{DOMAIN_TYPE}/actions/change_state/invoke",
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="update_and_acknowledge_multiple_events")
-def partial_update_and_acknowledge_multiple_events(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
-) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        url=f"{base}/domain-types/{DOMAIN_TYPE}/actions/update_and_acknowledge/invoke",
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="change_state_or_update_and_acknowledge")
-def partial_change_state_or_update_and_acknowledge(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
 def test_get_all_ec_events(
-    mock_livestatus: MockLiveStatusConnection, get_events: Callable, collection_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text"
     )
     with mock_livestatus:
-        resp = get_events(collection_base_url + "all")
+        resp = clients.EventConsole.get_all()
         assert {event["id"] for event in resp.json["value"]} == {"1", "2", "3", "4", "5", "6"}
         assert {event["extensions"]["host"] for event in resp.json["value"]} == {
             "heute",
@@ -164,54 +82,58 @@ def test_get_all_ec_events(
 
 
 def test_get_all_ec_events_host(
-    mock_livestatus: MockLiveStatusConnection, get_events: Callable, collection_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host_b"
     )
     with mock_livestatus:
-        get_events(collection_base_url + "all?host=test_host_b")
+        clients.EventConsole.get_all(host="test_host_b")
 
 
 def test_get_all_ec_events_state(
-    mock_livestatus: MockLiveStatusConnection, get_events: Callable, collection_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 0"
     )
     with mock_livestatus:
-        get_events(collection_base_url + "all?state=ok")
+        clients.EventConsole.get_all(state="ok")
 
 
 def test_get_all_ec_events_app(
-    mock_livestatus: MockLiveStatusConnection, get_events: Callable, collection_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_application = App2"
     )
     with mock_livestatus:
-        get_events(collection_base_url + "all?application=App2")
+        clients.EventConsole.get_all(application="App2")
 
 
 def test_get_all_ec_events_query(
-    mock_livestatus: MockLiveStatusConnection, get_events: Callable, collection_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host"
     )
     with mock_livestatus:
-        get_events(
-            collection_base_url
-            + 'all?query={"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}'
+        clients.EventConsole.get_all(
+            query='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}'
         )
 
 
 def test_get_ec_event_by_id(
-    mock_livestatus: MockLiveStatusConnection, get_event: Callable, object_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
@@ -219,8 +141,8 @@ def test_get_ec_event_by_id(
         sites=["NO_SITE"],
     )
     with mock_livestatus:
-        resp = get_event(url=object_base_url + "2?site_id=NO_SITE")
-        assert resp.json["domainType"] == DOMAIN_TYPE
+        resp = clients.EventConsole.get(event_id="2", site_id="NO_SITE")
+        assert resp.json["domainType"] == clients.EventConsole.domain
         assert {link["method"] for link in resp.json["links"]} == {"GET", "DELETE"}
         assert set((resp.json["extensions"]).keys()) == {
             "site_id",
@@ -242,12 +164,19 @@ def test_get_ec_event_by_id(
         }
 
 
-def test_get_ec_event_by_str_id(get_event: Callable, object_base_url: str) -> None:
-    get_event(url=object_base_url + "non_int_str", status=404)
+def test_get_ec_event_by_str_id(clients: ClientRegistry) -> None:
+    resp = clients.EventConsole.get(
+        event_id="non_int_str",
+        site_id="NO_SITE",
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+    assert resp.json["fields"]["event_id"] == ["'non_int_str' does not match pattern '^[0-9]+$'."]
 
 
 def test_get_ec_event_that_doesnt_exist_by_id(
-    mock_livestatus: MockLiveStatusConnection, get_event: Callable, object_base_url: str
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
@@ -255,10 +184,23 @@ def test_get_ec_event_that_doesnt_exist_by_id(
         sites=["NO_SITE"],
     )
     with mock_livestatus:
-        get_event(url=object_base_url + "20?site_id=NO_SITE", status=404)
+        resp = clients.EventConsole.get(
+            event_id="20",
+            site_id="NO_SITE",
+            expect_ok=False,
+        )
+        resp.assert_status_code(404)
+        assert resp.json == {
+            "title": "The requested event was not found",
+            "status": 404,
+            "detail": "Could not find event with id 20.",
+        }
 
 
-def test_delete_event_by_id(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
+def test_delete_event_by_id(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1",
@@ -266,10 +208,17 @@ def test_delete_event_by_id(mock_livestatus: MockLiveStatusConnection, delete: C
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1;test123-...", match_type="ellipsis")
     with mock_livestatus:
-        delete(params=json.dumps({"site_id": "NO_SITE", "filter_type": "by_id", "event_id": 1}))
+        clients.EventConsole.delete(
+            site_id="NO_SITE",
+            filter_type="by_id",
+            event_id=1,
+        )
 
 
-def test_delete_event_by_query(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
+def test_delete_event_by_query(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host",
@@ -277,19 +226,16 @@ def test_delete_event_by_query(mock_livestatus: MockLiveStatusConnection, delete
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1;test123-...", match_type="ellipsis")
     with mock_livestatus:
-        delete(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "query",
-                    "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
-                }
-            )
+        clients.EventConsole.delete(
+            site_id="NO_SITE",
+            filter_type="query",
+            query='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
         )
 
 
 def test_delete_event_by_params_all(
-    mock_livestatus: MockLiveStatusConnection, delete: Callable
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
@@ -298,22 +244,19 @@ def test_delete_event_by_params_all(
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;5;test123-...", match_type="ellipsis")
     with mock_livestatus:
-        delete(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "params",
-                    "filters": {
-                        "state": "warning",
-                        "host": "heute",
-                        "application": "App5",
-                    },
-                }
-            )
+        clients.EventConsole.delete(
+            site_id="NO_SITE",
+            filter_type="params",
+            state="warning",
+            host="heute",
+            application="App5",
         )
 
 
-def test_delete_event_by_phase(mock_livestatus: MockLiveStatusConnection, delete: Callable) -> None:
+def test_delete_event_by_phase(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack",
@@ -322,27 +265,24 @@ def test_delete_event_by_phase(mock_livestatus: MockLiveStatusConnection, delete
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;2,4,6;test123-...", match_type="ellipsis")
 
     with mock_livestatus:
-        delete(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "params",
-                    "filters": {
-                        "phase": "ack",
-                    },
-                }
-            )
+        clients.EventConsole.delete(
+            site_id="NO_SITE",
+            filter_type="params",
+            phase="ack",
         )
 
 
-def test_delete_event_no_params(delete: Callable) -> None:
-    delete(params=json.dumps({"site_id": "NO_SITE", "filter_type": "params"}), status=400)
+def test_delete_event_no_params(clients: ClientRegistry) -> None:
+    clients.EventConsole.delete(
+        site_id="NO_SITE",
+        filter_type="params",
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 def test_change_existing_event_state_by_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -355,16 +295,16 @@ def test_change_existing_event_state_by_id(
     )
 
     with mock_livestatus:
-        change_state_or_update_and_acknowledge(
-            url=object_base_url + "1/actions/change_state/invoke",
-            params=json.dumps({"site_id": "NO_SITE", "new_state": "warning"}),
+        clients.EventConsole.change_event_state(
+            event_id="1",
+            site_id="NO_SITE",
+            new_state="warning",
         )
 
 
 def test_change_non_existing_event_state_by_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -374,16 +314,17 @@ def test_change_non_existing_event_state_by_id(
     )
 
     with mock_livestatus:
-        change_state_or_update_and_acknowledge(
-            status=404,
-            url=object_base_url + "7/actions/change_state/invoke",
-            params=json.dumps({"site_id": "NO_SITE", "new_state": "warning"}),
-        )
+        clients.EventConsole.change_event_state(
+            event_id="7",
+            site_id="NO_SITE",
+            new_state="warning",
+            expect_ok=False,
+        ).assert_status_code(404)
 
 
 def test_change_existing_event_states_query_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    change_multiple_event_states: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -396,21 +337,17 @@ def test_change_existing_event_states_query_filter(
     )
 
     with mock_livestatus:
-        change_multiple_event_states(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "query",
-                    "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
-                    "new_state": "unknown",
-                }
-            ),
+        clients.EventConsole.change_multiple_event_states(
+            site_id="NO_SITE",
+            filter_type="query",
+            new_state="unknown",
+            query='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
         )
 
 
 def test_change_existing_event_states_params_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    change_multiple_event_states: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -423,41 +360,31 @@ def test_change_existing_event_states_params_filter(
     )
 
     with mock_livestatus:
-        change_multiple_event_states(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "params",
-                    "new_state": "unknown",
-                    "filters": {
-                        "state": "warning",
-                        "host": "heute",
-                        "application": "App5",
-                        "phase": "open",
-                    },
-                }
-            ),
+        clients.EventConsole.change_multiple_event_states(
+            site_id="NO_SITE",
+            filter_type="params",
+            new_state="unknown",
+            state="warning",
+            host="heute",
+            application="App5",
+            phase="open",
         )
 
 
 def test_change_existing_event_states_no_filters(
-    change_multiple_event_states: Callable,
+    clients: ClientRegistry,
 ) -> None:
-    change_multiple_event_states(
-        params=json.dumps(
-            {
-                "filter_type": "params",
-                "new_state": "unknown",
-            }
-        ),
-        status=400,
-    )
+    clients.EventConsole.change_multiple_event_states(
+        site_id="NO_SITE",
+        filter_type="params",
+        new_state="unknown",
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 def test_update_and_acknowledge_by_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -470,22 +397,17 @@ def test_update_and_acknowledge_by_id(
     )
 
     with mock_livestatus:
-        change_state_or_update_and_acknowledge(
-            url=object_base_url + "1/actions/update_and_acknowledge/invoke",
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "change_comment": "comment_changed",
-                    "change_contact": "Checkmk",
-                }
-            ),
+        clients.EventConsole.update_and_acknowledge(
+            event_id="1",
+            site_id="NO_SITE",
+            change_comment="comment_changed",
+            change_contact="Checkmk",
         )
 
 
 def test_update_and_acknowledge_withdrawal_by_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -498,23 +420,18 @@ def test_update_and_acknowledge_withdrawal_by_id(
     )
 
     with mock_livestatus:
-        change_state_or_update_and_acknowledge(
-            url=object_base_url + "4/actions/update_and_acknowledge/invoke",
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "change_comment": "comment_changed",
-                    "change_contact": "Checkmk",
-                    "phase": "open",
-                }
-            ),
+        clients.EventConsole.update_and_acknowledge(
+            event_id="4",
+            site_id="NO_SITE",
+            change_comment="comment_changed",
+            change_contact="Checkmk",
+            phase="open",
         )
 
 
 def test_update_and_acknowledge_non_existing_event_by_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -524,22 +441,18 @@ def test_update_and_acknowledge_non_existing_event_by_id(
     )
 
     with mock_livestatus:
-        change_state_or_update_and_acknowledge(
-            status=404,
-            url=object_base_url + "7/actions/update_and_acknowledge/invoke",
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "change_contact": "testcontact",
-                    "change_comment": "testcomment",
-                }
-            ),
-        )
+        clients.EventConsole.update_and_acknowledge(
+            event_id="7",
+            site_id="NO_SITE",
+            change_comment="testcontact",
+            change_contact="testcomment",
+            expect_ok=False,
+        ).assert_status_code(404)
 
 
 def test_update_and_acknowledge_query_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    update_and_acknowledge_multiple_events: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -552,22 +465,18 @@ def test_update_and_acknowledge_query_filter(
     )
 
     with mock_livestatus:
-        update_and_acknowledge_multiple_events(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "query",
-                    "query": '{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
-                    "change_contact": "testcontact",
-                    "change_comment": "testcomment",
-                },
-            ),
+        clients.EventConsole.update_and_acknowledge_multiple(
+            site_id="NO_SITE",
+            filter_type="query",
+            query='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
+            change_contact="testcontact",
+            change_comment="testcomment",
         )
 
 
 def test_update_and_acknowledge_params_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    update_and_acknowledge_multiple_events: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -580,26 +489,20 @@ def test_update_and_acknowledge_params_filter(
     )
 
     with mock_livestatus:
-        update_and_acknowledge_multiple_events(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "params",
-                    "filters": {
-                        "state": "warning",
-                        "host": "heute",
-                        "application": "App5",
-                    },
-                    "change_contact": "testcontact",
-                    "change_comment": "testcomment",
-                },
-            ),
+        clients.EventConsole.update_and_acknowledge_multiple(
+            site_id="NO_SITE",
+            filter_type="params",
+            state="warning",
+            host="heute",
+            application="App5",
+            change_contact="testcontact",
+            change_comment="testcomment",
         )
 
 
 def test_update_and_acknowledge_all_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    update_and_acknowledge_multiple_events: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -612,21 +515,17 @@ def test_update_and_acknowledge_all_filter(
     )
 
     with mock_livestatus:
-        update_and_acknowledge_multiple_events(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "all",
-                    "change_contact": "testcontact",
-                    "change_comment": "testcomment",
-                },
-            ),
+        clients.EventConsole.update_and_acknowledge_multiple(
+            site_id="NO_SITE",
+            filter_type="all",
+            change_contact="testcontact",
+            change_comment="testcomment",
         )
 
 
 def test_update_and_acknowledge_withdrawal_params_filter(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    update_and_acknowledge_multiple_events: Callable,
 ) -> None:
 
     add_event_console_events_to_live_status_table(mock_livestatus)
@@ -639,36 +538,27 @@ def test_update_and_acknowledge_withdrawal_params_filter(
     )
 
     with mock_livestatus:
-        update_and_acknowledge_multiple_events(
-            params=json.dumps(
-                {
-                    "site_id": "NO_SITE",
-                    "filter_type": "all",
-                    "phase": "open",
-                },
-            ),
+        clients.EventConsole.update_and_acknowledge_multiple(
+            site_id="NO_SITE",
+            filter_type="all",
+            phase="open",
         )
 
 
-def test_update_and_acknowledge_no_filters(
-    update_and_acknowledge_multiple_events: Callable,
-) -> None:
-
-    update_and_acknowledge_multiple_events(
-        params=json.dumps(
-            {
-                "filter_type": "params",
-                "change_contact": "testcontact",
-                "change_comment": "testcomment",
-            }
-        ),
-        status=400,
+def test_update_and_acknowledge_no_filters(clients: ClientRegistry) -> None:
+    resp = clients.EventConsole.update_and_acknowledge_multiple(
+        site_id="NO_SITE",
+        filter_type="params",
+        change_contact="testcontact",
+        change_comment="testcomment",
+        expect_ok=False,
     )
+    assert resp.json["detail"] == "These fields have problems: filters"
 
 
 def test_update_and_acknowledge_all_filter_no_site_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    update_and_acknowledge_multiple_events: Callable,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
@@ -679,20 +569,16 @@ def test_update_and_acknowledge_all_filter_no_site_id(
     )
 
     with mock_livestatus:
-        update_and_acknowledge_multiple_events(
-            params=json.dumps(
-                {
-                    "filter_type": "all",
-                    "change_contact": "testcontact",
-                    "change_comment": "testcomment",
-                },
-            ),
+        clients.EventConsole.update_and_acknowledge_multiple(
+            filter_type="all",
+            change_comment="testcomment",
+            change_contact="testcontact",
         )
 
 
 def test_change_existing_event_states_params_filter_no_site_id(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    change_multiple_event_states: Callable,
 ) -> None:
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
@@ -703,48 +589,29 @@ def test_change_existing_event_states_params_filter_no_site_id(
     )
 
     with mock_livestatus:
-        change_multiple_event_states(
-            params=json.dumps(
-                {
-                    "filter_type": "params",
-                    "new_state": "unknown",
-                    "filters": {
-                        "state": "warning",
-                        "host": "heute",
-                        "application": "App5",
-                        "phase": "open",
-                    },
-                }
-            ),
+        clients.EventConsole.change_multiple_event_states(
+            filter_type="params",
+            new_state="unknown",
+            state="warning",
+            host="heute",
+            application="App5",
+            phase="open",
         )
 
 
-def test_update_and_acknowledge_by_id_but_no_site_id(
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
-) -> None:
-    resp = change_state_or_update_and_acknowledge(
-        url=object_base_url + "1/actions/update_and_acknowledge/invoke",
-        params=json.dumps(
-            {
-                "change_comment": "comment_changed",
-                "change_contact": "Checkmk",
-            }
-        ),
-        status=400,
+def test_update_and_acknowledge_by_id_but_no_site_id(clients: ClientRegistry) -> None:
+    resp = clients.EventConsole.update_and_acknowledge(
+        event_id="1",
+        site_id=None,
+        change_comment="testcontact",
+        change_contact="testcomment",
+        expect_ok=False,
     )
     assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}
 
 
-def test_change_existing_event_state_by_id_no_site_id(
-    object_base_url: str,
-    change_state_or_update_and_acknowledge: Callable,
-) -> None:
-    # add_event_console_events_to_live_status_table(mock_livestatus)
-
-    resp = change_state_or_update_and_acknowledge(
-        url=object_base_url + "1/actions/change_state/invoke",
-        params=json.dumps({"new_state": "warning"}),
-        status=400,
+def test_change_existing_event_state_by_id_no_site_id(clients: ClientRegistry) -> None:
+    resp = clients.EventConsole.change_event_state(
+        event_id="1", new_state="warning", expect_ok=False
     )
     assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}

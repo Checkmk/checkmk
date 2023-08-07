@@ -1,5 +1,5 @@
 title: BEA Weblogic: Number of JVM Threads
-agents: linux
+agents: linux, windows
 catalog: app/java
 license: GPLv2
 distribution: check_mk

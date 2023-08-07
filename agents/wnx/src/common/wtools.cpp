@@ -3,9 +3,8 @@
 
 #include "wtools.h"
 
-#include <WinSock2.h>
-
 #include <Psapi.h>
+#include <WinSock2.h>
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -3452,6 +3451,31 @@ void InternalUsersDb::killAll() {
 size_t InternalUsersDb::size() const {
     std::lock_guard lk(users_lock_);
     return users_.size();
+}
+
+inline std::string ToUtf8(const std::wstring_view src,
+                          unsigned long &error_code) noexcept {
+    const auto in_len = static_cast<int>(src.length());
+    const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
+                                               nullptr, 0, nullptr, nullptr);
+    if (out_len == 0) {
+        error_code = ::GetLastError();
+        return {};
+    }
+
+    std::string str;
+    str.resize(out_len);
+
+    const auto result = ::WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, src.data(), static_cast<int>(src.size()),
+        str.data(), out_len, nullptr, nullptr);
+    if (result == 0) {
+        error_code = ::GetLastError();
+        return {};
+    }
+    // some older engines may have problems if we do not have trailing zero
+    AddSafetyEndingNull(str);
+    return str;
 }
 
 }  // namespace wtools

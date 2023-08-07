@@ -55,6 +55,14 @@ std::pair<std::string_view, std::optional<std::string_view>> SplitView(
     std::string_view data, std::string_view delimiter);
 using ScanViewCallback = std::function<void(std::string_view work)>;
 
+/// determines used algorithm to convert data into UTF-8
+enum UtfConversionMode {
+    basic,           /// whole block is converted
+    repair_by_line,  /// every line converted individually
+};
+
+bool IsUtf16BomLe(std::string_view data) noexcept;
+
 /// call callback for every string between begin, delimiter and end
 void ScanView(std::string_view data, std::string_view delimiter,
               ScanViewCallback callback);
@@ -387,6 +395,9 @@ inline bool HackPluginDataRemoveCr(std::vector<char> &out,
     return HackDataWithCacheInfo(out, original_data, "", HackDataMode::header);
 }
 
+std::string ConvertUtfData(const std::vector<char> &data_block,
+                           tools::UtfConversionMode mode);
+
 class PluginEntry : public cfg::PluginInfo {
 public:
     explicit PluginEntry(std::filesystem::path path) : path_(std::move(path)) {}
@@ -549,6 +560,7 @@ public:
     const wtools::InternalUser &getUser() const noexcept { return iu_; }
 
 protected:
+    tools::UtfConversionMode getUtfConversionMode() const;
     void fillInternalUser(wtools::InternalUsersDb *iu);
     std::optional<std::string> startProcessName();
     void restartAsyncThreadIfFinished(const std::wstring &id);

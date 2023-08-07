@@ -25,6 +25,7 @@ namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 namespace cma {
 bool IsValidFile(const fs::path &file_to_exec) {
@@ -124,8 +125,12 @@ std::pair<std::string_view, std::optional<std::string_view>> SplitView(
         return std::pair{std::string_view{data.begin(), data.end()},
                          std::nullopt};
     }
-    return std::pair{std::string_view{data.begin(), found.begin()},
+    return std::pair{std::string_view{data.begin(), found.end()},
                      std::string_view{found.end(), data.end()}};
+}
+
+bool IsUtf16BomLe(std::string_view data) noexcept {
+    return data.size() > 1 && data[0] == '\xFF' && data[1] == '\xFE';
 }
 
 void ScanView(std::string_view data, std::string_view delimiter,
@@ -661,6 +666,113 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
     return true;
 }
 
+namespace {
+constexpr auto CR_16 = "\x0D\x00"sv;
+constexpr auto LF_16 = "\x0A\x00"sv;
+
+/// check we do not have added additional CR
+void EnsureCorrectLastChar(std::string_view input, std::string &output) {
+    if (input.length() >= 2 && input.substr(input.length() - 2) != LF_16 &&
+        !output.empty() && output.back() == '\n') {
+        output.pop_back();
+    }
+}
+
+namespace {
+
+struct DisassembleView {
+    std::string_view s;
+    bool has_cr;
+    bool has_lf;
+};
+
+/// Separate data view from the L'CR' and L'LF'
+/// Info about cr & lf is stored to be used during re-assembling
+DisassembleView DisassembleString(std::string_view s) {
+    const auto has_cr =
+        s.length() >= 4 && s.substr(s.length() - 4, s.length() - 2) == CR_16;
+    const auto has_lf = s.length() >= 2 && s.substr(s.length() - 2) == LF_16;
+    auto sz = s.size();
+    if (has_cr) {
+        sz -= 2;
+    }
+    if (has_lf) {
+        sz -= 2;
+    }
+    return {.s = {s.data(), sz}, .has_cr = has_cr, .has_lf = has_lf};
+}
+
+bool IsLikelyUtf8(std::string_view s) {
+    return s.size() >= 10 &&  // string to be long enough short to be sure
+           ::MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, s.data(),
+                                 static_cast<int>(s.size()), nullptr, 0) != 0;
+}
+
+void AppendDisassembledTail(std::string &data,
+                            const DisassembleView &disassembled) {
+    if (disassembled.has_cr) {
+        data += '\x0D';
+    }
+    if (disassembled.has_lf) {
+        data += '\x0A';
+    }
+}
+
+void AppendDisassembled(std::string &data,
+                        const DisassembleView &disassembled) {
+    data += disassembled.s;
+    AppendDisassembledTail(data, disassembled);
+}
+
+}  // namespace
+
+std::string ConvertWithRepair(std::string_view data_block) {
+    std::string data;
+    if (tools::IsUtf16BomLe(data_block)) {
+        data.reserve(data_block.size());
+        tools::ScanView(data_block.substr(2), LF_16, [&data](auto s) {
+            auto disassembled = DisassembleString(s);
+            if (IsLikelyUtf8(disassembled.s)) {
+                AppendDisassembled(data, disassembled);
+            } else {
+                if (const auto wide_string = tools::ToWideView(s);
+                    wide_string) {
+                    data += wtools::ToUtf8(*wide_string);
+                } else {
+                    XLOG::t("Invalid UTF-8 string '{}' -> skip", s);
+                    AppendDisassembledTail(data, disassembled);
+                }
+            }
+        });
+    } else {
+        data.assign(data_block.begin(), data_block.end());
+    }
+    wtools::AddSafetyEndingNull(data);
+    return data;
+}
+
+std::string PostProcessPluginData(const std::vector<char> &datablock,
+                                  tools::UtfConversionMode mode) {
+    auto data = ConvertUtfData(datablock, mode);
+    if (!data.empty() && data.back() == 0) {
+        data.pop_back();  // conditional convert adds 0
+    }
+    return data;
+}
+}  // namespace
+
+std::string ConvertUtfData(const std::vector<char> &data_block,
+                           tools::UtfConversionMode mode) {
+    switch (mode) {
+        case tools::UtfConversionMode::basic:
+            return wtools::ConditionallyConvertFromUtf16(data_block);
+        case tools::UtfConversionMode::repair_by_line:
+            return ConvertWithRepair(tools::ToView(data_block));
+    }
+    // unreachable
+    return {};
+}
+
 // LOOP:
 // register
 // wait some time
@@ -695,10 +807,8 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
         minibox_.processResults([&](const std::wstring &cmd_line, uint32_t pid,
                                     uint32_t code,
                                     const std::vector<char> &datablock) {
-            auto data = wtools::ConditionallyConvertFromUtf16(datablock);
-            if (!data.empty() && data.back() == 0) {
-                data.pop_back();  // conditional convert adds 0
-            }
+            auto data =
+                PostProcessPluginData(datablock, getUtfConversionMode());
             tools::AddVector(accu, data);
             storeData(pid, accu);
             if (cfg::LogPluginOutput()) {
@@ -1108,6 +1218,12 @@ wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user) {
     }
 
     return {table[0], L""};
+}
+
+tools::UtfConversionMode PluginEntry::getUtfConversionMode() const {
+    // TODO(sk): add global flag
+    return repair_invalid_utf_ ? tools::UtfConversionMode::repair_by_line
+                               : tools::UtfConversionMode::basic;
 }
 
 void PluginEntry::fillInternalUser(wtools::InternalUsersDb *iu) {

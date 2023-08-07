@@ -523,23 +523,17 @@ private:
 #endif
 };
 
-// Standard converter, generates no exception in Windows
-// we support two converters
-// one is deprecated, second is windows only
+/// Converts string to UTF-8 with error code
+/// Returns empty string on error.
+inline std::string ToUtf8(const std::wstring_view src,
+                          unsigned long &error_code) noexcept;
+
+/// Converts to UTF-8 drops error code
+/// This default API used. In most cases we could treat malformed UTF-8 as empty
+/// strings
 inline std::string ToUtf8(const std::wstring_view src) noexcept {
-    const auto in_len = static_cast<int>(src.length());
-    const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
-                                               nullptr, 0, nullptr, nullptr);
-    if (out_len == 0) {
-        return {};
-    }
-
-    std::string str;
-    str.resize(out_len);
-
-    ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len,
-                          nullptr, nullptr);
-    return str;
+    unsigned long _ = 0;
+    return ToUtf8(src, _);
 }
 
 inline std::string ToUtf8(std::string_view src) noexcept {
@@ -562,8 +556,8 @@ inline std::wstring ConvertToUtf16(std::string_view src) noexcept {
     std::wstring wstr;
     wstr.resize(out_len);
 
-    if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, wstr.data(),
-                            out_len) == out_len) {
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8_str, in_len,
+                            wstr.data(), out_len) == out_len) {
         return wstr;
     }
     return {};
@@ -649,6 +643,7 @@ inline int DataCountOnHandle(HANDLE handle) noexcept {
     return read_count;
 }
 
+// TODO(sk): remove it as a deprecated
 template <typename T>
 bool IsVectorMarkedAsUTF16(const std::vector<T> &data) noexcept {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");

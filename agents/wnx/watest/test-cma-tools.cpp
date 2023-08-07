@@ -267,15 +267,94 @@ TEST(CmaTools, ToView) {
     EXPECT_EQ(ToView(data), "A\0b\0c\0"sv);
 }
 
+TEST(CmaTools, ToWideView) {
+    EXPECT_FALSE(ToWideView("a"s).has_value());
+    const auto result = *ToWideView("\xD6\0\n\0"sv);
+    const auto expected = wtools::ConvertToUtf16("Ö\n"sv);
+    EXPECT_EQ(result, expected);
+}
+
 TEST(CmaTools, ScanView) {
     constexpr auto haystack{"markline2mark markline4markz"sv};
     constexpr auto needle{"mark"sv};
     std::vector<std::string> result;
-    const std::vector<std::string> expected = {"", "line2", " ", "line4", "z"};
+    const std::vector<std::string> expected = {"mark", "line2mark", " mark",
+                                               "line4mark", "z"};
 
     ScanView(haystack, needle,
              [&](auto s) { result.emplace_back(std::string{s}); });
     EXPECT_EQ(result, expected);
+}
+
+namespace {
+std::vector<char> JoinBomLe(std::wstring_view value) {
+    constexpr auto bom{"\xFF\xFE"sv};
+    std::vector<char> data;
+    data.assign(bom.begin(), bom.end());
+    const auto begin = reinterpret_cast<const char *>(value.data());
+    data.append_range(std::vector<char>{begin, begin + value.size() * 2});
+    return data;
+}
+}  // namespace
+
+std::pair<std::vector<char>, std::string> GetGoodTestPair() {
+    constexpr auto expected_result = "ÜÖÄa\nФИФИ"sv;
+    const auto in = wtools::ConvertToUtf16(expected_result);
+    const auto good_input = JoinBomLe(in);
+    return {good_input, std::string{expected_result}};
+}
+
+std::pair<std::vector<char>, std::string> GetBadTestPairMix_8_16() {
+    constexpr auto base = "ÜÖÄa\nФИФИ"sv;
+    std::wstring bad{*ToWideView({base.data(), base.size()})};
+    bad += L"\nAB";
+    auto bad_input = JoinBomLe(bad);
+    return {bad_input, std::string{base} + "\nAB"s};
+}
+std::pair<std::vector<char>, std::string> GetBadTestPairMix_8_16_8() {
+    constexpr auto base = "ÜÖÄa\nФИФИ"sv;
+    std::wstring bad{*ToWideView({base.data(), base.size()})};
+    bad += L"\nAB\n";
+    auto bad_input = JoinBomLe(bad);
+    bad_input.append_range(base);
+    return {bad_input, std::string{base} + "\nAB\n"s + std::string{base}};
+}
+std::pair<std::vector<char>, std::string> GetBadTestPairMix_Odd_16_Odd() {
+    std::vector<char> bad{
+        '\xFF', '\xFE',             //
+        'A',    'B',    'C',        // "ABC"
+        '\x0A', '\0',               // \n
+        'A',    '\0',   'B', '\0',  // L"AB"
+        '\x0A', '\0',               // \n
+        'A',    'B',    'C',        // "ABC"
+    };
+    return {bad, std::string{"\nAB\n"s}};
+}
+TEST(CmaTools, ConvertUtfDataGood) {
+    const auto [good, expected] = GetGoodTestPair();
+    EXPECT_EQ(ConvertUtfData(good, basic), expected);
+    EXPECT_EQ(ConvertUtfData(good, repair_by_line), expected);
+}
+
+TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_8_16) {
+    const auto [bad_input, expected] = GetBadTestPairMix_8_16();
+
+    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
+    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
+}
+
+TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_8_16_8) {
+    const auto [bad_input, expected] = GetBadTestPairMix_8_16_8();
+
+    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
+    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
+}
+
+TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_Odd_16_Odd) {
+    const auto [bad_input, expected] = GetBadTestPairMix_Odd_16_Odd();
+
+    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
+    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
 }
 
 namespace win {

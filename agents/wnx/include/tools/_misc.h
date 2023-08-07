@@ -63,6 +63,14 @@ std::string_view ToView(const Data &input) {
             sizeof(input[0]) * input.size()};
 }
 
+inline std::optional<std::wstring_view> ToWideView(std::string_view s) {
+    if ((s.size() % 2) != 0) {
+        return {};
+    }
+    return std::wstring_view{reinterpret_cast<const wchar_t *>(s.data()),
+                             s.size() / 2};
+}
+
 template <class T>
 concept StringLike = std::is_convertible_v<T, std::string_view>;
 template <class T>

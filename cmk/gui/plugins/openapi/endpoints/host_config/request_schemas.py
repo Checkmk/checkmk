@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
+from marshmallow import validates_schema, ValidationError
+
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 
@@ -99,16 +103,20 @@ class UpdateHost(BaseSchema):
       * `remove_attributes`
     """
 
+    schema_example = {"attributes": {"ipaddress": "192.168.0.123"}}
+
     attributes = gui_fields.host_attributes_field(
         "host",
         "update",
         "inbound",
         description=(
             "Replace all currently set attributes on the host, with these attributes. "
-            "Any previously set attributes which are not given here will be removed."
+            "Any previously set attributes which are not given here will be removed. "
+            "Can't be used together with update_attributes or remove_attributes fields."
         ),
         example={"ipaddress": "192.168.0.123"},
         required=False,
+        load_default=None,
     )
     update_attributes = gui_fields.host_attributes_field(
         "host",
@@ -116,18 +124,33 @@ class UpdateHost(BaseSchema):
         "inbound",
         description=(
             "Just update the hosts attributes with these attributes. The previously set "
-            "attributes will be overwritten."
+            "attributes will be overwritten. Can't be used together with attributes or "
+            "remove_attributes fields."
         ),
         example={"ipaddress": "192.168.0.123"},
         required=False,
+        load_default=None,
     )
     remove_attributes = fields.List(
         fields.String(),
-        description="A list of attributes which should be removed.",
+        description=(
+            "A list of attributes which should be removed. Can't be used together with "
+            "attributes or attributes fields."
+        ),
         example=["tag_foobar"],
         required=False,
-        load_default=list,
     )
+
+    @validates_schema
+    def validate_attributes(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Only one of the attributes fields is allowed at a time"""
+        only_one_of = {"attributes", "update_attributes", "remove_attributes"}
+
+        attribute_fields_sent = only_one_of & set(data)
+        if len(attribute_fields_sent) > 1:
+            raise ValidationError(
+                f"This endpoint only allows 1 action (set/update/remove) per call, you specified {len(attribute_fields_sent)} actions: {', '.join(attribute_fields_sent)}."
+            )
 
 
 class UpdateHostEntry(UpdateHost):

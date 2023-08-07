@@ -390,35 +390,34 @@ def update_host(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
     host_name = params["host_name"]
-    body = params["body"]
-    new_attributes = body["attributes"]
-    update_attributes = body["update_attributes"]
-    remove_attributes = body["remove_attributes"]
-    _verify_hostname(host_name, should_exist=True)
+    _verify_hostname(
+        host_name, should_exist=True
+    )  # remove this.  host should already be verified in schema.
     host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
+    body = params["body"]
 
-    if new_attributes:
-        new_attributes["meta_data"] = host.attributes().get("meta_data", {})
+    if new_attributes := body.get("attributes"):
+        new_attributes["meta_data"] = host.attribute("meta_data", {})
         host.edit(new_attributes, None)
 
-    if update_attributes:
+    if update_attributes := body.get("update_attributes"):
         host.update_attributes(update_attributes)
 
-    faulty_attributes = []
-    for attribute in remove_attributes:
-        if not host.has_explicit_attribute(attribute):
-            faulty_attributes.append(attribute)
+    if remove_attributes := body.get("remove_attributes"):
+        faulty_attributes = []
+        for attribute in remove_attributes:
+            if attribute not in host.attributes():
+                faulty_attributes.append(attribute)
 
-    if remove_attributes:
         host.clean_attributes(remove_attributes)  # silently ignores missing attributes
 
-    if faulty_attributes:
-        return problem(
-            status=400,
-            title="Some attributes were not removed",
-            detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
-        )
+        if faulty_attributes:
+            return problem(
+                status=400,
+                title="Some attributes were not removed",
+                detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
+            )
 
     return _serve_host(host, effective_attributes=False)
 
@@ -444,34 +443,34 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
     body = params["body"]
-    entries = body["entries"]
 
     succeeded_hosts: list[CREHost] = []
     failed_hosts: dict[HostName, str] = {}
-    for update_detail in entries:
+
+    for update_detail in body["entries"]:
         host_name = update_detail["host_name"]
-        new_attributes = update_detail["attributes"]
-        update_attributes = update_detail["update_attributes"]
-        remove_attributes = update_detail["remove_attributes"]
-        _verify_hostname(host_name)
+        _verify_hostname(
+            host_name
+        )  # remove this?  We already verify the host in the request schema
         host: CREHost = Host.load_host(host_name)
-        if new_attributes:
+        faulty_attributes = []
+
+        if new_attributes := update_detail.get("attributes"):
             host.edit(new_attributes, None)
 
-        if update_attributes:
+        if update_attributes := update_detail.get("update_attributes"):
             host.update_attributes(update_attributes)
 
-        faulty_attributes = []
-        for attribute in remove_attributes:
-            if not host.has_explicit_attribute(attribute):
-                faulty_attributes.append(attribute)
+        if remove_attributes := update_detail.get("remove_attributes"):
+            for attribute in remove_attributes:
+                if attribute not in host.attributes():
+                    faulty_attributes.append(attribute)
+
+            host.clean_attributes(remove_attributes)
 
         if faulty_attributes:
             failed_hosts[host_name] = f"Failed to remove {', '.join(faulty_attributes)}"
             continue
-
-        if remove_attributes:
-            host.clean_attributes(remove_attributes)
 
         succeeded_hosts.append(host)
 

@@ -609,11 +609,11 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def bulk_create(self, *args: JSON, expect_ok: bool = True) -> Response:
+    def bulk_create(self, entries: list[dict[str, Any]], expect_ok: bool = True) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/bulk-create/invoke",
-            body={"entries": args},
+            body={"entries": entries},
             expect_ok=expect_ok,
         )
 
@@ -646,32 +646,52 @@ class HostConfigClient(RestApiClient):
     def edit(
         self,
         host_name: str,
-        folder: str | None = "/",
         attributes: Mapping[str, Any] | None = None,
         update_attributes: Mapping[str, Any] | None = None,
         remove_attributes: Sequence[str] | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-        headers = {"IF-Match": etag, "Accept": "application/json"}
-        body = {
-            "attributes": attributes,
-            "update_attributes": update_attributes,
-            "remove_attributes": remove_attributes,
-        }
+        body: dict[str, Any] = {}
+
+        if attributes is not None:
+            body["attributes"] = attributes
+
+        if remove_attributes is not None:
+            body["remove_attributes"] = remove_attributes
+
+        if update_attributes is not None:
+            body["update_attributes"] = update_attributes
+
         return self.request(
             "put",
             url=f"/objects/{self.domain}/" + host_name,
-            body={k: v for k, v in body.items() if v is not None},
+            body=body,
             expect_ok=expect_ok,
-            headers=headers,
+            headers=self._set_etag_header(host_name, etag),
         )
 
-    def bulk_edit(self, *args: JSON, expect_ok: bool = True) -> Response:
+    def bulk_edit(
+        self,
+        entries: list[dict[str, Any]],
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "put",
             url=f"/domain-types/{self.domain}/actions/bulk-update/invoke",
-            body={"entries": args},
+            body={"entries": entries},
+            expect_ok=expect_ok,
+        )
+
+    def bulk_delete(
+        self,
+        entries: list[str],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/bulk-delete/invoke",
+            body={"entries": entries},
             expect_ok=expect_ok,
         )
 
@@ -708,6 +728,40 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
             headers={"IF-Match": etag, "Accept": "application/json"},
         )
+
+    def rename(
+        self,
+        host_name: str,
+        new_name: str,
+        etag: str | None = None,
+        expect_ok: bool = True,
+        follow_redirects: bool = True,
+    ) -> Response:
+        if etag is None:
+            etag = self.get(host_name).headers["ETag"]
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{host_name}/actions/rename/invoke",
+            body={"new_name": new_name},
+            expect_ok=expect_ok,
+            follow_redirects=follow_redirects,
+            headers={"IF-Match": etag, "Accept": "application/json"},
+        )
+
+    def rename_wait_for_completion(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/wait-for-completion/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def _set_etag_header(
+        self, host_name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(host_name=host_name).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 class FolderClient(RestApiClient):

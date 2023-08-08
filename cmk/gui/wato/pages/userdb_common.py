@@ -15,7 +15,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.customer import customer_api
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import get_login_sites
+from cmk.gui.site_config import get_login_sites, sitenames
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
@@ -204,7 +204,12 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     if cmk_version.edition() is cmk_version.Edition.CME:
-        return list(customer_api().get_sites_of_customer(connection["customer"]).keys())
+        # TODO CMK-14203
+        _customer_api = customer_api()
+        if _customer_api.is_global(customer := connection.get("customer", SCOPE_GLOBAL)):
+            return sitenames()
+        assert customer is not None
+        return list(_customer_api.get_sites_of_customer(customer).keys())
     return get_login_sites()
 
 

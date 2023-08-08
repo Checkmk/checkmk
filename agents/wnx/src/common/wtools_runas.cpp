@@ -188,7 +188,6 @@ bool SetLookupPrivilege(HANDLE token_handle, const LUID &luid) {
     tp.Privileges[0].Luid = luid;
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    // Adjust Token privileges
     if (::AdjustTokenPrivileges(token_handle, FALSE, &tp,
                                 sizeof TOKEN_PRIVILEGES, nullptr,
                                 nullptr) == TRUE)

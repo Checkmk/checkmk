@@ -39,6 +39,7 @@ endif
 SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
+SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe 
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.4.cab \
@@ -48,6 +49,7 @@ SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
 	$(SOURCE_BUILT_AGENT_UPDATER) \
 	$(SOURCE_BUILT_OHM) \
+	$(SOURCE_BUILT_EXT) \
 	$(SOURCE_BUILT_WINDOWS)
 
 ifeq ($(ENTERPRISE),yes)

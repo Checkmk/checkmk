@@ -26,7 +26,6 @@ static void SetEnabledFlag(bool flag) {
 }
 
 TEST(Commander, Base) {
-    //
     auto yaml = cfg::GetLoadedConfig();
     auto yaml_global = yaml[cfg::groups::kGlobal];
     EXPECT_TRUE(yaml_global[cfg::vars::kEnabled].IsScalar());

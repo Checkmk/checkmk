@@ -247,7 +247,7 @@ STAGES:
     - NAME: 'Shellcheck'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
-      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      COMMAND: "make test-shellcheck-docker &> ${RESULTS}/shellcheck.txt"
       TEXT_ON_SKIP: 'No Shell files changed'
       RESULT_CHECK_TYPE: "SHELLCHECK"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"

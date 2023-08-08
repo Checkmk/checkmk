@@ -70,7 +70,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
+	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core
 
@@ -109,6 +109,7 @@ help:
 	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
 	@echo "test-pylint                         - Run pylint based tests"
 	@echo "test-shellcheck                     - Run shellcheck tests"
+	@echo "test-shellcheck-docker              - Run shellcheck tests in docker"
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
@@ -337,6 +338,9 @@ test-pylint-docker:
 
 test-shellcheck:
 	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
+
+test-shellcheck-docker:
+	../scripts/run-in-docker.sh make --quiet test-shellcheck
 
 test-cycles:
 	$(CYCLES) \

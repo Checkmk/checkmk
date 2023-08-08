@@ -126,6 +126,8 @@ get_files_from_filesystem() {
         --exclude-dir="build" \
         --exclude-dir="node_modules" \
         --exclude-dir="shared_cargo_folder" \
+        $(: docker directories ----------------------------------------------) \
+        --exclude-dir="build_user_home" \
         $(: OMD stuff, should perhaps be included partially -----------------) \
         --exclude-dir="omd" \
         "${SHEBANG_PATTERN}" ./*

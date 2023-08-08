@@ -209,6 +209,6 @@ def approx(value_in: float) -> float:
     ],
 )
 def test_data_stats(
-    slices: list[_time_series.TimeSeriesValues], result: list[DataStat | None]
+    slices: list[Sequence[float | None]], result: Sequence[DataStat | None]
 ) -> None:
     assert _prediction._data_stats(slices) == result

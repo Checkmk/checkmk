@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from statistics import fmean
 
 Timestamp = int
 
 TimeWindow = tuple[Timestamp, Timestamp, int]
 TimeSeriesValue = float | None
-TimeSeriesValues = list[TimeSeriesValue]
+TimeSeriesValues = Sequence[TimeSeriesValue]
 
 
 def rrd_timestamps(time_window: TimeWindow) -> list[Timestamp]:
@@ -108,7 +108,7 @@ class TimeSeries:
             return self.values
 
         dwsa = []
-        co: TimeSeriesValues = []
+        co: list[TimeSeriesValue] = []
         desired_times = rrd_timestamps(twindow)
         i = 0
         for t, val in self.time_data_pairs():

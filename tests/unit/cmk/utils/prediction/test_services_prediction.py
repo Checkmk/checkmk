@@ -11,7 +11,7 @@ from tests.testlib import repo_path
 
 from livestatus import RRDResponse
 
-from cmk.utils.prediction import _prediction, TimeSeries
+from cmk.utils.prediction import _prediction
 
 
 def _load_fake_rrd_response(start: int, end: int) -> RRDResponse:
@@ -181,21 +181,16 @@ def test_calculate_data_for_prediction(
 ) -> None:
     from_time = time_windows[0][0]
 
-    rrd_responses = [
-        (_load_fake_rrd_response(start, end), from_time - start) for start, end in time_windows
-    ]
-
     raw_slices = [
         (
-            TimeSeries(
-                list(rrd_response.values),
-                (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
-            ),
-            offset,
+            response.window,
+            response.values,
+            from_time - start,
         )
-        for rrd_response, offset in rrd_responses
-        if rrd_response is not None
+        for start, end in time_windows
+        if (response := _load_fake_rrd_response(start, end))
     ]
+
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
     expected_reference = _prediction.PredictionData.parse_raw(

@@ -5,10 +5,9 @@
 
 import logging
 import math
-import typing
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel
 
@@ -45,7 +44,7 @@ class PredictionParameters(BaseModel, frozen=True):
     levels_lower: LevelsSpec | None = None
 
 
-class DataStat(typing.NamedTuple):
+class DataStat(NamedTuple):
     average: float
     min_: float
     max_: float
@@ -166,30 +165,23 @@ def compute_prediction(
     time_windows = time_slices(now, info.params.horizon * 86400, period_info, info.name)
 
     from_time = time_windows[0][0]
-    rrd_responses = [
+    raw_slices = [
         (
-            get_rrd_data_with_mk_general_exception(
+            response.window,
+            response.values,
+            from_time - start,
+        )
+        for start, end in time_windows
+        if (
+            response := get_rrd_data_with_mk_general_exception(
                 host_name,
                 service_description,
                 info.dsname,
                 info.cf,
                 start,
                 end,
-            ),
-            from_time - start,
+            )
         )
-        for start, end in time_windows
-    ]
-
-    raw_slices = [
-        (
-            TimeSeries(
-                list(rrd_response.values),
-                (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
-            ),
-            offset,
-        )
-        for rrd_response, offset in rrd_responses
     ]
 
     data_for_pred = _calculate_data_for_prediction(raw_slices)
@@ -200,24 +192,41 @@ def compute_prediction(
 
 
 def _calculate_data_for_prediction(
-    raw_slices: Sequence[tuple[TimeSeries, int]],
+    raw_slices: Sequence[tuple[range, TimeSeriesValues, int]],
 ) -> PredictionData:
     # Upsample all time slices to same resolution
     # We assume that the youngest slice has the finest resolution.
-    twindow = raw_slices[0][0].twindow
+    youngest_range = raw_slices[0][0]
     slices = [
-        ts.forward_fill_resample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
-        for ts, shift in raw_slices
+        _forward_fill_resample(
+            current_range,
+            values,
+            range(youngest_range.start - shift, youngest_range.stop - shift, youngest_range.step),
+        )
+        for current_range, values, shift in raw_slices
     ]
 
     return PredictionData(
         points=_data_stats(slices),
-        data_twindow=list(twindow[:2]),
-        step=twindow[2],
+        data_twindow=[youngest_range.start, youngest_range.stop],
+        step=youngest_range.step,
     )
 
 
-def _data_stats(slices: list[TimeSeriesValues]) -> list[DataStat | None]:
+def _forward_fill_resample(
+    current_range: range, values: Sequence[float | None], new_range: range
+) -> Sequence[float | None]:
+    if current_range == new_range:
+        return values
+
+    idx_max = len(values) - 1
+    return [
+        values[max(0, min(int((t - current_range.start) / current_range.step), idx_max))]
+        for t in new_range
+    ]
+
+
+def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
     "Statistically summarize all the upsampled RRD data"
 
     descriptors: list[DataStat | None] = []

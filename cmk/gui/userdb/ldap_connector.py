@@ -912,7 +912,13 @@ class LDAPUserConnector(UserConnector):
                     _('The configured User-ID attribute "%s" does not exist for the user "%s"')
                     % (user_id_attr, dn)
                 )
-            user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
+
+            try:
+                user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
+            except ValueError as e:
+                self._logger.warning(f"  SKIP SYNC {e}")
+                continue
+
             if user_id:
                 ldap_user["dn"] = dn  # also add the DN
                 result[user_id] = ldap_user

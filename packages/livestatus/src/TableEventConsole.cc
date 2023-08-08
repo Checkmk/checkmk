@@ -61,7 +61,7 @@ private:
         emitColumnsHeader(os);
         emitTimeRangeFilter(os);
         emitGreppingFilter(os);
-        os << std::endl;
+        os << "\n";
     }
 
     void emitGET(std::ostream &os) const {

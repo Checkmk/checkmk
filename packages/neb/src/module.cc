@@ -730,7 +730,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 fl_client_queue = new ClientQueue_t{};
                 g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             } catch (const std::exception &e) {
-                std::cerr << e.what() << std::endl;
+                std::cerr << e.what() << "\n";
                 exit(EXIT_FAILURE);
             }
             break;
@@ -1119,7 +1119,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
         register_callbacks();
     } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         exit(EXIT_FAILURE);
     }
 

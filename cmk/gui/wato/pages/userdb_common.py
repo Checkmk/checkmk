@@ -211,8 +211,10 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     if cmk_version.is_managed_edition():
-        if managed.is_global(customer := connection["customer"]):
+        # TODO CMK-14203
+        if managed.is_global(customer := connection.get("customer", managed.SCOPE_GLOBAL)):
             return sitenames()
+        assert customer is not None
         return list(managed_helpers.get_sites_of_customer(customer).keys())
     return get_login_sites()
 

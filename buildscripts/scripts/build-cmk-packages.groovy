@@ -124,10 +124,12 @@ def main() {
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
-            dir("${checkout_dir}") {
-                sh("make buildclean");
-                versioning.configure_checkout_folder(EDITION, cmk_version);
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+                dir("${checkout_dir}") {
+                    sh("make buildclean");
+                    versioning.configure_checkout_folder(EDITION, cmk_version);
+                }
             }
         }
     }

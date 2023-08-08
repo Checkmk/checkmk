@@ -22,8 +22,6 @@
 
 using namespace std::chrono_literals;
 
-int copy_data(int from, int to);
-
 struct thread_info {
     int from;
     int to;

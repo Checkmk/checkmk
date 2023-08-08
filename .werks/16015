@@ -1,0 +1,19 @@
+Title: ldap & saml: resolve error when connection config is edited or created
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1690532069
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, Checkmk raised an error in the following cases:
+
+LI: when the user attempted to create a LDAP connection with a config with the customer option set to "Global"
+LI: when the user attempted to change a LDAP connection config with the customer option set to "Global"
+LI: when the user attempted to create a SAML connection config
+LI: when the user attempted to delete an existing SAML connection config
+
+This werk resolves these issues and Checkmk will not throw an error anymore.
+

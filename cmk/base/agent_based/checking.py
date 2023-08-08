@@ -12,6 +12,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import wrap_parameters
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.hostaddress import HostName
@@ -27,7 +28,7 @@ from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName
+from cmk.checkengine.checking import CheckPlugin, CheckPluginName, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
@@ -81,6 +82,7 @@ def execute_checkmk_checks(
             Result[AgentRawData | SNMPRawData, Exception],
         ]
     ],
+    fetched_timings: Iterable[tuple[SourceInfo, Snapshot]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
@@ -95,52 +97,67 @@ def execute_checkmk_checks(
     submitter: Submitter,
     exit_spec: ExitSpec,
     snmp_backend: SNMPBackendEnum,
+    perfdata_with_times: bool,
 ) -> ActiveCheckResult:
-    host_sections = parser(fetched)
-    host_sections_by_host = group_by_host(
-        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
-    )
-    store_piggybacked_sections(host_sections_by_host)
-    providers = make_providers(host_sections_by_host, section_plugins)
-    service_results = list(
-        check_host_services(
-            hostname,
-            is_cluster=is_cluster,
-            cluster_nodes=cluster_nodes,
-            providers=providers,
-            services=services,
-            check_plugins=check_plugins,
-            run_plugin_names=run_plugin_names,
-            get_effective_host=get_effective_host,
-            get_check_period=get_check_period,
-            snmp_backend=snmp_backend,
-            rtc_package=None,
+    check_results = ActiveCheckResult()
+    with CPUTracker() as tracker:
+        # CPU tracking should be in the caller for SRP but then, the timings
+        # are missing for the `Check_MK` service in the GUI.
+        host_sections = parser(fetched)
+        host_sections_by_host = group_by_host(
+            (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
         )
-    )
-    submitter.submit(
-        Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-        for s in service_results
-    )
-
-    if run_plugin_names is EVERYTHING:
-        _do_inventory_actions_during_checking_for(
-            hostname,
-            inventory_parameters=inventory_parameters,
-            inventory_plugins=inventory_plugins,
-            params=params,
-            providers=providers,
-        )
-    timed_results = itertools.chain(
-        summarizer(host_sections),
-        check_parsing_errors(
-            itertools.chain.from_iterable(
-                resolver.parsing_errors for resolver in providers.values()
+        store_piggybacked_sections(host_sections_by_host)
+        providers = make_providers(host_sections_by_host, section_plugins)
+        service_results = list(
+            check_host_services(
+                hostname,
+                is_cluster=is_cluster,
+                cluster_nodes=cluster_nodes,
+                providers=providers,
+                services=services,
+                check_plugins=check_plugins,
+                run_plugin_names=run_plugin_names,
+                get_effective_host=get_effective_host,
+                get_check_period=get_check_period,
+                snmp_backend=snmp_backend,
+                rtc_package=None,
             )
-        ),
-        _check_plugins_missing_data(service_results, exit_spec),
-    )
+        )
+        submitter.submit(
+            Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
+            for s in service_results
+        )
 
-    return ActiveCheckResult.from_subresults(*timed_results)
+        if run_plugin_names is EVERYTHING:
+            _do_inventory_actions_during_checking_for(
+                hostname,
+                inventory_parameters=inventory_parameters,
+                inventory_plugins=inventory_plugins,
+                params=params,
+                providers=providers,
+            )
+        timed_results = itertools.chain(
+            summarizer(host_sections),
+            check_parsing_errors(
+                itertools.chain.from_iterable(
+                    resolver.parsing_errors for resolver in providers.values()
+                )
+            ),
+            _check_plugins_missing_data(service_results, exit_spec),
+        )
+
+        check_results = ActiveCheckResult.from_subresults(*timed_results)
+
+    check_results = ActiveCheckResult.from_subresults(
+        check_results,
+        make_timing_results(
+            tracker.duration,
+            fetched_timings,
+            perfdata_with_times=perfdata_with_times,
+        ),
+    )
+    return check_results
 
 
 def _do_inventory_actions_during_checking_for(

@@ -27,7 +27,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
@@ -62,7 +62,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.checkengine.inventory as inventory
-from cmk.checkengine.checking import CheckPluginName, make_timing_results
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
@@ -2074,42 +2074,34 @@ def mode_check(
         fetched = fetcher(hostname, ip_address=ipaddress)
         is_cluster = config_cache.is_cluster(hostname)
         check_plugins = CheckPluginMapper(config_cache, value_store_manager)
-        with CPUTracker() as tracker:
-            check_result = execute_checkmk_checks(
-                hostname=hostname,
-                is_cluster=is_cluster,
-                cluster_nodes=config_cache.nodes_of(hostname) or (),
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(),
-                check_plugins=check_plugins,
-                inventory_plugins=InventoryPluginMapper(),
-                inventory_parameters=config_cache.inventory_parameters,
-                params=config_cache.hwsw_inventory_parameters(hostname),
-                services=config_cache.configured_services(hostname),
-                run_plugin_names=run_plugin_names,
-                get_effective_host=config_cache.effective_host,
-                get_check_period=partial(config_cache.check_period_of_service, hostname),
-                submitter=get_submitter_(
-                    check_submission=config.check_submission,
-                    monitoring_core=config.monitoring_core,
-                    dry_run=dry_run,
-                    host_name=hostname,
-                    perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-                    show_perfdata=options.get("perfdata", False),
-                ),
-                exit_spec=config_cache.exit_code_spec(hostname),
-                snmp_backend=config_cache.get_snmp_backend(hostname),
-            )
-
-        check_result = ActiveCheckResult.from_subresults(
-            check_result,
-            make_timing_results(
-                tracker.duration,
-                tuple((f[0], f[2]) for f in fetched),
-                perfdata_with_times=config.check_mk_perfdata_with_times,
+        check_result = execute_checkmk_checks(
+            hostname=hostname,
+            is_cluster=is_cluster,
+            cluster_nodes=config_cache.nodes_of(hostname) or (),
+            fetched=((f[0], f[1]) for f in fetched),
+            fetched_timings=((f[0], f[2]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            check_plugins=check_plugins,
+            inventory_plugins=InventoryPluginMapper(),
+            inventory_parameters=config_cache.inventory_parameters,
+            params=config_cache.hwsw_inventory_parameters(hostname),
+            services=config_cache.configured_services(hostname),
+            run_plugin_names=run_plugin_names,
+            get_effective_host=config_cache.effective_host,
+            get_check_period=partial(config_cache.check_period_of_service, hostname),
+            submitter=get_submitter_(
+                check_submission=config.check_submission,
+                monitoring_core=config.monitoring_core,
+                dry_run=dry_run,
+                host_name=hostname,
+                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+                show_perfdata=options.get("perfdata", False),
             ),
+            exit_spec=config_cache.exit_code_spec(hostname),
+            snmp_backend=config_cache.get_snmp_backend(hostname),
+            perfdata_with_times=config.check_mk_perfdata_with_times,
         )
         state, text = check_result.state, check_result.as_text()
 

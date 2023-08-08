@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable
 from contextlib import suppress
 from typing import DefaultDict
 
@@ -20,10 +20,14 @@ __all__ = ["make_timing_results"]
 
 def make_timing_results(
     total_times: Snapshot,
-    fetched: Sequence[tuple[SourceInfo, Snapshot]],
+    fetched: Iterable[tuple[SourceInfo, Snapshot]],
     *,
     perfdata_with_times: bool,
 ) -> ActiveCheckResult:
+    # Transform `fetched` into a `Sequence` because this function iterates
+    # twice on it.  That's an implementation detail, however, so let's
+    # keep `fetched` `Iterable` in the signature.
+    fetched = tuple(fetched)
     for duration in (f[1] for f in fetched):
         total_times += duration
 

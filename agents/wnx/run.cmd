@@ -57,6 +57,9 @@ if "%~1"=="--msi"           (set arg_msi=1)          & shift & goto CheckOpts
 if "%~1"=="-O"              (set arg_ohm=1)          & shift & goto CheckOpts
 if "%~1"=="--ohm"           (set arg_ohm=1)          & shift & goto CheckOpts
 
+if "%~1"=="-E"              (set arg_ext=1)          & shift & goto CheckOpts
+if "%~1"=="--extensions"    (set arg_ext=1)          & shift & goto CheckOpts
+
 if "%~1"=="-T"              (set arg_test=1)         & shift & goto CheckOpts
 if "%~1"=="--test"          (set arg_test=1)         & shift & goto CheckOpts
 
@@ -65,7 +68,7 @@ if "%~1"=="--documentation" (set arg_doc=1)          & shift & goto CheckOpts
 
 if "%~1"=="--sign"          (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
-if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_msi=1)
+if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_ext=1) & (set arg_msi=1)
 
 
 
@@ -109,6 +112,9 @@ call :build_agent_controller
 
 :: arg_ohm
 call :build_ohm
+
+:: arg_ext
+call :build_ext
 
 :: arg_sign
 call :sign_binaries
@@ -231,6 +237,14 @@ call build_ohm.cmd
 if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red & call :halt 71
 goto :eof
 
+:build_ext
+if not "%arg_ext%" == "1" powershell Write-Host "Skipped Build of Extensions" -Foreground Yellow & goto :eof
+cd extensions\robotmk_ext
+call ..\..\scripts\cargo_build_robotmk.cmd
+cd ..\..
+if not %errorlevel% == 0 powershell Write-Host "Failed Build of Extensions" -Foreground Red & call :halt 73
+goto :eof
+
 :build_msi
 if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
 ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
@@ -332,7 +346,7 @@ echo.%~nx0 [arguments]
 echo.
 echo.Available arguments:
 echo.  -?, -h, --help       display help and exit
-echo.  -A, --all            shortcut to -S -B -C -T -M:  setup, build, ctl, ohm, unit, msi
+echo.  -A, --all            shortcut to -S -B -E -C -T -M:  setup, build, ctl, ohm, unit, msi, extensions
 echo.  -c, --clean          clean artifacts
 echo.  -S, --setup          check setup
 echo.  -C, --ctl            build controller
@@ -342,6 +356,7 @@ echo.  -F, --check-format   check for correct formatting
 echo.  -B, --build          build controller
 echo.  -M, --msi            build msi
 echo.  -O, --ohm            build ohm
+echo.  -E, --extensions     build extensions
 echo.  -T, --test           run unit test controller
 echo.  --sign file secret   sign controller with file in c:\common and secret
 echo.

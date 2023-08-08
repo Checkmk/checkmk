@@ -23,6 +23,7 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.checkengine.checkresults import ActiveCheckResult
 
 from .submitters import ServiceState
 
@@ -58,10 +59,10 @@ class CheckResultErrorHandler:
         self.snmp_backend: Final = snmp_backend
         self.keepalive: Final = keepalive
         # return value
-        self._result: tuple[ServiceState, str] | None = None
+        self._result: ActiveCheckResult | None = None
 
     @property
-    def result(self) -> tuple[ServiceState, str] | None:
+    def result(self) -> ActiveCheckResult | None:
         return self._result
 
     def __enter__(self) -> CheckResultErrorHandler:
@@ -71,15 +72,17 @@ class CheckResultErrorHandler:
         if type_ is None:
             return True
         assert value is not None
-        self._result = _handle_failure(
-            value,
-            self.exit_spec,
-            host_name=self.host_name,
-            service_name=self.service_name,
-            plugin_name=self.plugin_name,
-            is_cluster=self.is_cluster,
-            snmp_backend=self.snmp_backend,
-            keepalive=self.keepalive,
+        self._result = ActiveCheckResult(
+            *_handle_failure(
+                value,
+                self.exit_spec,
+                host_name=self.host_name,
+                service_name=self.service_name,
+                plugin_name=self.plugin_name,
+                is_cluster=self.is_cluster,
+                snmp_backend=self.snmp_backend,
+                keepalive=self.keepalive,
+            )
         )
         return True
 

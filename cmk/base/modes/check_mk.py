@@ -1652,7 +1652,7 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    state, text = 3, "unknown error"
+    check_result = ActiveCheckResult(3, "unknown error")
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
         with plugin_contexts.current_host(hostname):
@@ -1673,19 +1673,18 @@ def mode_check_discovery(
                 find_service_description=config.service_description,
                 enforced_services=config_cache.enforced_services_table(hostname),
             )
-        state, text = check_result.state, check_result.as_text()
 
     if error_handler.result is not None:
-        state, text = error_handler.result
+        check_result = error_handler.result
 
-    active_check_handler(hostname, text)
+    active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(text)
+        console.verbose(check_result.as_text())
     else:
         with suppress(IOError):
-            sys.stdout.write(text + "\n")
+            sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
-    return state
+    return check_result.state
 
 
 def register_mode_check_discovery(
@@ -2048,6 +2047,7 @@ def mode_check(
         hostname,
         override_non_ok_state=None,
     )
+    dry_run = options.get("no-submit", False)
     error_handler = CheckResultErrorHandler(
         config_cache.exit_code_spec(hostname),
         host_name=hostname,
@@ -2057,9 +2057,7 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    state, text = (3, "unknown error")
-    dry_run = options.get("no-submit", False)
-    check_result = ActiveCheckResult()
+    check_result = ActiveCheckResult(3, "unknown error")
     fetched: Sequence[
         tuple[
             SourceInfo,
@@ -2103,19 +2101,18 @@ def mode_check(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             perfdata_with_times=config.check_mk_perfdata_with_times,
         )
-        state, text = check_result.state, check_result.as_text()
 
     if error_handler.result is not None:
-        state, text = error_handler.result
+        check_result = error_handler.result
 
-    active_check_handler(hostname, text)
+    active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(text)
+        console.verbose(check_result.as_text())
     else:
         with suppress(IOError):
-            sys.stdout.write(text + "\n")
+            sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
-    return state
+    return check_result.state
 
 
 def register_mode_check(
@@ -2456,7 +2453,7 @@ def mode_inventory_as_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    state, text = (3, "unknown error")
+    check_result = ActiveCheckResult(3, "unknown error")
     with error_handler:
         check_result = _execute_active_check_inventory(
             hostname,
@@ -2470,18 +2467,18 @@ def mode_inventory_as_check(
             parameters=parameters,
             raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
         )
-        state, text = check_result.state, check_result.as_text()
-    if error_handler.result is not None:
-        state, text = error_handler.result
 
-    active_check_handler(hostname, text)
+    if error_handler.result is not None:
+        check_result = error_handler.result
+
+    active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(text)
+        console.verbose(check_result.as_text())
     else:
         with suppress(IOError):
-            sys.stdout.write(text + "\n")
+            sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
-    return state
+    return check_result.state
 
 
 def register_mode_inventory_as_check(

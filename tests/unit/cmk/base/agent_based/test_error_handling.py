@@ -28,54 +28,54 @@ def _handler() -> CheckResultErrorHandler:
 
 
 def test_no_error_keeps_status_from_callee() -> None:
-    handler = _handler()
-    result = handler.result
+    check_result = None
 
-    with handler:
+    with _handler() as handler:
         check_result = ActiveCheckResult(
             0,
             "summary",
             ("details", "lots of"),
             ("metrics", "x"),
         )
-        result = check_result.state, check_result.as_text()
 
-    assert result == (0, "summary | metrics x\ndetails\nlots of")
+    assert check_result is not None
+    assert check_result.state == 0
+    assert check_result.as_text() == "summary | metrics x\ndetails\nlots of"
     assert handler.result is None
 
 
 def test_MKTimeout_exception_returns_2() -> None:
-    handler = _handler()
-    with handler:
+    with _handler() as handler:
         raise MKTimeout("oops!")
 
-    assert handler.result == (2, "Timed out\n")
+    assert handler.result is not None
+    assert handler.result.state == 2
+    assert handler.result.as_text() == "Timed out"
 
 
 def test_MKAgentError_exception_returns_2() -> None:
-    handler = _handler()
-    with handler:
+    with _handler() as handler:
         raise MKAgentError("oops!")
 
-    assert handler.result == (2, "oops!\n")
+    assert handler.result is not None
+    assert handler.result.state == 2
+    assert handler.result.as_text() == "oops!"
 
 
 def test_MKGeneralException_returns_3() -> None:
-    handler = _handler()
-    with handler:
+    with _handler() as handler:
         raise MKGeneralException("kaputt!")
 
-    assert handler.result == (3, "kaputt!\n")
+    assert handler.result is not None
+    assert handler.result.state == 3
+    assert handler.result.as_text() == "kaputt!"
 
 
 @pytest.mark.usefixtures("disable_debug")
 def test_unhandled_exception_returns_3() -> None:
-    handler = _handler()
-    with handler:
+    with _handler() as handler:
         raise ValueError("unexpected :/")
 
     assert handler.result is not None
-
-    state, text = handler.result
-    assert state == 3
-    assert text.startswith("check failed - please submit a crash report!")
+    assert handler.result.state == 3
+    assert handler.result.as_text().startswith("check failed - please submit a crash report!")

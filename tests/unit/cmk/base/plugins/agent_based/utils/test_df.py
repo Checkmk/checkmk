@@ -622,8 +622,26 @@ def test_get_filesystem_levels(
             ),
             id=(
                 "Minimum levels (aka 'levels low') do not make sense when levels are specified as free space. They are "
-                "assumed to be relating to used space. TODO: fix this behaviour..."
+                "assumed to be relating to used space. This behaviour only happens when the magic factor is not equal to 1.0."
+                "TODO: fix this behaviour..."
             ),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (-40.0, -30.0),
+                "magic": 1.0,
+                "levels_low": (10.0, 20.0),
+                "magic_normsize": 100.0,
+            },
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(-40.0),
+                crit_percent=df.Percent(-30.0),
+                warn_absolute=df.Bytes(-40 * 1024**3),
+                crit_absolute=df.Bytes(-30 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
+            id=("When the magic factor is equal to 1.0, the levels are interpreted correctly."),
         ),
     ],
 )

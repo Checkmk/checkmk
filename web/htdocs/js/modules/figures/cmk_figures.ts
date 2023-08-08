@@ -4,7 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {plot_render_function} from "cmk_figures_utils";
+import {
+    add_scheduler_debugging,
+    plot_render_function,
+    svg_text_overflow_ellipsis,
+} from "cmk_figures_utils";
 import crossfilter, {Crossfilter} from "crossfilter2";
 import * as d3 from "d3";
 import {
@@ -15,8 +19,7 @@ import {
 } from "figure_types";
 import {Scheduler} from "multi_data_fetcher";
 import {CMKAjaxReponse} from "types";
-
-import * as utils from "../utils";
+import * as utils from "utils";
 
 // Base class for all cmk_figure based figures
 // Introduces
@@ -112,7 +115,8 @@ export abstract class FigureBase<
     abstract getEmptyData(): T;
 
     initialize(with_debugging?: boolean) {
-        if (with_debugging) this._add_scheduler_debugging();
+        if (with_debugging)
+            add_scheduler_debugging(this._div_selection, this.scheduler);
         this.show_loading_image();
     }
 
@@ -325,35 +329,6 @@ export abstract class FigureBase<
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     render() {}
 
-    // Adds some basic debug features for the scheduler
-    _add_scheduler_debugging() {
-        const debugging = this._div_selection.append("div");
-        // Stop button
-        debugging
-            .append("input")
-            .attr("type", "button")
-            .attr("value", "Stop")
-            .on("click", () => this.scheduler.disable());
-        // Start button
-        debugging
-            .append("input")
-            .attr("type", "button")
-            .attr("value", "Start")
-            .on("click", () => this.scheduler.enable());
-        // Suspend 5 seconds
-        debugging
-            .append("input")
-            .attr("type", "button")
-            .attr("value", "Suspend 5 seconds")
-            .on("click", () => this.scheduler.suspend_for(5));
-        // Force update
-        debugging
-            .append("input")
-            .attr("type", "button")
-            .attr("value", "Force")
-            .on("click", () => this.scheduler.force_update());
-    }
-
     render_title(title: undefined | string, title_url: string) {
         if (!this.svg) return;
         const renderedTitle = title ? [{title: title, url: title_url}] : [];
@@ -406,43 +381,12 @@ export abstract class FigureBase<
         }
 
         text_element.each((_d, idx, nodes) => {
-            this._svg_text_overflow_ellipsis(
+            svg_text_overflow_ellipsis(
                 nodes[idx],
                 this.figure_size.width,
                 title_padding_left
             );
         });
-    }
-
-    /**
-     * Component to realize the css property text-overflow: ellipsis for svg text elements
-     * @param {DOMElement} text or tspan DOM element
-     * @param {number} width - Max width for the text/tspan element
-     * @param {number} padding - Padding for the text/tspan element
-     */
-    _svg_text_overflow_ellipsis(
-        node: SVGTextElement | SVGTSpanElement,
-        width: number,
-        padding: number
-    ) {
-        let length = node.getComputedTextLength();
-        if (length <= width - padding) return;
-
-        const node_sel = d3.select(node);
-        let text = node_sel.text();
-        d3.select(node.parentNode as HTMLElement)
-            .selectAll("title")
-            .data(() => [text])
-            .join("title")
-            .text(d => d)
-            .classed("svg_text_tooltip", true);
-
-        while (length > width - padding && text.length > 0) {
-            text = text.slice(0, -1);
-            node_sel.text(text + "...");
-            length = node.getComputedTextLength();
-        }
-        node_sel.attr("x", padding).attr("text-anchor", "left");
     }
 
     get_scale_render_function() {

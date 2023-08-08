@@ -1,0 +1,16 @@
+Title: Fix failed LDAP sync because of invalid user ID
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1691489253
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Since 2.2, user IDs are validated when synchronizing LDAP connections. This
+could result in a failed sync if one or more user IDs were invalid.
+
+From now on such users are skipped on synchronizing and logged to
+~/var/log/web.log.
+

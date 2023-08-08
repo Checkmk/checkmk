@@ -140,7 +140,10 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
 
 
 def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
-    ldap_result = [("user1", {"uid": ["USER1_ID"]})]
+    ldap_result = [
+        ("user1", {"uid": ["USER1_ID"]}),
+        ("user2", {"uid": ["USER2_ID#"]}),  # user with invalid user ID
+    ]
     # note that the key is lower-cased due to 'lower_user_ids'
     expected_result = {"user1_id": {"dn": "user1", "uid": ["USER1_ID"]}}
     add_filter = "my(*)filter"

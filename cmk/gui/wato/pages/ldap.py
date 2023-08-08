@@ -153,6 +153,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "The ID of the connection must be a unique text, with the same requirements as an user id. "
                         "It will be used as an internal key when objects refer to the connection."
                     ),
+                    allow_empty=False,
                     size=12,
                 ),
             )

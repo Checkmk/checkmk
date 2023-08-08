@@ -456,6 +456,7 @@ section_statgrab() {
 
         statgrab_temporary_file="/tmp/statgrab.$$"
         statgrab_cleanup() {
+            # shellcheck disable=SC2317 # shellcheck doesn't understand trap
             if [ -f "${statgrab_temporary_file}" ]; then
                 rm -f "${statgrab_temporary_file}"
             fi

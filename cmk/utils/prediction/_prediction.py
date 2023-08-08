@@ -23,7 +23,7 @@ from cmk.utils.servicename import ServiceName
 
 from ._grouping import PeriodInfo, PeriodName, time_slices, Timegroup
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
-from ._time_series import TimeSeries, TimeSeriesValues, Timestamp, TimeWindow
+from ._time_series import TimeSeries, TimeSeriesValues, Timestamp
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -202,7 +202,13 @@ def compute_prediction(
 def _calculate_data_for_prediction(
     raw_slices: Sequence[tuple[TimeSeries, int]],
 ) -> PredictionData:
-    twindow, slices = _upsample(raw_slices)
+    # Upsample all time slices to same resolution
+    # We assume that the youngest slice has the finest resolution.
+    twindow = raw_slices[0][0].twindow
+    slices = [
+        ts.forward_fill_resample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
+        for ts, shift in raw_slices
+    ]
 
     return PredictionData(
         points=_data_stats(slices),
@@ -242,19 +248,3 @@ def _std_dev(point_line: list[float], average: float) -> float | None:
     return math.sqrt(
         abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1)
     )
-
-
-def _upsample(
-    slices: Sequence[tuple[TimeSeries, int]]
-) -> tuple[TimeWindow, list[TimeSeriesValues]]:
-    """Upsample all time slices to same resolution
-
-    The resolutions of the different time ranges differ. We upsample
-    to the best resolution. We assume that the youngest slice has the
-    finest resolution.
-    """
-    twindow = slices[0][0].twindow
-    return twindow, [
-        ts.forward_fill_resample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
-        for ts, shift in slices
-    ]

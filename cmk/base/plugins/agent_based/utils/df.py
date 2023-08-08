@@ -194,8 +194,16 @@ def _adjust_levels(
     relative_size = filesystem_size / reference_size
     true_factor = (relative_size**factor) / relative_size
 
-    warn_percent = Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
-    crit_percent = Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+    warn_percent = (
+        Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
+        if factor != 1.0
+        else levels.warn_percent
+    )
+    crit_percent = (
+        Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+        if factor != 1.0
+        else levels.crit_percent
+    )
 
     if isinstance(levels, LevelsFreeSpace):
         return LevelsFreeSpace(

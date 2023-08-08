@@ -17,6 +17,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -509,17 +510,19 @@ class ModeRenameHost(WatoMode):
             )
         )
 
-        html.begin_form("rename_host", method="POST")
-        html.add_confirm_on_submit(
+        html.begin_form(
             "rename_host",
-            _(
-                "Rename host?<br>"
-                "Info: Renaming the host includes a restart of the monitoring core. "
-                "While this change is pending on the central site, the reverting of pending "
-                "changes is blocked."
+            method="POST",
+            require_confirmation=RequireConfirmation(
+                html=_(
+                    "Rename host?<br>"
+                    "Info: Renaming the host includes a restart of the monitoring core. "
+                    "While this change is pending on the central site, the reverting of pending "
+                    "changes is blocked."
+                ),
+                confirmButtonText=_("Yes, rename"),
+                cancelButtonText=_("No, keep current name"),
             ),
-            _("Yes, rename"),
-            _("No, keep current name"),
         )
         forms.header(_("Rename host %s") % self._host.name())
         forms.section(_("Current name"))

@@ -54,6 +54,7 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
+from .type_defs import RequireConfirmation
 
 
 class HTMLGenerator(HTMLWriter):
@@ -334,10 +335,15 @@ class HTMLGenerator(HTMLWriter):
         method: str = "GET",
         onsubmit: str | None = None,
         add_transid: bool = True,
+        require_confirmation: RequireConfirmation | None = None,
     ) -> None:
         self.form_name = name
         self.form_vars = []
         self.form_has_submit_button = False
+
+        data_cmk_form_confirmation = None
+        if require_confirmation:
+            data_cmk_form_confirmation = require_confirmation.serialize()
 
         if action is None:
             action = requested_file_name(self.request) + ".py"
@@ -348,6 +354,7 @@ class HTMLGenerator(HTMLWriter):
             action=action,
             method=method,
             onsubmit=onsubmit,
+            data_cmk_form_confirmation=data_cmk_form_confirmation,
             enctype="multipart/form-data" if method.lower() == "post" else None,
         )
 
@@ -367,28 +374,6 @@ class HTMLGenerator(HTMLWriter):
             self.input(name="_save", type_="submit", cssclass="hidden_submit")
         self.close_form()
         self.form_name = None
-
-    def add_confirm_on_submit(
-        self, form_name: str, msg: str, confirm_text: str = "Yes", cancel_text: str = "No"
-    ) -> None:
-        """Adds a confirm dialog to a form that is shown before executing a form submission"""
-        self.javascript(
-            "cmk.forms.add_confirm_on_submit(%s, %s, %s)"
-            % (
-                json.dumps("form_%s" % form_name),
-                json.dumps(escaping.escape_text(msg)),
-                json.dumps(
-                    {
-                        "confirmButtonText": confirm_text,
-                        "cancelButtonText": cancel_text,
-                        "customClass": {
-                            "confirmButton": "confirm_question",
-                            "icon": "confirm_icon confirm_question",
-                        },
-                    }
-                ),
-            )
-        )
 
     def in_form(self) -> bool:
         return self.form_name is not None

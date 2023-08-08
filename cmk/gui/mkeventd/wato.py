@@ -47,6 +47,7 @@ from cmk.utils.version import edition, Edition
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupSiteManagement,
     NotificationParameter,
@@ -2943,9 +2944,11 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.close_ul()
 
         if user.may("mkeventd.switchmode"):
-            html.begin_form("switch")
-            html.add_confirm_on_submit(
-                "switch", _("Do you really want to switch the event daemon mode?")
+            html.begin_form(
+                "switch",
+                require_confirmation=RequireConfirmation(
+                    html=_("Do you really want to switch the event daemon mode?")
+                ),
             )
             if repl_mode == "sync":
                 html.button("_switch_takeover", _("Switch to Takeover mode!"))

@@ -11,7 +11,7 @@ import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import * as ajax from "ajax";
 import $ from "jquery";
 import Swal from "sweetalert2";
-import {CMKAjaxReponse} from "types";
+import {CMKAjaxReponse, RequireConfirmation} from "types";
 import * as utils from "utils";
 import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
 
@@ -417,26 +417,15 @@ export function confirm_dialog(
 
 // Makes a form submittable after explicit confirmation
 export function add_confirm_on_submit(
-    form_id: string,
-    message: string,
-    optional_args: {[name: string]: string} = {}
+    form: HTMLFormElement,
+    confirmation_args: RequireConfirmation
 ) {
-    const form = document.getElementById(form_id);
-    if (form instanceof HTMLElement) {
-        form.addEventListener("submit", e => {
-            const args = {
-                ...{html: message},
-                ...optional_args,
-            };
-            confirm_dialog(args, () => {
-                (document.getElementById(form_id) as HTMLFormElement)?.submit();
-            });
-            return utils.prevent_default_events(e!);
+    form.addEventListener("submit", e => {
+        confirm_dialog(confirmation_args, () => {
+            form.submit();
         });
-    } else
-        throw new Error(
-            `Can not add confirm on submit: The Form with the id ${form_id} does not exist`
-        );
+        return utils.prevent_default_events(e!);
+    });
 }
 
 // Used as onclick handler on links to confirm following the link or not

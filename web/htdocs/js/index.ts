@@ -46,6 +46,7 @@ import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as sla from "sla";
 import * as transfer from "transfer";
+import {RequireConfirmation} from "types";
 import * as utils from "utils";
 import * as valuespecs from "valuespecs";
 import * as views from "views";
@@ -99,6 +100,15 @@ $(() => {
     forms.enable_dynamic_form_elements();
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
+    // add a confirmation popup for each for that has a valid confirmation text
+    document
+        .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
+        .forEach((form, _) => {
+            const confirmation: RequireConfirmation = JSON.parse(
+                form.dataset.cmk_form_confirmation!
+            );
+            forms.add_confirm_on_submit(form, confirmation);
+        });
 });
 
 export const cmk_export = {

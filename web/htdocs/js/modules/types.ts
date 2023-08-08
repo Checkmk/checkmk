@@ -31,6 +31,16 @@ export interface PlotDefinition {
     };
 }
 
+export interface RequireConfirmation {
+    html: string;
+    confirmButtonText: string;
+    cancelButtonText: string;
+    customClass: {
+        confirmButton: "confirm_question";
+        icon: "confirm_icon confirm_question";
+    };
+}
+
 declare global {
     interface JQueryStatic {
         //This is introduced for mobile.ts since it uses JQuery Mobile

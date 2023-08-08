@@ -584,7 +584,6 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 UnitRenderFunc = Callable[[Any], str]
 
-
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
@@ -637,7 +636,6 @@ class RowShading(TypedDict):
 
 
 GraphRenderOptions = dict[str, Any]
-
 
 ActionResult = FinalizeRequest | None
 

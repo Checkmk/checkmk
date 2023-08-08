@@ -17,6 +17,7 @@ from cmk.utils.site import omd_site
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.type_defs import HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
@@ -863,7 +864,13 @@ class ModeBIRules(ABCBIMode):
             menu.show()
             return
 
-        html.begin_form("bulk_action_form", method="POST")
+        html.begin_form(
+            "bulk_action_form",
+            method="POST",
+            require_confirmation=RequireConfirmation(
+                html=_("Do you really want to move the selected rules?")
+            ),
+        )
         if self._view_type == "list":
             self.render_rules(_("Rules"), only_unused=False)
         else:
@@ -885,10 +892,6 @@ class ModeBIRules(ABCBIMode):
                     "cmk.selection.update_bulk_moveto(%s)"
                     % json.dumps(request.var("bulk_moveto", ""))
                 )
-
-            html.add_confirm_on_submit(
-                "bulk_action_form", _("Do you really want to move the selected rules?")
-            )
 
             html.dropdown(
                 "bulk_moveto",
@@ -2139,7 +2142,13 @@ class BIModeAggregations(ABCBIMode):
             url = mode_url(self.name(), pack=self.bi_pack.id)
             html.reload_whole_page(url)
 
-        html.begin_form("bulk_action_form", method="POST")
+        html.begin_form(
+            "bulk_action_form",
+            method="POST",
+            require_confirmation=RequireConfirmation(
+                html=_("Do you really want to move the selected aggregations?")
+            ),
+        )
         self._render_aggregations()
         html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
@@ -2157,10 +2166,6 @@ class BIModeAggregations(ABCBIMode):
                     "cmk.selection.update_bulk_moveto(%s)"
                     % json.dumps(request.var("bulk_moveto", ""))
                 )
-
-            html.add_confirm_on_submit(
-                "bulk_action_form", _("Do you really want to move the selected aggregations?")
-            )
 
             html.dropdown(
                 "bulk_moveto",

@@ -2606,8 +2606,6 @@ mk_ora_db_connect() {
                 P_TNSALIAS_P="$PREFIX_SID$P_TNSALIAS_P"
             elif [ -n "$PREFIX" ]; then
                 P_TNSALIAS_P="$PREFIX$P_TNSALIAS_P"
-            else
-                P_TNSALIAS_P="$P_TNSALIAS_P"
             fi
 
             POSTFIX_SID="POSTFIX_$sid"
@@ -2616,8 +2614,6 @@ mk_ora_db_connect() {
                 P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX_SID"
             elif [ -n "$POSTFIX" ]; then
                 P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX"
-            else
-                P_TNSALIAS_P="$P_TNSALIAS_P"
             fi
         fi
 

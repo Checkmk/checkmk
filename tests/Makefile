@@ -292,7 +292,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	cd .. && shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
+	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \

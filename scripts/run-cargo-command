@@ -17,6 +17,7 @@ if [ -e "/opt/rust/rustup" ]; then
 fi
 
 if [[ -f cargo_env ]]; then
+    # shellcheck source=/dev/null
     source cargo_env
 fi
 cargo "$@"

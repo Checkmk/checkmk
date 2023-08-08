@@ -104,7 +104,7 @@ set_variable_defaults() {
 preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     . "${HOME}/.profile" >/dev/null 2>&1
 
     export MK_LIBDIR
@@ -771,7 +771,7 @@ get_plugin_interpreter() {
         return 0
     fi
 
-    if [ "${filename#${filename%??}}" != "_2" ]; then
+    if [ "${filename#"${filename%??}"}" != "_2" ]; then
         if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
             section_checkmk_failed_plugin "${agent_plugin}"
             return 1

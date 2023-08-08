@@ -39,7 +39,7 @@ WAITMAX_CMD=${WAITMAX_CMD:-waitmax}       # To be overloaded by tests
 load_config() {
     # source optional configuration file
     if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
-        # shellcheck disable=SC1090
+        # shellcheck source=../cfg_examples/mk_redis.cfg
         . "$MK_CONFDIR/mk_redis.cfg"
     fi
 }
@@ -102,7 +102,7 @@ else
     exit 0
 fi
 
-for INSTANCE in ${REDIS_INSTANCES[*]}; do
+for INSTANCE in "${REDIS_INSTANCES[@]}"; do
     redis_args "${INSTANCE}"
     # print server section
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"

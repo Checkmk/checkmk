@@ -178,6 +178,7 @@ informix_logusage() {
 #       EXCLUDES="SECTION SECTION ..."
 #       EXCLUDES=ALL
 
+# shellcheck disable=SC1091 # TODO: add a configuration example and remove this suppression
 # shellcheck source=agents/cfg_examples/informix.cfg
 . "$MK_CONFDIR/informix.cfg" 2>/dev/null
 

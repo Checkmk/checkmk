@@ -73,7 +73,7 @@ fi
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/sap_hana.cfg" ]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=/dev/null
     . "$MK_CONFDIR/sap_hana.cfg"
 else
     echo "No such file $MK_CONFDIR/sap_hana.cfg" >&2
@@ -826,7 +826,7 @@ if [ -n "$DBS" ]; then
             SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
 
             # find the first db that is connected for queries that should be run per instance
-            for DB_DATA in ${DBS[*]}; do
+            for DB_DATA in "${DBS[@]}"; do
                 IFS=',' read -r db_sid db_instance db_name db_user db_password db_userstorekey <<<"${DB_DATA}"
                 if [ "$SID" == "$db_sid" ] && [ "$INSTANCE" == "$db_instance" ]; then
                     CREDENTIALS=$(get_credentials "${db_user}" "${db_password}" "${db_userstorekey}")
@@ -838,7 +838,7 @@ if [ -n "$DBS" ]; then
 
             query_instance "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$db_name" "$CREDENTIALS" "$SSLOPTION"
 
-            for DB_DATA in ${DBS[*]}; do
+            for DB_DATA in "${DBS[@]}"; do
                 IFS=',' read -r db_sid db_instance db_name db_user db_password db_userstorekey <<<"${DB_DATA}"
                 if [ "$SID" == "$db_sid" ] && [ "$INSTANCE" == "$db_instance" ]; then
                     CREDENTIALS=$(get_credentials "${db_user}" "${db_password}" "${db_userstorekey}")

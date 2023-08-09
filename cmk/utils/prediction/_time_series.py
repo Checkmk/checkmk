@@ -80,8 +80,8 @@ class TimeSeries:
     def twindow(self) -> TimeWindow:
         return self.start, self.end, self.step
 
-    def bfill_upsample(self, twindow: TimeWindow) -> TimeSeriesValues:
-        """Upsample by backward filling values
+    def forward_fill_resample(self, twindow: TimeWindow) -> TimeSeriesValues:
+        """Upsample by forward filling values
 
         twindow : 3-tuple, (start, end, step)
              description of target time interval

@@ -24,6 +24,14 @@ def test_rrdtimestamps(twindow: TimeWindow, result: list[int]) -> None:
 @pytest.mark.parametrize(
     "rrddata, twindow, upsampled",
     [
+        # The following test resamples the identity function consisting of the points
+        # (0|0), (10|10), (20|20), (30|30) and (40|40).
+        # Resampling at other times will always repeat the last measured value
+        # until the next sample is reached/passed, resulting in
+        # (4|0), (8|0), (12|10), (16|10), (20|20) ...
+        # When dealing with missing data, this is commonly refered to as "forward filling".
+        ([0, 50, 10, 0, 10, 20, 30, 40], (4, 47, 4), [0, 0, 10, 10, 20, 20, 20, 30, 30, 40, 40]),
+        # Here are some more tests that I don't know the significance of:
         ([10, 20, 10, 20], (10, 20, 10), [20]),
         ([10, 20, 10, 20], (10, 20, 5), [20, 20]),
         (
@@ -45,7 +53,7 @@ def test_time_series_upsampling(
     upsampled: TimeSeriesValues,
 ) -> None:
     ts = TimeSeries(rrddata)
-    assert ts.bfill_upsample(twindow) == upsampled
+    assert ts.forward_fill_resample(twindow) == upsampled
 
 
 @pytest.mark.parametrize(

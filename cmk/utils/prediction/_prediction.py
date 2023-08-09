@@ -255,6 +255,6 @@ def _upsample(
     """
     twindow = slices[0][0].twindow
     return twindow, [
-        ts.bfill_upsample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
+        ts.forward_fill_resample((twindow[0] - shift, twindow[1] - shift, twindow[2]))
         for ts, shift in slices
     ]

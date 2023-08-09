@@ -113,7 +113,7 @@ def _align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction |
             rrddata.values = (
                 rrddata.downsample((start_time, end_time, step), spec[4] or cf)
                 if step >= rrddata.twindow[2]
-                else rrddata.bfill_upsample((start_time, end_time, step))
+                else rrddata.forward_fill_resample((start_time, end_time, step))
             )
 
 

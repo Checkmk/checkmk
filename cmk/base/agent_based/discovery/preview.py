@@ -219,7 +219,6 @@ def _check_preview_table_row(
             service,
             check_plugin,
             get_effective_host=get_effective_host,
-            check_function=check_plugin.function(host_name, service),
             snmp_backend=snmp_backend,
             rtc_package=None,
         ).result

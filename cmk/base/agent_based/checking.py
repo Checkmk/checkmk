@@ -257,7 +257,6 @@ def check_host_services(
                 plugin,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
-                check_function=plugin.function(host_name, service),
                 snmp_backend=snmp_backend,
             )
 
@@ -282,7 +281,6 @@ def get_aggregated_result(
     *,
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
-    check_function: Callable[..., ServiceCheckResult],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
@@ -315,7 +313,7 @@ def get_aggregated_result(
     )
 
     try:
-        result = check_function(**item_kw, **params_kw, **section_kws)
+        result = plugin.function(host_name, service)(**item_kw, **params_kw, **section_kws)
     except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return AggregatedResult(

@@ -41,20 +41,18 @@ export abstract class FigureBase<
     margin: ElementMargin;
     _fetch_start: number;
     _fetch_data_latency: number;
-    //TODO: delete unused property!?
+    //TODO: specify type of data
     _data_pre_processor_hooks: ((data?: any) => any)[];
-    //TODO: delete unused property!?
-    _pre_render_hooks: ((data?: any) => void)[];
     _post_render_hooks: ((data?: any) => void)[];
     _post_url: string;
     _post_body: string;
     _dashlet_spec: DashletSpec;
     //TODO: figure out how the type of _data should look like:
     // here in figureBase its like {data, plot_definitions}
-    // however, in some places it's overwritten to by only data from the above mentioned type
+    // however, in some places it's overwritten to be only data from the above mentioned type data = this._data.data
     // and in other spots like ntop_flows it's totally different and it will be something like data.flows
     // this not only effects the _data type but also _crossfilter
-    // and adding types to _data_pre_processor_hooks, _post_render_hooks and _pre_render_hooks
+    // and adding types to _data_pre_processor_hooks and _pre_render_hooks
     _data: T;
     _crossfilter: Crossfilter<any>;
     scheduler: Scheduler;
@@ -89,13 +87,11 @@ export abstract class FigureBase<
         // List of hooks which may modify data received from api call
         // Processing Pipeline:
         // -> _data_pre_processor_hooks # call registered hooks which may modifiy data from api call
-        // -> _pre_render_hooks         # call registered hook when receiving data
         // -> _update_data/update_gui   # the actual rendering graph rendering
         // -> _post_render_hooks        # call registered hooks when the rendering is finsihed
 
         // The preprocessor can convert arbitary api data, into a figure convenient format
         this._data_pre_processor_hooks = [];
-        this._pre_render_hooks = [];
         this._post_render_hooks = [];
 
         // Post url and body for fetching the graph data
@@ -118,28 +114,6 @@ export abstract class FigureBase<
         if (with_debugging)
             add_scheduler_debugging(this._div_selection, this.scheduler);
         this.show_loading_image();
-    }
-
-    //TODO: delete unused function!?
-    add_plot_definition(plot_definition: any) {
-        this._data.plot_definitions.push(plot_definition);
-    }
-
-    //TODO: delete unused function!?
-    add_data(data: any) {
-        this._data.data = this._data.data.concat(data);
-    }
-
-    //TODO: delete unused function
-    remove_plot_definition(plot_definition: any) {
-        const plot_id = plot_definition.id;
-        for (const idx in this._data.plot_definitions) {
-            const plot_def = this._data.plot_definitions[idx];
-            if (plot_def.id == plot_id) {
-                this._data.plot_definitions.splice(+idx, 1);
-                return;
-            }
-        }
     }
 
     resize() {
@@ -174,36 +148,12 @@ export abstract class FigureBase<
         this._div_selection.selectAll("div.loading_img").remove();
     }
 
-    //TODO: delete unused function
     subscribe_data_pre_processor_hook(func: (_data?: any) => any) {
         this._data_pre_processor_hooks.push(func);
     }
 
-    //TODO: delete unused function
-    unsubscribe_data_pre_processor_hook(func: (_data?: any) => any) {
-        const idx = this._data_pre_processor_hooks.indexOf(func);
-        this._data_pre_processor_hooks.splice(idx, 1);
-    }
-
-    //TODO: delete unused function
-    subscribe_pre_render_hook(func: (_data?: any) => void) {
-        this._pre_render_hooks.push(func);
-    }
-
-    //TODO: delete unused function
-    unsubscribe_pre_render_hook(func: (_data?: any) => void) {
-        const idx = this._pre_render_hooks.indexOf(func);
-        this._pre_render_hooks.splice(idx, 1);
-    }
-
     subscribe_post_render_hook(func: (data?: any) => void) {
         this._post_render_hooks.push(func);
-    }
-
-    //TODO: delete unused function
-    unsubscribe_post_render_hook(func: (data?: T) => void) {
-        const idx = this._post_render_hooks.indexOf(func);
-        this._post_render_hooks.splice(idx, 1);
     }
 
     get_update_interval() {
@@ -280,7 +230,6 @@ export abstract class FigureBase<
         this._data_pre_processor_hooks.forEach(pre_processor_func => {
             data = pre_processor_func(data);
         });
-        this._call_pre_render_hooks(data);
         this.update_data(data);
         this.remove_loading_image();
         this.update_gui();
@@ -303,10 +252,6 @@ export abstract class FigureBase<
         this._div_selection.select("#figure_error").remove();
         if (!this.svg) return;
         this.svg.style("display", null);
-    }
-
-    _call_pre_render_hooks(data: T) {
-        this._pre_render_hooks.forEach(hook => hook(data));
     }
 
     _call_post_render_hooks(data: T) {

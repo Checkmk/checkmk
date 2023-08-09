@@ -26,9 +26,8 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
+from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
-
-from .mode import mode_registry, WatoMode
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

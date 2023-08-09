@@ -13,7 +13,6 @@ from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.wato.mode import ModeRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -21,6 +20,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
 

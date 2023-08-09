@@ -49,7 +49,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -59,6 +58,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
 )
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
     ABCOperation,

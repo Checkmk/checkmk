@@ -39,9 +39,9 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 

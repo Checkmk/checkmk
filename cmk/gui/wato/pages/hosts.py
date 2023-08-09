@@ -39,7 +39,6 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -52,6 +51,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     validate_all_hosts,
 )
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

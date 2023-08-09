@@ -60,7 +60,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -73,6 +72,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     Host,
 )
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,

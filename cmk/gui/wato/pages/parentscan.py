@@ -42,7 +42,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -54,6 +53,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     SearchFolder,
 )
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -50,8 +50,8 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

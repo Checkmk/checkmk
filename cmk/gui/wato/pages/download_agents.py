@@ -26,8 +26,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

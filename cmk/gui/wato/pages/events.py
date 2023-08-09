@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
     RegExp,
     Tuple,
 )
-from cmk.gui.wato.mode import WatoMode
+from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
 

@@ -53,9 +53,9 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
-from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
+from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 _T = TypeVar("_T", bound=Mapping[str, Any])

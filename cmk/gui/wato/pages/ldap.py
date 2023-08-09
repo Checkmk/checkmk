@@ -58,7 +58,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,
@@ -66,11 +65,12 @@ from cmk.gui.wato.pages.userdb_common import (
     get_affected_sites,
     render_connections_page,
 )
+from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
-from cmk.gui.wato.mode import ModeRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:

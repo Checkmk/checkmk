@@ -23,9 +23,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 

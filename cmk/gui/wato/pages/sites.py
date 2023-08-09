@@ -79,7 +79,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
@@ -101,6 +100,7 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,

@@ -8,7 +8,7 @@ from collections.abc import Collection
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

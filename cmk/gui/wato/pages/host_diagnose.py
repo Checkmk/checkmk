@@ -36,12 +36,12 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
 from cmk.gui.valuespec import HostAddress as VSHostAddress
 from cmk.gui.valuespec import Integer, Password
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]

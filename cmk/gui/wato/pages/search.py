@@ -16,9 +16,9 @@ from cmk.gui.plugins.wato.utils import configure_attributes
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
-from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -74,10 +74,10 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
-from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"

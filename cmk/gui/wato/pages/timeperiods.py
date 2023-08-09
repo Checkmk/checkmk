@@ -52,15 +52,15 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 
 logger = logging.getLogger(__name__)
 
 TimeperiodUsage = tuple[str, str]
 
-from cmk.gui.wato.mode import ModeRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:

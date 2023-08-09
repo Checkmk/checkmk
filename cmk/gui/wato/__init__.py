@@ -161,9 +161,8 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
-
-from .mode import mode_registry, mode_url, redirect, WatoMode
 
 # .
 #   .--Plugins-------------------------------------------------------------.

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.pages import PageRegistry
-from cmk.gui.wato.mode import ModeRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 
 from . import (
     activate_changes,

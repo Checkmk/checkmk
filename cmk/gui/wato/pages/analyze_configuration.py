@@ -45,7 +45,6 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,
@@ -53,6 +52,7 @@ from cmk.gui.watolib.analyze_configuration import (
     AutomationCheckAnalyzeConfig,
 )
 from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

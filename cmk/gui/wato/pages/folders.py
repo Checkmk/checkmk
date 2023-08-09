@@ -64,7 +64,6 @@ from cmk.gui.utils.urls import (
     YouTubeReference,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -86,6 +85,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     SearchFolder,
 )
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 

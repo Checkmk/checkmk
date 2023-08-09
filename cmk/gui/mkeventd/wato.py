@@ -151,7 +151,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
@@ -172,6 +171,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
 from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,

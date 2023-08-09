@@ -38,10 +38,10 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
-from cmk.gui.wato.mode import redirect
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import redirect
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module

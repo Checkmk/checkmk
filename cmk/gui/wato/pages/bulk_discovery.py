@@ -25,7 +25,6 @@ from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -42,6 +41,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     SearchFolder,
 )
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

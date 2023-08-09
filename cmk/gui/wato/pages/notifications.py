@@ -76,7 +76,6 @@ from cmk.gui.valuespec import (
     Tuple,
     UUID,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
@@ -88,6 +87,7 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,

@@ -14,10 +14,10 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
+from cmk.gui.watolib.mode import ModeRegistry
 
 from . import filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
-from .mode import ModeRegistry
 from .views import (
     PainterHostFilename,
     PainterWatoFolderAbs,

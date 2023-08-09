@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
 
 

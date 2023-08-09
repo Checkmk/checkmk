@@ -36,7 +36,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
 def register(mode_registry: ModeRegistry) -> None:

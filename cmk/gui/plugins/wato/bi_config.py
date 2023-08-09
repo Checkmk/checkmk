@@ -102,9 +102,9 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema

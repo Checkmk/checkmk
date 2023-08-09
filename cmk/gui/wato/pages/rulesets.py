@@ -82,7 +82,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
-from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
 from cmk.gui.watolib.config_hostname import ConfigHostname
@@ -97,6 +96,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
 )
 from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,

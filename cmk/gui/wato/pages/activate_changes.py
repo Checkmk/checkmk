@@ -59,12 +59,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 
 

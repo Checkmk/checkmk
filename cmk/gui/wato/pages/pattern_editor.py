@@ -36,11 +36,11 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.mode import ModeRegistry, WatoMode
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,

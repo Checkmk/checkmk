@@ -45,10 +45,10 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
 )
-from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 
 

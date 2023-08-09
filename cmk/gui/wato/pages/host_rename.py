@@ -45,7 +45,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
@@ -60,6 +59,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     validate_host_uniqueness,
 )
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_changes import SiteChanges
 
 

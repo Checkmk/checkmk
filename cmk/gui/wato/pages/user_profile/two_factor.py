@@ -74,7 +74,7 @@ from cmk.gui.utils.urls import (
 )
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
-from cmk.gui.wato.mode import redirect
+from cmk.gui.watolib.mode import redirect
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related

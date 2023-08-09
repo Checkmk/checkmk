@@ -19,7 +19,7 @@ from cmk.gui.session import session
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.mode import redirect
+from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
 
 from .abstract_page import ABCUserProfilePage

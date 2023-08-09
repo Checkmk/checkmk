@@ -31,7 +31,6 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.wato.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -40,6 +39,7 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
 
 

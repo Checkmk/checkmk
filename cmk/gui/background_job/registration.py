@@ -5,8 +5,8 @@
 
 from cmk.gui.cron import register_job
 from cmk.gui.pages import PageRegistry
-from cmk.gui.wato.mode import ModeRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from ._manager import execute_housekeeping_job

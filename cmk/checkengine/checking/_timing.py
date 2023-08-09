@@ -24,12 +24,19 @@ def make_timing_results(
     *,
     perfdata_with_times: bool,
 ) -> ActiveCheckResult:
-    # Transform `fetched` into a `Sequence` because this function iterates
-    # twice on it.  That's an implementation detail, however, so let's
-    # keep `fetched` `Iterable` in the signature.
-    fetched = tuple(fetched)
-    for duration in (f[1] for f in fetched):
+    summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
+    for source, duration in fetched:
         total_times += duration
+        with suppress(KeyError):
+            summary[
+                {
+                    FetcherType.PIGGYBACK: "agent",
+                    FetcherType.PROGRAM: "ds",
+                    FetcherType.SPECIAL_AGENT: "ds",
+                    FetcherType.SNMP: "snmp",
+                    FetcherType.TCP: "agent",
+                }[source.fetcher_type]
+            ] += duration
 
     infotext = "execution time %.1f sec" % total_times.process.elapsed
     if not perfdata_with_times:
@@ -44,19 +51,6 @@ def make_timing_results(
         "children_user_time=%.3f" % total_times.process.children_user,
         "children_system_time=%.3f" % total_times.process.children_system,
     ]
-
-    summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-    for source, duration in fetched:
-        with suppress(KeyError):
-            summary[
-                {
-                    FetcherType.PIGGYBACK: "agent",
-                    FetcherType.PROGRAM: "ds",
-                    FetcherType.SPECIAL_AGENT: "ds",
-                    FetcherType.SNMP: "snmp",
-                    FetcherType.TCP: "agent",
-                }[source.fetcher_type]
-            ] += duration
 
     for phase, duration in summary.items():
         perfdata.append(f"cmk_time_{phase}={duration.idle:.3f}")

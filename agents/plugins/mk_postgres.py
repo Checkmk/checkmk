@@ -19,7 +19,7 @@ INSTANCE=...
 ----------------------------------------------------------
 """
 
-__version__ = "2.0.0p38"
+__version__ = "2.0.0p39"
 
 import io
 import subprocess

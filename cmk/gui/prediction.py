@@ -12,21 +12,22 @@ from livestatus import lqencode, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     estimate_levels,
     get_rrd_data,
-    PREDICTION_DIR,
     PredictionData,
-    PredictionInfo,
     PredictionParameters,
-    PredictionStore,
+    PredictionQuerier,
     timezone_at,
 )
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
+from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
@@ -51,70 +52,67 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("prediction_graph", page_graph)
 
 
-def _load_prediction_information(
-    *,
-    tg_name: str | None,
-    prediction_store: PredictionStore,
-) -> tuple[PredictionInfo, Sequence[tuple[str, str]]]:
-    selected_timegroup: PredictionInfo | None = None
-    timegroups: list[PredictionInfo] = []
-    now = time.time()
-    for tg_info in prediction_store.available_predictions():
-        timegroups.append(tg_info)
-        if tg_info.name == tg_name or (
-            tg_name is None and (tg_info.range[0] <= now <= tg_info.range[1])
-        ):
-            selected_timegroup = tg_info
-
-    timegroups.sort(key=lambda x: x.range[0])
-
-    if selected_timegroup is None:
-        if not timegroups:
-            raise MKGeneralException(
-                _("There is currently no prediction information available for this service.")
-            )
-        selected_timegroup = timegroups[0]
-
-    return selected_timegroup, [(tg.name, tg.name.title()) for tg in timegroups]
-
-
 def page_graph() -> None:
-    site_id = SiteId(request.get_str_input_mandatory("site"))
-    host_name = HostName(request.get_str_input_mandatory("host"))
-    service = request.get_str_input_mandatory("service")
-    dsname = request.get_str_input_mandatory("dsname")
-
-    breadcrumb = make_service_breadcrumb(host_name, service)
+    prediction_data_querier = _prediction_querier_from_request(request_)
+    breadcrumb = make_service_breadcrumb(
+        prediction_data_querier.host_name,
+        prediction_data_querier.service_name,
+    )
     make_header(
         html,
-        _("Prediction for %s - %s - %s") % (host_name, service, dsname),
+        _("Prediction for %s - %s - %s")
+        % (
+            prediction_data_querier.host_name,
+            prediction_data_querier.service_name,
+            prediction_data_querier.metric_name,
+        ),
         breadcrumb,
     )
 
     # Get current value from perf_data via Livestatus
-    current_value = get_current_perfdata(host_name, service, dsname)
+    current_value = get_current_perfdata(
+        prediction_data_querier.host_name,
+        prediction_data_querier.service_name,
+        prediction_data_querier.metric_name,
+    )
 
-    prediction_store = PredictionStore(PREDICTION_DIR, host_name, service, dsname)
+    if not (
+        available_predictions_sorted_by_start_time := sorted(
+            prediction_data_querier.query_available_predictions(),
+            key=lambda pred_info: pred_info.range[0],
+        )
+    ):
+        raise MKGeneralException(
+            _("There is currently no prediction information available for this service.")
+        )
 
-    timegroup, choices = _load_prediction_information(
-        tg_name=request.var("timegroup"),
-        prediction_store=prediction_store,
+    selected_prediction_info = next(
+        (
+            prediction_info
+            for prediction_info in available_predictions_sorted_by_start_time
+            if prediction_info.name == request_.var("timegroup")
+        ),
+        available_predictions_sorted_by_start_time[0],
+    )
+    selected_prediction_data = prediction_data_querier.query_prediction_data(
+        selected_prediction_info.name
     )
 
     html.begin_form("prediction")
     html.write_text(_("Show prediction for "))
     html.dropdown(
-        "timegroup", choices, deflt=timegroup.name, onchange="document.prediction.submit();"
+        "timegroup",
+        (
+            (prediction_info.name, prediction_info.name.title())
+            for prediction_info in available_predictions_sorted_by_start_time
+        ),
+        deflt=selected_prediction_info.name,
+        onchange="document.prediction.submit();",
     )
     html.hidden_fields()
     html.end_form()
 
-    # Get prediction data
-    tg_data = prediction_store.get_data(timegroup.name)
-    if tg_data is None:
-        raise MKGeneralException(_("Missing prediction data."))
-
-    swapped = swap_and_compute_levels(tg_data, timegroup.params)
+    swapped = swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
     vertical_range = compute_vertical_range(swapped)
     legend = [
         ("#000000", _("Reference")),
@@ -125,28 +123,36 @@ def page_graph() -> None:
     if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
-    create_graph(timegroup.name, graph_size, timegroup.range, vertical_range, legend)
+    create_graph(
+        selected_prediction_info.name,
+        graph_size,
+        selected_prediction_info.range,
+        vertical_range,
+        legend,
+    )
 
-    if timegroup.params.levels_upper is not None:
+    if selected_prediction_info.params.levels_upper is not None:
         render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
         render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
 
-    if timegroup.params.levels_lower is not None:
+    if selected_prediction_info.params.levels_lower is not None:
         render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
         render_area(swapped.lower_crit, "#ff0000", 0.1)
 
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
     vert_scala = _compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [[timegroup.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
+    time_scala = [
+        [selected_prediction_info.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)
+    ]
     render_coordinates(vert_scala, time_scala)
 
-    if timegroup.params.levels_lower is not None:
+    if selected_prediction_info.params.levels_lower is not None:
         render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
         render_curve(swapped.lower_warn, "#e0e000", square=True)
-        render_curve(swapped.lower_crit, "#f0b0b0", square=True)
+        render_curve(swapped.lower_crit, "#f0b0a0", square=True)
 
-    if timegroup.params.levels_upper is not None:
+    if selected_prediction_info.params.levels_upper is not None:
         render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
         render_curve(swapped.upper_warn, "#e0e000", square=True)
         render_curve(swapped.upper_crit, "#f0b0b0", square=True)
@@ -154,14 +160,14 @@ def page_graph() -> None:
     render_curve(swapped.average, "#000000")  # repetition makes line bolder
 
     # Try to get current RRD data and render it also
-    from_time, until_time = timegroup.range
+    from_time, until_time = selected_prediction_info.range
     now = time.time()
     if from_time <= now <= until_time:
         timeseries = get_rrd_data(
-            live().get_connection(site_id),
-            host_name,
-            service,
-            dsname,
+            prediction_data_querier.livestatus_connection,
+            prediction_data_querier.host_name,
+            prediction_data_querier.service_name,
+            prediction_data_querier.metric_name,
             "MAX",
             from_time,
             until_time,
@@ -170,10 +176,21 @@ def page_graph() -> None:
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - timezone_at(now)) % timegroup.slice
-            render_point(timegroup.range[0] + rel_time, current_value, "#0000ff")
+            rel_time = (now - timezone_at(now)) % selected_prediction_info.slice
+            render_point(selected_prediction_info.range[0] + rel_time, current_value, "#0000ff")
 
     html.footer()
+
+
+def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
+    return PredictionQuerier(
+        livestatus_connection=live().get_connection(
+            SiteId(request.get_str_input_mandatory("site"))
+        ),
+        host_name=HostName(request.get_str_input_mandatory("host")),
+        service_name=ServiceName(request.get_str_input_mandatory("service")),
+        metric_name=MetricName(request.get_str_input_mandatory("dsname")),
+    )
 
 
 vranges = [

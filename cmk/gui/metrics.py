@@ -30,6 +30,10 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._graph_specification import MetricExpression, parse_raw_graph_specification
+from cmk.gui.graphing._html_render import (
+    host_service_graph_dashlet_cmk,
+    host_service_graph_popup_cmk,
+)
 from cmk.gui.graphing._utils import (
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
@@ -43,10 +47,6 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.html_render import (
-    host_service_graph_dashlet_cmk,
-    host_service_graph_popup_cmk,
-)
 from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 

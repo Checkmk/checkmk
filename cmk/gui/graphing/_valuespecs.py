@@ -7,11 +7,9 @@ import json
 from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
-from cmk.gui.graphing._utils import metric_info, unit_info
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.metrics import artwork
 from cmk.gui.type_defs import GraphTitleFormat
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -27,6 +25,9 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
+
+from ._artwork import get_default_graph_render_options
+from ._utils import metric_info, unit_info
 
 
 def migrate_graph_render_options_title_format(
@@ -103,10 +104,10 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
     if default_values is None:
-        default_values = artwork.get_default_graph_render_options()
+        default_values = get_default_graph_render_options()
     else:
         default_values = default_values.copy()
-        for k, v in artwork.get_default_graph_render_options().items():
+        for k, v in get_default_graph_render_options().items():
             default_values.setdefault(k, v)
 
     elements = [

@@ -18,31 +18,12 @@ from cmk.utils.prediction import TimeRange
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
-from cmk.gui.graphing._utils import (
-    CombinedGraphMetric,
-    CombinedSingleMetricSpec,
-    ForecastGraphRecipe,
-    GraphDataRange,
-    GraphRecipe,
-    parse_raw_graph_recipe,
-    render_color_icon,
-    Scalar,
-    SizeEx,
-)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.artwork import (
-    graph_curves_to_be_painted,
-    GraphArtwork,
-    order_graph_curves_for_legend_and_mouse_hover,
-)
-from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import GraphRenderOptions
 from cmk.gui.utils.html import HTML
@@ -53,7 +34,31 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 
-from .graph_recipe_builder import build_graph_recipes
+from ._artwork import (
+    add_default_render_options,
+    compute_curve_values_at_timestamp,
+    compute_graph_artwork,
+    compute_graph_artwork_curves,
+    get_step_label,
+    graph_curves_to_be_painted,
+    GraphArtwork,
+    order_graph_curves_for_legend_and_mouse_hover,
+    save_graph_pin,
+)
+from ._graph_recipe_builder import build_graph_recipes
+from ._graph_specification import GraphSpecification, TemplateGraphSpecification
+from ._utils import (
+    CombinedGraphMetric,
+    CombinedSingleMetricSpec,
+    ForecastGraphRecipe,
+    GraphDataRange,
+    GraphRecipe,
+    parse_raw_graph_recipe,
+    render_color_icon,
+    Scalar,
+    SizeEx,
+)
+from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str
 
@@ -161,7 +166,7 @@ def render_graph_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
 ) -> HTML:
-    graph_render_options = artwork.add_default_render_options(graph_render_options)
+    graph_render_options = add_default_render_options(graph_render_options)
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_options)
@@ -301,7 +306,7 @@ def _show_graph_html_content(
     That is a canvas object for drawing the actual graph and also legend, buttons, resize handle,
     etc.
     """
-    graph_render_options = artwork.add_default_render_options(graph_render_options)
+    graph_render_options = add_default_render_options(graph_render_options)
 
     html.open_div(
         class_=["graph"] + (["preview"] if graph_render_options["preview"] else []),
@@ -462,7 +467,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
                 graph_artwork.definition.consolidation_function,
                 scalar,
                 graph_artwork.definition.consolidation_function,
-                artwork.get_step_label(graph_artwork.step),
+                get_step_label(graph_artwork.step),
                 scalar,
                 graph_artwork.definition.consolidation_function,
                 (graph_artwork.step / 60),
@@ -604,7 +609,7 @@ def render_ajax_graph(
         vertical_range = None
 
     if request.has_var("pin"):
-        artwork.save_graph_pin()
+        save_graph_pin()
 
     if request.has_var("consolidation_function"):
         graph_recipe = graph_recipe.copy(
@@ -620,7 +625,7 @@ def render_ajax_graph(
     if graph_render_options["editing"]:
         save_user_graph_data_range(graph_data_range)
 
-    graph_artwork = artwork.compute_graph_artwork(
+    graph_artwork = compute_graph_artwork(
         graph_recipe,
         graph_data_range,
         graph_render_options,
@@ -753,7 +758,7 @@ def render_graph_container_html(
     *,
     graph_display_id: str,
 ) -> HTML:
-    graph_render_options = artwork.add_default_render_options(graph_render_options)
+    graph_render_options = add_default_render_options(graph_render_options)
 
     # Estimate size of graph. This will not be the exact size of the graph, because
     # this does calculate the size of the canvas area and does not take e.g. the legend
@@ -829,7 +834,7 @@ def render_graph_content_html(
 ) -> HTML:
     output = HTML()
     try:
-        graph_artwork = artwork.compute_graph_artwork(
+        graph_artwork = compute_graph_artwork(
             graph_recipe,
             graph_data_range,
             graph_render_options,
@@ -906,7 +911,7 @@ def render_time_range_selection(
             }
         )
 
-        graph_artwork = artwork.compute_graph_artwork(
+        graph_artwork = compute_graph_artwork(
             graph_recipe,
             graph_data_range,
             graph_render_options,
@@ -938,7 +943,7 @@ def make_graph_data_range(
 def estimate_graph_step_for_html(
     time_range: TimeRange, graph_render_options: GraphRenderOptions
 ) -> int:
-    graph_render_options = artwork.add_default_render_options(graph_render_options)
+    graph_render_options = add_default_render_options(graph_render_options)
     width_in_ex = graph_render_options["size"][1]
     steps_per_ex = html_size_per_ex * 4
     number_of_steps = width_in_ex * steps_per_ex
@@ -991,7 +996,7 @@ def render_ajax_graph_hover(
     graph_data_range = context["data_range"]
     graph_recipe = parse_raw_graph_recipe(context["definition"])
 
-    curves = artwork.compute_graph_artwork_curves(
+    curves = compute_graph_artwork_curves(
         graph_recipe,
         graph_data_range,
         resolve_combined_single_metric_spec,
@@ -1000,7 +1005,7 @@ def render_ajax_graph_hover(
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
         "curve_values": list(
-            artwork.compute_curve_values_at_timestamp(
+            compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(
                     graph_recipe,
                     graph_curves_to_be_painted(curves),
@@ -1089,7 +1094,7 @@ def host_service_graph_dashlet_cmk(
     graph_display_id: str = "",
 ) -> HTML | None:
     graph_render_options = {**default_dashlet_graph_render_options}
-    graph_render_options = artwork.add_default_render_options(graph_render_options)
+    graph_render_options = add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 
     width_var = request.get_float_input_mandatory("width", 0.0)
@@ -1132,7 +1137,7 @@ def host_service_graph_dashlet_cmk(
     # make the graph fit into the dashlet area.
     if graph_render_options["show_legend"]:
         # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
-        graph_artwork = artwork.compute_graph_artwork(
+        graph_artwork = compute_graph_artwork(
             graph_recipe,
             graph_data_range,
             graph_render_options,

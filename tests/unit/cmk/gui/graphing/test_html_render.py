@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.plugins.metrics.html_render import render_title_elements_plain
+from cmk.gui.graphing._html_render import render_title_elements_plain
 
 
 @pytest.mark.parametrize(

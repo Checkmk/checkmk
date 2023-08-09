@@ -12,7 +12,15 @@ from tests.testlib import set_timezone
 
 from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
 
-from cmk.gui.plugins.metrics import artwork
+from cmk.gui.graphing._artwork import (
+    _purge_min_max,
+    _t_axis_labels_seconds,
+    _t_axis_labels_week,
+    areastack,
+    compute_graph_t_axis,
+    halfstep_interpolation,
+    TimeAxis,
+)
 
 
 @pytest.mark.parametrize(
@@ -31,14 +39,14 @@ def test_min(
     mirrored: bool,
     result: tuple[int, int],
 ) -> None:
-    assert artwork._purge_min_max(_min, _max, mirrored) == result
+    assert _purge_min_max(_min, _max, mirrored) == result
 
 
 def test_t_axis_labels_seconds() -> None:
     with set_timezone("Europe/Berlin"):
         assert [
             label_pos.timestamp()
-            for label_pos in artwork._t_axis_labels_seconds(
+            for label_pos in _t_axis_labels_seconds(
                 datetime.fromtimestamp(1565481600),
                 datetime.fromtimestamp(1565481620),
                 10,
@@ -54,7 +62,7 @@ def test_t_axis_labels_week() -> None:
     with set_timezone("Europe/Berlin"):
         assert [
             label_pos.timestamp()
-            for label_pos in artwork._t_axis_labels_week(
+            for label_pos in _t_axis_labels_week(
                 datetime.fromtimestamp(1565401600),
                 datetime.fromtimestamp(1566691200),
             )
@@ -65,7 +73,7 @@ def test_t_axis_labels_week() -> None:
 
 
 def test_halfstep_interpolation() -> None:
-    assert artwork.halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+    assert halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
         5.0,
         5.0,
         5.0,
@@ -95,7 +103,7 @@ def test_fringe(
     args: tuple[Sequence[TimeSeriesValue], Sequence[TimeSeriesValue]],
     result: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]],
 ) -> None:
-    assert artwork.areastack(args[1], args[0]) == result
+    assert areastack(args[1], args[0]) == result
 
 
 @pytest.mark.parametrize(
@@ -224,11 +232,11 @@ def test_compute_graph_t_axis(
     end_time: Timestamp,
     width: int,
     step: Seconds,
-    expected_result: artwork.TimeAxis,
+    expected_result: TimeAxis,
 ) -> None:
     with set_timezone("Europe/Berlin"):
         assert (
-            artwork.compute_graph_t_axis(
+            compute_graph_t_axis(
                 start_time=start_time,
                 end_time=end_time,
                 width=width,

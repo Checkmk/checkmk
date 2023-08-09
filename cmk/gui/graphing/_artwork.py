@@ -17,8 +17,16 @@ from pydantic import BaseModel
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
 
-from cmk.gui.graphing._graph_specification import HorizontalRule
-from cmk.gui.graphing._utils import (
+from cmk.gui.http import request
+from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
+from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
+from cmk.gui.utils.theme import theme
+
+from ._graph_specification import HorizontalRule
+from ._rrd_fetch import fetch_rrd_data_for_graph
+from ._timeseries import clean_time_series_point, compute_graph_curves
+from ._utils import (
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
     Curve,
@@ -27,12 +35,6 @@ from cmk.gui.graphing._utils import (
     SizeEx,
     unit_info,
 )
-from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.plugins.metrics import rrd_fetch, timeseries
-from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
-from cmk.gui.utils.theme import theme
 
 Label = tuple[float, str | None, int]
 
@@ -393,13 +395,13 @@ def compute_graph_artwork_curves(
     ],
 ) -> list[Curve]:
     # Fetch all raw RRD data
-    rrd_data = rrd_fetch.fetch_rrd_data_for_graph(
+    rrd_data = fetch_rrd_data_for_graph(
         graph_recipe,
         graph_data_range,
         resolve_combined_single_metric_spec,
     )
 
-    curves = timeseries.compute_graph_curves(graph_recipe.metrics, rrd_data)
+    curves = compute_graph_curves(graph_recipe.metrics, rrd_data)
 
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
@@ -470,7 +472,7 @@ def _compute_scalars(
         if pin_time is not None:
             pin = _get_value_at_timestamp(pin_time, rrddata)
 
-        clean_rrddata = timeseries.clean_time_series_point(rrddata)
+        clean_rrddata = clean_time_series_point(rrddata)
         if clean_rrddata:
             scalars = {
                 "pin": pin,

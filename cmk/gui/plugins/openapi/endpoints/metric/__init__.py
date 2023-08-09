@@ -8,8 +8,8 @@ Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
+from cmk.gui.graphing._graph_images import graph_spec_from_request
 from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
-from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
 from cmk.gui.plugins.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.plugins.openapi.endpoints.metric.common import (
     graph_id_from_request,

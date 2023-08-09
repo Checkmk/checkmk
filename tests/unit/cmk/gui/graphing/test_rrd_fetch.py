@@ -15,16 +15,20 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
-import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
+from cmk.gui.graphing._rrd_fetch import (
+    fetch_rrd_data_for_graph,
+    needed_elements_of_expression,
+    translate_and_merge_rrd_columns,
+)
 from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 def test_needed_elements_of_expression() -> None:
     assert set(
-        rf.needed_elements_of_expression(
+        needed_elements_of_expression(
             (
                 "transformation",
                 ("q90percentile", 95.0),
@@ -100,7 +104,7 @@ _GRAPH_DATA_RANGE: GraphDataRange = {"time_range": (1681985455, 1681999855), "st
 
 def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert rf.fetch_rrd_data_for_graph(
+        assert fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
             lambda _specs: (),
@@ -117,7 +121,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert rf.fetch_rrd_data_for_graph(
+        assert fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
             lambda _specs: (),
@@ -130,7 +134,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 
 
 def test_translate_and_merge_rrd_columns() -> None:
-    assert rf.translate_and_merge_rrd_columns(
+    assert translate_and_merge_rrd_columns(
         MetricName("my_metric"),
         [
             (
@@ -146,7 +150,7 @@ def test_translate_and_merge_rrd_columns() -> None:
 
 
 def test_translate_and_merge_rrd_columns_with_translation() -> None:
-    assert rf.translate_and_merge_rrd_columns(
+    assert translate_and_merge_rrd_columns(
         MetricName("my_metric"),
         [
             (
@@ -225,7 +229,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
     expected_data_points: TimeSeriesValues,
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
-    assert rf.translate_and_merge_rrd_columns(
+    assert translate_and_merge_rrd_columns(
         MetricName("temp"),
         [
             ("rrddata:ambient_temp:ambient_temp.average:1682324616:1682497416:60", [0, 0, 0]),

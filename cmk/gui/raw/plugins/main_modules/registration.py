@@ -10,9 +10,9 @@ from functools import partial
 
 import cmk.utils.version as cmk_version
 
+import cmk.gui.graphing._graph_images as graph_images
+import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-import cmk.gui.plugins.metrics.graph_images as graph_images
-import cmk.gui.plugins.metrics.html_render as html_render
 from cmk.gui.graphing._utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup

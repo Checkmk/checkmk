@@ -21,32 +21,34 @@ from cmk.utils.prediction import Timestamp
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
-from cmk.gui.graphing._graph_specification import (
-    parse_raw_graph_specification,
-    TemplateGraphSpecification,
+from cmk.gui.http import request, response
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.session import SuperUserContext
+from cmk.gui.type_defs import GraphRenderOptions
+
+from ._artwork import (
+    add_default_render_options,
+    compute_graph_artwork,
+    compute_graph_artwork_curves,
+    GraphArtwork,
 )
-from cmk.gui.graphing._utils import (
+from ._graph_pdf import (
+    compute_pdf_graph_data_range,
+    get_mm_per_ex,
+    graph_legend_height,
+    render_graph_pdf,
+)
+from ._graph_recipe_builder import build_graph_recipes
+from ._graph_specification import parse_raw_graph_specification, TemplateGraphSpecification
+from ._html_render import GraphDestinations
+from ._utils import (
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
     get_graph_data_from_livestatus,
     GraphDataRange,
     GraphRecipe,
 )
-from cmk.gui.http import request, response
-from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.plugins.metrics import artwork, html_render
-from cmk.gui.plugins.metrics.artwork import GraphArtwork
-from cmk.gui.plugins.metrics.graph_pdf import (
-    compute_pdf_graph_data_range,
-    get_mm_per_ex,
-    graph_legend_height,
-    render_graph_pdf,
-)
-from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphRenderOptions
-
-from .graph_recipe_builder import build_graph_recipes
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -109,14 +111,14 @@ def _answer_graph_image_request(
                 host_name=host_name,
                 service_description=service_description,
                 graph_index=None,  # all graphs
-                destination=html_render.GraphDestinations.notification,
+                destination=GraphDestinations.notification,
             ),
         )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         graphs = []
         for graph_recipe in graph_recipes[:num_graphs]:
-            graph_artwork = artwork.compute_graph_artwork(
+            graph_artwork = compute_graph_artwork(
                 graph_recipe,
                 graph_data_range,
                 graph_render_options,
@@ -158,9 +160,7 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
     }
 
     # Populate missing keys
-    graph_render_options = artwork.add_default_render_options(
-        graph_render_options, render_unthemed=True
-    )
+    graph_render_options = add_default_render_options(graph_render_options, render_unthemed=True)
 
     # Enforce settings optionally setable via request
     if api_request and api_request.get("render_options"):
@@ -274,7 +274,7 @@ def graph_spec_from_request(
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = artwork.compute_graph_artwork_curves(
+    curves = compute_graph_artwork_curves(
         graph_recipe,
         graph_data_range,
         resolve_combined_single_metric_spec,

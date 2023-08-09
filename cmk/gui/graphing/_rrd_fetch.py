@@ -21,14 +21,13 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValues
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
-from cmk.gui.graphing._graph_specification import (
-    GraphConsoldiationFunction,
-    GraphMetric,
-    RPNExpression,
-)
-from cmk.gui.graphing._utils import (
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import ColumnName
+
+from ._graph_specification import GraphConsoldiationFunction, GraphMetric, RPNExpression
+from ._timeseries import op_func_wrapper, time_series_operators
+from ._utils import (
     CheckMetricEntry,
     CombinedGraphMetric,
     CombinedSingleMetricSpec,
@@ -41,8 +40,6 @@ from cmk.gui.graphing._utils import (
     RRDDataKey,
     unit_info,
 )
-from cmk.gui.i18n import _
-from cmk.gui.type_defs import ColumnName
 
 
 def fetch_rrd_data_for_graph(
@@ -305,8 +302,8 @@ def translate_and_merge_rrd_columns(
     if not relevant_ts:
         return TimeSeries([0, 0, 0])
 
-    _op_title, op_func = ts.time_series_operators()["MERGE"]
-    single_value_series = [ts.op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
+    _op_title, op_func = time_series_operators()["MERGE"]
+    single_value_series = [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(
         single_value_series,

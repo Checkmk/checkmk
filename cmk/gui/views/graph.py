@@ -13,7 +13,12 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
+from cmk.gui.graphing._html_render import (
+    make_graph_data_range,
+    render_graphs_from_specification_html,
+)
 from cmk.gui.graphing._utils import CombinedGraphMetric, CombinedSingleMetricSpec
+from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.base import Cell, Painter2
@@ -23,8 +28,6 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.plugins.metrics import html_render
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -176,7 +179,7 @@ def paint_time_graph_cmk(
     if painter_option_pnp_timerange is not None:
         time_range = get_graph_timerange_from_painter_options()
 
-    graph_data_range = html_render.make_graph_data_range(time_range, graph_render_options)
+    graph_data_range = make_graph_data_range(time_range, graph_render_options)
 
     if is_mobile(request, response):
         graph_render_options.update(
@@ -205,7 +208,7 @@ def paint_time_graph_cmk(
             "Maybe performance data processing is disabled."
         )
 
-    return "", html_render.render_graphs_from_specification_html(
+    return "", render_graphs_from_specification_html(
         TemplateGraphSpecification(
             site=row["site"],
             host_name=row["host_name"],

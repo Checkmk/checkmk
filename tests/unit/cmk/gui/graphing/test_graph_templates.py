@@ -8,8 +8,9 @@ from collections.abc import Sequence
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.gui.graphing import _graph_templates as gt
+from cmk.gui.graphing._graph_templates import matching_graph_templates
 from cmk.gui.graphing._utils import GraphTemplate
-from cmk.gui.plugins.metrics import graph_templates
 
 _GRAPH_TEMPLATES = [
     GraphTemplate(
@@ -93,13 +94,13 @@ def test_matching_graph_templates(
     expected_result: Sequence[tuple[int, GraphTemplate]],
 ) -> None:
     monkeypatch.setattr(
-        graph_templates,
+        gt,
         "get_graph_templates",
         lambda _metrics: _GRAPH_TEMPLATES,
     )
     assert (
         list(
-            graph_templates.matching_graph_templates(
+            matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
                 translated_metrics={},

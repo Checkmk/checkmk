@@ -8,7 +8,10 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.plugins.metrics import valuespecs
+from cmk.gui.graphing._valuespecs import (
+    migrate_graph_render_options,
+    migrate_graph_render_options_title_format,
+)
 
 
 @pytest.mark.parametrize(
@@ -46,7 +49,7 @@ def test_migrate_graph_render_options_title_format(
     ],
     result: Sequence[str],
 ) -> None:
-    assert valuespecs.migrate_graph_render_options_title_format(entry) == result
+    assert migrate_graph_render_options_title_format(entry) == result
 
 
 @pytest.mark.parametrize(
@@ -71,4 +74,4 @@ def test_migrate_graph_render_options_title_format(
 def test_migrate_graph_render_options(
     entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
 ) -> None:
-    assert valuespecs.migrate_graph_render_options(entry) == result
+    assert migrate_graph_render_options(entry) == result

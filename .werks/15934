@@ -1,0 +1,14 @@
+Title: Fix selection for downtime commands
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1691562252
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Werk #15925 should have fixed the selection already but did not work as
+intended in all environments.
+
+The selection for removing and editing downtimes will now be shown as expected.

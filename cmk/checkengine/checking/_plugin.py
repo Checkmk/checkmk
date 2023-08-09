@@ -13,7 +13,16 @@ from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-__all__ = ["CheckPlugin"]
+__all__ = ["AggregatedResult", "CheckPlugin"]
+
+
+@dataclass(frozen=True)
+class AggregatedResult:
+    service: ConfiguredService
+    submit: bool
+    data_received: bool
+    result: ServiceCheckResult
+    cache_info: tuple[int, int] | None
 
 
 @dataclass(frozen=True)

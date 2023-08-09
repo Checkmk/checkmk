@@ -45,7 +45,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.base.agent_based.checking import get_aggregated_result
+from cmk.base.checkers import get_aggregated_result
 
 __all__ = ["CheckPreview", "get_check_preview"]
 

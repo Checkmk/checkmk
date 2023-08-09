@@ -17,7 +17,6 @@ from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
-import cmk.base.agent_based.checking as checking
 import cmk.base.checkers as checkers
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
@@ -236,7 +235,7 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
         lambda *args, **kw: "dummy.test.ip.0",
     )
     # empty, we have no cluster:
-    assert [] == checking._get_clustered_service_node_keys(
+    assert [] == checkers._get_clustered_service_node_keys(
         HostName("cluster.test"),
         SourceType.HOST,
         "Test Service",
@@ -258,7 +257,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         lambda *args, **kw: "dummy.test.ip.0",
     )
     # empty for a node:
-    assert [] == checking._get_clustered_service_node_keys(
+    assert [] == checkers._get_clustered_service_node_keys(
         HostName("node1.test"),
         SourceType.HOST,
         "Test Service",
@@ -270,7 +269,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checking._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(
         cluster_test,
         SourceType.HOST,
         "Test Service",
@@ -304,7 +303,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         "lookup_ip_address",
         lambda hostname, *args, **kw: "dummy.test.ip.%s" % hostname[4],
     )
-    assert checking._get_clustered_service_node_keys(
+    assert checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
         "Test Service",
@@ -322,7 +321,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checking._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
         "Test Unclustered",

@@ -14,24 +14,28 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from typing import Callable, Final
 
+import cmk.utils.debug
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.check_utils import unwrap_parameters
+from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import OnError
+from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
+from cmk.checkengine import crash_reporting
 from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName
+from cmk.checkengine.checking import AggregatedResult, CheckPlugin, CheckPluginName
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,
@@ -40,10 +44,17 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
-from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.parameters import Parameters, TimespecificParameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
-from cmk.checkengine.sectionparser import SectionPlugin
+from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
+from cmk.checkengine.sectionparserutils import (
+    get_cache_info,
+    get_section_cluster_kwargs,
+    get_section_kwargs,
+)
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize
 
@@ -52,7 +63,7 @@ import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.checking_classes import consume_check_results
+from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.value_store import ValueStoreManager
@@ -65,6 +76,7 @@ __all__ = [
     "CMKParser",
     "CMKSummarizer",
     "DiscoveryPluginMapper",
+    "get_aggregated_result",
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
@@ -434,6 +446,184 @@ def _aggregate_results(
         )
     all_text = [", ".join(summaries)] + details
     return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
+
+
+def _get_monitoring_data_kwargs(
+    host_name: HostName,
+    is_cluster: bool,
+    providers: Mapping[HostKey, Provider],
+    service: ConfiguredService,
+    sections: Sequence[ParsedSectionName],
+    source_type: SourceType | None = None,
+    *,
+    cluster_nodes: Sequence[HostName],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
+) -> tuple[Mapping[str, object], ServiceCheckResult]:
+    # Mapping[str, object] stands for either
+    #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
+    #  * Mapping[str, ParsedSectionContent | None] otherwise.
+    if source_type is None:
+        source_type = (
+            SourceType.MANAGEMENT
+            if service.check_plugin_name.is_management_name()
+            else SourceType.HOST
+        )
+
+    if is_cluster:
+        nodes = _get_clustered_service_node_keys(
+            host_name,
+            source_type,
+            service.description,
+            cluster_nodes=cluster_nodes,
+            get_effective_host=get_effective_host,
+        )
+        return (
+            get_section_cluster_kwargs(
+                providers,
+                nodes,
+                sections,
+            ),
+            ServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
+        )
+
+    return (
+        get_section_kwargs(
+            providers,
+            HostKey(host_name, source_type),
+            sections,
+        ),
+        ServiceCheckResult.received_no_data(),
+    )
+
+
+def _get_clustered_service_node_keys(
+    cluster_name: HostName,
+    source_type: SourceType,
+    service_descr: ServiceName,
+    *,
+    cluster_nodes: Sequence[HostName],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
+) -> Sequence[HostKey]:
+    """Returns the node keys if a service is clustered, otherwise an empty sequence"""
+    used_nodes = (
+        [nn for nn in cluster_nodes if cluster_name == get_effective_host(nn, service_descr)]
+        or cluster_nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
+        or ()
+    )
+
+    return [HostKey(nodename, source_type) for nodename in used_nodes]
+
+
+def get_aggregated_result(
+    host_name: HostName,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
+    providers: Mapping[HostKey, Provider],
+    service: ConfiguredService,
+    plugin: CheckPlugin,
+    *,
+    rtc_package: AgentRawData | None,
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    snmp_backend: SNMPBackendEnum,
+) -> AggregatedResult:
+    """Run the check function and aggregate the subresults
+
+    This function is also called during discovery.
+    """
+    section_kws, error_result = _get_monitoring_data_kwargs(
+        host_name,
+        is_cluster,
+        providers,
+        service,
+        plugin.sections,
+        cluster_nodes=cluster_nodes,
+        get_effective_host=get_effective_host,
+    )
+    if not section_kws:  # no data found
+        return AggregatedResult(
+            service=service,
+            submit=False,
+            data_received=False,
+            result=error_result,
+            cache_info=None,
+        )
+
+    item_kw = {} if service.item is None else {"item": service.item}
+    params_kw = (
+        {}
+        if plugin.default_parameters is None
+        else {"params": _final_read_only_check_parameters(service.parameters)}
+    )
+
+    try:
+        check_result = plugin.function(host_name, service)(**item_kw, **params_kw, **section_kws)
+    except IgnoreResultsError as e:
+        msg = str(e) or "No service summary available"
+        return AggregatedResult(
+            service=service,
+            submit=False,
+            data_received=True,
+            result=ServiceCheckResult(output=msg),
+            cache_info=None,
+        )
+    except MKTimeout:
+        raise
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+        check_result = ServiceCheckResult(
+            3,
+            crash_reporting.create_check_crash_dump(
+                host_name,
+                service.description,
+                plugin_name=service.check_plugin_name,
+                plugin_kwargs={**item_kw, **params_kw, **section_kws},
+                is_cluster=is_cluster,
+                is_enforced=service.is_enforced,
+                snmp_backend=snmp_backend,
+                rtc_package=rtc_package,
+            ),
+        )
+
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Iterable[Provider]
+    ) -> Iterable[ResolvedResult]:
+        for provider in providers:
+            yield from (
+                resolved
+                for section_name in section_names
+                if (resolved := provider.resolve(section_name)) is not None
+            )
+
+    return AggregatedResult(
+        service=service,
+        submit=True,
+        data_received=True,
+        result=check_result,
+        cache_info=get_cache_info(
+            tuple(
+                cache_info
+                for resolved in __iter(plugin.sections, providers.values())
+                if (cache_info := resolved.cache_info) is not None
+            )
+        ),
+    )
+
+
+def _final_read_only_check_parameters(
+    entries: TimespecificParameters | LegacyCheckParameters,
+) -> Parameters:
+    raw_parameters = (
+        entries.evaluate(timeperiod_active)
+        if isinstance(entries, TimespecificParameters)
+        else entries
+    )
+
+    # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
+    # wrap_parameters is a no-op for dictionaries.
+    # For auto-migrated plugins expecting tuples, they will be
+    # unwrapped by a decorator of the original check_function.
+    return Parameters(wrap_parameters(raw_parameters))
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

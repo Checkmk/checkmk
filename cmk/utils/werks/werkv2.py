@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import xml.etree.ElementTree as etree
 from typing import Any, Literal
 
 import markdown
@@ -103,7 +104,21 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
                 raise WerkError(
                     "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
                 )
-            self._werk["title"] = headline.text
+
+            # the treeprocessor runs before the inline processor, so no inline
+            # markdown (links, bold, italic,..) has been replaced. this is
+            # basically okay, because we don't want any formatting in the
+            # headline. but we want to give some hint to the user that no
+            # formatting is allowed.
+            title = headline.text
+            try:
+                _raise_if_contains_markdown_formatting(title)
+            except WerkError as e:
+                raise WerkError(
+                    "Markdown formatting in title detected, this is not allowed."
+                ) from e
+
+            self._werk["title"] = title
             root.remove(headline)
 
             # we removed the headline so we can access element 0 again with a
@@ -143,3 +158,12 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         return RawWerkV2.parse_obj(werk)
     except ValidationError as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
+
+
+def _raise_if_contains_markdown_formatting(string: str) -> None:
+    markdown_converted = markdown.markdown(string)
+    # if markdown_converted contains any html tags, then string contained markdown formatting
+    if len(etree.fromstring(markdown_converted)):
+        raise WerkError(
+            f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
+        )

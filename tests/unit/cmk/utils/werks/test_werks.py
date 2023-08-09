@@ -182,9 +182,34 @@ this is the `description` with some *formatting.*
         _markdown_string_to_werk(md)
 
 
+def test_loading_md_werk_formatting_in_title() -> None:
+    md = """[//]: # (werk v2)
+# test `werk` ***test*** [a](#href) asd
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+this is the `description` with some *formatting.*
+
+# test `werk` ***test*** [a](#href)
+
+"""
+    with pytest.raises(
+        WerkError, match="Markdown formatting in title detected, this is not allowed"
+    ):
+        _markdown_string_to_werk(md)
+
+
 def test_loading_md_werk() -> None:
     md = """[//]: # (werk v2)
-# test werk
+# test < werk
 
 key | value
 --- | ---
@@ -208,7 +233,7 @@ this is the `description` with some *formatting.*
         "date": "2022-12-12T11:08:08+00:00",
         "edition": "cre",
         "level": 1,
-        "title": "test werk",
+        "title": "test < werk",
         "version": "2.0.0p7",
         "description": "<p>this is the <code>description</code> with some <em>formatting.</em></p>",
     }

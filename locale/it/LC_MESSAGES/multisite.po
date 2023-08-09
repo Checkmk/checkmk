@@ -4335,13 +4335,14 @@ msgstr "Gli host interessati contengono"
 msgid "Affected sites"
 msgstr "Siti interessati"
 
+#, fuzzy
 msgid ""
-"After a battery calibration the battery capacity is reduced until the "
+"After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
-"level in this post-calibration phase. Since apc devices remember the time of "
-"the last calibration only as a date, the alternative lower level will be "
-"applied on the whole day of the calibration until midnight. You can extend "
-"this time period with an additional time span to make sure calibrations "
+"level in this post-diagnostics phase. Since apc devices remember the time of "
+"the last diagnostics only as a date, the alternative lower level will be "
+"applied on the whole day of the diagnostics until midnight. You can extend "
+"this time period with an additional time span to make sure diagnostics "
 "occuring just before midnight do not trigger false alarms."
 msgstr ""
 "Dopo una calibrazione della batteria, la capacità della batteria viene "
@@ -5749,7 +5750,8 @@ msgstr "Descrizione del servizio alternativo"
 msgid "Alternative address to ping"
 msgstr "Indirizzo alternativo per il ping"
 
-msgid "Alternative critical battery capacity after calibration"
+#, fuzzy
+msgid "Alternative critical battery capacity after diagnostics"
 msgstr "Capacità critica alternativa della batteria dopo la calibrazione"
 
 msgid "Alternative display name for Services"
@@ -30819,7 +30821,8 @@ msgstr "Livelli di sessioni attive"
 msgid "Levels of battery capacity"
 msgstr "Livelli di capacità della batteria"
 
-msgid "Levels of battery parameters after calibration"
+#, fuzzy
+msgid "Levels of battery parameters after diagnostics"
 msgstr "Livelli dei parametri della batteria dopo la calibrazione"
 
 msgid "Levels of current jobs"

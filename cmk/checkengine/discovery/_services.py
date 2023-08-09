@@ -47,39 +47,44 @@ def find_plugins(
     """
 
     def __iter(
-        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
-    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
-        for host_key, provider in providers.items():
+        section_names: Iterable[ParsedSectionName], providers: Iterable[Provider]
+    ) -> Iterable[ParsedSectionName]:
+        for provider in providers:
             # filter section names for sections that cannot be resolved
             for section_name in (
                 section_name
                 for section_name in section_names
                 if provider.resolve(section_name) is not None
             ):
-                yield host_key, section_name
+                yield section_name
 
-    parsed_sections_of_interest: Sequence[ParsedSectionName] = list(
-        frozenset(
-            itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
-        )
-    )
-    resolved: Sequence[tuple[HostKey, ParsedSectionName]] = tuple(
-        __iter(parsed_sections_of_interest, providers)
+    parsed_sections_of_interest = frozenset(
+        itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
     )
 
     return _find_host_plugins(
         preliminary_candidates,
         frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.HOST
+            __iter(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for (host_key, provider) in providers.items()
+                    if host_key.source_type is SourceType.HOST
+                ),
+            )
         ),
     ) | _find_mgmt_plugins(
         preliminary_candidates,
         frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.MANAGEMENT
+            __iter(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for (host_key, provider) in providers.items()
+                    if host_key.source_type is SourceType.MANAGEMENT
+                ),
+            )
         ),
     )
 

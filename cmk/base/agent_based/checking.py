@@ -343,9 +343,9 @@ def get_aggregated_result(
         )
 
     def __iter(
-        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+        section_names: Iterable[ParsedSectionName], providers: Iterable[Provider]
     ) -> Iterable[ResolvedResult]:
-        for provider in providers.values():
+        for provider in providers:
             yield from (
                 resolved
                 for section_name in section_names
@@ -360,7 +360,7 @@ def get_aggregated_result(
         cache_info=get_cache_info(
             tuple(
                 cache_info
-                for resolved in __iter(plugin.sections, providers)
+                for resolved in __iter(plugin.sections, providers.values())
                 if (cache_info := resolved.cache_info) is not None
             )
         ),

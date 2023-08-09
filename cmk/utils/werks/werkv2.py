@@ -150,6 +150,8 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         output_format="html",
     )
 
+    _raise_if_contains_unkown_tags(result)
+
     # werk was passed by reference into WerkExtractorExtension which got passed
     # to WerkExtractor which wrote all the fields.
     werk["description"] = result
@@ -167,3 +169,32 @@ def _raise_if_contains_markdown_formatting(string: str) -> None:
         raise WerkError(
             f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
         )
+
+
+def _raise_if_contains_unkown_tags(string: str) -> None:
+    tags_allowed = {
+        "code",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "strong",
+        "table",
+        "td",
+        "thead",
+        "tr",
+        "ul",
+    }
+    # string contains multiple tags, but etree expects only single root element.
+    # we wrap it in <p> which results in invalid html, but we don't care in this case.
+    tags_found = {e.tag for e in etree.fromstring(f"<p>{string}</p>").iter()}
+    tags_unknown = tags_found.difference(tags_allowed)
+    if tags_unknown:
+        tag_list = ", ".join(f"<{tag}>" for tag in tags_unknown)
+        raise WerkError(f"Found tag {tag_list} which is not in the list of allowed tags.")

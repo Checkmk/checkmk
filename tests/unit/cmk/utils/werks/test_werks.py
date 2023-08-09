@@ -207,6 +207,29 @@ this is the `description` with some *formatting.*
         _markdown_string_to_werk(md)
 
 
+def test_loading_md_werk_tags_not_in_whitelist() -> None:
+    md = """[//]: # (werk v2)
+# test werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+this is <blink>forbidden</blink>
+
+"""
+    with pytest.raises(
+        WerkError, match="Found tag <blink> which is not in the list of allowed tags"
+    ):
+        _markdown_string_to_werk(md)
+
+
 def test_loading_md_werk() -> None:
     md = """[//]: # (werk v2)
 # test < werk
@@ -221,7 +244,7 @@ version | 2.0.0p7
 compatible | yes
 edition | cre
 
-this is the `description` with some *formatting.*
+this is the `description` with some *italic* and __bold__ ***formatting***.
 
 """
     assert _markdown_string_to_werk(md).to_json_dict() == {
@@ -235,7 +258,8 @@ this is the `description` with some *formatting.*
         "level": 1,
         "title": "test < werk",
         "version": "2.0.0p7",
-        "description": "<p>this is the <code>description</code> with some <em>formatting.</em></p>",
+        "description": "<p>this is the <code>description</code> with some <em>italic</em> and "
+        "<strong>bold</strong> <strong><em>formatting</em></strong>.</p>",
     }
 
 

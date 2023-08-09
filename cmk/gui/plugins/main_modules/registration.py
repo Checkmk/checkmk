@@ -108,9 +108,13 @@ def register() -> None:
         sorter_registry,
         command_registry,
     )
-    backup_register(cmk.gui.pages.page_registry, mode_registry)
 
     if edition() is not Edition.CSE:  # disabled in CSE
+        backup_register(
+            cmk.gui.pages.page_registry,
+            mode_registry,
+            main_module_registry,
+        )
         mkeventd_registration.register(
             permission_section_registry,
             permission_registry,

@@ -319,7 +319,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
 
     @property
     def id_keys(self):
-        return ["downtime_id"]
+        return ["site", "downtime_id"]
 
 
 class LogDataSource(DataSourceLivestatus):

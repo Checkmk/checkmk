@@ -8,7 +8,7 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from livestatus import LocalConnection, lqencode
+from livestatus import lqencode, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -29,6 +29,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
+from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 graph_size = 2000, 700
@@ -78,6 +79,7 @@ def _load_prediction_information(
 
 
 def page_graph() -> None:
+    site_id = SiteId(request.get_str_input_mandatory("site"))
     host_name = HostName(request.get_str_input_mandatory("host"))
     service = request.get_str_input_mandatory("service")
     dsname = request.get_str_input_mandatory("dsname")
@@ -156,7 +158,13 @@ def page_graph() -> None:
     now = time.time()
     if from_time <= now <= until_time:
         timeseries = get_rrd_data(
-            LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
+            live().get_connection(site_id),
+            host_name,
+            service,
+            dsname,
+            "MAX",
+            from_time,
+            until_time,
         )
         rrd_data = timeseries.values
 

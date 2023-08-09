@@ -8,11 +8,20 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-import livestatus
+from livestatus import LocalConnection, lqencode
 
-import cmk.utils.prediction as _prediction
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import (
+    estimate_levels,
+    get_rrd_data,
+    PREDICTION_DIR,
+    PredictionData,
+    PredictionInfo,
+    PredictionParameters,
+    PredictionStore,
+    timezone_at,
+)
 
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.header import make_header
@@ -44,10 +53,10 @@ def register(page_registry: PageRegistry) -> None:
 def _load_prediction_information(
     *,
     tg_name: str | None,
-    prediction_store: _prediction.PredictionStore,
-) -> tuple[_prediction.PredictionInfo, Sequence[tuple[str, str]]]:
-    selected_timegroup: _prediction.PredictionInfo | None = None
-    timegroups: list[_prediction.PredictionInfo] = []
+    prediction_store: PredictionStore,
+) -> tuple[PredictionInfo, Sequence[tuple[str, str]]]:
+    selected_timegroup: PredictionInfo | None = None
+    timegroups: list[PredictionInfo] = []
     now = time.time()
     for tg_info in prediction_store.available_predictions():
         timegroups.append(tg_info)
@@ -83,9 +92,7 @@ def page_graph() -> None:
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host_name, service, dsname)
 
-    prediction_store = _prediction.PredictionStore(
-        _prediction.PREDICTION_DIR, host_name, service, dsname
-    )
+    prediction_store = PredictionStore(PREDICTION_DIR, host_name, service, dsname)
 
     timegroup, choices = _load_prediction_information(
         tg_name=request.var("timegroup"),
@@ -148,14 +155,14 @@ def page_graph() -> None:
     from_time, until_time = timegroup.range
     now = time.time()
     if from_time <= now <= until_time:
-        timeseries = _prediction.get_rrd_data(
-            livestatus.LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
+        timeseries = get_rrd_data(
+            LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
         )
         rrd_data = timeseries.values
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - _prediction.timezone_at(now)) % timegroup.slice
+            rel_time = (now - timezone_at(now)) % timegroup.slice
             render_point(timegroup.range[0] + rel_time, current_value, "#0000ff")
 
     html.footer()
@@ -220,7 +227,7 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
 def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | None:
     perf_data = sites.live().query_value(
         "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-        "Columns: perf_data" % (livestatus.lqencode(str(host)), livestatus.lqencode(service))
+        "Columns: perf_data" % (lqencode(str(host)), lqencode(service))
     )
 
     for part in perf_data.split():
@@ -231,9 +238,7 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | N
 
 
 # Compute check levels from prediction data and check parameters
-def swap_and_compute_levels(
-    tg_data: _prediction.PredictionData, params: _prediction.PredictionParameters
-) -> SwappedStats:
+def swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameters) -> SwappedStats:
     swapped = SwappedStats()
     for step in tg_data.points:
         if step is not None:
@@ -241,7 +246,7 @@ def swap_and_compute_levels(
             swapped.min_.append(step.min_)
             swapped.max_.append(step.max_)
             swapped.stdev.append(step.stdev)
-            upper_0, upper_1, lower_0, lower_1 = _prediction.estimate_levels(
+            upper_0, upper_1, lower_0, lower_1 = estimate_levels(
                 reference_value=step.average,
                 stdev=step.stdev,
                 levels_lower=params.levels_lower,

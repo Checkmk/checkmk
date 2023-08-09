@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p32
+Version: 2.1.0p33
 
 This change adds `windows` to supported agents in jolokia related manpages.
 

@@ -8,7 +8,7 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1t
+OPENSSL_VERSION=1.1.1v
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
 PYTHON_VERSION=3.8.16
 DIR_NAME=Python-${PYTHON_VERSION}
@@ -16,7 +16,7 @@ ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=7
+BUILD_ID=8
 
 build_package() {
     mkdir -p /opt/src

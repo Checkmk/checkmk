@@ -218,7 +218,7 @@ STAGES:
     - NAME: 'Shell check'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
-      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      COMMAND: "make test-shellcheck-docker &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
@@ -235,19 +235,19 @@ STAGES:
       TEXT_ON_SKIP: 'No JavaScript files changed'
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
-    -  NAME: 'JS Build'
-       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES
-       DIR: 'tests'
-       COMMAND: 'make test-build-js-docker &> ${RESULTS}/js-build.txt'
-       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
-       RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
+    - NAME: 'JS Build'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES
+      DIR: 'tests'
+      COMMAND: 'make test-build-js-docker &> ${RESULTS}/js-build.txt'
+      TEXT_ON_SKIP: 'No relevant JS/TS files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 
-    -  NAME: 'JS Lint'
-       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES
-       DIR: 'tests'
-       COMMAND: 'make test-lint-js-docker &> ${RESULTS}/js-lint.txt'
-       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
-       RESULT_CHECK_FILE_PATTERN: "results/js-lint.txt"
+    - NAME: 'JS Lint'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES
+      DIR: 'tests'
+      COMMAND: 'make test-lint-js-docker &> ${RESULTS}/js-lint.txt'
+      TEXT_ON_SKIP: 'No relevant JS/TS files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/js-lint.txt"
 
     - NAME: 'TypeScript Type Checking'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES

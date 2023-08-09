@@ -770,7 +770,7 @@ class ModeEditUser(WatoMode):
             # Note: this validation is done before the main-validiation later on
             # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
-                raise MKUserError("_password2", _("The both passwords do not match."))
+                raise MKUserError("_password2", _("Passwords don't match"))
 
             # Detect switch back from automation to password
             if "automation_secret" in user_attrs:

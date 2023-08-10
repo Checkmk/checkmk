@@ -830,10 +830,7 @@ void TableStateHistory::process(
     std::chrono::system_clock::duration query_timeframe,
     HostServiceState *hss) {
     hss->_duration = hss->_until - hss->_from;
-    hss->_duration_part =
-        mk::ticks<std::chrono::duration<double>>(hss->_duration) /
-        mk::ticks<std::chrono::duration<double>>(query_timeframe);
-    hss->computePerStateDurations();
+    hss->computePerStateDurations(query_timeframe);
 
     // if (hss->_duration > 0)
     _abort_query =

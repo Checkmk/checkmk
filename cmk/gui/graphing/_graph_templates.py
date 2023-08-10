@@ -17,7 +17,6 @@ from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, TranslatedMetrics
 
-from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
@@ -126,9 +125,6 @@ class TemplateGraphRecipeBuilder:
         destination: str | None,
     ) -> GraphTemplate | None:
         return graph_template
-
-
-graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

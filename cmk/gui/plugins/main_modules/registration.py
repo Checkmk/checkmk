@@ -18,6 +18,7 @@ from cmk.gui import (
     crash_reporting,
     cron,
     dashboard,
+    graphing,
     inventory,
     login,
     logwatch,
@@ -170,6 +171,7 @@ def register() -> None:
     background_job_registration.register(
         cmk.gui.pages.page_registry, mode_registry, main_module_registry
     )
+    graphing.register(cmk.gui.pages.page_registry)
 
 
 register()

@@ -26,6 +26,7 @@ from ._utils import (
     render_color,
     RRDData,
     time_series_expression_registry,
+    TimeSeriesExpressionRegistry,
 )
 
 # .
@@ -107,7 +108,6 @@ def evaluate_time_series_expression(
     return expression_func(parameters, rrd_data)
 
 
-@time_series_expression_registry.register_expression("operator")
 def expression_operator(
     parameters: ExpressionParams,
     rrd_data: RRDData,
@@ -126,7 +126,6 @@ def expression_operator(
     return []
 
 
-@time_series_expression_registry.register_expression("rrd")
 def expression_rrd(
     parameters: ExpressionParams,
     rrd_data: RRDData,
@@ -138,7 +137,6 @@ def expression_rrd(
     return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
-@time_series_expression_registry.register_expression("constant")
 def expression_constant(
     parameters: ExpressionParams,
     rrd_data: RRDData,
@@ -265,3 +263,9 @@ def time_series_operators() -> (
         "AVERAGE": (_("Average"), time_series_operator_average),
         "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }
+
+
+def register_time_series_expressions(registy: TimeSeriesExpressionRegistry) -> None:
+    registy.register_expression("operator")(expression_operator)
+    registy.register_expression("rrd")(expression_rrd)
+    registy.register_expression("constant")(expression_constant)

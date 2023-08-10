@@ -9,7 +9,7 @@ from typing import Any, Literal, TypedDict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import GraphTitleFormat
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -296,7 +296,6 @@ class ValuesWithUnits(CascadingDropdown):
         )
 
 
-@page_registry.register_page("ajax_vs_unit_resolver")
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         return ValuesWithUnits.resolve_units(self.webapi_request())

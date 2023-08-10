@@ -5,7 +5,6 @@
 
 from typing import Final
 
-from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_specification import ExplicitGraphSpecification
 from ._utils import GraphRecipe
 
@@ -27,6 +26,3 @@ class ExplicitGraphRecipeBuilder:
                 specification=spec,
             )
         ]
-
-
-graph_recipe_builder_registry.register(ExplicitGraphRecipeBuilder())

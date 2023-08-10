@@ -54,7 +54,6 @@ class PredictionInfo(BaseModel, frozen=True):
     name: Timegroup
     time: int
     range: tuple[Timestamp, Timestamp]
-    cf: ConsolidationFunctionName
     dsname: str
     slice: int
     params: PredictionParameters
@@ -74,7 +73,6 @@ def get_rrd_data_with_mk_general_exception(
     host_name: HostName,
     service_description: str,
     metric_name: str,
-    cf: ConsolidationFunctionName,
     fromtime: int,
     untiltime: int,
 ) -> livestatus.RRDResponse:
@@ -84,7 +82,7 @@ def get_rrd_data_with_mk_general_exception(
             livestatus.LocalConnection(),
             host_name,
             service_description,
-            f"{metric_name}.{cf.lower()}",
+            f"{metric_name}.max",
             fromtime,
             untiltime,
         )
@@ -176,7 +174,6 @@ def compute_prediction(
                 host_name,
                 service_description,
                 info.dsname,
-                info.cf,
                 start,
                 end,
             )

@@ -16,7 +16,6 @@ from ._grouping import get_timegroup_relative_time, PREDICTION_PERIODS, Timegrou
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
-    ConsolidationFunctionName,
     LevelsSpec,
     PredictionData,
     PredictionInfo,
@@ -58,7 +57,6 @@ def _get_prediction(
     return store.get_data(timegroup)
 
 
-# cf: consilidation function (MAX, MIN, AVERAGE)
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
@@ -67,7 +65,6 @@ def get_predictive_levels(
     service_description: ServiceName,
     dsname: str,
     params: PredictionParameters,
-    cf: ConsolidationFunctionName,
     levels_factor: float = 1.0,
 ) -> tuple[float | None, EstimatedLevels]:
     now = int(time.time())
@@ -95,7 +92,6 @@ def get_predictive_levels(
             name=timegroup,
             time=now,
             range=(current_slice_start, current_slice_end),
-            cf=cf,
             dsname=dsname,
             slice=period_info.slice,
             params=params,

@@ -388,7 +388,6 @@ def check_levels_predictive(
             plugin_contexts.service_description(),
             metric_name,
             PredictionParameters.parse_obj(levels),
-            "MAX",
         )
         if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)

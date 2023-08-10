@@ -26,7 +26,6 @@ class TestPredictionQuerier:
             name=Timegroup("everyday"),
             time=123,
             range=(0, 200),
-            cf="max",
             dsname=str(querier.metric_name),
             slice=3,
             params=PredictionParameters(

@@ -308,7 +308,6 @@ def check_levels(  # pylint: disable=too-many-branches
                 service_description(),
                 dsname,
                 params,
-                "MAX",
                 levels_factor=factor * scale,
             )
             if ref_value:

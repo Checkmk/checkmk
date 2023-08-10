@@ -32,7 +32,7 @@ from tests.testlib.utils import (
     restart_httpd,
     spawn_expect_process,
 )
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKVersion, version_from_env, version_gte
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -1329,13 +1329,18 @@ class SiteFactory:
         site.start()
         return site
 
-    def update_site(
+    def interactive_update(
         self,
         test_site: Site,
         target_version: CMKVersion,
+        min_version: CMKVersion,
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
     ) -> Site:
+        """Update the test-site with the given target-version if supported.
+
+        Such update process is performed interactively via Pexpect.
+        """
         self.version = target_version
         site = self.get_existing_site(test_site.id)
         site.install_cmk()
@@ -1348,17 +1353,43 @@ class SiteFactory:
             target_version.version_directory(),
         )
 
-        pexpect_dialogs = [
-            PExpectDialog(
-                expect=(
-                    f"You are going to update the site {test_site.id} "
-                    f"from version {test_site.version.version_directory()} "
-                    f"to version {target_version.version_directory()}."
-                ),
-                send="u\r",
-            ),
-            PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
-        ]
+        pexpect_dialogs = []
+        if self._version_supported(test_site.version.version, min_version.version):
+            logger.info("Updating to a supported version.")
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        expect=(
+                            f"You are going to update the site {test_site.id} "
+                            f"from version {test_site.version.version_directory()} "
+                            f"to version {target_version.version_directory()}."
+                        ),
+                        send="u\r",
+                    )
+                ]
+            )
+        else:  # update-process not supported. Still, verify the correct message is displayed
+            logger.info(
+                "Updating from version %s to version %s is not supported",
+                min_version,
+                target_version,
+            )
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        expect=(
+                            f"ERROR: You are trying to update from "
+                            f"{test_site.version.version_directory()} to "
+                            f"{target_version.version_directory()} which is not supported."
+                        ),
+                        send="\r",
+                    )
+                ]
+            )
+
+        pexpect_dialogs.extend(
+            [PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True)]
+        )
 
         rc = spawn_expect_process(
             [
@@ -1398,6 +1429,11 @@ class SiteFactory:
         ), "Edition mismatch during update!"
 
         return site
+
+    @staticmethod
+    def _version_supported(version: str, min_version: str) -> bool:
+        """Check if the given version is supported for updating."""
+        return version_gte(version, min_version)
 
     def get_test_site(
         self,

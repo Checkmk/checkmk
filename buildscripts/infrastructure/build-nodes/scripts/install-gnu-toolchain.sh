@@ -81,7 +81,7 @@ build_binutils() {
         "${BINUTILS_CONFIGURE_ADD_OPTS}" \
         --prefix="${PREFIX}"
     make -j4 MAKEINFO=true
-    make install
+    make install MAKEINFO=true
 }
 
 build_gcc() {

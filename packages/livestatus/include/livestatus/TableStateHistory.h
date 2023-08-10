@@ -56,11 +56,11 @@ private:
                               Logfile::const_iterator &it_entries);
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
-                 HostServiceState *hs_state);
+                 HostServiceState *hss);
     ModificationStatus updateHostServiceState(
         Query &query, const User &user,
         std::chrono::system_clock::duration query_timeframe,
-        const LogEntry *entry, HostServiceState *hs_state, bool only_update,
+        const LogEntry *entry, HostServiceState *hss, bool only_update,
         const std::map<std::string, int> &notification_periods);
 };
 

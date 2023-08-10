@@ -33,7 +33,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.checkengine.check_table import FilterMode
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.inventory import InventoryPluginName
 
@@ -1373,7 +1372,7 @@ def _get_needed_plugin_names(
     # plugins are not.
     needed_agent_based_check_plugin_names = config_cache.check_table(
         host_name,
-        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+        filter_mode=config.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()
 

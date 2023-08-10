@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -23,6 +23,7 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.config import FilterMode, HostCheckTable
 
 
 @pytest.fixture(autouse=True, scope="module")

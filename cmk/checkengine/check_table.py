@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-import enum
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Mapping
 from typing import NamedTuple
 
 from cmk.utils.labels import ServiceLabel
@@ -19,11 +18,6 @@ from cmk.checkengine.parameters import TimespecificParameters
 class ServiceID(NamedTuple):
     name: CheckPluginName
     item: Item
-
-
-class FilterMode(enum.Enum):
-    NONE = enum.auto()
-    INCLUDE_CLUSTERED = enum.auto()
 
 
 class ConfiguredService(NamedTuple):
@@ -48,24 +42,3 @@ class ConfiguredService(NamedTuple):
         items.
         """
         return ServiceID(self.check_plugin_name, self.item or "")
-
-
-class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
-    def __init__(
-        self,
-        *,
-        services: Iterable[ConfiguredService],
-    ) -> None:
-        self._data = {s.id(): s for s in services}
-
-    def __getitem__(self, key: ServiceID) -> ConfiguredService:
-        return self._data[key]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> Iterator[ServiceID]:
-        return iter(self._data)
-
-    def needed_check_names(self) -> set[CheckPluginName]:
-        return {s.check_plugin_name for s in self.values()}

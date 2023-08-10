@@ -8,6 +8,7 @@ from __future__ import annotations
 import contextlib
 import copy
 import dataclasses
+import enum
 import functools
 import ipaddress
 import itertools
@@ -123,7 +124,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import (
     AutocheckEntry,
@@ -180,6 +181,32 @@ AllClusters = dict[HostName, list[HostName]]
 ObjectMacros = dict[str, AnyStr]
 
 CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
+
+
+class FilterMode(enum.Enum):
+    NONE = enum.auto()
+    INCLUDE_CLUSTERED = enum.auto()
+
+
+class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
+    def __init__(
+        self,
+        *,
+        services: Iterable[ConfiguredService],
+    ) -> None:
+        self._data = {s.id(): s for s in services}
+
+    def __getitem__(self, key: ServiceID) -> ConfiguredService:
+        return self._data[key]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[ServiceID]:
+        return iter(self._data)
+
+    def needed_check_names(self) -> set[CheckPluginName]:
+        return {s.check_plugin_name for s in self.values()}
 
 
 class HostAddressConfiguration(NamedTuple):

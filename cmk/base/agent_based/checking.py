@@ -22,8 +22,12 @@ from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import AggregatedResult, CheckPlugin, CheckPluginName
+from cmk.checkengine.checking import (
+    AggregatedResult,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+)
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo

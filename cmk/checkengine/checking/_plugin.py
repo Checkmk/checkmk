@@ -5,15 +5,49 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import ServiceLabel
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.check_table import ConfiguredService
+from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-__all__ = ["AggregatedResult", "CheckPlugin"]
+__all__ = ["AggregatedResult", "CheckPlugin", "ConfiguredService", "ServiceID"]
+
+
+class ServiceID(NamedTuple):
+    name: CheckPluginName
+    item: Item
+
+
+class ConfiguredService(NamedTuple):
+    """A service with all information derived from the config"""
+
+    check_plugin_name: CheckPluginName
+    item: Item
+    description: ServiceName
+    parameters: TimespecificParameters
+    # Explicitly optional b/c enforced services don't have disocvered params.
+    discovered_parameters: LegacyCheckParameters | None
+    service_labels: Mapping[str, ServiceLabel]
+    is_enforced: bool
+
+    def id(self) -> ServiceID:
+        return ServiceID(self.check_plugin_name, self.item)
+
+    def sort_key(self) -> ServiceID:
+        """Allow to sort services
+
+        Basically sort by id(). Unfortunately we have plugins with *AND* without
+        items.
+        """
+        return ServiceID(self.check_plugin_name, self.item or "")
 
 
 @dataclass(frozen=True)

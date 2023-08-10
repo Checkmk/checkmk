@@ -21,8 +21,13 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName, Item
+from cmk.checkengine.checking import (
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    Item,
+    ServiceID,
+)
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

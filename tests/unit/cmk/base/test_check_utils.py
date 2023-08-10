@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
 

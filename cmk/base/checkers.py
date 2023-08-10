@@ -34,8 +34,12 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkengine import crash_reporting
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import AggregatedResult, CheckPlugin, CheckPluginName
+from cmk.checkengine.checking import (
+    AggregatedResult,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+)
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,

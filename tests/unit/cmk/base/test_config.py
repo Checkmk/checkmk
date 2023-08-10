@@ -31,8 +31,7 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters, HostLabel
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet

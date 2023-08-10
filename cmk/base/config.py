@@ -124,8 +124,13 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
+from cmk.checkengine.checking import (
+    CheckPluginName,
+    CheckPluginNameStr,
+    ConfiguredService,
+    Item,
+    ServiceID,
+)
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutochecksManager,

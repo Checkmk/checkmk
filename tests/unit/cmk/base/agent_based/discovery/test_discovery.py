@@ -27,8 +27,7 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

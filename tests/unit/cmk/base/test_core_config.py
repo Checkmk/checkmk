@@ -23,8 +23,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config

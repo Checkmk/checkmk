@@ -24,8 +24,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import logger
 
-from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName, Item
+from cmk.checkengine.checking import CheckPluginName, Item, ServiceID
 
 _PluginName = str
 _UserKey = str

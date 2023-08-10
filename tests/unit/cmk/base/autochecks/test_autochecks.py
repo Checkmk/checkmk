@@ -15,8 +15,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.parameters import TimespecificParameters

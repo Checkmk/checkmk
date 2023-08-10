@@ -20,8 +20,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName, Item
+from cmk.checkengine.checking import CheckPluginName, Item, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction

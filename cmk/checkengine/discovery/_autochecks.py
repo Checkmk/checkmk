@@ -16,8 +16,7 @@ from cmk.utils.labels import ServiceLabel
 from cmk.utils.servicename import ServiceName
 from cmk.utils.store import ObjectStore
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName, Item
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Item, ServiceID
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 

@@ -1963,21 +1963,22 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 rtc_package=None,
             )
 
-        discovery.commandline_discovery(
-            hostname,
-            ruleset_matcher=config_cache.ruleset_matcher,
-            parser=parser,
-            fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
-            section_error_handling=section_error_handling,
-            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-            plugins=DiscoveryPluginMapper(config_cache=config_cache),
-            run_plugin_names=run_plugin_names,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            arg_only_new=options["discover"] == 1,
-            only_host_labels="only-host-labels" in options,
-            on_error=on_error,
-        )
+        with plugin_contexts.current_host(hostname):
+            discovery.commandline_discovery(
+                hostname,
+                ruleset_matcher=config_cache.ruleset_matcher,
+                parser=parser,
+                fetcher=fetcher,
+                section_plugins=SectionPluginMapper(),
+                section_error_handling=section_error_handling,
+                host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+                plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                run_plugin_names=run_plugin_names,
+                ignore_plugin=config_cache.check_plugin_ignored,
+                arg_only_new=options["discover"] == 1,
+                only_host_labels="only-host-labels" in options,
+                on_error=on_error,
+            )
 
 
 modes.register(

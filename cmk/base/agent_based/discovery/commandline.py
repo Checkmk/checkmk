@@ -40,8 +40,6 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
-from cmk.base.api.agent_based import plugin_contexts
-
 __all__ = ["commandline_discovery"]
 
 
@@ -158,14 +156,13 @@ def _commandline_discovery_on_host(
         console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
 
     try:
-        with plugin_contexts.current_host(real_host_name):
-            discovered_services = discover_services(
-                real_host_name,
-                candidates - skip,
-                providers=providers,
-                plugins=plugins,
-                on_error=on_error,
-            )
+        discovered_services = discover_services(
+            real_host_name,
+            candidates - skip,
+            providers=providers,
+            plugins=plugins,
+            on_error=on_error,
+        )
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 

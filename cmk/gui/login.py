@@ -12,6 +12,7 @@ from contextlib import suppress
 from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
+from urllib.parse import unquote
 
 from six import ensure_str
 from werkzeug.local import LocalProxy
@@ -21,6 +22,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.i18n
 import cmk.gui.mobile
@@ -421,7 +423,8 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
 def check_auth_by_cookie() -> Optional[UserId]:
     """check if session cookie exists and if it is valid
 
-    Returns None if not authenticated. If a user was successful authenticated the UserId is returned"""
+    Returns None if not authenticated. If a user was successful authenticated the UserId is returned
+    """
 
     cookie_name = auth_cookie_name()
     if not request.has_cookie(cookie_name):
@@ -500,7 +503,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self) -> None:
+    def _do_login(self) -> None:  # pylint: disable=too-many-branches
         """handle the sent login form"""
         if not request.var("_login"):
             return
@@ -567,6 +570,14 @@ class LoginPage(Page):
                         "user_change_pw.py?_origtarget=%s&reason=%s"
                         % (urlencode(origtarget), change_pw_result)
                     )
+
+                # If user pasted e.g. a view to a link in mobile mode, redirect
+                # to the correct page
+                if is_mobile(request, response) and "start_url" in origtarget:
+                    url = unquote(origtarget.split("start_url=")[1])
+                    if not is_allowed_url(url):
+                        url = default_origtarget
+                    raise HTTPRedirect(url)
 
                 raise HTTPRedirect(origtarget)
 

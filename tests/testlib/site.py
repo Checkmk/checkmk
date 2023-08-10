@@ -1337,7 +1337,7 @@ class SiteFactory:
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
     ) -> Site:
-        """Update the test-site with the given target-version if supported.
+        """Update the test-site with the given target-version, if supported.
 
         Such update process is performed interactively via Pexpect.
         """
@@ -1410,6 +1410,7 @@ class SiteFactory:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # refresh the site object after creating the site
+        self._base_ident = ""
         site = self.get_existing_site(test_site.id)
 
         # open the livestatus port

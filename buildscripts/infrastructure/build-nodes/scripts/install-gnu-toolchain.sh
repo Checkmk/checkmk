@@ -80,7 +80,7 @@ build_binutils() {
     MAKEINFO=true ../binutils-${BINUTILS_VERSION}/configure \
         "${BINUTILS_CONFIGURE_ADD_OPTS}" \
         --prefix="${PREFIX}"
-    make -j4
+    make -j4 MAKEINFO=true
     make install
 }
 

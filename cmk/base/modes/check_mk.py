@@ -1873,6 +1873,35 @@ _DiscoveryOptions = TypedDict(
 )
 
 
+def _preprocess_hostnames(
+    arg_host_names: frozenset[HostName],
+    is_cluster: Callable[[HostName], bool],
+    resolve_nodes: Callable[[HostName], Iterable[HostName]],
+    config_cache: ConfigCache,
+    only_host_labels: bool,
+) -> set[HostName]:
+    """Default to all hosts and expand cluster names to their nodes"""
+    if not arg_host_names:
+        console.verbose(
+            "Discovering %shost labels on all hosts\n"
+            % ("services and " if not only_host_labels else "")
+        )
+        return set(config_cache.all_active_realhosts())
+
+    node_names = {
+        node_name
+        for host_name in arg_host_names
+        for node_name in (resolve_nodes(host_name) if is_cluster(host_name) else (host_name,))
+    }
+
+    console.verbose(
+        "Discovering %shost labels on: %s\n"
+        % ("services and " if not only_host_labels else "", ", ".join(sorted(node_names)))
+    )
+
+    return node_names
+
+
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if hostnames:
@@ -1913,23 +1942,42 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(),
     )
-    discovery.commandline_discovery(
-        set(hostnames),
-        is_cluster=config_cache.is_cluster,
-        resolve_cluster=lambda hn: config_cache.nodes_of(hn) or (),
-        config_cache=config_cache,
-        ruleset_matcher=config_cache.ruleset_matcher,
-        parser=parser,
-        fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
-        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-        plugins=DiscoveryPluginMapper(config_cache=config_cache),
-        run_plugin_names=run_plugin_names,
-        ignore_plugin=config_cache.check_plugin_ignored,
-        arg_only_new=options["discover"] == 1,
-        only_host_labels="only-host-labels" in options,
-        on_error=on_error,
-    )
+    for hostname in sorted(
+        _preprocess_hostnames(
+            frozenset(hostnames),
+            is_cluster=config_cache.is_cluster,
+            resolve_nodes=lambda hn: config_cache.nodes_of(hn) or (),
+            config_cache=config_cache,
+            only_host_labels="only-host-labels" in options,
+        )
+    ):
+
+        def section_error_handling(
+            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = hostname
+        ) -> str:
+            return create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
+            )
+
+        discovery.commandline_discovery(
+            hostname,
+            ruleset_matcher=config_cache.ruleset_matcher,
+            parser=parser,
+            fetcher=fetcher,
+            section_plugins=SectionPluginMapper(),
+            section_error_handling=section_error_handling,
+            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+            plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            run_plugin_names=run_plugin_names,
+            ignore_plugin=config_cache.check_plugin_ignored,
+            arg_only_new=options["discover"] == 1,
+            only_host_labels="only-host-labels" in options,
+            on_error=on_error,
+        )
 
 
 modes.register(

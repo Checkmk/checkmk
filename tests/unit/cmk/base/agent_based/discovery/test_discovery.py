@@ -988,14 +988,12 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         simulation_mode=True,
     )
     discovery.commandline_discovery(
-        arg_hostnames={testhost},
-        is_cluster=config_cache.is_cluster,
-        resolve_cluster=lambda hn: config_cache.nodes_of(hn) or (),
-        config_cache=config_cache,
+        host_name=testhost,
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
+        section_error_handling=lambda *args, **kw: "error",
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         plugins=DiscoveryPluginMapper(config_cache=config_cache),
         run_plugin_names=EVERYTHING,

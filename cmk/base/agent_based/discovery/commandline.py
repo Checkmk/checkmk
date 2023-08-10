@@ -6,7 +6,7 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -20,7 +20,6 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import (
     analyse_services,
     AutochecksStore,
@@ -42,21 +41,18 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.config import ConfigCache
 
 __all__ = ["commandline_discovery"]
 
 
 def commandline_discovery(
-    arg_hostnames: set[HostName],
+    host_name: HostName,
     *,
-    is_cluster: Callable[[HostName], bool],
-    resolve_cluster: Callable[[HostName], Iterable[HostName]],
     parser: ParserFunction,
     fetcher: FetcherFunction,
-    config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     section_plugins: SectionMap[SectionPlugin],
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
@@ -71,90 +67,39 @@ def commandline_discovery(
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
     """
-    non_cluster_host_names = _preprocess_hostnames(
-        arg_hostnames,
-        is_cluster,
-        resolve_cluster,
-        config_cache,
-        only_host_labels,
-    )
-
-    # Now loop through all hosts
-    for host_name in sorted(non_cluster_host_names):
-
-        def section_error_handling(
-            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = host_name
-        ) -> str:
-            return create_section_crash_dump(
-                operation="parsing",
-                section_name=section_name,
-                section_content=raw_data,
-                host_name=host_name,
-                rtc_package=None,
-            )
-
-        section.section_begin(host_name)
-        try:
-            fetched = fetcher(host_name, ip_address=None)
-            host_sections = parser((f[0], f[1]) for f in fetched)
-            host_sections_by_host = group_by_host(
-                (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
-            )
-            store_piggybacked_sections(host_sections_by_host)
-            providers = make_providers(
-                host_sections_by_host,
-                section_plugins,
-                error_handling=section_error_handling,
-            )
-            _commandline_discovery_on_host(
-                real_host_name=host_name,
-                host_label_plugins=host_label_plugins,
-                ruleset_matcher=ruleset_matcher,
-                providers=providers,
-                plugins=plugins,
-                run_plugin_names=run_plugin_names,
-                ignore_plugin=ignore_plugin,
-                only_new=arg_only_new,
-                load_labels=arg_only_new,
-                only_host_labels=only_host_labels,
-                on_error=on_error,
-            )
-
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            section.section_error("%s" % e)
-        finally:
-            cmk.utils.cleanup.cleanup_globals()
-
-
-def _preprocess_hostnames(
-    arg_host_names: set[HostName],
-    is_cluster: Callable[[HostName], bool],
-    resolve_nodes: Callable[[HostName], Iterable[HostName]],
-    config_cache: ConfigCache,
-    only_host_labels: bool,
-) -> set[HostName]:
-    """Default to all hosts and expand cluster names to their nodes"""
-    if not arg_host_names:
-        console.verbose(
-            "Discovering %shost labels on all hosts\n"
-            % ("services and " if not only_host_labels else "")
+    section.section_begin(host_name)
+    try:
+        fetched = fetcher(host_name, ip_address=None)
+        host_sections = parser((f[0], f[1]) for f in fetched)
+        host_sections_by_host = group_by_host(
+            (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
         )
-        return set(config_cache.all_active_realhosts())
+        store_piggybacked_sections(host_sections_by_host)
+        providers = make_providers(
+            host_sections_by_host,
+            section_plugins,
+            error_handling=section_error_handling,
+        )
+        _commandline_discovery_on_host(
+            real_host_name=host_name,
+            host_label_plugins=host_label_plugins,
+            ruleset_matcher=ruleset_matcher,
+            providers=providers,
+            plugins=plugins,
+            run_plugin_names=run_plugin_names,
+            ignore_plugin=ignore_plugin,
+            only_new=arg_only_new,
+            load_labels=arg_only_new,
+            only_host_labels=only_host_labels,
+            on_error=on_error,
+        )
 
-    node_names = {
-        node_name
-        for host_name in arg_host_names
-        for node_name in (resolve_nodes(host_name) if is_cluster(host_name) else (host_name,))
-    }
-
-    console.verbose(
-        "Discovering %shost labels on: %s\n"
-        % ("services and " if not only_host_labels else "", ", ".join(sorted(node_names)))
-    )
-
-    return node_names
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        section.section_error("%s" % e)
+    finally:
+        cmk.utils.cleanup.cleanup_globals()
 
 
 def _commandline_discovery_on_host(

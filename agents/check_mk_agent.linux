@@ -317,6 +317,7 @@ if inpath timeout; then
     waitmax() {
         timeout "$@"
     }
+    export -f waitmax
 fi
 
 encryption_panic() {

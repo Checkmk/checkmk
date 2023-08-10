@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
@@ -14,9 +14,10 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.sectionparser import ParsedSectionName
+from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 
 __all__ = ["AggregatedResult", "CheckPlugin", "ConfiguredService", "ServiceID"]
 
@@ -59,9 +60,20 @@ class AggregatedResult:
     cache_info: tuple[int, int] | None
 
 
+class CheckFunction(Protocol):
+    def __call__(
+        self,
+        host_name: HostName,
+        service: ConfiguredService,
+        *,
+        providers: Mapping[HostKey, Provider],
+    ) -> AggregatedResult:
+        ...
+
+
 @dataclass(frozen=True)
 class CheckPlugin:
     sections: Sequence[ParsedSectionName]
-    function: Callable[[HostName, ConfiguredService], Callable[..., ServiceCheckResult]]
+    function: CheckFunction
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None

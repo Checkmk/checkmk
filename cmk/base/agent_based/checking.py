@@ -20,7 +20,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
-from cmk.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine.checking import (
     AggregatedResult,
@@ -48,16 +48,12 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.base.checkers import get_aggregated_result
-
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 
 
 def execute_checkmk_checks(
     *,
     hostname: HostName,
-    is_cluster: bool,
-    cluster_nodes: Sequence[HostName],
     fetched: Iterable[
         tuple[
             SourceInfo,
@@ -72,12 +68,10 @@ def execute_checkmk_checks(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
-    snmp_backend: SNMPBackendEnum,
 ) -> ActiveCheckResult:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
@@ -88,16 +82,11 @@ def execute_checkmk_checks(
     service_results = list(
         check_host_services(
             hostname,
-            is_cluster=is_cluster,
-            cluster_nodes=cluster_nodes,
             providers=providers,
             services=services,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
-            get_effective_host=get_effective_host,
             get_check_period=get_check_period,
-            snmp_backend=snmp_backend,
-            rtc_package=None,
         )
     )
     submitter.submit(
@@ -203,16 +192,11 @@ def _check_plugins_missing_data(
 def check_host_services(
     host_name: HostName,
     *,
-    is_cluster: bool,
-    cluster_nodes: Sequence[HostName],
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
-    rtc_package: AgentRawData | None,
-    snmp_backend: SNMPBackendEnum,
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
@@ -231,17 +215,7 @@ def check_host_services(
             )
         else:
             plugin = check_plugins[service.check_plugin_name]
-            yield get_aggregated_result(
-                host_name,
-                is_cluster,
-                cluster_nodes,
-                providers,
-                service,
-                plugin,
-                rtc_package=rtc_package,
-                get_effective_host=get_effective_host,
-                snmp_backend=snmp_backend,
-            )
+            yield plugin.function(host_name, service, providers=providers)
 
 
 def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:

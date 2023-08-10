@@ -350,9 +350,16 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
 
 class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     # See comment to SectionPluginMapper.
-    def __init__(self, config_cache: ConfigCache, value_store_manager: ValueStoreManager):
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        value_store_manager: ValueStoreManager,
+        *,
+        rtc_package: AgentRawData | None,
+    ):
         self.config_cache: Final = config_cache
         self.value_store_manager: Final = value_store_manager
+        self.rtc_package: Final = rtc_package
 
     def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
         plugin = _api.get_check_plugin(__key)
@@ -360,10 +367,25 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             raise KeyError(__key)
 
         def check_function(
-            host_name: HostName, service: ConfiguredService
-        ) -> Callable[..., ServiceCheckResult]:
-            return _get_check_function(
+            host_name: HostName,
+            service: ConfiguredService,
+            *,
+            providers: Mapping[HostKey, Provider],
+        ) -> AggregatedResult:
+            check_function = _get_check_function(
                 plugin, self.config_cache, host_name, service, self.value_store_manager
+            )
+            return get_aggregated_result(
+                host_name,
+                self.config_cache.is_cluster(host_name),
+                cluster_nodes=self.config_cache.nodes_of(host_name) or (),
+                providers=providers,
+                service=service,
+                plugin=plugin,
+                check_function=check_function,
+                rtc_package=self.rtc_package,
+                get_effective_host=self.config_cache.effective_host,
+                snmp_backend=self.config_cache.get_snmp_backend(host_name),
             )
 
         return CheckPlugin(
@@ -524,16 +546,51 @@ def get_aggregated_result(
     cluster_nodes: Sequence[HostName],
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
-    plugin: CheckPlugin,
+    plugin: CheckPluginAPI,
+    check_function: Callable[..., ServiceCheckResult],
     *,
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
-    """Run the check function and aggregate the subresults
-
-    This function is also called during discovery.
-    """
+    # Mostly API-specific error-handling around the check function.
+    #
+    # Note that errors are handled here and in the caller in
+    # the `CheckResultErrorHandler`.  So we have nearly identical, nested
+    # error handling in both places.  Here the slightly simplified structure:
+    #
+    # ```
+    # try:
+    #    try:
+    #        return check_function(*args, **kwargs)
+    #    except Timeout:
+    #        raise
+    #    except Exception:
+    #        crash_reporting.create_check_crash_dump(...)
+    # except Timeout:
+    #        ...  # handle timeout
+    # except Exception:
+    #    crash_reporting.create_check_crash_dump(...)
+    #
+    # ```
+    #
+    # Now, that is not only a terrible code structure, that's also buggy.
+    #
+    # Indeed, whether to handle errors and how to handle them is only
+    # the callers' business.  For example, crash reports should only be
+    # created on errors when the caller is a core (CMC or Nagios) but *not*
+    # on the command line.  Another example: `IgnoreResultsError` is a
+    # Check API feature and of no concern for the check engine.
+    #
+    # Because it is the callers business, this *here* is the wrong place.
+    # In principle, all the error handling should occur in the caller in
+    # `CheckResultErrorHandler`.
+    #
+    # Because this function is written so creatively (early returns,
+    # reraising some exceptions for to the caller, seemingly random
+    # arguments passed to the crash report ...) and `CheckResultErrorHandler`
+    # isn't much better, I couldn't find an easy solution on my own.
+    #
     section_kws, error_result = _get_monitoring_data_kwargs(
         host_name,
         is_cluster,
@@ -555,12 +612,12 @@ def get_aggregated_result(
     item_kw = {} if service.item is None else {"item": service.item}
     params_kw = (
         {}
-        if plugin.default_parameters is None
+        if plugin.check_default_parameters is None
         else {"params": _final_read_only_check_parameters(service.parameters)}
     )
 
     try:
-        check_result = plugin.function(host_name, service)(**item_kw, **params_kw, **section_kws)
+        check_result = check_function(**item_kw, **params_kw, **section_kws)
     except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return AggregatedResult(

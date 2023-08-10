@@ -2070,13 +2070,14 @@ def mode_check(
     ) as value_store_manager:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
-        is_cluster = config_cache.is_cluster(hostname)
-        check_plugins = CheckPluginMapper(config_cache, value_store_manager)
+        check_plugins = CheckPluginMapper(
+            config_cache,
+            value_store_manager,
+            rtc_package=None,
+        )
         with CPUTracker() as tracker:
             check_result = execute_checkmk_checks(
                 hostname=hostname,
-                is_cluster=is_cluster,
-                cluster_nodes=config_cache.nodes_of(hostname) or (),
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
                 summarizer=summarizer,
@@ -2087,7 +2088,6 @@ def mode_check(
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(hostname),
                 run_plugin_names=run_plugin_names,
-                get_effective_host=config_cache.effective_host,
                 get_check_period=partial(config_cache.check_period_of_service, hostname),
                 submitter=get_submitter_(
                     check_submission=config.check_submission,
@@ -2098,7 +2098,6 @@ def mode_check(
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
-                snmp_backend=config_cache.get_snmp_backend(hostname),
             )
 
         check_result = ActiveCheckResult.from_subresults(

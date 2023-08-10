@@ -426,7 +426,11 @@ def _execute_discovery(
         host_name, store_changes=False
     ) as value_store_manager:
         is_cluster = config_cache.is_cluster(host_name)
-        check_plugins = CheckPluginMapper(config_cache, value_store_manager)
+        check_plugins = CheckPluginMapper(
+            config_cache,
+            value_store_manager,
+            rtc_package=None,
+        )
         passive_check_preview = discovery.get_check_preview(
             host_name,
             ip_address,
@@ -457,7 +461,6 @@ def _execute_discovery(
             find_service_description=config.service_description,
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
-            snmp_backend=config_cache.get_snmp_backend(host_name),
         )
     return discovery.CheckPreview(
         table=[

@@ -834,46 +834,7 @@ void TableStateHistory::process(
     hs_state->_duration_part =
         mk::ticks<std::chrono::duration<double>>(hs_state->_duration) /
         mk::ticks<std::chrono::duration<double>>(query_timeframe);
-
-    hs_state->_duration_unmonitored = 0s;
-    hs_state->_duration_part_unmonitored = 0;
-
-    hs_state->_duration_ok = 0s;
-    hs_state->_duration_part_ok = 0;
-
-    hs_state->_duration_warning = 0s;
-    hs_state->_duration_part_warning = 0;
-
-    hs_state->_duration_critical = 0s;
-    hs_state->_duration_part_critical = 0;
-
-    hs_state->_duration_unknown = 0s;
-    hs_state->_duration_part_unknown = 0;
-
-    switch (hs_state->_state) {
-        case -1:
-            hs_state->_duration_unmonitored = hs_state->_duration;
-            hs_state->_duration_part_unmonitored = hs_state->_duration_part;
-            break;
-        case STATE_OK:
-            hs_state->_duration_ok = hs_state->_duration;
-            hs_state->_duration_part_ok = hs_state->_duration_part;
-            break;
-        case STATE_WARNING:
-            hs_state->_duration_warning = hs_state->_duration;
-            hs_state->_duration_part_warning = hs_state->_duration_part;
-            break;
-        case STATE_CRITICAL:
-            hs_state->_duration_critical = hs_state->_duration;
-            hs_state->_duration_part_critical = hs_state->_duration_part;
-            break;
-        case STATE_UNKNOWN:
-            hs_state->_duration_unknown = hs_state->_duration;
-            hs_state->_duration_part_unknown = hs_state->_duration_part;
-            break;
-        default:
-            break;
-    }
+    hs_state->computePerStateDurations();
 
     // if (hs_state->_duration > 0)
     _abort_query = user.is_authorized_for_object(hs_state->_host,

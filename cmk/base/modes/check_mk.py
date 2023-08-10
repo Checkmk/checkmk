@@ -65,7 +65,11 @@ import cmk.checkengine.inventory as inventory
 from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.crash_reporting import create_section_crash_dump
-from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
+from cmk.checkengine.discovery import (
+    commandline_discovery,
+    execute_check_discovery,
+    remove_autochecks_of_host,
+)
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
@@ -79,7 +83,6 @@ from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core
@@ -1964,7 +1967,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             )
 
         with plugin_contexts.current_host(hostname):
-            discovery.commandline_discovery(
+            commandline_discovery(
                 hostname,
                 ruleset_matcher=config_cache.ruleset_matcher,
                 parser=parser,

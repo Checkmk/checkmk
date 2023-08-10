@@ -34,6 +34,7 @@ from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksStore,
+    commandline_discovery,
     discover_host_labels,
     discover_services,
     DiscoveryCheckParameters,
@@ -65,7 +66,6 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.type_defs import AgentRawDataSection
 
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
@@ -987,7 +987,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         selected_sections=NO_SELECTION,
         simulation_mode=True,
     )
-    discovery.commandline_discovery(
+    commandline_discovery(
         host_name=testhost,
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,

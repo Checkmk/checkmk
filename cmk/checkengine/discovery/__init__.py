@@ -13,6 +13,7 @@ from ._autochecks import (
     set_autochecks_of_real_hosts,
 )
 from ._autodiscovery import autodiscovery, automation_discovery, DiscoveryResult, get_host_services
+from ._commandline import commandline_discovery
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
 from ._impl import execute_check_discovery
@@ -31,6 +32,7 @@ __all__ = [
     "autodiscovery",
     "automation_discovery",
     "CheckPreview",
+    "commandline_discovery",
     "discover_host_labels",
     "discover_services",
     "DiscoveryCheckParameters",

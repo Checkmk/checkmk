@@ -20,16 +20,6 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import (
-    analyse_services,
-    AutochecksStore,
-    discover_host_labels,
-    discover_services,
-    DiscoveryPlugin,
-    find_plugins,
-    HostLabelPlugin,
-    QualifiedDiscovery,
-)
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
@@ -39,6 +29,12 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+
+from ._autochecks import AutochecksStore
+from ._discovery import DiscoveryPlugin
+from ._host_labels import discover_host_labels, HostLabelPlugin
+from ._services import analyse_services, discover_services, find_plugins
+from ._utils import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]
 

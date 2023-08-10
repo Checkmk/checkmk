@@ -4,6 +4,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .commandline import commandline_discovery
-from .preview import CheckPreview, get_check_preview
 
-__all__ = ["CheckPreview", "commandline_discovery", "get_check_preview"]
+__all__ = ["commandline_discovery"]

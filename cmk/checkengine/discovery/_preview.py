@@ -27,15 +27,6 @@ from cmk.checkengine.checking import (
     ServiceID,
 )
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkengine.discovery import (
-    analyse_cluster_labels,
-    AutocheckEntry,
-    discover_host_labels,
-    DiscoveryPlugin,
-    HostLabelPlugin,
-    QualifiedDiscovery,
-)
-from cmk.checkengine.discovery._autodiscovery import _Transition, get_host_services
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import group_by_host, ParserFunction
@@ -47,6 +38,12 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
+
+from ._autochecks import AutocheckEntry
+from ._autodiscovery import _Transition, get_host_services
+from ._discovery import DiscoveryPlugin
+from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
+from ._utils import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "get_check_preview"]
 

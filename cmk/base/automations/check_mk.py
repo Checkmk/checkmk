@@ -118,8 +118,10 @@ from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
     autodiscovery,
     automation_discovery,
+    CheckPreview,
     DiscoveryMode,
     DiscoveryResult,
+    get_check_preview,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
@@ -128,7 +130,6 @@ from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
@@ -409,7 +410,7 @@ def _execute_discovery(
     host_name: HostName,
     perform_scan: bool,
     on_error: OnError,
-) -> discovery.CheckPreview:
+) -> CheckPreview:
     file_cache_options = FileCacheOptions(
         use_outdated=not perform_scan, use_only_cache=not perform_scan
     )
@@ -448,7 +449,7 @@ def _execute_discovery(
             value_store_manager,
             rtc_package=None,
         )
-        passive_check_preview = discovery.get_check_preview(
+        passive_check_preview = get_check_preview(
             host_name,
             ip_address,
             is_cluster=is_cluster,
@@ -486,7 +487,7 @@ def _execute_discovery(
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
         )
-    return discovery.CheckPreview(
+    return CheckPreview(
         table=[
             *passive_check_preview.table,
             *config_cache.active_check_preview_rows(host_name),

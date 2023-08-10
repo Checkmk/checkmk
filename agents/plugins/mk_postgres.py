@@ -570,8 +570,8 @@ class PostgresWin(PostgresBase):
         # != as it has the same SQL implementation
         sql_cmd_lastvacuum = (
             "SELECT "
-            "current_database() AS datname, nspname AS sname, "
-            "relname AS tname, CASE WHEN v IS NULL THEN -1 "
+            "current_database() AS datname, REPLACE(nspname, ';', '') AS sname, "
+            "REPLACE(relname, ';', '') AS tname, CASE WHEN v IS NULL THEN -1 "
             "ELSE round(extract(epoch FROM v)) END AS vtime, "
             "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) "
             "END AS atime FROM (SELECT nspname, relname, "
@@ -902,8 +902,8 @@ class PostgresLinux(PostgresBase):
         # type: (List[str]) -> str
         sql_cmd_lastvacuum = (
             "SELECT "
-            "current_database() AS datname, nspname AS sname, "
-            "relname AS tname, CASE WHEN v IS NULL THEN -1 "
+            "current_database() AS datname, REPLACE(nspname, ';', '') AS sname, "
+            "REPLACE(relname, ';', '') AS tname, CASE WHEN v IS NULL THEN -1 "
             "ELSE round(extract(epoch FROM v)) END AS vtime, "
             "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) "
             "END AS atime FROM (SELECT nspname, relname, "

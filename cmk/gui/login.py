@@ -8,6 +8,7 @@ import contextlib
 import http.client
 from collections.abc import Iterator
 from datetime import datetime
+from urllib.parse import unquote
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -16,6 +17,7 @@ from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb
@@ -134,7 +136,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self) -> None:
+    def _do_login(self) -> None:  # pylint: disable=too-many-branches
         """handle the login form"""
         if not request.var("_login"):
             return
@@ -207,6 +209,14 @@ class LoginPage(Page):
                     raise HTTPRedirect(
                         f"user_change_pw.py?_origtarget={urlencode(origtarget)}&reason={change_reason}"
                     )
+
+                # If user pasted e.g. a view to a link in mobile mode, redirect
+                # to the correct page
+                if is_mobile(request, response) and "start_url" in origtarget:
+                    url = unquote(origtarget.split("start_url=")[1])
+                    if not is_allowed_url(url):
+                        url = default_origtarget
+                    raise HTTPRedirect(url)
 
                 raise HTTPRedirect(origtarget)
 

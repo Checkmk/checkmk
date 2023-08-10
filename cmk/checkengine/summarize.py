@@ -22,7 +22,7 @@ from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
 from cmk.fetchers import FetcherType
 
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.error_handling import ExitSpec
+from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parser import HostSections
 

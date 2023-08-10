@@ -23,7 +23,7 @@ from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkengine.error_handling import ExitSpec
+from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,

@@ -47,7 +47,7 @@ from cmk.checkengine.checkresults import (
     state_markers,
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
-from cmk.checkengine.error_handling import ExitSpec
+from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.legacy import LegacyCheckParameters

@@ -137,7 +137,7 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     DiscoveryPlugin,
 )
-from cmk.checkengine.error_handling import ExitSpec
+from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters

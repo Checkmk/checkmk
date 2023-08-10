@@ -13,7 +13,6 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import (
@@ -27,6 +26,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._rrd_fetch import fetch_rrd_data_for_graph, translate_and_merge_rrd_columns
 from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
+from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 

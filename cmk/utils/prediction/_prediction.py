@@ -5,7 +5,7 @@
 
 import logging
 import math
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple
 
@@ -22,13 +22,12 @@ from cmk.utils.servicename import ServiceName
 
 from ._grouping import PeriodInfo, PeriodName, time_slices, Timegroup
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
-from ._time_series import TimeSeries, TimeSeriesValues, Timestamp
 
 logger = logging.getLogger("cmk.prediction")
 
 Seconds = int
+Timestamp = int
 
-RRDColumnFunction = Callable[[Timestamp, Timestamp], TimeSeries]
 ConsolidationFunctionName = str
 EstimatedLevel = float | None
 EstimatedLevels = tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
@@ -192,7 +191,7 @@ def compute_prediction(
 
 
 def _calculate_data_for_prediction(
-    raw_slices: Sequence[tuple[range, TimeSeriesValues, int]],
+    raw_slices: Sequence[tuple[range, Sequence[float | None], int]],
 ) -> PredictionData:
     # Upsample all time slices to same resolution
     # We assume that the youngest slice has the finest resolution.

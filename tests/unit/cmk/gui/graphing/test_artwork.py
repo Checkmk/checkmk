@@ -10,8 +10,6 @@ import pytest
 
 from tests.testlib import set_timezone
 
-from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
-
 from cmk.gui.graphing._artwork import (
     _areastack,
     _compute_graph_t_axis,
@@ -21,6 +19,7 @@ from cmk.gui.graphing._artwork import (
     _t_axis_labels_week,
     TimeAxis,
 )
+from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 
 @pytest.mark.parametrize(
@@ -231,7 +230,7 @@ def test_compute_graph_t_axis(
     start_time: Timestamp,
     end_time: Timestamp,
     width: int,
-    step: Seconds,
+    step: int,
     expected_result: TimeAxis,
 ) -> None:
     with set_timezone("Europe/Berlin"):

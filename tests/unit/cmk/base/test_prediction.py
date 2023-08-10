@@ -12,7 +12,9 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import _grouping, _prediction, _time_series, DataStat
+from cmk.utils.prediction import _grouping, _prediction, DataStat
+
+Timestamp = int
 
 
 @pytest.mark.parametrize(
@@ -25,11 +27,9 @@ from cmk.utils.prediction import _grouping, _prediction, _time_series, DataStat
     ],
 )
 def test_group_by(
-    group_by: Callable[
-        [_time_series.Timestamp], tuple[_grouping.Timegroup, _time_series.Timestamp]
-    ],
-    timestamp: _time_series.Timestamp,
-    result: tuple[_grouping.Timegroup, _time_series.Timestamp],
+    group_by: Callable[[Timestamp], tuple[_grouping.Timegroup, Timestamp]],
+    timestamp: Timestamp,
+    result: tuple[_grouping.Timegroup, Timestamp],
 ) -> None:
     with on_time(timestamp, "CET"):
         assert group_by(timestamp) == result
@@ -128,7 +128,7 @@ def test_time_slices(
     horizon: int,
     period_info: _grouping.PeriodInfo,
     timegroup: _grouping.Timegroup,
-    result: Sequence[tuple[_time_series.Timestamp, _time_series.Timestamp]],
+    result: Sequence[tuple[Timestamp, Timestamp]],
 ) -> None:
     """Find period slices for predictive levels
 

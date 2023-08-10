@@ -8,10 +8,10 @@ from typing import Literal
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.prediction import TimeSeries
 
 from cmk.gui.graphing._timeseries import _time_series_math
 from cmk.gui.graphing._type_defs import Operators
+from cmk.gui.time_series import TimeSeries
 
 
 @pytest.mark.parametrize(

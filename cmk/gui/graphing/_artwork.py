@@ -16,13 +16,13 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 import cmk.utils.render
-from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
 
 from cmk.gui.graphing._color import fade_color, parse_color, render_color
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
@@ -37,6 +37,8 @@ from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
 from ._type_defs import LineType
 from ._utils import Curve, GraphDataRange, GraphRecipe, RRDData, SizeEx
+
+Seconds = int
 
 Label = tuple[float, str | None, int]
 

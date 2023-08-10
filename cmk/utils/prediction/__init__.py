@@ -9,14 +9,6 @@ from ._paths import PREDICTION_DIR
 from ._plugin_interface import estimate_levels, get_predictive_levels
 from ._prediction import DataStat, PredictionData, PredictionInfo, PredictionParameters
 from ._query import PredictionQuerier
-from ._time_series import (
-    rrd_timestamps,
-    TimeSeries,
-    TimeSeriesValue,
-    TimeSeriesValues,
-    Timestamp,
-    TimeWindow,
-)
 
 __all__ = [
     "get_predictive_levels",
@@ -27,13 +19,7 @@ __all__ = [
     "PredictionQuerier",
     "PREDICTION_DIR",
     "PredictionParameters",
-    "rrd_timestamps",
     "Seconds",
     "Timegroup",
-    "TimeSeries",
-    "TimeSeriesValue",
-    "TimeSeriesValues",
-    "Timestamp",
-    "TimeWindow",
     "timezone_at",
 ]

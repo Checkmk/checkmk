@@ -13,7 +13,6 @@ import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.labels import Labels
-from cmk.utils.prediction import Timestamp
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
@@ -394,13 +393,13 @@ def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = 
     return key, ""
 
 
-def _paint_future_time(timestamp: Timestamp) -> CellSpec:
+def _paint_future_time(timestamp: int) -> CellSpec:
     if timestamp <= 0:
         return "", "-"
     return paint_age(timestamp, True, 0, what="future")
 
 
-def _paint_day(timestamp: Timestamp) -> CellSpec:
+def _paint_day(timestamp: int) -> CellSpec:
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
 
 

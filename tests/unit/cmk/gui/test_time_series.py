@@ -6,12 +6,7 @@
 
 import pytest
 
-from cmk.utils.prediction._time_series import (
-    rrd_timestamps,
-    TimeSeries,
-    TimeSeriesValues,
-    TimeWindow,
-)
+from cmk.gui.time_series import rrd_timestamps, TimeSeries, TimeSeriesValues, TimeWindow
 
 
 @pytest.mark.parametrize(

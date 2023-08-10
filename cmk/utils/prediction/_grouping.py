@@ -9,9 +9,8 @@ from typing import Final, Literal, NamedTuple, NewType
 
 from cmk.utils import dateutils
 
-from ._time_series import Timestamp
-
 Seconds = int
+Timestamp = int
 
 Timegroup = NewType("Timegroup", str)
 

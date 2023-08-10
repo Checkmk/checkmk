@@ -7,8 +7,6 @@
 from collections.abc import Sequence
 from typing import TypeGuard
 
-from cmk.utils.prediction import Timestamp
-
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import GraphRenderOptions, RGBColor, SizeMM
@@ -412,9 +410,7 @@ def _is_area_layouted_curve(curve: LayoutedCurve) -> TypeGuard[LayoutedCurveArea
     return curve["type"] == "area"
 
 
-def compute_pdf_graph_data_range(
-    width: SizeMM, start_time: Timestamp, end_time: Timestamp
-) -> GraphDataRange:
+def compute_pdf_graph_data_range(width: SizeMM, start_time: int, end_time: int) -> GraphDataRange:
     """Estimate step. It is depended on width of the graph in mm."""
     graph_offcut_width = 20.0  # total width - this = width of canvas in mm
     mm_per_step = 0.5  # approx. one datapoint per 0.5 mm

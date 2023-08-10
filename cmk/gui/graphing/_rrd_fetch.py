@@ -16,11 +16,11 @@ from livestatus import livestatus_lql, SiteId
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
+from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import CombinedSingleMetricSpec, GraphMetric, NeededElementForRRDDataKey

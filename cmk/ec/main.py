@@ -46,7 +46,6 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
-from cmk.utils.prediction import Timestamp
 from cmk.utils.site import omd_site
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import translate_hostname
@@ -370,7 +369,7 @@ class TimePeriods:
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
         self._active: Mapping[TimeperiodName, bool] = {}
-        self._cache_timestamp: Timestamp | None = None
+        self._cache_timestamp: int | None = None
 
     def _update(self) -> None:
         try:

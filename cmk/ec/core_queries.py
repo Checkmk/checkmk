@@ -9,7 +9,6 @@ from typing import Any, NamedTuple
 from livestatus import LocalConnection
 
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.prediction import Timestamp
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.user import UserId
@@ -64,7 +63,7 @@ def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
     )
 
 
-def query_status_program_start() -> Timestamp:
+def query_status_program_start() -> int:
     return LocalConnection().query_value("GET status\nColumns: program_start")
 
 

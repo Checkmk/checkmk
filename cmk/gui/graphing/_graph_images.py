@@ -16,7 +16,6 @@ import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import Timestamp
 
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
@@ -136,7 +135,7 @@ def _answer_graph_image_request(
 
 
 def graph_image_data_range(
-    graph_render_options: GraphRenderOptions, start_time: Timestamp, end_time: Timestamp
+    graph_render_options: GraphRenderOptions, start_time: int, end_time: int
 ) -> GraphDataRange:
     mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
     width_mm = graph_render_options["size"][0] * mm_per_ex

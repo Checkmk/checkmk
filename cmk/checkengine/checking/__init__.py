@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._checking import CheckPluginName, CheckPluginNameStr, Item
+from ._name import CheckPluginName, CheckPluginNameStr, Item
 from ._plugin import AggregatedResult, CheckPlugin, ConfiguredService, ServiceID
 from ._timing import make_timing_results
 

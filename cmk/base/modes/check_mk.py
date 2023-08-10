@@ -62,7 +62,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.checkengine.inventory as inventory
-from cmk.checkengine.checking import CheckPluginName, make_timing_results
+from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
@@ -90,7 +90,6 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.checking import execute_checkmk_checks
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.api.agent_based.value_store import load_host_value_store

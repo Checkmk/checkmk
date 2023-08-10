@@ -22,12 +22,6 @@ from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.checking import (
-    AggregatedResult,
-    CheckPlugin,
-    CheckPluginName,
-    ConfiguredService,
-)
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
@@ -47,6 +41,9 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
+
+from ._name import CheckPluginName
+from ._plugin import AggregatedResult, CheckPlugin, ConfiguredService
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 

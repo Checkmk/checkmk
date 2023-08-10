@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._checking import check_host_services, execute_checkmk_checks
 from ._name import CheckPluginName, CheckPluginNameStr, Item
 from ._plugin import AggregatedResult, CheckPlugin, ConfiguredService, ServiceID
 from ._timing import make_timing_results
 
 __all__ = [
     "AggregatedResult",
+    "check_host_services",
     "CheckPlugin",
     "CheckPluginName",
     "CheckPluginNameStr",
     "ConfiguredService",
+    "execute_checkmk_checks",
     "Item",
     "make_timing_results",
     "ServiceID",

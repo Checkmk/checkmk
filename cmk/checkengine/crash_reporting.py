@@ -20,7 +20,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking._name import CheckPluginName, CheckPluginNameStr
 
 CrashReportStore = crash_reporting.CrashReportStore
 

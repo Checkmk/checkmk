@@ -22,7 +22,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine import crash_reporting
-from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.checkengine.checking._name import CheckPluginNameStr
 from cmk.checkengine.checkresults import ActiveCheckResult
 
 from .submitters import ServiceState

@@ -12,12 +12,13 @@ from cmk.utils.labels import ServiceLabel
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
+
+from ._name import CheckPluginName, Item
 
 __all__ = ["AggregatedResult", "CheckPlugin", "ConfiguredService", "ServiceID"]
 

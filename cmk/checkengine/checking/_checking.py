@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
@@ -69,13 +69,18 @@ def execute_checkmk_checks(
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> ActiveCheckResult:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
     store_piggybacked_sections(host_sections_by_host)
-    providers = make_providers(host_sections_by_host, section_plugins)
+    providers = make_providers(
+        host_sections_by_host,
+        section_plugins,
+        error_handling=section_error_handling,
+    )
     service_results = list(
         check_host_services(
             hostname,

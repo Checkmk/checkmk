@@ -20,10 +20,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, Item, ServiceID
+from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
@@ -115,6 +116,7 @@ def automation_discovery(
     service_filters: _ServiceFilters | None,
     enforced_services: Container[ServiceID],
     on_error: OnError,
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
     result = DiscoveryResult()
@@ -144,7 +146,11 @@ def automation_discovery(
             (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
         )
         store_piggybacked_sections(host_sections_by_host)
-        providers = make_providers(host_sections_by_host, section_plugins)
+        providers = make_providers(
+            host_sections_by_host,
+            section_plugins,
+            error_handling=section_error_handling,
+        )
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = QualifiedDiscovery[HostLabel](
@@ -387,6 +393,13 @@ def autodiscovery(
         fetcher=fetcher,
         summarizer=summarizer,
         section_plugins=section_plugins,
+        section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+            operation="parsing",
+            section_name=section_name,
+            section_content=raw_data,
+            host_name=host_name,
+            rtc_package=None,
+        ),
         host_label_plugins=host_label_plugins,
         plugins=plugins,
         ignore_service=ignore_service,

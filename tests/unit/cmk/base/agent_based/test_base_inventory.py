@@ -1269,6 +1269,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
                 parsed_section_name=ParsedSectionName("data"),
             )
         },
+        section_error_handling=lambda *args, **kw: "error",
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
@@ -1292,6 +1293,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=lambda *args, **kw: {},
         section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),

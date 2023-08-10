@@ -6,7 +6,7 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -17,9 +17,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import (
     analyse_services,
     AutochecksStore,
@@ -80,6 +81,18 @@ def commandline_discovery(
 
     # Now loop through all hosts
     for host_name in sorted(non_cluster_host_names):
+
+        def section_error_handling(
+            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = host_name
+        ) -> str:
+            return create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
+            )
+
         section.section_begin(host_name)
         try:
             fetched = fetcher(host_name, ip_address=None)
@@ -88,7 +101,11 @@ def commandline_discovery(
                 (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
             )
             store_piggybacked_sections(host_sections_by_host)
-            providers = make_providers(host_sections_by_host, section_plugins)
+            providers = make_providers(
+                host_sections_by_host,
+                section_plugins,
+                error_handling=section_error_handling,
+            )
             _commandline_discovery_on_host(
                 real_host_name=host_name,
                 host_label_plugins=host_label_plugins,

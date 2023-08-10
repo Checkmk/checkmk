@@ -13,7 +13,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -77,6 +77,7 @@ def get_check_preview(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
     on_error: OnError,
 ) -> CheckPreview:
@@ -91,7 +92,11 @@ def get_check_preview(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
     store_piggybacked_sections(host_sections_by_host)
-    providers = make_providers(host_sections_by_host, section_plugins)
+    providers = make_providers(
+        host_sections_by_host,
+        section_plugins,
+        error_handling=section_error_handling,
+    )
 
     if is_cluster:
         host_labels, kept_labels = analyse_cluster_labels(

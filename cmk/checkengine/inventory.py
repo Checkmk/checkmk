@@ -19,7 +19,7 @@ import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
     MutableTree,
@@ -125,6 +125,7 @@ def inventorize_host(
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
@@ -133,7 +134,11 @@ def inventorize_host(
     )
     store_piggybacked_sections(host_sections_by_host)
 
-    providers = make_providers(host_sections_by_host, section_plugins)
+    providers = make_providers(
+        host_sections_by_host,
+        section_plugins,
+        error_handling=section_error_handling,
+    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),

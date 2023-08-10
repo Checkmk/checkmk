@@ -61,6 +61,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.sectionname import SectionName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -111,6 +112,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
@@ -255,6 +257,20 @@ class AutomationDiscovery(DiscoveryAutomation):
             max_cachefile_age=config.max_cachefile_age(),
         )
         for hostname in hostnames:
+
+            def section_error_handling(
+                section_name: SectionName,
+                raw_data: Sequence[object],
+                host_name: HostName = hostname,
+            ) -> str:
+                return create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=host_name,
+                    rtc_package=None,
+                )
+
             with plugin_contexts.current_host(hostname):
                 results[hostname] = automation_discovery(
                     hostname,
@@ -270,6 +286,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                         override_non_ok_state=None,
                     ),
                     section_plugins=SectionPluginMapper(),
+                    section_error_handling=section_error_handling,
                     host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
                     plugins=DiscoveryPluginMapper(config_cache=config_cache),
                     ignore_service=config_cache.service_ignored,
@@ -444,6 +461,13 @@ def _execute_discovery(
                 override_non_ok_state=None,
             ),
             section_plugins=SectionPluginMapper(),
+            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
+            ),
             host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
             check_plugins=check_plugins,
             compute_check_parameters=(

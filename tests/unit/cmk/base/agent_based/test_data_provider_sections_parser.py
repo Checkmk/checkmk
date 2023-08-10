@@ -8,11 +8,9 @@ from typing import Any
 
 import pytest
 
-import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.checkengine import crash_reporting
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.sectionparser import SectionsParser
 from cmk.checkengine.type_defs import AgentRawDataSectionElem
@@ -39,6 +37,7 @@ class TestSectionsParser:
                 }
             ),
             host_name=HostName("only-neede-for-crash-reporting"),
+            error_handling=lambda *args, **kw: "error",
         )
 
     @staticmethod
@@ -55,24 +54,15 @@ class TestSectionsParser:
         assert parsing_result.data == 1
 
     @staticmethod
+    @pytest.mark.usefixtures("disable_debug")
     def test_parsing_errors(
-        monkeypatch: pytest.MonkeyPatch,
         sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
-        monkeypatch.setattr(
-            crash_reporting,
-            "create_section_crash_dump",
-            lambda **kw: "crash dump msg",
-        )
-        # Debug mode raises instead of creating the crash report that we want here.
-        cmk.utils.debug.disable()
         section_name, parse_function = _section("one", lambda x: 1 / 0)
 
         assert sections_parser.parse(section_name, parse_function) is None
         assert len(sections_parser.parsing_errors) == 1
-        assert sections_parser.parsing_errors[0].startswith(
-            "Parsing of section one failed - please submit a crash report! (Crash-ID: "
-        )
+        assert sections_parser.parsing_errors == ["error"]
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser[AgentRawDataSectionElem]) -> None:

@@ -14,7 +14,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
-from .crash_reporting import create_section_crash_dump
 from .fetcher import HostKey, SourceType
 from .parser import HostSections
 
@@ -58,12 +57,21 @@ class SectionsParser(Generic[_TSeq]):
         self,
         host_sections: HostSections[SectionMap[_TSeq]],
         host_name: HostName,
+        *,
+        # Note: It would be better to keep the error handling entirely out of the
+        #       check engine.  A better approach would be to wrap the function
+        #       with the error handling at the interface of the check engine.
+        #
+        #       See `cmk.base.checkers.CheckPluginMapper.__getitem__`.
+        #
+        error_handling: Callable[[SectionName, _TSeq], str],
     ) -> None:
         super().__init__()
         self._host_sections: HostSections[SectionMap[_TSeq]] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
+        self.error_handling: Final = error_handling
 
     def __repr__(self) -> str:
         return "{}(host_sections={!r}, host_name={!r})".format(
@@ -105,15 +113,7 @@ class SectionsParser(Generic[_TSeq]):
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
-            self.parsing_errors.append(
-                create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=self._host_name,
-                    rtc_package=None,
-                )
-            )
+            self.parsing_errors.append(self.error_handling(section_name, raw_data))
             return None
 
 
@@ -210,10 +210,16 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
 def make_providers(
     host_sections: Mapping[HostKey, HostSections],
     section_plugins: SectionMap[SectionPlugin],
+    *,
+    error_handling: Callable[[SectionName, _TSeq], str],
 ) -> Mapping[HostKey, Provider]:
     return {
         host_key: ParsedSectionsResolver(
-            SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
+            SectionsParser(
+                host_sections=host_sections,
+                host_name=host_key.hostname,
+                error_handling=error_handling,
+            ),
             section_plugins={
                 section_name: section_plugins[section_name]
                 for section_name in host_sections.sections

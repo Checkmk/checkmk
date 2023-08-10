@@ -15,7 +15,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
@@ -79,6 +79,7 @@ def execute_check_discovery(
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Container[ServiceID],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -94,7 +95,11 @@ def execute_check_discovery(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
     store_piggybacked_sections(host_sections_by_host)
-    providers = make_providers(host_sections_by_host, section_plugins)
+    providers = make_providers(
+        host_sections_by_host,
+        section_plugins,
+        error_handling=section_error_handling,
+    )
 
     if is_cluster:
         host_labels, _kept_labels = analyse_cluster_labels(

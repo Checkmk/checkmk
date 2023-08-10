@@ -792,6 +792,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
+                    error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
                     section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
@@ -813,6 +814,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
+                    error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
                     section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
@@ -1087,6 +1089,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                         }
                     ),
                     host_name=hostname,
+                    error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
                     section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
@@ -1184,6 +1187,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node1_hostname,
+                    error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
                     section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
@@ -1224,6 +1228,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node2_hostname,
+                    error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
                     section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))

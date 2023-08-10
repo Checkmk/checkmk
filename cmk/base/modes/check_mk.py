@@ -64,6 +64,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 import cmk.checkengine.inventory as inventory
 from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
@@ -1664,6 +1665,13 @@ def mode_check_discovery(
                 parser=parser,
                 summarizer=summarizer,
                 section_plugins=SectionPluginMapper(),
+                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=hostname,
+                    rtc_package=None,
+                ),
                 host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
                 plugins=DiscoveryPluginMapper(config_cache=config_cache),
                 ignore_service=config_cache.service_ignored,
@@ -2081,6 +2089,13 @@ def mode_check(
                 parser=parser,
                 summarizer=summarizer,
                 section_plugins=SectionPluginMapper(),
+                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=hostname,
+                    rtc_package=None,
+                ),
                 check_plugins=check_plugins,
                 inventory_plugins=InventoryPluginMapper(),
                 inventory_parameters=config_cache.inventory_parameters,
@@ -2244,6 +2259,20 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     inventory_plugins = InventoryPluginMapper()
 
     for hostname in hostnames:
+
+        def section_error_handling(
+            section_name: SectionName,
+            raw_data: Sequence[object],
+            host_name: HostName = hostname,
+        ) -> str:
+            return create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
+            )
+
         parameters = config_cache.hwsw_inventory_parameters(hostname)
         raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
         summarizer = CMKSummarizer(
@@ -2270,6 +2299,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                     summarizer=summarizer,
                     inventory_parameters=config_cache.inventory_parameters,
                     section_plugins=section_plugins,
+                    section_error_handling=section_error_handling,
                     inventory_plugins=inventory_plugins,
                     run_plugin_names=run_plugin_names,
                     parameters=parameters,
@@ -2361,6 +2391,13 @@ def _execute_active_check_inventory(
             summarizer=summarizer,
             inventory_parameters=inventory_parameters,
             section_plugins=section_plugins,
+            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
+            ),
             inventory_plugins=inventory_plugins,
             run_plugin_names=EVERYTHING,
             parameters=parameters,

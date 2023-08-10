@@ -82,6 +82,7 @@ def make_parser() -> SectionsParser:
             }
         ),
         host_name=HostName("some-host"),
+        error_handling=lambda *args, **kw: "error",
     )
 
 

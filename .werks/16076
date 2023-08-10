@@ -13,3 +13,4 @@ Version: 2.3.0b1
 * Skip baking if we have no bake revision.
 * Introduce global config vars
 * Support case where bake revision should be included, but not increased.
+* Apply correct BakeRevisionMode in call sites.

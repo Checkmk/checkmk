@@ -42,8 +42,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._name import CheckPluginName
-from ._plugin import AggregatedResult, CheckPlugin, ConfiguredService
+from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredService
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 

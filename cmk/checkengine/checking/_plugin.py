@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from __future__ import annotations
+
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import NamedTuple, Protocol
+from typing import Final, NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
+from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
@@ -18,9 +21,40 @@ from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 
-from ._name import CheckPluginName, Item
+__all__ = [
+    "AggregatedResult",
+    "CheckPlugin",
+    "CheckPluginName",
+    "CheckPluginNameStr",
+    "ConfiguredService",
+    "Item",
+    "ServiceID",
+]
 
-__all__ = ["AggregatedResult", "CheckPlugin", "ConfiguredService", "ServiceID"]
+
+CheckPluginNameStr = str
+Item = str | None
+
+
+class CheckPluginName(ValidatedString):
+    MANAGEMENT_PREFIX: Final = "mgmt_"
+
+    @classmethod
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
+
+    def is_management_name(self) -> bool:
+        return self._value.startswith(self.MANAGEMENT_PREFIX)
+
+    def create_management_name(self) -> CheckPluginName:
+        if self.is_management_name():
+            return self
+        return CheckPluginName(f"{self.MANAGEMENT_PREFIX}{self._value}")
+
+    def create_basic_name(self) -> CheckPluginName:
+        if self.is_management_name():
+            return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX) :])
+        return self
 
 
 class ServiceID(NamedTuple):

@@ -16,7 +16,7 @@
         "moduleResolution": "node",
         "esModuleInterop": false,
         "module": "CommonJS",
-        "allowJs": true,
+        "allowJs": false,
         "allowSyntheticDefaultImports": true,
         "baseUrl": "./",
         "paths": {

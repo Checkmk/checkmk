@@ -601,7 +601,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return dict(os.environ)
 
 
-class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_find_all.json"
@@ -617,11 +617,11 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
 
 
-class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_show_all.json"
@@ -637,11 +637,11 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
 
 
-class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_list.json"
@@ -657,8 +657,8 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "list", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
 
 
 class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):

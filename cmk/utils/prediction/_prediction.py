@@ -55,7 +55,6 @@ class PredictionInfo(BaseModel, frozen=True):
     time: int
     range: tuple[Timestamp, Timestamp]
     dsname: str
-    slice: int
     params: PredictionParameters
 
 

@@ -16,10 +16,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     estimate_levels,
+    PREDICTION_PERIODS,
     PredictionData,
     PredictionParameters,
     PredictionQuerier,
-    timezone_at,
 )
 from cmk.utils.servicename import ServiceName
 
@@ -183,8 +183,10 @@ def page_graph() -> None:
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - timezone_at(now)) % selected_prediction_info.slice
-            render_point(selected_prediction_info.range[0] + rel_time, current_value, "#0000ff")
+            _group, rel_time = PREDICTION_PERIODS[selected_prediction_info.params.period].groupby(
+                int(now)
+            )
+            render_point(from_time + rel_time, current_value, "#0000ff")
 
     html.footer()
 

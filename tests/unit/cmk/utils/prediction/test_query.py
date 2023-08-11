@@ -27,7 +27,6 @@ class TestPredictionQuerier:
             time=123,
             range=(0, 200),
             dsname=str(querier.metric_name),
-            slice=3,
             params=PredictionParameters(
                 period="day",
                 horizon=20,

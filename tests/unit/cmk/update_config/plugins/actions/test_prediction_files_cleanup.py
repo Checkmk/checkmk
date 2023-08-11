@@ -26,7 +26,6 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
             time=123456789,
             range=(23, 42),
             dsname="kuchen_count",
-            slice=3600,
             params=PredictionParameters(horizon=3, period="wday"),
         ).json(),
     )

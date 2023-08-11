@@ -5,8 +5,6 @@
 
 import pytest
 
-from cmk.utils.prediction import Seconds
-
 import cmk.gui.valuespec as vs
 
 from .utils import (
@@ -14,6 +12,8 @@ from .utils import (
     expect_validate_success_migrate_or_transform,
     request_var,
 )
+
+Seconds = int
 
 
 @pytest.fixture(name="transformed_age")

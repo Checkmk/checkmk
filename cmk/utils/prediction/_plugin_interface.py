@@ -93,7 +93,6 @@ def get_predictive_levels(
             time=now,
             range=(current_slice_start, current_slice_end),
             dsname=dsname,
-            slice=period_info.slice,
             params=params,
         )
         data_for_pred = compute_prediction(

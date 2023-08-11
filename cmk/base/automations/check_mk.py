@@ -584,6 +584,19 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                 if host_name not in process_hosts:
                     continue
 
+                def section_error_handling(
+                    section_name: SectionName,
+                    raw_data: Sequence[object],
+                    host_name: HostName = host_name,
+                ) -> str:
+                    return create_section_crash_dump(
+                        operation="parsing",
+                        section_name=section_name,
+                        section_content=raw_data,
+                        host_name=host_name,
+                        rtc_package=None,
+                    )
+
                 hosts_processed.add(host_name)
                 console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
                 params = config_cache.discovery_check_parameters(host_name)
@@ -604,6 +617,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                                 config_cache, host_name, override_non_ok_state=None
                             ),
                             section_plugins=section_plugins,
+                            section_error_handling=section_error_handling,
                             host_label_plugins=host_label_plugins,
                             plugins=plugins,
                             ignore_service=config_cache.service_ignored,

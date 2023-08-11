@@ -24,7 +24,6 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, Item, ServiceID
-from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
@@ -359,6 +358,7 @@ def autodiscovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     ignore_service: Callable[[HostName, ServiceName], bool],
@@ -393,13 +393,7 @@ def autodiscovery(
         fetcher=fetcher,
         summarizer=summarizer,
         section_plugins=section_plugins,
-        section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-            operation="parsing",
-            section_name=section_name,
-            section_content=raw_data,
-            host_name=host_name,
-            rtc_package=None,
-        ),
+        section_error_handling=section_error_handling,
         host_label_plugins=host_label_plugins,
         plugins=plugins,
         ignore_service=ignore_service,

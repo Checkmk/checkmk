@@ -85,6 +85,7 @@ def get_check_preview(
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -93,7 +94,6 @@ def get_check_preview(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
-    section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
     on_error: OnError,
 ) -> CheckPreview:

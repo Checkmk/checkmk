@@ -181,8 +181,6 @@ function _update_figures_in_selection(
         });
 }
 
-cmk_figures.figure_registry.register(TableFigure);
-
 function _update_dc_graphs_in_selection(
     selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>,
     graph_group: string | null

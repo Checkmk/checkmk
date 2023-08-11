@@ -15,6 +15,9 @@ import * as background_job from "background_job";
 import * as backup from "backup";
 import * as bi from "bi";
 import * as cmk_figures from "cmk_figures";
+import {figure_registry} from "cmk_figures";
+import {EventStats, HostStats, ServiceStats} from "cmk_stats";
+import {TableFigure} from "cmk_table";
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
@@ -52,6 +55,8 @@ import * as webauthn from "webauthn";
 
 import * as nodevis from "./modules/nodevis/main";
 
+const isEnterprise = process.env.ENTERPRISE !== "no";
+
 // Optional import is currently not possible using the ES6 imports
 let graphs_cee;
 let ntop_host_details;
@@ -60,8 +65,19 @@ let ntop_flows;
 let ntop_top_talkers;
 let ntop_utils;
 let license_usage_timeseries_graph;
+let register;
 
-if (process.env.ENTERPRISE !== "no") {
+function registerRawFigureBaseClasses() {
+    figure_registry.register(TableFigure);
+    figure_registry.register(HostStats);
+    figure_registry.register(ServiceStats);
+    figure_registry.register(EventStats);
+}
+
+registerRawFigureBaseClasses();
+if (isEnterprise) {
+    register = require("register");
+    register.registerEnterpriseFigureBaseClasses();
     require("cmk_figures_plugins_cee");
     graphs_cee = require("graphs_cee");
     ntop_host_details = require("ntop_host_details");

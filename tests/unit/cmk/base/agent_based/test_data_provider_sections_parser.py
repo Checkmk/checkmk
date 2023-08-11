@@ -11,9 +11,8 @@ import pytest
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.checkengine.parser import HostSections
+from cmk.checkengine.parser import AgentRawDataSectionElem, HostSections
 from cmk.checkengine.sectionparser import SectionsParser
-from cmk.checkengine.type_defs import AgentRawDataSectionElem
 
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 

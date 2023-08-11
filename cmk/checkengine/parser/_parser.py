@@ -19,9 +19,10 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine.fetcher import SourceInfo
-from cmk.checkengine.type_defs import AgentRawDataSection
 
 __all__ = [
+    "AgentRawDataSection",
+    "AgentRawDataSectionElem",
     "NO_SELECTION",
     "parse_raw_data",
     "Parser",
@@ -32,6 +33,12 @@ __all__ = [
 
 _Tin = TypeVar("_Tin")
 _Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
+
+# Note that the inner Sequence[str] to AgentRawDataSectionElem
+# is only **artificially** different from AgentRawData and
+# obtained approximatively with `raw_data.decode("utf-8").split()`!
+AgentRawDataSectionElem = Sequence[str]
+AgentRawDataSection = SectionMap[Sequence[AgentRawDataSectionElem]]
 
 
 class HostSections(Generic[_Tout]):

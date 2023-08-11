@@ -141,8 +141,12 @@ from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.parser import AgentParser, NO_SELECTION, SectionNameCollection
-from cmk.checkengine.type_defs import AgentRawDataSectionElem
+from cmk.checkengine.parser import (
+    AgentParser,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionNameCollection,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config

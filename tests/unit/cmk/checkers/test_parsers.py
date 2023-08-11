@@ -26,9 +26,8 @@ from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers.cache import SectionStore
 
-from cmk.checkengine.parser import AgentParser, NO_SELECTION, SNMPParser
+from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SNMPParser
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
-from cmk.checkengine.type_defs import AgentRawDataSectionElem
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 

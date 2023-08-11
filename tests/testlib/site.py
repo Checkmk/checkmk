@@ -1329,6 +1329,49 @@ class SiteFactory:
         site.start()
         return site
 
+    def interactive_create(self, name: str, logfile_path: str = "/tmp/omd_install.out") -> Site:
+        """Interactive site creation via Pexpect"""
+        self._base_ident = ""
+        site = self._site_obj(name)
+        site.install_cmk()
+
+        rc = spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                self.version.version_directory(),
+                "create",
+                "--admin-password",
+                site.admin_password,
+                "--apache-reload",
+                name,
+            ],
+            dialogs=[],
+            logfile_path=logfile_path,
+        )
+
+        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+
+        with open(logfile_path, "r") as logfile:
+            logger.debug("OMD automation logfile: %s", logfile.read())
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site(site.id)
+
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Test-site %s is up", site.id)
+
+        restart_httpd()
+
+        return site
+
     def interactive_update(
         self,
         test_site: Site,

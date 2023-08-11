@@ -21,7 +21,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, restart_httpd, spawn_expect_process
+from tests.testlib.utils import current_base_branch_name, restart_httpd
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -209,8 +209,6 @@ def _get_site(
         source_version = base_site.version.version_directory() if base_site else ""
         target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
-        # install the release
-        site.install_cmk()
 
         if not os.getenv("CI", "").strip().lower() == "true":
             print(
@@ -232,35 +230,8 @@ def _get_site(
                 pytest.skip(f"{source_version} is not a supported version for {target_version}")
 
         else:  # interactive site creation
-            rc = spawn_expect_process(
-                [
-                    "/usr/bin/sudo",
-                    "/usr/bin/omd",
-                    "-V",
-                    target_version,
-                    "create",
-                    "--admin-password",
-                    site.admin_password,
-                    "--apache-reload",
-                    site.id,
-                ],
-                dialogs=[],
-                logfile_path=logfile_path,
-            )
+            site = sf.interactive_create(site.id, logfile_path)
 
-            assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
-
-            with open(logfile_path, "r") as logfile:
-                logger.debug("OMD automation logfile: %s", logfile.read())
-
-            # refresh the site object after creating the site
-            site = sf.get_existing_site("central")
-
-            # open the livestatus port
-            site.open_livestatus_tcp(encrypted=False)
-
-            # start the site after manually installing it
-            site.start()
     else:
         # use SiteFactory for non-interactive site creation/update
         site = sf.get_site("central")

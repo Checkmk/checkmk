@@ -14,12 +14,12 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    TypedDict,
     TypeVar,
     Union,
 )
 
 from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (

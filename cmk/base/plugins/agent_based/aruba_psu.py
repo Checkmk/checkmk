@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple, TypedDict
+from typing import Mapping, NamedTuple, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     all_of,

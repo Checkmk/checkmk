@@ -5,7 +5,9 @@
 
 import re
 import time
-from typing import Any, MutableMapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, MutableMapping, Optional, Sequence, Tuple
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

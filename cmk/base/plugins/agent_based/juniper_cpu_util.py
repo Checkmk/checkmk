@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from time import time
-from typing import Mapping, Tuple, TypedDict
+from typing import Mapping, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

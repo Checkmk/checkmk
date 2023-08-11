@@ -7,7 +7,9 @@ import itertools
 import json
 import time
 from collections.abc import Iterable, Iterator, Sequence
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from livestatus import LocalConnection, SiteId
 

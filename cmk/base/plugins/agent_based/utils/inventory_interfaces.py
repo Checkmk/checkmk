@@ -5,7 +5,9 @@
 
 import time
 from dataclasses import dataclass
-from typing import Container, Iterable, Optional, TypedDict, Union
+from typing import Container, Iterable, Optional, Union
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import Attributes, TableRow
 from ..agent_based_api.v1.type_defs import InventoryResult

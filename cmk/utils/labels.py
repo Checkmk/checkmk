@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Final, Self, TypedDict
+from typing import Any, Final, Self
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store

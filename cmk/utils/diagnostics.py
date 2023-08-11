@@ -7,7 +7,9 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict, Union
+from typing import Any, Literal, NamedTuple, Union
+
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

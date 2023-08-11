@@ -19,7 +19,9 @@ False
 True
 """
 
-from typing import Dict, Literal, TypedDict
+from typing import Dict, Literal
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import all_of, contains, matches, not_matches
 

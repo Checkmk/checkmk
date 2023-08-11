@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
-from typing import Any, Mapping, TypedDict
+from typing import Any, Mapping
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils import multipath
 

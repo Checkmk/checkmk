@@ -8,7 +8,9 @@ import json
 import math
 import time
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, Optional, Tuple, TypedDict, Union
+from typing import Literal, MutableMapping, NamedTuple, Optional, Tuple, Union
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

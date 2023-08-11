@@ -20,7 +20,9 @@
 # hardware.cpuPkg.vendor.1 intel
 
 import time
-from typing import Callable, Dict, Final, List, Optional, Tuple, TypedDict, Union
+from typing import Callable, Dict, Final, List, Optional, Tuple, Union
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import Attributes, register, type_defs
 from .utils.esx_vsphere import Section

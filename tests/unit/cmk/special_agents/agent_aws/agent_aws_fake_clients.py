@@ -8,7 +8,9 @@ from __future__ import annotations
 import abc
 import random
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from typing import Any, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 

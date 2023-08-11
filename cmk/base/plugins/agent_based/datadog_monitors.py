@@ -6,7 +6,9 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import Container, Iterable, Mapping, TypedDict
+from typing import Container, Iterable, Mapping
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

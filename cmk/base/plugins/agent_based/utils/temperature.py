@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Generator, MutableMapping, Optional, Tuple, TypedDict, Union
+from typing import Any, Generator, MutableMapping, Optional, Tuple, Union
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result, State
 from ..agent_based_api.v1.render import timespan

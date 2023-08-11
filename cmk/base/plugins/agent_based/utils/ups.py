@@ -5,7 +5,9 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final, Optional, Tuple, TypedDict
+from typing import Final, Optional, Tuple
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import (
     any_of,

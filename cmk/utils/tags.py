@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import NamedTuple, NewType, TypedDict
+from typing import NamedTuple, NewType
+
+from typing_extensions import TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _

@@ -12,7 +12,9 @@ import re
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import cache
-from typing import Any, cast, Literal, NamedTuple, TypedDict
+from typing import Any, cast, Literal, NamedTuple
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store

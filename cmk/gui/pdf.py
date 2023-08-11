@@ -23,7 +23,7 @@ import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Literal, overload, Protocol, TypedDict, Union
+from typing import Literal, overload, Protocol, Union
 
 from PIL import PngImagePlugin
 from PIL.Image import Image
@@ -33,6 +33,7 @@ from reportlab.lib.utils import ImageReader  # type: ignore[import]
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import]
 from six import ensure_str
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 

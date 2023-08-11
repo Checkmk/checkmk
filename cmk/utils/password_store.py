@@ -44,7 +44,9 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, NoReturn, TypedDict, Union
+from typing import Literal, NoReturn, Union
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store

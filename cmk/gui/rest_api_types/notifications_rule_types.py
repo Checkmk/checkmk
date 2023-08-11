@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, cast, Iterator, Literal, Mapping, Optional, Sequence, TypedDict
+from typing import Any, cast, Iterator, Literal, Mapping, Optional, Sequence
+
+from typing_extensions import TypedDict
 
 from cmk.utils.notify_types import (
     BulkOutsideTimePeriodType,

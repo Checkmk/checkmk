@@ -5,7 +5,9 @@
 
 import time
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple, TypedDict
+from typing import Mapping, NamedTuple, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

@@ -9,10 +9,11 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import Literal, TypedDict, TypeVar
+from typing import Literal, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp

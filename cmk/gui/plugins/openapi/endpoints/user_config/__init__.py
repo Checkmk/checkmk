@@ -6,7 +6,9 @@
 import datetime as dt
 import time
 from collections.abc import Mapping
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId

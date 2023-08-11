@@ -5,7 +5,9 @@
 
 from contextlib import suppress
 from statistics import mean
-from typing import Dict, List, NamedTuple, Tuple, TypedDict
+from typing import Dict, List, NamedTuple, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, OIDEnd, register, render, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

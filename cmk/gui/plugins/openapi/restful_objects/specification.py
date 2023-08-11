@@ -308,11 +308,12 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
-from typing import Literal, TypedDict
+from typing import Literal
 
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
 import apispec_oneofschema  # type: ignore[import]
+from typing_extensions import TypedDict
 
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions

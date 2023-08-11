@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import NamedTuple, NewType, TypedDict
+from typing import NamedTuple, NewType
+
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

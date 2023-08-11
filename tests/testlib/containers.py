@@ -15,12 +15,13 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
 
 import docker  # type: ignore[import]
 import dockerpty  # type: ignore[import]
 import requests
 from docker.models.images import Image  # type: ignore[import]
+from typing_extensions import TypedDict
 
 import tests.testlib as testlib
 from tests.testlib import get_cmk_download_credentials

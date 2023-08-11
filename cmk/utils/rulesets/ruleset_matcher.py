@@ -6,7 +6,9 @@
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypedDict, TypeVar
+from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+
+from typing_extensions import TypedDict
 
 from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.exceptions import MKGeneralException

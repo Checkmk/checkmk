@@ -5,7 +5,9 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import Mapping, NamedTuple, NotRequired, TypedDict
+from typing import Mapping, NamedTuple, NotRequired
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

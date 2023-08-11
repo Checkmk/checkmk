@@ -5,7 +5,9 @@
 
 import dataclasses
 from contextlib import suppress
-from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, TypedDict
+from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Tuple
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
 

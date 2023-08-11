@@ -17,9 +17,10 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol
 
 from redis.client import Pipeline
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

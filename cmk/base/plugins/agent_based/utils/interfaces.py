@@ -21,9 +21,10 @@ from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
 from typing import Any, assert_never, Literal
 from typing import Mapping as TypingMapping
-from typing import ParamSpec, TypedDict, TypeVar
+from typing import ParamSpec, TypeVar
 
 import pydantic
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import (
     check_levels,

@@ -7,9 +7,10 @@ import collections
 import functools
 import typing
 from collections.abc import Callable
-from typing import Any, cast, Literal, NamedTuple, TypedDict, TypeVar
+from typing import Any, cast, Literal, NamedTuple, TypeVar
 
 from marshmallow import ValidationError
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

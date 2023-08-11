@@ -5,7 +5,9 @@
 
 import json
 from collections.abc import Sequence
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _

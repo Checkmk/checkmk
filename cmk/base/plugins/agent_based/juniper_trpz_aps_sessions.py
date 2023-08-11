@@ -12,7 +12,9 @@
 
 import time
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     any_of,

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired
+
+from typing_extensions import TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 from cmk.base.api.agent_based.section_classes import SNMPTree

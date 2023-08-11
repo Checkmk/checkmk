@@ -21,7 +21,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, TypedDict
+from typing import Any, Literal, NamedTuple, NewType
+
+from typing_extensions import TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)

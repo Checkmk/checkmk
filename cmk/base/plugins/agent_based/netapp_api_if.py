@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,

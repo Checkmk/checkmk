@@ -33,9 +33,10 @@ from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 from setproctitle import setthreadtitle
+from typing_extensions import TypedDict
 
 import cmk.utils.daemon
 import cmk.utils.paths

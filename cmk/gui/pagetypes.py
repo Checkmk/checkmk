@@ -28,7 +28,9 @@ import json
 import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
-from typing import cast, Generic, Literal, Self, TypedDict, TypeVar
+from typing import cast, Generic, Literal, Self, TypeVar
+
+from typing_extensions import TypedDict
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException

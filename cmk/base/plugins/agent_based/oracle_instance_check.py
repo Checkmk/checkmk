@@ -16,7 +16,9 @@
 
 import time
 from collections.abc import Iterable, Mapping
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

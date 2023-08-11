@@ -93,7 +93,9 @@ This is the data we can extract
 
 """
 
-from typing import List, Mapping, NamedTuple, Sequence, TypedDict
+from typing import List, Mapping, NamedTuple, Sequence
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     all_of,

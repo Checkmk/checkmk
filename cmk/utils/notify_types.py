@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal, Mapping, NewType, Sequence, TypedDict, Union
+from typing import Any, Literal, Mapping, NewType, Sequence, Union
+
+from typing_extensions import TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Sequence
-from typing import Literal, NamedTuple, TypedDict
+from typing import Literal, NamedTuple
+
+from typing_extensions import TypedDict
 
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName

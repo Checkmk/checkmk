@@ -9,10 +9,10 @@ from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
-from typing import TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

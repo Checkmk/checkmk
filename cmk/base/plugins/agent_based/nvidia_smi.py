@@ -5,10 +5,11 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import cast, Literal, Mapping, TypedDict, TypeVar
+from typing import cast, Literal, Mapping, TypeVar
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

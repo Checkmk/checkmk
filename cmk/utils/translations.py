@@ -5,7 +5,9 @@
 
 import ipaddress
 from collections.abc import Iterable
-from typing import cast, Literal, NotRequired, TypedDict
+from typing import cast, Literal, NotRequired
+
+from typing_extensions import TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex

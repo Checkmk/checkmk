@@ -8,7 +8,8 @@ from contextlib import suppress
 from itertools import chain
 from pathlib import Path
 from stat import filemode
-from typing import TypedDict
+
+from typing_extensions import TypedDict
 
 from ._installed import Installer
 from ._mkp import PackagePart

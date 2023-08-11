@@ -5,7 +5,9 @@
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Mapping, TypedDict
+from typing import Any, Mapping
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

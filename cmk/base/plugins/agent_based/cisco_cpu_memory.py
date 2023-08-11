@@ -2,7 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping, TypedDict
+from typing import Any, List, Mapping
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Dict, Final, List, Mapping, Optional, Tuple, TypedDict
+from typing import Any, Callable, Dict, Final, List, Mapping, Optional, Tuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 

@@ -13,7 +13,9 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TypedDict
+from typing import Any, cast, Literal, NoReturn
+
+from typing_extensions import TypedDict
 
 from cmk.utils import version
 

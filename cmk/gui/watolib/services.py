@@ -21,13 +21,13 @@ from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import (
-    CheckPreviewEntry,
     SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksTable,
 )
 
 from cmk.checkengine.checking import CheckPluginNameStr, Item
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (

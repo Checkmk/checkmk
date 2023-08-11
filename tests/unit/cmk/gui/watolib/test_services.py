@@ -15,11 +15,12 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.user import UserId
 
 from cmk.automations.results import (
-    CheckPreviewEntry,
     DeleteHostsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksResult,
 )
+
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore

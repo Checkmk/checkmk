@@ -17,11 +17,12 @@ from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
-    CheckPreviewEntry,
     GetServicesLabelsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksResult,
 )
+
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[

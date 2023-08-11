@@ -16,7 +16,7 @@ from typing import Any, assert_never
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.automations.results import CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema

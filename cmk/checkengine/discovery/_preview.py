@@ -17,8 +17,6 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.automations.results import CheckPreviewEntry
-
 from cmk.checkengine.checking import (
     CheckPlugin,
     CheckPluginName,
@@ -26,8 +24,9 @@ from cmk.checkengine.checking import (
     Item,
     ServiceID,
 )
-from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
@@ -45,7 +44,27 @@ from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils import QualifiedDiscovery
 
-__all__ = ["CheckPreview", "get_check_preview"]
+__all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
+
+
+@dataclass(frozen=True)
+class CheckPreviewEntry:
+    check_source: str
+    check_plugin_name: str
+    ruleset_name: RulesetName | None
+    item: Item
+    discovered_parameters: LegacyCheckParameters
+    effective_parameters: LegacyCheckParameters
+    description: str
+    state: int | None
+    output: str
+    # Service discovery never uses the perfdata in the check table. That entry
+    # is constantly discarded, yet passed around(back and forth) as part of the
+    # discovery result in the request elements. Some perfdata VALUES are not parsable
+    # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
+    metrics: list[MetricTuple]
+    labels: dict[str, str]
+    found_on_nodes: list[HostName]
 
 
 @dataclass(frozen=True)

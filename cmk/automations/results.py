@@ -23,7 +23,7 @@ from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginNameStr, Item
-from cmk.checkengine.checkresults import MetricTuple
+from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
@@ -110,26 +110,6 @@ class DiscoveryPre22NameResult(ServiceDiscoveryResult):
 
 
 result_type_registry.register(DiscoveryPre22NameResult)
-
-
-@dataclass(frozen=True)
-class CheckPreviewEntry:
-    check_source: str
-    check_plugin_name: str
-    ruleset_name: RulesetName | None
-    item: Item
-    discovered_parameters: LegacyCheckParameters
-    effective_parameters: LegacyCheckParameters
-    description: str
-    state: int | None
-    output: str
-    # Service discovery never uses the perfdata in the check table. That entry
-    # is constantly discarded, yet passed around(back and forth) as part of the
-    # discovery result in the request elements. Some perfdata VALUES are not parsable
-    # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
-    metrics: list[MetricTuple]
-    labels: dict[str, str]
-    found_on_nodes: list[HostName]
 
 
 @dataclass

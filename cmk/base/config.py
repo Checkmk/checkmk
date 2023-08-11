@@ -101,8 +101,6 @@ from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.automations.results import CheckPreviewEntry
-
 from cmk.snmplib import (  # these are required in the modules' namespace to load the configuration!
     SNMPBackendEnum,
     SNMPCredentials,
@@ -134,6 +132,7 @@ from cmk.checkengine.checking import (
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutochecksManager,
+    CheckPreviewEntry,
     DiscoveryCheckParameters,
     DiscoveryPlugin,
 )

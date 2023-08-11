@@ -23,9 +23,8 @@ from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
-from cmk.automations.results import CheckPreviewEntry
-
 from cmk.checkengine.checking import CheckPluginNameStr, Item
+from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb

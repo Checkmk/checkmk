@@ -13,12 +13,12 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
-    CheckPreviewEntry,
     result_type_registry,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
 
+from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations

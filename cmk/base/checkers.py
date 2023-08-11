@@ -33,7 +33,6 @@ from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkengine import crash_reporting
 from cmk.checkengine.checking import (
     AggregatedResult,
     CheckPlugin,
@@ -72,6 +71,7 @@ from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionRes
 from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
+from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
 __all__ = [
@@ -566,11 +566,11 @@ def get_aggregated_result(
     #    except Timeout:
     #        raise
     #    except Exception:
-    #        crash_reporting.create_check_crash_dump(...)
+    #        create_check_crash_dump(...)
     # except Timeout:
     #        ...  # handle timeout
     # except Exception:
-    #    crash_reporting.create_check_crash_dump(...)
+    #    create_check_crash_dump(...)
     #
     # ```
     #
@@ -634,7 +634,7 @@ def get_aggregated_result(
             raise
         check_result = ServiceCheckResult(
             3,
-            crash_reporting.create_check_crash_dump(
+            create_check_crash_dump(
                 host_name,
                 service.description,
                 plugin_name=service.check_plugin_name,

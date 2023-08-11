@@ -21,12 +21,12 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine import crash_reporting
 from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.submitters import ServiceState
 
-from .exitspec import ExitSpec
-from .submitters import ServiceState
+from ._crash import create_check_crash_dump
 
 
 class CheckResultErrorHandler:
@@ -103,7 +103,7 @@ def _handle_failure(
         raise exc
     return (
         exit_spec.get("exception", 3),
-        crash_reporting.create_check_crash_dump(
+        create_check_crash_dump(
             host_name,
             service_name,
             plugin_name=plugin_name,

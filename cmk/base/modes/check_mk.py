@@ -64,13 +64,11 @@ from cmk.fetchers.filecache import FileCacheOptions
 import cmk.checkengine.inventory as inventory
 from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import (
     commandline_discovery,
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
@@ -109,6 +107,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
+from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
 

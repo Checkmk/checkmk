@@ -11,7 +11,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.crash_reporting import CrashReportStore
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.crash_reporting import CheckCrashReport
+from cmk.base.errorhandling import CheckCrashReport
 
 
 def _check_generic_crash_info(crash):

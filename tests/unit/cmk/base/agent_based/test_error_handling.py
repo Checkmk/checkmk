@@ -12,8 +12,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.exitspec import ExitSpec
+
+from cmk.base.errorhandling import CheckResultErrorHandler
 
 
 def _handler() -> CheckResultErrorHandler:

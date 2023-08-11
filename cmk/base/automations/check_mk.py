@@ -112,7 +112,6 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
-from cmk.checkengine.crash_reporting import create_section_crash_dump
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
@@ -156,6 +155,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
+from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.sources import make_parser
 
 HistoryFile = str

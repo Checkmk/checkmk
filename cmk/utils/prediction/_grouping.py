@@ -33,29 +33,32 @@ def timezone_at(timestamp: float) -> int:
     return time.altzone if is_dst(timestamp) else time.timezone
 
 
-def _window_start(timestamp: int, span: int) -> int:
-    """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
+def _second_of_hour(t: time.struct_time) -> int:
+    return t.tm_min * 60 + t.tm_sec
 
-    It works well across time zones, but has an unfair behavior with daylight savings time."""
-    return (timestamp - timezone_at(timestamp)) % span
+
+def _second_of_day(t: time.struct_time) -> int:
+    return t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
 
 
 def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    wday = time.localtime(t).tm_wday
-    return Timegroup(dateutils.weekday_ids()[wday]), _window_start(t, 86400)
+    st = time.localtime(t)
+    return Timegroup(dateutils.weekday_ids()[st.tm_wday]), _second_of_day(st)
 
 
 def _group_by_day(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    return Timegroup("everyday"), _window_start(t, 86400)
+    st = time.localtime(t)
+    return Timegroup("everyday"), _second_of_day(st)
 
 
 def _group_by_day_of_month(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    mday = time.localtime(t).tm_mday
-    return Timegroup(str(mday)), _window_start(t, 86400)
+    st = time.localtime(t)
+    return Timegroup(str(st.tm_mday)), _second_of_day(st)
 
 
 def _group_by_everyhour(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    return Timegroup("everyhour"), _window_start(t, 3600)
+    st = time.localtime(t)
+    return Timegroup("everyhour"), _second_of_hour(st)
 
 
 PREDICTION_PERIODS: Final[Mapping[PeriodName, PeriodInfo]] = {

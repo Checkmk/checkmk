@@ -83,7 +83,7 @@ endif
         protobuf-files
 
 help:
-	@echo "setup			      --> Prepare system for development and building"
+	@echo "setup                          --> Prepare system for development and building"
 	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
 	@echo "make rpm                       --> Create rpm package"
 	@echo "make deb                       --> Create deb package"

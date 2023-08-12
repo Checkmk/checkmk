@@ -160,6 +160,8 @@ $LONGHOSTOUTPUT$
         desc = context.get("PARAMETER_HOST_DESC") or tmpl_host_desc
         msg = context.get("PARAMETER_HOST_MSG") or tmpl_host_msg
         alias = "HOST_PROBLEM_ID: %s" % context["HOSTPROBLEMID"]
+        if context["HOSTPROBLEMID"] == '0':
+            alias = 'HOST_PROBLEM_ID: %s' % context['LASTHOSTPROBLEMID']
         ack_author = context["HOSTACKAUTHOR"]
         ack_comment = context["HOSTACKCOMMENT"]
     else:
@@ -174,6 +176,8 @@ $LONGSERVICEOUTPUT$
         desc = context.get("PARAMETER_SVC_DESC") or tmpl_svc_desc
         msg = context.get("PARAMETER_SVC_MSG") or tmpl_svc_msg
         alias = "SVC_PROBLEM_ID: %s" % context["SERVICEPROBLEMID"]
+        if context["SERVICEPROBLEMID"] == '0':
+            alias = 'SVC_PROBLEM_ID: %s' % context['LASTSERVICEPROBLEMID']
         ack_author = context["SERVICEACKAUTHOR"]
         ack_comment = context["SERVICEACKCOMMENT"]
 

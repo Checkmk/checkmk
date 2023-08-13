@@ -9,15 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_signal_quality():
-    return Tuple(
-        elements=[
-            Percentage(title=_("Warning if under"), maxvalue=100),
-            Percentage(title=_("Critical if under"), maxvalue=100),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    Tuple(
+                        elements=[
+                            Percentage(title=_("Warning if under"), maxvalue=100),
+                            Percentage(title=_("Critical if under"), maxvalue=100),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )
 
 

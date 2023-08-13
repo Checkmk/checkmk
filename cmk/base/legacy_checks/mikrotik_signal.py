@@ -8,18 +8,13 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
-mikrotik_signal_default_levels = (80, 70)
-
 
 def inventory_mikrotik_signal(info):
-    inventory = []
-    for network, _strength, _mode in info:
-        inventory.append((network, mikrotik_signal_default_levels))
-    return inventory
+    yield from ((network, {}) for network, _strength, _mode in info)
 
 
 def check_mikrotik_signal(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels_lower"]
     for network, strength, mode in info:
         if network == item:
             strength = saveint(strength)
@@ -49,4 +44,7 @@ check_info["mikrotik_signal"] = LegacyCheckDefinition(
     discovery_function=inventory_mikrotik_signal,
     check_function=check_mikrotik_signal,
     check_ruleset_name="signal_quality",
+    check_default_parameters={
+        "levels_lower": (80, 70),
+    },
 )

@@ -85,20 +85,19 @@ info = [
 
 discovery = {
     "": [
-        ("HAM/SADS003", (15, 20)),
-        ("HAM/SADS008", (15, 20)),
-        ("HAM/SADS015", (15, 20)),
-        ("HAM/SADS055", (15, 20)),
+        ("HAM/SADS003", {}),
+        ("HAM/SADS008", {}),
+        ("HAM/SADS015", {}),
+        ("HAM/SADS055", {}),
     ]
 }
 
 checks = {
     "": [
-        ("HAM/SADS003", (15, 20), [(0, "All replications are OK.", [])]),
-        ("HAM/SADS008", (15, 20), [(0, "All replications are OK.", [])]),
+        ("HAM/SADS003", {"failure_levels": (15, 20)}, [(0, "All replications are OK.", [])]),
         (
             "HAM/SADS015",
-            (-1, 2),
+            {"failure_levels": (-1, 2)},
             [
                 (1, "Replications with failures: 3, Total failures: 0", []),
                 (
@@ -108,7 +107,5 @@ checks = {
                 ),
             ],
         ),
-        ("HAM/SADS055", (15, 20), [(0, "All replications are OK.", [])]),
-        ("HAM/SADS015", (15, 20), [(0, "All replications are OK.", [])]),
     ]
 }

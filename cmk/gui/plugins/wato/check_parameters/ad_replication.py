@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
 
 
 def _item_spec_ad_replication():
@@ -19,13 +19,24 @@ def _item_spec_ad_replication():
     )
 
 
-def _parameter_valuespec_ad_replication():
-    return Tuple(
-        help=_("The number of replication failures"),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("failures")),
-            Integer(title=_("Critical at"), unit=_("failures")),
-        ],
+def _parameter_valuespec_ad_replication() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "failure_levels",
+                    Tuple(
+                        help=_("Upper levels for the number of replication failures"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("failures")),
+                            Integer(title=_("Critical at"), unit=_("failures")),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"failure_levels": p},
     )
 
 

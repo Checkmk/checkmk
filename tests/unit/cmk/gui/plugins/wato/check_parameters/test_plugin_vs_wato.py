@@ -396,11 +396,6 @@ class ErrorReporter:
         # type # plugin # wato
         (
             "check",
-            "ad_replication",
-            RuleGroup.CheckgroupParameters("ad_replication"),
-        ),
-        (
-            "check",
             "apc_ats_output",
             RuleGroup.CheckgroupParameters("apc_ats_output"),
         ),

@@ -1,0 +1,11 @@
+Title: Windows agent correctly determines MRPE timeout now
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692024589
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p8
+
+

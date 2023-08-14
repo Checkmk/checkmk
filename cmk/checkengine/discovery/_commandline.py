@@ -119,7 +119,7 @@ def _commandline_discovery_on_host(
         ),
     )
 
-    DiscoveredHostLabelsStore(real_host_name).save(host_labels.kept())
+    DiscoveredHostLabelsStore(real_host_name).save(host_labels.present)
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
         ruleset_matcher.clear_caches()

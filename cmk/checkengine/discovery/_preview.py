@@ -142,7 +142,7 @@ def get_check_preview(
                 on_error=on_error,
             ),
         )
-        kept_labels = {host_name: host_labels.kept()}
+        kept_labels = {host_name: host_labels.present}
 
     for result in check_parsing_errors(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())

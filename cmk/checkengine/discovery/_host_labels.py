@@ -76,7 +76,7 @@ def analyse_cluster_labels(
         node_name: QualifiedDiscovery[_HostLabel](
             preexisting=existing_host_labels.get(node_name, ()),
             current=discovered_host_labels.get(node_name, ()),
-        ).kept()
+        ).present
         for node_name in node_names
     }
 
@@ -88,7 +88,7 @@ def analyse_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
         ),
     )
-    kept_labels[cluster_name] = cluster_labels.kept()
+    kept_labels[cluster_name] = cluster_labels.present
 
     return cluster_labels, kept_labels
 

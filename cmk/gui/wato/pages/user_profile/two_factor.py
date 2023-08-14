@@ -611,58 +611,148 @@ class UserLoginTwoFactor(Page):
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
 
-        html.begin_form(
-            "two_factor_login", method="POST", add_transid=False, action="user_login_two_factor.py"
-        )
-        html.prevent_password_auto_completion()
-        html.hidden_field(
-            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-        )
-
-        if backup_code := request.get_validated_type_input(Password, "_backup_code"):
-            if is_two_factor_backup_code_valid(user.id, backup_code):
-                session.session_info.two_factor_completed = True
-                raise HTTPRedirect(origtarget)
+        credentials = load_two_factor_credentials(user.id)
+        totp_style = {
+            "label": "label_pass",
+            "input": "input_pass",
+            "button": "_use_totp_code",
+            "div": "",
+        }
+        backup_style = totp_style
 
         html.label(
             _("Two-factor authentication"),
             for_="webauthn_message",
-            id_="label_2fa",
+            id_="label_webauthn",
             class_="legend",
         )
-        html.div("", id_="webauthn_message")
 
-        with foldable_container(
-            treename="webauthn_backup_codes",
-            id_="backup_container",
-            isopen=False,
-            title=_("Use backup code"),
-            indent=False,
-            save_state=False,
-        ):
-            html.label(
-                "%s:" % _("Backup code"),
-                id_="label_pass",
-                class_=["legend"],
-                for_="_backup_code",
+        # WebAuthn
+        if credentials["webauthn_credentials"]:
+            html.begin_form(
+                "webauthn_login",
+                method="POST",
+                add_transid=False,
+                action="user_login_two_factor.py",
             )
-            html.br()
-            html.password_input("_backup_code", id_="input_pass", size=None)
+            html.prevent_password_auto_completion()
+            html.hidden_field(
+                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            )
 
-            html.open_div(id_="button_text")
-            html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
+            html.div("", id_="webauthn_message")
+            html.javascript("cmk.webauthn.login()")
+
+            html.hidden_fields()
+            html.end_form()
+
+        # TOTP
+        if credentials["totp_credentials"]:
+            html.begin_form(
+                "totp_login", method="POST", add_transid=False, action="user_login_two_factor.py"
+            )
+            html.prevent_password_auto_completion()
+            html.hidden_field(
+                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            )
+
+            if totp_code := request.get_validated_type_input(Password, "_totp_code"):
+                totp_credential = credentials["totp_credentials"]
+                for credential in totp_credential:
+                    otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
+                    if otp.check_totp(
+                        totp_code.raw_bytes.decode(),
+                        otp.calculate_generation(datetime.datetime.now()),
+                    ):
+                        session.session_info.two_factor_completed = True
+                        raise HTTPRedirect(origtarget)
+
+            with foldable_container(
+                treename="authenticator_app",
+                id_="backup_container",
+                isopen=False,
+                title=_("Use Authenticator App"),
+                indent=False,
+                save_state=False,
+            ):
+                html.label(
+                    "%s:" % _("OTP code"),
+                    id_=totp_style["label"],
+                    class_=["legend"],
+                    for_="_totp_code",
+                )
+                html.br()
+                html.password_input("_totp_code", id_=totp_style["input"], size=None)
+
+                html.open_div(id_="button_text")
+                html.button(totp_style["button"], _("Use authenticator code"), cssclass="hot")
+                html.close_div()
+
+            if user_errors:
+                html.open_div(id_="login_error")
+                html.show_user_errors()
+                html.close_div()
+
+            html.hidden_fields()
+            html.end_form()
+
+        # Backup
+        if credentials["backup_codes"]:
+            if credentials["totp_credentials"]:
+                backup_style = {
+                    "label": "label_backup",
+                    "input": "input_backup",
+                    "button": "_use_backup_code",
+                    "div": "backup_foldable",
+                }
+            html.begin_form(
+                "backup_code_login",
+                method="POST",
+                add_transid=False,
+                action="user_login_two_factor.py",
+            )
+            html.prevent_password_auto_completion()
+            html.hidden_field(
+                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            )
+
+            if backup_code := request.get_validated_type_input(Password, "_backup_code"):
+                if is_two_factor_backup_code_valid(user.id, backup_code):
+                    session.session_info.two_factor_completed = True
+                    raise HTTPRedirect(origtarget)
+
+            html.open_div(class_=backup_style["div"])
+            with foldable_container(
+                treename="backup_codes",
+                id_="backup_container",
+                isopen=False,
+                title=_("Use backup code"),
+                indent=False,
+                save_state=False,
+            ):
+                html.label(
+                    "%s:" % _("Backup code"),
+                    id_=backup_style["label"],
+                    class_=["legend", ""],
+                    for_="_backup_code",
+                )
+                html.br()
+                html.password_input("_backup_code", id_=backup_style["input"], size=None)
+
+                html.open_div(id_="button_text")
+                html.button(backup_style["button"], _("Use backup code"), cssclass="hot")
+                html.close_div()
             html.close_div()
+
+            if user_errors:
+                html.open_div(id_="login_error")
+                html.show_user_errors()
+                html.close_div()
+
             html.close_div()
+            html.hidden_fields()
+            html.end_form()
 
-        if user_errors:
-            html.open_div(id_="login_error")
-            html.show_user_errors()
-            html.close_div()
-
-        html.javascript("cmk.webauthn.login()")
-
-        html.hidden_fields()
-        html.end_form()
         html.close_div()
         html.footer()
 

@@ -602,3 +602,77 @@ def test_openapi_exclude_field(clients: ClientRegistry) -> None:
     assert referenced_time_period_by_name.json["fields"]["exclude"]["0"] == [
         "Time period alias does not exist: 'time_period_1'"
     ]
+
+
+def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
+    time_period_alias_1 = "Time Period 1"
+    time_period_1: dict[str, object] = {
+        "name": "time_period_1",
+        "alias": time_period_alias_1,
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    time_period_alias_2 = "Time Period 2"
+    time_period_2: dict[str, object] = {
+        "name": "time_period_2",
+        "alias": time_period_alias_2,
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    time_period_3: dict[str, object] = {
+        "name": "time_period_3",
+        "alias": "Time Period 3",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    clients.TimePeriod.create(time_period_data=time_period_1)
+    clients.TimePeriod.create(time_period_data=time_period_2)
+    clients.TimePeriod.create(time_period_data=time_period_3)
+
+    res_empty_exclude = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_empty_exclude.json["extensions"]["exclude"] == []
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3", time_period_data={"exclude": [time_period_alias_1]}
+    )
+    res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_update_time_period.json["extensions"]["exclude"] == [time_period_alias_1]
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3", time_period_data={"exclude": [time_period_alias_2]}
+    )
+    res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_update_time_period.json["extensions"]["exclude"] == [time_period_alias_2]
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3",
+        time_period_data={"exclude": ["I don't exist"]},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3",
+        time_period_data={"exclude": "This should be a list"},
+        expect_ok=False,
+    ).assert_status_code(400)

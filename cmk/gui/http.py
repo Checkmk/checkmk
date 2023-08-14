@@ -240,6 +240,8 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, werkzeu
     and provides some low level functions to the application for accessing this information.
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
+    max_form_parts = 10000
+
     # pylint: disable=too-many-ancestors
     @property
     def request_timeout(self) -> int:

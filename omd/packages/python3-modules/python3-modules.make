@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 13
+PYTHON3_MODULES_BUILD_ID := 14
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -70,9 +70,9 @@ PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += importlib_metadata-4.10.1.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += click-8.1.3.tar.gz # needed by Flask
-PYTHON3_MODULES_LIST += Werkzeug-2.1.2.tar.gz # Needed by Flask
+PYTHON3_MODULES_LIST += Werkzeug-2.2.3.tar.gz # Needed by Flask
 PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
-PYTHON3_MODULES_LIST += Flask-2.1.2.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += Flask-2.2.5.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Babel-2.10.3.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Flask-Babel-2.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)

@@ -303,7 +303,7 @@ void MrpeProvider::parseConfig() {
 void MrpeProvider::loadTimeout() {
     const auto mrpe_timeout = cfg::GetVal(
         cfg::groups::kMrpe, cfg::vars::kTimeout, cfg::defaults::kMrpeTimeout);
-    setTimeout(std::min(1U, mrpe_timeout));
+    setTimeout(std::max(1U, mrpe_timeout));
 }
 
 void MrpeProvider::loadConfig() {

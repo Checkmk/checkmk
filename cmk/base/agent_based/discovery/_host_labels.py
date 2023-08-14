@@ -151,11 +151,6 @@ def do_load_labels(host_name: HostName) -> Sequence[HostLabel]:
 
 
 def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:
-    # TODO (mo): Clean this up, the logic is all backwards:
-    # It seems we always keep the vanished ones here.
-    # However: If we do not load the existing ones, no labels will be classified as 'vanished',
-    # and the ones that *are* in fact vanished are dropped silently.
-    yield from host_labels.vanished
     yield from host_labels.present
 
 

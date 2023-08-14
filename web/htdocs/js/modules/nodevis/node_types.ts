@@ -26,7 +26,7 @@ export class TopologyNode extends AbstractGUINode {
         return "topology";
     }
 
-    render_object() {
+    override render_object() {
         AbstractGUINode.prototype.render_object.call(this);
 
         if (this.node.data.has_no_parents)
@@ -50,7 +50,7 @@ export class TopologyNode extends AbstractGUINode {
         this.update_growth_indicators();
     }
 
-    update_node_data(node, selection) {
+    override update_node_data(node, selection) {
         AbstractGUINode.prototype.update_node_data.call(this, node, selection);
         this.update_growth_indicators();
     }
@@ -123,7 +123,7 @@ export class TopologyNode extends AbstractGUINode {
             );
     }
 
-    _fetch_external_quickinfo() {
+    override _fetch_external_quickinfo() {
         this._quickinfo_fetch_in_progress = true;
         const view_url =
             "view.py?view_name=topology_hover_host&display_options=I&host=" +
@@ -133,7 +133,7 @@ export class TopologyNode extends AbstractGUINode {
         );
     }
 
-    get_context_menu_elements() {
+    override get_context_menu_elements() {
         let elements =
             AbstractGUINode.prototype.get_context_menu_elements.call(this);
         elements = elements.concat(this._get_topology_menu_elements());
@@ -220,7 +220,7 @@ function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
 }
 
 export class TopologyCentralNode extends TopologyNode {
-    static class_name = "topology_center";
+    static override class_name = "topology_center";
 
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
@@ -228,15 +228,15 @@ export class TopologyCentralNode extends TopologyNode {
         this._has_quickinfo = false;
     }
 
-    static id() {
+    static override id() {
         return "topology_center";
     }
 
-    render_text(): void {
+    override render_text(): void {
         return;
     }
 
-    render_object() {
+    override render_object() {
         this.selection()
             .selectAll("circle")
             .data([this.id()])
@@ -259,7 +259,7 @@ export class TopologyCentralNode extends TopologyNode {
 }
 
 export class TopologySiteNode extends TopologyNode {
-    static class_name = "topology_site";
+    static override class_name = "topology_site";
 
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
@@ -267,11 +267,11 @@ export class TopologySiteNode extends TopologyNode {
         this._has_quickinfo = false;
     }
 
-    static id() {
+    static override id() {
         return "topology_site";
     }
 
-    render_object() {
+    override render_object() {
         this.selection()
             .selectAll("circle")
             .data([this.id()])
@@ -306,7 +306,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         return "bi_leaf";
     }
 
-    _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
         quickinfo.push({name: "Host name", value: this.node.data.hostname});
         if (this.node.data.service)
@@ -317,7 +317,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         return quickinfo;
     }
 
-    _fetch_external_quickinfo(): void {
+    override _fetch_external_quickinfo(): void {
         this._quickinfo_fetch_in_progress = true;
         let view_url;
         if (this.node.data.service)
@@ -337,7 +337,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         );
     }
 
-    _get_details_url(): string {
+    override _get_details_url(): string {
         if (this.node.data.service && this.node.data.service != "") {
             return (
                 "view.py?view_name=service" +
@@ -370,7 +370,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         return "bi_aggregator";
     }
 
-    _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
         quickinfo.push({
@@ -387,7 +387,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         return quickinfo;
     }
 
-    get_context_menu_elements(): ContextMenuElement[] {
+    override get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
 
         // Local actions

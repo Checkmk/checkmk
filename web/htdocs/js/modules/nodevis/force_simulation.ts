@@ -290,9 +290,9 @@ export class ForceConfig {
 }
 
 export class BIForceConfig extends ForceConfig {
-    description = "BI Force configuration";
+    override description = "BI Force configuration";
 
-    get_style_options(): StyleOptionSpecRange[] {
+    override get_style_options(): StyleOptionSpecRange[] {
         return [
             {
                 id: "center",

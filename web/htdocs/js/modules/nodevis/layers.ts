@@ -33,26 +33,26 @@ import {
 import {DefaultTransition} from "nodevis/utils";
 
 export class LayeredDebugLayer extends ToggleableLayer {
-    static class_name = "debug_layer";
+    static override class_name = "debug_layer";
     _anchor_info?: d3SelectionG;
 
-    id() {
+    override id() {
         return "debug_layer";
     }
 
-    z_index(): number {
+    override z_index(): number {
         return 20;
     }
 
-    name() {
+    override name() {
         return "Debug Layer";
     }
 
-    setup() {
+    override setup() {
         this.overlay_active = false;
     }
 
-    update_gui() {
+    override update_gui() {
         this._div_selection
             .selectAll("td#Simulation")
             .text(
@@ -162,7 +162,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
             .on("mousemove.translation_info", null);
     }
 
-    size_changed() {
+    override size_changed() {
         if (!this.overlay_active) return;
     }
 
@@ -170,7 +170,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
         this._world.viewport.reset_zoom();
     }
 
-    zoomed() {
+    override zoomed() {
         if (!this.overlay_active || !this._anchor_info) return;
         // TODO: check if toString is working
         this._anchor_info.attr(
@@ -193,21 +193,21 @@ export class LayeredDebugLayer extends ToggleableLayer {
 }
 
 export class LayeredIconOverlay extends ToggleableLayer {
-    static class_name = "node_icon_overlay";
+    static override class_name = "node_icon_overlay";
 
-    id() {
+    override id() {
         return "node_icon_overlay";
     }
 
-    z_index(): number {
+    override z_index(): number {
         return 10;
     }
 
-    name() {
+    override name() {
         return "Node icons";
     }
 
-    update_gui() {
+    override update_gui() {
         const nodes: NodevisNode[] = [];
         this._world.viewport.get_all_nodes().forEach(node => {
             if (!node.data.icon_image) return;
@@ -259,7 +259,7 @@ export class LayeredIconOverlay extends ToggleableLayer {
 //#   +--------------------------------------------------------------------+
 
 export class LayeredNodesLayer extends FixLayer {
-    static class_name = "nodes";
+    static override class_name = "nodes";
     node_instances: {[name: string]: AbstractGUINode};
     link_instances: {[name: string]: AbstractLink};
     _links_for_node: {[name: string]: AbstractLink[]} = {};
@@ -295,7 +295,7 @@ export class LayeredNodesLayer extends FixLayer {
             .style("display", "none");
     }
 
-    id() {
+    override id() {
         return "nodes";
     }
 
@@ -319,15 +319,15 @@ export class LayeredNodesLayer extends FixLayer {
         }
     }
 
-    z_index(): number {
+    override z_index(): number {
         return 50;
     }
 
-    name() {
+    override name() {
         return "Nodes Layer";
     }
 
-    setup(): void {
+    override setup(): void {
         return;
     }
 
@@ -387,7 +387,7 @@ export class LayeredNodesLayer extends FixLayer {
         this.update_gui(true);
     }
 
-    zoomed(): void {
+    override zoomed(): void {
         // Interrupt any gui transitions whenever the zoom factor is changed
         if (this.last_scale != this._world.viewport.last_zoom.k)
             this._svg_selection
@@ -403,7 +403,7 @@ export class LayeredNodesLayer extends FixLayer {
         this.last_scale = this._world.viewport.last_zoom.k;
     }
 
-    update_data(): void {
+    override update_data(): void {
         this._update_nodes();
         this._update_links();
     }
@@ -529,7 +529,7 @@ export class LayeredNodesLayer extends FixLayer {
         return new link_class(this._world, link_data);
     }
 
-    update_gui(force = false): void {
+    override update_gui(force = false): void {
         this._update_position_of_context_menu();
         if (!force && this._world.force_simulation._simulation.alpha() < 0.11) {
             for (const idx in this.node_instances)
@@ -551,7 +551,10 @@ export class LayeredNodesLayer extends FixLayer {
                 false;
     }
 
-    render_context_menu(event: MouseEvent, node_id: string | null): void {
+    override render_context_menu(
+        event: MouseEvent,
+        node_id: string | null
+    ): void {
         if (!this._world.layout_manager.edit_layout && !node_id) return; // Nothing to show
 
         //        let coords : Coords = {x: 0, y:0};
@@ -684,7 +687,7 @@ export class LayeredNodesLayer extends FixLayer {
             .style("top", new_coords.y + "px");
     }
 
-    hide_context_menu(): void {
+    override hide_context_menu(): void {
         this.popup_menu_selection.selectAll("*").remove();
         this.popup_menu_selection.style("display", "none");
     }

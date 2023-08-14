@@ -82,7 +82,7 @@ export interface TableFigureData<Config = PieChartData | NtopTalkerData>
 export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     _table!: d3.Selection<HTMLTableElement, unknown, d3.BaseType, unknown>;
 
-    ident() {
+    override ident() {
         return "table";
     }
 
@@ -90,7 +90,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
         return {data: [], plot_definitions: [], rows: []};
     }
 
-    initialize(debug?: boolean) {
+    override initialize(debug?: boolean) {
         cmk_figures.FigureBase.prototype.initialize.call(this, debug);
         this._table = this._div_selection.append("table");
     }
@@ -110,7 +110,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     //   ]
     // }
 
-    update_gui() {
+    override update_gui() {
         // TODO: clear table when no rows exist
         const data = this._data;
         if (!data.rows) return;

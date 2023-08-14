@@ -146,7 +146,7 @@ export class NodeVisualization {
 }
 
 export class BIVisualization extends NodeVisualization {
-    static _nodevis_type = "bi_aggregations";
+    static override _nodevis_type = "bi_aggregations";
     constructor(div_id) {
         super(div_id);
     }
@@ -162,7 +162,7 @@ export class BIVisualization extends NodeVisualization {
         aggr_ds.fetch_aggregations(list_of_aggregations, use_layout_id);
     }
 
-    _get_force_config(): typeof ForceConfig {
+    override _get_force_config(): typeof ForceConfig {
         return BIForceConfig;
     }
 
@@ -246,7 +246,7 @@ interface TopologyFrontendConfig {
 }
 
 export class TopologyVisualization extends NodeVisualization {
-    static _nodevis_type = "topology";
+    static override _nodevis_type = "topology";
     _custom_topology_fetch_parameters: {[name: string]: any} = {};
     _custom_node_settings_memory = {};
     _last_update_request: number;
@@ -279,7 +279,7 @@ export class TopologyVisualization extends NodeVisualization {
         return this._frontend_configuration;
     }
 
-    save_layout() {
+    override save_layout() {
         // TODO: move to layout.ts
         const fetch_params = new SearchFilters().get_filter_params();
         fetch_params["topology_frontend_configuration"] = JSON.stringify(
@@ -289,7 +289,7 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_data(fetch_params);
     }
 
-    delete_layout() {
+    override delete_layout() {
         // TODO: move to layout.ts
         const fetch_params = new SearchFilters().get_filter_params();
         fetch_params["topology_frontend_configuration"] = JSON.stringify(
@@ -341,7 +341,7 @@ export class TopologyVisualization extends NodeVisualization {
         return frontend_config;
     }
 
-    update_browser_url(): void {
+    override update_browser_url(): void {
         return;
     }
 
@@ -415,7 +415,7 @@ export class TopologyVisualization extends NodeVisualization {
         d3.select("label#max_nodes_error_text").text(errors);
     }
 
-    update_data() {
+    override update_data() {
         if (this._throttle_update()) return;
         // Update browser url in case someone wants to bookmark the current settings
         this.update_browser_url();

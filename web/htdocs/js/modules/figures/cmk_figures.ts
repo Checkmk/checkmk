@@ -358,13 +358,13 @@ export abstract class TextFigure<
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
 
-    initialize(debug: boolean) {
+    override initialize(debug: boolean) {
         FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");
     }
 
-    resize() {
+    override resize() {
         if (this._data.title) {
             this.margin.top = 22; // magic number: title height
         }
@@ -379,7 +379,7 @@ export abstract class TextFigure<
         );
     }
 
-    update_gui() {
+    override update_gui() {
         this.resize();
         this.render();
     }

@@ -24,13 +24,23 @@ abstract class UnitPrefixes {
 }
 
 export class SIUnitPrefixes extends UnitPrefixes {
-    static _BASE = 1000;
-    static _PREFIXES: string[] = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
+    static override _BASE = 1000;
+    static override _PREFIXES: string[] = [
+        "",
+        "k",
+        "M",
+        "G",
+        "T",
+        "P",
+        "E",
+        "Z",
+        "Y",
+    ];
 }
 
 export class IECUnitPrefixes extends UnitPrefixes {
-    static _BASE = 1024;
-    static _PREFIXES: string[] = [
+    static override _BASE = 1024;
+    static override _PREFIXES: string[] = [
         "",
         "Ki",
         "Mi",

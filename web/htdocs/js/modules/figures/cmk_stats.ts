@@ -38,7 +38,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
     _max_radius!: number;
     _title!: string;
     _title_url!: string;
-    ident() {
+    override ident() {
         return "hoststats";
     }
 
@@ -53,7 +53,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
         };
     }
 
-    initialize(debug?: boolean) {
+    override initialize(debug?: boolean) {
         super.initialize(debug);
 
         this._div_selection.classed("stats_dashlet", true);
@@ -68,7 +68,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
         this._max_radius = 48;
     }
 
-    update_data(data: FigureResponseData) {
+    override update_data(data: FigureResponseData) {
         this._title = data.title;
         this._title_url = data.title_url;
         //This assignment changes the type of our Data so it not FigureData but FigureData.Data
@@ -79,7 +79,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
         this._data = data.data;
     }
 
-    update_gui() {
+    override update_gui() {
         if (!this._data || this._data.total.count == 0) return;
 
         this.resize();
@@ -168,13 +168,13 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
 }
 
 export class ServiceStats extends HostStats {
-    ident() {
+    override ident() {
         return "servicestats";
     }
 }
 
 export class EventStats extends HostStats {
-    ident() {
+    override ident() {
         return "eventstats";
     }
 }

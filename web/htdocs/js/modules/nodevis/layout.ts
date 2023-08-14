@@ -125,7 +125,7 @@ export function compute_node_position(node: NodevisNode) {
 }
 
 export class LayoutManagerLayer extends FixLayer {
-    static class_name = "layout_manager";
+    static override class_name = "layout_manager";
     _mouse_events_overlay: LayoutingMouseEventsOverlay;
     layout_applier: LayoutApplier;
     toolbar_plugin: LayoutingToolbarPlugin;
@@ -160,15 +160,15 @@ export class LayoutManagerLayer extends FixLayer {
             .attr("id", "hierarchies");
     }
 
-    id(): string {
+    override id(): string {
         return "layout_manager";
     }
 
-    z_index(): number {
+    override z_index(): number {
         return 40;
     }
 
-    name(): string {
+    override name(): string {
         return "Layout Manager";
     }
 
@@ -240,13 +240,13 @@ export class LayoutManagerLayer extends FixLayer {
         return this._node_dragging_enforced || this._node_dragging_allowed;
     }
 
-    size_changed(): boolean {
+    override size_changed(): boolean {
         // TODO: check this
         //        node_visualization_layout_styles.force_simulation.size_changed()
         return false;
     }
 
-    update_data(): void {
+    override update_data(): void {
         this.toolbar_plugin.update_layout_configuration();
         const sorted_styles: [number, AbstractLayoutStyle][] = [];
         for (const idx in this._active_styles) {
@@ -270,7 +270,7 @@ export class LayoutManagerLayer extends FixLayer {
         this._mouse_events_overlay.update_data();
     }
 
-    update_gui(): void {
+    override update_gui(): void {
         for (const idx in this._active_styles) {
             this._active_styles[idx].update_gui();
         }
@@ -296,7 +296,7 @@ export class LayoutManagerLayer extends FixLayer {
         }
     }
 
-    zoomed(): void {
+    override zoomed(): void {
         for (const idx in this._active_styles) {
             this._active_styles[idx].zoomed();
         }
@@ -529,7 +529,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         this.active = false;
     }
 
-    id() {
+    override id() {
         return "layouting_toolbar";
     }
 
@@ -539,7 +539,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         return this._layout_style_configuration;
     }
 
-    setup_selections(content_selection: d3SelectionDiv) {
+    override setup_selections(content_selection: d3SelectionDiv) {
         this._div_selection = content_selection;
         this.setup_toolbar_elements(this._div_selection);
         this._layout_style_configuration = new LayoutStyleConfiguration(
@@ -646,7 +646,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             });
     }
 
-    render_togglebutton(selection: d3SelectionDiv): void {
+    override render_togglebutton(selection: d3SelectionDiv): void {
         selection.style("cursor", "pointer");
         const cell = selection.append("table").append("tr").append("td");
         cell.append("img")
@@ -655,7 +655,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("opacity", 1);
     }
 
-    enable_actions() {
+    override enable_actions() {
         this._world.layout_manager.show_layout_options();
         this.update_layout_configuration();
 
@@ -673,7 +673,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("display", null);
     }
 
-    disable_actions() {
+    override disable_actions() {
         if (this._world.layout_manager.edit_layout) {
             this._world.layout_manager.hide_layout_options();
             this._world.viewport.update_gui_of_layers();
@@ -686,7 +686,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("display", "none");
     }
 
-    remove_content() {
+    override remove_content() {
         this.div_selection()
             .select("div.toolbar_layouting")
             .transition()

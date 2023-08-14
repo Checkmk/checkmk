@@ -10,7 +10,7 @@ State: unknown
 Version: 2.2.0p3
 
 Previously, service quotas were fetched without pagination which led to
-some quota values missing from the Azure API.
+some quota values missing from the AWS API.
 For missing quota values default values were reported instead of the correct
 ones.
 

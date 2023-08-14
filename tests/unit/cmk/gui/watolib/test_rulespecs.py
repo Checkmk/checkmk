@@ -187,6 +187,7 @@ def test_grouped_rulespecs() -> None:
             "agent_config:win_set_wmi_timeout",
             "agent_config:win_ps",
             "agent_config:win_openhardwaremonitor",
+            "agent_config:win_robotmk",
             "agent_config:win_printers",
             "agent_config:mcafee_av_client",
         ],

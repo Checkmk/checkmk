@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 15
+PYTHON3_MODULES_BUILD_ID := 16
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -96,7 +96,7 @@ PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), py
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.30.tar.gz # needed by numpy
 PYTHON3_MODULES_LIST += numpy-1.22.4.zip # needed by GUI (forecast graphs)
-PYTHON3_MODULES_LIST += reportlab-3.6.11.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += reportlab-3.6.13.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-2.10.2.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 

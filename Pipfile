@@ -71,13 +71,13 @@ ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
-certifi = "==2022.12.7"  # needed by requests
+certifi = "==2023.07.22"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.26.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.4.4"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
-requests = {version = "==2.26.0",extras = ["security"]}  # needed by DCD, connexion
+requests = {version = "==2.31.0",extras = ["security"]}  # needed by DCD, connexion
 charset-normalizer = "==2.0.6" # needed by requests
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr

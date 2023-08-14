@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 14
+PYTHON3_MODULES_BUILD_ID := 15
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -51,13 +51,13 @@ PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
-PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += certifi-2023.7.22.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.26.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed by jira, pyghmi
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
-PYTHON3_MODULES_LIST += requests-2.26.0.tar.gz # needed by DCD
+PYTHON3_MODULES_LIST += requests-2.31.0.tar.gz # needed by DCD
 PYTHON3_MODULES_LIST += charset-normalizer-2.0.6.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr

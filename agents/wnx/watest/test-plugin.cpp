@@ -1148,7 +1148,7 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
     EXPECT_FALSE(um[paths[6]].pattern().empty());
 }
 
-TEST(PluginTest, SyncStartSimulationFuture_Component_DISABLED) {
+TEST(PluginTest, SyncStartSimulationFuture_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     const std::vector<cfg::Plugins::ExeUnit> units = {

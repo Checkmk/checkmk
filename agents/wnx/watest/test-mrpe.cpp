@@ -81,6 +81,7 @@ TEST_F(SectionProviderMrpeFixture, CheckConfigTimeout) {
     mrpe.loadConfig();
     ASSERT_EQ(mrpe.timeout(), 60);
 }
+
 TEST_F(SectionProviderMrpeFixture, RunCachedComponent_DISABLED) {
     MrpeProvider mrpe;
     auto yaml = cfg::GetLoadedConfig();

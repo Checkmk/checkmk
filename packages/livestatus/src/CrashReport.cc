@@ -9,7 +9,6 @@
 #include <regex>
 #include <system_error>
 #include <utility>
-#include <vector>
 
 #include "livestatus/Logger.h"
 

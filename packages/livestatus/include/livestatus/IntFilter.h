@@ -16,8 +16,9 @@
 #include <variant>
 
 #include "livestatus/ColumnFilter.h"
-#include "livestatus/Filter.h"
-#include "livestatus/opids.h"
+
+class Filter;
+enum class RelationalOperator;
 class Row;
 class User;
 

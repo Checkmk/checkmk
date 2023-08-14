@@ -6,7 +6,6 @@
 #include "livestatus/TableContactGroups.h"
 
 #include <memory>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/Column.h"

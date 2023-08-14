@@ -4,10 +4,7 @@
 // source code package.
 
 #include <chrono>
-#include <memory>
 #include <string>
-#include <variant>  // IWYU pragma: keep
-#include <vector>
 
 #include "gtest/gtest.h"
 #include "livestatus/ListColumn.h"

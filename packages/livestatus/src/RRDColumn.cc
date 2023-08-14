@@ -15,7 +15,6 @@
 #include <memory>
 #include <set>
 #include <stdexcept>
-#include <type_traits>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"

@@ -7,7 +7,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <sstream>
 
 #include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"

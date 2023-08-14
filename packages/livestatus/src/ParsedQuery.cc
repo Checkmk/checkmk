@@ -13,7 +13,6 @@
 #include <map>
 #include <ratio>
 #include <stdexcept>
-#include <type_traits>
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"

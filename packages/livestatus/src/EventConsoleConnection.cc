@@ -5,20 +5,16 @@
 
 #include "livestatus/EventConsoleConnection.h"
 
-#include <asio/basic_socket.hpp>
-#include <asio/buffer.hpp>
-#include <asio/detail/impl/reactive_socket_service_base.ipp>
-#include <asio/error.hpp>
-#include <asio/error_code.hpp>
-#include <asio/local/stream_protocol.hpp>
-#include <asio/socket_base.hpp>
-#include <asio/system_error.hpp>
 #include <chrono>
 #include <ostream>
 #include <system_error>
 #include <thread>
 #include <utility>
 
+#include "asio/basic_socket.hpp"
+#include "asio/error.hpp"
+#include "asio/socket_base.hpp"
+#include "asio/system_error.hpp"
 #include "livestatus/Logger.h"
 
 using namespace std::chrono_literals;

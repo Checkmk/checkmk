@@ -61,7 +61,7 @@ BRANCH_VERSION     := 2.3.0
 #endif
 
 SHELL              := /bin/bash
-CLANG_VERSION      := 14
+CLANG_VERSION      := 16
 
 PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
 

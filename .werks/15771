@@ -1,0 +1,13 @@
+Title: discovery: remove vanished labels on 'Accept all'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692013733
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p33
+
+Vanished labels weren't beeing removed after clicking 'Accept all'
+in the discovery page. There was no way to remove vanished labels
+from the host using the UI.

@@ -151,6 +151,7 @@ class DiagnosticsDump:
             HWDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
             FilesSizeCSVDiagnosticsElement(),
+            SELinuxJSONDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -632,6 +633,30 @@ class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         return get_all_package_infos()
+
+
+class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "selinux"
+
+    @property
+    def title(self) -> str:
+        return _("SELinux information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `sestatus`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+        if not (selinux_binary := shutil.which("sestatus")):
+            return {}
+
+        return {
+            line.split(":")[0]: line.split(":")[1].lstrip()
+            for line in subprocess.check_output(selinux_binary, text=True).split("\n")
+            if ":" in line
+        }
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

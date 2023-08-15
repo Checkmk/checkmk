@@ -1,0 +1,14 @@
+Title: Support Diagnostics: Include basic SELinux infos
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1692093176
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The Support Diagnostics dump now includes basic information about SELinux as provided by the command <code>sestatus</code>.
+
+

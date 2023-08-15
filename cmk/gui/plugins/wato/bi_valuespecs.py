@@ -845,7 +845,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                             "of all child nodes is being used as the total state. If you set it for example "
                             "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
                             "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-                            "resulting state would be WARN. Or you could say that the worst to nodes are "
+                            "resulting state would be WARN. Or you could say that the worst two nodes are "
                             "first dropped and then the worst of the remaining nodes defines the state. "
                         ),
                         title=_("Take n'th worst state for n = "),

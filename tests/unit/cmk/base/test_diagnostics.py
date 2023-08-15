@@ -5,6 +5,7 @@
 
 import csv
 import json
+import os
 import shutil
 from pathlib import Path, PurePath
 from typing import NamedTuple, Type
@@ -723,3 +724,43 @@ CONFIG_APACHE_TCP_PORT='5000'"""
 
     shutil.rmtree(str(automation_dir))
     shutil.rmtree(str(etc_omd_dir))
+
+
+def test_diagnostics_element_se_linux():
+    diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
+    assert diagnostics_element.ident == "selinux"
+    assert diagnostics_element.title == "SELinux information"
+    assert diagnostics_element.description == (
+        "Output of `sestatus`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("sestatus")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "SELinux status:                 enabled"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", test_bin_dir)
+
+        diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("selinux.json")
+
+        content = json.loads(filepath.open().read())
+
+        assert content["SELinux status"] == "enabled"
+
+        shutil.rmtree(str(test_bin_dir))

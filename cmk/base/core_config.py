@@ -294,7 +294,10 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
             config_cache, selected_hosts=None
         )
 
-    agent_bakery.bake_on_restart(target_configs)
+    agent_bakery.bake_on_restart(
+        target_configs,
+        apply_bake_revision=config.apply_bake_revision,
+    )
 
 
 @contextmanager

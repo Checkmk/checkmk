@@ -82,14 +82,13 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
 
-    if params.get("assume_role"):
+    role_arn_id = params.get("access", {}).get("role_arn_id")
+    if role_arn_id:
         args += ["--assume-role"]
-        role_arn_id = params["assume_role"].get("role_arn_id")
-        if role_arn_id:
-            if role_arn_id[0]:
-                args += ["--role-arn", role_arn_id[0]]
-            if role_arn_id[1]:
-                args += ["--external-id", role_arn_id[1]]
+        if role_arn_id[0]:
+            args += ["--role-arn", role_arn_id[0]]
+        if role_arn_id[1]:
+            args += ["--external-id", role_arn_id[1]]
 
     regions = params.get("regions")
     if regions:

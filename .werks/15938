@@ -1,0 +1,13 @@
+Title: Fix title link of top alerters dashlet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1692172992
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p8
+
+If you used the top alerters title link, the opened view did not apply new
+filter options correctly.
+

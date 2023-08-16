@@ -6,6 +6,7 @@
 import abc
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import cmk.utils.plugin_registry
@@ -13,6 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 from cmk.utils.version import Edition, mark_edition_only
 
+from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -52,6 +54,25 @@ from cmk.gui.watolib.search import (
     MatchItems,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
+
+
+@dataclass(frozen=True)
+class RulespecAllowList:
+    visible_rulespecs: set[str] = field(default_factory=set)
+
+    @classmethod
+    def from_config(cls) -> "RulespecAllowList":
+        global_config = get_global_config()
+        model = global_config.rulespec_allow_list
+        visible_rulespecs = set()
+        for group in model.rule_groups:
+            _prefix = "" if group.type_ is None else f"{group.type_.value}:"
+            names = {f"{_prefix}{name}" for name in group.rule_names}
+            visible_rulespecs.update(names)
+        return cls(visible_rulespecs=visible_rulespecs)
+
+    def is_visible(self, rulespec_name: str) -> bool:
+        return rulespec_name in self.visible_rulespecs
 
 
 class RulespecBaseGroup(abc.ABC):

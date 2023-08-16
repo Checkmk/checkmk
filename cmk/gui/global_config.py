@@ -6,6 +6,7 @@
 from pydantic import BaseModel
 
 from cmk.utils.paths import cse_config_dir
+from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.log import logger
@@ -20,8 +21,18 @@ class GlobalSettings(BaseModel):
         return edition() is not Edition.CSE or varname in self.is_activate
 
 
+class RuleSetGroup(BaseModel):
+    type_: RuleGroupType | None = None
+    rule_names: set[str] = set()
+
+
+class RulespecAllowList(BaseModel):
+    rule_groups: list[RuleSetGroup] = []
+
+
 class GlobalConfig(BaseModel):
     global_settings: GlobalSettings
+    rulespec_allow_list: RulespecAllowList
 
 
 def load_global_config() -> GlobalConfig:
@@ -30,7 +41,10 @@ def load_global_config() -> GlobalConfig:
         return GlobalConfig.parse_file(path)
     except Exception as e:
         LOGGER.debug("Failed to load config from %s: %s", path, e)
-        return GlobalConfig(global_settings=GlobalSettings(is_activate=set[str]()))
+        return GlobalConfig(
+            global_settings=GlobalSettings(is_activate=set[str]()),
+            rulespec_allow_list=RulespecAllowList(),
+        )
 
 
 def get_global_config() -> GlobalConfig:

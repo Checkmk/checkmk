@@ -123,7 +123,6 @@ int CopyFolderRecursive(
     std::filesystem::copy_options copy_mode,
     const std::function<bool(std::filesystem::path)> &predicate) noexcept;
 
-bool RunDetachedProcess(const std::wstring &Name);
 namespace details {
 bool IsIgnoredFile(const std::filesystem::path &filename);
 }

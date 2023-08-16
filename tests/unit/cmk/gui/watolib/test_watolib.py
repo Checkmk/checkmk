@@ -216,6 +216,7 @@ def test_registered_configvars() -> None:
             "alert_handler_timeout",
             "alert_logging",
             "bake_agents_on_restart",
+            "apply_bake_revision",
             "cmc_authorization",
             "cmc_check_helpers",
             "cmc_check_timeout",

@@ -132,7 +132,7 @@ class CommandReschedule(Command):
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
-        html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
+        html.text_input("_resched_spread", default_value="1", size=3, cssclass="number")
         html.write_text(" " + _("minutes"))
         html.close_div()
 

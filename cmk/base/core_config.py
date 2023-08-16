@@ -37,8 +37,6 @@ import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
-from cmk.cee.bakery.type_defs import BakeRevisionMode
-
 CoreCommandName = str
 CoreCommand = str
 
@@ -289,14 +287,7 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
             config_cache, selected_hosts=None
         )
 
-    agent_bakery.bake_agents(
-        target_configs,
-        bake_revision_mode=BakeRevisionMode.INACTIVE
-        if config.apply_bake_revision
-        else BakeRevisionMode.DISABLED,
-        logging_level=config.agent_bakery_logging,
-        call_site="config creation",
-    )
+    agent_bakery.bake_agents(target_configs, call_site="config creation")
 
 
 @contextmanager

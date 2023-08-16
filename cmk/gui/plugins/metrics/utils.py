@@ -211,8 +211,23 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
         self._item_index = start_index or 0
 
     def append(self, item: GraphTemplate) -> None:
+        # Avoid duplicate graph definitions in case the metric plugins are loaded multiple times.
+        # Otherwise, we get duplicate graphs in the UI.
+        if self._item_already_appended(item):
+            return
         self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
+
+    def _item_already_appended(self, item: GraphTemplate) -> bool:
+        return self._remove_id_from_graph_template(item) in [
+            self._remove_id_from_graph_template(graph_template)
+            for graph_template_id, graph_template in self.items()
+            if graph_template_id.startswith(self._list_identifier)
+        ]
+
+    @staticmethod
+    def _remove_id_from_graph_template(graph_template: GraphTemplate) -> dict[str, object]:
+        return {k: v for k, v in graph_template.items() if k != "id"}
 
 
 class UnitRegistry:

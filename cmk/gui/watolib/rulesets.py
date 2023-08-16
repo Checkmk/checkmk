@@ -31,6 +31,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
 )
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.version import edition, Edition
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -55,7 +56,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     may_use_redis,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.rulespecs import Rulespec, rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.rulespecs import (
+    Rulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecAllowList,
+)
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
@@ -497,6 +503,25 @@ class AllRulesets(RulesetCollection):
             self._save_rulesets_recursively(subfolder)
 
         self._save_folder(folder, self._rulesets, self._unknown_rulesets)
+
+
+def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[RulesetName, Ruleset]:
+    if edition() is not Edition.CSE:
+        return rulesets
+
+    allow_list = RulespecAllowList.from_config()
+    return {
+        name: ruleset
+        for name, ruleset in rulesets.items()
+        if allow_list.is_visible(ruleset.rulespec.name)
+    }
+
+
+def visible_ruleset(rulespec_name: str) -> bool:
+    if edition() is not Edition.CSE:
+        return True
+
+    return RulespecAllowList.from_config().is_visible(rulespec_name)
 
 
 class SingleRulesetRecursively(RulesetCollection):

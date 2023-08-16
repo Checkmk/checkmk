@@ -106,6 +106,8 @@ from cmk.gui.watolib.rulesets import (
     SearchOptions,
     SingleRulesetRecursively,
     UseHostFolder,
+    visible_ruleset,
+    visible_rulesets,
 )
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
@@ -243,15 +245,17 @@ class ABCRulesetMode(WatoMode):
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets = RulesetCollection(
-                {
-                    name: ruleset
-                    for name, ruleset in self._rulesets().get_rulesets().items()
-                    if ruleset.matches_search_with_rules(self._search_options)
-                }
+            rulesets = AllRulesets(
+                visible_rulesets(
+                    {
+                        name: ruleset
+                        for name, ruleset in self._rulesets().get_rulesets().items()
+                        if ruleset.matches_search_with_rules(self._search_options)
+                    }
+                )
             )
         else:
-            rulesets = self._rulesets()
+            rulesets = AllRulesets(visible_rulesets(self._rulesets().get_rulesets()))
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -824,6 +828,9 @@ class ModeEditRuleset(WatoMode):
         try:
             self._rulespec = rulespec_registry[self._name]
         except KeyError:
+            raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
+
+        if not visible_ruleset(self._rulespec.name):
             raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
 
         self._valuespec = self._rulespec.valuespec

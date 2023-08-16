@@ -483,9 +483,9 @@ def _valuespec_special_agents_aws() -> Migrate:
                     ),
                 ),
                 (
-                    "assume_role",
+                    "access",
                     Dictionary(
-                        title=_("Assume a different IAM role"),
+                        title=_("Access to AWS API"),
                         elements=[
                             (
                                 "role_arn_id",
@@ -510,7 +510,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                                         ),
                                     ],
                                 ),
-                            )
+                            ),
                         ],
                     ),
                 ),
@@ -558,8 +558,17 @@ def _valuespec_special_agents_aws() -> Migrate:
             ],
             optional_keys=["overall_tags", "proxy_details"],
         ),
-        migrate=lambda p: {"piggyback_naming_convention": "ip_region_instance"} | p,
+        migrate=__migrate,
     )
+
+
+def __migrate(p: dict[str, object]) -> dict[str, object]:
+    p = {"piggyback_naming_convention": "ip_region_instance"} | p
+    # "assume_role" was renamed to "access"
+    if "assume_role" in p:
+        assert "access" not in p
+        p["access"] = p.pop("assume_role")
+    return p
 
 
 rulespec_registry.register(

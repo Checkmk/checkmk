@@ -24,7 +24,7 @@ from tests.testlib import SpecialAgent
                     "proxy_user": "banana",
                     "proxy_password": ("password", "banana123"),
                 },
-                "assume_role": {},
+                "access": {},
                 "global_services": {
                     "ce": None,
                 },
@@ -79,7 +79,7 @@ from tests.testlib import SpecialAgent
                     "proxy_user": "banana",
                     "proxy_password": ("store", "banana123"),
                 },
-                "assume_role": {},
+                "access": {},
                 "global_services": {},
                 "regions": [],
                 "services": {},

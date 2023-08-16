@@ -11,4 +11,3 @@ Version: 2.3.0b1
 * Make bake revision optional.
   Default to false.
 * Skip baking if we have no bake revision.
-* Introduce global config vars

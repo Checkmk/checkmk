@@ -62,7 +62,7 @@ export function start(
     return utils.prevent_default_events(event);
 }
 
-function element_dragging(event: MouseEvent) {
+function element_dragging(event: MouseEvent): true | void {
     if (g_element_dragging === null) return true;
 
     position_dragging_object(event);

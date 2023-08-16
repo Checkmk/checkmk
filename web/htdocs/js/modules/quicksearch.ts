@@ -73,7 +73,10 @@ function search_dropdown_value() {
     else return null;
 }
 
-function mkSearchKeyDown(e: KeyboardEvent, oField: HTMLInputElement) {
+function mkSearchKeyDown(
+    e: KeyboardEvent,
+    oField: HTMLInputElement
+): false | void {
     const keyCode = e.which || e.keyCode;
     switch (keyCode) {
         // Return/Enter

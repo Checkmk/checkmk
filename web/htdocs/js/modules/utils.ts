@@ -739,11 +739,14 @@ export function add_simplebar_scrollbar(scrollable_id: string) {
     );
 }
 
-export function add_simplebar_scrollbar_to_object(obj: Nullable<HTMLElement>) {
+export function add_simplebar_scrollbar_to_object(
+    obj: Nullable<HTMLElement>
+): SimpleBar | undefined {
     if (obj) {
         return new SimpleBar(obj);
     }
     console.log("Missing object for SimpleBar initiation.");
+    return undefined;
 }
 
 export function content_scrollbar(scrollable_id: string) {

@@ -13,6 +13,7 @@
         "noImplicitAny": false,
         "noImplicitThis": false,
         "noImplicitOverride": true,
+        "noImplicitReturns": true,
         "noEmit": true,
         "moduleResolution": "node",
         "esModuleInterop": false,

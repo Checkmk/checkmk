@@ -339,7 +339,10 @@ function ajax_call_autocomplete_labels(
 }
 
 // Handle Enter key in textfields
-export function textinput_enter_submit(event: KeyboardEvent, submit: string) {
+export function textinput_enter_submit(
+    event: KeyboardEvent,
+    submit: string
+): boolean | void {
     const keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
         if (submit) {

@@ -325,7 +325,10 @@ export function toggle_container(id: string) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-export function open_folder(event: Event | undefined, link: string) {
+export function open_folder(
+    event: Event | undefined,
+    link: string
+): false | void {
     const target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div

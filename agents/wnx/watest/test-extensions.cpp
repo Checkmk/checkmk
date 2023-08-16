@@ -15,8 +15,8 @@ TEST(Extensions, GetExtensions) {
     const auto cfg = GetLoadedConfig();
     const auto extensions = GetExtensions(cfg);
     ASSERT_EQ(extensions.size(), 1);
-    EXPECT_EQ(extensions[0].command_line,
-              "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe daemon");
+    EXPECT_EQ(extensions[0].binary, "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe");
+    EXPECT_EQ(extensions[0].command_line, "daemon");
     EXPECT_EQ(extensions[0].name, "robot_mk");
     EXPECT_EQ(extensions[0].mode, Mode::automatic);
 }

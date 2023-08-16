@@ -191,8 +191,9 @@ const char *const kMrpeParallel = "parallel";  // boool
 // group "extensions"
 constexpr std::string_view kExtensionsExecution = "execution";  // list of nodes
 constexpr std::string_view kExecutionName = "name";             // string
-constexpr std::string_view kExecutionCmdLine = "exec";          // string
-constexpr std::string_view kExecutionRun = "run";               // "yes"|"no"|"auto"
+constexpr std::string_view kExecutionBinary = "binary";         // string
+constexpr std::string_view kExecutionCmdLine = "command_line";  // string
+constexpr std::string_view kExecutionRun = "run";  // "yes"|"no"|"auto"
 
 // group "modules"
 constexpr std::string_view kModulesTable = "table";  // list of nodes

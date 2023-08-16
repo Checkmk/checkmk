@@ -46,10 +46,13 @@ std::vector<Extension> GetExtensions(YAML::Node node) {
             }
             names.emplace(name);
 
+            const auto binary =
+                GetVal<std::string>(entry, vars::kExecutionBinary, "");
             const auto command_line =
                 GetVal<std::string>(entry, vars::kExecutionCmdLine, "");
             auto mode = GetVal<std::string>(entry, vars::kExecutionRun, "");
             exts.emplace_back(Extension{.name = name,
+                                        .binary = binary,
                                         .command_line = command_line,
                                         .mode = ToMode(mode)});
         }

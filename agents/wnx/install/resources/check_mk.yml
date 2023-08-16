@@ -280,9 +280,10 @@ extensions:
     enabled: yes
 
     execution:
-        - name        : "robot_mk"                                       # just a name
-          exec        : "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe daemon" # command line
-          run         : auto                                             # yes, no or auto(run if present)
+        - name        : "robot_mk"                                  # just a name
+          binary      : "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe"   # what to run
+          command_line: "daemon"                                    # command line
+          run         : auto                                        # yes, no or auto(run if present)
 
 modules:
     enabled: yes

@@ -15,6 +15,7 @@ namespace cma::cfg::extensions {
 enum class Mode { yes, no, automatic };
 struct Extension {
     std::string name;
+    std::string binary;
     std::string command_line;
     Mode mode;
 };

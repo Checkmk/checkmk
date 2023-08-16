@@ -55,9 +55,6 @@ from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
 
-GLOBAL_SERVICE_REGION = "us-east-1"
-
-
 AWSStrings = bytes | str
 
 
@@ -7006,6 +7003,11 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "--proxy-password", help="The password for authentication of the proxy server"
     )
     parser.add_argument(
+        "--global-service-region",
+        help="Set this to your region when you are in 'us-gov-*' or 'cn-*' regions.",
+        default="us-east-1",
+    )
+    parser.add_argument(
         "--assume-role",
         action="store_true",
         help="Use STS AssumeRole to assume a different IAM role",
@@ -7302,7 +7304,7 @@ def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
 
 
 def _get_account_id(args: Args) -> str:
-    session = _create_session_from_args(args, GLOBAL_SERVICE_REGION)
+    session = _create_session_from_args(args, args.global_service_region)
     account_id = session.client("sts").get_caller_identity()["Account"]
     return account_id
 
@@ -7352,7 +7354,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         return 1
 
     for aws_services, aws_regions, aws_sections in [
-        (global_services, [GLOBAL_SERVICE_REGION], AWSSectionsUSEast),
+        (global_services, [args.global_service_region], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:

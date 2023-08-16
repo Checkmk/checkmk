@@ -82,6 +82,10 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
 
+    global_service_region = params.get("access", {}).get("global_service_region")
+    if global_service_region is not None:
+        args += ["--global-service-region", global_service_region]
+
     role_arn_id = params.get("access", {}).get("role_arn_id")
     if role_arn_id:
         args += ["--assume-role"]

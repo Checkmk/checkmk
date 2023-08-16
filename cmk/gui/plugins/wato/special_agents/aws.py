@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DictionaryEntry,
+    DropdownChoice,
     FixedValue,
     Integer,
     ListChoice,
@@ -487,6 +488,28 @@ def _valuespec_special_agents_aws() -> Migrate:
                     Dictionary(
                         title=_("Access to AWS API"),
                         elements=[
+                            (
+                                "global_service_region",
+                                DropdownChoice(
+                                    title=_("Use custom region for global AWS services"),
+                                    choices=[
+                                        (None, _("default (all normal AWS regions)")),
+                                    ]
+                                    + [
+                                        (x, x)
+                                        for x in (
+                                            "us-gov-east-1",
+                                            "us-gov-west-1",
+                                            "cn-north-1",
+                                            "cn-northwest-1",
+                                        )
+                                    ],
+                                    help=_(
+                                        "us-gov-* or cn-* regions have their own global services and may not reach the default one."
+                                    ),
+                                    default_value=None,
+                                ),
+                            ),
                             (
                                 "role_arn_id",
                                 Tuple(

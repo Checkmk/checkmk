@@ -1,0 +1,33 @@
+Title: aws: support for us-gov-* and cn-* regions
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1692185091
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p9
+
+The aws monitoring of checkmk differentiates between global and local services.
+For global services, and  for getting an access token via sts service, checkmk
+assumed that the global region "us-east-1" can be used.
+
+This assumption is wrong. When hosting aws services in the following regions,
+you have to use said regions to access the global services:
+
+<ul>
+<li>us-gov-east-1</li>
+<li>us-gov-west-1</li>
+<li>cn-north-1</li>
+<li>cn-northwest-1</li>
+</ul>
+
+The error message visible in the debug output of the aws special agent was:
+
+C+:
+An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.
+C-:
+
+The global service region can now be configured.
+

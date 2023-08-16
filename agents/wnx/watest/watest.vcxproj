@@ -335,6 +335,7 @@
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
+    <ClCompile Include="test-extensions.cpp" />
     <ClCompile Include="test-external-port.cpp" />
     <ClCompile Include="test-firewall.cpp" />
     <ClCompile Include="test-fmt_ext.cpp" />

@@ -755,6 +755,9 @@ TEST(AgentConfig, FactoryConfig) {
         EXPECT_FALSE(mrpe_parallel);
     }
 
+    // extensions
+    // NOT TESTED here, see test-extensions
+
     // modules
     {
         auto modules_table = cfg[groups::kModules];

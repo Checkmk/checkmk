@@ -37,6 +37,7 @@ constexpr std::string_view kLogWatchEvent = "logwatch";
 constexpr std::string_view kLocal = "local";
 constexpr std::string_view kSystem = "system";
 constexpr std::string_view kModules = "modules";
+constexpr std::string_view kExtensions = "extensions";
 }  // namespace groups
 
 // ALL name of variables in the YAML
@@ -186,6 +187,12 @@ const char *const kFileInfoPath = "path";  // sequence
 // group "mrpe"
 const char *const kMrpeConfig = "config";      // sequence
 const char *const kMrpeParallel = "parallel";  // boool
+
+// group "extensions"
+constexpr std::string_view kExtensionsExecution = "execution";  // list of nodes
+constexpr std::string_view kExecutionName = "name";             // string
+constexpr std::string_view kExecutionCmdLine = "exec";          // string
+constexpr std::string_view kExecutionRun = "run";               // "yes"|"no"|"auto"
 
 // group "modules"
 constexpr std::string_view kModulesTable = "table";  // list of nodes

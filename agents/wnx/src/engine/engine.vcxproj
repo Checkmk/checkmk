@@ -314,6 +314,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="eventlog\eventlogbase.h" />
     <ClInclude Include="eventlog\eventlogstd.h" />
     <ClInclude Include="eventlog\eventlogvista.h" />
+    <ClInclude Include="extensions.h" />
     <ClInclude Include="firewall.h" />
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
@@ -543,6 +544,7 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="eventlog\eventlogbase.cpp" />
     <ClCompile Include="eventlog\eventlogstd.cpp" />
     <ClCompile Include="eventlog\eventlogvista.cpp" />
+    <ClCompile Include="extensions.cpp" />
     <ClCompile Include="external_port.cpp" />
     <ClCompile Include="firewall.cpp" />
     <ClCompile Include="groups.cpp" />

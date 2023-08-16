@@ -41,6 +41,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
+    get_rulespec_allow_list,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
@@ -136,11 +137,15 @@ class ModeObjectParameters(WatoMode):
             self._show_service_info(all_rulesets=all_rulesets, service_result=service_result)
 
         last_maingroup = None
+        allow_list = get_rulespec_allow_list()
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(
                 rulespec_registry.get_by_group(groupname), key=lambda x: x.title or ""
             ):
+                if not allow_list.is_visible(rulespec.name):
+                    continue
+
                 if (rulespec.item_type == "service") == (not self._service):
                     continue  # This rule is not for hosts/services
 

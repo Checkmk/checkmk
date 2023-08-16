@@ -12,7 +12,7 @@ from typing import Any, Literal
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
-from cmk.utils.version import Edition, mark_edition_only
+from cmk.utils.version import Edition, edition, mark_edition_only
 
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -56,6 +56,11 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
 
+class AllowAll:
+    def is_visible(self, _rulespec_name: str) -> bool:
+        return True
+
+
 @dataclass(frozen=True)
 class RulespecAllowList:
     visible_rulespecs: set[str] = field(default_factory=set)
@@ -73,6 +78,12 @@ class RulespecAllowList:
 
     def is_visible(self, rulespec_name: str) -> bool:
         return rulespec_name in self.visible_rulespecs
+
+
+def get_rulespec_allow_list() -> RulespecAllowList | AllowAll:
+    if edition() is not Edition.CSE:
+        return AllowAll()
+    return RulespecAllowList.from_config()
 
 
 class RulespecBaseGroup(abc.ABC):

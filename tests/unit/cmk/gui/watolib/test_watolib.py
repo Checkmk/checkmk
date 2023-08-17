@@ -211,6 +211,7 @@ def test_registered_configvars():
             "alert_handler_event_types",
             "alert_handler_timeout",
             "alert_logging",
+            "apply_bake_revision",
             "bake_agents_on_restart",
             "cmc_authorization",
             "cmc_check_helpers",

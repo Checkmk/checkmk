@@ -49,6 +49,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
     encode_labels_for_livestatus,
+    filter_http_vars_for_simple_label_group,
     Label,
     label_help_text,
     Labels,
@@ -1301,7 +1302,9 @@ class HostLabelMatchPlugin(ABCLabelMatchPlugin):
             return None
         if for_view == "host" and row:
             return row["name"], [("host", row["name"])]
-        return "", [("host_label", self._user_inputs_to_http(used_filters[self.name]))]
+        return "", list(
+            filter_http_vars_for_simple_label_group(used_filters[self.name], "host").items()
+        )
 
 
 class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
@@ -1327,7 +1330,9 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
             return None
         if row:
             return "", [("service", row["description"])]
-        return "", [("service_label", self._user_inputs_to_http(used_filters[self.name]))]
+        return "", list(
+            filter_http_vars_for_simple_label_group(used_filters[self.name], "service").items()
+        )
 
 
 match_plugin_registry.register(HostLabelMatchPlugin())

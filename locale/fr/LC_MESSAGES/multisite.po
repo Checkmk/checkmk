@@ -6432,14 +6432,6 @@ msgstr "Archiver cet événement"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Sauvegardes Arcserve (allemand) (Windows)"
 
-#, python-format
-msgid ""
-"Are you sure you want to rename the host <b>%s</b>? This involves a restart "
-"of the monitoring core!"
-msgstr ""
-"Êtes-vous sûr de vouloir renommer l'hôte <b>%s</b> ? Cela implique un "
-"redémarrage du noyau de surveillance !"
-
 msgid "Area"
 msgstr "Zone"
 
@@ -7921,6 +7913,11 @@ msgstr "Paquets bloqués/s"
 
 msgid "Blocked connections"
 msgstr "Connexions bloquées"
+
+msgid ""
+"Blocked due to non-revertible change. Activate those changes to unblock "
+"reverting."
+msgstr ""
 
 msgid "Blocking rate"
 msgstr "Taux de blocage"
@@ -9909,6 +9906,11 @@ msgstr "Changez la plage de temps du graphique en : %s"
 
 msgid "Change infotext in check output"
 msgstr "Modifier l'infotexte dans la sortie de contrôle"
+
+msgid ""
+"Change is not revertible. Activate this change to unblock the reverting of "
+"pending changes."
+msgstr ""
 
 msgid "Change log (Werks)"
 msgstr "Journal des modifications (Werks)"
@@ -16787,9 +16789,6 @@ msgstr ""
 "tout en conservant le mot de passe original. Les notifications ne sont pas "
 "affectées par ce paramètre."
 
-msgid "Discard all pending changes"
-msgstr "Rejeter tous les changements en attente"
-
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
 msgstr "Changements en attente écartés (Restauré %s)"
@@ -17799,9 +17798,10 @@ msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Voulez-vous vraiment déplacer les règles sélectionnées ?"
 
+#, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
-"the monitoring core!"
+"the monitoring core and blocks %s until the next activation!"
 msgstr ""
 "Voulez-vous vraiment renommer les hôtes suivants ? Cela implique un "
 "redémarrage du noyau de surveillance !"
@@ -36820,6 +36820,10 @@ msgstr "Aucune limitation de version"
 msgid "No view defined with the name '%s'."
 msgstr "Aucune vue n'est définie avec le nom '%s'."
 
+#, fuzzy
+msgid "No, keep current name"
+msgstr "Nom actuel"
+
 msgid "No-TxCredits errors"
 msgstr "Erreurs de No-TxCredits"
 
@@ -43930,6 +43934,12 @@ msgstr ""
 msgid "Rename host %s"
 msgstr "Renommer l'hôte %s"
 
+msgid ""
+"Rename host?<br>Info: Renaming the host includes a restart of the monitoring "
+"core. While this change is pending on the central site, the reverting of "
+"pending changes is blocked."
+msgstr ""
+
 msgid "Rename multiple hosts"
 msgstr "Renommer plusieurs hôtes"
 
@@ -43948,10 +43958,6 @@ msgstr "Hôte renommé %s"
 #, python-format
 msgid "Renamed host from %s into %s."
 msgstr "L'hôte a été renommé de %s en %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "L'hôte a été renommé de %s en %s"
 
 #, python-format
 msgid "Renamed host in %d rulesets of folder %s"
@@ -44858,6 +44864,10 @@ msgstr "Code de retour classe 5xx (erreur de serveur)"
 
 msgid "Return process times within performance data"
 msgstr "Retour des temps de traitement dans les données de performance"
+
+#, fuzzy
+msgid "Revert all pending changes"
+msgstr "Rejeter tous les changements en attente"
 
 msgid "Revolutions per minute"
 msgstr "Révolutions par minute"
@@ -69070,6 +69080,10 @@ msgstr "Année"
 msgid "Yes"
 msgstr "Oui"
 
+#, fuzzy
+msgid "Yes, rename"
+msgstr "Nom du serveur Redis"
+
 msgid "Yes, that is exactly what I want."
 msgstr "Oui, c'est exactement ce que je veux."
 
@@ -70287,10 +70301,10 @@ msgstr ""
 "Il n'est pas possible d'effectuer des requêtes sur des plages de temps qui "
 "sont antérieures à l'horizon."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You cannot rename a host while you have pending changes on the central site "
-"(%s) or the site the host is monitored on (%s)."
+"You cannot rename a host while you have pending changes on the site the host "
+"is monitored on (%s)."
 msgstr ""
 "Vous ne pouvez pas renommer un hôte alors que vous avez des modifications en "
 "attente sur le site central (%s) ou le site sur lequel l'hôte est surveillé "
@@ -73174,6 +73188,18 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, python-format
+#~ msgid ""
+#~ "Are you sure you want to rename the host <b>%s</b>? This involves a "
+#~ "restart of the monitoring core!"
+#~ msgstr ""
+#~ "Êtes-vous sûr de vouloir renommer l'hôte <b>%s</b> ? Cela implique un "
+#~ "redémarrage du noyau de surveillance !"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "L'hôte a été renommé de %s en %s"
 
 #, python-format
 #~ msgid " (day %d)"

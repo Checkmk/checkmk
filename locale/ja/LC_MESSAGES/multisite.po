@@ -6233,14 +6233,6 @@ msgstr "このイベントをアーカイブする"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve(ドイツ語)バックアップ(Windows)"
 
-#, python-format
-msgid ""
-"Are you sure you want to rename the host <b>%s</b>? This involves a restart "
-"of the monitoring core!"
-msgstr ""
-"ホストの名前を <b>%s</b>に変更してもよろしいですか？これには、監視コアの再起"
-"動が含まれます！"
-
 msgid "Area"
 msgstr "範囲"
 
@@ -7707,6 +7699,11 @@ msgstr "ブロックされたパッケージ"
 
 msgid "Blocked connections"
 msgstr "ブロックされた接続"
+
+msgid ""
+"Blocked due to non-revertible change. Activate those changes to unblock "
+"reverting."
+msgstr ""
 
 msgid "Blocking rate"
 msgstr "ブロック率"
@@ -9622,6 +9619,11 @@ msgstr "グラフの時間範囲を次のように変更します: %s"
 
 msgid "Change infotext in check output"
 msgstr "チェック出力の情報テキストを変更する"
+
+msgid ""
+"Change is not revertible. Activate this change to unblock the reverting of "
+"pending changes."
+msgstr ""
 
 msgid "Change log (Werks)"
 msgstr "ログの変更(Werks)"
@@ -16339,9 +16341,6 @@ msgstr ""
 "パスワードを無効にすると、ユーザーは元のパスワードを保持したままログインでき"
 "なくなります。通知はこの設定の影響を受けません。"
 
-msgid "Discard all pending changes"
-msgstr "保留中の変更をすべて破棄します"
-
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
 msgstr "保留中の変更を破棄しました(%s を復元しました)"
@@ -17329,9 +17328,10 @@ msgstr "選択した集計を本当に移動しますか？"
 msgid "Do you really want to move the selected rules?"
 msgstr "選択したルールを本当に移動しますか?"
 
+#, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
-"the monitoring core!"
+"the monitoring core and blocks %s until the next activation!"
 msgstr ""
 "本当に次のホストの名前を変更してもよろしいですか？ これには、監視コアの再起動"
 "が含まれます！"
@@ -35911,6 +35911,10 @@ msgstr "バージョン制限なし"
 msgid "No view defined with the name '%s'."
 msgstr "%s'という名前で定義されたビューはありません。"
 
+#, fuzzy
+msgid "No, keep current name"
+msgstr "現在の名前"
+
 msgid "No-TxCredits errors"
 msgstr "No-TxCreditsエラー"
 
@@ -42883,6 +42887,12 @@ msgstr ""
 msgid "Rename host %s"
 msgstr "ホスト%sの名前を変更します"
 
+msgid ""
+"Rename host?<br>Info: Renaming the host includes a restart of the monitoring "
+"core. While this change is pending on the central site, the reverting of "
+"pending changes is blocked."
+msgstr ""
+
 msgid "Rename multiple hosts"
 msgstr "複数のホストの名前を変更する"
 
@@ -42901,10 +42911,6 @@ msgstr "ホスト%sの名前が変更されました"
 #, python-format
 msgid "Renamed host from %s into %s."
 msgstr "ホストの名前を%sから%sに変更しました。"
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "ホストの名前を %s から %s に変更"
 
 #, python-format
 msgid "Renamed host in %d rulesets of folder %s"
@@ -43783,6 +43789,10 @@ msgstr "リターンコードクラス 5xx（サーバーエラー）"
 
 msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
+
+#, fuzzy
+msgid "Revert all pending changes"
+msgstr "保留中の変更をすべて破棄します"
 
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
@@ -66845,6 +66855,10 @@ msgstr "年"
 msgid "Yes"
 msgstr "はい"
 
+#, fuzzy
+msgid "Yes, rename"
+msgstr "Redisサーバー名"
+
 msgid "Yes, that is exactly what I want."
 msgstr ""
 
@@ -67955,10 +67969,10 @@ msgstr ""
 msgid "You cannot query for time ranges that are before the horizon."
 msgstr "期間より前の時間範囲をクエリすることはできません。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You cannot rename a host while you have pending changes on the central site "
-"(%s) or the site the host is monitored on (%s)."
+"You cannot rename a host while you have pending changes on the site the host "
+"is monitored on (%s)."
 msgstr ""
 "中央サイト(%s)またはホスト監視サイト(%s)で保留中の変更がある間は、ホストの名"
 "前を変更することはできません。"
@@ -70785,6 +70799,18 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid ""
+#~ "Are you sure you want to rename the host <b>%s</b>? This involves a "
+#~ "restart of the monitoring core!"
+#~ msgstr ""
+#~ "ホストの名前を <b>%s</b>に変更してもよろしいですか？これには、監視コアの再"
+#~ "起動が含まれます！"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "ホストの名前を %s から %s に変更"
 
 #, python-format
 #~ msgid " (day %d)"

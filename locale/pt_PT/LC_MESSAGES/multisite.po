@@ -6375,14 +6375,6 @@ msgstr "Arquivar este evento"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve (alemão) backups (Windows)"
 
-#, python-format
-msgid ""
-"Are you sure you want to rename the host <b>%s</b>? This involves a restart "
-"of the monitoring core!"
-msgstr ""
-"Tem a certeza que quer mudar o nome do anfitrião <b>%s</b>? Isso envolve um "
-"reinício do núcleo de monitoramento!"
-
 msgid "Area"
 msgstr "Área"
 
@@ -7858,6 +7850,11 @@ msgstr "Pacotes bloqueados/s"
 
 msgid "Blocked connections"
 msgstr "Ligações bloqueadas"
+
+msgid ""
+"Blocked due to non-revertible change. Activate those changes to unblock "
+"reverting."
+msgstr ""
 
 msgid "Blocking rate"
 msgstr "Taxa de bloqueio"
@@ -9817,6 +9814,11 @@ msgstr "Alterar o temporizador do gráfico para: %s"
 
 msgid "Change infotext in check output"
 msgstr "Modificar texto info na saída de verificação"
+
+msgid ""
+"Change is not revertible. Activate this change to unblock the reverting of "
+"pending changes."
+msgstr ""
 
 msgid "Change log (Werks)"
 msgstr "Registo de alterações (Werks)"
@@ -16621,9 +16623,6 @@ msgstr ""
 "Desativar a senha impedirá que um usuário faça o login enquanto mantém a "
 "senha original. Notificações não são afetadas por esta configuração."
 
-msgid "Discard all pending changes"
-msgstr "Descartar todas as alterações pendentes"
-
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
 msgstr "Descartadas alterações pendentes (Restaurado %s)"
@@ -17619,9 +17618,10 @@ msgstr "Você realmente quer mover as agregações selecionadas?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Você realmente quer mover as regras selecionadas?"
 
+#, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
-"the monitoring core!"
+"the monitoring core and blocks %s until the next activation!"
 msgstr ""
 "Quer mesmo mudar o nome dos seguintes anfitriões? Isto implica um reinício "
 "do núcleo de monitorização!"
@@ -36446,6 +36446,10 @@ msgstr "Sem limitação de versão"
 msgid "No view defined with the name '%s'."
 msgstr "Nenhuma vista definida com o nome \"%s\"."
 
+#, fuzzy
+msgid "No, keep current name"
+msgstr "Nome atual"
+
 msgid "No-TxCredits errors"
 msgstr "Erros de No-TxCredits"
 
@@ -43475,6 +43479,12 @@ msgstr ""
 msgid "Rename host %s"
 msgstr "Renomear host %s"
 
+msgid ""
+"Rename host?<br>Info: Renaming the host includes a restart of the monitoring "
+"core. While this change is pending on the central site, the reverting of "
+"pending changes is blocked."
+msgstr ""
+
 msgid "Rename multiple hosts"
 msgstr "Renomear múltiplos anfitriões"
 
@@ -43493,10 +43503,6 @@ msgstr "Renomeado %s anfitrião"
 #, python-format
 msgid "Renamed host from %s into %s."
 msgstr "Renomeado hospedeiro de %s para %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Renomeado hospedeiro de %s para %s"
 
 #, python-format
 msgid "Renamed host in %d rulesets of folder %s"
@@ -44391,6 +44397,10 @@ msgstr "Código de retorno classe 5xx (erro do servidor)"
 
 msgid "Return process times within performance data"
 msgstr "Tempos de processo de retorno dentro dos dados de desempenho"
+
+#, fuzzy
+msgid "Revert all pending changes"
+msgstr "Descartar todas as alterações pendentes"
 
 msgid "Revolutions per minute"
 msgstr "Revoluções por minuto"
@@ -68227,6 +68237,10 @@ msgstr "Ano"
 msgid "Yes"
 msgstr "Sim"
 
+#, fuzzy
+msgid "Yes, rename"
+msgstr "Nome do servidor Redis"
+
 msgid "Yes, that is exactly what I want."
 msgstr "Sim, é exactamente isso que eu quero."
 
@@ -69402,8 +69416,8 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"You cannot rename a host while you have pending changes on the central site "
-"(%s) or the site the host is monitored on (%s)."
+"You cannot rename a host while you have pending changes on the site the host "
+"is monitored on (%s)."
 msgstr ""
 "Não é possível renomear um host enquanto houver alterações pendentes no site "
 "central (%s) ou no site em que o host é monitorado (%s)."
@@ -72259,6 +72273,18 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid ""
+#~ "Are you sure you want to rename the host <b>%s</b>? This involves a "
+#~ "restart of the monitoring core!"
+#~ msgstr ""
+#~ "Tem a certeza que quer mudar o nome do anfitrião <b>%s</b>? Isso envolve "
+#~ "um reinício do núcleo de monitoramento!"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Renomeado hospedeiro de %s para %s"
 
 #, python-format
 #~ msgid " (day %d)"

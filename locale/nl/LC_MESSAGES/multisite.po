@@ -6355,14 +6355,6 @@ msgstr "Archiveer dit evenement"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve (Duitse) back-ups (Windows)"
 
-#, python-format
-msgid ""
-"Are you sure you want to rename the host <b>%s</b>? This involves a restart "
-"of the monitoring core!"
-msgstr ""
-"Weet u zeker dat u de host <b>%s</b> wilt hernoemen? Dit impliceert een "
-"herstart van de monitoring core!"
-
 msgid "Area"
 msgstr "Gebied"
 
@@ -7833,6 +7825,11 @@ msgstr "Geblokkeerde pakketten/s"
 
 msgid "Blocked connections"
 msgstr "Geblokkeerde verbindingen"
+
+msgid ""
+"Blocked due to non-revertible change. Activate those changes to unblock "
+"reverting."
+msgstr ""
 
 msgid "Blocking rate"
 msgstr "Blokkeringspercentage"
@@ -9788,6 +9785,11 @@ msgstr "Verander de timer van de grafiek in: %s"
 
 msgid "Change infotext in check output"
 msgstr "Verander infotekst in controle output"
+
+msgid ""
+"Change is not revertible. Activate this change to unblock the reverting of "
+"pending changes."
+msgstr ""
 
 msgid "Change log (Werks)"
 msgstr "Wijzigingslogboek (Werks)"
@@ -16585,9 +16587,6 @@ msgstr ""
 "terwijl het oorspronkelijke wachtwoord behouden blijft. Meldingen worden "
 "niet beïnvloed door deze instelling."
 
-msgid "Discard all pending changes"
-msgstr "Vernietig alle hangende wijzigingen"
-
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
 msgstr "In behandeling zijnde wijzigingen verwijderd (Hersteld %s)"
@@ -17576,9 +17575,10 @@ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
 
+#, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
-"the monitoring core!"
+"the monitoring core and blocks %s until the next activation!"
 msgstr ""
 "Wil je echt de volgende hosts hernoemen? Dit impliceert een herstart van de "
 "monitoring core!"
@@ -36375,6 +36375,10 @@ msgstr "Geen versiebeperking"
 msgid "No view defined with the name '%s'."
 msgstr "Geen view gedefinieerd met de naam '%s'."
 
+#, fuzzy
+msgid "No, keep current name"
+msgstr "Huidige naam"
+
 msgid "No-TxCredits errors"
 msgstr "No-TxCredits fouten"
 
@@ -43379,6 +43383,12 @@ msgstr ""
 msgid "Rename host %s"
 msgstr "Hernoem host %s"
 
+msgid ""
+"Rename host?<br>Info: Renaming the host includes a restart of the monitoring "
+"core. While this change is pending on the central site, the reverting of "
+"pending changes is blocked."
+msgstr ""
+
 msgid "Rename multiple hosts"
 msgstr "Hernoem meerdere hosts"
 
@@ -43397,10 +43407,6 @@ msgstr "Hernoemde host %s"
 #, python-format
 msgid "Renamed host from %s into %s."
 msgstr "Hernoemde host van %s in %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Hernoemde host van %s naar %s"
 
 #, python-format
 msgid "Renamed host in %d rulesets of folder %s"
@@ -44271,6 +44277,10 @@ msgstr "Retourcode klasse 5xx (serverfout)"
 
 msgid "Return process times within performance data"
 msgstr "Terugkeren procestijden binnen prestatiegegevens"
+
+#, fuzzy
+msgid "Revert all pending changes"
+msgstr "Vernietig alle hangende wijzigingen"
 
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
@@ -68141,6 +68151,10 @@ msgstr "Jaar"
 msgid "Yes"
 msgstr "Ja"
 
+#, fuzzy
+msgid "Yes, rename"
+msgstr "Redis server naam"
+
 msgid "Yes, that is exactly what I want."
 msgstr "Ja, dat is precies wat ik wil."
 
@@ -69326,10 +69340,10 @@ msgid "You cannot query for time ranges that are before the horizon."
 msgstr ""
 "U kunt geen opzoekingen doen voor tijdbereiken die vóór de horizon liggen."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You cannot rename a host while you have pending changes on the central site "
-"(%s) or the site the host is monitored on (%s)."
+"You cannot rename a host while you have pending changes on the site the host "
+"is monitored on (%s)."
 msgstr ""
 "U kunt een host niet hernoemen terwijl u nog wijzigingen op de centrale site "
 "(%s) of de site waarop de host wordt bewaakt (%s) heeft lopen."
@@ -72185,6 +72199,18 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid ""
+#~ "Are you sure you want to rename the host <b>%s</b>? This involves a "
+#~ "restart of the monitoring core!"
+#~ msgstr ""
+#~ "Weet u zeker dat u de host <b>%s</b> wilt hernoemen? Dit impliceert een "
+#~ "herstart van de monitoring core!"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Hernoemde host van %s naar %s"
 
 #, python-format
 #~ msgid " (day %d)"

@@ -6405,14 +6405,6 @@ msgstr "Arhivați acest eveniment"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Copii de rezervă Arcserve (germană) (Windows)"
 
-#, python-format
-msgid ""
-"Are you sure you want to rename the host <b>%s</b>? This involves a restart "
-"of the monitoring core!"
-msgstr ""
-"Sunteți sigur că doriți să redenumiți gazda <b>%s</b>? Acest lucru implică o "
-"repornire a nucleului de monitorizare!"
-
 msgid "Area"
 msgstr "Zona"
 
@@ -7891,6 +7883,11 @@ msgstr "Pachete blocate/s"
 
 msgid "Blocked connections"
 msgstr "Conexiuni blocate"
+
+msgid ""
+"Blocked due to non-revertible change. Activate those changes to unblock "
+"reverting."
+msgstr ""
 
 msgid "Blocking rate"
 msgstr "Rata de blocare"
@@ -9871,6 +9868,11 @@ msgstr "Schimbați intervalul de timp al graficului la: %s."
 
 msgid "Change infotext in check output"
 msgstr "Schimbarea infotextului în ieșirea de control"
+
+msgid ""
+"Change is not revertible. Activate this change to unblock the reverting of "
+"pending changes."
+msgstr ""
 
 msgid "Change log (Werks)"
 msgstr "Jurnal de modificări (Werks)"
@@ -16723,9 +16725,6 @@ msgstr ""
 "același timp parola originală. Notificările nu sunt afectate de această "
 "setare."
 
-msgid "Discard all pending changes"
-msgstr "Renunță la toate modificările în așteptare"
-
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
 msgstr "Modificări în așteptare respinse (Restabilit %s)"
@@ -17734,9 +17733,10 @@ msgstr "Chiar doriți să mutați agregările selectate?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Chiar doriți să mutați regulile selectate?"
 
+#, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
-"the monitoring core!"
+"the monitoring core and blocks %s until the next activation!"
 msgstr ""
 "Chiar doriți să redenumiți următoarele gazde? Acest lucru implică o "
 "repornire a nucleului de monitorizare!"
@@ -36690,6 +36690,10 @@ msgstr "Fără limitare de versiune"
 msgid "No view defined with the name '%s'."
 msgstr "Nu există nicio vizualizare definită cu numele '%s'."
 
+#, fuzzy
+msgid "No, keep current name"
+msgstr "Numele curent"
+
 msgid "No-TxCredits errors"
 msgstr "Erori No-TxCredits"
 
@@ -43768,6 +43772,12 @@ msgstr ""
 msgid "Rename host %s"
 msgstr "Redenumiți gazda %s"
 
+msgid ""
+"Rename host?<br>Info: Renaming the host includes a restart of the monitoring "
+"core. While this change is pending on the central site, the reverting of "
+"pending changes is blocked."
+msgstr ""
+
 msgid "Rename multiple hosts"
 msgstr "Redenumiți mai multe gazde"
 
@@ -43785,10 +43795,6 @@ msgstr "Gazdă redenumită %s"
 
 #, fuzzy, python-format
 msgid "Renamed host from %s into %s."
-msgstr "A redenumit gazda din %s în %s."
-
-#, fuzzy, python-format
-msgid "Renamed host from %s to %s"
 msgstr "A redenumit gazda din %s în %s."
 
 #, fuzzy, python-format
@@ -44686,6 +44692,10 @@ msgstr "Cod de returnare clasa 5xx (eroare de server)"
 
 msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
+
+#, fuzzy
+msgid "Revert all pending changes"
+msgstr "Renunță la toate modificările în așteptare"
 
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
@@ -68800,6 +68810,10 @@ msgstr "Anul"
 msgid "Yes"
 msgstr "Da"
 
+#, fuzzy
+msgid "Yes, rename"
+msgstr "Numele serverului Redis"
+
 msgid "Yes, that is exactly what I want."
 msgstr "Da, este exact ceea ce vreau."
 
@@ -69978,10 +69992,10 @@ msgstr ""
 "Nu puteți efectua interogări pentru intervale de timp care sunt anterioare "
 "orizontului."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You cannot rename a host while you have pending changes on the central site "
-"(%s) or the site the host is monitored on (%s)."
+"You cannot rename a host while you have pending changes on the site the host "
+"is monitored on (%s)."
 msgstr ""
 "Nu puteți redenumi o gazdă în timp ce aveți modificări în așteptare pe site-"
 "ul central (%s) sau pe site-ul pe care este monitorizată gazda (%s)."
@@ -72873,6 +72887,18 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, python-format
+#~ msgid ""
+#~ "Are you sure you want to rename the host <b>%s</b>? This involves a "
+#~ "restart of the monitoring core!"
+#~ msgstr ""
+#~ "Sunteți sigur că doriți să redenumiți gazda <b>%s</b>? Acest lucru "
+#~ "implică o repornire a nucleului de monitorizare!"
+
+#, fuzzy, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "A redenumit gazda din %s în %s."
 
 #, python-format
 #~ msgid " (day %d)"

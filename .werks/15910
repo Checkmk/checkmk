@@ -1,0 +1,15 @@
+Title: agent_aws: DNSName not available in load balancer info
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1692275378
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The agent_aws special agent used to crash when the DNSName was not available in the load balancer information.
+This happened for Gateway Load Balancers. These load balancers will now be skipped.
+
+

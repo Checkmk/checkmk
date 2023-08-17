@@ -1,15 +1,28 @@
 include $(REPO_PATH)/defines.make
 
 PYTHON3_MODULES := python3-modules
+# Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
+PYTHON3_MODULES_VERS := 1.1
+PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 
-PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES)
-PYTHON3_MODULES_BUILD_DIR := $(BAZEL_BIN)/omd/packages/$(PYTHON3_MODULES)/$(PYTHON3_MODULES)
+PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
+	$(wildcard $(REPO_PATH)/omd/packages/python3-modules/python3-modules.make) \
+	$(wildcard $(REPO_PATH)/agent-receiver/*.py) \
+	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
 
-PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES)-build
-PYTHON3_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES)-install-intermediate
-PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES)-install
+# Increase the number before the "-" to enforce a recreation of the build cache
+PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,19,$(PYTHON3_MODULES_DEPS))
 
-PACKAGE_PYTHON3_MODULES_PYTHON_DEPS := $(OPENSSL_CACHE_PKG_PROCESS) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_CACHE_PKG_PROCESS)
+PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
+PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
+PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
+PYTHON3_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install-intermediate
+PYTHON3_MODULES_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-cache-pkg-process
+PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
+
+PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 
 # Used by other OMD packages
 PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
@@ -21,24 +34,121 @@ PACKAGE_PYTHON3_MODULES_PYTHON         := \
 	LDFLAGS="$$LDFLAGS $(PACKAGE_PYTHON_LDFLAGS)" \
 	LD_LIBRARY_PATH="$$LD_LIBRARY_PATH:$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" \
 	$(PACKAGE_PYTHON_EXECUTABLE)
+PACKAGE_PYTHON3_MODULES_PYTHON_DEPS := $(OPENSSL_CACHE_PKG_PROCESS) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_CACHE_PKG_PROCESS)
 
-# on Centos8 we don't build our own OpenSSL, so we have to inform the build about it
-ifeq ($(DISTRO_CODE),el8)
-OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define no-own-openssl=true"
-endif
-
-# on Sles Distros we temporarily need to deactivate SSL checking
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
-OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
-endif
-
-$(PYTHON3_MODULES_BUILD):
-	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules-modify
-
-$(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(RSYNC) $(PYTHON3_MODULES_BUILD_DIR)/ $(PYTHON3_MODULES_INSTALL_DIR)/
+$(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCESS) $(FREETDS_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_PATCHING)
+	$(RM) -r $(PYTHON3_MODULES_BUILD_DIR)
+	$(MKDIR) $(PYTHON3_MODULES_BUILD_DIR)
+	$(MKDIR) $(BUILD_HELPER_DIR)
+	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
+	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
+            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) \
+	    `: rrdtool module is built with rrdtool omd package` \
+	    `: protobuf module is built with protobuf omd package` \
+	    `: fixup git local dependencies` \
+		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver|pymssql)' > requirements-dist.txt ; \
+# rpath: Create some dummy rpath which has enough space for later replacement
+# by the final rpath
+	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
+	    export PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" ; \
+	    export PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) ; \
+	    unset DESTDIR MAKEFLAGS ; \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \
+	    `: -Wl,--strip-debug - Shrink the built libraries` \
+	    export LDFLAGS="-Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	    export CFLAGS="-I$(PACKAGE_PYTHON_INCLUDE_PATH) $$CFLAGS" ; \
+	    `: Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package` \
+	    `: Keep in sync with scripts/run-pipenv` \
+	    export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4 ; \
+	    export NPY_NUM_BUILD_JOBS=4 ; \
+	    `: Make git command work with system ssl while we keep using our own for building` \
+            export PATH="$(PYTHON3_MODULES_WORK_DIR):$$PATH" ; \
+            mkdir -p "$(PYTHON3_MODULES_WORK_DIR)" ; \
+            install -m 755 "$(PACKAGE_DIR)/omd/use_system_openssl" "$(PYTHON3_MODULES_WORK_DIR)/git" ; \
+		GIT_SSL_CAINFO=$(REPO_PATH)/omd/packages/python3-modules/github-com.pem \
+		$(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		git+https://github.com/JonasScharpf/pymssql.git@cython3_fix_v227 ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		-r requirements-dist.txt ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		"$(REPO_PATH)/agent-receiver/"
+# For some highly obscure unknown reason some files end up world-writable. Fix that!
+	chmod -R o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages
+# Cleanup some unwanted files (example scripts)
+	find $(PYTHON3_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/snmpsim
+# Cleanup unneeded test files of numpy
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
+# Fix python interpreter for kept scripts
+	$(SED) -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+# pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
+# build the shebang of the scripts installed to bin. When executed via our CI
+# containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
+# case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
+# fit into the shebang. Let's also cleanup this case.
+	$(SED) -i -z "s|^#\!/bin/sh\n'''exec.*python3 \"\$$0\" \"\$$@\"\n' '''|#\!/usr/bin/env python3|" $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 	$(TOUCH) $@
 
-$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
+$(PYTHON3_MODULES_PATCHING): $(PYTHON3_MODULES_UNPACK)
+	$(TOUCH) $@
+
+$(PYTHON3_MODULES_UNPACK):
+	$(TOUCH) $@
+
+$(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
+	$(TOUCH) $@
+
+PYTHON3_MODULES_CACHE_PKG_PATH := $(call cache_pkg_path,$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
+
+$(PYTHON3_MODULES_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID),$(PYTHON3_MODULES_INTERMEDIATE_INSTALL))
+
+$(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR))
+	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
+# Ensure that the rpath of the python binary and dynamic libs always points to the current version path
+	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
+	    patchelf --set-rpath "$(OMD_ROOT)/lib" $$F; \
+	    echo -n "Test rpath of $$F..." ; \
+		if patchelf --print-rpath "$$F" | grep "$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		    echo OK ; \
+		else \
+		    echo "ERROR ($$(patchelf --print-rpath $$F))"; \
+		    exit 1 ; \
+		fi \
+	done
+	$(TOUCH) $@
+
+$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_CACHE_PKG_PROCESS)
 	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

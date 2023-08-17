@@ -2792,7 +2792,12 @@ class ELBSummaryGeneric(AWSSection):
     ) -> AWSComputedContent:
         content_by_piggyback_hosts: dict[str, str] = {}
         for load_balancer in raw_content.content:
-            content_by_piggyback_hosts.setdefault(load_balancer["DNSName"], load_balancer)
+            if (dns_name := load_balancer.get("DNSName")) is None:
+                # SUP-15023
+                # We skip "gateway" type load balancers
+                # because they don't provide DNSName information
+                continue
+            content_by_piggyback_hosts.setdefault(dns_name, load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:

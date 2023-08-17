@@ -518,7 +518,6 @@ class CREConfig:
     wato_upload_insecure_snapshots: bool = False
     wato_hide_varnames: bool = True
     wato_hide_help_in_lists: bool = True
-    wato_activate_changes_concurrency: str = "auto"
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15

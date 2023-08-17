@@ -1301,12 +1301,9 @@ class HostLabelMatchPlugin(ABCLabelMatchPlugin):
             return None
         if for_view == "host" and row:
             return row["name"], [("host", row["name"])]
-        return "", [
-            (key, value)
-            for key, value in filter_http_vars_for_simple_label_group(
-                used_filters[self.name], "host"
-            ).items()
-        ]
+        return "", list(
+            filter_http_vars_for_simple_label_group(used_filters[self.name], "host").items()
+        )
 
 
 class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
@@ -1332,12 +1329,9 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
             return None
         if row:
             return "", [("service", row["description"])]
-        return "", [
-            (key, value)
-            for key, value in filter_http_vars_for_simple_label_group(
-                used_filters[self.name], "service"
-            ).items()
-        ]
+        return "", list(
+            filter_http_vars_for_simple_label_group(used_filters[self.name], "service").items()
+        )
 
 
 match_plugin_registry.register(HostLabelMatchPlugin())

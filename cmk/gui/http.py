@@ -242,6 +242,8 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    # TODO investigate why there are so many form_parts
+    max_form_parts = 10000
     # pylint: disable=too-many-ancestors
 
     def __init__(self, environ, populate_request=True, shallow=False):

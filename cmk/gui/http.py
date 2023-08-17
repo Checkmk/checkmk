@@ -313,6 +313,8 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    # TODO investigate why there are so many form_parts
+    max_form_parts = 10000
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

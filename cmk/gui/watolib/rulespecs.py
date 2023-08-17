@@ -1287,21 +1287,22 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
-        yield from (
-            MatchItem(
-                title=rulespec.title,
-                topic=self._topic(rulespec),
-                url=makeuri_contextless(
-                    request,
-                    [("mode", "edit_ruleset"), ("varname", rulespec.name)],
-                    filename="wato.py",
-                ),
-                match_texts=[rulespec.title, rulespec.name],
-            )
-            for group in self._rulespec_registry.get_all_groups()
-            for rulespec in self._rulespec_registry.get_by_group(group)
-            if rulespec.title
-        )
+        allow_list = get_rulespec_allow_list()
+        for group in self._rulespec_registry.get_all_groups():
+            for rulespec in self._rulespec_registry.get_by_group(group):
+                if not rulespec.title or not allow_list.is_visible(rulespec.name):
+                    continue
+
+                yield MatchItem(
+                    title=rulespec.title,
+                    topic=self._topic(rulespec),
+                    url=makeuri_contextless(
+                        request,
+                        [("mode", "edit_ruleset"), ("varname", rulespec.name)],
+                        filename="wato.py",
+                    ),
+                    match_texts=[rulespec.title, rulespec.name],
+                )
 
     @staticmethod
     def is_affected_by_change(_change_action_name: str) -> bool:

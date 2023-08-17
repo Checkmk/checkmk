@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -10,7 +12,16 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, TextInput, ValueSpec
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    Migrate,
+    MonitoringState,
+    TextInput,
+    Tuple,
+    ValueSpec,
+)
 
 
 def _item_spec() -> ValueSpec:
@@ -45,11 +56,57 @@ rulespec_registry.register(
 
 
 def _vs_smoke() -> ValueSpec:
-    return Dictionary(
-        title=_("Smoke levels"),
-        elements=[("levels", Levels(title=_("Smoke Levels")))],
-        required_keys=["levels"],
+    return Migrate(
+        Dictionary(
+            title=_("Smoke monitoring"),
+            elements=[
+                (
+                    "smoke_handling",
+                    CascadingDropdown(
+                        title=_("Smoke handling"),
+                        choices=[
+                            (
+                                "binary",
+                                _("Set monitoring states for no-smoke and smoke cases"),
+                                Tuple(
+                                    elements=[
+                                        MonitoringState(
+                                            title=_("Monitoring state if no smoke is detected"),
+                                        ),
+                                        MonitoringState(
+                                            title=_("Monitoring state if smoke is detected"),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "levels",
+                                _("Configure levels on smoke"),
+                                SimpleLevels(title=_("Smoke Levels")),
+                            ),
+                        ],
+                        sorted=False,
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=_migrate_smoke,
     )
+
+
+def _migrate_smoke(
+    p: dict[Literal["levels"] | Literal["smoke_handling"], object]
+) -> dict[Literal["smoke_handling"], object]:
+    if "smoke_handling" in p:
+        return {"smoke_handling": p["smoke_handling"]}
+    match p["levels"]:
+        case None:
+            return {"smoke_handling": ("levels", None)}
+        case (warn, crit):
+            return {"smoke_handling": ("levels", (warn, crit))}
+        case _:
+            return {"smoke_handling": ("binary", (0, 2))}
 
 
 rulespec_registry.register(

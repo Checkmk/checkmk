@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
+import pytest
+
 from cmk.base.plugins.agent_based import etherbox
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
 def test_parsing() -> None:
@@ -55,7 +58,11 @@ def test_check_smoke_sensor_type_not_found() -> None:
     )
     assert section
     results = list(
-        etherbox.check_etherbox_smoke(item="9.6", section=section, params={"levels": (0, 0)})
+        etherbox.check_etherbox_smoke(
+            item="9.6",
+            section=section,
+            params={"smoke_handling": ("binary", (0, 2))},
+        )
     )
     assert set(results) == {
         Result(state=State.UNKNOWN, summary="Sensor type changed 9.6"),
@@ -73,30 +80,73 @@ def test_check_smoke_sensor_not_found() -> None:
     )
     assert section
     results = list(
-        etherbox.check_etherbox_smoke(item="9.6", section=section, params={"levels": (0, 0)})
+        etherbox.check_etherbox_smoke(
+            item="9.6",
+            section=section,
+            params={"smoke_handling": ("binary", (0, 2))},
+        )
     )
     assert set(results) == {
         Result(state=State.UNKNOWN, summary="Sensor not found"),
     }
 
 
-def test_check_smoke() -> None:
-    section = etherbox.etherbox_convert(
-        [
-            [["0"]],
+@pytest.mark.parametrize(
+    ["section", "params", "expected_result"],
+    [
+        pytest.param(
+            etherbox.Section(
+                unit_of_measurement="c",
+                sensor_data={"9": {"6": etherbox.SensorData(name="n", value=0)}},
+            ),
+            {"smoke_handling": ("binary", (0, 2))},
             [
-                ["1", "9", "n", "6", "42"],
+                Result(state=State.OK, summary="No smoke detected"),
+                Metric("smoke", 0.0),
             ],
-        ]
+            id="binary, no smoke detected",
+        ),
+        pytest.param(
+            etherbox.Section(
+                unit_of_measurement="c",
+                sensor_data={"9": {"6": etherbox.SensorData(name="n", value=42)}},
+            ),
+            {"smoke_handling": ("binary", (0, 2))},
+            [
+                Result(state=State.CRIT, summary="Smoke detected"),
+                Metric("smoke", 42.0),
+            ],
+            id="binary, smoke detected",
+        ),
+        pytest.param(
+            etherbox.Section(
+                unit_of_measurement="c",
+                sensor_data={"9": {"6": etherbox.SensorData(name="n", value=42)}},
+            ),
+            {"smoke_handling": ("levels", (0, 0))},
+            [
+                Result(state=State.CRIT, summary="Smoke level: 42.00 (warn/crit at 0.00/0.00)"),
+                Metric("smoke", 42.0, levels=(0, 0)),
+            ],
+            id="levels",
+        ),
+    ],
+)
+def test_check_smoke(
+    section: etherbox.Section,
+    params: etherbox.SmokeParams,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            etherbox.check_etherbox_smoke(
+                item="9.6",
+                section=section,
+                params=params,
+            )
+        )
+        == expected_result
     )
-    assert section
-    results = list(
-        etherbox.check_etherbox_smoke(item="9.6", section=section, params={"levels": (0, 0)})
-    )
-    assert set(results) == {
-        Result(state=State.CRIT, summary="Smoke Alarm: 42.00 (warn/crit at 0.00/0.00)"),
-        Metric("smoke", 42.0, levels=(0, 0)),
-    }
 
 
 def test_check_switch() -> None:

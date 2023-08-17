@@ -20,6 +20,7 @@
 #include "common/wtools.h"
 #include "common/wtools_service.h"
 #include "common/yaml.h"
+#include "extensions.h"
 #include "external_port.h"
 #include "firewall.h"
 #include "install_api.h"
@@ -742,6 +743,14 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         } else {
             mc_.LoadDefault();
         }
+
+        std::vector<fs::path> paths;
+        if (is_service) {
+            paths = cfg::extensions::StartAll(
+                cfg::extensions::GetAll(cfg::GetLoadedConfig()));
+        }
+
+        ON_OUT_OF_SCOPE(cfg::extensions::KillAll(paths));
 
         preStartBinaries();
 

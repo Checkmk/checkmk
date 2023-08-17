@@ -20,6 +20,9 @@ struct Extension {
     Mode mode;
 };
 
-std::vector<Extension> GetExtensions(YAML::Node node);
+std::vector<Extension> GetAll(YAML::Node node);
+std::vector<std::filesystem::path> StartAll(
+    const std::vector<Extension> &extensions);
+void KillAll(const std::vector<std::filesystem::path> &paths);
 
 }  // namespace cma::cfg::extensions

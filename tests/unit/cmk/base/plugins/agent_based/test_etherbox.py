@@ -229,7 +229,7 @@ def test_check_voltage() -> None:
     )
     assert set(results) == {
         Metric("voltage", 42.0, levels=(0.0, 0.0)),
-        Result(state=State.CRIT, summary="42.00 (warn/crit at 0.00/0.00)"),
+        Result(state=State.CRIT, summary="42.00 V (warn/crit at 0.00 V/0.00 V)"),
     }
 
 

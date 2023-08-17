@@ -44,7 +44,6 @@ API_DOMAIN = Literal[
     "contact_group_config",
     "site_connection",
     "notification_rule",
-    "comment",
 ]
 
 
@@ -1524,149 +1523,6 @@ class RuleNotificationClient(RestApiClient):
         )
 
 
-class CommentClient(RestApiClient):
-    domain: API_DOMAIN = "comment"
-
-    def delete(
-        self,
-        site_id: str,
-        delete_type: str,
-        comment_id: Any | None = None,
-        host_name: str | None = None,
-        service_descriptions: Sequence[str] | None = None,
-        query: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        body = _only_set_keys(
-            {
-                "site_id": site_id,
-                "delete_type": delete_type,
-                "comment_id": comment_id,
-                "host_name": host_name,
-                "service_descriptions": service_descriptions,
-                "query": query,
-            }
-        )
-
-        res = self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/delete/invoke",
-            body=body,
-            expect_ok=expect_ok,
-        )
-
-        if expect_ok:
-            res.assert_status_code(204)
-
-        return res
-
-    def create_for_host(
-        self,
-        comment: str,
-        comment_type: str = "host",
-        host_name: str | None = None,
-        query: Mapping[str, Any] | str | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        body: dict[str, Any] = _only_set_keys(
-            {
-                "comment": comment,
-                "comment_type": comment_type,
-                "host_name": host_name,
-                "query": query,
-            }
-        )
-
-        return self._create(body, "host", expect_ok)
-
-    def create_for_service(
-        self,
-        comment: str,
-        comment_type: str = "service",
-        host_name: str | None = None,
-        query: Mapping[str, Any] | str | None = None,
-        service_description: str | None = None,
-        persistent: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        body: dict[str, Any] = _only_set_keys(
-            {
-                "comment_type": comment_type,
-                "comment": comment,
-                "host_name": host_name,
-                "query": query,
-                "persistent": persistent,
-                "service_description": service_description,
-            }
-        )
-
-        return self._create(body, "service", expect_ok)
-
-    def _create(self, body: dict[str, Any], collection: str, expect_ok: bool) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/{collection}",
-            body=body,
-            expect_ok=expect_ok,
-        )
-
-    def get_all(
-        self,
-        host_name: str | None = None,
-        service_description: str | None = None,
-        query: Mapping[str, Any] | str | None = None,
-        site_id: str | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        q: Mapping[str, Any] = _only_set_keys(
-            {
-                "host_name": host_name,
-                "service_description": service_description,
-                "query": query,
-                "site_id": site_id,
-            }
-        )
-
-        return self._get("all", q, expect_ok)
-
-    def get_host(
-        self,
-        host_name: str | None = None,
-        service_description: str | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        query: Mapping[str, Any] = _only_set_keys(
-            {"host_name": host_name, "service_description": service_description}
-        )
-
-        return self._get("host", query, expect_ok)
-
-    def get_service(self, expect_ok: bool = True) -> Response:
-        return self._get("service", None, expect_ok)
-
-    def _get(
-        self, collection: str, query: Mapping[str, Any] | None = None, expect_ok: bool = True
-    ) -> Response:
-        return self.request(
-            "get",
-            url=f"/domain-types/{self.domain}/collections/{collection}",
-            query_params=query if query else None,
-            expect_ok=expect_ok,
-        )
-
-    def get(
-        self, comment_id: str | int, site_id: str | None = None, expect_ok: bool = True
-    ) -> Response:
-        # TODO: Agregar el parámetro site_id: str
-        qp = _only_set_keys({"site_id": site_id})
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/{comment_id}",
-            query_params=qp if qp else None,
-            expect_ok=expect_ok,
-        )
-
-
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -1688,7 +1544,6 @@ class ClientRegistry:
     ContactGroup: ContactGroupClient
     SiteManagement: SiteManagementClient
     RuleNotification: RuleNotificationClient
-    Comment: CommentClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -1712,5 +1567,4 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ContactGroup=ContactGroupClient(request_handler, url_prefix),
         SiteManagement=SiteManagementClient(request_handler, url_prefix),
         RuleNotification=RuleNotificationClient(request_handler, url_prefix),
-        Comment=CommentClient(request_handler, url_prefix),
     )

@@ -278,6 +278,7 @@ service_tag_rules: list[RuleSpec[object]] = []
 
 # Rulesets for agent bakery
 agent_config: dict[str, list[RuleSpec[object]]] = {}
+apply_bake_revision: bool = True
 bake_agents_on_restart = False
 folder_attributes: dict[str, FolderAttributes] = {}
 

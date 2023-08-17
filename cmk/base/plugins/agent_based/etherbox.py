@@ -373,7 +373,12 @@ def check_etherbox_voltage(item: str, params: Mapping[str, Any], section: Sectio
     except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
-    yield from check_levels(data.value, levels_upper=params["levels"], metric_name="voltage")
+    yield from check_levels(
+        data.value,
+        levels_upper=params["levels"],
+        metric_name="voltage",
+        render_func=lambda v: f"{v:.2f} V",
+    )
 
 
 def discovery_voltage(section: Section) -> DiscoveryResult:
@@ -387,5 +392,5 @@ register.check_plugin(
     discovery_function=discovery_voltage,
     service_name="Sensor %s",
     check_ruleset_name="etherbox_voltage",
-    check_default_parameters={"levels": (0, 0)},
+    check_default_parameters={"levels": None},
 )

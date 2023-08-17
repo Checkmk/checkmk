@@ -8,7 +8,6 @@ from typing import Literal
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
-    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
@@ -36,10 +35,21 @@ def _item_spec() -> ValueSpec:
 
 
 def _vs_voltage() -> ValueSpec:
-    return Dictionary(
-        title=_("Voltage levels"),
-        elements=[("levels", Levels(title=_("Voltage Levels")))],
-        required_keys=["levels"],
+    return Migrate(
+        Dictionary(
+            title=_("Voltage levels"),
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        title=_("Voltage Levels"),
+                        unit="V",
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: {"levels": None} if isinstance(p["levels"], dict) else p,
     )
 
 

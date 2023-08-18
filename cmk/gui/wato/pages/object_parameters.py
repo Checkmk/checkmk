@@ -40,11 +40,13 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
+    AllowAll,
     get_rulegroup,
     get_rulespec_allow_list,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
+    RulespecAllowList,
 )
 from cmk.gui.watolib.utils import mk_repr
 
@@ -209,27 +211,33 @@ class ModeObjectParameters(WatoMode):
         render_labels = functools.partial(
             self._show_labels, service_result.labels, "service", service_result.label_sources
         )
-        handler[origin](serviceinfo, all_rulesets, service_result, render_labels)
+        rulespec_allow_list = get_rulespec_allow_list()
+        handler[origin](
+            serviceinfo, all_rulesets, rulespec_allow_list, service_result, render_labels
+        )
         return
 
     def _handle_auto_origin(
         self,
         serviceinfo: ServiceInfo,
         all_rulesets: AllRulesets,
+        rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
         render_labels: Callable[[], None],
     ) -> None:
         # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
         checkgroup = serviceinfo["checkgroup"]
+        not_configurable_render = functools.partial(
+            self._render_rule_reason,
+            _("Parameters"),
+            None,
+            "",
+            "",
+            True,
+            _("This check is not configurable via WATO"),
+        )
         if not checkgroup:
-            self._render_rule_reason(
-                _("Parameters"),
-                None,
-                "",
-                "",
-                True,
-                _("This check is not configurable via WATO"),
-            )
+            not_configurable_render()
             render_labels()
             return
 
@@ -238,14 +246,17 @@ class ModeObjectParameters(WatoMode):
             # via checkgroup_parameters but via "logwatch_rules" in a special
             # Setup module.
             rulespec = rulespec_registry["logwatch_rules"]
-            self._output_analysed_ruleset(
-                all_rulesets,
-                rulespec,
-                svc_desc_or_item=serviceinfo["item"],
-                svc_desc=self._service,
-                known_settings=serviceinfo["parameters"],
-                service_result=service_result,
-            )
+            if rulespec_allow_list.is_visible(rulespec.name):
+                self._output_analysed_ruleset(
+                    all_rulesets,
+                    rulespec,
+                    svc_desc_or_item=serviceinfo["item"],
+                    svc_desc=self._service,
+                    known_settings=serviceinfo["parameters"],
+                    service_result=service_result,
+                )
+            else:
+                not_configurable_render()
             render_labels()
             return
 
@@ -257,26 +268,22 @@ class ModeObjectParameters(WatoMode):
         # but we need to address it anyway.
         if RuleGroup.CheckgroupParameters(checkgroup) in rulespec_registry:
             rulespec = rulespec_registry["checkgroup_parameters:" + checkgroup]
-            self._output_analysed_ruleset(
-                all_rulesets,
-                rulespec,
-                svc_desc_or_item=serviceinfo["item"],
-                svc_desc=self._service,
-                known_settings=serviceinfo["parameters"],
-                service_result=service_result,
-            )
+            if rulespec_allow_list.is_visible(rulespec.name):
+                self._output_analysed_ruleset(
+                    all_rulesets,
+                    rulespec,
+                    svc_desc_or_item=serviceinfo["item"],
+                    svc_desc=self._service,
+                    known_settings=serviceinfo["parameters"],
+                    service_result=service_result,
+                )
+            else:
+                not_configurable_render()
             render_labels()
             return
 
         if RuleGroup.StaticChecks(checkgroup) in rulespec_registry:
-            self._render_rule_reason(
-                _("Parameters"),
-                None,
-                "",
-                "",
-                True,
-                _("This check is not configurable via WATO"),
-            )
+            not_configurable_render()
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
@@ -302,11 +309,15 @@ class ModeObjectParameters(WatoMode):
         self,
         serviceinfo: ServiceInfo,
         all_rulesets: AllRulesets,
+        rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
         render_labels: Callable[[], None],
     ) -> None:
         checkgroup = serviceinfo["checkgroup"]
-        if not checkgroup:
+        rulespec = rulespec_registry.get("static_checks:" + checkgroup)
+        if rulespec is None or (
+            rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)
+        ):
             html.write_text(_("This check is not configurable via WATO"))
             return
 
@@ -339,19 +350,21 @@ class ModeObjectParameters(WatoMode):
         self,
         serviceinfo: ServiceInfo,
         all_rulesets: AllRulesets,
+        rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
         render_labels: Callable[[], None],
     ) -> None:
         checktype = serviceinfo["checktype"]
         rulespec = rulespec_registry[RuleGroup.ActiveChecks(checktype)]
-        self._output_analysed_ruleset(
-            all_rulesets,
-            rulespec,
-            svc_desc_or_item=None,
-            svc_desc=None,
-            known_settings=serviceinfo["parameters"],
-            service_result=service_result,
-        )
+        if rulespec_allow_list.is_visible(rulespec.name):
+            self._output_analysed_ruleset(
+                all_rulesets,
+                rulespec,
+                svc_desc_or_item=None,
+                svc_desc=None,
+                known_settings=serviceinfo["parameters"],
+                service_result=service_result,
+            )
         self._show_labels(service_result.labels, "service", service_result.label_sources)
         render_labels()
 
@@ -359,6 +372,7 @@ class ModeObjectParameters(WatoMode):
         self,
         serviceinfo: ServiceInfo,
         all_rulesets: AllRulesets,
+        _rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
         render_labels: Callable[[], None],
     ) -> None:

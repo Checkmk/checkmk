@@ -1639,6 +1639,28 @@ class SnapshotManager:
         hooks.call("post-snapshot-creation", self._site_snapshot_settings)
 
 
+def _clone_site_config_directory(
+    site_logger: logging.Logger,
+    site_id: str,
+    snapshot_settings: SnapshotSettings,
+    origin_site_work_dir: str,
+) -> None:
+    site_logger.debug("Processing site %s", site_id)
+
+    if os.path.exists(snapshot_settings.work_dir):
+        shutil.rmtree(snapshot_settings.work_dir)
+
+    completed_process = subprocess.run(
+        ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
+        shell=False,
+        close_fds=True,
+        check=False,
+    )
+
+    assert completed_process.returncode == 0
+    site_logger.debug("Finished site")
+
+
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
     def prepare_snapshot_files(self):
         """Collect the files to be synchronized for all sites
@@ -1745,24 +1767,19 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
     def _clone_site_config_directories(
         self, origin_site_id: SiteId, site_ids: list[SiteId]
     ) -> None:
-        origin_site_work_dir = self._site_snapshot_settings[origin_site_id].work_dir
-
-        for site_id in site_ids:
-            self._logger.debug("Processing site %s", site_id)
-            snapshot_settings = self._site_snapshot_settings[site_id]
-
-            if os.path.exists(snapshot_settings.work_dir):
-                shutil.rmtree(snapshot_settings.work_dir)
-
-            completed_process = subprocess.run(
-                ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
-                shell=False,
-                close_fds=True,
-                check=False,
+        clone_args = [
+            (
+                self._logger.getChild(f"site[{site_id}]"),
+                site_id,
+                self._site_snapshot_settings[site_id],
+                self._site_snapshot_settings[origin_site_id].work_dir,
             )
+            for site_id in site_ids
+        ]
 
-            assert completed_process.returncode == 0
-            self._logger.debug("Finished site")
+        num_threads = 5  # based on rudimentary tests, performance improvement drops off after
+        with multiprocessing.pool.ThreadPool(processes=num_threads) as copy_pool:
+            copy_pool.starmap(_clone_site_config_directory, clone_args)
 
     def get_generic_components(self) -> list[ReplicationPath]:
         return get_replication_paths()

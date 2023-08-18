@@ -28,7 +28,7 @@ def test_invalid_metric_name_does_not_crash() -> None:
                 "Problem: invalid character(s) in metric name: ':'"
             ),
         ),
-        Result(state=State.OK, summary="Invalid:name: 1.00"),
+        Result(state=State.OK, notice="Invalid:name: 1.00"),
     ]
 
 
@@ -277,7 +277,7 @@ def test_fix_state():
         )
     ) == [
         Result(state=State.CRIT, summary="A critical check"),
-        Result(state=State.OK, summary="V: 120.00"),
+        Result(state=State.OK, notice="V: 120.00"),
         Metric("V", 120, boundaries=(0, 1000)),
     ]
 
@@ -349,7 +349,7 @@ def test_compute_state():
         local.check_local("", {}, local.LocalSection(errors={}, data={"": local_result}))
     ) == [
         Result(state=State.OK, summary="Result is computed from two values"),
-        Result(state=State.OK, summary="Value 1: 10.00"),
+        Result(state=State.OK, notice="Value 1: 10.00"),
         Metric("value1", 10, levels=(30.0, 50.0)),
         Result(state=State.WARN, summary="Value 2: 20.00 (warn/crit at 20.00/50.00)"),
         Metric("value2", 20, levels=(20, 50), boundaries=(0, 100)),

@@ -349,6 +349,7 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
             metric_name=metric_name,
             label=_labelify(entry.name),
             boundaries=entry.boundaries,
+            notice_only=True,
         )
 
 

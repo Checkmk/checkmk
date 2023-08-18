@@ -57,7 +57,7 @@ from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
-from .helpers import ECLock
+from .helpers import ECLock, Failure, parse_syslog_message
 from .history import (
     ActiveHistoryPeriod,
     Columns,
@@ -434,6 +434,7 @@ class EventServer(ECServerThread):
 
         self._rules: list[Rule] = []
         self._rule_by_id: dict[str | None, Rule] = {}
+        self._rule_hash: dict[int, dict[int, Any]] = {}
         self._hash_stats: list[list[int]] = []  # facility/priority
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -754,69 +755,38 @@ class EventServer(ECServerThread):
             # NOTE: We modify client_socket in the loop, so we need to copy below!
             for fd, (cs, address, previous_data) in list(client_sockets.items()):
                 if fd in readable:
+                    data = previous_data
                     # Receive next part of data
                     try:
-                        new_data = cs.recv(4096)
+                        data += cs.recv(4096)
                     except Exception:
-                        new_data = b""
-                        address = None
+                        self._logger.exception("Exception during syslog socket_tcp recv")
 
-                    # Put together with incomplete messages from last time
-                    data = previous_data + new_data
-
-                    # Do we have incomplete data? (if the socket has been
-                    # closed then we consider the pending message always
-                    # as complete, even if there was no trailing \n)
-                    if new_data and not data.endswith(b"\n"):  # keep fragment
-                        # Do we have any complete messages?
-                        if b"\n" in data:
-                            complete, rest = data.rsplit(b"\n", 1)
-                            self.process_raw_lines(complete + b"\n", address)
-                        else:
-                            rest = data  # keep for next time
-
-                    # Only complete messages
-                    else:
-                        if data:
-                            self.process_raw_lines(data, address)
-                        rest = b""
-
-                    # Connection still open?
-                    if new_data:
-                        client_sockets[fd] = (cs, address, rest)
-                    else:
+                    if not data:
                         cs.close()
                         del client_sockets[fd]
 
+                    if unprocessed := self.process_syslog_data(data, address):
+                        client_sockets[fd] = (cs, address, unprocessed)
+
             # Read data from pipe
             if pipe in readable:
-                with contextlib.suppress(Exception):
-                    data = os.read(pipe, 4096)
-                    if data:
-                        # Prepend previous beginning of message to read data
-                        data = pipe_fragment + data
-                        pipe_fragment = b""
+                data = pipe_fragment
+                try:
+                    data += os.read(pipe, 4096)
+                except Exception:
+                    self._logger.exception("General exception during pipe os.read")
 
-                        # Last message still incomplete?
-                        if data[-1:] != b"\n":
-                            if b"\n" in data:  # at least one complete message contained
-                                messages, pipe_fragment = data.rsplit(b"\n", 1)
-                                self.process_raw_lines(messages + b"\n", None)  # got lost in split
-                            else:
-                                pipe_fragment = data  # keep beginning of message, wait for \n
-                        else:
-                            self.process_raw_lines(data, None)
-                    else:  # EOF
-                        os.close(pipe)
-                        pipe = self.open_pipe()
-                        listen_list[0] = pipe
-                        # Pending fragments from previous reads that are not terminated
-                        # by a \n are ignored.
-                        if pipe_fragment:
-                            self._logger.warning(
-                                "Ignoring incomplete message '%r' from pipe", pipe_fragment
-                            )
-                            pipe_fragment = b""
+                if not data:
+                    os.close(pipe)
+                    listen_list.remove(pipe)
+                    listen_list.append(self.open_pipe())
+
+                if unprocessed := self.process_syslog_data(data, None):
+                    self._logger.warning(
+                        "Ignoring incomplete message '%r' from pipe", pipe_fragment
+                    )
+                    pipe_fragment = b""
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
@@ -831,7 +801,7 @@ class EventServer(ECServerThread):
                     raise ValueError(
                         f"Invalid remote address '{address!r}' for syslog socket (UDP)"
                     )
-                self.process_raw_lines(message, (unmap_ipv4_address(address[0]), address[1]))
+                self.process_raw_line(message, (unmap_ipv4_address(address[0]), address[1]))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
@@ -860,7 +830,8 @@ class EventServer(ECServerThread):
             if spool_files := sorted(
                 self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
             ):
-                self.process_raw_lines(spool_files[0].read_bytes(), None)
+                for line_bytes in spool_files[0].read_bytes().splitlines():
+                    self.process_raw_line(line_bytes, None)
                 spool_files[0].unlink()
                 select_timeout = 0  # enable fast processing to process further files
             else:
@@ -881,18 +852,49 @@ class EventServer(ECServerThread):
         elapsed = time.time() - before
         self._perfcounters.count_time("processing", elapsed)
 
-    def process_raw_lines(self, data: bytes, address: tuple[str, int] | None) -> None:
-        """Takes several lines of messages, handles encoding and processes them separated."""
-        for line_bytes in data.splitlines():
-            if line := scrub_string(line_bytes.rstrip().decode("utf-8")):
-                try:
+    def process_raw_line(self, data: bytes, address: tuple[str, int] | None) -> None:
+        """Takes one line message, handles encoding and processes it."""
+        if line := scrub_string(data.rstrip().decode("utf-8")):
+            try:
 
-                    def handler(line: str = line) -> None:
-                        self.process_line(line, address)
+                def handler(line: str = line) -> None:
+                    self.process_line(line, address)
 
-                    self.process_raw_data(handler)
-                except Exception:
-                    self._logger.exception("Exception handling a log line (skipping this one)")
+                self.process_raw_data(handler)
+            except Exception:
+                self._logger.exception("Exception handling a log line (skipping this one)")
+
+    def process_syslog_data(self, data: bytes, address: tuple[str, int] | None) -> bytes:
+        """
+        Processes syslog data in a loop.
+
+
+        This method handles Octet counting (if message starts with a digit)
+        and Transparent framing messages (if '\n' used as a separator).
+        See the RFC doc: https://www.rfc-editor.org/rfc/rfc6587#section-3.4:
+
+        Octet counting:
+            TCP-DATA = *SYSLOG-FRAME
+
+            SYSLOG-FRAME = MSG-LEN SP SYSLOG-MSG   ; Octet-counting
+                                                    ; method
+
+            MSG-LEN = NONZERO-DIGIT *DIGIT
+
+            NONZERO-DIGIT = %d49-57
+
+        Returns the remaining unprocessed bytes.
+        """
+        rest = memoryview(b"")
+
+        while data:
+            complete, rest = parse_syslog_message(memoryview(data))
+            if complete is Failure:
+                break
+            self.process_raw_line(complete, address)
+            data = bytes(rest)
+
+        return bytes(rest)
 
     def do_housekeeping(self) -> None:
         with self._event_status.lock, self._lock_configuration:
@@ -1239,7 +1241,7 @@ class EventServer(ECServerThread):
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
-        self._rule_hash: dict[int, dict[int, Any]] = {}
+        self._rule_hash = {}
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0

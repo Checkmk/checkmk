@@ -21,6 +21,7 @@ from tests.testlib.rest_api_client import (
 )
 
 from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file
 from cmk.utils.user import UserId
 
@@ -165,7 +166,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
         ),
     }"""
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=RuleGroup.ActiveChecks("http"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -440,7 +441,7 @@ def test_openapi_move_rule_before_specific_rule(
 
 def test_create_rule_permission_error_regression(clients: ClientRegistry) -> None:
     clients.Rule.create(
-        ruleset="active_checks:cmk_inv",
+        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
         folder="~",
         properties={"disabled": False},
         value_raw='{"status_data_inventory": True}',
@@ -507,7 +508,7 @@ def test_user_needs_folder_permissions_to_move_rules(
     )
 
     resp = clients.Rule.create(
-        ruleset="active_checks:cmk_inv",
+        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
         folder="~" + source_folder,
         properties={"disabled": False},
         value_raw='{"status_data_inventory": True}',
@@ -579,7 +580,9 @@ def test_openapi_cannot_move_rules_from_different_rulesets_regression(
     )
     lhs_rule_id = resp.json["id"]
 
-    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    resp = clients.Rule.create(
+        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
+    )
     rhs_rule_id = resp.json["id"]
 
     clients.Rule.move(
@@ -592,7 +595,9 @@ def test_openapi_cannot_move_rules_from_different_rulesets_regression(
 
 
 def test_openapi_cannot_move_rule_before_or_after_itself(clients: ClientRegistry) -> None:
-    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    resp = clients.Rule.create(
+        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
+    )
     rule_id = resp.json["id"]
 
     clients.Rule.move(

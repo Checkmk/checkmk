@@ -10,6 +10,7 @@ from collections.abc import Collection, Iterator
 from typing import Callable
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 
@@ -336,7 +337,7 @@ class ModeObjectParameters(WatoMode):
         render_labels: Callable[[], None],
     ) -> None:
         checktype = serviceinfo["checktype"]
-        rulespec = rulespec_registry["active_checks:" + checktype]
+        rulespec = rulespec_registry[RuleGroup.ActiveChecks(checktype)]
         self._output_analysed_ruleset(
             all_rulesets,
             rulespec,

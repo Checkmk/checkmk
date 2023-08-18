@@ -7,6 +7,7 @@ import abc
 import typing as t
 
 from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
@@ -264,7 +265,7 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:temperature_trends"),
         ("check", "checkgroup_parameters:prism_container"),
         ("discovery", "discovery_systemd_units_services_rules"),
-        ("inventory", "active_checks:cmk_inv"),
+        ("inventory", RuleGroup.ActiveChecks("cmk_inv")),
         ("inventory", "inv_parameters:inv_if"),
         ("inventory", "inv_parameters:lnx_sysctl"),
         ("inventory", "inv_retention_intervals"),

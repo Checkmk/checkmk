@@ -20,6 +20,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
@@ -823,7 +824,7 @@ class ModeEditRuleset(WatoMode):
                         pass
             elif check_command.startswith("check_mk_active-"):
                 check_command = check_command[16:].split(" ")[0][:-1]
-                self._name = "active_checks:" + check_command
+                self._name = RuleGroup.ActiveChecks(check_command)
 
         try:
             self._rulespec = rulespec_registry[self._name]

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.i18n import _
@@ -119,7 +120,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="all",
-        name="active_checks:cmk_inv",
+        name=RuleGroup.ActiveChecks("cmk_inv"),
         valuespec=_valuespec_active_checks_cmk_inv,
     )
 )

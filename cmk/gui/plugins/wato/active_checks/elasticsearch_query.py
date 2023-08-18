@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
@@ -162,7 +164,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupIntegrateOtherServices,
         match_type="all",
-        name="active_checks:elasticsearch_query",
+        name=RuleGroup.ActiveChecks("elasticsearch_query"),
         valuespec=_valuespec_active_checks_elasticsearch_query,
     )
 )

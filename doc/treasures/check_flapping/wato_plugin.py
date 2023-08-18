@@ -8,7 +8,7 @@
 
 register_rule(
     "activechecks",
-    "active_checks:flapping",
+    RuleGroup.ActiveChecks("flapping"),
     Tuple(
         title=_("Check Flapping Services"),
         help=_(

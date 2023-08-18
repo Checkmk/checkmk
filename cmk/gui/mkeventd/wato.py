@@ -39,6 +39,7 @@ import cmk.utils.store as store
 import cmk.utils.translations
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.version import edition, Edition
 
@@ -5067,7 +5068,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
 ActiveCheckMKEventsRulespec = HostRulespec(
     group=RulespecGroupEventConsole,
     match_type="all",
-    name="active_checks:mkevents",
+    name=RuleGroup.ActiveChecks("mkevents"),
     valuespec=lambda: Migrate(
         valuespec=_valuespec_active_checks_mkevents(),
         migrate=lambda value: {"show_last_log": "summary"} | value,

@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.definition import RuleGroup
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato
@@ -159,7 +160,7 @@ def test_grouped_rulespecs() -> None:
         ],
         "eventconsole": [
             "extra_host_conf:_ec_event_limit",
-            "active_checks:mkevents",
+            RuleGroup.ActiveChecks("mkevents"),
             "extra_host_conf:_ec_contact",
             "extra_service_conf:_ec_contact",
         ],
@@ -530,7 +531,7 @@ def test_grouped_rulespecs() -> None:
             "checkgroup_parameters:carbon_monoxide",
         ],
         "inventory": [
-            "active_checks:cmk_inv",
+            RuleGroup.ActiveChecks("cmk_inv"),
             "inv_parameters:inv_if",
         ],
         "static/virtualization": [
@@ -1037,27 +1038,27 @@ def test_grouped_rulespecs() -> None:
             "extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
         ],
         "activechecks": [
-            "active_checks:ssh",
-            "active_checks:icmp",
-            "active_checks:ftp",
-            "active_checks:sftp",
-            "active_checks:dns",
-            "active_checks:sql",
-            "active_checks:tcp",
-            "active_checks:uniserv",
-            "active_checks:http",
-            "active_checks:ldap",
-            "active_checks:smtp",
-            "active_checks:disk_smb",
+            RuleGroup.ActiveChecks("ssh"),
+            RuleGroup.ActiveChecks("icmp"),
+            RuleGroup.ActiveChecks("ftp"),
+            RuleGroup.ActiveChecks("sftp"),
+            RuleGroup.ActiveChecks("dns"),
+            RuleGroup.ActiveChecks("sql"),
+            RuleGroup.ActiveChecks("tcp"),
+            RuleGroup.ActiveChecks("uniserv"),
+            RuleGroup.ActiveChecks("http"),
+            RuleGroup.ActiveChecks("ldap"),
+            RuleGroup.ActiveChecks("smtp"),
+            RuleGroup.ActiveChecks("disk_smb"),
             "custom_checks",
-            "active_checks:bi_aggr",
-            "active_checks:form_submit",
-            "active_checks:notify_count",
-            "active_checks:traceroute",
-            "active_checks:mail_loop",
-            "active_checks:mail",
-            "active_checks:mailboxes",
-            "active_checks:by_ssh",
+            RuleGroup.ActiveChecks("bi_aggr"),
+            RuleGroup.ActiveChecks("form_submit"),
+            RuleGroup.ActiveChecks("notify_count"),
+            RuleGroup.ActiveChecks("traceroute"),
+            RuleGroup.ActiveChecks("mail_loop"),
+            RuleGroup.ActiveChecks("mail"),
+            RuleGroup.ActiveChecks("mailboxes"),
+            RuleGroup.ActiveChecks("by_ssh"),
         ],
         "agent/check_mk_agent": [
             "agent_ports",

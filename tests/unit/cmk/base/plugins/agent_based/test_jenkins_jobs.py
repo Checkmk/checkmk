@@ -95,3 +95,36 @@ def test_check_job3_item(section: jn.Section) -> None:
         Metric("jenkins_build_duration", 193.715),
         jn.Result(state=jn.State.CRIT, summary="Build result: Failure"),
     ]
+
+
+@freeze_time("2021-11-23 13:00:00")
+def test_check_job3_item_with_params(section: jn.Section) -> None:
+    assert list(
+        jn.check_jenkins_jobs(
+            "project/Job3",
+            {
+                "build_result": {
+                    "success": 0,
+                    "unstable": 0,
+                    "failure": 0,
+                    "aborted": 0,
+                    "null": 0,
+                    "none": 0,
+                }
+            },
+            section,
+        )
+    ) == [
+        jn.Result(state=jn.State.OK, summary="Display name: Job 3"),
+        jn.Result(state=jn.State.OK, summary="State: Success"),
+        jn.Result(state=jn.State.OK, summary="Job score: 100.00%"),
+        Metric("jenkins_job_score", 100.0),
+        jn.Result(state=jn.State.OK, summary="Time since last build: 7 days 1 hour"),
+        Metric("jenkins_last_build", 609957.0),
+        jn.Result(state=jn.State.OK, summary="Time since last successful build: 7 days 1 hour"),
+        Metric("jenkins_time_since", 609956.5680000782),
+        jn.Result(state=jn.State.OK, summary="Build id: 26"),
+        jn.Result(state=jn.State.OK, summary="Build duration: 3 minutes 14 seconds"),
+        Metric("jenkins_build_duration", 193.715),
+        jn.Result(state=jn.State.OK, summary="Build result: Failure"),
+    ]

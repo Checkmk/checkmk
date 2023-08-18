@@ -158,7 +158,8 @@ def check_jenkins_jobs(item: str, params: Mapping[str, Any], section: Section) -
             yield Result(
                 state=State(
                     params.get("build_result", {}).get(
-                        job.build_result, MAP_BUILD_STATES[job.build_result.lower()]
+                        job.build_result.lower(),
+                        MAP_BUILD_STATES[job.build_result.lower()],
                     )
                 ),
                 summary="Build result: %s" % job.build_result.title(),

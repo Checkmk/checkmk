@@ -38,6 +38,7 @@ import * as password_meter from "password_meter";
 import * as popup_menu from "popup_menu";
 import * as prediction from "prediction";
 import * as profile_replication from "profile_replication";
+import {render_qr_codes} from "qrcode_rendering";
 import * as quicksearch from "quicksearch";
 import * as reload_pause from "reload_pause";
 import * as selection from "selection";
@@ -109,6 +110,7 @@ $(() => {
             );
             forms.add_confirm_on_submit(form, confirmation);
         });
+    render_qr_codes();
 });
 
 export const cmk_export = {

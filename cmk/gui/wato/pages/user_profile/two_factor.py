@@ -335,14 +335,16 @@ class RegisterTotpSecret(ABCUserProfilePage):
         html.prevent_password_auto_completion()
         html.open_div(class_="wato")
 
-        html.p(
-            "otpauth://totp/%s?secret=%s&issuer=%s"
+        html.div(
+            "",
+            data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
             % (
                 parse.quote(user.alias, safe=""),
                 base32_secret,
                 parse.quote("checkmk " + omd_site(), safe=""),
-            )
+            ),
         )
+        html.p("Alternatively you can enter your secret manually: %s" % (base32_secret))
 
         self._valuespec().render_input(
             "profile",

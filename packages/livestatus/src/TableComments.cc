@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <variant>  // IWYU pragma: keep
 
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"

@@ -25,7 +25,6 @@
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
 #include "neb/Comment.h"
-#include "neb/Downtime.h"
 #include "neb/NebComment.h"
 #include "neb/NebContact.h"
 #include "neb/NebContactGroup.h"

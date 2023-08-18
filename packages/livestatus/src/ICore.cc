@@ -6,6 +6,7 @@
 #include "livestatus/ICore.h"
 
 #include <filesystem>
+#include <sstream>
 
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"

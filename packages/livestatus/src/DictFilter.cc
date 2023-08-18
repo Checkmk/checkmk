@@ -13,7 +13,6 @@
 
 #include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
-#include "livestatus/opids.h"
 
 namespace {
 constexpr const char *whitespace = " \t\n\v\f\r";

@@ -26,11 +26,9 @@
 #include "livestatus/Store.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
+#include "neb/Downtime.h"  // IWYU pragma: keep
 #include "neb/nagios.h"
-
 class Comment;
-class Downtime;
-enum class Encoding;
 class InputBuffer;
 class Logger;
 class OutputBuffer;

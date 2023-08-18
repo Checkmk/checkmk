@@ -12,9 +12,8 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
-
+#include "livestatus/opids.h"
 class Aggregator;
-enum class RelationalOperator;
 class Row;
 class RowRenderer;
 class User;

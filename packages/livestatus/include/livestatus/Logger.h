@@ -6,7 +6,8 @@
 #ifndef Logger_h
 #define Logger_h
 
-// NOTE: <iosfwd> should be enough, but IWYU complains then.
+// The stream-related pragmas are probably caused by
+// https://github.com/include-what-you-use/include-what-you-use/issues/277
 #include <atomic>
 #include <cerrno>
 #include <chrono>

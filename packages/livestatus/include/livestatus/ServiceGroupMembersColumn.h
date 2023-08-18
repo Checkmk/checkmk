@@ -13,13 +13,12 @@
 
 #include "livestatus/Filter.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/ListFilter.h"  // IWYU pragma: keep
 #include "livestatus/Row.h"
-
-class ListFilter;
+#include "livestatus/opids.h"
+enum class ServiceState;
 class Logger;
 class ListRenderer;
-enum class RelationalOperator;
-enum class ServiceState;
 class User;
 
 namespace column::service_group_members {

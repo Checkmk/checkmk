@@ -12,10 +12,9 @@
 #include <string>
 
 #include "livestatus/ColumnFilter.h"
-
-class Filter;
+#include "livestatus/Filter.h"
+#include "livestatus/opids.h"
 class Logger;
-enum class RelationalOperator;
 class Row;
 class User;
 

@@ -12,8 +12,7 @@
 #include <utility>
 
 #include "livestatus/Filter.h"
-
-enum class RelationalOperator;
+#include "livestatus/opids.h"
 
 class ColumnFilter : public Filter {
 public:

@@ -5,12 +5,15 @@
 
 #include "livestatus/TableHosts.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
+#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/AttributeBitmaskColumn.h"
@@ -29,6 +32,7 @@
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/LogwatchList.h"
 #include "livestatus/MapUtils.h"
@@ -41,8 +45,6 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 #include "livestatus/mk_inventory.h"
-
-enum class HostState;
 
 namespace {
 std::vector<::column::service_list::Entry> getServices(const IHost &hst,

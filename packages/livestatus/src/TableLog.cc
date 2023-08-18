@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
+#include <variant>  // IWYU pragma: keep
 
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"

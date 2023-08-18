@@ -6,6 +6,8 @@
 #include "livestatus/LogCache.h"
 
 #include <iterator>
+#include <sstream>
+#include <string>
 #include <system_error>
 
 #include "livestatus/ICore.h"

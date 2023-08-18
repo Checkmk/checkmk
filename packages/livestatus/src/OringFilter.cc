@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iterator>
 #include <ostream>
+#include <type_traits>
 #include <vector>
 
 #include "livestatus/AndingFilter.h"

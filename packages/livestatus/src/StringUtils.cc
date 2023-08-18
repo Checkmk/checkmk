@@ -12,6 +12,7 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <type_traits>
 
 #include "livestatus/OStreamStateSaver.h"
 

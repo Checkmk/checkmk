@@ -4,6 +4,7 @@
 // source code package.
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "gtest/gtest.h"

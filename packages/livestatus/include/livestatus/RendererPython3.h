@@ -11,8 +11,6 @@
 #include <vector>
 
 #include "livestatus/Renderer.h"
-
-enum class Encoding;
 class Logger;
 
 class RendererPython3 : public Renderer {

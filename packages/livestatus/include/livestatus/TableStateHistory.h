@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>  // IWYU pragma: keep
 
 #include "livestatus/LogCache.h"
 #include "livestatus/Logfile.h"

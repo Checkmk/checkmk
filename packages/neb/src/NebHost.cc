@@ -6,6 +6,7 @@
 #include "neb/NebHost.h"
 
 #include <algorithm>
+#include <unordered_map>
 #include <utility>
 
 #include "neb/NebContactGroup.h"

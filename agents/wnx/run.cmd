@@ -92,11 +92,6 @@ set SKIP_MINOR_BINARIES=YES
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME
 set hash_file=%arte%\windows_files_hashes.txt
 
-cd c:\common
-dir
-call sign.cmd
-cd %cur_dir%
-
 :: arg_clean
 call :clean
 

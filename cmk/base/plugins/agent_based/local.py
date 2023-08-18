@@ -303,6 +303,7 @@ def local_compute_state(perfdata, ignore_levels=False):
             metric_name=metric_name,
             label=entry.name,
             boundaries=entry.tuple[-2:],
+            notice_only=True,
         )
 
 

@@ -31,7 +31,7 @@ def test_invalid_metric_name_does_not_crash() -> None:
                 details=("The metric name 'invalid:name' is invalid. It will not be recorded. "
                          "Problem: invalid character(s) in metric name: ':'"),
             ),
-            Result(state=state.OK, summary="invalid:name: 1.00"),
+            Result(state=state.OK, notice="invalid:name: 1.00"),
         ]
 
 
@@ -203,7 +203,7 @@ def test_fix_state():
         local.check_local("NotGood", {},
                           local.LocalSection(errors={}, data={"NotGood": local_result}))) == [
                               Result(state=state.CRIT, summary="A critical check"),
-                              Result(state=state.OK, summary="V: 120.00"),
+                              Result(state=state.OK, notice="V: 120.00"),
                               Metric("V", 120, boundaries=(0, 1000)),
                           ]
 
@@ -310,7 +310,7 @@ def test_compute_state():
                                   local.LocalSection(errors={}, data={"": local_result}))) == [
                                       Result(state=state.OK,
                                              summary="Result is computed from two values"),
-                                      Result(state=state.OK, summary="value1: 10.00"),
+                                      Result(state=state.OK, notice="value1: 10.00"),
                                       Metric("value1", 10, levels=(30.0, 50.0)),
                                       Result(state=state.WARN,
                                              summary="value2: 20.00 (warn/crit at 20.00/50.00)"),

@@ -6,6 +6,7 @@
 #include "livestatus/DictFilter.h"
 
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <tuple>
 #include <unordered_map>

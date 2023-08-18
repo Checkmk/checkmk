@@ -4,6 +4,7 @@
 // source code package.
 #include "livestatus/TableHostGroups.h"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 

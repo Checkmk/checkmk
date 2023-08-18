@@ -7,8 +7,10 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <compare>
 #include <cstring>
 #include <ostream>
 #include <string_view>

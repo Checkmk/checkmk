@@ -5,6 +5,7 @@
 
 #include "livestatus/TableStateHistory.h"
 
+#include <compare>
 #include <cstddef>
 #include <optional>
 #include <ratio>

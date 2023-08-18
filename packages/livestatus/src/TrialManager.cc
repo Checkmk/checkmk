@@ -7,6 +7,7 @@
 
 #include <endian.h>
 
+#include <compare>
 #include <cstdint>
 #include <istream>
 #include <ratio>

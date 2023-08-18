@@ -17,6 +17,7 @@
 #include <atomic>
 #include <cerrno>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>

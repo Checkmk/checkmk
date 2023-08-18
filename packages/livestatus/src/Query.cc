@@ -5,7 +5,9 @@
 
 #include "livestatus/Query.h"
 
+#include <algorithm>
 #include <cassert>
+#include <compare>
 #include <sstream>
 #include <utility>
 

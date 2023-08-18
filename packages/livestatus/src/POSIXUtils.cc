@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <compare>
 #include <ratio>
 #include <thread>
 

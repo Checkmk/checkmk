@@ -5,6 +5,7 @@
 
 #include "livestatus/TableHosts.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>

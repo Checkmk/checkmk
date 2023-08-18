@@ -5,7 +5,10 @@
 
 #include "livestatus/LogCache.h"
 
+#include <algorithm>
+#include <compare>
 #include <iterator>
+#include <ranges>
 #include <system_error>
 
 #include "livestatus/ICore.h"
@@ -79,8 +82,8 @@ LogCache::pathsSince(std::chrono::system_clock::time_point since) {
     update();
     std::vector<std::filesystem::path> paths;
     bool horizon_reached{false};
-    for (auto it = _logfiles.crbegin(); it != _logfiles.crend(); ++it) {
-        const auto &[unused, log_file] = *it;
+    for (const auto &[unused, log_file] :
+         std::ranges::reverse_view(_logfiles)) {
         if (horizon_reached) {
             return {paths, log_file->path()};
         }

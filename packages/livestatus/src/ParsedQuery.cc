@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <compare>
 #include <cstdint>
 #include <cstdlib>
 #include <map>

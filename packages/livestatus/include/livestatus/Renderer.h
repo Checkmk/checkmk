@@ -7,6 +7,7 @@
 #define Renderer_h
 
 #include <chrono>
+#include <compare>
 #include <cstdint>
 #include <iomanip>
 #include <iosfwd>

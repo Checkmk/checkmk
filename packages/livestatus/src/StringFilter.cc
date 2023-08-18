@@ -5,6 +5,7 @@
 
 #include "livestatus/StringFilter.h"
 
+#include <compare>
 #include <utility>
 
 #include "livestatus/RegExp.h"

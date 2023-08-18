@@ -4,6 +4,7 @@
 // source code package.
 
 #include <algorithm>
+#include <compare>
 #include <filesystem>
 #include <fstream>
 #include <iterator>

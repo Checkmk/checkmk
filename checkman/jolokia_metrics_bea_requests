@@ -1,5 +1,5 @@
 title: BEA Weblogic: Requests to JVM Sessions
-agents: linux
+agents: linux, windows
 catalog: app/java
 license: GPL
 distribution: check_mk

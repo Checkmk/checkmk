@@ -1,5 +1,5 @@
 title: Java Application Servers: Type and Version
-agents: linux
+agents: linux, windows
 catalog: app/java
 license: GPL
 distribution: check_mk

@@ -1,5 +1,5 @@
 title: Java Virtual Machine: Tomcat Threads
-agents: linux
+agents: linux, windows
 license: GPL
 catalog: app/java
 distribution: check_mk

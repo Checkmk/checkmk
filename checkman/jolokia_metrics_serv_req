@@ -1,5 +1,5 @@
 title: Java Virtual Machine: Web Application Server Requests
-agents: linux
+agents: linux, windows
 catalog: app/java
 license: GPL
 distribution: check_mk

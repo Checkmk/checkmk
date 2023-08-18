@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "livestatus/Row.h"
+#include "livestatus/opids.h"
 
 IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)

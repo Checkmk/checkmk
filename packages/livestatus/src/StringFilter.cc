@@ -9,6 +9,7 @@
 
 #include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
+#include "livestatus/opids.h"
 
 StringFilter::StringFilter(Kind kind, std::string columnName,
                            std::function<std::string(Row)> getValue,

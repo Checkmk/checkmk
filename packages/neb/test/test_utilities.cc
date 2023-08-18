@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// IWYU pragma: no_include <tuple>
-// IWYU pragma: no_include <type_traits>
 #include "test_utilities.h"
 
 #include <string>

@@ -6,9 +6,11 @@
 #ifndef EventConsoleConnection_h
 #define EventConsoleConnection_h
 
-#include <asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>
+
+#include "asio/local/stream_protocol.hpp"
+
 class Logger;
 
 class EventConsoleConnection {

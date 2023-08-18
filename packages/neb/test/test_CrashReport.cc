@@ -18,8 +18,8 @@
 #include "livestatus/Logger.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
-#include "neb/Comment.h"   // IWYU pragma: keep
-#include "neb/Downtime.h"  // IWYU pragma: keep
+#include "neb/Comment.h"
+#include "neb/Downtime.h"
 #include "neb/NebCore.h"
 
 namespace fs = std::filesystem;

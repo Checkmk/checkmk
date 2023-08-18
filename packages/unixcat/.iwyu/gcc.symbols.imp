@@ -43,6 +43,7 @@
   { symbol: [ "fsblkcnt_t", private, "<sys/statvfs.h>", public ] },
   { symbol: [ "fsfilcnt_t", private, "<sys/types.h>", public ] },
   { symbol: [ "fsfilcnt_t", private, "<sys/statvfs.h>", public ] },
+  { symbol: [ "getopt", private, "<unistd.h>", public ] },
   { symbol: [ "gid_t", private, "<sys/types.h>", public ] },
   { symbol: [ "gid_t", private, "<grp.h>", public ] },
   { symbol: [ "gid_t", private, "<pwd.h>", public ] },
@@ -75,6 +76,8 @@
   { symbol: [ "uintptr_t", private, "<stdint.h>", public ] },
   { symbol: [ "iovec", private, "<sys/uio.h>", public ] },
   { symbol: [ "iovec", private, "<sys/socket.h>", public ] },
+  { symbol: [ "itimerspec", private, "<time.h>", public ] },
+  { symbol: [ "itimerspec", private, "<sys/timerfd.h>", public ] },
   { symbol: [ "key_t", private, "<sys/types.h>", public ] },
   { symbol: [ "key_t", private, "<sys/ipc.h>", public ] },
   { symbol: [ "lconv", private, "<locale.h>", public ] },
@@ -101,6 +104,10 @@
   { symbol: [ "off_t", private, "<sys/mman.h>", public ] },
   { symbol: [ "off_t", private, "<sys/stat.h>", public ] },
   { symbol: [ "off_t", private, "<unistd.h>", public ] },
+  { symbol: [ "optarg", private, "<unistd.h>", public ] },
+  { symbol: [ "opterr", private, "<unistd.h>", public ] },
+  { symbol: [ "optind", private, "<unistd.h>", public ] },
+  { symbol: [ "optopt", private, "<unistd.h>", public ] },
   { symbol: [ "pid_t", private, "<sys/types.h>", public ] },
   { symbol: [ "pid_t", private, "<fcntl.h>", public ] },
   { symbol: [ "pid_t", private, "<sched.h>", public ] },
@@ -251,6 +258,9 @@
   { symbol: [ "NULL", private, "<time.h>", public ] },
   { symbol: [ "NULL", private, "<unistd.h>", public ] },
   { symbol: [ "NULL", private, "<wchar.h>", public ] },
+
+  # GCC defines std::declval in <type_traits>, but the canonical location is <utility>
+  { symbol: [ "std::declval", private, "<utility>", public ] },
 
   # Kludge time: almost all STL types take an allocator, but they
   # almost always use the default value.  Usually we detect that

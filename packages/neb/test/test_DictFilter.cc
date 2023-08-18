@@ -4,7 +4,6 @@
 // source code package.
 
 #include <iomanip>
-#include <memory>
 #include <sstream>
 #include <string>
 
@@ -17,7 +16,6 @@
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
-#include "neb/Comment.h"  // IWYU pragma: keep
 #include "neb/NebHost.h"
 #include "test_utilities.h"
 

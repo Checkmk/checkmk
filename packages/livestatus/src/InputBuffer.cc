@@ -13,7 +13,6 @@
 #include <ostream>
 #include <string_view>
 #include <utility>
-// IWYU pragma: no_include <type_traits>
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"

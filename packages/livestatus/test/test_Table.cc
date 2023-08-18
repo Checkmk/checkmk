@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -48,6 +47,7 @@
 #include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
 
+enum class Encoding;
 class User;
 class IComment;
 class IContact;

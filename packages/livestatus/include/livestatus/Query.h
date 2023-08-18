@@ -17,10 +17,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "livestatus/Aggregator.h"  // IWYU pragma: keep
+#include "livestatus/Aggregator.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Renderer.h"
+
+enum class Encoding;
 class Logger;
 class OutputBuffer;
 class Row;

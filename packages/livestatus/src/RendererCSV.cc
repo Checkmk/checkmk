@@ -6,6 +6,7 @@
 #include "livestatus/RendererCSV.h"
 
 #include <ostream>
+
 class Logger;
 
 RendererCSV::RendererCSV(std::ostream &os, Logger *logger,

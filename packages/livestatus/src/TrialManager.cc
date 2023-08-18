@@ -3,13 +3,13 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// IWYU pragma: no_include <type_traits>
 #include "livestatus/TrialManager.h"
 
 #include <endian.h>
 
 #include <cstdint>
 #include <istream>
+#include <ratio>
 #include <stdexcept>
 #include <system_error>
 

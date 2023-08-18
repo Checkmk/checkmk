@@ -10,6 +10,7 @@
 
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
+#include "livestatus/opids.h"
 
 DoubleFilter::DoubleFilter(Kind kind, std::string columnName,
                            std::function<double(Row)> getValue,

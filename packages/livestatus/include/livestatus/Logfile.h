@@ -15,7 +15,7 @@
 #include <string>
 #include <utility>
 
-#include "livestatus/LogEntry.h"  // IWYU pragma: keep
+#include "livestatus/LogEntry.h"
 class LogCache;
 class LogFilter;
 class Logger;

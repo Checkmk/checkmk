@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/AttributeBitmaskColumn.h"

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import xml.etree.ElementTree as etree
 from typing import Any, Literal
 
 import markdown
@@ -103,7 +104,21 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
                 raise WerkError(
                     "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
                 )
-            self._werk["title"] = headline.text
+
+            # the treeprocessor runs before the inline processor, so no inline
+            # markdown (links, bold, italic,..) has been replaced. this is
+            # basically okay, because we don't want any formatting in the
+            # headline. but we want to give some hint to the user that no
+            # formatting is allowed.
+            title = headline.text
+            try:
+                _raise_if_contains_markdown_formatting(title)
+            except WerkError as e:
+                raise WerkError(
+                    "Markdown formatting in title detected, this is not allowed."
+                ) from e
+
+            self._werk["title"] = title
             root.remove(headline)
 
             # we removed the headline so we can access element 0 again with a
@@ -135,6 +150,8 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         output_format="html",
     )
 
+    _raise_if_contains_unkown_tags(result)
+
     # werk was passed by reference into WerkExtractorExtension which got passed
     # to WerkExtractor which wrote all the fields.
     werk["description"] = result
@@ -143,3 +160,41 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         return RawWerkV2.parse_obj(werk)
     except ValidationError as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
+
+
+def _raise_if_contains_markdown_formatting(string: str) -> None:
+    markdown_converted = markdown.markdown(string)
+    # if markdown_converted contains any html tags, then string contained markdown formatting
+    if len(etree.fromstring(markdown_converted)):
+        raise WerkError(
+            f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
+        )
+
+
+def _raise_if_contains_unkown_tags(string: str) -> None:
+    tags_allowed = {
+        "code",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "strong",
+        "table",
+        "td",
+        "thead",
+        "tr",
+        "ul",
+    }
+    # string contains multiple tags, but etree expects only single root element.
+    # we wrap it in <p> which results in invalid html, but we don't care in this case.
+    tags_found = {e.tag for e in etree.fromstring(f"<p>{string}</p>").iter()}
+    tags_unknown = tags_found.difference(tags_allowed)
+    if tags_unknown:
+        tag_list = ", ".join(f"<{tag}>" for tag in tags_unknown)
+        raise WerkError(f"Found tag {tag_list} which is not in the list of allowed tags.")

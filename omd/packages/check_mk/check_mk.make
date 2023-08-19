@@ -56,7 +56,7 @@ ifneq ($(EDITION),managed)
 	    --exclude "cme" \
 	    --exclude "cme.py"
 endif
-ifeq ($(filter $(EDITION),cloud free),)
+ifeq ($(filter $(EDITION),cloud free saas),)
 	EDITION_EXCLUDE += \
 	    --exclude "cloud" \
 	    --exclude "cce" \

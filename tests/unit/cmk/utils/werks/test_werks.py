@@ -182,9 +182,9 @@ this is the `description` with some *formatting.*
         _markdown_string_to_werk(md)
 
 
-def test_loading_md_werk() -> None:
+def test_loading_md_werk_formatting_in_title() -> None:
     md = """[//]: # (werk v2)
-# test werk
+# test `werk` ***test*** [a](#href) asd
 
 key | value
 --- | ---
@@ -198,6 +198,54 @@ edition | cre
 
 this is the `description` with some *formatting.*
 
+# test `werk` ***test*** [a](#href)
+
+"""
+    with pytest.raises(
+        WerkError, match="Markdown formatting in title detected, this is not allowed"
+    ):
+        _markdown_string_to_werk(md)
+
+
+def test_loading_md_werk_tags_not_in_whitelist() -> None:
+    md = """[//]: # (werk v2)
+# test werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+this is <blink>forbidden</blink>
+
+"""
+    with pytest.raises(
+        WerkError, match="Found tag <blink> which is not in the list of allowed tags"
+    ):
+        _markdown_string_to_werk(md)
+
+
+def test_loading_md_werk() -> None:
+    md = """[//]: # (werk v2)
+# test < werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+this is the `description` with some *italic* and __bold__ ***formatting***.
+
 """
     assert _markdown_string_to_werk(md).to_json_dict() == {
         "__version__": "2",
@@ -208,9 +256,10 @@ this is the `description` with some *formatting.*
         "date": "2022-12-12T11:08:08+00:00",
         "edition": "cre",
         "level": 1,
-        "title": "test werk",
+        "title": "test < werk",
         "version": "2.0.0p7",
-        "description": "<p>this is the <code>description</code> with some <em>formatting.</em></p>",
+        "description": "<p>this is the <code>description</code> with some <em>italic</em> and "
+        "<strong>bold</strong> <strong><em>formatting</em></strong>.</p>",
     }
 
 

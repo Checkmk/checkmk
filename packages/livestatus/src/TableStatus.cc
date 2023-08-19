@@ -9,8 +9,6 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
-#include <sstream>
-#include <variant>  // IWYU pragma: keep
 
 #include "livestatus/BlobColumn.h"
 #include "livestatus/Column.h"
@@ -21,6 +19,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
+#include "livestatus/global_counters.h"
 #include "livestatus/mk_inventory.h"
 
 TableStatus::TableStatus(ICore *mc) : Table(mc) {

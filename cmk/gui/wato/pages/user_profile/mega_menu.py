@@ -98,6 +98,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             url="logout.py",
             sort_index=40,
             icon="sidebar_logout",
+            target="_self",
         ),
     ]
 

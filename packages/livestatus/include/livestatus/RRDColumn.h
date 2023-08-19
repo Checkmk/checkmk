@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "livestatus/ListColumn.h"
-#include "livestatus/overload.h"  // IWYU pragma: keep
+#include "livestatus/overload.h"
 
 class IHost;
 class IService;

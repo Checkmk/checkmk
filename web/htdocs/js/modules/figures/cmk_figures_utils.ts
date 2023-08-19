@@ -14,6 +14,7 @@ import {
     Levels,
     TransformedData,
 } from "figure_types";
+import {Scheduler} from "multi_data_fetcher";
 
 /**
  * Draw an individual shape
@@ -340,4 +341,66 @@ export function split_unit(formatted_value?: string) {
 
 export function getEmptyBasicFigureData(): FigureData {
     return {data: [], plot_definitions: []};
+}
+
+/**
+ * Component to realize the css property text-overflow: ellipsis for svg text elements
+ * @param node - text/tspan element
+ * @param {number} width - Max width for the text/tspan element
+ * @param {number} padding - Padding for the text/tspan element
+ */
+export function svg_text_overflow_ellipsis(
+    node: SVGTextElement | SVGTSpanElement,
+    width: number,
+    padding: number
+) {
+    let length = node.getComputedTextLength();
+    if (length <= width - padding) return;
+
+    const node_sel = d3.select(node);
+    let text = node_sel.text();
+    d3.select(node.parentNode as HTMLElement)
+        .selectAll("title")
+        .data(() => [text])
+        .join("title")
+        .text(d => d)
+        .classed("svg_text_tooltip", true);
+
+    while (length > width - padding && text.length > 0) {
+        text = text.slice(0, -1);
+        node_sel.text(text + "...");
+        length = node.getComputedTextLength();
+    }
+    node_sel.attr("x", padding).attr("text-anchor", "left");
+}
+
+export function add_scheduler_debugging<GType extends d3.BaseType, Data>(
+    selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
+    scheduler: Scheduler
+) {
+    const debugging = selection.append("div");
+    // Stop button
+    debugging
+        .append("input")
+        .attr("type", "button")
+        .attr("value", "Stop")
+        .on("click", () => scheduler.disable());
+    // Start button
+    debugging
+        .append("input")
+        .attr("type", "button")
+        .attr("value", "Start")
+        .on("click", () => scheduler.enable());
+    // Suspend 5 seconds
+    debugging
+        .append("input")
+        .attr("type", "button")
+        .attr("value", "Suspend 5 seconds")
+        .on("click", () => scheduler.suspend_for(5));
+    // Force update
+    debugging
+        .append("input")
+        .attr("type", "button")
+        .attr("value", "Force")
+        .on("click", () => scheduler.force_update());
 }

@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <compare>
 #include <sstream>
 #include <stdexcept>
 #include <vector>

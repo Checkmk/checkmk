@@ -5,9 +5,7 @@
 
 #include <functional>
 #include <initializer_list>
-#include <memory>
 #include <string>
-#include <variant>  // IWYU pragma: keep
 
 #include "gtest/gtest.h"
 #include "livestatus/IntColumn.h"

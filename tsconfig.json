@@ -12,11 +12,12 @@
         "strictNullChecks": true,
         "noImplicitAny": false,
         "noImplicitThis": false,
+        "noImplicitOverride": true,
         "noEmit": true,
         "moduleResolution": "node",
         "esModuleInterop": false,
         "module": "CommonJS",
-        "allowJs": true,
+        "allowJs": false,
         "allowSyntheticDefaultImports": true,
         "baseUrl": "./",
         "paths": {

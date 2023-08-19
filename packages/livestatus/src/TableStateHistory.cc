@@ -5,16 +5,15 @@
 
 #include "livestatus/TableStateHistory.h"
 
+#include <compare>
 #include <cstddef>
 #include <optional>
 #include <ratio>
 #include <set>
 #include <stdexcept>
 #include <utility>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "livestatus/Attributes.h"  // IWYU pragma: keep
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"

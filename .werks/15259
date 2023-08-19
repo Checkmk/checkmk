@@ -1,0 +1,14 @@
+Title: Fixed periodic service notification interval
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1692266789
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Because of a regression in 2.2, the periodic notification interval of a host
+was used for all of its services, too, overriding any rules for the given
+services.  This has been fixed, the periodic service notification interval
+rules work as expected again.

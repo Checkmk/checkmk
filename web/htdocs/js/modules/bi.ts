@@ -356,7 +356,7 @@ export class BIRulePreview extends BIPreview {
         this._trigger_update_if_required(params);
     }
 
-    _get_update_url() {
+    override _get_update_url() {
         return encodeURI("ajax_bi_rule_preview.py");
     }
 
@@ -371,7 +371,9 @@ export class BIRulePreview extends BIPreview {
         return example_arguments;
     }
 
-    _update_previews(json_data: CMKAjaxReponse<BIRulePreviewJsonData>) {
+    override _update_previews(
+        json_data: CMKAjaxReponse<BIRulePreviewJsonData>
+    ) {
         this._update_simulated_parameters(json_data.result.params);
         const nodes = d3
             .selectAll("#rule_p_nodes_container > tr")
@@ -449,7 +451,7 @@ export class BIAggregationPreview extends BIPreview {
         this._trigger_update_if_required(params);
     }
 
-    _get_update_url() {
+    override _get_update_url() {
         return encodeURI("ajax_bi_aggregation_preview.py");
     }
 
@@ -466,7 +468,9 @@ export class BIAggregationPreview extends BIPreview {
         return node_preview_div;
     }
 
-    _update_previews(json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>) {
+    override _update_previews(
+        json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>
+    ) {
         const node_preview_div = this._get_preview_div(
             d3.select("div#aggr_d_node")
         );

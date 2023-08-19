@@ -1,0 +1,12 @@
+Title: time_period: the 'excluded' field can now be updated using the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1692021776
+Edition: cre
+Knowledge: doc
+Level: 3
+Version: 2.3.0b1
+
+Before this werk it was not possible to update the 'excluded' field using the REST API as it returned a status code 400. This werk fixes that behaviour and now the REST API handles the update of the 'excluded' field correctly.
+

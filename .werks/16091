@@ -1,0 +1,17 @@
+Title: Local checks: Show metric values in service summary only if WARN/CRIT
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692358226
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Before this werk, local check services always showed all metric values in the service summary. As of
+this werk, only metric values which result in a <i>WARN</i> or a <i>CRIT</i> are shown in the
+service summary. All other metric values are instead shown in the service details.
+
+Hence, if the <a href="https://docs.checkmk.com/latest/en/localchecks.html#dynamic_state">P</a>
+state is used, metric values are displayed in the service summary if the violate the thresholds.
+Without the P state, metric values are always displayed in the service details.

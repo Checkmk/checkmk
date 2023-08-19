@@ -248,3 +248,15 @@ class UpdateTimePeriod(BaseSchema):
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
         description="A list of additional time ranges to be added.",
     )
+
+    exclude = fields.List(  # type: ignore[assignment]
+        TimePeriodAlias(
+            example="alias",
+            description="The alias for a time period.",
+            required=True,
+            presence="should_exist_and_should_not_be_builtin",
+        ),
+        example=["alias"],
+        description="A list of time period aliases whose periods are excluded.",
+        required=False,
+    )

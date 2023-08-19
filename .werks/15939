@@ -1,0 +1,19 @@
+Title: Fix possible "Internal Server Error" on save of changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1692255820
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+After update of the werkzeug module we have seen different users facing
+problems while saving changes in, e.g. Business Intelligence, Dynamic host
+management and Agent deployment rules. The save action always lead to an
+"Internal Server Error".
+
+Reason was a new introduced limit of the mentioned module causing this error
+while saving very large formulars. So this could also occur on various other
+pages.
+

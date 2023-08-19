@@ -391,15 +391,16 @@ def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
 
 def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
-    to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
+    sync_delta = activate_changes.get_file_names_to_sync(
         site_id=SiteId("remote"),
         site_logger=logger,
-        central_file_infos=central,
-        remote_file_infos=remote,
+        sync_state=activate_changes.SyncState(
+            central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
+        ),
         file_filter_func=None,
     )
 
-    assert sorted(to_sync_new + to_sync_changed) == sorted(
+    assert sorted(sync_delta.to_sync_new + sync_delta.to_sync_changed) == sorted(
         [
             "both-differ-mode",
             "both-differ-size",
@@ -412,7 +413,7 @@ def test_get_file_names_to_sync() -> None:
         ]
     )
 
-    assert sorted(to_delete) == sorted(
+    assert sorted(sync_delta.to_delete) == sorted(
         [
             "remote-only",
             "central-link-remote-dir-with-file/file",

@@ -11,9 +11,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <unordered_map>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/AttributeBitmaskColumn.h"

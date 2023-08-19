@@ -1546,6 +1546,6 @@ class PythonHelper:
             return self.site.check_output(["python3", str(self.site_path)], input)
 
     @contextmanager
-    def execute(self) -> Iterator[subprocess.Popen]:
+    def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
-            yield self.site.execute(["python3", str(self.site_path)])
+            yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)

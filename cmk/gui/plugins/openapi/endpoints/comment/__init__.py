@@ -25,7 +25,9 @@ Related documentation
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.livestatus_helpers.expressions import And, Or
+from livestatus import SiteId
+
+from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 
 from cmk.gui import fields as gui_fields
@@ -70,11 +72,16 @@ RW_PERMISSIONS = permissions.AllPerm([permissions.Perm("action.addcomment"), PER
 
 
 def _serialize_comment(comment: Comment) -> DomainObject:
+    dict_comment = dict(comment)
+
+    if "site" in dict_comment:
+        dict_comment["site_id"] = dict_comment.pop("site")
+
     return constructors.domain_object(
         domain_type="comment",
         identifier=str(comment.id),
         title=comment.comment,
-        extensions=dict(comment),
+        extensions=dict_comment,
         editable=False,
         deletable=True,
     )
@@ -116,6 +123,23 @@ HOST_NAME_SHOW = {
     )
 }
 
+SITE_ID = {
+    "site_id": gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
+}
+
+OPTIONAL_SITE_ID = {
+    "site_id": gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+    )
+}
+
 
 class GetCommentsByQuery(BaseSchema):
     query = gui_fields.query_field(Comments, required=False)
@@ -127,15 +151,18 @@ class GetCommentsByQuery(BaseSchema):
     method="get",
     tag_group="Monitoring",
     path_params=[COMMENT_ID],
+    query_params=[SITE_ID],
     response_schema=CommentObject,
 )
 def show_comment(params: Mapping[str, Any]) -> Response:
     """Show a comment"""
     try:
+        site_id = SiteId(params["site_id"])
+        live = sites.live()
         result = (
             comment_cmds.comments_query()
             .filter(Comments.id == params["comment_id"])
-            .fetchone(sites.live())
+            .fetchone(live, True, only_site=site_id)
         )
     except ValueError:
         return problem(
@@ -154,14 +181,19 @@ def show_comment(params: Mapping[str, Any]) -> Response:
     response_schema=CommentCollection,
     update_config_generation=False,
     path_params=[COLLECTION_NAME],
-    query_params=[GetCommentsByQuery, HOST_NAME_SHOW, SERVICE_DESCRIPTION_SHOW],
+    query_params=[GetCommentsByQuery, HOST_NAME_SHOW, SERVICE_DESCRIPTION_SHOW, OPTIONAL_SITE_ID],
 )
 def show_comments(params: Mapping[str, Any]) -> Response:
     """Show comments"""
 
     try:
+        sites_to_query = params.get("site_id")
+        live = sites.live()
+        if sites_to_query:
+            live.only_sites = [sites_to_query]
+
         comments_dict: Mapping[int, Comment] = comment_cmds.get_comments(
-            connection=sites.live(),
+            connection=live,
             host_name=params.get("host_name"),
             service_description=params.get("service_description"),
             query=params.get("query"),
@@ -304,18 +336,22 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
     """Delete comments"""
     user.need_permission("action.addcomment")
     body = params["body"]
+    site_id = body["site_id"]
+
+    query_expr: QueryExpression
 
     match body["delete_type"]:
         case "query":
-            query = comment_cmds.comments_query().filter(body["query"])
+            query_expr = body["query"]
 
         case "by_id":
-            query = comment_cmds.comments_query().filter(Comments.id == body["comment_id"])
+            query_expr = Comments.id == body["comment_id"]
 
         case "params":
+            host_name = body["host_name"]
             if body.get("service_descriptions"):
-                svc_filter = And(
-                    Comments.host_name == body["host_name"],
+                query_expr = And(
+                    Comments.host_name == host_name,
                     Or(
                         *[
                             Comments.service_description == svc_desc
@@ -324,8 +360,7 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
                     ),
                 )
             else:
-                svc_filter = And(Comments.host_name == body["host_name"])
-            query = comment_cmds.comments_query().filter(svc_filter)
+                query_expr = And(Comments.host_name == host_name)
 
-    comment_cmds.delete_comments(sites.live(), query)
+    comment_cmds.delete_comments(sites.live(), query_expr, SiteId(site_id))
     return Response(status=204)

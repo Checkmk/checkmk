@@ -7,6 +7,8 @@
 #define Renderer_h
 
 #include <chrono>
+#include <compare>
+#include <cstdint>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -14,11 +16,13 @@
 #include <string>
 #include <vector>
 
-#include "livestatus/Interface.h"
 #include "livestatus/OStreamStateSaver.h"
-enum class Encoding;
+
+enum class CommentType : int32_t;
 class CSVSeparators;
+enum class Encoding;
 class Logger;
+enum class RecurringKind : int32_t;
 
 enum class OutputFormat { csv, broken_csv, json, python3 };
 

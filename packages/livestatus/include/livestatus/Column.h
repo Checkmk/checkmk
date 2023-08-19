@@ -16,9 +16,10 @@
 #include "livestatus/Filter.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
-#include "livestatus/opids.h"
+
 class Aggregation;
 class Aggregator;
+enum class RelationalOperator;
 class RowRenderer;
 class User;
 

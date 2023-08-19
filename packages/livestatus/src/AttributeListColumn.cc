@@ -5,6 +5,7 @@
 
 #include "livestatus/AttributeListColumn.h"
 
+#include <algorithm>
 #include <bitset>
 #include <cctype>
 #include <map>

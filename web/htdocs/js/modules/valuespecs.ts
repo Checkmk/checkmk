@@ -7,6 +7,9 @@
 import "select2";
 
 import * as ajax from "ajax";
+//TODO: this causes an error because allowJS is set to false in tsconfig
+// colorpicker should be used as a package instead of copied file
+//@ts-ignore
 import * as colorpicker from "colorpicker";
 import * as d3 from "d3";
 import * as forms from "forms";

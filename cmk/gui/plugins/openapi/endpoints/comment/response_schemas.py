@@ -37,6 +37,12 @@ class CommentAttributes(BaseSchema):
         required=True, description="True if the comment is from a service or else it's False."
     )
 
+    site_id = fields.String(
+        description="The site id of the downtime.",
+        example="production",
+        required=True,
+    )
+
 
 class CommentObject(DomainObject):
     domainType = fields.Constant(

@@ -15,7 +15,8 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
-#include "livestatus/opids.h"
+
+enum class RelationalOperator;
 class IntFilter;
 class Logger;
 

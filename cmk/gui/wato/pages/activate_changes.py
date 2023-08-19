@@ -184,11 +184,16 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             return
 
         yield PageMenuEntry(
-            title=_("Discard all pending changes"),
-            icon_name="delete",
+            title=_("Revert all pending changes"),
+            icon_name="revert",
             item=make_simple_link(makeactionuri(request, transactions, [("_action", "discard")])),
             name="discard_changes",
-            is_enabled=self.has_changes() and self._get_last_wato_snapshot_file(),
+            is_enabled=self.has_changes()
+            and not self.discard_changes_forbidden()
+            and self._get_last_wato_snapshot_file(),
+            disabled_tooltip=_(
+                "Blocked due to non-revertible change. Activate those changes to unblock reverting."
+            ),
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
@@ -450,10 +455,21 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 if self._is_foreign(change):
                     html.icon("foreign_changes", _("This change has been made by another user"))
 
+                icon_code = (
+                    html.render_icon(
+                        "no_revert",
+                        _(
+                            "Change is not revertible. Activate this change to unblock the reverting of pending changes."
+                        ),
+                    )
+                    if self._prevent_discard_changes(change)
+                    else ""
+                )
+
                 # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
                 # to handle this in a special way because of the SiteChanges file format. Would be
                 # cleaner to transport the text type (like AuditLogStore is doing it).
-                table.cell(_("Change"), HTML(change["text"]))
+                table.cell(_("Change"), HTML(icon_code + change["text"]))
 
                 table.cell(_("Affected sites"), css=["affected_sites"])
                 if self._affects_all_sites(change):
@@ -520,7 +536,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 if not is_online or not is_logged_in:
                     can_activate_all = False
 
-                need_restart = self._is_activate_needed(site_id)
+                need_restart = self.is_activate_needed(site_id)
                 need_sync = self.is_sync_needed(site_id)
                 need_action = need_restart or need_sync
                 nr_changes = len(self._changes_of_site(site_id))

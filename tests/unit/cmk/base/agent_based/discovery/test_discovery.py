@@ -1327,28 +1327,24 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
             expected_kept_labels=[
-                HostLabel("existing_label", "bar", SectionName("foo")),
-                HostLabel("another_label", "true", SectionName("labels")),
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
         ),
         on_cluster=ExpectedDiscoveryResultOnCluster(
-            expected_vanished_host_labels=[],
-            expected_old_host_labels=[
+            expected_vanished_host_labels=[
                 HostLabel("node1_existing_label", "true", plugin_name=SectionName("node1_plugin"))
             ],
+            expected_old_host_labels=[],
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
             expected_kept_labels={
                 HostName("test-clusterhost"): [
-                    HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
                     HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                     HostLabel("node2_live_label", "true", SectionName("labels")),
                 ],
                 HostName("test-node1"): [
-                    HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
                     HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 ],
                 HostName("test-node2"): [
@@ -1491,7 +1487,7 @@ def test__perform_host_label_discovery_on_realhost(
     assert host_label_result.old == discovery_test_case.on_realhost.expected_old_host_labels
     assert host_label_result.new == discovery_test_case.on_realhost.expected_new_host_labels
 
-    assert host_label_result.kept() == discovery_test_case.on_realhost.expected_kept_labels
+    assert host_label_result.present == discovery_test_case.on_realhost.expected_kept_labels
 
 
 @pytest.mark.usefixtures("fix_register")

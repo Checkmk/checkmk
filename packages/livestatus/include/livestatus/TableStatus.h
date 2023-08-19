@@ -10,8 +10,9 @@
 
 #include "livestatus/Row.h"
 #include "livestatus/Table.h"
-#include "livestatus/global_counters.h"
+
 class ColumnOffsets;
+enum class Counter;
 class ICore;
 class Query;
 class User;

@@ -94,7 +94,10 @@ class VisualTypeDashboards(VisualType):
                     # displaying host graphs.
                     "service": {"service": specification[1]["service_description"]},
                 }
-                parameters = {"source": specification[1]["graph_id"]}
+                parameters = {
+                    "source": specification[1]["graph_id"],
+                    "single_infos": [],
+                }
 
             elif specification[0] == "custom":
                 # Override the dashlet type here. It would be better to get the

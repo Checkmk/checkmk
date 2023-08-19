@@ -413,11 +413,19 @@ export function confirm_dialog(
 }
 
 // Makes a form submittable after explicit confirmation
-export function add_confirm_on_submit(form_id: string, message: string) {
+export function add_confirm_on_submit(
+    form_id: string,
+    message: string,
+    optional_args: {[name: string]: string} = {}
+) {
     const form = document.getElementById(form_id);
     if (form instanceof HTMLElement) {
         form.addEventListener("submit", e => {
-            confirm_dialog({html: message}, () => {
+            const args = {
+                ...{html: message},
+                ...optional_args,
+            };
+            confirm_dialog(args, () => {
                 (document.getElementById(form_id) as HTMLFormElement)?.submit();
             });
             return utils.prevent_default_events(e!);

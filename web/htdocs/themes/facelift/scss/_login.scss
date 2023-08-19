@@ -124,11 +124,13 @@ body.login {
   #label_user,
   #input_user,
   #label_pass,
+  #input_backup,
   #input_pass {
     float: left;
   }
 
   #input_user,
+  #input_backup,
   #input_pass {
     width: 183px;
     height: $input-field-height;
@@ -137,6 +139,7 @@ body.login {
 
   #_login,
   #_saml2_login_button,
+  #_use_totp_code,
   #_use_backup_code {
     width: 100%;
     height: 29px;
@@ -159,7 +162,7 @@ body.login {
   }
 
   div#saml_button {
-    margin-top: 20px;
+    margin-top: 200px;
   }
 
   h2.login_separator {
@@ -227,7 +230,7 @@ body.login {
       box-shadow: none;
     }
 
-    #label_2fa {
+    #label_webauthn {
       position: absolute;
       top: 70px;
       left: 40px;
@@ -239,18 +242,45 @@ body.login {
       left: 40px;
     }
 
+    #label_backup {
+      position: absolute;
+      top: 258px;
+      left: 40px;
+    }
+
     #input_pass {
       position: absolute;
       top: 146px;
       left: 135px;
     }
 
-    #_use_backup_code {
+    #input_backup {
+      position: absolute;
+      top: 251px;
+      left: 135px;
+    }
+
+    #_use_backup_code,
+    #_use_totp_code {
       bottom: 20px;
       left: 40px;
       padding: 8px 16px;
       position: absolute;
       width: calc(100% - 80px);
+    }
+
+    div.backup_foldable {
+      .foldable .foldable_header {
+        top: 230px;
+      }
+      #_use_backup_code {
+        top: 288px;
+      }
+    }
+
+    #_use_totp_code {
+      bottom: unset;
+      top: 183px;
     }
 
     .foldable {

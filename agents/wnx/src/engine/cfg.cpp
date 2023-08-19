@@ -3,10 +3,9 @@
 
 #include "cfg.h"
 
-#include <WinSock2.h>
-
 #include <ShlObj.h>  // known path
 #include <VersionHelpers.h>
+#include <WinSock2.h>
 #include <direct.h>  // known path
 
 #include <atomic>
@@ -1554,30 +1553,35 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     return yamls;
 }
 
-// declares what should be merged
-static void PreMergeSections(YAML::Node target, YAML::Node source) {
-    // plugins:
-    {
-        auto tgt_plugin = target[groups::kPlugins];
-        const auto src_plugin = source[groups::kPlugins];
+namespace {
 
-        MergeStringSequence(tgt_plugin, src_plugin, vars::kPluginsFolders);
-        MergeMapSequence(tgt_plugin, src_plugin, vars::kPluginsExecution,
-                         vars::kPluginPattern);
-    }
+void PreMergeSection(YAML::Node target, YAML::Node source,
+                     std::string_view section) {
+    const auto tgt = target[section];
+    const auto src = source[section];
 
-    // local:
-    {
-        auto tgt_local = target[groups::kLocal];
-        const auto src_local = source[groups::kLocal];
-
-        MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
-        MergeMapSequence(tgt_local, src_local, vars::kPluginsExecution,
-                         vars::kPluginPattern);
-    }
+    MergeStringSequence(tgt, src, vars::kPluginsFolders);
+    MergeMapSequence(tgt, src, vars::kPluginsExecution, vars::kPluginPattern);
 }
 
-static bool Is64BitWindows() {
+// declares what should be merged
+void PreMergeSectionPlugins(YAML::Node target, YAML::Node source) {
+    return PreMergeSection(target, source, groups::kPlugins);
+}
+
+void PreMergeSectionLocal(YAML::Node target, YAML::Node source) {
+    return PreMergeSection(target, source, groups::kLocal);
+}
+
+void PreMergeSectionExtensions(YAML::Node target, YAML::Node source) {
+    const auto tgt = target[groups::kExtensions];
+    const auto src = source[groups::kExtensions];
+
+    MergeMapSequence(tgt, src, std::string{vars::kExtensionsExecution},
+                     std::string{vars::kExecutionName});
+}
+
+bool Is64BitWindows() {
 #if defined(_WIN64)
     return true;  // 64-bit programs run only on Win64
 #elif defined(_WIN32)
@@ -1589,6 +1593,7 @@ static bool Is64BitWindows() {
     return false;  // Win64 does not support Win16
 #endif
 }
+}  // namespace
 
 // Scott Meyer method to have a safe singleton
 // static variables with block scope created only once
@@ -1662,12 +1667,14 @@ bool TryMerge(YAML::Node &config_node, const ConfigInfo::YamlData &yaml_data) {
         return false;
     }
 
-    auto bakery = YAML::LoadFile(wtools::ToUtf8(yaml_data.path_.wstring()));
-    // special cases for plugins and folder
-    PreMergeSections(bakery, config_node);
+    auto config = YAML::LoadFile(wtools::ToUtf8(yaml_data.path_.wstring()));
+
+    PreMergeSectionPlugins(config, config_node);
+    PreMergeSectionLocal(config, config_node);
+    PreMergeSectionExtensions(config, config_node);
 
     // normal cases
-    ConfigInfo::smartMerge(config_node, bakery, Combine::overwrite);
+    ConfigInfo::smartMerge(config_node, config, Combine::overwrite);
     return true;
 }
 }  // namespace

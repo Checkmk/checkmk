@@ -277,6 +277,11 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+
+        from cmk.cee.bakery.type_defs import (  # pylint: disable=redefined-outer-name,import-outside-toplevel
+            BakeRevisionMode,
+        )
+
     except ImportError:
         return
 
@@ -287,7 +292,14 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
             config_cache, selected_hosts=None
         )
 
-    agent_bakery.bake_agents(target_configs, call_site="config creation")
+    agent_bakery.bake_agents(
+        target_configs,
+        bake_revision_mode=BakeRevisionMode.INACTIVE
+        if config.apply_bake_revision
+        else BakeRevisionMode.DISABLED,
+        logging_level=config.agent_bakery_logging,
+        call_site="config creation",
+    )
 
 
 @contextmanager

@@ -163,7 +163,7 @@ export class AggregationsDatasource extends AbstractDatasource {
         this._update_interval = 30;
     }
 
-    static id(): string {
+    static override id(): string {
         return "bi_aggregations";
     }
 
@@ -181,7 +181,7 @@ export class TopologyDatasource extends AbstractDatasource {
         super("Topology");
     }
 
-    static id(): string {
+    static override id(): string {
         return "topology";
     }
 

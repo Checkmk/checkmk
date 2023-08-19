@@ -354,6 +354,15 @@ mrpe:
         # - include some_user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
 
+extensions:
+    enabled: yes
+
+    #execution:
+    #    - name        : "robot_mk"                                 # just a name
+    #      binary      : "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe"  # what to run
+    #      command_line: "daemon"                                   # command line
+    #      run         : auto                                       # yes, no or auto(run if present)
+
 modules:
     enabled: yes
 

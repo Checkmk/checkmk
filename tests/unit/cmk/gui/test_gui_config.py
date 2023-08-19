@@ -119,7 +119,6 @@ def test_default_config_from_plugins() -> None:
         "wato_upload_insecure_snapshots",
         "wato_hide_varnames",
         "wato_hide_help_in_lists",
-        "wato_activate_changes_concurrency",
         "wato_max_snapshots",
         "wato_num_hostspecs",
         "wato_num_itemspecs",

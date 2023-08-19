@@ -4,6 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+//TODO: cbor should be replaced with an npm or a python package
+// so this JS import here can be removed
+//@ts-ignore
 import {CBOR} from "cbor_ext";
 import * as utils from "utils";
 
@@ -18,7 +21,7 @@ export function register() {
             }
             throw new Error("Error getting registration data!");
         })
-        .then(CBOR.decode)
+        .then<CredentialCreationOptions>(CBOR.decode)
         .then(function (options) {
             return navigator.credentials.create(options);
         })
@@ -107,7 +110,7 @@ export function login() {
             }
             throw new Error("No credential available to authenticate!");
         })
-        .then(CBOR.decode)
+        .then<CredentialCreationOptions>(CBOR.decode)
         .then(function (options) {
             return navigator.credentials.get(options);
         })

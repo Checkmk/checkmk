@@ -164,7 +164,7 @@ def automation_discovery(
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
 
-            DiscoveredHostLabelsStore(host_name).save(host_labels.kept())
+            DiscoveredHostLabelsStore(host_name).save(host_labels.present)
             if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
                 # Rulesets for service discovery can match based on the hosts labels.
                 ruleset_matcher.clear_caches()

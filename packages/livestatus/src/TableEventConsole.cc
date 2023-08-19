@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
-#include <variant>  // IWYU pragma: keep
 
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"

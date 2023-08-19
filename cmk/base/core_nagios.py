@@ -487,7 +487,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                         # If we have the same active check again with the same description,
                         # then we do not regard this as an error, but simply ignore the
                         # second one. That way one can override a check with other settings.
-                        if cn == "active(%s)" % acttype:
+                        if cn == f"active({acttype})":
                             continue
 
                         core_config.duplicate_service_warning(
@@ -495,12 +495,12 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                             description=description,
                             host_name=hostname,
                             first_occurrence=used_descriptions[description],
-                            second_occurrence=("active(%s)" % acttype, None),
+                            second_occurrence=(f"active({acttype})", None),
                         )
                         continue
 
                     # TODO: is this right? description on the right, not item?
-                    used_descriptions[description] = ("active(" + acttype + ")", description)
+                    used_descriptions[description] = (f"active({acttype})", description)
 
                     if host_attrs["address"] in ["0.0.0.0", "::"]:
                         command_name = "check-mk-custom"

@@ -1296,9 +1296,10 @@ class EventServer(ECServerThread):
             )
             for facility in list(range(23)) + [31]:
                 if facility in self._rule_hash:
-                    stats = []
-                    for prio, entries in self._rule_hash[facility].items():
-                        stats.append(f"{SyslogPriority(prio)}({len(entries)})")
+                    stats = [
+                        f"{SyslogPriority(prio)}({len(entries)})"
+                        for prio, entries in self._rule_hash[facility].items()
+                    ]
                     self._logger.info(" %-12s: %s", SyslogFacility(facility), " ".join(stats))
 
     def hash_rule(self, rule: Rule) -> None:
@@ -3719,5 +3720,4 @@ def main() -> None:  # pylint: disable=too-many-branches
 
 
 if __name__ == "__main__":
-    main()
     main()

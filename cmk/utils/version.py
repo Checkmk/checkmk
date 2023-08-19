@@ -434,10 +434,10 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version.from_str("2.2.0p1"), Version.from_str("2.3.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.2.0p8"), Version.from_str("2.3.0i1")), VersionsCompatible)
     True
     >>> str(c(Version.from_str("2.2.0b1000"), Version.from_str("2.3.0i1")))
-    'This target version requires at least 2.2.0p1'
+    'This target version requires at least 2.2.0p...'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -513,7 +513,10 @@ def versions_compatible(
 _REQUIRED_PATCH_RELEASES_MAP: Final = {
     # max can be evaluated in place, obviously, but we keep a list for documentation.
     _BaseVersion(2, 3, 0): max(
-        (Version.from_str("2.2.0p1"),),  # at least the last major version, by default.
+        (
+            Version.from_str("2.2.0p1"),  # at least the last major version, by default.
+            Version.from_str("2.2.0p8"),  # Here we started to sign agents with SHA256
+        ),
     ),
 }
 

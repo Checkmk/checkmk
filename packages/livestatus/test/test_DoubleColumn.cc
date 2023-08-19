@@ -4,7 +4,6 @@
 // source code package.
 
 #include <initializer_list>
-#include <memory>
 #include <string>
 
 #include "gtest/gtest.h"

@@ -13,9 +13,10 @@
 #include <string>
 
 #include "livestatus/ColumnFilter.h"
-#include "livestatus/Filter.h"
-#include "livestatus/opids.h"
+
+class Filter;
 class RegExp;
+enum class RelationalOperator;
 class Row;
 class User;
 

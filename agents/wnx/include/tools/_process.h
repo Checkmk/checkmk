@@ -88,6 +88,32 @@ inline bool RunDetachedCommand(const std::string &command) {
     return false;
 }
 
+inline bool RunDetachedProcess(const std::wstring &name) {
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    ZeroMemory(&pi, sizeof pi);
+    auto windows_name = const_cast<LPWSTR>(name.c_str());
+
+    const auto ret = CreateProcessW(
+        nullptr,       // application name
+        windows_name,  // Command line options
+        nullptr,       // Process handle not inheritable
+        nullptr,       // Thread handle not inheritable
+        FALSE,         // Set handle inheritance to FALSE
+        CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,  // No creation flags
+        nullptr,  // Use parent's environment block
+        nullptr,  // Use parent's starting directory
+        &si,      // Pointer to STARTUPINFO structure
+        &pi);     // Pointer to PROCESS_INFORMATION structure
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return ret == TRUE;
+}
+
 // NOTE: LAST and BEST attempt to have standard windows starter
 // Returns process id on success
 /// IMPORTANT: SET inherit_handle to TRUE may prevent script form start

@@ -2102,7 +2102,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     def help(self):
         return _(
             "This plugin synchronizes a field of the users LDAP account to the pager attribute "
-            "of the Setup user accounts, which is then forwarded to the monitoring core and can be used"
+            "of the Setup user accounts, which is then forwarded to the monitoring core and can be used "
             "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
         )
 

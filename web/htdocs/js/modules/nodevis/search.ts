@@ -19,15 +19,15 @@ export class SearchAggregationsPlugin extends ToolbarPluginBase {
         return new SearchAggregationsPlugin(world, "Search aggregations");
     }
 
-    id() {
+    override id() {
         return "bi_search_aggregations";
     }
 
-    has_toggle_button(): boolean {
+    override has_toggle_button(): boolean {
         return false;
     }
 
-    render_content(): void {
+    override render_content(): void {
         if (this._div_selection == null) return;
 
         this._div_selection

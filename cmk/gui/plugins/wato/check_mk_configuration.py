@@ -1976,42 +1976,6 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableActivateChangesConcurrency(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_activate_changes_concurrency"
-
-    def valuespec(self) -> ValueSpec:
-        return CascadingDropdown(
-            title=_("Maximum parallel site activations"),
-            choices=[
-                (
-                    "auto",
-                    # xgettext: no-python-format
-                    _("Start new activations until 90% of RAM is used"),
-                ),
-                (
-                    "maximum",
-                    _("Limit maximum number to"),
-                    Integer(minvalue=5, default_value=20),
-                ),
-            ],
-            orientation="horizontal",
-            help=_(
-                "Specifies the maximum number of parallel running site activate changes processes. "
-                "Each site activation is handled in a separate apache process. If your configuration setup includes "
-                "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates. "
-                "Note: The hardcoded minimum is set to 5."
-            ),
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO

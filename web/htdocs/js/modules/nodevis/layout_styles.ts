@@ -48,11 +48,11 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     max_depth = 1;
     _layer_count = 0;
 
-    positioning_weight(): number {
+    override positioning_weight(): number {
         return 10 + this.style_root_node.depth;
     }
 
-    remove(): void {
+    override remove(): void {
         this.get_div_selection().remove();
         AbstractLayoutStyle.prototype.remove.call(this);
         this._cleanup_style_node_positioning();
@@ -67,7 +67,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         }
     }
 
-    update_data(): void {
+    override update_data(): void {
         this.use_transition = true;
 
         this._cleanup_style_node_positioning();
@@ -145,7 +145,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         delete node["children_backup"];
     }
 
-    zoomed(): void {
+    override zoomed(): void {
         // Update style overlays which depend on zoom
         this.generate_overlay();
     }
@@ -193,18 +193,18 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
-    static class_name = "hierarchy";
-    static description = "Hierarchical style";
+    static override class_name = "hierarchy";
+    static override description = "Hierarchical style";
 
-    type(): string {
+    override type(): string {
         return "hierarchy";
     }
 
-    style_color(): string {
+    override style_color(): string {
         return "#ffa042";
     }
 
-    get_style_options(): StyleOptionSpec[] {
+    override get_style_options(): StyleOptionSpec[] {
         return [
             {
                 id: "layer_height",
@@ -245,7 +245,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         ];
     }
 
-    _compute_node_offsets(): void {
+    override _compute_node_offsets(): void {
         const rad = (this.get_rotation() / 180) * Math.PI;
         const cos_x = Math.cos(rad);
         const sin_x = Math.sin(rad);
@@ -329,7 +329,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         }
     }
 
-    translate_coords(): void {
+    override translate_coords(): void {
         if (this._style_translated && this.has_fixed_position()) return;
 
         const rad = (this.get_rotation() / 180) * Math.PI;
@@ -408,7 +408,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         this.use_transition = false;
     }
 
-    generate_overlay(): void {
+    override generate_overlay(): void {
         if (!this._world.layout_manager.edit_layout) return;
 
         this.selection.attr(
@@ -552,19 +552,19 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
-    static class_name = "radial";
-    static description = "Radial style";
+    static override class_name = "radial";
+    static override description = "Radial style";
     _text_rotations: number[] = [];
 
-    type(): string {
+    override type(): string {
         return "radial";
     }
 
-    style_color(): string {
+    override style_color(): string {
         return "#13d389";
     }
 
-    get_style_options(): StyleOptionSpec[] {
+    override get_style_options(): StyleOptionSpec[] {
         return [
             {
                 id: "radius",
@@ -599,7 +599,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         ];
     }
 
-    _compute_node_offsets(): void {
+    override _compute_node_offsets(): void {
         const radius =
             (this.style_config.options.radius as number) *
             (this.max_depth - this.style_root_node.depth + 1);
@@ -642,7 +642,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         }
     }
 
-    translate_coords(): void {
+    override translate_coords(): void {
         if (this._style_translated && this.has_fixed_position()) return;
 
         const offsets: Coords = {
@@ -735,7 +735,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         };
     }
 
-    generate_overlay(): void {
+    override generate_overlay(): void {
         if (!this._world.layout_manager.edit_layout) return;
 
         this.selection.attr(
@@ -864,42 +864,42 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleFixed extends AbstractLayoutStyle {
-    static class_name = "fixed";
-    static description = "Fixed position style";
+    static override class_name = "fixed";
+    static override description = "Fixed position style";
 
-    type(): string {
+    override type(): string {
         return "fixed";
     }
 
-    style_color(): string {
+    override style_color(): string {
         return "Burlywood";
     }
 
-    positioning_weight(): number {
+    override positioning_weight(): number {
         return 100;
     }
 
-    update_data(): void {
+    override update_data(): void {
         this.fix_node(this.style_root_node);
     }
 }
 
 export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
-    static class_name = "block";
-    static description = "Leaf-Nodes Block style";
+    static override class_name = "block";
+    static override description = "Leaf-Nodes Block style";
     _width = 0;
     _height = 0;
     _leaf_childs: NodevisNode[] = [];
 
-    type(): string {
+    override type(): string {
         return "block";
     }
 
-    style_color(): string {
+    override style_color(): string {
         return "#3cc2ff";
     }
 
-    get_style_options(): StyleOptionSpecCheckbox[] {
+    override get_style_options(): StyleOptionSpecCheckbox[] {
         return [
             {
                 id: "detach_from_parent",
@@ -910,7 +910,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         ];
     }
 
-    _compute_node_offsets(): void {
+    override _compute_node_offsets(): void {
         this._leaf_childs = [];
         if (!this.style_root_node.children) return;
 
@@ -951,11 +951,11 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         this.use_transition = true;
     }
 
-    get_size(): [number, number] {
+    override get_size(): [number, number] {
         return [this._width * 1.1, this._height];
     }
 
-    translate_coords(): void {
+    override translate_coords(): void {
         if (this._style_root_node_offsets.length == 0) return;
 
         log(
@@ -997,11 +997,11 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         this._style_translated = true;
     }
 
-    update_gui(): void {
+    override update_gui(): void {
         this.generate_overlay();
     }
 
-    generate_overlay(): void {
+    override generate_overlay(): void {
         if (this._style_root_node_offsets.length < 2) return;
 
         this.selection.attr(

@@ -2824,7 +2824,10 @@ def _get_config_sync_paths(
 
     for file_name in file_names:
         file_path = os.path.join(root_path, file_name)
-        if os.path.basename(os.path.dirname(file_path)) not in replication_path_excludes:
+        if (
+            os.path.basename(os.path.dirname(file_path)) not in replication_path_excludes
+            and file_name not in replication_path_excludes
+        ):
             valid_entries.append(file_path)
 
     return valid_entries

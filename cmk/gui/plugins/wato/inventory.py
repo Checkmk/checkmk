@@ -188,7 +188,7 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
-        name="inv_exports:software_csv",
+        name=RuleGroup.InvExports("software_csv"),
         valuespec=_valuespec_inv_exports_software_csv,
         is_deprecated=True,
     )

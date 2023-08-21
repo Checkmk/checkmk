@@ -269,7 +269,10 @@ class ErrorReporter:
         ("inventory", "inv_parameters:inv_if"),
         ("inventory", "inv_parameters:lnx_sysctl"),
         ("inventory", "inv_retention_intervals"),
-        ("inventory", "inv_exports:software_csv"),  # deprecated since 2.2
+        (
+            "inventory",
+            RuleGroup.InvExports("software_csv"),
+        ),  # deprecated since 2.2
     }
     KNOWN_ITEM_REQUIREMENTS = {
         # type # plugin # wato

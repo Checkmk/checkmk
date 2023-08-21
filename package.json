@@ -65,8 +65,6 @@
     "postcss": "^8.2.4",
     "postcss-loader": "^6.2.1",
     "prettier": "^2.5.0",
-    "redoc": "^2.0.0-rc.58",
-    "redoc-cli": "^0.13.1",
     "sass": "^1.44.0",
     "sass-loader": "^12.3.0",
     "script-loader": "^0.7.2",

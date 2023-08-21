@@ -212,6 +212,7 @@ jQuery Mobile Framework CSS,1.0 ,MIT,https://opensource.org/licenses/MIT,"web/ht
 web/htdocs/jquery/jquery.mobile-1.0.min.css",Dual licensed under the MIT or GPL Version 2 licenses.
 jQuery Mobile Framework CSS,1.0 ,MIT,https://opensource.org/licenses/MIT,"web/htdocs/jquery/jquery.mobile.structure-1.0.css
 web/htdocs/jquery/jquery.mobile.structure-1.0.min.css",Dual licensed under the MIT or GPL Version 2 licenses.
+redoc.standalone,2.0.0-rc.44,MIT,https://opensource.org/licenses/MIT,web/htdocs/openapi/redoc.standalone.js,
 ,,,,,
 JavaScript dependencies,,,,,
 @babel/code-frame,7.12.13,MIT,https://opensource.org/licenses/MIT,,

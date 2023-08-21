@@ -22,6 +22,7 @@ _AZURE_METRIC_FMT = {
     "bytes_per_second": lambda b: "%s/s" % get_bytes_human_readable(b),
     "seconds": lambda s: "%.2f s" % s,
     "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
+    "milliseconds": lambda ms: "%d ms" % (ms * 1000),
 }
 
 
@@ -77,7 +78,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         return 3, "Metric %s is 'None'" % display_name, []
 
     # convert to SI-unit
-    if unit == "milli_seconds":
+    if unit in ("milli_seconds", "milliseconds"):
         value /= 1000.
     elif unit == "seconds_rate":
         # we got seconds, but we computed the rate -> seconds per second:

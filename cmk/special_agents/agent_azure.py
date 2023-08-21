@@ -49,8 +49,8 @@ METRICS_SELECTED = {
          'connection_successful,connection_failed', 'PT1M', 'average', None),
     ],
     'Microsoft.Storage/storageAccounts': [
-        ('UsedCapacity,Ingress,Egress,Transactions,'
-         'SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'total', None),
+        ('UsedCapacity,Ingress,Egress,Transactions', 'PT1H', 'total', None),
+        ('SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'average', None),
     ],
     'Microsoft.Web/sites': [('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),],
 }

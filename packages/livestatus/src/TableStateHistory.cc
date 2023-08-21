@@ -372,9 +372,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         if (only_update && entry->time() >= since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
-            for (auto &it_hst : state_info) {
-                it_hst.second->_from = since;
-                it_hst.second->_until = since;
+            for (const auto &[key, hst] : state_info) {
+                hst->_from = since;
+                hst->_until = since;
             }
             only_update = false;
         }
@@ -383,8 +383,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             entry->kind() != LogEntryKind::state_service_initial &&
             entry->kind() != LogEntryKind::state_host_initial) {
             // Set still unknown hosts / services to unmonitored
-            for (auto &it_hst : state_info) {
-                auto &hst = it_hst.second;
+            for (const auto &[key, hst] : state_info) {
                 if (hst->_may_no_longer_exist) {
                     hst->_has_vanished = true;
                 }
@@ -463,11 +462,11 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
                     // Host/Service relations
                     if (state->_is_host) {
-                        for (auto &it_inh : state_info) {
-                            if (it_inh.second->_host != nullptr &&
-                                it_inh.second->_host->handleForStateHistory() ==
+                        for (const auto &[key, hst] : state_info) {
+                            if (hst->_host != nullptr &&
+                                hst->_host->handleForStateHistory() ==
                                     state->_host->handleForStateHistory()) {
-                                state->_services.push_back(it_inh.second);
+                                state->_services.push_back(hst);
                             }
                         }
                     } else {
@@ -561,10 +560,10 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 try {
                     const TimeperiodTransition tpt(entry->options());
                     notification_periods[tpt.name()] = tpt.to();
-                    for (auto &it_hst : state_info) {
-                        updateHostServiceState(
-                            query, user, query_timeframe, entry, it_hst.second,
-                            only_update, notification_periods);
+                    for (const auto &[key, hst] : state_info) {
+                        updateHostServiceState(query, user, query_timeframe,
+                                               entry, hst, only_update,
+                                               notification_periods);
                     }
                 } catch (const std::logic_error &e) {
                     Warning(logger())
@@ -580,10 +579,10 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 // we can detect if a host is no longer available after a nagios
                 // startup. If it still exists an INITIAL HOST/SERVICE state
                 // entry will follow up shortly.
-                for (auto &it_hst : state_info) {
-                    if (!it_hst.second->_has_vanished) {
-                        it_hst.second->_last_known_time = entry->time();
-                        it_hst.second->_may_no_longer_exist = true;
+                for (const auto &[key, hst] : state_info) {
+                    if (!hst->_has_vanished) {
+                        hst->_last_known_time = entry->time();
+                        hst->_may_no_longer_exist = true;
                     }
                 }
                 in_nagios_initial_states = true;
@@ -593,11 +592,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Create final reports
-    auto it_hst = state_info.begin();
     if (!_abort_query) {
-        while (it_hst != state_info.end()) {
-            auto &hst = it_hst->second;
-
+        for (const auto &[key, hst] : state_info) {
             // No trace since the last two nagios startup -> host/service has
             // vanished
             if (hst->_may_no_longer_exist) {
@@ -617,12 +613,11 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             hst->_until = hst->_time;
 
             process(query, user, query_timeframe, hst);
-            ++it_hst;
         }
     }
 
-    for (auto &[key, hss] : state_info) {
-        delete hss;
+    for (auto &[key, hst] : state_info) {
+        delete hst;
     }
 }
 

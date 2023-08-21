@@ -10,7 +10,6 @@ import http.client as http_client
 import json
 import time
 from base64 import b32decode, b32encode
-from collections.abc import Sequence
 from urllib import parse
 from uuid import uuid4
 
@@ -126,6 +125,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             save_two_factor_credentials(user.id, credentials)
             flash(_("Selected credential has been deleted"))
 
+        if request.has_var("_delete_codes"):
+            credentials["backup_codes"] = []
+            save_two_factor_credentials(user.id, credentials)
+            flash(_("All backup codes have been deleted"))
+
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
@@ -224,6 +228,13 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     "If you regenerate backup codes, you automatically invalidate the existing codes."
                 )
             )
+            delete_url = make_confirm_delete_link(
+                url=makeactionuri(request, transactions, [("_delete_codes", "")]),
+                title=_("Invalidate all backup codes"),
+            )
+            html.open_a(class_=["iconlink", "link"], target="main", href=delete_url)
+            html.i(_("Invalidate all codes"))
+            html.close_a()
         else:
             html.i(_("No backup codes created yet."))
 
@@ -263,16 +274,6 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     _("Registered at"),
                     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(credential["registered_at"])),
                 )
-
-    def _show_backup_codes(self, backup_codes: Sequence[str]) -> None:
-        forms.header(_("Backup codes"))
-        forms.section(_("Backup codes"), simple=True)
-        if backup_codes:
-            html.p(_("You have %d unused backup codes left.") % len(backup_codes))
-            html.i(_("If you regenerate backup codes, you automatically invalidate old codes."))
-        else:
-            html.i(_("No backup codes created yet."))
-        forms.end()
 
 
 class RegisterTotpSecret(ABCUserProfilePage):

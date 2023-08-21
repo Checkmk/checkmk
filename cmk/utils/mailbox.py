@@ -41,6 +41,7 @@ from exchangelib import (  # type: ignore[import]
     DELEGATE,
     EWSDateTime,
     EWSTimeZone,
+    Folder,
     Identity,
     IMPERSONATION,
 )
@@ -60,6 +61,7 @@ Message = POPIMAPMessage | EWSMessage
 
 MailMessages = Mapping[MailIndex, Message]  # type: ignore[valid-type]
 POPIMAPMailMessages = Mapping[MailIndex, POPIMAPMessage]
+EWSMailMessages = Mapping[MailIndex, EWSMessage]
 
 
 class EWS:
@@ -89,6 +91,32 @@ class EWS:
             selected_folder /= s
         self._selected_folder = selected_folder
         return int(self._selected_folder.total_count)
+
+    def add_folder(self, folder_path: str) -> Folder:
+        subfolder_names = folder_path.split("/")
+
+        # Determine parent folder
+        parent_folder: Folder | None = None  # default
+        # Match the given folder_path to both a same-level folder and a subfolder of the inbox
+        for parent_folder in [self._account.inbox.parent, self._account.inbox]:
+            i = 0
+            for i, fname in enumerate(subfolder_names):
+                if f := next(parent_folder.glob(fname).resolve(), None):
+                    if i == len(subfolder_names) - 1:  # full match - folder path already exists
+                        return f
+                    parent_folder = f
+                else:
+                    break
+            if i > 0:  # break loop if at least the 1st lvl subfolder is found in the root folder
+                break
+        subfolder_names = subfolder_names[i:]
+
+        # Create new subfolder(s)
+        for fname in subfolder_names:
+            new_folder = Folder(parent=parent_folder, name=fname)
+            new_folder.save()
+            parent_folder = new_folder
+        return new_folder
 
     def mail_ids_by_date(
         self,
@@ -361,7 +389,7 @@ class Mailbox:
         """Return mails contained in the currently selected folder matching @subject_pattern"""
         assert self._connection is not None
 
-        def _fetch_mails_pop3() -> MailMessages:
+        def _fetch_mails_pop3() -> POPIMAPMailMessages:
             return {
                 i: email.message_from_bytes(
                     b"\n".join(
@@ -373,11 +401,11 @@ class Mailbox:
                 for i in range(len(verified_result(self._connection.list())))
             }
 
-        def _fetch_mails_imap() -> MailMessages:
+        def _fetch_mails_imap() -> POPIMAPMailMessages:
             raw_messages = verified_result(self._connection.search(None, "NOT", "DELETED"))[0]
             assert isinstance(raw_messages, bytes)
             messages = raw_messages.decode().strip()
-            mails: MailMessages = {}
+            mails: POPIMAPMailMessages = {}
             for num in messages.split():
                 try:
                     data = verified_result(self._connection.fetch(num, "(RFC822)"))
@@ -391,6 +419,9 @@ class Mailbox:
                         % (num, exc, messages)
                     ) from exc
             return mails
+
+        def _fetch_mails_ews() -> EWSMailMessages:
+            return dict(enumerate(self._connection._account.inbox.all()))
 
         pattern = re.compile(subject_pattern) if subject_pattern else None
         try:
@@ -406,6 +437,13 @@ class Mailbox:
                     num: msg
                     for num, msg in _fetch_mails_imap().items()
                     if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
+                }
+            if inbox_protocol == "EWS":
+                ews_mails: EWSMailMessages = _fetch_mails_ews()
+                return {
+                    num: msg
+                    for num, msg in ews_mails.items()
+                    if pattern is None or pattern.match(msg.subject)
                 }
             raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
         except Exception as exc:
@@ -497,37 +535,43 @@ class Mailbox:
             else []
         )
 
-    def delete_mails(self, mails: Iterable[int]) -> None:
+    def delete_mails(self, mails: MailMessages) -> None:
         assert self._connection is not None
-        assert isinstance(mails, (list, tuple, set))
         try:
-            if self.inbox_protocol() == "POP3":
+            inbox_protocol = self.inbox_protocol()
+            if inbox_protocol == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
-            elif self.inbox_protocol() == "IMAP":
+            elif inbox_protocol == "IMAP":
                 for mail_index in mails:
                     verified_result(self._connection.store(mail_index, "+FLAGS", "\\Deleted"))
                 self._connection.expunge()
+            elif inbox_protocol == "EWS":
+                self._connection._account.bulk_delete(mails.values(), delete_type="SoftDelete")
+            else:
+                raise NotImplementedError(f"Deleting mails is not implemented for {inbox_protocol}")
 
         except Exception as exc:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
-    def copy_mails(self, mails: list[int], folder: str) -> None:
-        assert self._connection and self.inbox_protocol() == "IMAP"
+    def copy_mails(self, mails: MailMessages, folder: str) -> None:
+        inbox_protocol = self.inbox_protocol()
+        assert self._connection and inbox_protocol in {"IMAP", "EWS"}
+        # The user wants the message to be moved to the folder
+        # refered by the string stored in "cleanup_messages"
+        folder = folder.strip("/")
         try:
-            for mail_index in mails:
-                # The user wants the message to be moved to the folder
-                # refered by the string stored in "cleanup_messages"
-                folder = folder.strip("/")
-
-                # Create maybe missing folder hierarchy
-                target = ""
-                for level in folder.split("/"):
-                    target += "%s/" % level
-                    self._connection.create(target)
-
-                # Copy the mail
-                verified_result(self._connection.copy(str(mail_index), folder))
+            # Create maybe missing folder hierarchy and copy the mails
+            if inbox_protocol == "IMAP":
+                for mail_index in mails:
+                    target = ""
+                    for level in folder.split("/"):
+                        target += f"{level}/"
+                        self._connection.create(target)
+                    verified_result(self._connection.copy(str(mail_index), folder))
+            elif inbox_protocol == "EWS":
+                folder_obj = self._connection.add_folder(folder)
+                self._connection._account.bulk_copy(mails.values(), folder_obj)
 
         except Exception as exc:
             raise CleanupMailboxError("Failed to copy mail: %r" % exc) from exc

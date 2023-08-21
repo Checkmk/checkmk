@@ -15,7 +15,7 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             {
                 "fetch": (
                     "IMAP",
@@ -35,8 +35,58 @@ pytestmark = pytest.mark.checks
                 "--fetch-password=bar",
                 "--connect-timeout=15",
             ],
+            id="imap",
         ),
-        (
+        pytest.param(
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "connection": {"disable_tls": True, "tcp_port": 143},
+                        "auth": ("basic", ("foo", "bar")),
+                    },
+                ),
+                "connect_timeout": 15,
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-port=143",
+                "--fetch-username=foo",
+                "--fetch-password=bar",
+                "--connect-timeout=15",
+            ],
+            id="ews_no_tls",
+        ),
+        pytest.param(
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "server": "$HOSTNAME$",
+                        "connection": {"disable_tls": True, "tcp_port": 143},
+                        "auth": (
+                            "oauth2",
+                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                        ),
+                        "email_address": "foo@bar.com",
+                    },
+                ),
+                "connect_timeout": 15,
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=$HOSTNAME$",
+                "--fetch-port=143",
+                "--fetch-client-id=client_id",
+                "--fetch-client-secret=client_secret",
+                "--fetch-tenant-id=tenant_id",
+                "--fetch-email-address=foo@bar.com",
+                "--connect-timeout=15",
+            ],
+            id="ews_oauth",
+        ),
+        pytest.param(
             {
                 "service_description": "Email",
                 "fetch": (
@@ -65,6 +115,7 @@ pytestmark = pytest.mark.checks
                 "--forward-host=me.too@checkmk.com",
                 "--cleanup=delete",
             ],
+            id="imap_with_forward",
         ),
     ],
 )

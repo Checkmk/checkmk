@@ -404,8 +404,8 @@ def _valuespec_active_checks_mail() -> Migrate:
         valuespec=Dictionary(
             title=_("Check Email"),
             help=_(
-                "The basic function of this check is to log in into an IMAP or POP3 mailbox to "
-                "monitor whether or not the login is possible. A extended feature is, that the "
+                "The basic function of this check is to log in into an IMAP, POP3 or EWS mailbox "
+                "to monitor whether or not the login is possible. An extended feature is, that the "
                 "check can fetch all (or just some) from the mailbox and forward them as events "
                 "to the Event Console."
             ),
@@ -423,7 +423,7 @@ def _valuespec_active_checks_mail() -> Migrate:
                         default_value="Email",
                     ),
                 ),
-                _mail_receiving_params({"IMAP", "POP3"}),
+                _mail_receiving_params({"IMAP", "POP3", "EWS"}),
                 (
                     "connect_timeout",
                     Integer(

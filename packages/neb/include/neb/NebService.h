@@ -14,12 +14,12 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "livestatus/Interface.h"
-#include "livestatus/StringUtils.h"
 #include "neb/MacroExpander.h"
 #include "neb/NebContact.h"
 #include "neb/NebCore.h"
@@ -283,18 +283,19 @@ public:
 
         // check_mk PASSIVE CHECK without check interval uses the check
         // interval of its check-mk service
-        const auto is_cmk_passive =
-            mk::starts_with(service_.check_command_ptr->name, "check_mk-");
-        if (is_cmk_passive) {
+        auto is_cmk_passive = [](const ::service &svc) {
+            return std::string_view{svc.check_command_ptr->name}.starts_with(
+                "check_mk-");
+        };
+        if (is_cmk_passive(service_)) {
             const auto *host = service_.host_ptr;
             for (const auto *svc_member = host->services; svc_member != nullptr;
                  svc_member = svc_member->next) {
-                service *tmp_svc = svc_member->service_ptr;
-                if (mk::starts_with(tmp_svc->check_command_ptr->name,
-                                    "check-mk")) {
-                    auto safe_interval = tmp_svc->check_interval == 0
+                const auto &tmp_svc = *svc_member->service_ptr;
+                if (is_cmk_passive(tmp_svc)) {
+                    auto safe_interval = tmp_svc.check_interval == 0
                                              ? 1
-                                             : tmp_svc->check_interval;
+                                             : tmp_svc.check_interval;
                     return check_result_age / (safe_interval * interval_length);
                 }
             }

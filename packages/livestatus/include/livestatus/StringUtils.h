@@ -21,9 +21,6 @@ namespace mk {
 std::string unsafe_tolower(const std::string &str);
 std::string unsafe_toupper(const std::string &str);
 
-bool starts_with(std::string_view input, std::string_view test);
-bool ends_with(std::string_view input, std::string_view test);
-
 std::string replace_chars(const std::string &str,
                           const std::string &chars_to_replace,
                           char replacement);

@@ -484,7 +484,7 @@ std::string LogEntry::state_info() const {
                     state_type_ == "UNREACHABLE"sv) {
                     return parens("NOTIFY"sv, state_type_);
                 }
-                if (mk::starts_with(state_type_, "ALERTHANDLER (")) {
+                if (state_type_.starts_with("ALERTHANDLER (")) {
                     return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
                 return std::string{state_type_};
@@ -496,7 +496,7 @@ std::string LogEntry::state_info() const {
                     state_type_ == "UNKNOWN"sv) {
                     return parens("NOTIFY"sv, state_type_);
                 }
-                if (mk::starts_with(state_type_, "ALERTHANDLER ("sv)) {
+                if (state_type_.starts_with("ALERTHANDLER ("sv)) {
                     return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
                 return std::string{state_type_};

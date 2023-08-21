@@ -11,7 +11,6 @@
 
 #include "livestatus/Interface.h"
 #include "livestatus/RegExp.h"
-#include "livestatus/StringUtils.h"
 #include "neb/NebCore.h"
 
 // static
@@ -59,7 +58,7 @@ std::optional<std::string> CompoundMacroExpander::expand(
 
 std::optional<std::string> UserMacroExpander::expand(
     const std::string &str) const {
-    if (mk::starts_with(str, "USER")) {
+    if (str.starts_with("USER")) {
         const int n = atoi(str.substr(4).c_str());
         if (1 <= n && n <= MAX_USER_MACROS) {
             return from_ptr(macro_user[n - 1]);
@@ -74,7 +73,7 @@ CustomVariableExpander::CustomVariableExpander(std::string prefix,
 
 std::optional<std::string> CustomVariableExpander::expand(
     const std::string &str) const {
-    if (!mk::starts_with(str, _prefix)) {
+    if (!str.starts_with(_prefix)) {
         return {};
     }
 

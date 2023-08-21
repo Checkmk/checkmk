@@ -12,7 +12,6 @@
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-#include "livestatus/StringUtils.h"
 
 Table::Table(ICore *mc) : _mc(mc) {}
 
@@ -35,7 +34,7 @@ void Table::addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol) {
 
 std::shared_ptr<Column> Table::column(std::string colname) const {
     // Strip away a sequence of prefixes.
-    while (mk::starts_with(colname, namePrefix())) {
+    while (colname.starts_with(namePrefix())) {
         colname = colname.substr(namePrefix().size());
     }
 

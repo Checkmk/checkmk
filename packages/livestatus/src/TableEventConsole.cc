@@ -94,7 +94,7 @@ private:
         // .. and then we ignore all host-related columns, they are implicitly
         // joined later via ECRow._host later.
         for (const auto &name : column_names) {
-            if (!mk::starts_with(name, "host_")) {
+            if (!name.starts_with("host_")) {
                 os << " " << name;
             }
         }

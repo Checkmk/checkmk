@@ -13,13 +13,13 @@
 
 inline std::tuple<AttributeKind, std::string> to_attribute_kind(
     const std::string &name) {
-    if (mk::starts_with(name, "_TAG_")) {
+    if (name.starts_with("_TAG_")) {
         return {AttributeKind::tags, name.substr(5)};
     }
-    if (mk::starts_with(name, "_LABEL_")) {
+    if (name.starts_with("_LABEL_")) {
         return {AttributeKind::labels, name.substr(7)};
     }
-    if (mk::starts_with(name, "_LABELSOURCE_")) {
+    if (name.starts_with("_LABELSOURCE_")) {
         return {AttributeKind::label_sources, name.substr(13)};
     }
     return {AttributeKind::custom_variables, name};

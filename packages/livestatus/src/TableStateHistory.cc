@@ -264,12 +264,12 @@ private:
 // static
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
     const Query &query) {
-    return query.partialFilter(
-        "current host/service columns", [](const std::string &columnName) {
-            return mk::starts_with(columnName, "current_") ||
-                   mk::starts_with(columnName, "host_") ||
-                   mk::starts_with(columnName, "service_");
-        });
+    return query.partialFilter("current host/service columns",
+                               [](const std::string &columnName) {
+                                   return columnName.starts_with("current_") ||
+                                          columnName.starts_with("host_") ||
+                                          columnName.starts_with("service_");
+                               });
 }
 
 void TableStateHistory::answerQuery(Query &query, const User &user) {
@@ -728,7 +728,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::downtime_alert_host: {
             const int downtime_active =
-                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
+                entry->state_type().starts_with("STARTED") ? 1 : 0;
 
             if (hss->_in_host_downtime != downtime_active) {
                 if (!only_update) {
@@ -747,7 +747,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::downtime_alert_service: {
             const int downtime_active =
-                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
+                entry->state_type().starts_with("STARTED") ? 1 : 0;
             if (hss->_in_downtime != downtime_active) {
                 if (!only_update) {
                     process(query, user, query_timeframe, hss);
@@ -760,7 +760,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::flapping_host:
         case LogEntryKind::flapping_service: {
             const int flapping_active =
-                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
+                entry->state_type().starts_with("STARTED") ? 1 : 0;
             if (hss->_is_flapping != flapping_active) {
                 if (!only_update) {
                     process(query, user, query_timeframe, hss);

@@ -173,53 +173,53 @@ public:
     [[nodiscard]] bool no_more_notifications() const override {
         return service_.no_more_notifications != 0;
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point last_time_ok()
+    [[nodiscard]] std::chrono::system_clock::time_point last_time_ok()
         const override {
         return std::chrono::system_clock::from_time_t(service_.last_time_ok);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_time_warning() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_time_warning()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_time_warning);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_time_critical() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_time_critical()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_time_critical);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_time_unknown() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_time_unknown()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_time_unknown);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point last_check()
+    [[nodiscard]] std::chrono::system_clock::time_point last_check()
         const override {
         return std::chrono::system_clock::from_time_t(service_.last_check);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point next_check()
+    [[nodiscard]] std::chrono::system_clock::time_point next_check()
         const override {
         return std::chrono::system_clock::from_time_t(service_.next_check);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_notification() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_notification()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_notification);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    next_notification() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point next_notification()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.next_notification);
     }
     [[nodiscard]] int32_t current_notification_number() const override {
         return service_.current_notification_number;
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_state_change() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_state_change()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_state_change);
     }
-    [[nodiscard]] virtual std::chrono::system_clock::time_point
-    last_hard_state_change() const override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_hard_state_change()
+        const override {
         return std::chrono::system_clock::from_time_t(
             service_.last_hard_state_change);
     }
@@ -358,17 +358,16 @@ public:
         }
         return std::vector<std::string>(names.begin(), names.end());
     }
-    [[nodiscard]] virtual Attributes attributes(
-        AttributeKind kind) const override {
+    [[nodiscard]] Attributes attributes(AttributeKind kind) const override {
         return CustomAttributes(service_.custom_variables, kind);
     }
 
-    virtual bool all_of_service_groups(
+    bool all_of_service_groups(
         std::function<bool(const IServiceGroup &)> pred) const override;
-    virtual bool all_of_contact_groups(
+    bool all_of_contact_groups(
         std::function<bool(const IContactGroup &)> pred) const override;
 
-    [[nodiscard]] virtual std::chrono::system_clock::time_point cached_at()
+    [[nodiscard]] std::chrono::system_clock::time_point cached_at()
         const override {
         return {};
     }
@@ -380,7 +379,7 @@ public:
     [[nodiscard]] double flappiness() const override {
         return service_.percent_state_change;
     }
-    [[nodiscard]] virtual std::string notification_postponement_reason()
+    [[nodiscard]] std::string notification_postponement_reason()
         const override {
         return "";
     }
@@ -388,8 +387,7 @@ public:
     [[nodiscard]] int32_t pending_flex_downtime() const override {
         return service_.pending_flex_downtime;
     }
-    [[nodiscard]] virtual bool check_flapping_recovery_notification()
-        const override {
+    [[nodiscard]] bool check_flapping_recovery_notification() const override {
         return service_.check_flapping_recovery_notification != 0;
     }
     bool all_of_labels(

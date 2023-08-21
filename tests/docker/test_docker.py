@@ -616,7 +616,7 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
-    # Check whether or not the agent port is opened
+    # Check whether the agent port is opened
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
@@ -639,7 +639,7 @@ def test_update(
         ),
         VersionsCompatible,
     )
-    # Currently, in the master branch, we can't derive the future major version from from the daily
+    # Currently, in the master branch, we can't derive the future major version from the daily
     # build version. So we hack around a bit to gather it from the git. In the future we plan to
     # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
     # additional check can be removed.

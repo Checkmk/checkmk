@@ -266,8 +266,8 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:prism_container"),
         ("discovery", "discovery_systemd_units_services_rules"),
         ("inventory", RuleGroup.ActiveChecks("cmk_inv")),
-        ("inventory", "inv_parameters:inv_if"),
-        ("inventory", "inv_parameters:lnx_sysctl"),
+        ("inventory", RuleGroup.InvParameters("inv_if")),
+        ("inventory", RuleGroup.InvParameters("lnx_sysctl")),
         ("inventory", "inv_retention_intervals"),
         (
             "inventory",

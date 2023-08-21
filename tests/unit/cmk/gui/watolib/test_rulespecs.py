@@ -532,7 +532,7 @@ def test_grouped_rulespecs() -> None:
         ],
         "inventory": [
             RuleGroup.ActiveChecks("cmk_inv"),
-            "inv_parameters:inv_if",
+            RuleGroup.InvParameters("inv_if"),
         ],
         "static/virtualization": [
             "static_checks:vm_state",

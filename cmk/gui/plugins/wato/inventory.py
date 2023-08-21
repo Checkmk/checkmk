@@ -240,7 +240,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="dict",
-        name="inv_parameters:inv_if",
+        name=RuleGroup.InvParameters("inv_if"),
         valuespec=_valuespec_inv_parameters_inv_if,
     )
 )
@@ -288,7 +288,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="dict",
-        name="inv_parameters:lnx_sysctl",
+        name=RuleGroup.InvParameters("lnx_sysctl"),
         valuespec=_valuespec_inv_parameters_lnx_sysctl,
     )
 )

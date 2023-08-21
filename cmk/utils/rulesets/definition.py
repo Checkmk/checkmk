@@ -11,6 +11,7 @@ class RuleGroupType(enum.Enum):
     EXTRA_HOST_CONF = "extra_host_conf"
     EXTRA_SERVICE_CONF = "extra_service_conf"
     INV_EXPORTS = "inv_exports"
+    INV_PARAMETERS = "inv_parameters"
 
 
 class RuleGroup:
@@ -33,3 +34,7 @@ class RuleGroup:
     @staticmethod
     def InvExports(name: str | None) -> str:
         return f"{RuleGroupType.INV_EXPORTS.value}:{name}"
+
+    @staticmethod
+    def InvParameters(name: str | None) -> str:
+        return f"{RuleGroupType.INV_PARAMETERS.value}:{name}"

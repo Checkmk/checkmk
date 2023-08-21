@@ -2878,12 +2878,88 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                                 [
                                     Int("Limit"),
                                     Str("AggregateKeyType"),
-                                    Dict("ScopeDownStatement", []),
+                                    Dict(
+                                        "ScopeDownStatement",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
                                 ],
                             ),
-                            Dict("AndStatement", [List("Statements", [])]),
+                            Dict(
+                                "AndStatement",
+                                [
+                                    List(
+                                        "Statements",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    )
+                                ],
+                            ),
                             Dict("OrStatement", [List("Statements", [])]),
-                            Dict("NotStatement", [Dict("ScopeDownStatement", [])]),
+                            Dict(
+                                "NotStatement",
+                                [
+                                    Dict(
+                                        "ScopeDownStatement",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    )
+                                ],
+                            ),
                             Dict(
                                 "Statement",
                                 [

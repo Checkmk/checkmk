@@ -86,7 +86,7 @@ private:
             // see  isAuthorizedForEventViaContactGroups
             "event_contact_groups"};
         table_->any_column([&](const auto &col) {
-            if (special_columns.find(col->name()) != special_columns.end()) {
+            if (special_columns.contains(col->name())) {
                 column_names.insert(col->name());
             }
             return false;

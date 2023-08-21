@@ -429,7 +429,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     continue;
                 }
 
-                if (object_blacklist.find(key) != object_blacklist.end()) {
+                if (object_blacklist.contains(key)) {
                     // Host/Service is not needed for this query and has already
                     // been filtered out.
                     continue;

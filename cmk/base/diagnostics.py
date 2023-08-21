@@ -57,9 +57,13 @@ from cmk.utils.type_defs import HostName
 
 import cmk.base.section as section
 
-if cmk_version.is_enterprise_edition():
-    # type: ignore[import] # noqa: F401 # pylint: disable=no-name-in-module,import-error
-    from cmk.base.cee.diagnostics import cmc_specific_attrs
+if cmk_version.edition() in [
+    cmk_version.Edition.CEE,
+    cmk_version.Edition.CME,
+]:
+    from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
+        cmc_specific_attrs,
+    )
 else:
 
     def cmc_specific_attrs() -> Mapping[str, int]:
@@ -902,7 +906,6 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
     def add_or_get_files(
         self, tmp_dump_folder: Path, collectors: Collectors
     ) -> DiagnosticsElementFilepaths:
-
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 
         for dump_args in (None, "config"):

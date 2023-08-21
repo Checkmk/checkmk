@@ -239,7 +239,7 @@ public:
         return service_.event_handler_enabled != 0;
     }
     [[nodiscard]] bool notifications_enabled() const override {
-        return service_.notifications_enabled;
+        return service_.notifications_enabled != 0;
     }
     [[nodiscard]] bool process_performance_data() const override {
         return service_.process_performance_data != 0;
@@ -248,7 +248,7 @@ public:
         return service_.is_executing != 0;
     }
     [[nodiscard]] bool active_checks_enabled() const override {
-        return service_.checks_enabled;
+        return service_.checks_enabled != 0;
     }
     [[nodiscard]] int32_t check_options() const override {
         return service_.check_options;
@@ -356,7 +356,7 @@ public:
                 names.insert(cm->contact_ptr->name);
             }
         }
-        return std::vector<std::string>(names.begin(), names.end());
+        return {names.begin(), names.end()};
     }
     [[nodiscard]] Attributes attributes(AttributeKind kind) const override {
         return CustomAttributes(service_.custom_variables, kind);

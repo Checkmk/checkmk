@@ -10,6 +10,7 @@ from typing import Literal
 import pytest
 
 from cmk.special_agents.agent_aws import (
+    _get_wafv2_web_acls,
     AWSConfig,
     NamingConvention,
     ResultDistributor,
@@ -54,8 +55,35 @@ class FakeWAFV2Client:
         return {"TagInfoForResource": tags, "NextMarker": "string"}
 
 
-def create_sections(names, tags, is_regional):
+def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
+    fake_wafv2_client = FakeWAFV2Client()
 
+    def get_response_content(response, key, dflt=None):  # type: ignore[no-untyped-def]
+        if dflt is None:
+            dflt = []
+        if key in response:
+            return response[key]
+        return dflt
+
+    res = _get_wafv2_web_acls(fake_wafv2_client, "us-east-1", get_response_content, None, None)  # type: ignore[arg-type]
+    search_string = res[0]["Rules"][0]["Statement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+    assert isinstance(search_string, str)
+
+    for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
+        if "RateBasedStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "NotStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "AndStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["AndStatement"]["Statements"][0][
+                "ByteMatchStatement"
+            ]["SearchString"]
+            assert isinstance(search_string, str)
+
+
+def create_sections(names, tags, is_regional):
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
@@ -135,7 +163,6 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
@@ -155,7 +182,6 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
 
 def _test_limits(wafv2_sections):
-
     wafv2_limits = wafv2_sections["wafv2_limits"]
     wafv2_limits_results = wafv2_limits.run().results
 
@@ -179,7 +205,6 @@ def test_agent_aws_wafv2_limits(  # type:ignore[no-untyped-def]
 
 
 def _test_summary(wafv2_summary, found_instances):
-
     wafv2_summary_results = wafv2_summary.run().results
 
     assert wafv2_summary.cache_interval == 300
@@ -214,7 +239,6 @@ def test_agent_aws_wafv2_summary_wo_limits(  # type:ignore[no-untyped-def]
 
 
 def _test_web_acl(wafv2_sections, found_instances):
-
     _wafv2_summary_results = wafv2_sections["wafv2_summary"].run().results
     wafv2_web_acl = wafv2_sections["wafv2_web_acl"]
     wafv2_web_acl_results = wafv2_web_acl.run().results

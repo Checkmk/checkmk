@@ -2055,22 +2055,31 @@ def _prepare_for_activation_tasks(
         site_activation_state = _initialize_site_activation_state(
             site_id, activation_id, activate_changes, time_started
         )
+        try:
+            if not _lock_activation(site_activation_state):
+                continue
+            _mark_running(site_activation_state)
 
-        if not _lock_activation(site_activation_state):
-            continue
-        _mark_running(site_activation_state)
+            log_audit("activate-changes", "Started activation of site %s" % site_id)
+            site_activation_states_per_site[site_id] = site_activation_state
 
-        log_audit("activate-changes", "Started activation of site %s" % site_id)
-        site_activation_states_per_site[site_id] = site_activation_state
-
-        if activate_changes.is_sync_needed(site_id):
-            central_file_infos_per_site[site_id] = _get_site_central_file_infos(
-                site_id, snapshot_settings, config_sync_file_infos_per_inode
+            if activate_changes.is_sync_needed(site_id):
+                central_file_infos_per_site[site_id] = _get_site_central_file_infos(
+                    site_id, snapshot_settings, config_sync_file_infos_per_inode
+                )
+        except Exception as e:
+            _handle_activation_changes_exception(
+                logger.getChild(f"site[{site_id}]"), str(e), site_activation_state
             )
+            _cleanup_activation(site_id, activation_id)
     return central_file_infos_per_site, site_activation_states_per_site
 
 
-def _get_site_central_file_infos(site_id, snapshot_settings, config_sync_file_infos_per_inode):
+def _get_site_central_file_infos(
+    site_id: SiteId,
+    snapshot_settings: SnapshotSettings,
+    config_sync_file_infos_per_inode: Mapping[int, ConfigSyncFileInfo],
+) -> ConfigSyncFileInfos:
     # In case we experience performance issues here, we could postpone the hashing of the
     # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
     # are not enough to detect a differing file.
@@ -2200,13 +2209,16 @@ def sync_and_activate(
         logger.exception("error activating changes")
     finally:
         for activation_site_id in site_activation_states:
-            _unlock_activation(activation_site_id, activation_id)
+            _cleanup_activation(activation_site_id, activation_id)
 
-            # Create a copy of last result in the persisted dir
-            shutil.copy(
-                ActivateChangesManager.site_state_path(activation_id, activation_site_id),
-                ActivateChangesManager.persisted_site_state_path(activation_site_id),
-            )
+
+def _cleanup_activation(site_id: SiteId, activation_id: ActivationId) -> None:
+    _unlock_activation(site_id, activation_id)
+    # Create a copy of last result in the persisted dir
+    shutil.copy(
+        ActivateChangesManager.site_state_path(activation_id, site_id),
+        ActivateChangesManager.persisted_site_state_path(site_id),
+    )
 
 
 def _handle_active_tasks(

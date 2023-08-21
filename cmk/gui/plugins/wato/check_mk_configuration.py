@@ -3237,7 +3237,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:max_check_attempts",
+        name=RuleGroup.ExtraServiceConf("max_check_attempts"),
         valuespec=_valuespec_extra_service_conf_max_check_attempts,
     )
 )
@@ -3264,7 +3264,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:check_interval",
+        name=RuleGroup.ExtraServiceConf("check_interval"),
         valuespec=_valuespec_extra_service_conf_check_interval,
     )
 )
@@ -3291,7 +3291,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:retry_interval",
+        name=RuleGroup.ExtraServiceConf("retry_interval"),
         valuespec=_valuespec_extra_service_conf_retry_interval,
     )
 )
@@ -3313,7 +3313,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:check_period",
+        name=RuleGroup.ExtraServiceConf("check_period"),
         valuespec=_valuespec_extra_service_conf_check_period,
     )
 )
@@ -3357,7 +3357,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:process_perf_data",
+        name=RuleGroup.ExtraServiceConf("process_perf_data"),
         valuespec=_valuespec_extra_service_conf_process_perf_data,
     )
 )
@@ -3381,7 +3381,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:passive_checks_enabled",
+        name=RuleGroup.ExtraServiceConf("passive_checks_enabled"),
         valuespec=_valuespec_extra_service_conf_passive_checks_enabled,
     )
 )
@@ -3399,7 +3399,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
-        name="extra_service_conf:active_checks_enabled",
+        name=RuleGroup.ExtraServiceConf("active_checks_enabled"),
         valuespec=_valuespec_extra_service_conf_active_checks_enabled,
     )
 )
@@ -3602,7 +3602,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:notifications_enabled",
+        name=RuleGroup.ExtraServiceConf("notifications_enabled"),
         valuespec=_valuespec_extra_service_conf_notifications_enabled,
     )
 )
@@ -3676,7 +3676,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:notification_options",
+        name=RuleGroup.ExtraServiceConf("notification_options"),
         valuespec=_valuespec_extra_service_conf_notification_options,
     )
 )
@@ -3723,7 +3723,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:notification_period",
+        name=RuleGroup.ExtraServiceConf("notification_period"),
         valuespec=_valuespec_extra_service_conf_notification_period,
     )
 )
@@ -3788,7 +3788,7 @@ rulespec_registry.register(
         factory_default=0.0,
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:first_notification_delay",
+        name=RuleGroup.ExtraServiceConf("first_notification_delay"),
         valuespec=_valuespec_extra_service_conf_first_notification_delay,
     )
 )
@@ -3855,7 +3855,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:notification_interval",
+        name=RuleGroup.ExtraServiceConf("notification_interval"),
         valuespec=_valuespec_extra_service_conf_notification_interval,
     )
 )
@@ -3898,7 +3898,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationNotifications,
         item_type="service",
-        name="extra_service_conf:flap_detection_enabled",
+        name=RuleGroup.ExtraServiceConf("flap_detection_enabled"),
         valuespec=_valuespec_extra_service_conf_flap_detection_enabled,
     )
 )
@@ -4573,7 +4573,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
-        name="extra_service_conf:service_period",
+        name=RuleGroup.ExtraServiceConf("service_period"),
         valuespec=_valuespec_extra_service_conf_service_period,
     )
 )
@@ -4601,7 +4601,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
-        name="extra_service_conf:display_name",
+        name=RuleGroup.ExtraServiceConf("display_name"),
         valuespec=_valuespec_extra_service_conf_display_name,
     )
 )
@@ -4620,7 +4620,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
-        name="extra_service_conf:notes_url",
+        name=RuleGroup.ExtraServiceConf("notes_url"),
         valuespec=_valuespec_extra_service_conf_notes_url,
     )
 )
@@ -4738,7 +4738,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
-        name="extra_service_conf:icon_image",
+        name=RuleGroup.ExtraServiceConf("icon_image"),
         valuespec=_valuespec_extra_service_conf_icon_image,
     )
 )
@@ -4836,7 +4836,7 @@ rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
-        name="extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
+        name=RuleGroup.ExtraServiceConf("_ESCAPE_PLUGIN_OUTPUT"),
         valuespec=_valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT,
     )
 )

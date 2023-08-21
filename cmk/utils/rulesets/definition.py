@@ -9,6 +9,7 @@ class RuleGroupType(enum.Enum):
     ACTIVE_CHECKS = "active_checks"
     AGENT_CONFIG = "agent_config"
     EXTRA_HOST_CONF = "extra_host_conf"
+    EXTRA_SERVICE_CONF = "extra_service_conf"
 
 
 class RuleGroup:
@@ -23,3 +24,7 @@ class RuleGroup:
     @staticmethod
     def ExtraHostConf(name: str | None) -> str:
         return f"{RuleGroupType.EXTRA_HOST_CONF.value}:{name}"
+
+    @staticmethod
+    def ExtraServiceConf(name: str | None) -> str:
+        return f"{RuleGroupType.EXTRA_SERVICE_CONF.value}:{name}"

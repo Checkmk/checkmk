@@ -12,6 +12,7 @@ from re import Pattern
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -180,7 +181,7 @@ def _validate_rule_values(
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
-        "extra_service_conf:_sla_config",
+        RuleGroup.ExtraServiceConf("_sla_config"),
     }
 
     n_invalid = 0

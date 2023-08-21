@@ -6,6 +6,7 @@
 
 
 from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
@@ -64,7 +65,7 @@ def _validate_rule_values(
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
-        "extra_service_conf:_sla_config",
+        RuleGroup.ExtraServiceConf("_sla_config"),
     }
 
     for ruleset in all_rulesets.get_rulesets().values():

@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.version import edition, Edition
 
@@ -271,7 +272,7 @@ def test_remove_removed_check_plugins_from_ignored_checks() -> None:
                 **(
                     {}
                     if edition() is Edition.CRE
-                    else {"extra_service_conf:_sla_config": "i am skipped"}
+                    else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },
             0,

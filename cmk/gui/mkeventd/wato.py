@@ -5124,7 +5124,7 @@ def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
 ExtraServiceConfECSLRulespec = ServiceRulespec(
     group=RulespecGroupMonitoringConfigurationVarious,
     item_type="service",
-    name="extra_service_conf:_ec_sl",
+    name=RuleGroup.ExtraServiceConf("_ec_sl"),
     valuespec=_valuespec_extra_service_conf__ec_sl,
 )
 
@@ -5170,7 +5170,7 @@ def _valuespec_extra_service_conf__ec_contact() -> TextInput:
 ExtraServiceConfECContact = ServiceRulespec(
     group=RulespecGroupEventConsole,
     item_type="service",
-    name="extra_service_conf:_ec_contact",
+    name=RuleGroup.ExtraServiceConf("_ec_contact"),
     valuespec=_valuespec_extra_service_conf__ec_contact,
 )
 

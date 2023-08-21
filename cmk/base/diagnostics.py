@@ -60,7 +60,11 @@ from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import HostName
 
-if cmk_version.is_enterprise_edition():
+if cmk_version.edition() in [
+    cmk_version.Edition.CEE,
+    cmk_version.Edition.CME,
+    cmk_version.Edition.CCE,
+]:
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
         cmc_specific_attrs,
     )
@@ -957,7 +961,6 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 
         for dump_args in (None, "--config"):

@@ -57,6 +57,7 @@ else
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
+"${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 

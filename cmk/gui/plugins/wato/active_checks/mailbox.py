@@ -599,8 +599,11 @@ def _forward_to_ec_elements() -> list[DictionaryEntry]:
                                 TextInput(
                                     title=_("Move to subfolder"),
                                     help=_(
-                                        "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
-                                        "<tt>INBOX/Processed_Mails</tt>."
+                                        "Specify the destination path in the format "
+                                        "<tt>Path/To/Folder</tt>, for example "
+                                        "<tt>INBOX/Processed_Mails</tt>. Note that the maximum "
+                                        "depth of folder trees might be limited by your mail "
+                                        "provider."
                                     ),
                                     allow_empty=False,
                                 ),

@@ -22,7 +22,7 @@ from cmk.utils.mailbox import (
     ConnectError,
     ForwardToECError,
     Mailbox,
-    MailMessages,
+    POPIMAPMailMessages,
 )
 
 
@@ -105,7 +105,7 @@ def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
     return time.strftime("%b %d %H:%M:%S", localtime)
 
 
-def prepare_messages_for_ec(args: Args, mails: MailMessages) -> tuple[list[str], list[int]]:
+def prepare_messages_for_ec(args: Args, mails: POPIMAPMailMessages) -> tuple[list[str], list[int]]:
     # create syslog message from each mail
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
     # <facility+priority> timestamp hostname application: message
@@ -233,7 +233,7 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
 
 
 def check_mail(args: Args) -> CheckResult:
-    """Create a mailbox an try to connect. In case of success our check will happily return OK
+    """Create a mailbox and try to connect. In case of success our check will happily return OK
     If desired mails can also be fetched and forwarded to the event console (EC)
     """
     with Mailbox(args) as mailbox:

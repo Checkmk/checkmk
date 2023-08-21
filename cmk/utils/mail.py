@@ -93,6 +93,8 @@ def send_mail_sendmail(m: Message, target: MailString, from_address: MailString 
             if sender_full_name:
                 cmd += ["-F", sender_full_name]
             cmd += ["-f", sender_address]
+            # Also skip empty target addresses, nullmailer would fail
+            target = MailString(",".join(list(filter(None, target.split(",")))))
         else:
             cmd += ["-F", from_address, "-f", from_address]
     cmd += ["-i", target]

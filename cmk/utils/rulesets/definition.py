@@ -12,6 +12,7 @@ class RuleGroupType(enum.Enum):
     EXTRA_SERVICE_CONF = "extra_service_conf"
     INV_EXPORTS = "inv_exports"
     INV_PARAMETERS = "inv_parameters"
+    NOTIFICATION_PARAMETERS = "notification_parameters"
 
 
 class RuleGroup:
@@ -38,3 +39,7 @@ class RuleGroup:
     @staticmethod
     def InvParameters(name: str | None) -> str:
         return f"{RuleGroupType.INV_PARAMETERS.value}:{name}"
+
+    @staticmethod
+    def NotificationParameters(name: str | None) -> str:
+        return f"{RuleGroupType.NOTIFICATION_PARAMETERS.value}:{name}"

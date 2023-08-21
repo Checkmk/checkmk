@@ -5,6 +5,8 @@
 
 from pytest import MonkeyPatch
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 import cmk.gui.plugins.wato.utils as utils
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
@@ -50,7 +52,7 @@ def test_register_legacy_notification_parameters(
         rulespecs, "rulespec_registry", rulespecs.RulespecRegistry(rulespec_group_registry)
     )
 
-    assert "notification_parameters:xyz" not in rulespecs.rulespec_registry
+    assert RuleGroup.NotificationParameters("xyz") not in rulespecs.rulespec_registry
     assert "xyz" not in utils.notification_parameter_registry
     register_notification_parameters(
         "xyz",
@@ -64,4 +66,4 @@ def test_register_legacy_notification_parameters(
     assert isinstance(cls.spec, Dictionary)
     assert cls.spec.help() == "slosh"
 
-    assert "notification_parameters:xyz" in rulespecs.rulespec_registry
+    assert RuleGroup.NotificationParameters("xyz") in rulespecs.rulespec_registry

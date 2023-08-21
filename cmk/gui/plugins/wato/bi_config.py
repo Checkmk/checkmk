@@ -485,7 +485,7 @@ class ModeBIPacks(ABCBIMode):
                                             request,
                                             [
                                                 ("mode", "edit_ruleset"),
-                                                ("varname", "special_agents:bi"),
+                                                ("varname", RuleGroup.SpecialAgents("bi")),
                                             ],
                                         )
                                     ),

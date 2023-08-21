@@ -18,6 +18,7 @@ from livestatus import LocalConnection, SiteConfiguration, SiteId
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import local_checks_dir, local_inventory_dir
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -1209,10 +1210,10 @@ class ACTestESXDatasources(ACTest):
 
     def _get_rules(self):
         collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "special_agents:vsphere"
+            RuleGroup.SpecialAgents("vsphere")
         )
 
-        ruleset = collection.get("special_agents:vsphere")
+        ruleset = collection.get(RuleGroup.SpecialAgents("vsphere"))
         return ruleset.get_rules()
 
     def is_relevant(self) -> bool:

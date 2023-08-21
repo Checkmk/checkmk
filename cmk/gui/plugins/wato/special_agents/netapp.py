@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.plugins.wato.utils import (
@@ -60,7 +62,7 @@ def _valuespec_special_agents_netapp() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:netapp",
+        name=RuleGroup.SpecialAgents("netapp"),
         valuespec=_valuespec_special_agents_netapp,
     )
 )

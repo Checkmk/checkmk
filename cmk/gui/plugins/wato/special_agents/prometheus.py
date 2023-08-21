@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._utils import MetricName
 from cmk.gui.i18n import _
@@ -540,7 +542,7 @@ def _validate_prometheus_service_metrics(value, _varprefix):
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:prometheus",
+        name=RuleGroup.SpecialAgents("prometheus"),
         valuespec=_valuespec_generic_metrics_prometheus,
         doc_references={DocReference.PROMETHEUS: _("Integrating Prometheus")},
     )

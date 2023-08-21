@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from typing import Final
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
@@ -119,7 +120,7 @@ def _valuespec_special_agents_gcp():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:gcp",
+        name=RuleGroup.SpecialAgents("gcp"),
         title=lambda: _("Google Cloud Platform (GCP)"),
         valuespec=_valuespec_special_agents_gcp,
         doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},

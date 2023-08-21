@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents import common
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -29,7 +31,7 @@ def _valuespec_special_agents_aws_status() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=common.RulespecGroupVMCloudContainer,
-        name="special_agents:aws_status",
+        name=RuleGroup.SpecialAgents("aws_status"),
         valuespec=_valuespec_special_agents_aws_status,
         doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},
     )

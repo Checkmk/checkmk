@@ -6,6 +6,7 @@
 from collections.abc import Container, Iterable
 from typing import TypeVar
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
@@ -596,7 +597,7 @@ def __migrate(p: dict[str, object]) -> dict[str, object]:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:aws",
+        name=RuleGroup.SpecialAgents("aws"),
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,
         doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},

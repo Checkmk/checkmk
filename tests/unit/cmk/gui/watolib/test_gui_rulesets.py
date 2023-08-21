@@ -675,7 +675,7 @@ class _RuleHelper:
     @staticmethod
     def gcp_rule() -> rulesets.Rule:
         return _RuleHelper._make_rule(
-            "special_agents:gcp",
+            RuleGroup.SpecialAgents("gcp"),
             {
                 "project": "old_value",
                 "credentials": ("password", "hunter2"),

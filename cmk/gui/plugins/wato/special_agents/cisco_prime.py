@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
@@ -96,7 +98,7 @@ def _valuespec_special_agents_cisco_prime():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:cisco_prime",
+        name=RuleGroup.SpecialAgents("cisco_prime"),
         valuespec=_valuespec_special_agents_cisco_prime,
     )
 )

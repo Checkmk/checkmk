@@ -178,7 +178,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
     resp = clients.Ruleset.list(search_options="?used=0")
-    ruleset = next(r for r in resp.json["value"] if "special_agents:gcp" == r["id"])
+    ruleset = next(r for r in resp.json["value"] if RuleGroup.SpecialAgents("gcp") == r["id"])
     assert (
         ruleset["links"][0]["href"]
         == "http://localhost/NO_SITE/check_mk/api/1.0/objects/ruleset/special_agents%253Agcp"
@@ -314,7 +314,7 @@ def test_openapi_delete_rule(
     ).assert_status_code(404)
 
 
-@pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
+@pytest.mark.parametrize("ruleset", ["host_groups", RuleGroup.SpecialAgents("gcp")])
 def test_openapi_show_ruleset(clients: ClientRegistry, ruleset: str) -> None:
     resp = clients.Ruleset.get(ruleset_id=urllib.parse.quote(ruleset))
     assert resp.json["extensions"]["name"] == ruleset

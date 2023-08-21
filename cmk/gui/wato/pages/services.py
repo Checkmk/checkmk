@@ -1284,7 +1284,7 @@ class DiscoveryPageRenderer:
             url = folder_preserving_link(
                 [
                     ("mode", "edit_ruleset"),
-                    ("varname", "static_checks:" + entry.ruleset_name),
+                    ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
                     ("host", self._host.name()),
                 ]
             )

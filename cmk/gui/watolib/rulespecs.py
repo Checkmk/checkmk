@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 from cmk.utils.version import Edition, mark_edition_only
 
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -837,7 +838,7 @@ class ManualCheckParameterRulespec(HostRulespec):
         # Mandatory keys
         self._check_group_name = check_group_name
         if name is None:
-            name = "static_checks:%s" % self._check_group_name
+            name = RuleGroup.StaticChecks(self._check_group_name)
 
         arg_infos = [
             # (arg, is_callable, none_allowed)
@@ -937,7 +938,9 @@ def register_rule(
     }
     if valuespec is not None:
         class_kwargs["valuespec"] = lambda: valuespec
-    if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
+    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS) or varname.startswith(
+        "checkgroup_parameters:"
+    ):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
     if title is not None:
         class_kwargs["title"] = lambda: title
@@ -960,7 +963,7 @@ def register_rule(
 # NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
 # to nest ifs in a slightly ugly way.
 def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -> type[Rulespec]:
-    if varname.startswith("static_checks:"):
+    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS):
         return ManualCheckParameterRulespec
     if varname.startswith("checkgroup_parameters:"):
         if has_itemtype:

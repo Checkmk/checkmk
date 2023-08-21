@@ -253,7 +253,7 @@ def test_openapi_list_rules_with_hyphens(
         "get_elements",
         lambda x: {"fileinfo_groups": "some title"},
     )
-    STATIC_CHECKS_FILEINFO_GROUPS = "static_checks:fileinfo-groups"
+    STATIC_CHECKS_FILEINFO_GROUPS = RuleGroup.StaticChecks("fileinfo-groups")
     _, result = _create_rule(
         clients,
         "/",

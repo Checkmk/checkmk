@@ -262,7 +262,7 @@ class ModeObjectParameters(WatoMode):
             render_labels()
             return
 
-        if "static_checks:" + checkgroup in rulespec_registry:
+        if RuleGroup.StaticChecks(checkgroup) in rulespec_registry:
             self._render_rule_reason(
                 _("Parameters"),
                 None,
@@ -273,11 +273,11 @@ class ModeObjectParameters(WatoMode):
             )
             return
 
-        rulespec = rulespec_registry["static_checks:" + checkgroup]
+        rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
         url = folder_preserving_link(
             [
                 ("mode", "edit_ruleset"),
-                ("varname", "static_checks:" + checkgroup),
+                ("varname", RuleGroup.StaticChecks(checkgroup)),
                 ("host", self._hostname),
             ]
         )
@@ -304,7 +304,7 @@ class ModeObjectParameters(WatoMode):
             html.write_text(_("This check is not configurable via WATO"))
             return
 
-        rulespec = rulespec_registry["static_checks:" + checkgroup]
+        rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
         itemspec = rulespec.item_spec
         if itemspec:
             item_text: ValueSpecText | Item = itemspec.value_to_html(serviceinfo["item"])

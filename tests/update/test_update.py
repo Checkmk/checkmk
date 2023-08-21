@@ -163,7 +163,7 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:  # pylint: disable=to
         if len(target_crit_services[hostname]) > 0:
             logger_services_crit("target", target_crit_services[hostname], hostname)
 
-        # TODO: 'Nullmailer Queue' service is not found after the update. Investigate.
+        # TODO: 'Nullmailer Queue' service is not found after the update. See CMK-14150.
         nullmailer_service = "Nullmailer Queue"
         if nullmailer_service in base_data[hostname]:
             base_data[hostname].pop(nullmailer_service)

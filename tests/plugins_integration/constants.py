@@ -9,12 +9,12 @@ DUMP_DIR_PATH = f"{os.path.dirname(__file__)}/{DUMP_DIR}"
 RESPONSE_DIR = "responses"
 RESPONSE_DIR_PATH = f"{os.path.dirname(__file__)}/{RESPONSE_DIR}"
 
-SECTION_NAMES = [_ for _ in os.getenv("SECTION_NAMES", "").split(",") if _]
 HOST_NAMES = [_ for _ in os.getenv("HOST_NAMES", "").split(",") if _]
 CHECK_NAMES = [_ for _ in os.getenv("CHECK_NAMES", "").split(",") if _]
-# TODO: Finish SNMP tests and enable them by default
-DUMP_TYPES = [_ for _ in os.getenv("DUMP_TYPES", "agent").split(",") if _]
+DUMP_TYPES = [_ for _ in os.getenv("DUMP_TYPES", "agent,snmp").split(",") if _]
 
+# these columns of the SERVICES table will be returned via the get_host_services() openapi call
+# NOTE: extending this list will require an update of the check output (--update-checks)
 API_SERVICES_COLS = [
     "host_name",
     "check_command",

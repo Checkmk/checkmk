@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "Usage: $(basename "$0") <PATTERN> <CHUNK_SIZE>"
+    echo " E.g.: $(basename "$0") oracle 50"
+    exit
+fi
+[ "$1" ] && [ "$1" != "-" ] && _FILE_PATTERN=$1 || _FILE_PATTERN=
+[ "$2" ] && [ "$2" != "-" ] && _CHUNK_SIZE=$2 || _CHUNK_SIZE=50
+_CD=$(dirname "$0")
+_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[ "${_ROOT}" == "" ] && _ROOT=../..
+_TMP=/tmp
+((_FILE_COUNT = $(find "${_CD}/dumps" -name "*${_FILE_PATTERN}*" -type f -printf "%f\n" | wc -l)))
+((_CHUNK_MOD = _FILE_COUNT % _CHUNK_SIZE))
+((_CHUNK_COUNT = _FILE_COUNT / _CHUNK_SIZE))
+[ ${_CHUNK_MOD} -gt 0 ] && ((_CHUNK_COUNT += 1))
+sudo -v
+_REPORT_FILE_SUFFIX="$(date +%Y-%m-%d_%H-%M)"
+for ((i = 0; i < _CHUNK_COUNT; i++)); do
+    [ "$i" -gt 0 ] && _REUSE=1 || _REUSE=0
+    [ "$i" -lt "$((_CHUNK_COUNT - 1))" ] && _CLEANUP=0 || _CLEANUP=${CLEANUP:-1}
+    echo "pytest -T plugins_integration \"${_CD}/test_plugin.py\" -k \"${_FILE_PATTERN}\" --bulk-mode --chunk-index=\"$i\" --chunk-size=\"${_CHUNK_SIZE}\" --junitxml=\"${_TMP}/~results.${_REPORT_FILE_SUFFIX}.chunk$i.xml\" \"${*:3}\""
+    REUSE=${_REUSE} CLEANUP=${_CLEANUP} pytest -T plugins_integration "${_CD}/test_plugin.py" -k "${_FILE_PATTERN}" --bulk-mode --chunk-index="$i" --chunk-size="${_CHUNK_SIZE}" --junitxml="${_TMP}/~results.${_REPORT_FILE_SUFFIX}.chunk$i.xml" "${@:3}"
+done
+# read the sorted array of junit input files (without relying on shell expansion)
+readarray -t _JUNIT_REPORT_FILES < <(find "${_TMP}" -name "~results.${_REPORT_FILE_SUFFIX}.chunk*.xml" | sort)
+# set the junit/html output files
+_JUNIT_REPORT_FILE="${_CD}/results.${_REPORT_FILE_SUFFIX}.xml"
+_HTML_REPORT_FILE="${_CD}/results.${_REPORT_FILE_SUFFIX}.htm"
+# merge files into results.xml while also merging the test suites
+python3 "${_ROOT}/tests/scripts/merge-junit-suites.py" "${_JUNIT_REPORT_FILES[@]}" "${_JUNIT_REPORT_FILE}" --stats --pytest-suite-name plugins_integration && rm "${_JUNIT_REPORT_FILES[@]}"
+# generate HTML report and summary
+junit2html "${_JUNIT_REPORT_FILE}" "${_HTML_REPORT_FILE}" >/dev/null 2>&1

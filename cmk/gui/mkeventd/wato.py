@@ -4917,7 +4917,7 @@ def _valuespec_extra_host_conf__ec_event_limit() -> Transform:
 
 ECEventLimitRulespec = HostRulespec(
     group=RulespecGroupEventConsole,
-    name="extra_host_conf:_ec_event_limit",
+    name=RuleGroup.ExtraHostConf("_ec_event_limit"),
     valuespec=_valuespec_extra_host_conf__ec_event_limit,
 )
 
@@ -5104,7 +5104,7 @@ def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
 
 ExtraHostConfECSLRulespec = HostRulespec(
     group=RulespecGroupHostsMonitoringRulesVarious,
-    name="extra_host_conf:_ec_sl",
+    name=RuleGroup.ExtraHostConf("_ec_sl"),
     valuespec=_valuespec_extra_host_conf__ec_sl,
 )
 
@@ -5158,7 +5158,7 @@ def _valuespec_extra_host_conf__ec_contact() -> TextInput:
 
 ExtraHostConfECContact = HostRulespec(
     group=RulespecGroupEventConsole,
-    name="extra_host_conf:_ec_contact",
+    name=RuleGroup.ExtraHostConf("_ec_contact"),
     valuespec=_valuespec_extra_host_conf__ec_contact,
 )
 

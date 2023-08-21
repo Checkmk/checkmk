@@ -235,7 +235,7 @@ def test_openapi_create_rule(
 
 def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="extra_host_conf:notification_options",
+        ruleset=RuleGroup.ExtraHostConf("notification_options"),
         folder="/",
         properties={"description": "Test", "disabled": False},
         value_raw="'d,u,r,f,s'",

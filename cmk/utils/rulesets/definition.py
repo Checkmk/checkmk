@@ -8,6 +8,7 @@ import enum
 class RuleGroupType(enum.Enum):
     ACTIVE_CHECKS = "active_checks"
     AGENT_CONFIG = "agent_config"
+    EXTRA_HOST_CONF = "extra_host_conf"
 
 
 class RuleGroup:
@@ -18,3 +19,7 @@ class RuleGroup:
     @staticmethod
     def AgentConfig(name: str | None) -> str:
         return f"{RuleGroupType.AGENT_CONFIG.value}:{name}"
+
+    @staticmethod
+    def ExtraHostConf(name: str | None) -> str:
+        return f"{RuleGroupType.EXTRA_HOST_CONF.value}:{name}"

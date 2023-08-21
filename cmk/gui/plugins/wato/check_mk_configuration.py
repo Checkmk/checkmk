@@ -3419,7 +3419,7 @@ def _valuespec_extra_host_conf_max_check_attempts():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name="extra_host_conf:max_check_attempts",
+        name=RuleGroup.ExtraHostConf("max_check_attempts"),
         valuespec=_valuespec_extra_host_conf_max_check_attempts,
     )
 )
@@ -3447,7 +3447,7 @@ def _valuespec_extra_host_conf_check_interval():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name="extra_host_conf:check_interval",
+        name=RuleGroup.ExtraHostConf("check_interval"),
         valuespec=_valuespec_extra_host_conf_check_interval,
     )
 )
@@ -3472,7 +3472,7 @@ def _valuespec_extra_host_conf_retry_interval():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name="extra_host_conf:retry_interval",
+        name=RuleGroup.ExtraHostConf("retry_interval"),
         valuespec=_valuespec_extra_host_conf_retry_interval,
     )
 )
@@ -3492,7 +3492,7 @@ def _valuespec_extra_host_conf_check_period():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name="extra_host_conf:check_period",
+        name=RuleGroup.ExtraHostConf("check_period"),
         valuespec=_valuespec_extra_host_conf_check_period,
     )
 )
@@ -3578,7 +3578,7 @@ def _valuespec_extra_host_conf_notifications_enabled():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:notifications_enabled",
+        name=RuleGroup.ExtraHostConf("notifications_enabled"),
         valuespec=_valuespec_extra_host_conf_notifications_enabled,
     )
 )
@@ -3641,7 +3641,7 @@ def _valuespec_extra_host_conf_notification_options():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:notification_options",
+        name=RuleGroup.ExtraHostConf("notification_options"),
         valuespec=_valuespec_extra_host_conf_notification_options,
     )
 )
@@ -3699,7 +3699,7 @@ def _valuespec_extra_host_conf_notification_period():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:notification_period",
+        name=RuleGroup.ExtraHostConf("notification_period"),
         valuespec=_valuespec_extra_host_conf_notification_period,
     )
 )
@@ -3759,7 +3759,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=0.0,
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:first_notification_delay",
+        name=RuleGroup.ExtraHostConf("first_notification_delay"),
         valuespec=_valuespec_extra_host_conf_first_notification_delay,
     )
 )
@@ -3821,7 +3821,7 @@ def _valuespec_extra_host_conf_notification_interval():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:notification_interval",
+        name=RuleGroup.ExtraHostConf("notification_interval"),
         valuespec=_valuespec_extra_host_conf_notification_interval,
     )
 )
@@ -3875,7 +3875,7 @@ def _valuespec_extra_host_conf_flap_detection_enabled():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:flap_detection_enabled",
+        name=RuleGroup.ExtraHostConf("flap_detection_enabled"),
         valuespec=_valuespec_extra_host_conf_flap_detection_enabled,
     )
 )
@@ -4510,7 +4510,7 @@ def _valuespec_extra_host_conf_service_period():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesVarious,
-        name="extra_host_conf:service_period",
+        name=RuleGroup.ExtraHostConf("service_period"),
         valuespec=_valuespec_extra_host_conf_service_period,
     )
 )
@@ -4564,7 +4564,7 @@ def _valuespec_extra_host_conf_notes_url():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesVarious,
-        name="extra_host_conf:notes_url",
+        name=RuleGroup.ExtraHostConf("notes_url"),
         valuespec=_valuespec_extra_host_conf_notes_url,
     )
 )
@@ -4716,7 +4716,7 @@ def _valuespec_extra_host_conf_icon_image() -> IconSelector:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesVarious,
-        name="extra_host_conf:icon_image",
+        name=RuleGroup.ExtraHostConf("icon_image"),
         valuespec=_valuespec_extra_host_conf_icon_image,
     )
 )
@@ -4804,7 +4804,7 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupHostsMonitoringRulesVarious,
-        name="extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+        name=RuleGroup.ExtraHostConf("_ESCAPE_PLUGIN_OUTPUT"),
         valuespec=_valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT,
     )
 )

@@ -26,8 +26,12 @@ class AlertsInfo:
     num_of_alerts_in_range: int
 
 
-def parse_graylog_alerts(string_table: StringTable) -> AlertsInfo:
-    alerts_data = json.loads(string_table[0][0]).get("alerts")
+def parse_graylog_alerts(string_table: StringTable) -> AlertsInfo | None:
+    alerts_section = json.loads(string_table[0][0])
+    if len(alerts_section) != 1:
+        return None
+
+    alerts_data = alerts_section.get("alerts")
 
     return AlertsInfo(
         num_of_alerts=alerts_data.get("num_of_alerts"),

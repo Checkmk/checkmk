@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
@@ -71,7 +73,10 @@ class TemperatureUnitUserAttribute(UserAttribute):
                     request,
                     [
                         ("mode", "edit_ruleset"),
-                        ("varname", "checkgroup_parameters:temperature"),
+                        (
+                            "varname",
+                            RuleGroup.CheckgroupParameters("temperature"),
+                        ),
                     ],
                     filename="wato.py",
                 ),

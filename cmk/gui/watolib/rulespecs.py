@@ -692,7 +692,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     ) -> None:
         # Mandatory keys
         self._check_group_name = check_group_name
-        name = "checkgroup_parameters:%s" % self._check_group_name
+        name = RuleGroup.CheckgroupParameters(self._check_group_name)
         self._parameter_valuespec = parameter_valuespec
 
         arg_infos = [
@@ -938,8 +938,8 @@ def register_rule(
     }
     if valuespec is not None:
         class_kwargs["valuespec"] = lambda: valuespec
-    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS) or varname.startswith(
-        "checkgroup_parameters:"
+    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS) or is_from_ruleset_group(
+        varname, RuleGroupType.CHECKGROUP_PARAMETERS
     ):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
     if title is not None:
@@ -965,7 +965,7 @@ def register_rule(
 def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -> type[Rulespec]:
     if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS):
         return ManualCheckParameterRulespec
-    if varname.startswith("checkgroup_parameters:"):
+    if is_from_ruleset_group(varname, RuleGroupType.CHECKGROUP_PARAMETERS):
         if has_itemtype:
             return CheckParameterRulespecWithItem
         return CheckParameterRulespecWithoutItem

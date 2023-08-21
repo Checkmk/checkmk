@@ -15,6 +15,7 @@ class RuleGroupType(enum.Enum):
     NOTIFICATION_PARAMETERS = "notification_parameters"
     SPECIAL_AGENTS = "special_agents"
     STATIC_CHECKS = "static_checks"
+    CHECKGROUP_PARAMETERS = "checkgroup_parameters"
 
 
 class RuleGroup:
@@ -53,6 +54,10 @@ class RuleGroup:
     @staticmethod
     def StaticChecks(name: str | None) -> str:
         return f"{RuleGroupType.STATIC_CHECKS.value}:{name}"
+
+    @staticmethod
+    def CheckgroupParameters(name: str | None) -> str:
+        return f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{name}"
 
 
 def is_from_ruleset_group(rule_name: str, group_type: RuleGroupType) -> bool:

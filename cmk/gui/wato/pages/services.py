@@ -1336,7 +1336,7 @@ class DiscoveryPageRenderer:
         if entry.ruleset_name == "logwatch":
             return "logwatch_rules"
         if entry.ruleset_name:
-            return f"checkgroup_parameters:{entry.ruleset_name}"
+            return RuleGroup.CheckgroupParameters(entry.ruleset_name)
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
             return RuleGroup.ActiveChecks(entry.check_plugin_name)
         return None

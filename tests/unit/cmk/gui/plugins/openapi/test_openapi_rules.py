@@ -130,7 +130,7 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
     clients.Rule.create(
-        ruleset="checkgroup_parameters:filesystem",
+        ruleset=RuleGroup.CheckgroupParameters("filesystem"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -141,7 +141,7 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
     value_raw = "{'levels': (10.0, 5.0)}"
     resp = clients.Rule.create(
-        ruleset="checkgroup_parameters:memory_percentage_used",
+        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -546,7 +546,7 @@ def test_openapi_deprecated_filter_regression(clients: ClientRegistry) -> None:
 
     # checkgroup_parameters:jvm_threads is deprecated.
     clients.Rule.create(
-        ruleset="checkgroup_parameters:jvm_threads",
+        ruleset=RuleGroup.CheckgroupParameters("jvm_threads"),
         value_raw="'(80, 100)'",
         conditions={"host_name": {"match_on": ["heute"], "operator": "one_of"}},
         properties={},

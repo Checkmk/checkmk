@@ -251,7 +251,9 @@ def _transform_fileinfo_timeofday_to_timeperiods(collection: RulesetCollection) 
     This transformation is introduced in v2.2 and can be removed in v2.3.
     """
     all_rulesets = collection.get_rulesets()
-    rulesets = [all_rulesets[f"checkgroup_parameters:{c}"] for c in ("fileinfo", "fileinfo-groups")]
+    rulesets = [
+        all_rulesets[RuleGroup.CheckgroupParameters(c)] for c in ("fileinfo", "fileinfo-groups")
+    ]
     rules = [r.get_rules() for r in rulesets]
 
     for _folder, _folder_index, rule in chain(*rules):

@@ -812,7 +812,7 @@ class ModeEditRuleset(WatoMode):
             checks = get_check_information().plugin_infos
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
-                self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")
+                self._name = RuleGroup.CheckgroupParameters(checks[check_command].get("group", ""))
                 descr_pattern = checks[check_command]["service_description"].replace("%s", "(.*)")
                 matcher = re.search(
                     descr_pattern, request.get_str_input_mandatory("service_description")

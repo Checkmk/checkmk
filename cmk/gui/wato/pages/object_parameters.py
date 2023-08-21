@@ -249,7 +249,7 @@ class ModeObjectParameters(WatoMode):
         # inventory. But in the later case all parameters are set
         # by the inventory. This will be changed in a later version,
         # but we need to address it anyway.
-        if "checkgroup_parameters:" + checkgroup in rulespec_registry:
+        if RuleGroup.CheckgroupParameters(checkgroup) in rulespec_registry:
             rulespec = rulespec_registry["checkgroup_parameters:" + checkgroup]
             self._output_analysed_ruleset(
                 all_rulesets,

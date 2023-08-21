@@ -474,7 +474,7 @@ class ModeCheckManPage(WatoMode):
             self._service_description = check_info["service_description"]
             ruleset_name = check_info.get("check_ruleset_name")
             self._ruleset: str | None = (
-                f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
+                RuleGroup.CheckgroupParameters(ruleset_name) if ruleset_name else None
             )
             self._check_default_parameters: object = check_info.get("check_default_parameters")
 

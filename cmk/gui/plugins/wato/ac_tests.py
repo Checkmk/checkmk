@@ -1355,8 +1355,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     def _get_rules(self):
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "checkgroup_parameters:agent_update"
-        ).get("checkgroup_parameters:agent_update")
+            RuleGroup.CheckgroupParameters("agent_update")
+        ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
             (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])

@@ -63,7 +63,7 @@ def fixture_gen_id(monkeypatch):
         ("only_hosts", True, True),
         # non-binary service ruleset
         (
-            "checkgroup_parameters:local",
+            RuleGroup.CheckgroupParameters("local"),
             _parameter_valuespec_local().default_value(),
             False,
         ),
@@ -131,7 +131,7 @@ def test_rule_from_config_unhandled_format(
         ),
         # non-binary service ruleset
         (
-            "checkgroup_parameters:local",
+            RuleGroup.CheckgroupParameters("local"),
             ("VAL", ["HOSTLIST"], ["SVC", "LIST"]),
         ),
         # binary service ruleset
@@ -308,7 +308,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
         ),
         # non-binary service ruleset
         (
-            "checkgroup_parameters:local",
+            RuleGroup.CheckgroupParameters("local"),
             {
                 "id": "1",
                 "value": "VAL",
@@ -467,7 +467,8 @@ def test_ruleset_to_config(
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
-            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+            RuleGroup.CheckgroupParameters("local"),
+            ruleset_matcher.get_tag_to_group_map(active_config.tags),
         )
         ruleset.replace_folder_config(
             folder_tree().root_folder(),
@@ -527,7 +528,8 @@ def test_ruleset_to_config_sub_folder(
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
-            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+            RuleGroup.CheckgroupParameters("local"),
+            ruleset_matcher.get_tag_to_group_map(active_config.tags),
         )
 
         folder_tree().create_missing_folders("abc")

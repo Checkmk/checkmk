@@ -7,9 +7,14 @@ import enum
 
 class RuleGroupType(enum.Enum):
     ACTIVE_CHECKS = "active_checks"
+    AGENT_CONFIG = "agent_config"
 
 
 class RuleGroup:
     @staticmethod
     def ActiveChecks(name: str | None) -> str:
         return f"{RuleGroupType.ACTIVE_CHECKS.value}:{name}"
+
+    @staticmethod
+    def AgentConfig(name: str | None) -> str:
+        return f"{RuleGroupType.AGENT_CONFIG.value}:{name}"

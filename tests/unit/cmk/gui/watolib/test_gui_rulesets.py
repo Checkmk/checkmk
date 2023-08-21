@@ -17,6 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.user import UserId
@@ -685,7 +686,7 @@ class _RuleHelper:
     @staticmethod
     def ssh_rule() -> rulesets.Rule:
         return _RuleHelper._make_rule(
-            "agent_config:lnx_remote_alert_handlers",
+            RuleGroup.AgentConfig("lnx_remote_alert_handlers"),
             {"handlers": {}, "runas": "old_value", "sshkey": ("private_key", "public_key")},
         )
 

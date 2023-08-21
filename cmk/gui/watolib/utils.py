@@ -14,6 +14,7 @@ from typing import Any
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -98,13 +99,13 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname in [
         "custom_checks",
         "datasource_programs",
-        "agent_config:mrpe",
-        "agent_config:agent_paths",
-        "agent_config:runas",
-        "agent_config:only_from",
+        RuleGroup.AgentConfig("mrpe"),
+        RuleGroup.AgentConfig("agent_paths"),
+        RuleGroup.AgentConfig("runas"),
+        RuleGroup.AgentConfig("only_from"),
     ]:
         return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
-    if varname == "agent_config:custom_files":
+    if varname == RuleGroup.AgentConfig("custom_files"):
         return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
     return user.may("wato.rulesets")
 

@@ -16,6 +16,7 @@ from tests.testlib.users import create_and_destroy_user
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
 import cmk.gui.permissions as permissions
@@ -359,10 +360,10 @@ def test_monitoring_user_permissions(
     [
         "custom_checks",
         "datasource_programs",
-        "agent_config:mrpe",
-        "agent_config:agent_paths",
-        "agent_config:runas",
-        "agent_config:only_from",
+        RuleGroup.AgentConfig("mrpe"),
+        RuleGroup.AgentConfig("agent_paths"),
+        RuleGroup.AgentConfig("runas"),
+        RuleGroup.AgentConfig("only_from"),
     ],
 )
 def test_ruleset_permissions_with_commandline_access(varname: str) -> None:

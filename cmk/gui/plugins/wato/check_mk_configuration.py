@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import edition, Edition
 
@@ -5625,7 +5626,7 @@ def _valuespec_agent_config_only_from():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupMonitoringAgentsGenericOptions,
-        name="agent_config:only_from",
+        name=RuleGroup.AgentConfig("only_from"),
         valuespec=_valuespec_agent_config_only_from,
     )
 )

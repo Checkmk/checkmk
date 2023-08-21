@@ -6,12 +6,16 @@
 # pylint: disable=protected-access,redefined-outer-name
 import email
 from argparse import Namespace as Args
+from collections.abc import Sequence
+from email.message import Message as POPIMAPMessage
+from types import ModuleType
 
 import pytest
+from exchangelib import Message as EWSMessage  # type: ignore[import]
 
 from tests.testlib import import_module
 
-from cmk.utils.mailbox import _active_check_main_core
+from cmk.utils.mailbox import _active_check_main_core, MailMessages
 
 
 @pytest.fixture(scope="module")
@@ -19,7 +23,7 @@ def check_mail():
     return import_module("active_checks/check_mail")
 
 
-def create_test_email(subject):
+def create_test_email(subject: str) -> POPIMAPMessage:
     email_string = (
         'Subject: %s\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Type: text/plain; charset="iso-8859-1"\r\n\r\nThe email content\r\nis very important!\r\n'
         % subject
@@ -27,7 +31,11 @@ def create_test_email(subject):
     return email.message_from_string(email_string)
 
 
-def test_ac_check_mail_main_failed_connect(check_mail):
+def create_test_email_ews(subject: str) -> EWSMessage:
+    return EWSMessage(subject=subject, text_body="The email content\r\nis very important!\r\n")
+
+
+def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
     state, info, perf = _active_check_main_core(
         check_mail.create_argument_parser(),
         check_mail.check_mail,
@@ -48,19 +56,17 @@ def test_ac_check_mail_main_failed_connect(check_mail):
 
 
 @pytest.mark.parametrize(
-    "mails, expected_messages, expected_forwarded",
+    "mails, expected_messages, inbox_protocol",
     [
-        ({}, [], []),
+        ({}, [], "POP3"),
         (
             {
                 "1": create_test_email("Foobar"),
             },
             [
-                ("<21>", "None Foobar: Foobar|The email content\x00is very important!\x00"),
+                ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
             ],
-            [
-                "1",
-            ],
+            "IMAP",
         ),
         (
             {
@@ -68,22 +74,39 @@ def test_ac_check_mail_main_failed_connect(check_mail):
                 "1": create_test_email("Foo"),
             },
             [
-                ("<21>", "None Foo: Foo|The email content\x00is very important!\x00"),
-                ("<21>", "None Bar: Bar|The email content\x00is very important!\x00"),
+                ("<21>", "None Foo: Foo | The email content\x00is very important!\x00"),
+                ("<21>", "None Bar: Bar | The email content\x00is very important!\x00"),
             ],
+            "IMAP",
+        ),
+        (
+            {
+                "1": create_test_email_ews("Foobar"),
+            },
             [
-                "1",
-                "2",
+                ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
             ],
+            "EWS",
+        ),
+        (
+            {
+                "2": create_test_email_ews("Bar"),
+                "1": create_test_email_ews("Foo"),
+            },
+            [
+                ("<21>", "None Foo: Foo | The email content\x00is very important!\x00"),
+                ("<21>", "None Bar: Bar | The email content\x00is very important!\x00"),
+            ],
+            "EWS",
         ),
     ],
 )
 def test_ac_check_mail_prepare_messages_for_ec(
-    check_mail,
-    mails,
-    expected_messages,
-    expected_forwarded,
-):
+    check_mail: ModuleType,
+    mails: MailMessages,
+    expected_messages: Sequence[tuple[str, str]],
+    inbox_protocol: str,
+) -> None:
     args = Args(
         body_limit=1000,
         forward_app=None,
@@ -91,8 +114,7 @@ def test_ac_check_mail_prepare_messages_for_ec(
         fetch_server=None,
         forward_facility=2,
     )
-    messages, forwarded = check_mail.prepare_messages_for_ec(args, mails)
-    assert forwarded == expected_forwarded
+    messages = check_mail.prepare_messages_for_ec(args, mails, inbox_protocol)
     for message, (expected_priority, expected_message) in zip(messages, expected_messages):
         assert message.startswith(expected_priority)
         assert message.endswith(expected_message)

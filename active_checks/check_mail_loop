@@ -312,9 +312,10 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
     with Mailbox(args) as mailbox:
         mailbox.connect()
+        fetched_mail_messages: POPIMAPMailMessages = mailbox.fetch_mails()
         obsolete_mails, fetched_mails = fetch_mail_timestamps(
             args,
-            mailbox.fetch_mails(),
+            fetched_mail_messages,
             expected_mails,
         )
         logging.debug("obsolete_mails: %r", obsolete_mails)
@@ -332,13 +333,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         if args.delete_messages:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
-            mailbox.delete_mails(
-                set(
-                    elem[0]
-                    for maillist in (obsolete_mails, fetched_mails)
-                    for elem in maillist.values()
-                )
-            )
+            mailbox.delete_mails(fetched_mail_messages)
 
     return state, output, perfdata
 

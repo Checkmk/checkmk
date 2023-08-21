@@ -628,7 +628,7 @@ def test_update(
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
-        version_spec="2.2.0p5",
+        version_spec="2.2.0p8",
         branch="2.2.0",
         edition=Edition.CRE,
     )

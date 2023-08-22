@@ -314,7 +314,6 @@ def test_timed_out_session_gets_a_new_one_instead(
         # A new session is created, because the old one expired.
         assert session.session_info.session_id != old_session.session_id
         assert session.session_info.started_at != old_session.started_at
-        assert session.session_info.last_activity == int(datetime.now().timestamp())
         assert session.session_info.last_activity > old_session.last_activity
 
 

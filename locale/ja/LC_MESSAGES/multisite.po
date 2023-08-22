@@ -6100,6 +6100,10 @@ msgstr "ラグを適用する"
 msgid "Apply OMD config changes"
 msgstr "OMDの設定変更を適用する"
 
+#, fuzzy
+msgid "Apply bake revision"
+msgstr "圧縮を適用"
+
 msgid "Apply compression"
 msgstr "圧縮を適用"
 
@@ -11829,6 +11833,10 @@ msgstr ""
 "は、直近のチェック間隔において、ユーザープロセスおよびカーネルルーチンに使用"
 "されたCPU時間のパーセンテージを利用可能なすべてのコアで集計したものです。設定"
 "可能な範囲は0%～100%"
+
+#, fuzzy
+msgid "Configure levels on smoke"
+msgstr "Iノード レベルなし"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -18998,6 +19006,9 @@ msgstr "エンジンIDs(SNMPv3にのみ必要)"
 
 msgid "English"
 msgstr "English"
+
+msgid "Ensure always-increasing .rpm and .deb versions."
+msgstr ""
 
 msgid "Enter"
 msgstr "入る"
@@ -34485,6 +34496,10 @@ msgstr "監視対象ユニットが全く見つからない場合の監視状態
 msgid "Monitoring state if failover link not up"
 msgstr "フェイルオーバーリンクがアップしていない場合の状態監視"
 
+#, fuzzy
+msgid "Monitoring state if no smoke is detected"
+msgstr "タスクが有効になっていない場合の状態の監視"
+
 msgid "Monitoring state if not active/standby"
 msgstr "アクティブ/スタンバイでない場合の監視状態"
 
@@ -34496,6 +34511,10 @@ msgstr "サービスが失敗した場合の状態の監視"
 
 msgid "Monitoring state if service is inactive"
 msgstr "サービスが非アクティブ場合、状態を監視する"
+
+#, fuzzy
+msgid "Monitoring state if smoke is detected"
+msgstr "タスクが有効になっていない場合の状態の監視"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
@@ -46383,6 +46402,10 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "最大経過日数を設定する"
 
+#, fuzzy
+msgid "Set monitoring states for no-smoke and smoke cases"
+msgstr "他のユニット状態の監視状態"
+
 msgid "Set optional timeout for connections to JIRA"
 msgstr "JIRAへの接続にオプションのタイムアウトを設定する"
 
@@ -47873,8 +47896,13 @@ msgstr "Smoke探知"
 msgid "Smoke Levels"
 msgstr "スモークレベル"
 
-msgid "Smoke levels"
-msgstr "スモークレベル"
+#, fuzzy
+msgid "Smoke handling"
+msgstr "エラー処理"
+
+#, fuzzy
+msgid "Smoke monitoring"
+msgstr "ネットワーク監視"
 
 msgid "Snapshot build currently in progress"
 msgstr "現在進行中のスナップショットビルド"
@@ -60361,6 +60389,20 @@ msgstr ""
 "ることに注意してください。"
 
 msgid ""
+"To distinguish different agent bakery packages from each other, the agent "
+"hash of an agent package is included in the version of .rpm and .deb "
+"packages. However, when updating a package on a host, the new agent package "
+"may be detected as a downgrade. To mitigate this, an always increasing "
+"<i>Bake revision</i> can be added to the versioning scheme by this "
+"activating this option.<br><i>Caution:</i> When activating this option, the "
+"agent bakery will have to invalidate agent package signatures that normally "
+"would stay valid on baking. You'll have to resign them manually afterwards, "
+"or always use <i>Bake and sign</i>.<br>Only activate this option when "
+"actually running into the mentioned downgrading problem. This should not be "
+"the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
 "one host for every monitored resource group. You can learn about the "
@@ -70799,6 +70841,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Smoke levels"
+#~ msgstr "スモークレベル"
 
 #, python-format
 #~ msgid ""

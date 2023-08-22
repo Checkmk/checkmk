@@ -6226,6 +6226,10 @@ msgstr "Verzögerung des Anwendens"
 msgid "Apply OMD config changes"
 msgstr "OMD-Konfigurationsänderungen anwenden"
 
+#, fuzzy
+msgid "Apply bake revision"
+msgstr "Komprimierung verwenden"
+
 msgid "Apply compression"
 msgstr "Komprimierung verwenden"
 
@@ -12030,6 +12034,10 @@ msgstr ""
 "den prozentualen Anteil der CPU-Zeit, der für Benutzerprozesse und Kernel-"
 "Routinen über alle verfügbaren Kerne innerhalb des letzten Prüfintervalls "
 "verwendet wird. Der zulässige Bereich reicht von 0% bis 100%"
+
+#, fuzzy
+msgid "Configure levels on smoke"
+msgstr "Keine Schwellwerte auf Inodes"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -19295,6 +19303,9 @@ msgstr "Engine-IDs (nur für SNMPv3 benötigt)"
 
 msgid "English"
 msgstr "Englisch"
+
+msgid "Ensure always-increasing .rpm and .deb versions."
+msgstr ""
 
 msgid "Enter"
 msgstr "OK"
@@ -35002,6 +35013,10 @@ msgstr ""
 msgid "Monitoring state if failover link not up"
 msgstr "Monitoring-Zustand, wenn der Failover-Link nicht aktiv ist"
 
+#, fuzzy
+msgid "Monitoring state if no smoke is detected"
+msgstr "Monitoring State falls der Task nicht aktiviert ist"
+
 msgid "Monitoring state if not active/standby"
 msgstr "Monitoring-Zustand, wenn nicht aktiv/standby"
 
@@ -35013,6 +35028,10 @@ msgstr "Monitoring State falls der Service fehlgeschlagen ist"
 
 msgid "Monitoring state if service is inactive"
 msgstr "Monitoring State falls der Service inaktiv ist"
+
+#, fuzzy
+msgid "Monitoring state if smoke is detected"
+msgstr "Monitoring State falls der Task nicht aktiviert ist"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Monitoring State falls der Task nicht aktiviert ist"
@@ -46961,6 +46980,10 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "Maximales Alter einstellen"
 
+#, fuzzy
+msgid "Set monitoring states for no-smoke and smoke cases"
+msgstr "Monitoring-Zustand für alle übrigen Zustände der Einheit"
+
 msgid "Set optional timeout for connections to JIRA"
 msgstr "Optionalen Timeout Wert für Verbindungen zu JIRA einstellen"
 
@@ -48494,8 +48517,13 @@ msgstr "Rauchmelder"
 msgid "Smoke Levels"
 msgstr "Rauch-Schwellwerte"
 
-msgid "Smoke levels"
-msgstr "Rauch-Schwellwerte"
+#, fuzzy
+msgid "Smoke handling"
+msgstr "Fehlerbehandlung"
+
+#, fuzzy
+msgid "Smoke monitoring"
+msgstr "Netzwerk-Überwachung"
 
 msgid "Snapshot build currently in progress"
 msgstr "Erstellen der Sicherung läuft gerade"
@@ -61605,6 +61633,20 @@ msgstr ""
 "Ausführung die Belastung der CPU erhöht."
 
 msgid ""
+"To distinguish different agent bakery packages from each other, the agent "
+"hash of an agent package is included in the version of .rpm and .deb "
+"packages. However, when updating a package on a host, the new agent package "
+"may be detected as a downgrade. To mitigate this, an always increasing "
+"<i>Bake revision</i> can be added to the versioning scheme by this "
+"activating this option.<br><i>Caution:</i> When activating this option, the "
+"agent bakery will have to invalidate agent package signatures that normally "
+"would stay valid on baking. You'll have to resign them manually afterwards, "
+"or always use <i>Bake and sign</i>.<br>Only activate this option when "
+"actually running into the mentioned downgrading problem. This should not be "
+"the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
 "one host for every monitored resource group. You can learn about the "
@@ -72335,6 +72377,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Smoke levels"
+#~ msgstr "Rauch-Schwellwerte"
 
 #, python-format
 #~ msgid ""

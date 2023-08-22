@@ -6218,6 +6218,10 @@ msgstr "Solliciteer Lag"
 msgid "Apply OMD config changes"
 msgstr "Wijzigingen in OMD-configuratie toepassen"
 
+#, fuzzy
+msgid "Apply bake revision"
+msgstr "Breng compressie aan"
+
 msgid "Apply compression"
 msgstr "Breng compressie aan"
 
@@ -12014,6 +12018,10 @@ msgstr ""
 "gebruikt voor gebruikersprocessen en kernelroutines over alle beschikbare "
 "cores binnen het laatste controle-interval. Het mogelijke bereik is van 0% "
 "tot 100%"
+
+#, fuzzy
+msgid "Configure levels on smoke"
+msgstr "Geen niveaus op inodes"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -19251,6 +19259,9 @@ msgstr "Engine ID's (alleen nodig voor SNMPv3)"
 
 msgid "English"
 msgstr "Engels"
+
+msgid "Ensure always-increasing .rpm and .deb versions."
+msgstr ""
 
 msgid "Enter"
 msgstr "Ga naar"
@@ -34944,6 +34955,10 @@ msgstr "Bewakingsstatus als een bewaakte eenheid helemaal niet wordt gevonden."
 msgid "Monitoring state if failover link not up"
 msgstr "Bewakingstoestand als failover link niet up is"
 
+#, fuzzy
+msgid "Monitoring state if no smoke is detected"
+msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
+
 msgid "Monitoring state if not active/standby"
 msgstr "Bewakingstoestand indien niet actief/standby"
 
@@ -34955,6 +34970,10 @@ msgstr "Bewakingstoestand als de dienst mislukt"
 
 msgid "Monitoring state if service is inactive"
 msgstr "Bewakingstoestand als de dienst inactief is"
+
+#, fuzzy
+msgid "Monitoring state if smoke is detected"
+msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
@@ -46851,6 +46870,10 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "Maximumleeftijd instellen"
 
+#, fuzzy
+msgid "Set monitoring states for no-smoke and smoke cases"
+msgstr "Bewakingstoestand voor elke andere eenheidstoestand"
+
 msgid "Set optional timeout for connections to JIRA"
 msgstr "Stel een optionele time-out in voor verbindingen met JIRA"
 
@@ -48373,8 +48396,13 @@ msgstr "Rookdetectie"
 msgid "Smoke Levels"
 msgstr "Rookniveaus"
 
-msgid "Smoke levels"
-msgstr "Rookniveaus"
+#, fuzzy
+msgid "Smoke handling"
+msgstr "Foutafhandeling"
+
+#, fuzzy
+msgid "Smoke monitoring"
+msgstr "Netwerkbewaking"
 
 msgid "Snapshot build currently in progress"
 msgstr "Snapshot build is bezig"
@@ -61484,6 +61512,20 @@ msgstr ""
 "verhogen."
 
 msgid ""
+"To distinguish different agent bakery packages from each other, the agent "
+"hash of an agent package is included in the version of .rpm and .deb "
+"packages. However, when updating a package on a host, the new agent package "
+"may be detected as a downgrade. To mitigate this, an always increasing "
+"<i>Bake revision</i> can be added to the versioning scheme by this "
+"activating this option.<br><i>Caution:</i> When activating this option, the "
+"agent bakery will have to invalidate agent package signatures that normally "
+"would stay valid on baking. You'll have to resign them manually afterwards, "
+"or always use <i>Bake and sign</i>.<br>Only activate this option when "
+"actually running into the mentioned downgrading problem. This should not be "
+"the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
 "one host for every monitored resource group. You can learn about the "
@@ -72199,6 +72241,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Smoke levels"
+#~ msgstr "Rookniveaus"
 
 #, python-format
 #~ msgid ""

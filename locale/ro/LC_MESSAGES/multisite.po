@@ -6266,6 +6266,10 @@ msgstr "Aplicați Lag"
 msgid "Apply OMD config changes"
 msgstr "Aplicați modificările de configurare OMD"
 
+#, fuzzy
+msgid "Apply bake revision"
+msgstr "Aplicați compresia"
+
 msgid "Apply compression"
 msgstr "Aplicați compresia"
 
@@ -12119,6 +12123,10 @@ msgstr ""
 "CPU care este utilizat pentru procesele de utilizator și rutinele kernelului "
 "pe toate nucleele disponibile în ultimul interval de verificare. Intervalul "
 "posibil este de la 0% la 100%."
+
+#, fuzzy
+msgid "Configure levels on smoke"
+msgstr "Nu există niveluri pe inodes"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -19416,6 +19424,9 @@ msgstr "ID-uri de motor (necesare numai pentru SNMPv3)"
 
 msgid "English"
 msgstr "Engleză"
+
+msgid "Ensure always-increasing .rpm and .deb versions."
+msgstr ""
 
 msgid "Enter"
 msgstr "Introduceți"
@@ -35242,6 +35253,10 @@ msgstr ""
 msgid "Monitoring state if failover link not up"
 msgstr "Monitorizarea stării dacă legătura de failover nu este activă"
 
+#, fuzzy
+msgid "Monitoring state if no smoke is detected"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
+
 msgid "Monitoring state if not active/standby"
 msgstr "Starea de monitorizare dacă nu este activă/în așteptare"
 
@@ -35253,6 +35268,10 @@ msgstr "Starea de monitorizare în cazul în care serviciul este eșuat"
 
 msgid "Monitoring state if service is inactive"
 msgstr "Starea de monitorizare în cazul în care serviciul este inactiv"
+
+#, fuzzy
+msgid "Monitoring state if smoke is detected"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
@@ -47310,6 +47329,10 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "Setați vârsta maximă"
 
+#, fuzzy
+msgid "Set monitoring states for no-smoke and smoke cases"
+msgstr "Starea de monitorizare pentru orice altă stare a unității"
+
 msgid "Set optional timeout for connections to JIRA"
 msgstr "Setați un timeout opțional pentru conexiunile la JIRA"
 
@@ -48855,8 +48878,13 @@ msgstr "Detectarea fumului"
 msgid "Smoke Levels"
 msgstr "Nivelurile de fum"
 
-msgid "Smoke levels"
-msgstr "Nivelurile de fum"
+#, fuzzy
+msgid "Smoke handling"
+msgstr "Gestionarea erorilor"
+
+#, fuzzy
+msgid "Smoke monitoring"
+msgstr "Monitorizarea rețelei"
 
 msgid "Snapshot build currently in progress"
 msgstr "Construirea instantanee în curs de desfășurare"
@@ -62094,6 +62122,20 @@ msgstr ""
 "totuși că execuțiile simultane vor crește sarcina asupra CPU."
 
 msgid ""
+"To distinguish different agent bakery packages from each other, the agent "
+"hash of an agent package is included in the version of .rpm and .deb "
+"packages. However, when updating a package on a host, the new agent package "
+"may be detected as a downgrade. To mitigate this, an always increasing "
+"<i>Bake revision</i> can be added to the versioning scheme by this "
+"activating this option.<br><i>Caution:</i> When activating this option, the "
+"agent bakery will have to invalidate agent package signatures that normally "
+"would stay valid on baking. You'll have to resign them manually afterwards, "
+"or always use <i>Bake and sign</i>.<br>Only activate this option when "
+"actually running into the mentioned downgrading problem. This should not be "
+"the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
 "one host for every monitored resource group. You can learn about the "
@@ -72887,6 +72929,9 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Smoke levels"
+#~ msgstr "Nivelurile de fum"
 
 #, python-format
 #~ msgid ""

@@ -35,6 +35,7 @@ SHELL_FILES_REL := $(shell cd ..; grep -rl \
     --exclude-dir="tests" \
     --exclude-dir="web" \
     --exclude-dir="build_user_home" \
+    --exclude-dir="shared_cargo_folder" \
     --exclude="LIVEPROXYD" \
     --exclude="install-sh" \
     --exclude="code_examples.py" \

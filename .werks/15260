@@ -1,0 +1,15 @@
+Title: Fixed rescheduling of non-existent service
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1692695123
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p9
+
+When a Livestatus query with a "WaitObject:" line for a non-existent service
+was sent to the monitoring core, a crash happened.  This could e.g. be
+triggered by direct Livestatus queries or via a "Reschedule" in the GUI
+under certain circumstances.  This was a regression in 2.2.0 and has been
+fixed.

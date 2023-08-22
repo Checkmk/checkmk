@@ -206,16 +206,16 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; npm --version; node --version; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
-	cd ..; npm ci && scripts/check-typescript-types.sh
+	cd ..; npm --version; node --version; npm ci && scripts/check-typescript-types.sh
 
 test-lint-js:
-	cd ..; npm ci && scripts/check-js-lint.sh
+	cd ..; npm --version; node --version; npm ci && scripts/check-js-lint.sh
 
 test-build-js:
-	npm ci && ENTERPRISE=yes MANAGED=no npm run build
+	npm --version; node --version; npm ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js

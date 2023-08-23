@@ -123,7 +123,7 @@ def get_predictive_levels(
 def estimate_levels(
     *,
     reference_value: float,
-    stdev: float,
+    stdev: float | None,
     levels_lower: LevelsSpec | None,
     levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
@@ -173,7 +173,7 @@ def _get_levels_from_params(
     levels: LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
-    stdev: float,
+    stdev: float | None,
     levels_factor: float,
 ) -> tuple[float, float] | tuple[None, None]:
     levels_type, (warn, crit) = levels
@@ -187,7 +187,7 @@ def _get_levels_from_params(
             reference_deviation = reference / 100.0
         case "stdev":
             match stdev:
-                case 0:
+                case 0 | None:
                     return (None, None)
                 case _:
                     reference_deviation = stdev

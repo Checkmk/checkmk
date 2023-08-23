@@ -148,14 +148,14 @@ def test_time_slices(
 @pytest.mark.parametrize(
     "slices, result",
     [
-        ([list(range(6))], [DataStat(i, i, i, i) for i in range(6)]),
+        ([list(range(6))], [DataStat(i, i, i, None) for i in range(6)]),
         (
             [[1, 5, None, 6]],
             [
-                DataStat(1, 1, 1, 1),
-                DataStat(5, 5, 5, 5),
+                DataStat(1, 1, 1, None),
+                DataStat(5, 5, 5, None),
                 None,
-                DataStat(6, 6, 6, 6),
+                DataStat(6, 6, 6, None),
             ],
         ),
         (
@@ -165,8 +165,8 @@ def test_time_slices(
             ],
             [
                 DataStat(1.5, 1, 2, pytest.approx(math.sqrt(2) / 2)),  # fixed: true-division
-                DataStat(5.0, 5, 5, pytest.approx(5.0)),
-                DataStat(2.0, 2, 2, pytest.approx(2.0)),
+                DataStat(5.0, 5, 5, None),
+                DataStat(2.0, 2, 2, None),
                 DataStat(5.0, 4, 6, pytest.approx(math.sqrt(2))),
             ],
         ),
@@ -198,7 +198,7 @@ def test_time_slices(
                 DataStat(3.5, 2, 5, pytest.approx(2.121320)),
                 DataStat(4.0, 2, 6, pytest.approx(2.828427)),
                 DataStat(5.0, 2, 8, pytest.approx(4.242640)),
-                DataStat(2.0, 2, 2, pytest.approx(2.0)),
+                DataStat(2.0, 2, 2, None),
             ],
         ),
     ],

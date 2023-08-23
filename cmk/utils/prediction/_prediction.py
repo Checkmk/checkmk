@@ -54,7 +54,7 @@ class DataStat:
     average: float
     min_: float
     max_: float
-    stdev: float
+    stdev: float | None
 
 
 _TimeSlices = list[tuple[Timestamp, Timestamp]]
@@ -571,13 +571,11 @@ def _data_stats(slices: list[TimeSeriesValues]) -> list[DataStat | None]:
     return descriptors
 
 
-def _std_dev(point_line: list[float], average: float) -> float:
+def _std_dev(point_line: list[float], average: float) -> float | None:
     samples = len(point_line)
-    # In the case of a single data-point an unbiased standard deviation is
-    # undefined. In this case we take the magnitude of the measured value
-    # itself as a measure of the dispersion.
+    # In the case of a single data-point an unbiased standard deviation is undefined.
     if samples == 1:
-        return abs(average)
+        return None
     return math.sqrt(
         abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1)
     )

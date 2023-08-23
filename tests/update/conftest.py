@@ -29,6 +29,15 @@ from cmk.utils.version import Edition
 logger = logging.getLogger(__name__)
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--disable-interactive-mode",
+        action="store_true",
+        default=False,
+        help="Disable interactive site creation and update. Use CLI instead.",
+    )
+
+
 @dataclasses.dataclass
 class BaseVersions:
     """Get all base versions used for the test."""
@@ -175,9 +184,7 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(
-    version: CMKVersion, base_site: Optional[Site] = None, interactive: bool = True
-) -> Site:
+def _get_site(version: CMKVersion, interactive: bool, base_site: Optional[Site] = None) -> Site:
     """Install or update the test site with the given version.
     An update installation is done automatically when an optional base_site is given.
     By default, both installing and updating is done directly via spawn_expect_process()."""
@@ -266,16 +273,18 @@ def version_supported(version: str) -> bool:
 def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
-    logger.info("Setting up test-site ...")
-    test_site = _get_site(base_version, interactive=True)
+    interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
+    logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
+    test_site = _get_site(base_version, interactive=not interactive_mode_off)
     yield test_site
     logger.info("Removing test-site...")
     test_site.rm()
 
 
-def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:
+def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bool) -> Site:
     """Update the test site to the target version."""
-    return _get_site(target_version, base_site=site, interactive=interactive)
+    logger.info("Updating site (interactive-mode=%s) ...", not interactive_mode_off)
+    return _get_site(target_version, base_site=site, interactive=not interactive_mode_off)
 
 
 def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:

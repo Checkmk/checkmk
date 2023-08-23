@@ -37,7 +37,11 @@ logger = logging.getLogger(__name__)
     reason="Test currently failing for missing `php7`. "
     "This will be fixed  starting from  base-version 2.2.0p8",
 )
-def test_update(test_site: Site, agent_ctl: Path) -> None:  # pylint: disable=too-many-branches
+def test_update(  # pylint: disable=too-many-branches
+    test_site: Site,
+    agent_ctl: Path,
+    request: pytest.FixtureRequest,
+) -> None:
     # get version data
     base_version = test_site.version
 
@@ -120,7 +124,9 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:  # pylint: disable=to
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(test_site, target_version, interactive=True)
+    target_site = update_site(
+        test_site, target_version, request.config.getoption(name="--disable-interactive-mode")
+    )
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)

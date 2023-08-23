@@ -106,7 +106,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("Python 3.8.16")
+    assert version.startswith("Python 3.8.17")
 
 
 def test_03_python_path(site):
@@ -139,7 +139,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site: Site, pip_cmd):
     p = site.execute(pip_cmd.command + ["-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 22.0.4")
+    assert version.startswith("pip 23.0.1")
 
 
 def test_04_pip_user_can_install_non_wheel_packages(site):

@@ -358,9 +358,7 @@ def estimate_level_bounds(
         )
 
     # how == "stdev":
-    if stdev is None:  # just make explicit what would have happend anyway:
-        raise TypeError("stdev is None")
-    if stdev == 0:
+    if stdev == 0 or stdev is None:
         return None, None
 
     return (

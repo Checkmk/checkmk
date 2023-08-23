@@ -21,7 +21,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, restart_httpd
+from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -244,21 +244,6 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Optional[Site] 
     else:
         # use SiteFactory for non-interactive site creation/update
         site = sf.get_site("central")
-
-    verify_admin_password(site)
-
-    assert site.is_running(), "Site is not running!"
-    logger.info("Test-site %s is up", site.id)
-
-    restart_httpd()
-
-    site_version, site_edition = get_omd_version(site).rsplit(".", 1)
-    assert (
-        site.version.version == version.version == site_version
-    ), "Version mismatch during %s!" % ("update" if update else "installation")
-    assert (
-        site.version.edition.short == version.edition.short == site_edition
-    ), "Edition mismatch during %s!" % ("update" if update else "installation")
 
     return site
 

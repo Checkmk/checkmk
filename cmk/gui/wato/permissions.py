@@ -533,16 +533,6 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
-        name="icons",
-        title=_l("Manage Custom Icons"),
-        description=_l("Upload or delete custom icons"),
-        defaults=["admin"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionWATO,
         name="custom_attributes",
         title=_l("Manage custom attributes"),
         description=_l("Manage custom host- and user attributes"),

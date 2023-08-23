@@ -496,9 +496,7 @@ def _get_levels_from_params(
     elif levels_type == "relative":
         reference_deviation = reference / 100.0
     else:  # levels_type == "stdev":
-        if stdev is None:
-            raise TypeError("stdev is None")
-        if stdev == 0:
+        if stdev is None or stdev == 0:
             return None, None
         reference_deviation = stdev
 

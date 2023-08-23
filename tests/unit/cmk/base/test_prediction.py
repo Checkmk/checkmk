@@ -148,8 +148,8 @@ def test_time_slices(
 @pytest.mark.parametrize(
     "slices, result",
     [
-        ([list(range(6))], [[i] * 4 for i in range(6)]),
-        ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
+        ([list(range(6))], [[i, i, i, None] for i in range(6)]),
+        ([[1, 5, None, 6]], [[i, i, i, None] for i in [1, 5, None, 6]]),
         (
             [
                 [1, 5, None, 6],
@@ -157,8 +157,8 @@ def test_time_slices(
             ],
             [
                 pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),  # fixed: true-division
-                [5.0, 5, 5, 5.0],
-                [2.0, 2, 2, 2.0],
+                [5.0, 5, 5, None],
+                [2.0, 2, 2, None],
                 pytest.approx([5.0, 4, 6, math.sqrt(2)]),
             ],
         ),
@@ -190,7 +190,7 @@ def test_time_slices(
                 pytest.approx([3.5, 2, 5, 2.121320]),
                 pytest.approx([4.0, 2, 6, 2.828427]),
                 pytest.approx([5.0, 2, 8, 4.242640]),
-                pytest.approx([2.0, 2, 2, 2.0]),
+                pytest.approx([2.0, 2, 2, None]),
             ],
         ),
     ],

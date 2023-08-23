@@ -186,6 +186,7 @@ def update_config(site: Site) -> int:
 
 def _get_site(version: CMKVersion, interactive: bool, base_site: Optional[Site] = None) -> Site:
     """Install or update the test site with the given version.
+
     An update installation is done automatically when an optional base_site is given.
     By default, both installing and updating is done directly via spawn_expect_process()."""
     update = base_site is not None and base_site.exists()

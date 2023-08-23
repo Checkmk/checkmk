@@ -1278,14 +1278,19 @@ class SiteFactory:
         site = self._site_obj(name)
 
         site.create()
-        self._sites[site.id] = site
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site(name)
 
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
+
         site.start()
         site.prepare_for_tests()
+
         # There seem to be still some changes that want to be activated
         site.activate_changes_and_wait_for_core_reload()
+
         logger.debug("Created site %s", site.id)
         return site
 

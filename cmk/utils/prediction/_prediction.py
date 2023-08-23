@@ -49,10 +49,15 @@ class PredictionParameters(BaseModel, frozen=True):
     levels_lower: LevelsSpec | None = None
 
 
-_DataStatValue = float | None
-_DataStat = list[_DataStatValue]
+@dataclass(frozen=True)
+class DataStat:
+    average: float
+    min_: float
+    max_: float
+    stdev: float
+
+
 _TimeSlices = list[tuple[Timestamp, Timestamp]]
-DataStats = list[_DataStat]
 
 _GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
 
@@ -86,8 +91,7 @@ class PredictionInfo(BaseModel, frozen=True):
 
 
 class PredictionData(BaseModel, frozen=True):
-    columns: list[str]
-    points: DataStats
+    points: list[DataStat | None]
     data_twindow: list[Timestamp]
     step: Seconds
 
@@ -538,32 +542,31 @@ def _calculate_data_for_prediction(
     twindow, slices = _upsample(raw_slices)
 
     return PredictionData(
-        columns=["average", "min", "max", "stdev"],
         points=_data_stats(slices),
         data_twindow=list(twindow[:2]),
         step=twindow[2],
     )
 
 
-def _data_stats(slices: list[TimeSeriesValues]) -> DataStats:
+def _data_stats(slices: list[TimeSeriesValues]) -> list[DataStat | None]:
     "Statistically summarize all the upsampled RRD data"
 
-    descriptors: DataStats = []
+    descriptors: list[DataStat | None] = []
 
     for time_column in zip(*slices):
         point_line = [x for x in time_column if x is not None]
         if point_line:
             average = sum(point_line) / float(len(point_line))
             descriptors.append(
-                [
-                    average,
-                    min(point_line),
-                    max(point_line),
-                    _std_dev(point_line, average),
-                ]
+                DataStat(
+                    average=average,
+                    min_=min(point_line),
+                    max_=max(point_line),
+                    stdev=_std_dev(point_line, average),
+                )
             )
         else:
-            descriptors.append([None, None, None, None])
+            descriptors.append(None)
 
     return descriptors
 

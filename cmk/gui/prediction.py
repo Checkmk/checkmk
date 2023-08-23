@@ -5,8 +5,8 @@
 
 import json
 import time
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 
 import livestatus
 
@@ -23,6 +23,18 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 graph_size = 2000, 700
+
+
+@dataclass(frozen=True)
+class SwappedStats:
+    average: list[float | None] = field(default_factory=list)
+    min_: list[float | None] = field(default_factory=list)
+    max_: list[float | None] = field(default_factory=list)
+    stdev: list[float | None] = field(default_factory=list)
+    upper_warn: list[float] = field(default_factory=list)
+    upper_crit: list[float] = field(default_factory=list)
+    lower_warn: list[float] = field(default_factory=list)
+    lower_crit: list[float] = field(default_factory=list)
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -105,12 +117,12 @@ def page_graph() -> None:
     create_graph(timegroup.name, graph_size, timegroup.range, vertical_range, legend)
 
     if timegroup.params.levels_upper is not None:
-        render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
-        render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
+        render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
+        render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
 
     if timegroup.params.levels_lower is not None:
-        render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
-        render_area(swapped["lower_crit"], "#ff0000", 0.1)
+        render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
+        render_area(swapped.lower_crit, "#ff0000", 0.1)
 
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
@@ -119,16 +131,16 @@ def page_graph() -> None:
     render_coordinates(vert_scala, time_scala)
 
     if timegroup.params.levels_lower is not None:
-        render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
-        render_curve(swapped["lower_warn"], "#e0e000", square=True)
-        render_curve(swapped["lower_crit"], "#f0b0a0", square=True)
+        render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
+        render_curve(swapped.lower_warn, "#e0e000", square=True)
+        render_curve(swapped.lower_crit, "#f0b0b0", square=True)
 
     if timegroup.params.levels_upper is not None:
-        render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
-        render_curve(swapped["upper_warn"], "#e0e000", square=True)
-        render_curve(swapped["upper_crit"], "#f0b0b0", square=True)
-    render_curve(swapped["average"], "#000000")
-    render_curve(swapped["average"], "#000000")  # repetition makes line bolder
+        render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
+        render_curve(swapped.upper_warn, "#e0e000", square=True)
+        render_curve(swapped.upper_crit, "#f0b0b0", square=True)
+    render_curve(swapped.average, "#000000")
+    render_curve(swapped.average, "#000000")  # repetition makes line bolder
 
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup.range
@@ -219,42 +231,52 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | N
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(
     tg_data: _prediction.PredictionData, params: _prediction.PredictionParameters
-) -> Mapping[str, list[Any]]:
-    columns = tg_data.columns
-    swapped: dict[str, list[Any]] = {c: [] for c in columns}
+) -> SwappedStats:
+    swapped = SwappedStats()
     for step in tg_data.points:
-        row = dict(zip(columns, step))
-        for k, v in row.items():
-            swapped[k].append(v)
-        if row["average"] is not None and row["stdev"] is not None:
+        if step is not None:
+            swapped.average.append(step.average)
+            swapped.min_.append(step.min_)
+            swapped.max_.append(step.max_)
+            swapped.stdev.append(step.stdev)
             upper_0, upper_1, lower_0, lower_1 = _prediction.estimate_levels(
-                reference_value=row["average"],
-                stdev=row["stdev"],
+                reference_value=step.average,
+                stdev=step.stdev,
                 levels_lower=params.levels_lower,
                 levels_upper=params.levels_upper,
                 levels_upper_lower_bound=params.levels_upper_min,
                 levels_factor=1.0,
             )
-            swapped.setdefault("upper_warn", []).append(upper_0 or 0)
-            swapped.setdefault("upper_crit", []).append(upper_1 or 0)
-            swapped.setdefault("lower_warn", []).append(lower_0 or 0)
-            swapped.setdefault("lower_crit", []).append(lower_1 or 0)
+            swapped.upper_warn.append(upper_0 or 0)
+            swapped.upper_crit.append(upper_1 or 0)
+            swapped.lower_warn.append(lower_0 or 0)
+            swapped.lower_crit.append(lower_1 or 0)
         else:
-            swapped.setdefault("upper_warn", []).append(0)
-            swapped.setdefault("upper_crit", []).append(0)
-            swapped.setdefault("lower_warn", []).append(0)
-            swapped.setdefault("lower_crit", []).append(0)
+            swapped.average.append(None)
+            swapped.min_.append(None)
+            swapped.max_.append(None)
+            swapped.stdev.append(None)
+            swapped.upper_warn.append(0)
+            swapped.upper_crit.append(0)
+            swapped.lower_warn.append(0)
+            swapped.lower_crit.append(0)
 
     return swapped
 
 
-def compute_vertical_range(swapped):
-    mmin, mmax = 0.0, 0.0
-    for points in swapped.values():
-        # NOTE: pylint emits false positives below
-        mmax = max(mmax, max(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
-        mmin = min(mmin, min(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
-    return mmin, mmax
+def compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
+    points = (
+        swapped.average
+        + swapped.min_
+        + swapped.max_
+        + swapped.min_
+        + swapped.stdev
+        + swapped.upper_warn
+        + swapped.upper_crit
+        + swapped.lower_warn
+        + swapped.lower_crit
+    )
+    return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 
 
 def create_graph(name, size, bounds, v_range, legend):

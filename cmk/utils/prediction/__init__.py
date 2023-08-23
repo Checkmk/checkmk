@@ -6,7 +6,7 @@
 
 from ._plugin_interface import estimate_levels, EstimatedLevels, get_predictive_levels
 from ._prediction import (
-    DataStats,
+    DataStat,
     get_rrd_data,
     livestatus_lql,
     lq_logic,
@@ -28,7 +28,7 @@ from ._prediction import (
 
 __all__ = [
     "get_predictive_levels",
-    "DataStats",
+    "DataStat",
     "estimate_levels",
     "get_rrd_data",
     "livestatus_lql",

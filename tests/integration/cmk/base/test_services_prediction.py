@@ -516,7 +516,13 @@ def test_calculate_data_for_prediction(
     assert expected_reference.dict(exclude={"points"}) == data_for_pred.dict(exclude={"points"})
     assert len(expected_reference.points) == len(data_for_pred.points)
     for cal, ref in zip(data_for_pred.points, expected_reference.points):
-        assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
+        if cal is None or ref is None:
+            assert cal is None and ref is None
+            continue
+        assert cal.average == pytest.approx(ref.average, rel=1e-12, abs=1e-12)
+        assert cal.min_ == pytest.approx(ref.min_, rel=1e-12, abs=1e-12)
+        assert cal.max_ == pytest.approx(ref.max_, rel=1e-12, abs=1e-12)
+        assert cal.stdev == pytest.approx(ref.stdev, rel=1e-12, abs=1e-12)
 
 
 @pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")

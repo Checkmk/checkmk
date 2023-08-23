@@ -105,14 +105,14 @@ def get_predictive_levels(
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred.step)
-    reference = dict(zip(data_for_pred.columns, data_for_pred.points[index]))
+    reference = data_for_pred.points[index]
 
-    if reference["average"] is None:
+    if reference is None:
         return None, (None, None, None, None)
 
-    return reference["average"], estimate_levels(
-        reference_value=reference["average"],
-        stdev=reference["stdev"],
+    return reference.average, estimate_levels(
+        reference_value=reference.average,
+        stdev=reference.stdev,
         levels_lower=params.levels_lower,
         levels_upper=params.levels_upper,
         levels_upper_lower_bound=params.levels_upper_min,
@@ -123,7 +123,7 @@ def get_predictive_levels(
 def estimate_levels(
     *,
     reference_value: float,
-    stdev: float | None,
+    stdev: float,
     levels_lower: LevelsSpec | None,
     levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
@@ -173,7 +173,7 @@ def _get_levels_from_params(
     levels: LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
-    stdev: float | None,
+    stdev: float,
     levels_factor: float,
 ) -> tuple[float, float] | tuple[None, None]:
     levels_type, (warn, crit) = levels
@@ -187,8 +187,6 @@ def _get_levels_from_params(
             reference_deviation = reference / 100.0
         case "stdev":
             match stdev:
-                case None:
-                    raise TypeError("stdev is None")
                 case 0:
                     return (None, None)
                 case _:

@@ -65,7 +65,7 @@ from cmk.utils.prediction import _plugin_interface
 )
 def test_estimate_levels(
     reference_value: float,
-    reference_deviation: float | None,
+    reference_deviation: float,
     params: Mapping,
     levels_factor: float,
     result: _plugin_interface.EstimatedLevels,

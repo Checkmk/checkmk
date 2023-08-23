@@ -12,7 +12,7 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import _prediction
+from cmk.utils.prediction import _prediction, DataStat
 
 
 @pytest.mark.parametrize(
@@ -148,18 +148,26 @@ def test_time_slices(
 @pytest.mark.parametrize(
     "slices, result",
     [
-        ([list(range(6))], [[i] * 4 for i in range(6)]),
-        ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
+        ([list(range(6))], [DataStat(i, i, i, i) for i in range(6)]),
+        (
+            [[1, 5, None, 6]],
+            [
+                DataStat(1, 1, 1, 1),
+                DataStat(5, 5, 5, 5),
+                None,
+                DataStat(6, 6, 6, 6),
+            ],
+        ),
         (
             [
                 [1, 5, None, 6],
                 [2, None, 2, 4],
             ],
             [
-                pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),  # fixed: true-division
-                [5.0, 5, 5, 5.0],
-                [2.0, 2, 2, 2.0],
-                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
+                DataStat(1.5, 1, 2, pytest.approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(5.0, 5, 5, pytest.approx(5.0)),
+                DataStat(2.0, 2, 2, pytest.approx(2.0)),
+                DataStat(5.0, 4, 6, pytest.approx(math.sqrt(2))),
             ],
         ),
         (
@@ -169,12 +177,12 @@ def test_time_slices(
                 [3, 3, None, None, 2, 2],
             ],
             [
-                pytest.approx([2.0, 1, 3, 1.0]),
-                pytest.approx([10.0 / 3.0, 2, 5, 1.527525]),
-                pytest.approx([2.5, 2, 3, math.sqrt(2) / 2]),  # fixed: true-division
-                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
-                pytest.approx([4.333333, 2, 8, 3.214550]),
-                pytest.approx([3.5, 2, 5, 2.121320]),
+                DataStat(pytest.approx(2.0), 1, 3, pytest.approx(1.0)),
+                DataStat(pytest.approx(3.333333), 2, 5, pytest.approx(1.527525)),
+                DataStat(2.5, 2, 3, pytest.approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(pytest.approx(5.0), 4, 6, pytest.approx(math.sqrt(2))),
+                DataStat(pytest.approx(4.333333), 2, 8, pytest.approx(3.214550)),
+                DataStat(pytest.approx(3.5), 2, 5, pytest.approx(2.121320)),
             ],
         ),
         (
@@ -184,18 +192,18 @@ def test_time_slices(
                 [5, 5, 5, 5, 2, 2, 2],
             ],
             [
-                pytest.approx([3.0, 1, 5, 2.828427]),
-                pytest.approx([5.0, 5, 5, 0.0]),
-                pytest.approx([4.0, 3, 5, 1.414213]),
-                pytest.approx([3.5, 2, 5, 2.121320]),
-                pytest.approx([4.0, 2, 6, 2.828427]),
-                pytest.approx([5.0, 2, 8, 4.242640]),
-                pytest.approx([2.0, 2, 2, 2.0]),
+                DataStat(3.0, 1, 5, pytest.approx(2.828427)),
+                DataStat(5.0, 5, 5, pytest.approx(0.0)),
+                DataStat(4.0, 3, 5, pytest.approx(1.414213)),
+                DataStat(3.5, 2, 5, pytest.approx(2.121320)),
+                DataStat(4.0, 2, 6, pytest.approx(2.828427)),
+                DataStat(5.0, 2, 8, pytest.approx(4.242640)),
+                DataStat(2.0, 2, 2, pytest.approx(2.0)),
             ],
         ),
     ],
 )
 def test_data_stats(
-    slices: list[_prediction.TimeSeriesValues], result: _prediction.DataStats
+    slices: list[_prediction.TimeSeriesValues], result: list[DataStat | None]
 ) -> None:
     assert _prediction._data_stats(slices) == result

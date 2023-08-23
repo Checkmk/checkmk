@@ -5,7 +5,13 @@
 
 from pathlib import Path
 
-from cmk.utils.prediction import PredictionData, PredictionInfo, PredictionParameters, Timegroup
+from cmk.utils.prediction import (
+    DataStat,
+    PredictionData,
+    PredictionInfo,
+    PredictionParameters,
+    Timegroup,
+)
 
 from cmk.update_config.plugins.actions.prediction_files_cleanup import RemoveUnreadablePredictions
 
@@ -27,8 +33,10 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
     )
     data_file.write_text(
         PredictionData(
-            columns=["average", "max", "min"],
-            points=[[1.0, 2.0, 3.0], [4.0, None, 6.0]],
+            points=[
+                DataStat(average=1.0, max_=2.0, min_=3.0, stdev=1.0),
+                DataStat(average=1.0, max_=2.0, min_=4.0, stdev=5.0),
+            ],
             data_twindow=[1, 10],
             step=2,
         ).json(),
@@ -47,8 +55,10 @@ def test_corrupt_files_are_removed(tmp_path: Path) -> None:
     info_file.write_text("boo")
     data_file.write_text(
         PredictionData(
-            columns=["average", "max", "min"],
-            points=[[1.0, 2.0, 3.0], [4.0, None, 6.0]],
+            points=[
+                DataStat(average=1.0, max_=2.0, min_=3.0, stdev=1.0),
+                DataStat(average=1.0, max_=2.0, min_=4.0, stdev=5.0),
+            ],
             data_twindow=[1, 10],
             step=2,
         ).json(),

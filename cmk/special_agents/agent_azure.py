@@ -1328,9 +1328,7 @@ def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]
         name = group["name"]
         tags = group.get("tags", {})
         if name in monitored_groups:
-            # label is being renamed to "cmk/azure/resource_group", remove for version 2.3.0
-            deprecated_label = {"resource_group": name}
-            group_labels[name] = {**tags, **deprecated_label, **{"cmk/azure/resource_group": name}}
+            group_labels[name] = {**tags, **{"cmk/azure/resource_group": name}}
 
     return group_labels
 

@@ -225,12 +225,12 @@ def test_process_vm(
             {
                 "BurningMan": {
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
+                    "cmk/azure/resource_group": "BurningMan",
                 }
             },
             (
                 [
-                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
+                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                 ],
                 ["MyVM"],
             ),
@@ -280,7 +280,7 @@ def test_get_vm_labels_section(
             {
                 "BurningMan": {
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
+                    "cmk/azure/resource_group": "BurningMan",
                 }
             },
             Args(piggyback_vms="self", debug=False, services=["Microsoft.Compute/virtualMachines"]),
@@ -289,7 +289,7 @@ def test_get_vm_labels_section(
                     LabelsSection,
                     ["MyVM"],
                     [
-                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
+                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                     ],
                 ),
                 (
@@ -333,7 +333,7 @@ def test_get_vm_labels_section(
             {
                 "BurningMan": {
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
+                    "cmk/azure/resource_group": "BurningMan",
                 }
             },
             Args(
@@ -383,7 +383,7 @@ def test_get_vm_labels_section(
             {
                 "BurningMan": {
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
+                    "cmk/azure/resource_group": "BurningMan",
                 }
             },
             Args(
@@ -427,7 +427,6 @@ def test_process_resource(
                 "BurningMan": {
                     "cmk/azure/resource_group": "BurningMan",
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
                 }
             },
         )
@@ -460,12 +459,12 @@ def test_get_group_labels(
             {
                 "BurningMan": {
                     "my-resource-tag": "my-resource-value",
-                    "resource_group": "BurningMan",
+                    "cmk/azure/resource_group": "BurningMan",
                 }
             },
             "<<<<BurningMan>>>>\n"
             "<<<labels:sep(0)>>>\n"
-            '{"my-resource-tag": "my-resource-value", "resource_group": "BurningMan"}\n'
+            '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
             "<<<<>>>>\n"
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"

@@ -206,16 +206,16 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; npm --version; node --version; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
-	cd ..; npm --version; node --version; npm ci && scripts/check-typescript-types.sh
+	cd ..; scripts/npm-ci && scripts/check-typescript-types.sh
 
 test-lint-js:
-	cd ..; npm --version; node --version; npm ci && scripts/check-js-lint.sh
+	cd ..; scripts/npm-ci && scripts/check-js-lint.sh
 
 test-build-js:
-	npm --version; node --version; npm ci && ENTERPRISE=yes MANAGED=no npm run build
+	cd ..; scripts/npm-ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js
@@ -230,7 +230,7 @@ test-typescript-types-docker:
 	../scripts/run-in-docker.sh make --quiet test-typescript-types
 
 test-format-css:
-	cd ..; scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
+	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
 
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css

@@ -1,0 +1,3 @@
+echo "nodejs $(node --version)"
+echo "npm $(npm --version)"
+npm ci

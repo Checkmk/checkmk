@@ -128,7 +128,7 @@ def test_upload_signing_keys(
     # both cases...
     # See also: tests/unit/cmk/utils/crypto/test_certificate.py
     logged_in_page.main_area.check_error(
-        "/(Invalid pass phrase)|(The file does not look like a valid key file.)/"
+        re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
     )
 
     # all ok

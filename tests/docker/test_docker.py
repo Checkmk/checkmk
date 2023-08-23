@@ -8,6 +8,7 @@
 import logging
 import os
 import subprocess
+import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -590,6 +591,9 @@ def test_redirects_work_with_custom_port(
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
+@pytest.mark.skipif(
+    build_version().is_saas_edition(), reason="Saas edition replaced the login screen"
+)
 def test_http_access_login_screen(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
@@ -609,6 +613,30 @@ def test_http_access_login_screen(
             ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
         )[-1]
     )
+
+
+def get_docker_ip(container_name: str) -> str:
+    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.Gateway}}}}{{{{end}}}}' {container_name}"
+    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+    if output == "":
+        output = "127.0.0.1"
+    return output
+
+
+@pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
+def test_http_access_login_screen_saas(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
+    c = _start(request, client)
+
+    while c.status != "running":
+        time.sleep(1)
+
+    ip = get_docker_ip(c.name)
+    resp = requests.get(f"http://{ip}:5000/cmk/check_mk", allow_redirects=False, timeout=10)
+    # saas login redirects to external service
+    assert resp.status_code == 302
+    assert "/check_mk/login.py?_origtarget=index.py" in resp.headers["location"]
 
 
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:

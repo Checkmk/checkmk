@@ -30,3 +30,12 @@ export interface PlotDefinition {
         unit: Record<string, string>;
     };
 }
+
+declare global {
+    interface JQueryStatic {
+        //This is introduced for mobile.ts since it uses JQuery Mobile
+        //However, Typescript doesn't recognize any mobile attribute in JQueryStatic
+        //that's why I added it.
+        mobile: any;
+    }
+}

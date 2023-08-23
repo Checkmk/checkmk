@@ -492,9 +492,13 @@ def _get_levels_from_params(
         case "relative":
             reference_deviation = reference / 100.0
         case "stdev":
-            if stdev is None:  # just make explicit what would have happend anyway:
-                raise TypeError("stdev is None")
-            reference_deviation = stdev
+            match stdev:
+                case None:
+                    raise TypeError("stdev is None")
+                case 0:
+                    return None, None
+                case _:
+                    reference_deviation = stdev
         case _:
             assert_never(levels_type)
 

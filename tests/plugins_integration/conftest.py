@@ -68,6 +68,40 @@ def pytest_addoption(parser):
         default="",
         help="Check name allow list",
     )
+    parser.addoption(
+        "--data-dir",
+        action="store",
+        help="Data dir path",
+    )
+    parser.addoption(
+        "--dump-dir",
+        action="store",
+        help="Dump dir path",
+    )
+    parser.addoption(
+        "--response-dir",
+        action="store",
+        help="Response dir path",
+    )
+
+
+def pytest_configure(config):
+    # parse options that control the test execution
+    if data_dir := config.getoption(name="--data-dir"):
+        constants.DATA_DIR = data_dir
+        constants.DUMP_DIR = f"{data_dir}/dumps"
+        constants.RESPONSE_DIR = f"{data_dir}/responses"
+    logger.info("DATA_DIR=%s", constants.DATA_DIR)
+    if dump_dir := config.getoption(name="--dump-dir"):
+        constants.DUMP_DIR = dump_dir
+    logger.info("DUMP_DIR=%s", constants.DUMP_DIR)
+    if response_dir := config.getoption(name="--response-dir"):
+        constants.RESPONSE_DIR = response_dir
+    logger.info("RESPONSE_DIR=%s", constants.RESPONSE_DIR)
+    if host_names := config.getoption(name="--host-names"):
+        constants.HOST_NAMES = host_names.split(",")
+    if check_names := config.getoption(name="--check-names"):
+        constants.CHECK_NAMES = check_names.split(",")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -90,7 +124,7 @@ def pytest_collection_modifyitems(config, items):
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     for site in get_site_factory(prefix="plugins_").get_test_site():
-        dump_path = site.path(f"var/check_mk/{constants.DUMP_DIR}")
+        dump_path = site.path("var/check_mk/dumps")
         # NOTE: the snmpwalks folder cannot be changed!
         walk_path = site.path("var/check_mk/snmpwalks")
         # create dump folder in the test site
@@ -99,17 +133,17 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         assert rc == 0
 
         logger.info("Injecting agent-output...")
-        for file_name in os.listdir(constants.DUMP_DIR_PATH):
+        for dump_name in get_host_names():
             assert (
                 execute(
                     [
                         "sudo",
                         "cp",
                         "-f",
-                        f"{constants.DUMP_DIR_PATH}/{file_name}",
-                        f"{walk_path}/{file_name}"
-                        if re.search(r"\bsnmp\b", file_name)
-                        else f"{dump_path}/{file_name}",
+                        f"{constants.DUMP_DIR}/{dump_name}",
+                        f"{walk_path}/{dump_name}"
+                        if re.search(r"\bsnmp\b", dump_name)
+                        else f"{dump_path}/{dump_name}",
                     ]
                 ).returncode
                 == 0

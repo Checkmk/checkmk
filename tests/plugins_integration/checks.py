@@ -95,11 +95,9 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
     else:
         agent_host_names = []
         snmp_host_names = []
-        for dump_file_name in [
-            _ for _ in os.listdir(constants.DUMP_DIR_PATH) if not _.startswith(".")
-        ]:
+        for dump_file_name in [_ for _ in os.listdir(constants.DUMP_DIR) if not _.startswith(".")]:
             try:
-                dump_file_path = f"{constants.DUMP_DIR_PATH}/{dump_file_name}"
+                dump_file_path = f"{constants.DUMP_DIR}/{dump_file_name}"
                 with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
                     if dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
@@ -125,7 +123,7 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
 
 def read_disk_dump(host_name: str) -> str:
     """Return the content of an agent dump from the dumps folder."""
-    dump_file_path = f"{constants.DUMP_DIR_PATH}/{host_name}"
+    dump_file_path = f"{constants.DUMP_DIR}/{host_name}"
     with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
         return dump_file.read()
 
@@ -154,7 +152,7 @@ def _verify_check_result(
     """Verify that the check result is matching the stored canon.
 
     Optionally update the stored canon if it does not match."""
-    json_output_file_path = f"{constants.RESPONSE_DIR_PATH}/{check_file_name}.json"
+    json_output_file_path = f"{constants.RESPONSE_DIR}/{check_file_name}.json"
     if os.path.exists(json_output_file_path):
         with open(json_output_file_path, mode="r", encoding="utf-8") as json_file:
             canon_data = json.load(json_file)

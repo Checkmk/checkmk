@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
-DUMP_DIR = "dumps"
-DUMP_DIR_PATH = f"{os.path.dirname(__file__)}/{DUMP_DIR}"
-RESPONSE_DIR = "responses"
-RESPONSE_DIR_PATH = f"{os.path.dirname(__file__)}/{RESPONSE_DIR}"
+DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(__file__))
+DUMP_DIR = os.getenv("DUMP_DIR", f"{DATA_DIR}/dumps")
+RESPONSE_DIR = os.getenv("RESPONSE_DIR", f"{DATA_DIR}/responses")
 
 HOST_NAMES = [_ for _ in os.getenv("HOST_NAMES", "").split(",") if _]
 CHECK_NAMES = [_ for _ in os.getenv("CHECK_NAMES", "").split(",") if _]

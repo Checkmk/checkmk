@@ -8,7 +8,6 @@ import pytest
 
 from tests.testlib.site import Site
 
-from tests.plugins_integration import constants
 from tests.plugins_integration.checks import (
     get_host_names,
     process_check_output,
@@ -36,7 +35,7 @@ def test_single(
             assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
         # perform assertion over check data
-        tmp_path = tmp_path_factory.mktemp(constants.RESPONSE_DIR)
+        tmp_path = tmp_path_factory.mktemp("responses")
         logger.info(tmp_path)
         assert process_check_output(
             test_site,
@@ -63,7 +62,7 @@ def test_bulk(
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
     # perform assertion over check data
-    tmp_path = tmp_path_factory.mktemp(constants.RESPONSE_DIR)
+    tmp_path = tmp_path_factory.mktemp("responses")
     logger.info(tmp_path)
     assert process_check_output(
         test_site,

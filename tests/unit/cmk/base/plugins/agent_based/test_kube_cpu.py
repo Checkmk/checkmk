@@ -107,8 +107,8 @@ def allocatable_resource_section():
 
 @pytest.fixture
 def check_result(params, usage_section, resources_section, allocatable_resource_section):
-    return kube_cpu.check_kube_cpu(
-        params, usage_section, resources_section, allocatable_resource_section
+    return kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, allocatable_resource_section, 1.0, {}
     )
 
 
@@ -123,34 +123,28 @@ def test_discovery(
         assert len(list(kube_cpu.discovery_kube_cpu(s1, s2, s3))) == 1
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_missing_usage(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 6
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_count_metrics_all_sections_present(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Metric)]) == 7
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_count_results_all_sections_present(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Result)]) == 4
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_yields_check_results(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 3 * 1 + 4 * 2
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_yields_results(check_result: CheckResult) -> None:
     expected = 1 + 2 + 1
     assert len([r for r in check_result if isinstance(r, Result)]) == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_results_without_usage(check_result: CheckResult) -> None:
     expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
@@ -161,7 +155,6 @@ def test_check_results_without_usage(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in results)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_metrics_without_usage(check_result: CheckResult) -> None:
     expected_metrics = {
@@ -173,7 +166,6 @@ def test_check_metrics_without_usage(check_result: CheckResult) -> None:
     assert expected_metrics == metrics
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("resources_section", [None])
 def test_check_if_no_resources(check_result: CheckResult) -> None:
     """Crashing is expected, because section_kube_cpu is only missing, if data from the api
@@ -182,7 +174,6 @@ def test_check_if_no_resources(check_result: CheckResult) -> None:
         list(check_result)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_beginning_of_summaries_with_all_sections_present(
     check_result,
     resources_request,
@@ -199,7 +190,6 @@ def test_check_beginning_of_summaries_with_all_sections_present(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_yields_multiple_metrics_with_values(
     check_result, resources_request, resources_limit
 ):
@@ -215,12 +205,10 @@ def test_check_yields_multiple_metrics_with_values(
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_all_states_ok(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "resources_limit, resources_request",
     [
@@ -234,7 +222,6 @@ def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "resources_limit, resources_request",
     [
@@ -274,7 +261,6 @@ def test_check_abs_levels_with_mixed(
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "resources_request, resources_limit, expected_states",
     [
@@ -295,7 +281,6 @@ def test_check_result_states_mixed(
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("usage_section", [None])
 def test_overview_requests_contained_no_usage_section(
     usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
@@ -307,7 +292,6 @@ def test_overview_requests_contained_no_usage_section(
     assert [r for r in results if overview_requests_ignored in r.summary] == requests_results
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_overview_requests_contained(
     usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
@@ -318,7 +302,6 @@ def test_overview_requests_contained(
     assert [r for r in results if overview_requests_ignored in r.summary] == requests_results
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("usage_section", [None])
 def test_overview_limits_contained_no_usage(
     usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
@@ -330,7 +313,6 @@ def test_overview_limits_contained_no_usage(
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("usage_section")
 def test_overview_limits_contained(
     check_result: CheckResult, resources_section: kube_resources.Resources

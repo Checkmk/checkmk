@@ -124,13 +124,8 @@ def overview_requests_ignored(resources_section):
 
 
 @pytest.fixture
-def allocatable_value():
-    return ALLOCATABLE
-
-
-@pytest.fixture
-def allocatable_resource_string_table_element(allocatable_value):
-    return {"context": "node", "value": allocatable_value}
+def allocatable_resource_string_table_element():
+    return {"context": "node", "value": ALLOCATABLE}
 
 
 @pytest.fixture
@@ -158,13 +153,11 @@ def test_parse_resources(
     assert resources_section.limit == resources_limit
 
 
-def test_parse_allocatable_resource(
-    allocatable_resource_string_table: StringTable, allocatable_value: float
-) -> None:
+def test_parse_allocatable_resource(allocatable_resource_string_table: StringTable) -> None:
     allocatable_resource_section = kube_resources.parse_allocatable_resource(
         allocatable_resource_string_table
     )
-    assert allocatable_resource_section.value == allocatable_value
+    assert allocatable_resource_section.value == ALLOCATABLE
 
 
 def test_discovery(

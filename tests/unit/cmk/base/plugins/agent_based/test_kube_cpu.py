@@ -6,17 +6,16 @@
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import itertools
-import json
 from collections.abc import MutableMapping, Sequence
 
 import pytest
 
 import cmk.base.plugins.agent_based.utils.kube
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import kube_resources
+from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
@@ -44,13 +43,16 @@ def usage_cycle_age() -> int:
 
 
 @pytest.fixture
-def value_store(
-    usage_cycle_age: int, usage_string_table: StringTable
-) -> dict[str, tuple[float, str]]:
+def usage_section():
+    return PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE))
+
+
+@pytest.fixture
+def value_store(usage_cycle_age: int) -> dict[str, tuple[float, str]]:
     return {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * usage_cycle_age,
-            kube_resources.parse_performance_usage(usage_string_table).json(),
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
         )
     }
 
@@ -64,16 +66,6 @@ def params():
         node=("levels", (15.0, 22.5)),
         cluster=("levels", (15.0, 22.5)),
     )
-
-
-@pytest.fixture
-def usage_string_table() -> StringTable:
-    return [[json.dumps({"resource": {"type_": "cpu", "usage": USAGE}})]]
-
-
-@pytest.fixture
-def usage_section(usage_string_table):
-    return kube_resources.parse_performance_usage(usage_string_table)
 
 
 @pytest.fixture

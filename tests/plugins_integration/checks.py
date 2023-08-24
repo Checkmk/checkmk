@@ -19,7 +19,7 @@ from tests.testlib.utils import execute
 
 from tests.plugins_integration import constants
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
@@ -45,14 +45,14 @@ def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
 
         for field_name in patterns:
             pattern = patterns[field_name]
-            LOGGER.debug("> Applying regexp: %s", pattern)
+            logger.debug("> Applying regexp: %s", pattern)
             if not canon.get(field_name):
-                LOGGER.debug(
+                logger.debug(
                     '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
                 )
                 continue
             if not result.get(field_name):
-                LOGGER.debug(
+                logger.debug(
                     '> Field "%s" not found in result "%s", skipping...', field_name, identifier
                 )
                 continue
@@ -106,9 +106,9 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
                     else:
                         agent_host_names.append(dump_file_name)
             except OSError:
-                LOGGER.error('Could not access dump file "%s"!', dump_file_name)
+                logger.error('Could not access dump file "%s"!', dump_file_name)
             except UnicodeDecodeError:
-                LOGGER.error('Could not decode dump file "%s"!', dump_file_name)
+                logger.error('Could not decode dump file "%s"!', dump_file_name)
     if "agent" in constants.DUMP_TYPES:
         host_names += agent_host_names
     if "snmp" in constants.DUMP_TYPES:
@@ -160,7 +160,7 @@ def _verify_check_result(
             canon_data = json.load(json_file)
     else:
         if not update_mode:
-            LOGGER.warning('Canon file "%s" not found!', json_output_file_path)
+            logger.warning('Canon file "%s" not found!', json_output_file_path)
         canon_data = {}
     json_result_file_path = str(output_dir / f"{check_file_name}.result.json")
     with open(json_result_file_path, mode="w", encoding="utf-8") as json_file:
@@ -179,19 +179,19 @@ def _verify_check_result(
     if update_mode:
         with open(json_output_file_path, mode="w", encoding="utf-8") as json_file:
             json_file.write(f"{json.dumps(result_data, indent=4)}\n")
-        LOGGER.info('Canon file "%s" updated!', json_output_file_path)
+        logger.info('Canon file "%s" updated!', json_output_file_path)
         return True
     with open(json_canon_file_path, mode="w", encoding="utf-8") as json_file:
         json_file.write(f"{json.dumps(canon_data, indent=4)}\n")
 
     if result_data is None or len(result_data) == 0:
-        LOGGER.error("%s: No data returned!", check_file_name)
+        logger.error("%s: No data returned!", check_file_name)
     elif len(canon_data) != len(result_data):
-        LOGGER.error("%s: Data length mismatch!", check_file_name)
+        logger.error("%s: Data length mismatch!", check_file_name)
     else:
-        LOGGER.error("%s: Data mismatch!", check_file_name)
+        logger.error("%s: Data mismatch!", check_file_name)
 
-    LOGGER.error(
+    logger.error(
         execute(
             shlex.split(os.getenv("DIFF_CMD", "diff"))
             + [
@@ -217,10 +217,10 @@ def process_check_output(
 ) -> bool:
     """Process the check output and either dump or compare it."""
     passed = True if update_mode else None
-    LOGGER.info('> Processing agent host "%s"...', host_name)
+    logger.info('> Processing agent host "%s"...', host_name)
     check_results = get_check_results(site, host_name)
     for check_id in sorted(check_results):
-        LOGGER.debug('> Processing check id "%s"...', check_id)
+        logger.debug('> Processing check id "%s"...', check_id)
         check_result = check_results[check_id]
         check_host_name = check_id.split(":", 1)[0]
         check_display_name = check_result.get("display_name", check_id.split(":", 1)[-1]).replace(
@@ -229,7 +229,7 @@ def process_check_output(
         check_safe_name = check_display_name.replace("$", "_").replace(" ", "_").replace("/", "#")
         check_file_name = f"{check_host_name}.{check_safe_name}"
 
-        LOGGER.debug('> Verifying check id "%s"...', check_id)
+        logger.debug('> Verifying check id "%s"...', check_id)
         if _verify_check_result(
             check_file_name,
             check_result.get("extensions", {}),
@@ -247,7 +247,7 @@ def process_check_output(
 
 @contextmanager
 def setup_host(site: Site, host_name: str) -> Iterator:
-    LOGGER.info('Creating host "%s"...', host_name)
+    logger.info('Creating host "%s"...', host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
         "tag_agent": ("no-agent" if "snmp" in host_name else "cmk-agent"),
@@ -261,17 +261,17 @@ def setup_host(site: Site, host_name: str) -> Iterator:
         bake_agent=False,
     )
 
-    LOGGER.info("Activating changes & reloading core...")
+    logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    LOGGER.info("Running service discovery...")
+    logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(host_name)
     site.openapi.bulk_discover_services([host_name], bulk_size=10, wait_for_completion=True)
 
-    LOGGER.info("Activating changes & reloading core...")
+    logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    LOGGER.info("Scheduling checks & checking for pending services...")
+    logger.info("Scheduling checks & checking for pending services...")
     for idx in range(3):
         # we have to schedule the checks multiple times (twice at least):
         # => once to get baseline data
@@ -283,7 +283,7 @@ def setup_host(site: Site, host_name: str) -> Iterator:
             continue
 
     if len(pending_checks) > 0:
-        LOGGER.info(
+        logger.info(
             '%s pending service(s) found on host "%s": %s',
             len(pending_checks),
             host_name,
@@ -294,7 +294,7 @@ def setup_host(site: Site, host_name: str) -> Iterator:
 
     yield
 
-    LOGGER.info('Deleting host "%s"...', host_name)
+    logger.info('Deleting host "%s"...', host_name)
     site.openapi.delete_host(host_name)
 
 
@@ -323,23 +323,23 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
         }
         for host_name in snmp_host_names
     ]
-    LOGGER.info("Bulk-creating %s hosts...", len(host_entries))
+    logger.info("Bulk-creating %s hosts...", len(host_entries))
     site.openapi.bulk_create_hosts(
         host_entries,
         bake_agent=False,
         ignore_existing=True,
     )
 
-    LOGGER.info("Activating changes & reloading core...")
+    logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    LOGGER.info("Running service discovery...")
+    logger.info("Running service discovery...")
     site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
 
-    LOGGER.info("Activating changes & reloading core...")
+    logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    LOGGER.info("Checking for pending services...")
+    logger.info("Checking for pending services...")
     pending_checks = {_: site.openapi.get_host_services(_, pending=True) for _ in host_names}
     for idx in range(3):
         # we have to schedule the checks multiple times (twice at least):
@@ -354,7 +354,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
                 continue
 
     for host_name in pending_checks:
-        LOGGER.info(
+        logger.info(
             '%s pending service(s) found on host "%s": %s',
             len(pending_checks[host_name]),
             host_name,
@@ -366,8 +366,8 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
 
 
 def cleanup_hosts(site: Site, host_names: list[str]) -> None:
-    LOGGER.info("Bulk-deleting %s hosts...", len(host_names))
+    logger.info("Bulk-deleting %s hosts...", len(host_names))
     site.openapi.bulk_delete_hosts(host_names)
 
-    LOGGER.info("Activating changes & reloading core...")
+    logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()

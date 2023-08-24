@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import logging
+
 import pytest
 
 from tests.testlib.site import Site
@@ -14,7 +16,8 @@ from tests.plugins_integration.checks import (
     read_disk_dump,
     setup_host,
 )
-from tests.plugins_integration.conftest import LOGGER
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize("host_name", get_host_names())
@@ -34,7 +37,7 @@ def test_single(
 
         # perform assertion over check data
         tmp_path = tmp_path_factory.mktemp(constants.RESPONSE_DIR)
-        LOGGER.info(tmp_path)
+        logger.info(tmp_path)
         assert process_check_output(
             test_site,
             host_name,
@@ -61,7 +64,7 @@ def test_bulk(
 
     # perform assertion over check data
     tmp_path = tmp_path_factory.mktemp(constants.RESPONSE_DIR)
-    LOGGER.info(tmp_path)
+    logger.info(tmp_path)
     assert process_check_output(
         test_site,
         host_name,

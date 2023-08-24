@@ -122,13 +122,8 @@ def overview_requests_ignored(resources_section):
 
 
 @pytest.fixture
-def allocatable_resource_string_table_element():
-    return {"context": "node", "value": ALLOCATABLE}
-
-
-@pytest.fixture
-def allocatable_resource_string_table(allocatable_resource_string_table_element):
-    return [[json.dumps(allocatable_resource_string_table_element)]]
+def allocatable_resource_string_table():
+    return [[json.dumps({"context": "node", "value": ALLOCATABLE})]]
 
 
 @pytest.fixture

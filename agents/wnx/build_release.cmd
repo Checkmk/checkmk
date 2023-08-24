@@ -147,7 +147,7 @@ goto :eof
 
 :build_msi
 :: with signing we must rebuild MSI
-if not "%2" == "" del /Y %arte%\check_mk_agent.msi
+if not "%2" == "" del /Y %build_dir%\install\Release\check_mk_service.msi
 "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 goto :eof
@@ -193,11 +193,11 @@ goto :eof
 
 :: Deploy Phase: post processing/build special modules using make
 :deploy_to_artifacts
-copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
-copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 34
-copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 35
-copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || powershell Write-Host "Failed to copy OHM exe" -Foreground Red && exit /b 36
-copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || powershell Write-Host "Failed to copy OHM dll" -Foreground Red && exit /b 37
+copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || ( powershell Write-Host "Failed to copy msi" -Foreground Red & call :halt 33 )
+copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || ( powershell Write-Host "Failed to create 64 bit agent" -Foreground Red & call :halt 34 )
+copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || ( powershell Write-Host "Failed to create 32 bit agent" -Foreground Red & call :halt 35 )
+copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || ( powershell Write-Host "Failed to copy OHM exe" -Foreground Red & call :halt 36 )
+copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || ( powershell Write-Host "Failed to copy OHM dll" -Foreground Red & call :halt 37 )
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
@@ -230,7 +230,7 @@ goto :eof
 
 :__ErrorExit
 rem Creates a syntax error, stops immediately
-() 
+()
 goto :eof
 
 :__SetErrorLevel

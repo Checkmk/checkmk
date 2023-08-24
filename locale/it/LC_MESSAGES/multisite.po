@@ -2960,6 +2960,10 @@ msgstr "Accedere alla modalità di licenza"
 msgid "Access the licensing settings mode"
 msgstr "Accedere alla modalità di impostazione delle licenze"
 
+#, fuzzy
+msgid "Access to AWS API"
+msgstr "Accesso agli agenti"
+
 msgid "Access to Livestatus via TCP"
 msgstr "Accesso a Livestatus via TCP"
 
@@ -6513,9 +6517,6 @@ msgstr[1] ""
 
 msgid "Associative selection of multiple sites"
 msgstr "Selezione associativa di più siti"
-
-msgid "Assume a different IAM role"
-msgstr "Assumere un ruolo IAM diverso"
 
 msgid "Assume another state for this item (reload page to activate)"
 msgstr ""
@@ -64467,6 +64468,9 @@ msgstr "Utilizzare le credenziali"
 msgid "Use custom connection parameters"
 msgstr "Utilizzare parametri di connessione personalizzati"
 
+msgid "Use custom region for global AWS services"
+msgstr ""
+
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Utilizzare i dati di Checkmk Cluster Collector"
 
@@ -70838,6 +70842,10 @@ msgstr "decadimento"
 msgid "default (%s)"
 msgstr "default (%s)"
 
+#, fuzzy
+msgid "default (all normal AWS regions)"
+msgstr "Impostare i valori predefiniti per tutte le sezioni"
+
 msgid "degraded"
 msgstr "degradato"
 
@@ -72311,6 +72319,11 @@ msgstr "caricare istantanee insicure"
 msgid "upper limit"
 msgstr "limite superiore"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+
 msgid "use SSL"
 msgstr "utilizzare SSL"
 
@@ -72487,6 +72500,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Assume a different IAM role"
+#~ msgstr "Assumere un ruolo IAM diverso"
 
 #~ msgid "Smoke levels"
 #~ msgstr "Livelli di fumo"

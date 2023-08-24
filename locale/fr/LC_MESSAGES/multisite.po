@@ -2997,6 +2997,10 @@ msgstr "Accéder au mode de licence"
 msgid "Access the licensing settings mode"
 msgstr "Accéder au mode de paramétrage des licences"
 
+#, fuzzy
+msgid "Access to AWS API"
+msgstr "Accéder à l'API Web"
+
 msgid "Access to Livestatus via TCP"
 msgstr "Accès à Livestatus via TCP"
 
@@ -6574,9 +6578,6 @@ msgstr[1] ""
 
 msgid "Associative selection of multiple sites"
 msgstr "Sélection associative de sites multiples"
-
-msgid "Assume a different IAM role"
-msgstr "Assumer un rôle IAM différent"
 
 msgid "Assume another state for this item (reload page to activate)"
 msgstr ""
@@ -65085,6 +65086,9 @@ msgstr "Utiliser les informations d'identification"
 msgid "Use custom connection parameters"
 msgstr "Utiliser des paramètres de connexion personnalisés"
 
+msgid "Use custom region for global AWS services"
+msgstr ""
+
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Utiliser les données de Checkmk Cluster Collector"
 
@@ -71583,6 +71587,10 @@ msgstr "décroissance"
 msgid "default (%s)"
 msgstr "défaut (%s)"
 
+#, fuzzy
+msgid "default (all normal AWS regions)"
+msgstr "Définir les valeurs par défaut pour toutes les sections"
+
 msgid "degraded"
 msgstr "dégradé"
 
@@ -73054,6 +73062,11 @@ msgstr "télécharger des instantanés non sécurisés"
 msgid "upper limit"
 msgstr "limite supérieure"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+
 msgid "use SSL"
 msgstr "utiliser SSL"
 
@@ -73230,6 +73243,9 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Assume a different IAM role"
+#~ msgstr "Assumer un rôle IAM différent"
 
 #~ msgid "Smoke levels"
 #~ msgstr "Niveaux de fumée"
@@ -78017,9 +78033,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~ msgid "A complete listing of all host groups and each of their hosts"
 #~ msgstr ""
 #~ "Une liste complète de tous les groupes d'hôtes et de leur hôtes respectifs"
-
-#~ msgid "Access to Web-API"
-#~ msgstr "Accéder à l'API Web"
 
 #~ msgid "Activate export to Graphite"
 #~ msgstr "Activer les exports vers Graphite"

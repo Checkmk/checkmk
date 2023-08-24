@@ -2907,6 +2907,10 @@ msgstr "イベントコンソールへのアクセス"
 msgid "Access the licensing settings mode"
 msgstr "ライセンスステータス"
 
+#, fuzzy
+msgid "Access to AWS API"
+msgstr "エージェントへのアクセス"
+
 msgid "Access to Livestatus via TCP"
 msgstr "TCPを介したLivestatusへのアクセス"
 
@@ -6366,9 +6370,6 @@ msgstr[0] ""
 #, fuzzy
 msgid "Associative selection of multiple sites"
 msgstr "選択したサイトでアクティブ化"
-
-msgid "Assume a different IAM role"
-msgstr "別のIAMの役割を引き受ける"
 
 msgid "Assume another state for this item (reload page to activate)"
 msgstr ""
@@ -63094,6 +63095,9 @@ msgstr "資格情報を使用する"
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
+msgid "Use custom region for global AWS services"
+msgstr ""
+
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Checkmkクラスターコントローラーのデータを使用する"
 
@@ -69199,6 +69203,10 @@ msgstr "減衰"
 msgid "default (%s)"
 msgstr "デフォルト (%s)"
 
+#, fuzzy
+msgid "default (all normal AWS regions)"
+msgstr "すべてのセクションにデフォルト値を設定する"
+
 msgid "degraded"
 msgstr "劣化"
 
@@ -70665,6 +70673,11 @@ msgstr "安全でないスナップショットをアップロードする"
 msgid "upper limit"
 msgstr "上限"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+
 msgid "use SSL"
 msgstr "SSLを使用する"
 
@@ -70841,6 +70854,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Assume a different IAM role"
+#~ msgstr "別のIAMの役割を引き受ける"
 
 #~ msgid "Smoke levels"
 #~ msgstr "スモークレベル"

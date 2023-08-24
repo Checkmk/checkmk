@@ -2982,6 +2982,10 @@ msgstr "Lizenzierungsmodus aufrufen"
 msgid "Access the licensing settings mode"
 msgstr "Lizenzierungseinstellungen aufrufen"
 
+#, fuzzy
+msgid "Access to AWS API"
+msgstr "Zugriff auf die Web-API"
+
 msgid "Access to Livestatus via TCP"
 msgstr "Zugriff auf Livestatus über TCP"
 
@@ -6504,9 +6508,6 @@ msgstr[1] ""
 
 msgid "Associative selection of multiple sites"
 msgstr "Verbundene Auswahl von mehreren Instanzen"
-
-msgid "Assume a different IAM role"
-msgstr "Vermutlich eine andere IAM Rolle"
 
 msgid "Assume another state for this item (reload page to activate)"
 msgstr ""
@@ -64346,6 +64347,9 @@ msgstr "Zugangsdaten angeben"
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
+msgid "Use custom region for global AWS services"
+msgstr ""
+
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Daten des Checkmk Cluster Collectors verwenden"
 
@@ -70737,6 +70741,10 @@ msgstr "Abklingen"
 msgid "default (%s)"
 msgstr "Standard (%s)"
 
+#, fuzzy
+msgid "default (all normal AWS regions)"
+msgstr "Standardwerte für alle Sektionen setzen"
+
 msgid "degraded"
 msgstr "degradiert"
 
@@ -72201,6 +72209,11 @@ msgstr "Unsichere Sicherungen einspielen"
 msgid "upper limit"
 msgstr "Oberer Schwellwert"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+
 msgid "use SSL"
 msgstr "SSL verwenden"
 
@@ -72377,6 +72390,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Assume a different IAM role"
+#~ msgstr "Vermutlich eine andere IAM Rolle"
 
 #~ msgid "Smoke levels"
 #~ msgstr "Rauch-Schwellwerte"
@@ -78004,9 +78020,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Access the best analyze configuration functionality provided by WATO"
 #~ msgstr "Zugriff auf Die Konfigurationsanalyse von WATO"
-
-#~ msgid "Access to Web-API"
-#~ msgstr "Zugriff auf die Web-API"
 
 #~ msgid "Acknowledge %s"
 #~ msgstr "Quittiere %s"

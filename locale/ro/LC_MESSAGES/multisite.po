@@ -2975,6 +2975,10 @@ msgstr "Accesați modul de acordare a licențelor"
 msgid "Access the licensing settings mode"
 msgstr "Accesați modul de configurare a licențelor"
 
+#, fuzzy
+msgid "Access to AWS API"
+msgstr "Acces la Agenți"
+
 msgid "Access to Livestatus via TCP"
 msgstr "Acces la Livestatus prin TCP"
 
@@ -6544,9 +6548,6 @@ msgstr[2] ""
 
 msgid "Associative selection of multiple sites"
 msgstr "Selecția asociativă a mai multor situri"
-
-msgid "Assume a different IAM role"
-msgstr "Asumați-vă un rol IAM diferit"
 
 msgid "Assume another state for this item (reload page to activate)"
 msgstr ""
@@ -64847,6 +64848,9 @@ msgstr "Utilizați acreditările"
 msgid "Use custom connection parameters"
 msgstr "Utilizați parametri de conectare personalizați"
 
+msgid "Use custom region for global AWS services"
+msgstr ""
+
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Utilizați datele de la Checkmk Cluster Collector"
 
@@ -71272,6 +71276,10 @@ msgstr "decădere"
 msgid "default (%s)"
 msgstr "implicit (%s)"
 
+#, fuzzy
+msgid "default (all normal AWS regions)"
+msgstr "Setați valorile implicite pentru toate secțiunile"
+
 msgid "degraded"
 msgstr "degradat"
 
@@ -72752,6 +72760,11 @@ msgstr "urca snapshot-uri nesigure"
 msgid "upper limit"
 msgstr "limita superioara"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+
 msgid "use SSL"
 msgstr "foloseste SSL"
 
@@ -72929,6 +72942,9 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Assume a different IAM role"
+#~ msgstr "Asumați-vă un rol IAM diferit"
 
 #~ msgid "Smoke levels"
 #~ msgstr "Nivelurile de fum"
@@ -74773,10 +74789,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Absolute free space in MB"
 #~ msgstr "Spațiu liber exact în MB"
-
-#, fuzzy
-#~ msgid "Access to Web-API"
-#~ msgstr "Acces la Agenți"
 
 #, fuzzy
 #~ msgid "Acknowledge %s"

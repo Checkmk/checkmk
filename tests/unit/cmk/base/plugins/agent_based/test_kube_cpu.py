@@ -87,25 +87,15 @@ def resources_limit():
 
 
 @pytest.fixture
-def resources_string_table_element(resources_request, resources_limit):
-    return {
-        "request": resources_request,
-        "limit": resources_limit,
-        "count_total": COUNT_TOTAL,
-        "count_zeroed_limits": COUNT_ZEROED_LIMITS,
-        "count_unspecified_limits": COUNT_UNSPECIFIED_LIMITS,
-        "count_unspecified_requests": COUNT_UNSPECIFIED_REQUESTS,
-    }
-
-
-@pytest.fixture
-def resources_string_table(resources_string_table_element):
-    return [[json.dumps(resources_string_table_element)]]
-
-
-@pytest.fixture
-def resources_section(resources_string_table):
-    return kube_resources.parse_resources(resources_string_table)
+def resources_section(resources_request, resources_limit):
+    return kube_resources.Resources(
+        request=resources_request,
+        limit=resources_limit,
+        count_total=COUNT_TOTAL,
+        count_zeroed_limits=COUNT_ZEROED_LIMITS,
+        count_unspecified_limits=COUNT_UNSPECIFIED_LIMITS,
+        count_unspecified_requests=COUNT_UNSPECIFIED_REQUESTS,
+    )
 
 
 @pytest.fixture
@@ -128,14 +118,6 @@ def check_result(params, usage_section, resources_section, allocatable_resource_
     return kube_cpu.check_kube_cpu(
         params, usage_section, resources_section, allocatable_resource_section
     )
-
-
-def test_parse_resources(
-    resources_string_table: StringTable, resources_request: float, resources_limit: float
-) -> None:
-    resources_section = kube_resources.parse_resources(resources_string_table)
-    assert resources_section.request == resources_request
-    assert resources_section.limit == resources_limit
 
 
 def test_discovery(

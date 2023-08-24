@@ -118,6 +118,7 @@ from cmk.checkengine.discovery import (
     autodiscovery,
     automation_discovery,
     CheckPreview,
+    CheckPreviewEntry,
     DiscoveryMode,
     DiscoveryResult,
     get_check_preview,
@@ -406,6 +407,51 @@ def _get_discovery_preview(
         )
 
 
+def active_check_preview_rows(
+    config_cache: ConfigCache, host_name: HostName
+) -> Sequence[CheckPreviewEntry]:
+    alias = config_cache.alias(host_name)
+    active_checks_ = config_cache.active_checks(host_name)
+    host_attrs = config_cache.get_host_attributes(host_name)
+    ignored_services = config.IgnoredServices(config_cache, host_name)
+
+    def make_check_source(desc: str) -> str:
+        return "ignored_active" if desc in ignored_services else "active"
+
+    def make_output(desc: str) -> str:
+        pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
+        return f"WAITING - {pretty} check, cannot be done offline"
+
+    return list(
+        {
+            descr: CheckPreviewEntry(
+                check_source=make_check_source(descr),
+                check_plugin_name=plugin_name,
+                ruleset_name=None,
+                item=descr,
+                discovered_parameters=None,
+                effective_parameters=None,
+                description=descr,
+                state=None,
+                output=make_output(descr),
+                metrics=[],
+                labels={},
+                found_on_nodes=[host_name],
+            )
+            for plugin_name, entries in active_checks_
+            for params in entries
+            for descr in config.get_active_check_descriptions(
+                plugin_name,
+                config.active_check_info[plugin_name],
+                host_name,
+                alias,
+                host_attrs,
+                params,
+            )
+        }.values()
+    )
+
+
 def _execute_discovery(
     host_name: HostName,
     perform_scan: bool,
@@ -490,7 +536,7 @@ def _execute_discovery(
     return CheckPreview(
         table=[
             *passive_check_preview.table,
-            *config_cache.active_check_preview_rows(host_name),
+            *active_check_preview_rows(config_cache, host_name),
             *config_cache.custom_check_preview_rows(host_name),
         ],
         labels=passive_check_preview.labels,

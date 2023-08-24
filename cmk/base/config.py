@@ -2990,48 +2990,6 @@ class ConfigCache:
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
 
-    def active_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
-        alias = self.alias(host_name)
-        active_checks_ = self.active_checks(host_name)
-        host_attrs = self.get_host_attributes(host_name)
-        ignored_services = IgnoredServices(self, host_name)
-
-        def make_check_source(desc: str) -> str:
-            return "ignored_active" if desc in ignored_services else "active"
-
-        def make_output(desc: str) -> str:
-            pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
-            return f"WAITING - {pretty} check, cannot be done offline"
-
-        return list(
-            {
-                descr: CheckPreviewEntry(
-                    check_source=make_check_source(descr),
-                    check_plugin_name=plugin_name,
-                    ruleset_name=None,
-                    item=descr,
-                    discovered_parameters=None,
-                    effective_parameters=None,
-                    description=descr,
-                    state=None,
-                    output=make_output(descr),
-                    metrics=[],
-                    labels={},
-                    found_on_nodes=[host_name],
-                )
-                for plugin_name, entries in active_checks_
-                for params in entries
-                for descr in get_active_check_descriptions(
-                    plugin_name,
-                    active_check_info[plugin_name],
-                    host_name,
-                    alias,
-                    host_attrs,
-                    params,
-                )
-            }.values()
-        )
-
     def custom_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
         custom_checks_ = self.custom_checks(host_name)
         ignored_services = IgnoredServices(self, host_name)

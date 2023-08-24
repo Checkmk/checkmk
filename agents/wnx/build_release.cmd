@@ -46,11 +46,11 @@ make install_extlibs
 call :build_windows_agent
 call :build_agent_controller
 
+call :unit_test
 call :build_ohm
+call :sign_binaries
 call :build_msi
 call :set_msi_version
-call :unit_test
-call :sign_binaries
 call :deploy_to_artifacts
 
 ::Get end time:
@@ -145,7 +145,11 @@ if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Re
 goto :eof
 
 :build_msi
-ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+:: with signing we must rebuild MSI
+if not "%2" == "" (
+del /Y %arte%\check_mk_agent.msi
+)
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 goto :eof
 
@@ -177,11 +181,14 @@ goto :eof
 :sign_binaries
 if not "%2" == "" (
 powershell Write-Host "Signing Executables" -Foreground White
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
-@call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorLib.dll
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorCLI.exe
+:: to be sure that all artifacts are up to date
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+call scripts\attach_usb_token.cmd c:\common\usbip-win-0.3.6-dev\usbip.exe yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
+@call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe
 )
 goto :eof
 
@@ -208,7 +215,8 @@ goto :eof
 :sign_msi
 if "%2" == "" powershell Write-Host "Signing skipped" -Foreground Yellow & goto :eof
 powershell Write-Host "Signing MSI" -Foreground White
-@call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
+@call scripts\sign_code.cmd %arte%\check_mk_agent.msi
+call scripts\detach_usb_token.cmd
 call scripts\call_signing_tests.cmd 
 if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & :halt 41
 powershell Write-Host "MSI signing succeeded" -Foreground Green
@@ -217,6 +225,7 @@ goto :eof
 
 :: Sets the errorlevel and stops the batch immediately
 :halt
+call scripts\detach_usb_token.cmd
 call :__SetErrorLevel %1
 call :__ErrorExit 2> nul
 goto :eof

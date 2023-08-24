@@ -27,7 +27,7 @@ namespace cma::cmdline {
 void PrintBlock(std::string_view title, Colors title_color,
                 const std::function<std::string()> &formatter) {
     xlog::sendStringToStdio(title.data(), title_color);
-    auto out = formatter();
+    const auto out = formatter();
     printf("%s", out.data());
 }
 
@@ -355,7 +355,7 @@ int RunService(std::wstring_view app_name) {
     const auto ret = ServiceAsService(app_name, 1000ms, [] {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
-        auto [command, started] = install::CheckForUpdateFile(
+        const auto [command, started] = install::CheckForUpdateFile(
             install::kDefaultMsiFileName,    // file we are looking for
             cfg::GetUpdateDir(),             // dir with file
             install::UpdateProcess::execute  // operation if file found

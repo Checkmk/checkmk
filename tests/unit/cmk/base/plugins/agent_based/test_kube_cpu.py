@@ -7,7 +7,7 @@
 
 import itertools
 import json
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import MutableMapping, Sequence
 
 import pytest
 
@@ -97,15 +97,8 @@ def params(params_usage, params_request, params_limit, params_cluster, params_no
 
 
 @pytest.fixture
-def usage_string_table_element():
-    return {"resource": {"type_": "cpu", "usage": USAGE}}
-
-
-@pytest.fixture
-def usage_string_table(
-    usage_string_table_element: Mapping[str, Mapping[str, str | float]]
-) -> StringTable:
-    return [[json.dumps(usage_string_table_element)]]
+def usage_string_table() -> StringTable:
+    return [[json.dumps({"resource": {"type_": "cpu", "usage": USAGE}})]]
 
 
 @pytest.fixture

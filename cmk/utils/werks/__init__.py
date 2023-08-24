@@ -151,3 +151,9 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
 
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
+
+
+def load_werk(file_name: str, file_content: str) -> Werk:
+    if file_name.endswith(".md"):
+        return load_werk_v2(file_content, file_name.removesuffix(".md")).to_werk()
+    return load_werk_v1(file_content, int(file_name)).to_werk()

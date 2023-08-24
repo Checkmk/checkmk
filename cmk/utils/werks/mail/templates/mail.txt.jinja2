@@ -1,0 +1,13 @@
+{% if werk_modified -%}
+Werk {{ werk.id }} was adapted. The following is the new Werk, a diff is shown at the end of the message.
+
+{% elif werk_removed -%}
+Werk {{ werk.id }} was deleted. The following Werk is no longer relevant.
+
+{% endif -%}
+
+{{werk_plaintext}}
+{% if werk_modified -%}
+------------------------------------<diff>-------------------------------------------
+{{change.diff}}
+{% endif %}

@@ -27,9 +27,6 @@ OK = 0.18  # value for request and limit to set state to OK
 WARN = 0.12  # value for request and limit to set state to WARN
 CRIT = 0.09  # value for request and limit to set state to CRIT
 ALLOCATABLE = 5.0  # value for allocatable cpu
-ALLOCATABLE_OK = ALLOCATABLE / 0.5  # value for allocatable to set state to OK
-ALLOCATABLE_WARN = ALLOCATABLE / 0.6  # value for allocatable to set state to WARN
-ALLOCATABLE_CRIT = ALLOCATABLE / 0.9  # value for allocatable to set state to CRIT
 
 
 # Resources

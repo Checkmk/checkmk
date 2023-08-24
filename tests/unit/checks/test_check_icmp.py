@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib import ActiveCheck
 
-from cmk.base.config import HostAddressConfiguration
+from cmk.base.command_config import HostAddressConfiguration
 
 pytestmark = pytest.mark.checks
 

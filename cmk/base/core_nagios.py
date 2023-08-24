@@ -37,12 +37,12 @@ from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.command_config as command_config
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -344,6 +344,20 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     return host_spec
 
 
+def transform_active_service_command(
+    cfg: NagiosConfig, service_data: command_config.ActiveServiceData
+) -> str:
+    if config.simulation_mode:
+        cfg.custom_commands_to_define.add("check-mk-simulation")
+        return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
+
+    if service_data.command == "check-mk-custom":
+        cfg.custom_commands_to_define.add("check-mk-custom")
+        return f"{service_data.command}!{service_data.command_line}"
+
+    return service_data.command_display
+
+
 def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     cfg: NagiosConfig,
     config_cache: ConfigCache,
@@ -449,87 +463,62 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         license_counter["services"] += 1
 
     # legacy checks via active_checks
-    actchecks = []
-    for plugin_name, entries in config_cache.active_checks(hostname):
-        cfg.active_checks_to_define.add(plugin_name)
-        act_info = config.active_check_info[plugin_name]
-        for params in entries:
-            actchecks.append((plugin_name, act_info, params))
+    active_services = []
+
+    active_check_config = command_config.ActiveCheckConfig(
+        hostname,
+        host_attrs,
+        stored_passwords=stored_passwords,
+        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
+    )
+
+    active_checks = config_cache.active_checks(hostname)
+    actchecks = [name for name, params in active_checks if params]
+    for service_data in active_check_config.get_active_service_data(active_checks):
+        if do_omit_service(hostname, service_data.description):
+            continue
+
+        if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
+            core_config.duplicate_service_warning(
+                checktype="active",
+                description=service_data.description,
+                host_name=hostname,
+                first_occurrence=existing_plugin,
+                second_occurrence=(f"active({service_data.plugin_name})", None),
+            )
+            continue
+
+        used_descriptions[service_data.description] = (
+            f"active({service_data.plugin_name})",
+            service_data.description,
+        )
+
+        service_spec = {
+            "use": "check_mk_perf,check_mk_default",
+            "host_name": hostname,
+            "service_description": service_data.description,
+            "check_command": transform_active_service_command(cfg, service_data),
+            "active_checks_enabled": str(1),
+        }
+        service_spec.update(
+            core_config.get_service_attributes(hostname, service_data.description, config_cache)
+        )
+        service_spec.update(
+            _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
+        )
+
+        cfg.active_checks_to_define.add(service_data.plugin_name)
+        active_services.append(service_spec)
 
     if actchecks:
         cfg.write("\n\n# Active checks\n")
-        for acttype, act_info, params in actchecks:
-            # Make hostname available as global variable in argument functions
-            with plugin_contexts.current_host(hostname):
-                for description, args in config.iter_active_check_services(
-                    acttype,
-                    act_info,
-                    hostname,
-                    host_attrs["alias"],
-                    host_attrs,
-                    params,
-                    stored_passwords,
-                ):
-                    if not description:
-                        config_warnings.warn(
-                            f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
-                        )
-                        continue
 
-                    if do_omit_service(hostname, description):
-                        continue
+        for service_spec in active_services:
+            cfg.write(_format_nagios_object("service", service_spec))
+            license_counter["services"] += 1
 
-                    # quote ! and \ for Nagios
-                    escaped_args = args.replace("\\", "\\\\").replace("!", "\\!")
-
-                    if description in used_descriptions:
-                        cn, _ = used_descriptions[description]
-                        # If we have the same active check again with the same description,
-                        # then we do not regard this as an error, but simply ignore the
-                        # second one. That way one can override a check with other settings.
-                        if cn == f"active({acttype})":
-                            continue
-
-                        core_config.duplicate_service_warning(
-                            checktype="active",
-                            description=description,
-                            host_name=hostname,
-                            first_occurrence=used_descriptions[description],
-                            second_occurrence=(f"active({acttype})", None),
-                        )
-                        continue
-
-                    # TODO: is this right? description on the right, not item?
-                    used_descriptions[description] = (f"active({acttype})", description)
-
-                    if host_attrs["address"] in ["0.0.0.0", "::"]:
-                        command_name = "check-mk-custom"
-                        command = (
-                            command_name
-                            + '!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2'
-                        )
-                        cfg.custom_commands_to_define.add(command_name)
-                    else:
-                        command = f"check_mk_active-{acttype}!{escaped_args}"
-
-                    service_spec = {
-                        "use": "check_mk_perf,check_mk_default",
-                        "host_name": hostname,
-                        "service_description": description,
-                        "check_command": _simulate_command(cfg, command),
-                        "active_checks_enabled": str(1),
-                    }
-                    service_spec.update(
-                        core_config.get_service_attributes(hostname, description, config_cache)
-                    )
-                    service_spec.update(
-                        _extra_service_conf_of(cfg, config_cache, hostname, description)
-                    )
-                    cfg.write(_format_nagios_object("service", service_spec))
-                    license_counter["services"] += 1
-
-                    # write service dependencies for active checks
-                    cfg.write(get_dependencies(hostname, description))
+            # write service dependencies for active checks
+            cfg.write(get_dependencies(hostname, service_spec["service_description"]))
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)

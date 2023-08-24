@@ -132,6 +132,7 @@ from cmk.checkengine.summarize import summarize
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
+import cmk.base.command_config as command_config
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config
@@ -410,7 +411,6 @@ def _get_discovery_preview(
 def active_check_preview_rows(
     config_cache: ConfigCache, host_name: HostName
 ) -> Sequence[CheckPreviewEntry]:
-    alias = config_cache.alias(host_name)
     active_checks_ = config_cache.active_checks(host_name)
     host_attrs = config_cache.get_host_attributes(host_name)
     ignored_services = config.IgnoredServices(config_cache, host_name)
@@ -422,31 +422,29 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
+    active_check_config = command_config.ActiveCheckConfig(
+        host_name,
+        host_attrs,
+    )
+
     return list(
         {
-            descr: CheckPreviewEntry(
-                check_source=make_check_source(descr),
-                check_plugin_name=plugin_name,
+            active_service.description: CheckPreviewEntry(
+                check_source=make_check_source(active_service.description),
+                check_plugin_name=active_service.plugin_name,
                 ruleset_name=None,
-                item=descr,
+                item=active_service.description,
                 discovered_parameters=None,
                 effective_parameters=None,
-                description=descr,
+                description=active_service.description,
                 state=None,
-                output=make_output(descr),
+                output=make_output(active_service.description),
                 metrics=[],
                 labels={},
                 found_on_nodes=[host_name],
             )
-            for plugin_name, entries in active_checks_
-            for params in entries
-            for descr in config.get_active_check_descriptions(
-                plugin_name,
-                config.active_check_info[plugin_name],
-                host_name,
-                alias,
-                host_attrs,
-                params,
+            for active_service in active_check_config.get_active_service_descriptions(
+                active_checks_
             )
         }.values()
     )
@@ -1268,24 +1266,20 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        with plugin_contexts.current_host(host_name):
-            host_attrs = config_cache.get_host_attributes(host_name)
-            for plugin_name, entries in config_cache.active_checks(host_name):
-                for active_check_params in entries:
-                    for description in config.get_active_check_descriptions(
-                        plugin_name,
-                        config.active_check_info[plugin_name],
-                        host_name,
-                        config_cache.alias(host_name),
-                        host_attrs,
-                        active_check_params,
-                    ):
-                        if description == servicedesc:
-                            return {
-                                "origin": "active",
-                                "checktype": plugin_name,
-                                "parameters": active_check_params,
-                            }
+        host_attrs = config_cache.get_host_attributes(host_name)
+        active_check_config = command_config.ActiveCheckConfig(
+            host_name,
+            host_attrs,
+        )
+
+        active_checks = config_cache.active_checks(host_name)
+        for active_service in active_check_config.get_active_service_descriptions(active_checks):
+            if active_service.description == servicedesc:
+                return {
+                    "origin": "active",
+                    "checktype": active_service.plugin_name,
+                    "parameters": active_service.params,
+                }
 
         return {}  # not found
 
@@ -2092,45 +2086,34 @@ class AutomationActiveCheck(Automation):
                     "Passive check - cannot be executed",
                 )
 
-        try:
-            act_info = config.active_check_info[plugin]
-        except KeyError:
-            return ActiveCheckResult(
-                None,
-                "Failed to compute check result",
+        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+        resource_macros = self._get_resouce_macros()
+        active_check_config = command_config.ActiveCheckConfig(
+            host_name,
+            host_attrs,
+            {**host_macros, **resource_macros},
+            cmk.utils.password_store.load(),
+        )
+
+        active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
+        for service_data in active_check_config.get_active_service_data([(plugin, active_check)]):
+            if service_data.description != item:
+                continue
+
+            command_line = self._replace_service_macros(
+                host_name,
+                service_data.description,
+                service_data.command_line,
             )
-
-        # Set host name for host_name()-function (part of the Check API)
-        # (used e.g. by check_http)
-        stored_passwords = cmk.utils.password_store.load()
-        with plugin_contexts.current_host(host_name):
-            for params in dict(config_cache.active_checks(host_name)).get(plugin, []):
-                for description, command_args in config.iter_active_check_services(
-                    plugin,
-                    act_info,
-                    host_name,
-                    host_attrs["alias"],
-                    host_attrs,
-                    params,
-                    stored_passwords,
-                ):
-                    if description != item:
-                        continue
-
-                    command_line = self._replace_macros(
-                        host_name,
-                        description,
-                        act_info["command_line"].replace("$ARG1$", command_args),
-                    )
-                    cmd = core_config.autodetect_plugin(command_line)
-                    return ActiveCheckResult(*self._execute_check_plugin(cmd))
+            return ActiveCheckResult(*self._execute_check_plugin(command_line))
 
         return ActiveCheckResult(
             None,
             "Failed to compute check result",
         )
 
-    def _load_resource_file(self, macros: dict[str, str]) -> None:
+    def _get_resouce_macros(self) -> Mapping[str, str]:
+        macros = {}
         try:
             for line in (omd_root / "etc/nagios/resource.cfg").open():
                 line = line.strip()
@@ -2141,6 +2124,7 @@ class AutomationActiveCheck(Automation):
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
+        return macros
 
     # Simulate replacing some of the more important macros of host and service. We
     # cannot use dynamic macros, of course. Note: this will not work
@@ -2154,9 +2138,18 @@ class AutomationActiveCheck(Automation):
         )
         service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
-        self._load_resource_file(macros)
+        macros.update(self._get_resouce_macros())
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
+
+    def _replace_service_macros(
+        self, hostname: HostName, service_desc: str, commandline: str
+    ) -> str:
+        config_cache = config.get_config_cache()
+        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
+
+        return replace_macros_in_str(commandline, {k: f"{v}" for k, v in service_macros.items()})
 
     def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
         try:

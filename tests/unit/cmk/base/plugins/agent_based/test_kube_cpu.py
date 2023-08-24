@@ -76,16 +76,6 @@ def resources_section(resources_request, resources_limit):
 
 
 @pytest.fixture
-def overview_limits_ignored(resources_section):
-    return kube_resources.count_overview(resources_section, "limit")
-
-
-@pytest.fixture
-def overview_requests_ignored(resources_section):
-    return kube_resources.count_overview(resources_section, "request")
-
-
-@pytest.fixture
 def allocatable_resource_section():
     return kube_resources.AllocatableResource(context="node", value=ALLOCATABLE)
 

@@ -91,6 +91,7 @@ set build_dir=.\build
 set SKIP_MINOR_BINARIES=YES
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME
 set hash_file=%arte%\windows_files_hashes.txt
+set usbip_exe=pc:\common\usbip-win-0.3.6-dev\usbip.exe
 
 :: arg_clean
 call :clean
@@ -287,7 +288,7 @@ if not "%arg_sign%" == "1" powershell Write-Host "Signing binaries skipped" -For
 powershell Write-Host "run:Signing binary..." -Foreground White
 :: to be sure that all artifacts are up to date
 "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
-call scripts\attach_usb_token.cmd c:\common\usbip-win-0.3.6-dev\usbip.exe yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
+call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
 if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & :halt 91
 del /Q %hash_file% 2>nul
 powershell Write-Host "Signing Executables" -Foreground White
@@ -325,7 +326,7 @@ goto :eof
 if not "%arg_sign%" == "1" powershell Write-Host "Signing MSI skipped" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Signing MSI" -Foreground White
 @call scripts\sign_code.cmd %arte%\check_mk_agent.msi  %hash_file%
-call scripts\detach_usb_token.cmd
+call scripts\detach_usb_token.cmd %usbip_exe%
 call scripts\call_signing_tests.cmd
 if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & :halt 41
 @py -3 scripts\check_hashes.py %hash_file%
@@ -336,7 +337,7 @@ goto :eof
 
 :: Sets the errorlevel and stops the batch immediately
 :halt
-call scripts\detach_usb_token.cmd
+call scripts\detach_usb_token.cmd %usbip_exe%
 call :__SetErrorLevel %1
 call :__ErrorExit 2> nul
 goto :eof

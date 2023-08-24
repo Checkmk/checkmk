@@ -13,7 +13,7 @@ exit /b 0
 
 :usage
 powershell Write-Host "Usage:" -ForegroundColor DarkGreen
-powershell Write-Host "detach_usb_token.cmd usb_ip_path usb_server" -ForegroundColor DarkGreen
+powershell Write-Host "detach_usb_token.cmd usb_ip_path" -ForegroundColor DarkGreen
 powershell Write-Host "Example:" -ForegroundColor DarkGreen
 powershell Write-Host "       detach_usb_token.cmd c:\common\usb_ip\usbip.exe" -ForegroundColor DarkGreen
 :exit

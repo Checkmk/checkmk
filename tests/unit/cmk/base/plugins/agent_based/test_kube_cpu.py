@@ -31,10 +31,6 @@ ALLOCATABLE = 5.0  # value for allocatable cpu
 # Resources
 LIMIT = 2 * OK
 REQUEST = OK
-COUNT_TOTAL = 2
-COUNT_UNSPECIFIED_REQUESTS = 0
-COUNT_UNSPECIFIED_LIMITS = 0
-COUNT_ZEROED_LIMITS = 0
 
 
 @pytest.fixture
@@ -68,10 +64,10 @@ def resources_section(resources_request, resources_limit):
     return kube_resources.Resources(
         request=resources_request,
         limit=resources_limit,
-        count_total=COUNT_TOTAL,
-        count_zeroed_limits=COUNT_ZEROED_LIMITS,
-        count_unspecified_limits=COUNT_UNSPECIFIED_LIMITS,
-        count_unspecified_requests=COUNT_UNSPECIFIED_REQUESTS,
+        count_total=2,
+        count_zeroed_limits=0,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
     )
 
 

@@ -33,4 +33,5 @@ Python-2.1.1,https://www.python.org/download/releases/2.1.1/license/,Python 2.1.
 Unlicense,https://opensource.org/licenses/unlicense,The Unlicense,
 WTFPL,https://spdx.org/licenses/WTFPL.html,Do What the F*ck You Want to Public License,
 X11,https://spdx.org/licenses/X11.html,X11 License,
-Zlib,https://opensource.org/licenses/Zlib,Zlib License,
+Xinetd,https://spdx.org/licenses/xinetd.html,Xinetd License,
+Zlib,https://opensource.org/licenses/Zlib,The zlib/libpng License,

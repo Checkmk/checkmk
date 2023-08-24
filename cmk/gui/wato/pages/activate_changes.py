@@ -470,7 +470,10 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 # to handle this in a special way because of the SiteChanges file format. Would be
                 # cleaner to transport the text type (like AuditLogStore is doing it).
                 table.cell(_("Summary"), HTML(icon_code + change["text"]))
-                table.cell(_("Details"), HTML(change.get("diff_text", "")))
+
+                table.cell(
+                    _("Details"), HTML(diff_text if (diff_text := change.get("diff_text")) else "")
+                )
 
                 table.cell(_("Affected sites"), css=["affected_sites"])
                 if self._affects_all_sites(change):

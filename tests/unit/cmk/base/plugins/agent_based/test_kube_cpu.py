@@ -23,7 +23,6 @@ ONE_HOUR = 60 * ONE_MINUTE
 TIMESTAMP = 359
 
 USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
-LEVELS = 60.0, 90.0  # default values for upper levels for request and limit
 OK = 0.18  # value for request and limit to set state to OK
 WARN = 0.12  # value for request and limit to set state to WARN
 CRIT = 0.09  # value for request and limit to set state to CRIT
@@ -31,7 +30,6 @@ ALLOCATABLE = 5.0  # value for allocatable cpu
 ALLOCATABLE_OK = ALLOCATABLE / 0.5  # value for allocatable to set state to OK
 ALLOCATABLE_WARN = ALLOCATABLE / 0.6  # value for allocatable to set state to WARN
 ALLOCATABLE_CRIT = ALLOCATABLE / 0.9  # value for allocatable to set state to CRIT
-LEVELS_ALLOCATABLE = USAGE  # default values for upper levels for allocatable
 
 
 # Resources
@@ -64,10 +62,10 @@ def value_store(
 def params():
     return kube_resources.Params(
         usage="no_levels",
-        request=("levels", LEVELS),
-        limit=("levels", (LEVELS[0] / 2, LEVELS[1] / 2)),
-        node=("levels", (LEVELS[0] / 4, LEVELS[1] / 4)),
-        cluster=("levels", (LEVELS[0] / 4, LEVELS[1] / 4)),
+        request=("levels", (60.0, 90.0)),
+        limit=("levels", (30.0, 45.0)),
+        node=("levels", (15.0, 22.5)),
+        cluster=("levels", (15.0, 22.5)),
     )
 
 

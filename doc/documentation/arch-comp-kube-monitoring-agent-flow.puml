@@ -14,13 +14,13 @@ between the Kubernetes objects;
 }
 partition usage metrics handling (optional) {
 :query the usage (CPU & Memory) from
-our collectors / Openshift Prometheus;
+our collectors / OpenShift Prometheus;
 :write out piggyback sections if the matching
 k8s API object is still running;
 }
 partition machine-sections handling (optional) {
 :query machine-sections from
-cluster collector / Openshift Prometheus;
+cluster collector / OpenShift Prometheus;
 :write out piggyback sections specific to node if
 node is reported to be present;
 }

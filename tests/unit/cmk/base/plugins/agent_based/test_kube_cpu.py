@@ -61,38 +61,13 @@ def value_store(
 
 
 @pytest.fixture
-def params_usage():
-    return "no_levels"
-
-
-@pytest.fixture
-def params_request():
-    return ("levels", LEVELS)
-
-
-@pytest.fixture
-def params_limit():
-    return ("levels", (LEVELS[0] / 2, LEVELS[1] / 2))
-
-
-@pytest.fixture
-def params_cluster():
-    return ("levels", (LEVELS[0] / 4, LEVELS[1] / 4))
-
-
-@pytest.fixture
-def params_node():
-    return ("levels", (LEVELS[0] / 4, LEVELS[1] / 4))
-
-
-@pytest.fixture
-def params(params_usage, params_request, params_limit, params_cluster, params_node):
+def params():
     return kube_resources.Params(
-        usage=params_usage,
-        request=params_request,
-        limit=params_limit,
-        cluster=params_cluster,
-        node=params_node,
+        usage="no_levels",
+        request=("levels", LEVELS),
+        limit=("levels", (LEVELS[0] / 2, LEVELS[1] / 2)),
+        node=("levels", (LEVELS[0] / 4, LEVELS[1] / 4)),
+        cluster=("levels", (LEVELS[0] / 4, LEVELS[1] / 4)),
     )
 
 
@@ -309,7 +284,7 @@ def test_check_all_states_ok(check_result: CheckResult) -> None:
         (CRIT, CRIT),
     ],
 )
-@pytest.mark.parametrize("params_request, params_limit", [(("no_levels"), ("no_levels"))])
+@pytest.mark.parametrize("params", [kube_resources.DEFAULT_PARAMS])
 def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
@@ -324,18 +299,26 @@ def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "params_usage, params_request, params_limit, expected_states",
+    "params, expected_states",
     [
         (
-            ("no_levels", (0.01, 1.0)),
-            "no_levels",
-            "no_levels",
+            kube_resources.Params(
+                usage=("levels", (0.01, 1.0)),
+                request="no_levels",
+                limit="no_levels",
+                cluster="no_levels",
+                node="no_levels",
+            ),
             [State.WARN, State.OK, State.OK, State.OK],
         ),
         (
-            ("no_levels", (0.01, 0.01)),
-            "no_levels",
-            "no_levels",
+            kube_resources.Params(
+                usage=("levels", (0.01, 0.01)),
+                request="no_levels",
+                limit="no_levels",
+                cluster="no_levels",
+                node="no_levels",
+            ),
             [State.CRIT, State.OK, State.OK, State.OK],
         ),
     ],

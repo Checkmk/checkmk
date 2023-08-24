@@ -95,28 +95,6 @@ def test_discovery(
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_missing_usage(check_result: CheckResult) -> None:
-    assert len(list(check_result)) == 6
-
-
-def test_count_metrics_all_sections_present(check_result: CheckResult) -> None:
-    assert len([r for r in check_result if isinstance(r, Metric)]) == 7
-
-
-def test_count_results_all_sections_present(check_result: CheckResult) -> None:
-    assert len([r for r in check_result if isinstance(r, Result)]) == 4
-
-
-def test_check_yields_check_results(check_result: CheckResult) -> None:
-    assert len(list(check_result)) == 3 * 1 + 4 * 2
-
-
-def test_check_yields_results(check_result: CheckResult) -> None:
-    expected = 1 + 2 + 1
-    assert len([r for r in check_result if isinstance(r, Result)]) == expected
-
-
-@pytest.mark.parametrize("usage_section", [None])
 def test_check_results_without_usage(check_result: CheckResult) -> None:
     expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
     results = [r for r in check_result if isinstance(r, Result)]

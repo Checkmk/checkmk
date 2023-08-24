@@ -97,13 +97,8 @@ def params(params_usage, params_request, params_limit, params_cluster, params_no
 
 
 @pytest.fixture
-def usage_usage():
-    return USAGE
-
-
-@pytest.fixture
-def usage_string_table_element(usage_usage):
-    return {"resource": {"type_": "cpu", "usage": usage_usage}}
+def usage_string_table_element():
+    return {"resource": {"type_": "cpu", "usage": USAGE}}
 
 
 @pytest.fixture

@@ -13,7 +13,6 @@ import pytest
 import cmk.base.plugins.agent_based.utils.kube
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import kube_resources
 from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
 
@@ -71,32 +70,24 @@ def resources_section(resources_request, resources_limit):
     )
 
 
-@pytest.fixture
-def allocatable_resource_section():
-    return kube_resources.AllocatableResource(context="node", value=ALLOCATABLE)
-
-
-@pytest.fixture
-def check_result(params, usage_section, resources_section, allocatable_resource_section):
-    return kube_cpu._check_kube_cpu(
-        params, usage_section, resources_section, allocatable_resource_section, 1.0, {}
-    )
+ALLOCATABLE_RESOURCE_SECTION = kube_resources.AllocatableResource(context="node", value=ALLOCATABLE)
 
 
 def test_discovery(
     usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage,
     resources_section: kube_resources.Resources,
-    allocatable_resource_section: kube_resources.AllocatableResource,
 ) -> None:
     for s1, s2, s3 in itertools.product(
-        (usage_section, None), (resources_section, None), (allocatable_resource_section, None)
+        (usage_section, None), (resources_section, None), (ALLOCATABLE_RESOURCE_SECTION, None)
     ):
         assert len(list(kube_cpu.discovery_kube_cpu(s1, s2, s3))) == 1
 
 
-@pytest.mark.parametrize("usage_section", [None])
-def test_check_results_without_usage(check_result: CheckResult) -> None:
+def test_check_results_without_usage(params, resources_section):
     expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
+    check_result = kube_cpu._check_kube_cpu(
+        params, None, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(
         r.summary.startswith(beginning) for r, beginning in zip(results, expected_beginnings)
@@ -104,8 +95,13 @@ def test_check_results_without_usage(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in results)
 
 
-@pytest.mark.parametrize("usage_section", [None])
-def test_check_metrics_without_usage(check_result: CheckResult) -> None:
+def test_check_metrics_without_usage(
+    params: kube_resources.Params,
+    resources_section: kube_resources.Resources,
+) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, None, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     expected_metrics = {
         Metric("kube_cpu_allocatable", ALLOCATABLE, boundaries=(0.0, None)),
         Metric("kube_cpu_request", 0.18, boundaries=(0.0, None)),
@@ -115,24 +111,34 @@ def test_check_metrics_without_usage(check_result: CheckResult) -> None:
     assert expected_metrics == metrics
 
 
-@pytest.mark.parametrize("resources_section", [None])
-def test_check_if_no_resources(check_result: CheckResult) -> None:
+def test_check_if_no_resources(
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+) -> None:
     """Crashing is expected, because section_kube_cpu is only missing, if data from the api
     server missing."""
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, None, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     with pytest.raises(AssertionError):
         list(check_result)
 
 
 def test_check_beginning_of_summaries_with_all_sections_present(
-    check_result,
-    resources_request,
-    resources_limit,
-):
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
+    resources_request: int,
+    resources_limit: int,
+) -> None:
     expected_beginnings = [
         f"Usage: {USAGE:0.3f}",
         f"Requests utilization: {render.percent(USAGE /  resources_request * 100)} - {USAGE:0.3f} of {resources_request:0.3f}",
         f"Limits utilization: {render.percent(USAGE / resources_limit * 100)} - {USAGE:0.3f} of {resources_limit:0.3f}",
     ]
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(
         r.summary.startswith(beginning) for r, beginning in zip(results, expected_beginnings)
@@ -140,8 +146,15 @@ def test_check_beginning_of_summaries_with_all_sections_present(
 
 
 def test_check_yields_multiple_metrics_with_values(
-    check_result, resources_request, resources_limit
-):
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
+    resources_request: int,
+    resources_limit: int,
+) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     expected = [
         ("kube_cpu_usage", USAGE),
         ("kube_cpu_request", resources_request),
@@ -154,7 +167,14 @@ def test_check_yields_multiple_metrics_with_values(
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
 
-def test_check_all_states_ok(check_result: CheckResult) -> None:
+def test_check_all_states_ok(
+    params,
+    usage_section,
+    resources_section,
+):
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -166,8 +186,19 @@ def test_check_all_states_ok(check_result: CheckResult) -> None:
         (CRIT, CRIT),
     ],
 )
-@pytest.mark.parametrize("params", [kube_resources.DEFAULT_PARAMS])
-def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
+def test_check_all_states_ok_params_ignore(
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
+) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        kube_resources.DEFAULT_PARAMS,
+        usage_section,
+        resources_section,
+        ALLOCATABLE_RESOURCE_SECTION,
+        1.0,
+        {},
+    )
+
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -205,8 +236,14 @@ def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
     ],
 )
 def test_check_abs_levels_with_mixed(
-    expected_states: Sequence[State], check_result: CheckResult
+    params: kube_resources.Params,
+    expected_states: Sequence[State],
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
@@ -225,15 +262,24 @@ def test_check_abs_levels_with_mixed(
     ],
 )
 def test_check_result_states_mixed(
-    expected_states: Sequence[State], check_result: CheckResult
+    expected_states: Sequence[State],
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
-@pytest.mark.parametrize("usage_section", [None])
 def test_overview_requests_contained_no_usage_section(
-    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
+    params: kube_resources.Params,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, None, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     overview_requests_ignored = kube_resources.count_overview(resources_section, "request")
     results = [r for r in check_result if isinstance(r, Result)]
     requests_results = [r for r in results if "Request" in r.summary]
@@ -242,8 +288,13 @@ def test_overview_requests_contained_no_usage_section(
 
 
 def test_overview_requests_contained(
-    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, usage_section, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     overview_requests_ignored = kube_resources.count_overview(resources_section, "request")
     results = [r for r in check_result if isinstance(r, Result)]
     requests_results = [r for r in results if "Request" in r.summary]
@@ -251,10 +302,13 @@ def test_overview_requests_contained(
     assert [r for r in results if overview_requests_ignored in r.summary] == requests_results
 
 
-@pytest.mark.parametrize("usage_section", [None])
 def test_overview_limits_contained_no_usage(
-    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
+    params: kube_resources.Params,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, None, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     overview_limits_ignored = kube_resources.count_overview(resources_section, "limit")
     results = [r for r in check_result if isinstance(r, Result)]
     limits_results = [r for r in results if "Limit" in r.summary]
@@ -263,8 +317,13 @@ def test_overview_limits_contained_no_usage(
 
 
 def test_overview_limits_contained(
-    check_result: CheckResult, resources_section: kube_resources.Resources
+    params: kube_resources.Params,
+    usage_section: PerformanceUsage,
+    resources_section: kube_resources.Resources,
 ) -> None:
+    check_result = kube_cpu._check_kube_cpu(
+        params, None, resources_section, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+    )
     overview_limits_ignored = kube_resources.count_overview(resources_section, "limit")
     results = [r for r in check_result if isinstance(r, Result)]
     limits_results = [r for r in results if "Limit" in r.summary]

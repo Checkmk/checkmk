@@ -288,7 +288,6 @@ def test_overview_limits_contained_no_usage(
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
 
 
-@pytest.mark.usefixtures("usage_section")
 def test_overview_limits_contained(
     check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
@@ -299,10 +298,7 @@ def test_overview_limits_contained(
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
 
 
-@pytest.mark.parametrize("usage_section", [None])
-def test_stored_usage_value(
-    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
-) -> None:
+def test_stored_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 1,
@@ -310,15 +306,12 @@ def test_stored_usage_value(
         )
     }
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
-        usage_section, TIMESTAMP, value_store, "cpu_usage"
+        None, TIMESTAMP, value_store, "cpu_usage"
     )
     assert performance_cpu is not None
 
 
-@pytest.mark.parametrize("usage_section", [None])
-def test_stored_outdated_usage_value(
-    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
-) -> None:
+def test_stored_outdated_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 2,
@@ -327,6 +320,6 @@ def test_stored_outdated_usage_value(
     }
 
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
-        usage_section, TIMESTAMP, value_store, "cpu_usage"
+        None, TIMESTAMP, value_store, "cpu_usage"
     )
     assert performance_cpu is None

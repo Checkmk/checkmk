@@ -55,8 +55,6 @@ import * as webauthn from "webauthn";
 
 import * as nodevis from "./modules/nodevis/main";
 
-const isEnterprise = process.env.ENTERPRISE !== "no";
-
 // Optional import is currently not possible using the ES6 imports
 let graphs_cee;
 let ntop_host_details;
@@ -75,7 +73,7 @@ function registerRawFigureBaseClasses() {
 }
 
 registerRawFigureBaseClasses();
-if (isEnterprise) {
+if (process.env.ENTERPRISE !== "no") {
     register = require("register");
     register.registerEnterpriseFigureBaseClasses();
     require("cmk_figures_plugins_cee");

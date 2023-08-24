@@ -6,7 +6,7 @@
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import itertools
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -38,23 +38,8 @@ COUNT_ZEROED_LIMITS = 0
 
 
 @pytest.fixture
-def usage_cycle_age() -> int:
-    return 2
-
-
-@pytest.fixture
 def usage_section():
     return PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE))
-
-
-@pytest.fixture
-def value_store(usage_cycle_age: int) -> dict[str, tuple[float, str]]:
-    return {
-        "cpu_usage": (
-            TIMESTAMP - ONE_MINUTE * usage_cycle_age,
-            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
-        )
-    }
 
 
 @pytest.fixture
@@ -324,12 +309,16 @@ def test_overview_limits_contained(
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
 
 
-@pytest.mark.parametrize("usage_cycle_age", [1])
 @pytest.mark.parametrize("usage_section", [None])
 def test_stored_usage_value(
     usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
-    value_store: MutableMapping[str, object],
 ) -> None:
+    value_store = {
+        "cpu_usage": (
+            TIMESTAMP - ONE_MINUTE * 1,
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+        )
+    }
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"
     )
@@ -339,8 +328,14 @@ def test_stored_usage_value(
 @pytest.mark.parametrize("usage_section", [None])
 def test_stored_outdated_usage_value(
     usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
-    value_store: MutableMapping[str, object],
 ) -> None:
+    value_store = {
+        "cpu_usage": (
+            TIMESTAMP - ONE_MINUTE * 2,
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+        )
+    }
+
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"
     )

@@ -25,6 +25,11 @@ node ('win_210_agent_build') {
             )
         }
     }
+    stage("detach") {
+        dir("agents\\wnx"){
+            bat("detach.cmd")
+        }
+    }
 }
 
 def checkout_git(scm, VERSION) {

@@ -200,7 +200,9 @@ def test_check_regression(item, params, expected):
             [
                 (
                     1,
-                    "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).",
+                    "Received multiple filestats per single file service. Please check agent "
+                    "plugin configuration (mk_filestats). For example, if there are multiple "
+                    "non-utf-8 filenames, then they may be mapped to the same file service.",
                 ),
                 (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
                 (0, "Age: 14 hours 34 minutes", []),
@@ -212,3 +214,26 @@ def test_check_single_regression(item, params, expected):
     section = parse_filestats(STRING_TABLE)
     results = list(check_filestats_single(item, params, section))
     assert results == expected
+
+
+def test_check_single_duplicate_file() -> None:
+    """Data as the one below occurs due to Werk 15605. However, since the behaviour below was not
+    introduced by that Werk, such data may occur in other situations as well."""
+    string_table = [
+        ["[[[single_file /�]]]"],
+        ["{'type': 'file', 'path': '/�', 'stat_status': 'ok', 'size': 0, 'age': 87, 'mtime': 1}"],
+        ["[[[single_file /�]]]"],
+        ["{'type': 'file', 'path': '/�', 'stat_status': 'ok', 'size': 0, 'age': 111, 'mtime': 1}"],
+    ]
+    section = parse_filestats(string_table)
+    results = list(check_filestats_single("/�", {}, section))
+    assert results == [
+        (
+            1,
+            "Received multiple filestats per single file service. Please check agent "
+            "plugin configuration (mk_filestats). For example, if there are multiple "
+            "non-utf-8 filenames, then they may be mapped to the same file service.",
+        ),
+        (0, "Size: 0 B", [("size", 0, None, None)]),
+        (0, "Age: 1 minute 27 seconds", []),
+    ]

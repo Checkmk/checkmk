@@ -9,7 +9,6 @@ import pytest
 from tests.testlib.site import Site
 
 from tests.plugins_integration.checks import (
-    CheckModes,
     get_host_names,
     process_check_output,
     read_cmk_dump,
@@ -25,7 +24,6 @@ def test_single(
     test_site: Site,
     host_name: str,
     tmp_path_factory: pytest.TempPathFactory,
-    request: pytest.FixtureRequest,
 ) -> None:
     """Atomic execution (done if --bulk-mode is not set)"""
     with setup_host(test_site, host_name):
@@ -42,13 +40,7 @@ def test_single(
             test_site,
             host_name,
             tmp_path,
-            mode=CheckModes.UPDATE
-            if request.config.getoption("--update-checks")
-            else CheckModes.ADD
-            if request.config.getoption("--add-checks")
-            else CheckModes.DEFAULT,
-            apply_regexps=not request.config.getoption("--skip-masking"),
-        ), "Check output mismatch!"
+        ), f"Check output mismatch for host {host_name}!"
 
 
 @pytest.mark.usefixtures("bulk_setup")
@@ -57,7 +49,6 @@ def test_bulk(
     test_site: Site,
     host_name: str,
     tmp_path_factory: pytest.TempPathFactory,
-    request: pytest.FixtureRequest,
 ) -> None:
     """Bulk mode execution (done if --bulk-mode is set)"""
     disk_dump = read_disk_dump(host_name)
@@ -73,10 +64,4 @@ def test_bulk(
         test_site,
         host_name,
         tmp_path,
-        mode=CheckModes.UPDATE
-        if request.config.getoption("--update-checks")
-        else CheckModes.ADD
-        if request.config.getoption("--add-checks")
-        else CheckModes.DEFAULT,
-        apply_regexps=not request.config.getoption("--skip-masking"),
-    ), "Check output mismatch!"
+    ), f"Check output mismatch for host {host_name}!"

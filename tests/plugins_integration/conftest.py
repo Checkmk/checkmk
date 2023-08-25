@@ -87,6 +87,11 @@ def pytest_addoption(parser):
         help="Response dir path",
     )
     parser.addoption(
+        "--diff-dir",
+        action="store",
+        help="Diff dir path",
+    )
+    parser.addoption(
         "--dump-types",
         action="store",
         help='Selected dump types to process (default: "agent,snmp")',
@@ -95,26 +100,21 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     # parse options that control the test execution
-    if data_dir := config.getoption(name="--data-dir"):
-        checks.DATA_DIR = data_dir
-        checks.DUMP_DIR = f"{data_dir}/dumps"
-        checks.RESPONSE_DIR = f"{data_dir}/responses"
-    logger.info("DATA_DIR=%s", checks.DATA_DIR)
-    if dump_dir := config.getoption(name="--dump-dir"):
-        checks.DUMP_DIR = dump_dir
-    logger.info("DUMP_DIR=%s", checks.DUMP_DIR)
-    if response_dir := config.getoption(name="--response-dir"):
-        checks.RESPONSE_DIR = response_dir
-    logger.info("RESPONSE_DIR=%s", checks.RESPONSE_DIR)
-    if host_names := config.getoption(name="--host-names"):
-        checks.HOST_NAMES = host_names.split(",")
-    logger.info("HOST_NAMES=%s", ",".join(checks.HOST_NAMES) if checks.HOST_NAMES else "*")
-    if check_names := config.getoption(name="--check-names"):
-        checks.CHECK_NAMES = check_names.split(",")
-    logger.info("CHECK_NAMES=%s", ",".join(checks.CHECK_NAMES) if checks.CHECK_NAMES else "*")
-    if dump_types := config.getoption(name="--dump-types"):
-        checks.DUMP_TYPES = dump_types.split(",")
-    logger.info("DUMP_TYPES=%s", ",".join(checks.DUMP_TYPES) if checks.DUMP_TYPES else "*")
+    checks.config.load(
+        mode=checks.CheckModes.UPDATE
+        if config.getoption("--update-checks")
+        else checks.CheckModes.ADD
+        if config.getoption("--add-checks")
+        else checks.CheckModes.DEFAULT,
+        skip_masking=config.getoption("--skip-masking"),
+        data_dir=config.getoption(name="--data-dir"),
+        dump_dir=config.getoption(name="--dump-dir"),
+        response_dir=config.getoption(name="--response-dir"),
+        diff_dir=config.getoption(name="--diff-dir"),
+        host_names=config.getoption(name="--host-names"),
+        check_names=config.getoption(name="--check-names"),
+        dump_types=config.getoption(name="--dump-types"),
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -148,7 +148,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
                         "sudo",
                         "cp",
                         "-f",
-                        f"{checks.DUMP_DIR}/{dump_name}",
+                        f"{checks.config.dump_dir}/{dump_name}",
                         f"{walk_path}/{dump_name}"
                         if re.search(r"\bsnmp\b", dump_name)
                         else f"{dump_path}/{dump_name}",
@@ -157,7 +157,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
                 == 0
             )
 
-        for dump_type in checks.DUMP_TYPES:
+        for dump_type in checks.config.dump_types:
             host_folder = f"/{dump_type}"
             if site.openapi.get_folder(host_folder):
                 logger.info('Host folder "%s" already exists!', host_folder)
@@ -190,4 +190,5 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
     checks.setup_hosts(test_site, host_names)
     yield
-    checks.cleanup_hosts(test_site, host_names)
+    if os.getenv("CLEANUP", "1") == "1" and not pytestconfig.getoption("--skip-cleanup"):
+        checks.cleanup_hosts(test_site, host_names)

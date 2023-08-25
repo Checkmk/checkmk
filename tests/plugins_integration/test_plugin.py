@@ -9,6 +9,7 @@ import pytest
 from tests.testlib.site import Site
 
 from tests.plugins_integration.checks import (
+    CheckModes,
     get_host_names,
     process_check_output,
     read_cmk_dump,
@@ -41,7 +42,11 @@ def test_single(
             test_site,
             host_name,
             tmp_path,
-            update_mode=request.config.getoption("--update-checks"),
+            mode=CheckModes.UPDATE
+            if request.config.getoption("--update-checks")
+            else CheckModes.ADD
+            if request.config.getoption("--add-checks")
+            else CheckModes.DEFAULT,
             apply_regexps=not request.config.getoption("--skip-masking"),
         ), "Check output mismatch!"
 
@@ -68,6 +73,10 @@ def test_bulk(
         test_site,
         host_name,
         tmp_path,
-        update_mode=request.config.getoption("--update-checks"),
+        mode=CheckModes.UPDATE
+        if request.config.getoption("--update-checks")
+        else CheckModes.ADD
+        if request.config.getoption("--add-checks")
+        else CheckModes.DEFAULT,
         apply_regexps=not request.config.getoption("--skip-masking"),
     ), "Check output mismatch!"

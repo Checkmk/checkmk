@@ -9,6 +9,7 @@ import re
 import shlex
 import subprocess
 from contextlib import contextmanager
+from enum import IntEnum
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
@@ -17,9 +18,41 @@ import yaml
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
 
-from tests.plugins_integration import constants
-
 logger = logging.getLogger(__name__)
+
+
+DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(__file__))
+DUMP_DIR = os.getenv("DUMP_DIR", f"{DATA_DIR}/dumps")
+RESPONSE_DIR = os.getenv("RESPONSE_DIR", f"{DATA_DIR}/responses")
+
+HOST_NAMES = [_ for _ in os.getenv("HOST_NAMES", "").split(",") if _]
+CHECK_NAMES = [_ for _ in os.getenv("CHECK_NAMES", "").split(",") if _]
+DUMP_TYPES = [_ for _ in os.getenv("DUMP_TYPES", "agent,snmp").split(",") if _]
+
+# these columns of the SERVICES table will be returned via the get_host_services() openapi call
+# NOTE: extending this list will require an update of the check output (--update-checks)
+API_SERVICES_COLS = [
+    "host_name",
+    "check_command",
+    "check_command_expanded",
+    "check_options",
+    "check_period",
+    "check_type",
+    "description",
+    "display_name",
+    "has_been_checked",
+    "labels",
+    "plugin_output",
+    "state",
+    "state_type",
+    "tags",
+]
+
+
+class CheckModes(IntEnum):
+    DEFAULT = 0
+    ADD = 1
+    UPDATE = 2
 
 
 def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
@@ -69,12 +102,11 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     try:
         return {
             check["id"]: check
-            for check in site.openapi.get_host_services(
-                host_name, columns=constants.API_SERVICES_COLS
-            )
-            if len(constants.CHECK_NAMES) == 0
-            or check["id"] in constants.CHECK_NAMES
-            or any(re.fullmatch(pattern, check["id"]) for pattern in constants.CHECK_NAMES)
+            for check in site.openapi.get_host_services(host_name, columns=API_SERVICES_COLS)
+            if len(CHECK_NAMES) == 0
+            or check["id"] in CHECK_NAMES
+            or check["id"].split(":", 1)[-1] in CHECK_NAMES
+            or any(re.fullmatch(pattern, check["id"]) for pattern in CHECK_NAMES)
         }
     except json.decoder.JSONDecodeError as exc:
         raise ValueError(
@@ -95,9 +127,9 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
     else:
         agent_host_names = []
         snmp_host_names = []
-        for dump_file_name in [_ for _ in os.listdir(constants.DUMP_DIR) if not _.startswith(".")]:
+        for dump_file_name in [_ for _ in os.listdir(DUMP_DIR) if not _.startswith(".")]:
             try:
-                dump_file_path = f"{constants.DUMP_DIR}/{dump_file_name}"
+                dump_file_path = f"{DUMP_DIR}/{dump_file_name}"
                 with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
                     if dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
@@ -107,23 +139,23 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
                 logger.error('Could not access dump file "%s"!', dump_file_name)
             except UnicodeDecodeError:
                 logger.error('Could not decode dump file "%s"!', dump_file_name)
-    if "agent" in constants.DUMP_TYPES:
+    if "agent" in DUMP_TYPES:
         host_names += agent_host_names
-    if "snmp" in constants.DUMP_TYPES:
+    if "snmp" in DUMP_TYPES:
         host_names += snmp_host_names
     host_names = [
         _
         for _ in host_names
-        if len(constants.HOST_NAMES) == 0
-        or _ in constants.HOST_NAMES
-        or any(re.fullmatch(pattern, _) for pattern in constants.HOST_NAMES)
+        if len(HOST_NAMES) == 0
+        or _ in HOST_NAMES
+        or any(re.fullmatch(pattern, _) for pattern in HOST_NAMES)
     ]
     return host_names
 
 
 def read_disk_dump(host_name: str) -> str:
     """Return the content of an agent dump from the dumps folder."""
-    dump_file_path = f"{constants.DUMP_DIR}/{host_name}"
+    dump_file_path = f"{DUMP_DIR}/{host_name}"
     with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
         return dump_file.read()
 
@@ -143,51 +175,57 @@ def read_cmk_dump(host_name: str, site: Site, dump_type: str) -> str:
 
 
 def _verify_check_result(
-    check_file_name: str,
+    check_id: str,
+    canon_data: dict[str, Any],
     result_data: dict[str, Any],
     output_dir: Path,
-    update_mode: bool,
+    mode: CheckModes,
     apply_regexps: bool,
 ) -> bool:
     """Verify that the check result is matching the stored canon.
 
     Optionally update the stored canon if it does not match."""
-    json_output_file_path = f"{constants.RESPONSE_DIR}/{check_file_name}.json"
-    if os.path.exists(json_output_file_path):
-        with open(json_output_file_path, mode="r", encoding="utf-8") as json_file:
-            canon_data = json.load(json_file)
-    else:
-        if not update_mode:
-            logger.warning('Canon file "%s" not found!', json_output_file_path)
-        canon_data = {}
-    json_result_file_path = str(output_dir / f"{check_file_name}.result.json")
-    with open(json_result_file_path, mode="w", encoding="utf-8") as json_file:
-        json_file.write(f"{json.dumps(result_data, indent=4)}\n")
+    if mode == CheckModes.DEFAULT and not canon_data:
+        logger.warning("[%s] Canon not found!", check_id)
+    safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
+    with open(
+        json_result_file_path := str(output_dir / f"{safe_name}.result.json"),
+        mode="w",
+        encoding="utf-8",
+    ) as json_file:
+        json.dump(result_data, json_file, indent=4)
 
-    if not update_mode:
+    if mode != CheckModes.UPDATE:
         # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in constants.API_SERVICES_COLS}
-    json_canon_file_path = str(output_dir / f"{check_file_name}.canon.json")
+        canon_data = {_: canon_data[_] for _ in canon_data if _ in API_SERVICES_COLS}
+
     if apply_regexps:
-        _apply_regexps(check_file_name, canon_data, result_data)
+        _apply_regexps(check_id, canon_data, result_data)
 
     if result_data and canon_data == result_data:
         return True
 
-    if update_mode:
-        with open(json_output_file_path, mode="w", encoding="utf-8") as json_file:
-            json_file.write(f"{json.dumps(result_data, indent=4)}\n")
-        logger.info('Canon file "%s" updated!', json_output_file_path)
+    if mode == CheckModes.UPDATE or (mode == CheckModes.ADD and not canon_data):
+        canon_data = result_data
+        logger.info(
+            "[%s] Canon %s!",
+            check_id,
+            "updated" if mode == CheckModes.UPDATE else "added",
+        )
         return True
-    with open(json_canon_file_path, mode="w", encoding="utf-8") as json_file:
-        json_file.write(f"{json.dumps(canon_data, indent=4)}\n")
+    with open(
+        json_canon_file_path := str(output_dir / f"{safe_name}.canon.json"),
+        mode="w",
+        encoding="utf-8",
+    ) as json_file:
+        json.dump(canon_data, json_file, indent=4)
 
     if result_data is None or len(result_data) == 0:
-        logger.error("%s: No data returned!", check_file_name)
+        logger.error("[%s] No data returned!", check_id)
     elif len(canon_data) != len(result_data):
-        logger.error("%s: Data length mismatch!", check_file_name)
+        logger.error("[%s] Data length mismatch!", check_id)
     else:
-        logger.error("%s: Data mismatch!", check_file_name)
+        logger.error("[%s] Data mismatch!", check_id)
 
     logger.error(
         execute(
@@ -211,34 +249,54 @@ def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
 
 
 def process_check_output(
-    site: Site, host_name: str, output_dir: Path, update_mode: bool, apply_regexps: bool
+    site: Site,
+    host_name: str,
+    output_dir: Path,
+    mode: CheckModes = CheckModes.DEFAULT,
+    apply_regexps: bool = True,
 ) -> bool:
     """Process the check output and either dump or compare it."""
-    passed = True if update_mode else None
+    passed = True if mode == CheckModes.UPDATE else None
     logger.info('> Processing agent host "%s"...', host_name)
-    check_results = get_check_results(site, host_name)
+
+    if os.path.exists(f"{RESPONSE_DIR}/{host_name}.json"):
+        with open(
+            f"{RESPONSE_DIR}/{host_name}.json",
+            mode="r",
+            encoding="utf-8",
+        ) as json_file:
+            check_canons = json.load(json_file)
+    else:
+        check_canons = {}
+
+    check_results = {
+        _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
+    }
     for check_id in sorted(check_results):
         logger.debug('> Processing check id "%s"...', check_id)
-        check_result = check_results[check_id]
-        check_host_name = check_id.split(":", 1)[0]
-        check_display_name = check_result.get("display_name", check_id.split(":", 1)[-1]).replace(
-            f"_{site.id}_", "_SITE_"
-        )
-        check_safe_name = check_display_name.replace("$", "_").replace(" ", "_").replace("/", "#")
-        check_file_name = f"{check_host_name}.{check_safe_name}"
+        check_canon = check_canons.get(check_id, {})
+        check_result = check_results.get(check_id, {})
 
         logger.debug('> Verifying check id "%s"...', check_id)
         if _verify_check_result(
-            check_file_name,
-            check_result.get("extensions", {}),
+            check_id,
+            check_canon,
+            check_result,
             output_dir,
-            update_mode,
+            mode,
             apply_regexps,
         ):
             if passed is None:
                 passed = True
             continue
         passed = False
+    if mode != CheckModes.DEFAULT:
+        with open(
+            f"{RESPONSE_DIR}/{host_name}.json",
+            mode="w",
+            encoding="utf-8",
+        ) as json_file:
+            json.dump(check_results, json_file, indent=4)
 
     return passed is True
 
@@ -290,10 +348,11 @@ def setup_host(site: Site, host_name: str) -> Iterator:
             ),
         )
 
-    yield
-
-    logger.info('Deleting host "%s"...', host_name)
-    site.openapi.delete_host(host_name)
+    try:
+        yield
+    finally:
+        logger.info('Deleting host "%s"...', host_name)
+        site.openapi.delete_host(host_name)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:

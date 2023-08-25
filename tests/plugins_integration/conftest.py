@@ -11,8 +11,7 @@ import pytest
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import execute
 
-from tests.plugins_integration import constants
-from tests.plugins_integration.checks import cleanup_hosts, get_host_names, setup_hosts
+from tests.plugins_integration import checks
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,13 @@ def pytest_addoption(parser):
         "--update-checks",
         action="store_true",
         default=False,
-        help="Store checks-output files to be used as static references",
+        help="Store updated check output as static references",
+    )
+    parser.addoption(
+        "--add-checks",
+        action="store_true",
+        default=False,
+        help="Store added check output as static references",
     )
     parser.addoption(
         "--skip-cleanup",
@@ -59,13 +64,11 @@ def pytest_addoption(parser):
     parser.addoption(
         "--host-names",
         action="store",
-        default="",
         help="Host name allow list",
     )
     parser.addoption(
         "--check-names",
         action="store",
-        default="",
         help="Check name allow list",
     )
     parser.addoption(
@@ -83,25 +86,35 @@ def pytest_addoption(parser):
         action="store",
         help="Response dir path",
     )
+    parser.addoption(
+        "--dump-types",
+        action="store",
+        help='Selected dump types to process (default: "agent,snmp")',
+    )
 
 
 def pytest_configure(config):
     # parse options that control the test execution
     if data_dir := config.getoption(name="--data-dir"):
-        constants.DATA_DIR = data_dir
-        constants.DUMP_DIR = f"{data_dir}/dumps"
-        constants.RESPONSE_DIR = f"{data_dir}/responses"
-    logger.info("DATA_DIR=%s", constants.DATA_DIR)
+        checks.DATA_DIR = data_dir
+        checks.DUMP_DIR = f"{data_dir}/dumps"
+        checks.RESPONSE_DIR = f"{data_dir}/responses"
+    logger.info("DATA_DIR=%s", checks.DATA_DIR)
     if dump_dir := config.getoption(name="--dump-dir"):
-        constants.DUMP_DIR = dump_dir
-    logger.info("DUMP_DIR=%s", constants.DUMP_DIR)
+        checks.DUMP_DIR = dump_dir
+    logger.info("DUMP_DIR=%s", checks.DUMP_DIR)
     if response_dir := config.getoption(name="--response-dir"):
-        constants.RESPONSE_DIR = response_dir
-    logger.info("RESPONSE_DIR=%s", constants.RESPONSE_DIR)
+        checks.RESPONSE_DIR = response_dir
+    logger.info("RESPONSE_DIR=%s", checks.RESPONSE_DIR)
     if host_names := config.getoption(name="--host-names"):
-        constants.HOST_NAMES = host_names.split(",")
+        checks.HOST_NAMES = host_names.split(",")
+    logger.info("HOST_NAMES=%s", ",".join(checks.HOST_NAMES) if checks.HOST_NAMES else "*")
     if check_names := config.getoption(name="--check-names"):
-        constants.CHECK_NAMES = check_names.split(",")
+        checks.CHECK_NAMES = check_names.split(",")
+    logger.info("CHECK_NAMES=%s", ",".join(checks.CHECK_NAMES) if checks.CHECK_NAMES else "*")
+    if dump_types := config.getoption(name="--dump-types"):
+        checks.DUMP_TYPES = dump_types.split(",")
+    logger.info("DUMP_TYPES=%s", ",".join(checks.DUMP_TYPES) if checks.DUMP_TYPES else "*")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -113,11 +126,6 @@ def pytest_collection_modifyitems(config, items):
         chunk_size = config.getoption(name="--chunk-size")
         items[:] = items[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
     print(f"selected {len(items)} items")
-    # parse additional options that control the test execution
-    if config.getoption(name="--host-names"):
-        constants.HOST_NAMES = config.getoption(name="--host-names").split(",")
-    if config.getoption(name="--check-names"):
-        constants.CHECK_NAMES = config.getoption(name="--check-names").split(",")
 
 
 @pytest.fixture(name="test_site", scope="session")
@@ -133,14 +141,14 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         assert rc == 0
 
         logger.info("Injecting agent-output...")
-        for dump_name in get_host_names():
+        for dump_name in checks.get_host_names():
             assert (
                 execute(
                     [
                         "sudo",
                         "cp",
                         "-f",
-                        f"{constants.DUMP_DIR}/{dump_name}",
+                        f"{checks.DUMP_DIR}/{dump_name}",
                         f"{walk_path}/{dump_name}"
                         if re.search(r"\bsnmp\b", dump_name)
                         else f"{dump_path}/{dump_name}",
@@ -149,7 +157,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
                 == 0
             )
 
-        for dump_type in constants.DUMP_TYPES:
+        for dump_type in checks.DUMP_TYPES:
             host_folder = f"/{dump_type}"
             if site.openapi.get_folder(host_folder):
                 logger.info('Host folder "%s" already exists!', host_folder)
@@ -179,7 +187,7 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     logger.info("Getting host names...")
     chunk_index = pytestconfig.getoption(name="--chunk-index")
     chunk_size = pytestconfig.getoption(name="--chunk-size")
-    host_names = get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
-    setup_hosts(test_site, host_names)
+    host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
+    checks.setup_hosts(test_site, host_names)
     yield
-    cleanup_hosts(test_site, host_names)
+    checks.cleanup_hosts(test_site, host_names)

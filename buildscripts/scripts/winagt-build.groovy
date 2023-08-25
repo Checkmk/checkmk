@@ -31,9 +31,12 @@ def main() {
                 PASSWORD: WIN_SIGN_PASSWORD,
             )
         }
-        windows.build(
-            TARGET: 'detach',
-        )
+
+        stage("detach") {
+            dir("agents\\wnx"){
+                bat "run.cmd --detach"
+            }
+        }
 
     }
 }

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
-import json
 import logging
 import os
 import subprocess
@@ -71,30 +70,33 @@ class BaseVersions:
     ]
 
 
-def get_host_data(site: Site, hostname: str) -> dict:
-    """Return dict with key=service and value=status for all services in the given site and host."""
-    web = CMKWebSession(site)
-    web.login()
-    raw_data = json.loads(
-        web.get(
-            f"view.py?host={hostname}&output_format=json_export&site={site.id}&view_name=host"
-        ).content
-    )
-    data = {}
-    for item in raw_data[1:]:
-        data[item[1]] = item[0]
-    return data
+def get_host_services(site: Site, hostname: str, pending: bool = False) -> dict:
+    """Return dict with key=service and value=status for all services in the given site and host.
+
+    If pending=True, return the pending services only.
+    """
+    services = {}
+    for service in site.openapi.get_host_services(hostname, columns=["state"], pending=pending):
+        services[service["extensions"]["description"]] = service["extensions"]["state"]
+    return services
 
 
 def get_services_with_status(
-    host_data: dict, service_status: str, skipped_services: list | tuple = ()
+    host_data: dict, service_status: int, skipped_services: list | tuple = ()
 ) -> list:
     """Return a list of services in the given status which are not in the 'skipped' list."""
-    service_list = []
+    services_list = []
     for service in host_data:
         if host_data[service] == service_status and service not in skipped_services:
-            service_list.append(service)
-    return service_list
+            services_list.append(service)
+
+    logger.debug(
+        "%s service(s) found in state %s:\n%s",
+        len(services_list),
+        service_status,
+        pformat(services_list),
+    )
+    return services_list
 
 
 def _run_as_site_user(
@@ -286,23 +288,24 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bo
 
 def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
     """Reschedule services in the test-site for a given host until no pending services are found."""
-
     count = 0
-    base_data_host = get_host_data(site, hostname)
+    pending_services = get_host_services(site, hostname, pending=True)
 
     # reschedule services
     site.schedule_check(hostname, "Check_MK", 0)
 
-    while len(get_services_with_status(base_data_host, "PEND")) > 0 and count < max_count:
+    while len(pending_services) > 0 and count < max_count:
         logger.info(
             "The following services in %s host were found with pending status:\n%s.\n"
             "Rescheduling checks...",
             hostname,
-            pformat(get_services_with_status(base_data_host, "PEND")),
+            pformat(pending_services),
         )
         site.schedule_check(hostname, "Check_MK", 0)
-        base_data_host = get_host_data(site, hostname)
+        pending_services = get_host_services(site, hostname, pending=True)
         count += 1
+
+    assert len(pending_services) == 0
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
@@ -317,33 +320,3 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
-
-
-def logger_services_ok(version: str, services: list, hostname: str) -> None:
-    logger.debug(
-        "%s service(s) found in `OK` status in %s host in %s-version:\n%s",
-        len(services),
-        hostname,
-        version,
-        pformat(services),
-    )
-
-
-def logger_services_warn(version: str, services: list, hostname: str) -> None:
-    logger.warning(
-        "%s service(s) found in `WARN` status in %s host in %s-version:\n%s",
-        len(services),
-        hostname,
-        version,
-        pformat(services),
-    )
-
-
-def logger_services_crit(version: str, services: list, hostname: str) -> None:
-    logger.error(
-        "%s service(s) found in `CRIT` status in %s host in %s-version:\n%s",
-        len(services),
-        hostname,
-        version,
-        pformat(services),
-    )

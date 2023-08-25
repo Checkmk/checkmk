@@ -18,12 +18,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
 from .conftest import (
-    get_host_data,
+    get_host_services,
     get_services_with_status,
     get_site_status,
-    logger_services_crit,
-    logger_services_ok,
-    logger_services_warn,
     reschedule_services,
     update_config,
     update_site,
@@ -86,15 +83,12 @@ def test_update(  # pylint: disable=too-many-branches
 
     base_data = {}
     base_ok_services = {}
-    base_pend_services = {}
-    base_warn_services = {}
-    base_crit_services = {}
 
     for hostname in hostnames:
         reschedule_services(test_site, hostname)
 
         # get baseline monitoring data for each host
-        base_data[hostname] = get_host_data(test_site, hostname)
+        base_data[hostname] = get_host_services(test_site, hostname)
 
         # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
         #  after the update. See CMK-13774.
@@ -104,19 +98,13 @@ def test_update(  # pylint: disable=too-many-branches
                 if postfix_service in base_data[hostname]:
                     base_data[hostname].pop(postfix_service)
 
-        base_ok_services[hostname] = get_services_with_status(base_data[hostname], "OK")
-        base_pend_services[hostname] = get_services_with_status(base_data[hostname], "PEND")
-        base_warn_services[hostname] = get_services_with_status(base_data[hostname], "WARN")
-        base_crit_services[hostname] = get_services_with_status(base_data[hostname], "CRIT")
+        base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
+        # used in debugging mode
+        _ = get_services_with_status(base_data[hostname], 1)  # Warn
+        _ = get_services_with_status(base_data[hostname], 2)  # Crit
+        _ = get_services_with_status(base_data[hostname], 3)  # Unknown
 
         assert len(base_ok_services[hostname]) > 0
-        assert len(base_pend_services[hostname]) == 0
-
-        logger_services_ok("base", base_ok_services[hostname], hostname)
-        if len(base_warn_services[hostname]) > 0:
-            logger_services_warn("base", base_warn_services[hostname], hostname)
-        if len(base_crit_services[hostname]) > 0:
-            logger_services_crit("base", base_crit_services[hostname], hostname)
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -146,28 +134,18 @@ def test_update(  # pylint: disable=too-many-branches
 
     target_data = {}
     target_ok_services = {}
-    target_pend_services = {}
-    target_warn_services = {}
-    target_crit_services = {}
 
     for hostname in hostnames:
         reschedule_services(target_site, hostname)
 
         # get update monitoring data
-        target_data[hostname] = get_host_data(target_site, hostname)
+        target_data[hostname] = get_host_services(target_site, hostname)
 
-        target_ok_services[hostname] = get_services_with_status(target_data[hostname], "OK")
-        target_pend_services[hostname] = get_services_with_status(target_data[hostname], "PEND")
-        target_warn_services[hostname] = get_services_with_status(target_data[hostname], "WARN")
-        target_crit_services[hostname] = get_services_with_status(target_data[hostname], "CRIT")
-
-        assert len(target_pend_services[hostname]) == 0
-
-        logger_services_ok("target", target_ok_services[hostname], hostname)
-        if len(target_warn_services[hostname]) > 0:
-            logger_services_warn("target", target_warn_services[hostname], hostname)
-        if len(target_crit_services[hostname]) > 0:
-            logger_services_crit("target", target_crit_services[hostname], hostname)
+        target_ok_services[hostname] = get_services_with_status(target_data[hostname], 0)
+        # used in debugging mode
+        _ = get_services_with_status(target_data[hostname], 1)  # Warn
+        _ = get_services_with_status(target_data[hostname], 2)  # Crit
+        _ = get_services_with_status(target_data[hostname], 3)  # Unknown
 
         # TODO: 'Nullmailer Queue' service is not found after the update. See CMK-14150.
         nullmailer_service = "Nullmailer Queue"

@@ -180,7 +180,9 @@ checks = {
             [
                 (
                     1,
-                    "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).",
+                    "Received multiple filestats per single file service. Please check agent "
+                    "plugin configuration (mk_filestats). For example, if there are multiple "
+                    "non-utf-8 filenames, then they may be mapped to the same file service.",
                     [],
                 ),
                 (0, "Size: 3.71 KiB", [("size", 3804)]),

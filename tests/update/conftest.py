@@ -36,6 +36,12 @@ def pytest_addoption(parser):
         default=False,
         help="Disable interactive site creation and update. Use CLI instead.",
     )
+    parser.addoption(
+        "--latest-base-version",
+        action="store_true",
+        default=False,
+        help="Use the latest base-version only.",
+    )
 
 
 @dataclasses.dataclass
@@ -259,6 +265,11 @@ def version_supported(version: str) -> bool:
 def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
+    if (
+        request.config.getoption(name="--latest-base-version")
+        and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
+    ):
+        pytest.skip("Only latest base-version selected")
     interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
     logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
     test_site = _get_site(base_version, interactive=not interactive_mode_off)

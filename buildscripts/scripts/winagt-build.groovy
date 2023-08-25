@@ -31,6 +31,10 @@ def main() {
                 PASSWORD: WIN_SIGN_PASSWORD,
             )
         }
+        windows.build(
+            TARGET: 'detach',
+        )
+
     }
 }
 

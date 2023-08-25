@@ -151,11 +151,16 @@ checks = {
         ('multiple-stats-per-single-service',
             {},
             [
-                (1, 'Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).', []),
+                (
+                    1,
+                    'Received multiple filestats per single file service. Please check agent '
+                    'plugin configuration (mk_filestats). For example, if there are multiple '
+                    'non-utf-8 filenames, then they may be mapped to the same file service.',
+                    [],
+                ),
                 (0, 'Size: 3.71 kB', [('size', 3804)]),
                 (0, 'Age: 14 h', []),
             ]
         )
     ]
-
 }

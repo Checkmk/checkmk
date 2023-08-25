@@ -31,7 +31,7 @@ for /f %%i in ('where make') do set make_exe=%%i
 if "!make_exe!" == "" powershell Write-Host "make not found, something is really bad" -Foreground Red && exit /b 57
 )
 powershell Write-Host "[+] make" -Foreground Green
- 
+
 :: read version from the C++ agent
 set /p wnx_version_raw=<src\common\wnx_version.h
 :: parse version
@@ -60,8 +60,10 @@ set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
 set SKIP_MINOR_BINARIES=YES
 set build_dir=.\build
+set usbip_exe=c:\common\usbip-win-0.3.6-dev\usbip.exe
 
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
+
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
@@ -83,14 +85,21 @@ powershell Write-Host "Building MSI..." -Foreground White
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
-if not "%2" == "" (
+:: SIGNING of binaries
+if "%2" == "" goto build_msi
 powershell Write-Host "Signing Executables" -Foreground White
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
-)
-
+:: Ensure target win32 is build before signing
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
-if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
+if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 11
+call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
+
+:: BUILD OF MSI
+:build_msi
+if "%2" == "" del %build_dir%\install\Release\check_mk_service.msi
+%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 
 :: Patch Version Phase: Patch version value direct in the msi file
 :: set version:
@@ -102,52 +111,44 @@ powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
 @echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 @rem check result
-if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
-
-goto end
-:: Unit Tests Phase: post processing/build special modules using make
-:: this phase is skipped, there is no need to inculde unit tests in the build script
-powershell Write-Host "starting unit tests" -Foreground Cyan 
-
-pushd %REMOTE_MACHINE%
-watest
-if not %errorlevel% == 0 goto error
-popd
-powershell Write-Host "Unit test SUCCESS" -Foreground Green
-
-:error
-popd
-powershell Write-Host "Unit test failed" -Foreground Red 
-powershell Write-Host "Killing msi in artefacts" -Foreground Red 
-call %cur_dir%\clean_artefacts.cmd 
-exit 100
-
-:end
+if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red & call :halt 34
 
 @rem Deploy Phase: post processing/build special modules using make
 copy install\resources\check_mk.user.yml %REMOTE_MACHINE%
-pushd %REMOTE_MACHINE%
-
-copy check_mk_service.msi check_mk_agent.msi || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
-copy check_mk_service32.exe check_mk_agent.exe || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34
-copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
+copy %build_dir%\install\Release\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent.msi /y || ( powershell Write-Host "Failed to copy msi" -Foreground Red & call :halt 33 )
+copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %REMOTE_MACHINE%\check_mk_agent.exe /Y || ( powershell Write-Host "Failed to create 64 bit agent" -Foreground Red & call :halt 35 )
+copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %REMOTE_MACHINE%\check_mk_agent-64.exe /Y || ( powershell Write-Host "Failed to create 32 bit agent" -Foreground Red & call :halt 34 )
 powershell Write-Host "File Deployment succeeded" -Foreground Green
-
-popd
 
 copy %build_dir%\watest\Win32\Release\watest32.exe %REMOTE_MACHINE% /y	
 copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y	
 
 
 :: Additional Phase: post processing/build special modules using make
-!make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
-if not "%2" == "" (
+!make_exe! msi_patch || ( powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set & call :halt 36 )
+if "%2" == "" goto skip_msi_signing
 powershell Write-Host "Signing MSI" -Foreground White
 copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi
 :: obfuscate
 python ..\..\cmk\utils\obfuscate.py -obfuscate %arte%\check_mk_agent_unsigned.msi %arte%\check_mk_agent_unsigned.msi
-@call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
-)
+@call scripts\sign_code.cmd %arte%\check_mk_agent.msi
+if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red & call :halt 45
+call scripts\detach_usb_token.cmd %usbip_exe%
+:skip_msi_signing
+exit /b 0
 
+:: Sets the errorlevel and stops the batch immediately
+:halt
+call scripts\detach_usb_token.cmd %usbip_exe%
+call :__SetErrorLevel %1
+call :__ErrorExit 2> nul
+goto :eof
 
+:__ErrorExit
+rem Creates a syntax error, stops immediately
+()
+goto :eof
 
+:__SetErrorLevel
+exit /b %time:~-2%
+goto :eof

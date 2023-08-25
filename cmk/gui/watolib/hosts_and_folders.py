@@ -859,13 +859,17 @@ def update_metadata(
 
     """
     # Mypy can not help here with the dynamic key
-    attributes_updated = HostAttributes({"meta_data": {}, **attributes})  # type: ignore[misc]
+    attributes_updated = HostAttributes({"meta_data": {}, **attributes})
 
     now_ = time.time()
     last_update = attributes_updated["meta_data"].get("updated_at", None)
     # These attributes are only set if they don't exist or were set to None before.
+    # TODO: deep_update() is too general and as a consequence unusable with TypedDicts,
+    # at least from a typing perspective. We should probably nuke deep_update() and use
+    # a specialized version for HostAttributes here. Or simply do things directly by hand,
+    # this might even be clearer...
     deep_update(
-        attributes_updated,
+        attributes_updated,  # type: ignore[arg-type]
         {
             "meta_data": {
                 "created_at": last_update if last_update is not None else now_,  # fix empty field
@@ -877,7 +881,7 @@ def update_metadata(
     )
 
     # Intentionally overwrite updated_at every time
-    deep_update(attributes_updated, {"meta_data": {"updated_at": now_}}, overwrite=True)
+    deep_update(attributes_updated, {"meta_data": {"updated_at": now_}}, overwrite=True)  # type: ignore[arg-type]
 
     return attributes_updated
 

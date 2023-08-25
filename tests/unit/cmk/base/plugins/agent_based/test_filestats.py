@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+import pytest
 
+from cmk.base.legacy_checks.filestats import (
+    check_filestats,
+    check_filestats_single,
+    discover_filestats,
+    discover_filestats_single,
+    parse_filestats,
+)
 
-checkname = "filestats"
-
-info = [
+STRING_TABLE = [
     ["[[[file_stats aix agent files]]]"],
     [
         "{'stat_status': 'ok', 'age': 230276, 'mtime': 1544196317,"
@@ -77,44 +81,51 @@ info = [
     ],
 ]
 
-discovery = {
-    "": [
+
+def test_discovery() -> None:
+    section = parse_filestats(STRING_TABLE)
+    assert list(discover_filestats(section)) == [
         ("aix agent files", {}),
         ("$ection with funny characters %s &! (count files in ~)", {}),
         ("log files", {}),
-    ],
-    "single": [
+    ]
+
+
+def test_discovery_single() -> None:
+    section = parse_filestats(STRING_TABLE)
+    assert list(discover_filestats_single(section)) == [
         ("file1.txt", {}),
         ("file2.txt", {}),
         ("file3.txt", {}),
         ("multiple-stats-per-single-service", {}),
-    ],
-}
+    ]
 
-checks = {
-    "": [
+
+@pytest.mark.parametrize(
+    "item, params, expected",
+    [
         (
             "aix agent files",
             {},
             [
-                (0, "Files in total: 6", [("file_count", 6, None, None, None, None)]),
+                (0, "Files in total: 6", [("file_count", 6, None, None)]),
                 (0, "Smallest: 1.12 KiB", []),
                 (0, "Largest: 12.6 KiB", []),
                 (0, "Newest: 2 days 15 hours", []),
                 (0, "Oldest: 217 days 0 hours", []),
-                (0, "\n", []),
+                (0, "\n"),
             ],
         ),
         (
             "aix agent files",
             {"maxsize_largest": (12 * 1024, 13 * 1024), "minage_newest": (3600 * 72, 3600 * 96)},
             [
-                (0, "Files in total: 6", [("file_count", 6, None, None, None, None)]),
+                (0, "Files in total: 6", [("file_count", 6, None, None)]),
                 (0, "Smallest: 1.12 KiB", []),
                 (1, "Largest: 12.6 KiB (warn/crit at 12.0 KiB/13.0 KiB)", []),
                 (2, "Newest: 2 days 15 hours (warn/crit below 3 days 0 hours/4 days 0 hours)", []),
                 (0, "Oldest: 217 days 0 hours", []),
-                (0, "\n", []),
+                (0, "\n"),
             ],
         ),
         (
@@ -124,7 +135,7 @@ checks = {
                 (
                     2,
                     "Files in total: 35819 (warn/crit at 5/10)",
-                    [("file_count", 35819, 5, 10, None, None)],
+                    [("file_count", 35819, 5, 10)],
                 ),
             ],
         ),
@@ -132,21 +143,30 @@ checks = {
             "log files",
             {},
             [
-                (0, "Files in total: 17", [("file_count", 17, None, None, None, None)]),
+                (0, "Files in total: 17", [("file_count", 17, None, None)]),
                 (0, "Smallest: 0 B", []),
                 (0, "Largest: 2.40 MiB", []),
                 (0, "Newest: 4 minutes 12 seconds", []),
                 (0, "Oldest: 2 years 302 days", []),
-                (0, "\n", []),
+                (0, "\n"),
             ],
         ),
     ],
-    "single": [
+)
+def test_check_regression(item, params, expected):
+    section = parse_filestats(STRING_TABLE)
+    results = list(check_filestats(item, params, section))
+    assert results == expected
+
+
+@pytest.mark.parametrize(
+    "item, params, expected",
+    [
         (
             "file1.txt",
             {},
             [
-                (0, "Size: 3.71 KiB", [("size", 3804)]),
+                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
                 (0, "Age: 14 hours 34 minutes", []),
             ],
         ),
@@ -166,7 +186,7 @@ checks = {
             "file3.txt",
             {"min_age": (2 * 60, 1 * 60), "max_age": (3 * 60, 4 * 60)},
             [
-                (0, "Size: 3.71 KiB", [("size", 3804)]),
+                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
                 (
                     2,
                     "Age: 14 hours 34 minutes (warn/crit at 3 minutes 0 seconds/4 minutes 0 seconds)",
@@ -181,11 +201,14 @@ checks = {
                 (
                     1,
                     "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).",
-                    [],
                 ),
-                (0, "Size: 3.71 KiB", [("size", 3804)]),
+                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
                 (0, "Age: 14 hours 34 minutes", []),
             ],
         ),
     ],
-}
+)
+def test_check_single_regression(item, params, expected):
+    section = parse_filestats(STRING_TABLE)
+    results = list(check_filestats_single(item, params, section))
+    assert results == expected

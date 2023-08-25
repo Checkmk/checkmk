@@ -17,6 +17,7 @@ from typing import Any, cast, Literal
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
@@ -1137,6 +1138,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
     show_more_mode: bool = False
 
     show_more_mode = user.show_mode != "default_show_less"
+    is_cse = cmk_version.edition() == cmk_version.Edition.CSE
 
     for topic_id, topic_title in _host_attributes.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
@@ -1162,6 +1164,11 @@ def configure_attributes(  # pylint: disable=too-many-branches
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
+
+            # Hide snmp tag option in CSE. Registration is still needed because
+            # connection test page should still be functional
+            if is_cse and attrname == "tag_snmp_ds":
+                hide_attributes.append(attr.name())
 
             # Determine visibility information if this attribute is not always hidden
             if attr.is_visible(for_what, new):

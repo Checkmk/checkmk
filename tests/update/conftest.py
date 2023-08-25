@@ -13,7 +13,6 @@ from typing import Generator, Optional
 
 import pytest
 
-from tests.testlib import CMKWebSession
 from tests.testlib.agent import (
     agent_controller_daemon,
     clean_agent_controller,
@@ -114,39 +113,6 @@ def _run_as_site_user(
         check=False,
     )
     return completed_process
-
-
-def set_admin_password(site: Site, password: str = "cmk") -> int:
-    """Set the admin password for the given site.
-    Use cmk-passwd if available (or htpasswd otherwise)."""
-    if os.path.exists(f"{site.root}/bin/cmk-passwd"):
-        # recent checkmk versions: cmk-passwd
-        cmd = [f"{site.root}/bin/cmk-passwd", "-i", "cmkadmin"]
-    else:
-        # older checkmk versions: htpasswd
-        cmd = ["/usr/bin/htpasswd", "-i", f"{site.root}/etc/htpasswd", "cmkadmin"]
-    return _run_as_site_user(site, cmd, input_value=password).returncode
-
-
-def verify_admin_password(site: Site) -> None:
-    """Verify that logging in to the site is possible and reset the admin password otherwise."""
-    web = CMKWebSession(site)
-    try:
-        web.login()
-    except AssertionError:
-        assert set_admin_password(site) == 0, "Could not set admin password!"
-        logger.warning(
-            "Had to reset the admin password after installing %s!", site.version.version_directory()
-        )
-        site.stop()
-        site.start()
-
-
-def get_omd_version(site: Site, full: bool = False) -> str:
-    """Get the omd version for the given site."""
-    cmd = ["/usr/bin/omd", "version", site.id]
-    version = _run_as_site_user(site, cmd).stdout.split("\n", 1)[0]
-    return version if full else version.rsplit(" ", 1)[-1]
 
 
 def get_omd_status(site: Site) -> dict[str, str]:

@@ -25,7 +25,6 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
@@ -51,6 +50,7 @@ from cmk.utils.store.host_storage import (
     StorageFormat,
 )
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult
 
@@ -85,6 +85,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
     HostAttributes,
     HostContactGroupSpec,
+    MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import (
@@ -832,20 +833,20 @@ def _folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
 
 def update_metadata(
     attributes: HostAttributes,
-    created_by: str | None = None,
+    created_by: UserId | None = None,
 ) -> HostAttributes:
     """Update meta_data timestamps and set created_by if provided.
 
     Args:
-        attributes (dict): The attributes dictionary
-        created_by (str): The user or script which created this object.
+        attributes: The attributes dictionary
+        created_by: The user or script which created this object.
 
     Returns:
-        The modified 'attributes' dictionary. It is actually modified in-place.
+        The updated 'attributes' dictionary.
 
     Examples:
 
-        >>> res = update_metadata({'meta_data': {'updated_at': 123}}, created_by='Dog')
+        >>> res = update_metadata(HostAttributes(meta_data=MetaData(updated_at=123)), created_by=UserId('Dog'))
         >>> assert res['meta_data']['created_by'] == 'Dog'
         >>> assert res['meta_data']['created_at'] == 123
         >>> assert 123 < res['meta_data']['updated_at'] <= time.time()
@@ -858,32 +859,15 @@ def update_metadata(
             Key 'updated_at' in 'meta_data' added for use in the REST API.
 
     """
-    # Mypy can not help here with the dynamic key
-    attributes_updated = HostAttributes({"meta_data": {}, **attributes})
-
+    attributes = attributes.copy()
+    meta_data = attributes.setdefault("meta_data", MetaData())
     now_ = time.time()
-    last_update = attributes_updated["meta_data"].get("updated_at", None)
-    # These attributes are only set if they don't exist or were set to None before.
-    # TODO: deep_update() is too general and as a consequence unusable with TypedDicts,
-    # at least from a typing perspective. We should probably nuke deep_update() and use
-    # a specialized version for HostAttributes here. Or simply do things directly by hand,
-    # this might even be clearer...
-    deep_update(
-        attributes_updated,  # type: ignore[arg-type]
-        {
-            "meta_data": {
-                "created_at": last_update if last_update is not None else now_,  # fix empty field
-                "updated_at": now_,
-                "created_by": created_by,
-            }
-        },
-        overwrite=False,
-    )
-
-    # Intentionally overwrite updated_at every time
-    deep_update(attributes_updated, {"meta_data": {"updated_at": now_}}, overwrite=True)  # type: ignore[arg-type]
-
-    return attributes_updated
+    meta_data.setdefault("created_at", meta_data.get("updated_at", now_))
+    # NOTE: Something here is screwed up regarding None... :-/
+    # if created_by is not None:
+    meta_data.setdefault("created_by", created_by)  # type: ignore[typeddict-item]
+    meta_data["updated_at"] = now_
+    return attributes
 
 
 def get_wato_redis_client(tree: FolderTree) -> _RedisHelper:

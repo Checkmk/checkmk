@@ -871,6 +871,13 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
     )
 
     filter_nagios_flag_with_register(
+        ident="host_is_flapping",
+        title=_l("Host Flapping"),
+        sort_index=134,
+        info="host",
+    )
+
+    filter_nagios_flag_with_register(
         filter_registry=filter_registry,
         ident="service_acknowledged",
         title=_l("Problem acknowledged"),

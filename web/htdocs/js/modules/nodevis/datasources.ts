@@ -21,9 +21,20 @@
 //#   +--------------------------------------------------------------------+
 
 import * as d3 from "d3";
-import {DatasourceCallback} from "nodevis/type_defs";
+import {TopologyFrontendConfig} from "nodevis/main";
+import {DatasourceCallback, SerializedNodeChunk} from "nodevis/type_defs";
+import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";
+
+interface AjaxFetchTopologyData {
+    topology_meshes: Record<any, any>;
+    topology_chunks: Record<string, SerializedNodeChunk>;
+    headline: string;
+    errors: string[];
+    frontend_configuration: TopologyFrontendConfig;
+    query_hash?: string;
+}
 
 // Takes care of all available datasources
 // Offers register and get methods for datasource
@@ -64,7 +75,7 @@ export class DatasourceManager {
         }
     }
 
-    get_datasource(datasource_id): AbstractDatasource {
+    get_datasource(datasource_id: string): AbstractDatasource {
         return this.datasources[datasource_id];
     }
 
@@ -94,7 +105,7 @@ export class AbstractDatasource extends Object {
         this._new_data_subscribers.push(func);
     }
 
-    unsubscribe_new_data(func): void {
+    unsubscribe_new_data(func: number): void {
         this._new_data_subscribers.splice(func, 1);
     }
 
@@ -102,7 +113,7 @@ export class AbstractDatasource extends Object {
         this._fetch();
     }
 
-    set_update_interval(value): void {
+    set_update_interval(value: number): void {
         this._update_interval = value;
     }
 
@@ -118,7 +129,7 @@ export class AbstractDatasource extends Object {
         this._enabled = false;
     }
 
-    fetch(url, params: BodyInit | null = null): void {
+    fetch(url: string, params: BodyInit | null = null): void {
         this._fetch_start = Math.floor(new Date().getTime() / 1000);
         this._fetch_url = url;
         this._fetch_params = params;
@@ -134,14 +145,18 @@ export class AbstractDatasource extends Object {
             headers: {
                 "Content-type": "application/x-www-form-urlencoded",
             },
-        }).then(json_data => this._set_data(json_data));
+        }).then(json_data =>
+            this._set_data(
+                json_data as unknown as CMKAjaxReponse<AjaxFetchTopologyData>
+            )
+        );
     }
 
-    get_data(): {[name: string]: any} {
+    get_data(): Record<string, any> {
         return this._data;
     }
 
-    _set_data(new_data): void {
+    _set_data(new_data: CMKAjaxReponse<AjaxFetchTopologyData>): void {
         this._last_update = Math.floor(new Date().getTime() / 1000);
         this._fetch_latency = this._last_update - this._fetch_start;
 
@@ -167,7 +182,10 @@ export class AggregationsDatasource extends AbstractDatasource {
         return "bi_aggregations";
     }
 
-    fetch_aggregations(list_of_aggregations, use_layout_id): void {
+    fetch_aggregations(
+        list_of_aggregations: string[],
+        use_layout_id: string
+    ): void {
         let url =
             "ajax_fetch_aggregation_data.py?aggregations=" +
             JSON.stringify(list_of_aggregations);
@@ -185,7 +203,7 @@ export class TopologyDatasource extends AbstractDatasource {
         return "topology";
     }
 
-    fetch_hosts(fetch_params) {
+    fetch_hosts(fetch_params: BodyInit | null) {
         this.fetch("ajax_fetch_topology.py", fetch_params);
     }
 }

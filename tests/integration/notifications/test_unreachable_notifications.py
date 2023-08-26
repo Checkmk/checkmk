@@ -12,6 +12,8 @@ import pytest
 from tests.testlib import wait_until, WatchLog
 from tests.testlib.site import Site
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 STATE_UP = 0
 STATE_DOWN = 1
 STATE_UNREACHABLE = 2
@@ -57,10 +59,10 @@ def unreachable_enabled_fixture(
         else:
             notification_options = "d,r,f,s"
 
-        for rule_spec in site.openapi.get_rules("extra_host_conf:notification_options"):
+        for rule_spec in site.openapi.get_rules(RuleGroup.ExtraHostConf("notification_options")):
             site.openapi.delete_rule(rule_spec["id"])
         rule_id = site.openapi.create_rule(
-            ruleset_name="extra_host_conf:notification_options",
+            ruleset_name=RuleGroup.ExtraHostConf("notification_options"),
             value=notification_options,
         )
 

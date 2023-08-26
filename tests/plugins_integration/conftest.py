@@ -14,7 +14,7 @@ from tests.testlib.utils import execute
 from tests.plugins_integration import constants
 from tests.plugins_integration.checks import cleanup_hosts, get_host_names, setup_hosts
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -89,16 +89,16 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in get_site_factory(prefix="plugins_", update_from_git=False).get_test_site():
+    for site in get_site_factory(prefix="plugins_").get_test_site():
         dump_path = site.path(f"var/check_mk/{constants.DUMP_DIR}")
         # NOTE: the snmpwalks folder cannot be changed!
         walk_path = site.path("var/check_mk/snmpwalks")
         # create dump folder in the test site
-        LOGGER.info('Creating folder "%s"...', dump_path)
+        logger.info('Creating folder "%s"...', dump_path)
         rc = site.execute(["mkdir", "-p", dump_path]).wait()
         assert rc == 0
 
-        LOGGER.info("Injecting agent-output...")
+        logger.info("Injecting agent-output...")
         for file_name in os.listdir(constants.DUMP_DIR_PATH):
             assert (
                 execute(
@@ -118,31 +118,31 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         for dump_type in constants.DUMP_TYPES:
             host_folder = f"/{dump_type}"
             if site.openapi.get_folder(host_folder):
-                LOGGER.info('Host folder "%s" already exists!', host_folder)
+                logger.info('Host folder "%s" already exists!', host_folder)
             else:
-                LOGGER.info('Creating host folder "%s"...', host_folder)
+                logger.info('Creating host folder "%s"...', host_folder)
                 site.openapi.create_folder(host_folder)
             ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
-            LOGGER.info('Creating rule "%s"...', ruleset_name)
+            logger.info('Creating rule "%s"...', ruleset_name)
             site.openapi.create_rule(
                 ruleset_name=ruleset_name,
                 value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
                 folder=host_folder,
             )
-            LOGGER.info('Rule "%s" created!', ruleset_name)
+            logger.info('Rule "%s" created!', ruleset_name)
 
         yield site
 
         if os.getenv("CLEANUP", "1") == "1" and not request.config.getoption("--skip-cleanup"):
             # cleanup existing agent-output folder in the test site
-            LOGGER.info('Removing folder "%s"...', dump_path)
+            logger.info('Removing folder "%s"...', dump_path)
             assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")
 def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     """Setup multiple test hosts."""
-    LOGGER.info("Getting host names...")
+    logger.info("Getting host names...")
     chunk_index = pytestconfig.getoption(name="--chunk-index")
     chunk_size = pytestconfig.getoption(name="--chunk-size")
     host_names = get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]

@@ -274,8 +274,9 @@ class RegisterTotpSecret(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Register Authenticatior App")
 
-    def __init__(self) -> None:
+    def __init__(self, secret: bytes | None = None) -> None:
         super().__init__("general.manage_2fa")
+        self.secret = secret
 
     def _breadcrumb(self) -> Breadcrumb:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
@@ -298,8 +299,8 @@ class RegisterTotpSecret(ABCUserProfilePage):
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id, lock=True)
 
-        secret = b32decode(request.get_ascii_input_mandatory("_otp"))
-        otp = TOTP(secret, TotpVersion.one)
+        self.secret = b32decode(request.get_ascii_input_mandatory("_otp"))
+        otp = TOTP(self.secret, TotpVersion.one)
 
         vs = self._valuespec()
         provided_otp = vs.from_html_vars("profile")
@@ -308,7 +309,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
             totp_uuid = str(uuid4())
             credentials["totp_credentials"][totp_uuid] = {
                 "credential_id": totp_uuid,
-                "secret": secret,
+                "secret": self.secret,
                 "version": 1,
                 "registered_at": int(time.time()),
                 "alias": "",
@@ -326,8 +327,9 @@ class RegisterTotpSecret(ABCUserProfilePage):
         if not request.is_ssl_request:
             origtarget = "user_two_factor_overview.py"
             raise redirect(origtarget)
-        secret = TOTP.generate_secret()
-        base32_secret = b32encode(secret).decode()
+        if not self.secret:
+            self.secret = TOTP.generate_secret()
+        base32_secret = b32encode(self.secret).decode()
 
         html.begin_form("profile", method="POST")
         html.prevent_password_auto_completion()
@@ -592,7 +594,7 @@ class UserLoginTwoFactor(Page):
         html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
-        make_header(html, _("Two-factor authentication"), Breadcrumb(), javascripts=[])
+        make_header(html, _("Two-factor authentication"), Breadcrumb())
 
         html.open_div(id_="login")
 

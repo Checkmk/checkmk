@@ -16,7 +16,12 @@ import cmk.gui.graphing._utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import HorizontalRule
-from cmk.gui.graphing._utils import hex_color_to_rgb_color, NormalizedPerfData, TranslationInfo
+from cmk.gui.graphing._utils import (
+    AutomaticDict,
+    hex_color_to_rgb_color,
+    NormalizedPerfData,
+    TranslationInfo,
+)
 from cmk.gui.type_defs import Perfdata
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -1066,3 +1071,56 @@ def test_lookup_metric_translations_for_check_command(
         )
         == expected_result
     )
+
+
+def test_automatic_dict_append() -> None:
+    automatic_dict = AutomaticDict(list_identifier="appended")
+    automatic_dict["graph_1"] = {
+        "metrics": [
+            ("some_metric", "line"),
+            ("some_other_metric", "-area"),
+        ],
+    }
+    automatic_dict["graph_2"] = {
+        "metrics": [
+            ("something", "line"),
+        ],
+    }
+    automatic_dict.append(
+        {
+            "metrics": [
+                ("abc", "line"),
+            ],
+        }
+    )
+    automatic_dict.append(
+        {
+            "metrics": [
+                ("xyz", "line"),
+            ],
+        }
+    )
+    automatic_dict.append(
+        {
+            "metrics": [
+                ("xyz", "line"),
+            ],
+        }
+    )
+    assert dict(automatic_dict) == {
+        "appended_0": {
+            "metrics": [("abc", "line")],
+        },
+        "appended_1": {
+            "metrics": [("xyz", "line")],
+        },
+        "graph_1": {
+            "metrics": [
+                ("some_metric", "line"),
+                ("some_other_metric", "-area"),
+            ],
+        },
+        "graph_2": {
+            "metrics": [("something", "line")],
+        },
+    }

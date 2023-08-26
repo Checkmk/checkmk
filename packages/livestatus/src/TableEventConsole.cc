@@ -86,7 +86,7 @@ private:
             // see  isAuthorizedForEventViaContactGroups
             "event_contact_groups"};
         table_->any_column([&](const auto &col) {
-            if (special_columns.find(col->name()) != special_columns.end()) {
+            if (special_columns.contains(col->name())) {
                 column_names.insert(col->name());
             }
             return false;
@@ -94,7 +94,7 @@ private:
         // .. and then we ignore all host-related columns, they are implicitly
         // joined later via ECRow._host later.
         for (const auto &name : column_names) {
-            if (!mk::starts_with(name, "host_")) {
+            if (!name.starts_with("host_")) {
                 os << " " << name;
             }
         }

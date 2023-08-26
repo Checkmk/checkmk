@@ -1,0 +1,13 @@
+Title: Remove deprecated host label "resource_group" for Azure Resource Group hosts
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1692799907
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+As announced in https://checkmk.com/werk/15261, the "resource_group" host label has been replaced with the label "cmk/azure/resource_group".
+Users referencing the old label have to switch to the new one since with this werk, the "resource_group" label will no longer be provided for Azure Resource Group hosts.
+

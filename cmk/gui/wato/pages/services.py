@@ -19,6 +19,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
@@ -1283,7 +1284,7 @@ class DiscoveryPageRenderer:
             url = folder_preserving_link(
                 [
                     ("mode", "edit_ruleset"),
-                    ("varname", "static_checks:" + entry.ruleset_name),
+                    ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
                     ("host", self._host.name()),
                 ]
             )
@@ -1335,9 +1336,9 @@ class DiscoveryPageRenderer:
         if entry.ruleset_name == "logwatch":
             return "logwatch_rules"
         if entry.ruleset_name:
-            return f"checkgroup_parameters:{entry.ruleset_name}"
+            return RuleGroup.CheckgroupParameters(entry.ruleset_name)
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
-            return f"active_checks:{entry.check_plugin_name}"
+            return RuleGroup.ActiveChecks(entry.check_plugin_name)
         return None
 
     @staticmethod

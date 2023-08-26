@@ -1,0 +1,15 @@
+Title: AWS agent handles wafv2 rules with ByteMatchString correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692692673
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When a wafv2 rule with the ByteMatchString was configured the agent would crash. In the debug output a message about an unserializable entry would appear.
+In the AWS UI you can configure a rule with ByteMatchString in any field using "Search string".
+
+This has been fixed now. No action required.
+

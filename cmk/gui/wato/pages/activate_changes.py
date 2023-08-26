@@ -469,7 +469,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
                 # to handle this in a special way because of the SiteChanges file format. Would be
                 # cleaner to transport the text type (like AuditLogStore is doing it).
-                table.cell(_("Change"), HTML(icon_code + change["text"]))
+                table.cell(_("Summary"), HTML(icon_code + change["text"]))
+
+                table.cell(
+                    _("Details"), HTML(diff_text if (diff_text := change.get("diff_text")) else "")
+                )
 
                 table.cell(_("Affected sites"), css=["affected_sites"])
                 if self._affects_all_sites(change):

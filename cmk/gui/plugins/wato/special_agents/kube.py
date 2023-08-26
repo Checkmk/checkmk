@@ -6,6 +6,7 @@
 
 import pydantic
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition, edition, mark_edition_only
 
 from cmk.gui.exceptions import MKUserError
@@ -432,7 +433,7 @@ def _valuespec_special_agents_kube():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:kube",
+        name=RuleGroup.SpecialAgents("kube"),
         valuespec=_valuespec_special_agents_kube,
         doc_references={DocReference.KUBERNETES: _("Monitoring Kubernetes")},
     )

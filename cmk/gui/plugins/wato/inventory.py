@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.i18n import _
@@ -119,7 +120,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="all",
-        name="active_checks:cmk_inv",
+        name=RuleGroup.ActiveChecks("cmk_inv"),
         valuespec=_valuespec_active_checks_cmk_inv,
     )
 )
@@ -187,7 +188,7 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
-        name="inv_exports:software_csv",
+        name=RuleGroup.InvExports("software_csv"),
         valuespec=_valuespec_inv_exports_software_csv,
         is_deprecated=True,
     )
@@ -239,7 +240,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="dict",
-        name="inv_parameters:inv_if",
+        name=RuleGroup.InvParameters("inv_if"),
         valuespec=_valuespec_inv_parameters_inv_if,
     )
 )
@@ -287,7 +288,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupInventory,
         match_type="dict",
-        name="inv_parameters:lnx_sysctl",
+        name=RuleGroup.InvParameters("lnx_sysctl"),
         valuespec=_valuespec_inv_parameters_lnx_sysctl,
     )
 )

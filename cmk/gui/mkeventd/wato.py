@@ -39,6 +39,7 @@ import cmk.utils.store as store
 import cmk.utils.translations
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.version import edition, Edition
 
@@ -4916,7 +4917,7 @@ def _valuespec_extra_host_conf__ec_event_limit() -> Transform:
 
 ECEventLimitRulespec = HostRulespec(
     group=RulespecGroupEventConsole,
-    name="extra_host_conf:_ec_event_limit",
+    name=RuleGroup.ExtraHostConf("_ec_event_limit"),
     valuespec=_valuespec_extra_host_conf__ec_event_limit,
 )
 
@@ -5067,7 +5068,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
 ActiveCheckMKEventsRulespec = HostRulespec(
     group=RulespecGroupEventConsole,
     match_type="all",
-    name="active_checks:mkevents",
+    name=RuleGroup.ActiveChecks("mkevents"),
     valuespec=lambda: Migrate(
         valuespec=_valuespec_active_checks_mkevents(),
         migrate=lambda value: {"show_last_log": "summary"} | value,
@@ -5103,7 +5104,7 @@ def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
 
 ExtraHostConfECSLRulespec = HostRulespec(
     group=RulespecGroupHostsMonitoringRulesVarious,
-    name="extra_host_conf:_ec_sl",
+    name=RuleGroup.ExtraHostConf("_ec_sl"),
     valuespec=_valuespec_extra_host_conf__ec_sl,
 )
 
@@ -5123,7 +5124,7 @@ def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
 ExtraServiceConfECSLRulespec = ServiceRulespec(
     group=RulespecGroupMonitoringConfigurationVarious,
     item_type="service",
-    name="extra_service_conf:_ec_sl",
+    name=RuleGroup.ExtraServiceConf("_ec_sl"),
     valuespec=_valuespec_extra_service_conf__ec_sl,
 )
 
@@ -5157,7 +5158,7 @@ def _valuespec_extra_host_conf__ec_contact() -> TextInput:
 
 ExtraHostConfECContact = HostRulespec(
     group=RulespecGroupEventConsole,
-    name="extra_host_conf:_ec_contact",
+    name=RuleGroup.ExtraHostConf("_ec_contact"),
     valuespec=_valuespec_extra_host_conf__ec_contact,
 )
 
@@ -5169,7 +5170,7 @@ def _valuespec_extra_service_conf__ec_contact() -> TextInput:
 ExtraServiceConfECContact = ServiceRulespec(
     group=RulespecGroupEventConsole,
     item_type="service",
-    name="extra_service_conf:_ec_contact",
+    name=RuleGroup.ExtraServiceConf("_ec_contact"),
     valuespec=_valuespec_extra_service_conf__ec_contact,
 )
 

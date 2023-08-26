@@ -27,7 +27,12 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.host_attributes import ExcludeIPRange, IPRange, NetworkScanResult
+from cmk.gui.watolib.host_attributes import (
+    ExcludeIPRange,
+    HostAttributes,
+    IPRange,
+    NetworkScanResult,
+)
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
@@ -137,7 +142,7 @@ def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -
     for host_name, ipaddr in found:
         host_name = translate_hostname(translation, host_name)
 
-        attrs = update_metadata({}, created_by=_("Network scan"))
+        attrs = update_metadata(HostAttributes(), created_by=UserId(_("Network scan")))
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")

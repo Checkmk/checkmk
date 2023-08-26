@@ -5,7 +5,6 @@
  */
 
 import * as cmk_figures from "cmk_figures";
-import { figure_registry } from "cmk_figures";
 import * as d3 from "d3";
 import { BaseType } from "d3";
 import * as d3Hexbin from "d3-hexbin";
@@ -178,7 +177,3 @@ export class EventStats extends HostStats {
         return "eventstats";
     }
 }
-
-figure_registry.register(HostStats);
-figure_registry.register(ServiceStats);
-figure_registry.register(EventStats);

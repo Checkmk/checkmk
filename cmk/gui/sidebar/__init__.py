@@ -361,8 +361,7 @@ class SidebarRenderer:
         # In both cases this method would only render the sidebar
         # content afterwards.
 
-        html.clear_default_javascript()
-        html.html_head(title or _("Checkmk Sidebar"), javascripts=["side"])
+        html.html_head(title or _("Checkmk Sidebar"), main_javascript="side")
 
         self._show_body_start()
         self._show_sidebar()

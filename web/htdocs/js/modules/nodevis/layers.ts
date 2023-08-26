@@ -33,8 +33,11 @@ import {
 import {DefaultTransition} from "nodevis/utils";
 
 export class LayeredDebugLayer extends ToggleableLayer {
-    static override class_name = "debug_layer";
     _anchor_info?: d3SelectionG;
+
+    override class_name(): string {
+        return "debug_layer";
+    }
 
     override id() {
         return "debug_layer";
@@ -184,7 +187,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
             .text("X: " + last_zoom.x + " / Y:" + last_zoom.y);
     }
 
-    mousemove(event) {
+    mousemove(event: MouseEvent) {
         const coords = d3.pointer(event);
         this._div_selection
             .selectAll("td#Mouse")
@@ -193,7 +196,9 @@ export class LayeredDebugLayer extends ToggleableLayer {
 }
 
 export class LayeredIconOverlay extends ToggleableLayer {
-    static override class_name = "node_icon_overlay";
+    override class_name(): string {
+        return "node_icon_overlay";
+    }
 
     override id() {
         return "node_icon_overlay";
@@ -259,10 +264,9 @@ export class LayeredIconOverlay extends ToggleableLayer {
 //#   +--------------------------------------------------------------------+
 
 export class LayeredNodesLayer extends FixLayer {
-    static override class_name = "nodes";
-    node_instances: {[name: string]: AbstractGUINode};
-    link_instances: {[name: string]: AbstractLink};
-    _links_for_node: {[name: string]: AbstractLink[]} = {};
+    node_instances: Record<string, AbstractGUINode>;
+    link_instances: Record<string, AbstractLink>;
+    _links_for_node: Record<string, AbstractLink[]> = {};
     last_scale: number;
 
     nodes_selection: d3SelectionG;
@@ -293,6 +297,10 @@ export class LayeredNodesLayer extends FixLayer {
             .style("position", "absolute")
             .classed("popup_menu", true)
             .style("display", "none");
+    }
+
+    override class_name(): string {
+        return "nodes";
     }
 
     override id() {
@@ -331,7 +339,9 @@ export class LayeredNodesLayer extends FixLayer {
         return;
     }
 
-    render_line_style(into_selection: d3SelectionG): void {
+    render_line_style<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         const line_style_row = into_selection
             .selectAll("table.line_style tr")
             .data([null])
@@ -373,8 +383,10 @@ export class LayeredNodesLayer extends FixLayer {
             .text(d => d);
     }
 
-    _change_line_style(event): void {
-        const new_line_style = d3.select(event.target).property("value");
+    _change_line_style(event: Event): void {
+        const new_line_style = d3
+            .select(event.target as HTMLElement)
+            .property("value");
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
             // @ts-ignore
             node_chunk.layout_instance.line_config.style = new_line_style;
@@ -413,7 +425,7 @@ export class LayeredNodesLayer extends FixLayer {
             .get_all_nodes()
             .filter(d => !d.data.invisible);
 
-        const old_node_instances: {[name: string]: AbstractGUINode} =
+        const old_node_instances: Record<string, AbstractGUINode> =
             this.node_instances;
         this.node_instances = {};
 
@@ -450,7 +462,11 @@ export class LayeredNodesLayer extends FixLayer {
             });
     }
 
-    _add_node_vanish_animation(node, node_id, old_node_instances) {
+    _add_node_vanish_animation(
+        node: d3.Selection<SVGGElement, unknown, null, undefined>,
+        node_id: string,
+        old_node_instances: Record<string, AbstractGUINode>
+    ) {
         const old_instance = old_node_instances[node_id];
         if (!old_instance) {
             node.remove();
@@ -518,7 +534,6 @@ export class LayeredNodesLayer extends FixLayer {
         const node_class = node_type_class_registry.get_class(
             node_data.data.node_type
         );
-        // @ts-ignore
         return new node_class(this._world, node_data);
     }
 
@@ -526,6 +541,7 @@ export class LayeredNodesLayer extends FixLayer {
         const link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
+
         return new link_class(this._world, link_data);
     }
 
@@ -542,8 +558,9 @@ export class LayeredNodesLayer extends FixLayer {
         for (const idx in this.node_instances)
             this.node_instances[idx].update_position();
 
-        for (const idx in this.link_instances)
+        for (const idx in this.link_instances) {
             this.link_instances[idx].update_position();
+        }
 
         // Disable node transitions after each update step
         for (const idx in this.node_instances)

@@ -5,12 +5,14 @@
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
-
+import functools
 from collections.abc import Collection, Iterator
+from typing import Callable
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.automations.results import AnalyseServiceResult
+from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 
 from cmk.checkengine.checking import Item
 
@@ -174,13 +176,13 @@ class ModeObjectParameters(WatoMode):
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
-    def _show_service_info(  # pylint: disable=too-many-branches
+    def _show_service_info(
         self, all_rulesets: AllRulesets, service_result: AnalyseServiceResult
-    ) -> AnalyseServiceResult:
+    ) -> None:
         assert self._service is not None
         serviceinfo = service_result.service_info
         if not serviceinfo:
-            return AnalyseServiceResult(service_info={}, labels={}, label_sources={})
+            return
 
         forms.header(_("Check origin and parameters"), isopen=True, narrow=True, css="rulesettings")
         origin = serviceinfo["origin"]
@@ -192,176 +194,210 @@ class ModeObjectParameters(WatoMode):
         }[origin]
         self._render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
 
-        # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
-        if origin == "auto":
-            checkgroup = serviceinfo["checkgroup"]
-            checktype = serviceinfo["checktype"]
-            if not checkgroup:
-                self._render_rule_reason(
-                    _("Parameters"),
-                    None,
-                    "",
-                    "",
-                    True,
-                    _("This check is not configurable via WATO"),
-                )
+        handler = {
+            "auto": self._handle_auto_origin,
+            "static": self._handle_static_origin,
+            "active": self._handle_active_origin,
+            "classic": self._handle_classic_origin,
+        }
+        render_labels = functools.partial(
+            self._show_labels, service_result.labels, "service", service_result.label_sources
+        )
+        handler[origin](serviceinfo, all_rulesets, service_result, render_labels)
+        return
 
+    def _handle_auto_origin(
+        self,
+        serviceinfo: ServiceInfo,
+        all_rulesets: AllRulesets,
+        service_result: AnalyseServiceResult,
+        render_labels: Callable[[], None],
+    ) -> None:
+        # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
+        checkgroup = serviceinfo["checkgroup"]
+        if not checkgroup:
+            self._render_rule_reason(
+                _("Parameters"),
+                None,
+                "",
+                "",
+                True,
+                _("This check is not configurable via WATO"),
+            )
+            render_labels()
+            return
+
+        if checkgroup == "logwatch":
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
             # Setup module.
-            elif checkgroup == "logwatch":
-                rulespec = rulespec_registry["logwatch_rules"]
-                self._output_analysed_ruleset(
-                    all_rulesets,
-                    rulespec,
-                    svc_desc_or_item=serviceinfo["item"],
-                    svc_desc=self._service,
-                    known_settings=serviceinfo["parameters"],
-                    service_result=service_result,
-                )
-
-            else:
-                # Note: some discovered checks have a check group but
-                # *no* ruleset for discovered checks. One example is "ps".
-                # That can be configured as a manual check or created by
-                # inventory. But in the later case all parameters are set
-                # by the inventory. This will be changed in a later version,
-                # but we need to address it anyway.
-                grouprule = "checkgroup_parameters:" + checkgroup
-                if grouprule not in rulespec_registry:
-                    try:
-                        rulespec = rulespec_registry["static_checks:" + checkgroup]
-                    except KeyError:
-                        self._render_rule_reason(
-                            _("Parameters"),
-                            None,
-                            "",
-                            "",
-                            True,
-                            _("This check is not configurable via WATO"),
-                        )
-                        return service_result
-
-                    url = folder_preserving_link(
-                        [
-                            ("mode", "edit_ruleset"),
-                            ("varname", "static_checks:" + checkgroup),
-                            ("host", self._hostname),
-                        ]
-                    )
-                    assert isinstance(rulespec.valuespec, Tuple)
-                    self._render_rule_reason(
-                        _("Parameters"),
-                        url,
-                        _("Determined by discovery"),
-                        None,
-                        False,
-                        rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
-                    )
-
-                else:
-                    rulespec = rulespec_registry[grouprule]
-                    self._output_analysed_ruleset(
-                        all_rulesets,
-                        rulespec,
-                        svc_desc_or_item=serviceinfo["item"],
-                        svc_desc=self._service,
-                        known_settings=serviceinfo["parameters"],
-                        service_result=service_result,
-                    )
-
-        elif origin == "static":
-            checkgroup = serviceinfo["checkgroup"]
-            checktype = serviceinfo["checktype"]
-            if not checkgroup:
-                html.write_text(_("This check is not configurable via WATO"))
-            else:
-                rulespec = rulespec_registry["static_checks:" + checkgroup]
-                itemspec = rulespec.item_spec
-                if itemspec:
-                    item_text: ValueSpecText | Item = itemspec.value_to_html(serviceinfo["item"])
-                    assert rulespec.item_spec is not None
-                    title = rulespec.item_spec.title()
-                else:
-                    item_text = serviceinfo["item"]
-                    title = _("Item")
-                self._render_rule_reason(title, None, "", "", False, item_text)
-                self._output_analysed_ruleset(
-                    all_rulesets,
-                    rulespec,
-                    svc_desc_or_item=serviceinfo["item"],
-                    svc_desc=self._service,
-                    known_settings=self._PARAMETERS_OMIT,
-                    service_result=service_result,
-                )
-                assert isinstance(rulespec.valuespec, Tuple)
-                html.write_text(
-                    rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
-                )
-                html.close_td()
-                html.close_tr()
-                html.close_table()
-
-        elif origin == "active":
-            checktype = serviceinfo["checktype"]
-            rulespec = rulespec_registry["active_checks:" + checktype]
+            rulespec = rulespec_registry["logwatch_rules"]
             self._output_analysed_ruleset(
                 all_rulesets,
                 rulespec,
-                svc_desc_or_item=None,
-                svc_desc=None,
+                svc_desc_or_item=serviceinfo["item"],
+                svc_desc=self._service,
                 known_settings=serviceinfo["parameters"],
                 service_result=service_result,
             )
+            render_labels()
+            return
 
-        elif origin == "classic":
-            ruleset = all_rulesets.get("custom_checks")
-            origin_rule_result = self._get_custom_check_origin_rule(
-                ruleset, self._hostname, self._service, service_result=service_result
+        # Note: some discovered checks have a check group but
+        # *no* ruleset for discovered checks. One example is "ps".
+        # That can be configured as a manual check or created by
+        # inventory. But in the later case all parameters are set
+        # by the inventory. This will be changed in a later version,
+        # but we need to address it anyway.
+        if RuleGroup.CheckgroupParameters(checkgroup) in rulespec_registry:
+            rulespec = rulespec_registry["checkgroup_parameters:" + checkgroup]
+            self._output_analysed_ruleset(
+                all_rulesets,
+                rulespec,
+                svc_desc_or_item=serviceinfo["item"],
+                svc_desc=self._service,
+                known_settings=serviceinfo["parameters"],
+                service_result=service_result,
             )
-            if origin_rule_result is None:
-                raise MKUserError(
-                    None,
-                    _("Failed to determine origin rule of %s / %s")
-                    % (self._hostname, self._service),
-                )
-            rule_folder, rule_index, rule = origin_rule_result
+            render_labels()
+            return
 
-            url = folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
+        if RuleGroup.StaticChecks(checkgroup) in rulespec_registry:
+            self._render_rule_reason(
+                _("Parameters"),
+                None,
+                "",
+                "",
+                True,
+                _("This check is not configurable via WATO"),
             )
-            forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
-            url = folder_preserving_link(
-                [
-                    ("mode", "edit_rule"),
-                    ("varname", "custom_checks"),
-                    ("rule_folder", rule_folder.path()),
-                    ("rule_id", rule.id),
-                    ("host", self._hostname),
-                ]
-            )
+            return
 
-            html.open_table(class_="setting")
-            html.open_tr()
+        rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
+        url = folder_preserving_link(
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", RuleGroup.StaticChecks(checkgroup)),
+                ("host", self._hostname),
+            ]
+        )
+        assert isinstance(rulespec.valuespec, Tuple)
+        self._render_rule_reason(
+            _("Parameters"),
+            url,
+            _("Determined by discovery"),
+            None,
+            False,
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
+        )
+        render_labels()
 
-            html.open_td(class_="reason")
-            html.a(
-                "%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url
-            )
-            html.close_td()
-            html.open_td(class_=["settingvalue", "used"])
-            if "command_line" in serviceinfo:
-                html.tt(serviceinfo["command_line"])
-            else:
-                html.write_text(_("(no command line, passive check)"))
-            html.close_td()
+    def _handle_static_origin(
+        self,
+        serviceinfo: ServiceInfo,
+        all_rulesets: AllRulesets,
+        service_result: AnalyseServiceResult,
+        render_labels: Callable[[], None],
+    ) -> None:
+        checkgroup = serviceinfo["checkgroup"]
+        if not checkgroup:
+            html.write_text(_("This check is not configurable via WATO"))
+            return
 
-            html.close_tr()
-            html.close_table()
+        rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
+        itemspec = rulespec.item_spec
+        if itemspec:
+            item_text: ValueSpecText | Item = itemspec.value_to_html(serviceinfo["item"])
+            assert rulespec.item_spec is not None
+            title = rulespec.item_spec.title()
+        else:
+            item_text = serviceinfo["item"]
+            title = _("Item")
+        self._render_rule_reason(title, None, "", "", False, item_text)
+        self._output_analysed_ruleset(
+            all_rulesets,
+            rulespec,
+            svc_desc_or_item=serviceinfo["item"],
+            svc_desc=self._service,
+            known_settings=self._PARAMETERS_OMIT,
+            service_result=service_result,
+        )
+        assert isinstance(rulespec.valuespec, Tuple)
+        html.write_text(rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]))
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+        render_labels()
 
+    def _handle_active_origin(
+        self,
+        serviceinfo: ServiceInfo,
+        all_rulesets: AllRulesets,
+        service_result: AnalyseServiceResult,
+        render_labels: Callable[[], None],
+    ) -> None:
+        checktype = serviceinfo["checktype"]
+        rulespec = rulespec_registry[RuleGroup.ActiveChecks(checktype)]
+        self._output_analysed_ruleset(
+            all_rulesets,
+            rulespec,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            known_settings=serviceinfo["parameters"],
+            service_result=service_result,
+        )
         self._show_labels(service_result.labels, "service", service_result.label_sources)
+        render_labels()
 
-        return service_result
+    def _handle_classic_origin(
+        self,
+        serviceinfo: ServiceInfo,
+        all_rulesets: AllRulesets,
+        service_result: AnalyseServiceResult,
+        render_labels: Callable[[], None],
+    ) -> None:
+        ruleset = all_rulesets.get("custom_checks")
+        assert self._service is not None
+        origin_rule_result = self._get_custom_check_origin_rule(
+            ruleset, self._hostname, self._service, service_result=service_result
+        )
+        if origin_rule_result is None:
+            raise MKUserError(
+                None,
+                _("Failed to determine origin rule of %s / %s") % (self._hostname, self._service),
+            )
+        rule_folder, rule_index, rule = origin_rule_result
+
+        url = folder_preserving_link(
+            [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
+        )
+        forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
+        url = folder_preserving_link(
+            [
+                ("mode", "edit_rule"),
+                ("varname", "custom_checks"),
+                ("rule_folder", rule_folder.path()),
+                ("rule_id", rule.id),
+                ("host", self._hostname),
+            ]
+        )
+
+        html.open_table(class_="setting")
+        html.open_tr()
+
+        html.open_td(class_="reason")
+        html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
+        html.close_td()
+        html.open_td(class_=["settingvalue", "used"])
+        if "command_line" in serviceinfo:
+            html.tt(serviceinfo["command_line"])
+        else:
+            html.write_text(_("(no command line, passive check)"))
+        html.close_td()
+
+        html.close_tr()
+        html.close_table()
+        render_labels()
 
     def _get_custom_check_origin_rule(
         self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult

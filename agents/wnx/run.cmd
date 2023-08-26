@@ -66,7 +66,9 @@ if "%~1"=="--test"          (set arg_test=1)         & shift & goto CheckOpts
 if "%~1"=="-D"              (set arg_doc=1)          & shift & goto CheckOpts
 if "%~1"=="--documentation" (set arg_doc=1)          & shift & goto CheckOpts
 
-if "%~1"=="--sign"          (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
+if "%~1"=="--detach"        (set arg_detach=1)       & shift & goto CheckOpts
+
+if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
 if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_ext=1) & (set arg_msi=1)
 
@@ -91,6 +93,7 @@ set build_dir=.\build
 set SKIP_MINOR_BINARIES=YES
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME
 set hash_file=%arte%\windows_files_hashes.txt
+set usbip_exe=c:\common\usbip-win-0.3.6-dev\usbip.exe
 
 :: arg_clean
 call :clean
@@ -101,8 +104,6 @@ if "%arg_build%" == "1" call %cur_dir%\scripts\clean_artifacts.cmd
 if "%arg_build%" == "1" call scripts\unpack_packs.cmd
 if "%arg_build%" == "1" make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
 call :build_windows_agent
-
-
 
 :: arg_test
 call :unit_test
@@ -141,7 +142,8 @@ powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Blue
 
 call :patch_msi_code 
 call :sign_msi
-
+call :detach
+powershell Write-Host "FULL SUCCESS" -Foreground Blue
 exit /b 0
 
 :: CHECK FOR CHOCO
@@ -217,7 +219,7 @@ goto :eof
 
 :build_windows_agent
 if not "%arg_build%" == "1" powershell Write-Host "Skipped Agent Build" -Foreground Yellow & goto :eof
-powershell Write-Host "Building Windows Agent..." -Foreground White
+powershell Write-Host "run:Building Windows Agent..." -Foreground White
 for /f %%i in ('where make') do set make_exe=%%i
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if errorlevel 1 powershell Write-Host "Failed Build" -Foreground Red & call :halt 7
@@ -225,6 +227,7 @@ goto :eof
 
 :build_agent_controller
 if not "%arg_ctl%" == "1" powershell Write-Host "Skipped Controller Build" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building Agent Controller..." -Foreground White
 pushd ..\..\packages\cmk-agent-ctl
 call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Cargo Build" -Foreground Red && popd & call :halt 72
@@ -233,12 +236,14 @@ goto :eof
 
 :build_ohm
 if not "%arg_ohm%" == "1" powershell Write-Host "Skipped OHM Build" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building OHM..." -Foreground White
 call build_ohm.cmd
 if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red & call :halt 71
 goto :eof
 
 :build_ext
 if not "%arg_ext%" == "1" powershell Write-Host "Skipped Build of Extensions" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building Extensions..." -Foreground White
 cd extensions\robotmk_ext
 call ..\..\scripts\cargo_build_robotmk.cmd
 cd ..\..
@@ -247,7 +252,9 @@ goto :eof
 
 :build_msi
 if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
-ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+powershell Write-Host "run:Building MSI..." -Foreground White
+del /Y %build_dir%\install\Release\check_mk_service.msi
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 goto :eof
 
@@ -258,7 +265,7 @@ goto :eof
 if not "%arg_msi%" == "1" goto :eof
 echo %wnx_version:~1,-1%
 :: info
-powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
+powershell Write-Host "run:Setting Version in MSI: %wnx_version%" -Foreground Green
 :: command
 @echo cscript.exe //nologo WiRunSQL.vbs %arte%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
@@ -269,6 +276,7 @@ goto :eof
 :unit_test
 :: Unit Tests Phase: post processing/build special modules using make
 if not "%arg_test%" == "1" powershell Write-Host "Skipped Unit test" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Unit testing..." -Foreground White
 net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /Y
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y
@@ -280,24 +288,30 @@ goto :eof
 
 :sign_binaries
 if not "%arg_sign%" == "1" powershell Write-Host "Signing binaries skipped" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Signing binary..." -Foreground White
+:: to be sure that all artifacts are up to date
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
+if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & :halt 91
 del /Q %hash_file% 2>nul
 powershell Write-Host "Signing Executables" -Foreground White
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %arte%\cmk-agent-ctl.exe %hash_file%
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
+@call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
+@call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
 goto :eof
 
 
 :: Deploy Phase: post processing/build special modules using make
 :deploy_to_artifacts
 if not "%arg_msi%" == "1" goto :eof
-copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
-copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 34
-copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 35
-copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || powershell Write-Host "Failed to copy OHM exe" -Foreground Red && exit /b 36
-copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || powershell Write-Host "Failed to copy OHM dll" -Foreground Red && exit /b 37
+powershell Write-Host "run:Artifacts deploy..." -Foreground White
+copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || call :halt 33
+copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || call :halt 34
+copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || call :halt 35
+copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || call :halt 36
+copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || call :halt 37
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
@@ -306,32 +320,37 @@ goto :eof
 :: Additional Phase: post processing/build special modules using make
 :patch_msi_code
 if not "%arg_msi%" == "1"  goto :eof
-!make_exe! msi_patch 
+!make_exe! msi_patch
 if errorlevel 1 powershell Write-Host "Failed to patch MSI exec" -Foreground Red & call :halt 36
 copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi > nul
 goto :eof
 
 :sign_msi
 if not "%arg_sign%" == "1" powershell Write-Host "Signing MSI skipped" -Foreground Yellow & goto :eof
-powershell Write-Host "Signing MSI" -Foreground White
-@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %arte%\check_mk_agent.msi  %hash_file%
-call scripts\call_signing_tests.cmd 
+powershell Write-Host "run:Signing MSI" -Foreground White
+@call scripts\sign_code.cmd %arte%\check_mk_agent.msi  %hash_file%
+call scripts\detach_usb_token.cmd %usbip_exe%
+call scripts\call_signing_tests.cmd
 if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & :halt 41
 @py -3 scripts\check_hashes.py %hash_file%
 if errorlevel 1 call powershell Write-Host "Failed hashing test %errorlevel%" -Foreground Red & :halt 42
 powershell Write-Host "MSI signing succeeded" -Foreground Green
 goto :eof
 
+:detach
+if "%arg_detach%" == "1" call scripts\detach_usb_token.cmd %usbip_exe%
+goto :eof
 
 :: Sets the errorlevel and stops the batch immediately
 :halt
+call scripts\detach_usb_token.cmd %usbip_exe%
 call :__SetErrorLevel %1
 call :__ErrorExit 2> nul
 goto :eof
 
 :__ErrorExit
 rem Creates a syntax error, stops immediately
-() 
+()
 goto :eof
 
 :__SetErrorLevel

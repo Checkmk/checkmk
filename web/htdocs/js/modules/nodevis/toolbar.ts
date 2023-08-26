@@ -20,7 +20,7 @@ import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
 export class Toolbar {
     _world: NodevisWorld;
     _div_selection: d3SelectionDiv;
-    _toolbar_plugins = {};
+    _toolbar_plugins: Record<string, ToolbarPluginBase> = {};
     _plugin_contents_selection: d3SelectionDiv;
     _plugin_controls_selection: d3SelectionDiv;
     _plugin_buttons_selection: d3SelectionDiv;
@@ -109,7 +109,7 @@ export class Toolbar {
         );
         plugin_button.classed("up", !is_active);
         plugin_button.classed("down", is_active);
-        if (is_active == true) {
+        if (is_active) {
             plugin.enable();
             plugin.render_content();
         } else {

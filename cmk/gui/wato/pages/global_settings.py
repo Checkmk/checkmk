@@ -18,6 +18,7 @@ import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -154,12 +155,16 @@ class ABCGlobalSettingsMode(WatoMode):
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
+        global_config = get_global_config()
         for group, config_variables in self.iter_all_configuration_variables():
             header_is_painted = False  # needed for omitting empty groups
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
                 valuespec = config_variable.valuespec()
+
+                if not global_config.global_settings.is_activated(varname):
+                    continue
 
                 if self._show_only_modified and varname not in self._current_settings:
                     continue
@@ -273,6 +278,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         self._global_settings: GlobalSettings = {}
 
     def _may_edit_configvar(self, varname):
+        if not get_global_config().global_settings.is_activated(varname):
+            return False
         if varname in ["actions"]:
             return user.may("wato.add_or_modify_executables")
         return True

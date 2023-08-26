@@ -254,7 +254,7 @@ class LoginPage(Page):
     def _show_login_page(self) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
-        make_header(html, get_page_heading(), Breadcrumb(), javascripts=[])
+        make_header(html, get_page_heading(), Breadcrumb())
 
         default_origtarget = (
             "index.py"

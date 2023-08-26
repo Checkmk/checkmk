@@ -12,6 +12,7 @@ from re import Pattern
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -180,7 +181,7 @@ def _validate_rule_values(
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
-        "extra_service_conf:_sla_config",
+        RuleGroup.ExtraServiceConf("_sla_config"),
     }
 
     n_invalid = 0
@@ -250,7 +251,9 @@ def _transform_fileinfo_timeofday_to_timeperiods(collection: RulesetCollection) 
     This transformation is introduced in v2.2 and can be removed in v2.3.
     """
     all_rulesets = collection.get_rulesets()
-    rulesets = [all_rulesets[f"checkgroup_parameters:{c}"] for c in ("fileinfo", "fileinfo-groups")]
+    rulesets = [
+        all_rulesets[RuleGroup.CheckgroupParameters(c)] for c in ("fileinfo", "fileinfo-groups")
+    ]
     rules = [r.get_rules() for r in rulesets]
 
     for _folder, _folder_index, rule in chain(*rules):

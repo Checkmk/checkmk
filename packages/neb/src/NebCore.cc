@@ -653,19 +653,19 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
         return false;
     }
     const std::string line = input.nextLine();
-    if (mk::starts_with(line, "GET ")) {
+    if (line.starts_with("GET ")) {
         auto lines = getLines(input);
         logRequest(_logger_livestatus, line, lines);
         return _store.answerGetRequest(lines, output,
                                        mk::lstrip(line.substr(4)));
     }
-    if (mk::starts_with(line, "GET")) {
+    if (line.starts_with("GET")) {
         // only to get error message
         auto lines = getLines(input);
         logRequest(_logger_livestatus, line, lines);
         return _store.answerGetRequest(lines, output, "");
     }
-    if (mk::starts_with(line, "COMMAND ")) {
+    if (line.starts_with("COMMAND ")) {
         logRequest(_logger_livestatus, line, {});
         try {
             answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
@@ -674,7 +674,7 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
         }
         return true;
     }
-    if (mk::starts_with(line, "LOGROTATE")) {
+    if (line.starts_with("LOGROTATE")) {
         logRequest(_logger_livestatus, line, {});
         Informational(_logger_livestatus) << "Forcing logfile rotation";
         rotate_log_file(std::chrono::system_clock::to_time_t(
@@ -701,7 +701,7 @@ void NebCore::answerCommandRequest(const ExternalCommand &command) {
         answerCommandDelCrashReport(command);
         return;
     }
-    if (mk::starts_with(command.name(), "EC_")) {
+    if (command.name().starts_with("EC_")) {
         answerCommandEventConsole("COMMAND " + command.name().substr(3) +
                                   command.arguments());
         return;

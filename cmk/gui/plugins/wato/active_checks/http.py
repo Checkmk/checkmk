@@ -7,6 +7,8 @@ import copy
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
@@ -542,7 +544,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:http",
+        name=RuleGroup.ActiveChecks("http"),
         valuespec=_valuespec_active_checks_http,
     )
 )

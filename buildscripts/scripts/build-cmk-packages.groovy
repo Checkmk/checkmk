@@ -184,10 +184,14 @@ def main() {
     }
     parallel agent_builds;
 
-    //shout("create_and_upload_bom");
+    // With the current bazelization this job regularly breaks. Lets be tolerant...
+    // This should be mandatory as soon as we enter the beta phase!
+    catchError(buildResult: "SUCCESS", stageResult: "FAILURE") {
+        shout("create_and_upload_bom");
 
-    //// TODO creates stages - put them on top level
-    //create_and_upload_bom(WORKSPACE, branch_version, VERSION);
+        // TODO creates stages - put them on top level
+        create_and_upload_bom(WORKSPACE, branch_version, VERSION);
+    }
 
     shout("create_source_package");
     docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {

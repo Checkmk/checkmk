@@ -45,7 +45,6 @@ RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool
 
 WEBPACK_MODE       ?= production
 
-OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 LOCK_FD := 200
@@ -59,7 +58,7 @@ endif
         clean css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version skel openapi openapi-doc \
+        packages setup setversion tidy version skel openapi \
         protobuf-files
 
 help:
@@ -216,15 +215,9 @@ $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plu
 	mv $$TMPFILE $@
 
 
-$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
-	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
-		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
-		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
-
 openapi-clean:
 	rm -f $(OPENAPI_SPEC)
 openapi: $(OPENAPI_SPEC)
-openapi-doc: $(OPENAPI_DOC)
 
 
 optimize-images:
@@ -257,7 +250,6 @@ optimize-images:
 # used registry. The resolved entry is only a hint for npm.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
-node_modules/.bin/redoc-cli: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
 	@echo "npm version: $$(npm --version)"
@@ -276,7 +268,7 @@ node_modules/.bin/prettier: .ran-npm
         fi ; \
 	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
-	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
+	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
 # list all targets separately.

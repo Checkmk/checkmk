@@ -3491,12 +3491,10 @@ def update_slave_status(
 
 
 def make_config(config: ConfigFromWATO) -> Config:
-    # We need a mypy suppression below because of various problems related to
-    # extending TypedDicts, see e.g. https://github.com/python/mypy/issues/8890.
     return {
-        **config,  # type: ignore[misc]
+        **config,
         "action": {action["id"]: action for action in config["actions"]},
-        "last_reload": time.time(),
+        "last_reload": int(time.time()),
     }
 
 

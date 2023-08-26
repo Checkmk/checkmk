@@ -8,6 +8,7 @@
 import logging
 import os
 import subprocess
+import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -590,6 +591,9 @@ def test_redirects_work_with_custom_port(
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
+@pytest.mark.skipif(
+    build_version().is_saas_edition(), reason="Saas edition replaced the login screen"
+)
 def test_http_access_login_screen(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
@@ -611,12 +615,36 @@ def test_http_access_login_screen(
     )
 
 
+def get_docker_ip(container_name: str) -> str:
+    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.Gateway}}}}{{{{end}}}}' {container_name}"
+    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+    if output == "":
+        output = "127.0.0.1"
+    return output
+
+
+@pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
+def test_http_access_login_screen_saas(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
+    c = _start(request, client)
+
+    while c.status != "running":
+        time.sleep(1)
+
+    ip = get_docker_ip(c.name)
+    resp = requests.get(f"http://{ip}:5000/cmk/check_mk", allow_redirects=False, timeout=10)
+    # saas login redirects to external service
+    assert resp.status_code == 302
+    assert "/check_mk/login.py?_origtarget=index.py" in resp.headers["location"]
+
+
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(request, client)
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
-    # Check whether or not the agent port is opened
+    # Check whether the agent port is opened
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
@@ -628,7 +656,7 @@ def test_update(
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
-        version_spec="2.2.0p5",
+        version_spec="2.2.0p8",
         branch="2.2.0",
         edition=Edition.CRE,
     )
@@ -639,7 +667,7 @@ def test_update(
         ),
         VersionsCompatible,
     )
-    # Currently, in the master branch, we can't derive the future major version from from the daily
+    # Currently, in the master branch, we can't derive the future major version from the daily
     # build version. So we hack around a bit to gather it from the git. In the future we plan to
     # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
     # additional check can be removed.

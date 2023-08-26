@@ -6,6 +6,8 @@
 
 from typing import Any
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
@@ -242,7 +244,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_siemens_plc(),
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:siemens_plc",
+        name=RuleGroup.SpecialAgents("siemens_plc"),
         valuespec=_valuespec_special_agents_siemens_plc,
     )
 )

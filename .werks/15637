@@ -1,0 +1,17 @@
+Title: KUBE: Support Tanzu Kubernetes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1692687469
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this release of Checkmk, we introduce monitoring of Tanzu Kubernetes clusters. The setup is the
+same as for vanilla Kubernetes:
+
+LI: direct access to the Kubernetes API server must be provided
+LI: optionally, the <tt>Checkmk collectors</tt> can be installed to provide usage data (recommended)
+
+The details can be found in the documentation https://docs.checkmk.com/latest/en/monitoring_kubernetes.html

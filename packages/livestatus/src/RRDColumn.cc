@@ -21,7 +21,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
-#include "livestatus/StringUtils.h"
 #include "livestatus/strutil.h"
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
@@ -317,7 +316,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         const std::string rrd_error{rrd_get_error()};
-        if (mk::starts_with(rrd_error, "don't understand ")) {
+        if (rrd_error.starts_with("don't understand ")) {
             // The error msg "don't understand '<metric_name>'" is logged on
             // info lvl only as preventing such queries for non-given metrics is
             // not feasible atm

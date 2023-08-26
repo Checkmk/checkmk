@@ -6,6 +6,7 @@
 
 from collections.abc import Iterable, Mapping
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.exceptions import MKUserError
@@ -372,7 +373,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:mail_loop",
+        name=RuleGroup.ActiveChecks("mail_loop"),
         valuespec=_valuespec_active_checks_mail_loop,
     )
 )
@@ -620,7 +621,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:mail",
+        name=RuleGroup.ActiveChecks("mail"),
         valuespec=_valuespec_active_checks_mail,
     )
 )
@@ -715,7 +716,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:mailboxes",
+        name=RuleGroup.ActiveChecks("mailboxes"),
         valuespec=_valuespec_active_checks_mailboxes,
     )
 )

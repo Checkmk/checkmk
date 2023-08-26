@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
@@ -38,7 +40,7 @@ def _valuespec_special_agents_pure_storage_fa() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:pure_storage_fa",
+        name=RuleGroup.SpecialAgents("pure_storage_fa"),
         title=lambda: _("Pure Storage FlashArray"),
         valuespec=_valuespec_special_agents_pure_storage_fa,
     )

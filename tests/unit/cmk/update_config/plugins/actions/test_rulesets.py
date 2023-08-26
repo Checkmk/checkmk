@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.version import edition, Edition
 
@@ -251,7 +252,7 @@ def test_remove_removed_check_plugins_from_ignored_checks() -> None:
                         ("W", "\\H", "invalid_regex"),
                     ]
                 },
-                "checkgroup_parameters:ntp_time": {
+                RuleGroup.CheckgroupParameters("ntp_time"): {
                     "ntp_levels": (10, 200.0, 500.0),
                 },
             },
@@ -265,13 +266,13 @@ def test_remove_removed_check_plugins_from_ignored_checks() -> None:
                         ("C", "\\\\x\\\\y\\\\z", "some comment"),
                     ]
                 },
-                "checkgroup_parameters:ntp_time": {
+                RuleGroup.CheckgroupParameters("ntp_time"): {
                     "ntp_levels": (10, 200.0, 500.0),
                 },
                 **(
                     {}
                     if edition() is Edition.CRE
-                    else {"extra_service_conf:_sla_config": "i am skipped"}
+                    else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },
             0,
@@ -371,19 +372,21 @@ def test_transform_fileinfo_timeofday_to_timeperiods_fileinfo_ruleset(
     old_param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    fileinfo_ruleset = _instantiate_ruleset("checkgroup_parameters:fileinfo", old_param_value)
+    fileinfo_ruleset = _instantiate_ruleset(
+        RuleGroup.CheckgroupParameters("fileinfo"), old_param_value
+    )
     empty_ruleset = Ruleset("checkgroup_parameters:fileinfo-groups", {})
 
     rulesets = RulesetCollection(
         {
-            "checkgroup_parameters:fileinfo": fileinfo_ruleset,
-            "checkgroup_parameters:fileinfo-groups": empty_ruleset,
+            RuleGroup.CheckgroupParameters("fileinfo"): fileinfo_ruleset,
+            RuleGroup.CheckgroupParameters("fileinfo-groups"): empty_ruleset,
         }
     )
 
     rulesets_updater._transform_fileinfo_timeofday_to_timeperiods(rulesets)
 
-    ruleset = rulesets.get_rulesets()["checkgroup_parameters:fileinfo"]
+    ruleset = rulesets.get_rulesets()[RuleGroup.CheckgroupParameters("fileinfo")]
     assert ruleset.get_rules()[0][2].value == transformed_param_value
 
 
@@ -427,13 +430,13 @@ def test_transform_fileinfo_timeofday_to_timeperiods_fileinfo_groups_ruleset(
     old_param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    empty_ruleset = Ruleset("checkgroup_parameters:fileinfo", {})
+    empty_ruleset = Ruleset(RuleGroup.CheckgroupParameters("fileinfo"), {})
     fileinfo_group_ruleset = _instantiate_ruleset(
         "checkgroup_parameters:fileinfo-groups", old_param_value
     )
     rulesets = RulesetCollection(
         {
-            "checkgroup_parameters:fileinfo": empty_ruleset,
+            RuleGroup.CheckgroupParameters("fileinfo"): empty_ruleset,
             "checkgroup_parameters:fileinfo-groups": fileinfo_group_ruleset,
         }
     )

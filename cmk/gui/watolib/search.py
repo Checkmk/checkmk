@@ -23,6 +23,7 @@ from cmk.utils.setup_search_index import (
     UpdateRequests,
     updates_requested,
 )
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -33,6 +34,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.global_config import get_global_config
 from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
@@ -318,8 +320,16 @@ class PermissionsHandler:
     def may_see_category(self, category: str) -> bool:
         return user.may("wato.use") and self._category_permissions.get(category, True)
 
+    @staticmethod
+    def _permission_global_setting(url: str) -> bool:
+        if edition() is not Edition.CSE:
+            return True
+        _, query_vars = file_name_and_query_vars_from_url(url)
+        return get_global_config().global_settings.is_activated(query_vars["varname"][0])
+
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
+            "global_settings": self._permission_global_setting,
             "rules": self._permissions_rule,
             "hosts": lambda url: (
                 any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))

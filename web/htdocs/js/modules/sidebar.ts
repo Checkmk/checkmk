@@ -158,7 +158,7 @@ function removeSnapinDragIndicator() {
     }
 }
 
-function snapinDrop(event: MouseEvent, targetpos: HTMLElement) {
+function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
@@ -188,7 +188,7 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement) {
     ajax.call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
-function snapinTerminateDrag() {
+function snapinTerminateDrag(): true | void {
     if (g_snapin_dragging == false) return true;
     removeSnapinDragIndicator();
     // Reset properties

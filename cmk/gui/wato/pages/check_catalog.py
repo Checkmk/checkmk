@@ -15,6 +15,7 @@ from typing import Any, overload
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.checking import CheckPluginNameStr
 
@@ -473,7 +474,7 @@ class ModeCheckManPage(WatoMode):
             self._service_description = check_info["service_description"]
             ruleset_name = check_info.get("check_ruleset_name")
             self._ruleset: str | None = (
-                f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
+                RuleGroup.CheckgroupParameters(ruleset_name) if ruleset_name else None
             )
             self._check_default_parameters: object = check_info.get("check_default_parameters")
 
@@ -486,7 +487,7 @@ class ModeCheckManPage(WatoMode):
         elif self._check_plugin_name.startswith("check_"):  # Assume active check
             self._check_type = "active"
             self._service_description = "Active check"  # unused
-            self._ruleset = f"active_checks:{self._check_plugin_name[6:]}"
+            self._ruleset = RuleGroup.ActiveChecks(self._check_plugin_name[6:])
         else:
             raise MKUserError(
                 None,

@@ -25,7 +25,6 @@ from . import (
     host_diagnose,
     host_rename,
     hosts,
-    icons,
     ldap,
     not_implemented,
     notifications,
@@ -68,7 +67,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
-    icons.register(mode_registry)
     ldap.register(mode_registry)
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)

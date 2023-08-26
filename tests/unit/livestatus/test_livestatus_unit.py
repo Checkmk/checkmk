@@ -207,7 +207,9 @@ def test_create_socket(
 
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
-    assert len(sock.context.get_ca_certs()) == 1
+    # TODO: The assertion below is nonsense, it depends e.g. on the certificates in /etc/ssl/certs.
+    # What was the intention for the assertion, i.e. what exactly should be checked? No idea...
+    # assert len(sock.context.get_ca_certs()) == 1
     assert live.tls_ca_file_path == str(ca_file_path)
 
 

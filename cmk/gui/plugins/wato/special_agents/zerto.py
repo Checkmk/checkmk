@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
@@ -52,7 +54,7 @@ def _valuespec_special_agents_zerto():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:zerto",
+        name=RuleGroup.SpecialAgents("zerto"),
         valuespec=_valuespec_special_agents_zerto,
     )
 )

@@ -882,41 +882,6 @@ class MainModuleAuditLog(ABCMainModule):
 
 
 @main_module_registry.register
-class MainModuleIcons(ABCMainModule):
-    @property
-    def mode_or_url(self) -> str:
-        return "icons"
-
-    @property
-    def topic(self) -> MainModuleTopic:
-        return MainModuleTopicGeneral
-
-    @property
-    def title(self) -> str:
-        return _("Custom icons")
-
-    @property
-    def icon(self) -> Icon:
-        return "icons"
-
-    @property
-    def permission(self) -> None | str:
-        return "icons"
-
-    @property
-    def description(self) -> str:
-        return _("Extend the Checkmk GUI with your custom icons")
-
-    @property
-    def sort_index(self) -> int:
-        return 85
-
-    @property
-    def is_show_more(self) -> bool:
-        return True
-
-
-@main_module_registry.register
 class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def mode_or_url(self) -> str:

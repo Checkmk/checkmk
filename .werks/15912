@@ -1,0 +1,17 @@
+Title: graylog_alerts: Fixed section parsing when transitioning from 2.1 to 2.2
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692620690
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When transitioning from 2.1 to 2.2, parsing of the graylog alerts section used to fail.
+The error contains:
+C+:
+"exc_type": "AttributeError",
+"exc_value": "'list' object has no attribute 'get'"
+C-:
+This has now been fixed and the transition will not cause problems.

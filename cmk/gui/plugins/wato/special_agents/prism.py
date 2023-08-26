@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
 from cmk.gui.plugins.wato.utils import (
@@ -45,7 +47,7 @@ def _valuespec_special_agents_prism():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:prism",
+        name=RuleGroup.SpecialAgents("prism"),
         valuespec=_valuespec_special_agents_prism,
     )
 )

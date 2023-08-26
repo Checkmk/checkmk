@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
@@ -326,7 +327,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=Rulespec.FACTORY_DEFAULT_UNUSED,
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:datadog",
+        name=RuleGroup.SpecialAgents("datadog"),
         valuespec=_valuespec_special_agents_datadog,
     )
 )

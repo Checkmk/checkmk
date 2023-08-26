@@ -42,6 +42,7 @@ from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
@@ -133,6 +134,11 @@ def register() -> None:
             rulespec_registry,
             autocompleter_registry,
             filter_registry,
+        )
+        custom_icons_register(
+            mode_registry,
+            main_module_registry,
+            permission_registry,
         )
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)

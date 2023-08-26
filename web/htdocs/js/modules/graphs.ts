@@ -1060,7 +1060,7 @@ function get_graph_id_of_dom_node(target: HTMLElement) {
     return graph_container.id;
 }
 
-function graph_global_mouse_wheel(event: Event) {
+function graph_global_mouse_wheel(event: Event): boolean | void {
     let obj: HTMLElement | ParentNode | null = event!.target as HTMLElement;
     // prevent page scrolling when making wheelies over graphs
     while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode;
@@ -1308,7 +1308,7 @@ function set_pin_position(
     event: Event,
     graph: GraphArtwork,
     timestamp: number
-) {
+): boolean | void {
     if (graph.render_options.interaction && graph.render_options.show_pin)
         return update_graph(
             event,
@@ -1536,7 +1536,10 @@ interface GraphHover {
     curve_values: CurveValues[];
 }
 
-function update_graph_hover_popup(event: Event, graph: GraphArtwork) {
+function update_graph_hover_popup(
+    event: Event,
+    graph: GraphArtwork
+): boolean | void {
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
         return utils.prevent_default_events(event);
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils import gcp_constants
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
@@ -34,7 +35,7 @@ def _valuespec_special_agents_gcp_status() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:gcp_status",
+        name=RuleGroup.SpecialAgents("gcp_status"),
         valuespec=_valuespec_special_agents_gcp_status,
     )
 )

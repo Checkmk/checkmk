@@ -5,6 +5,7 @@
  */
 
 import * as d3 from "d3";
+import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
 import {StyleMatcherConditions} from "nodevis/layout_utils";
 import {
     BoundingRect,
@@ -15,7 +16,7 @@ import {
 } from "nodevis/type_defs";
 
 // TODO: remove or fix logging
-export function log(level, ...args) {
+export function log(level: number, ...args: any[]) {
     if (level < 4) console.log(...Array.from(args));
 }
 
@@ -24,29 +25,30 @@ export class DefaultTransition {
         return 500;
     }
 
-    static add_transition(selection) {
+    static add_transition<GType extends d3.BaseType, Data>(
+        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ) {
         return selection.transition().duration(DefaultTransition.duration());
     }
 }
 
 // Stores node visualization classes
 export type TypeWithName = {
-    class_name: string;
+    class_name: () => string;
 };
 
-export class AbstractClassRegistry<Type> {
-    _classes: {[name: string]: Type} = {};
+export class AbstractClassRegistry<Type extends TypeWithName> {
+    _classes: {[name: string]: AbstractNodeVisConstructor<Type>} = {};
 
-    register(class_template: TypeWithName) {
-        // @ts-ignore
-        this._classes[class_template.class_name] = class_template as Type;
+    register(class_template: AbstractNodeVisConstructor<Type>) {
+        this._classes[class_template.prototype.class_name()] = class_template;
     }
 
-    get_class(class_name: string): Type {
-        return this._classes[class_name] as unknown as Type;
+    get_class(class_name: string): AbstractNodeVisConstructor<Type> {
+        return this._classes[class_name];
     }
 
-    get_classes(): {[name: string]: Type} {
+    get_classes(): {[name: string]: AbstractNodeVisConstructor<Type>} {
         return this._classes;
     }
 }
@@ -77,10 +79,9 @@ export class NodeMatcher {
         return null;
     }
 
-    _is_bi_rule_matcher(matcher): boolean {
+    _is_bi_rule_matcher(matcher: StyleMatcherConditions): boolean {
         if (matcher.rule_name) return true;
-        if (matcher.rule_id) return true;
-        return false;
+        return !!matcher.rule_id;
     }
 
     // Duplicate to viewport.ts:get_all_nodes
@@ -92,15 +93,18 @@ export class NodeMatcher {
         return all_nodes;
     }
 
-    _match_by_bi_rule(matcher, node: NodevisNode): boolean {
+    _match_by_bi_rule(
+        matcher: StyleMatcherConditions,
+        node: NodevisNode
+    ): boolean {
         // List matches
-        const list_elements = ["aggr_path_name", "aggr_path_id"];
+        const list_elements = ["aggr_path_name", "aggr_path_id"] as const;
         for (const idx in list_elements) {
             const match_type = list_elements[idx];
             if (!matcher[match_type]) continue;
-            if (matcher[match_type].disabled) continue;
+            if (matcher[match_type]!.disabled) continue;
             if (
-                JSON.stringify(matcher[match_type].value) !=
+                JSON.stringify(matcher[match_type]!.value) !=
                 JSON.stringify(node.data[match_type])
             )
                 return false;
@@ -114,22 +118,22 @@ export class NodeMatcher {
         )
             return false;
 
-        if (
+        return !(
             matcher.rule_name &&
             !matcher.rule_name.disabled &&
             node.data.name != matcher.rule_name.value
-        )
-            return false;
-
-        return true;
+        );
     }
 
-    _match_by_generic_attr(matcher, node: NodevisNode): boolean {
-        const match_types = ["hostname", "service", "id"];
+    _match_by_generic_attr(
+        matcher: StyleMatcherConditions,
+        node: NodevisNode
+    ): boolean {
+        const match_types = ["hostname", "service", "id"] as const;
         for (const idx in match_types) {
             const match_type = match_types[idx];
-            if (matcher[match_type] && !matcher[match_type].disabled) {
-                if (node.data[match_type] != matcher[match_type].value)
+            if (matcher[match_type] && !matcher[match_type]!.disabled) {
+                if (node.data[match_type] != matcher[match_type]!.value)
                     return false;
             }
         }
@@ -159,8 +163,8 @@ export function get_bounding_rect(list_of_coords: Coords[]): BoundingRect {
 }
 
 export function get_bounding_rect_of_rotated_vertices(
-    vertices,
-    rotation_in_rad
+    vertices: Coords[],
+    rotation_in_rad: number
 ): BoundingRect {
     // TODO: check this
     // Vertices with less than 3 elements will fail
@@ -236,13 +240,13 @@ export class SearchFilters {
             .replace(/^\(+/, "")
             .replace(/\)+$/, "")
             .split("|")
-            .forEach(hostname => {
+            .forEach((hostname?: string) => {
                 if (hostname) current_hosts.add(hostname);
             });
         return current_hosts;
     }
 
-    set_host_regex_filter(host_regex) {
+    set_host_regex_filter(host_regex: string) {
         const host_regex_filter =
             this._root_node.select<HTMLSelectElement>("#host_regex");
         host_regex_filter
@@ -261,8 +265,8 @@ export class SearchFilters {
         const inputs = this._root_node.selectAll<HTMLInputElement, null>(
             "input,select"
         );
-        const params = {};
-        inputs.each((d, idx, nodes) => {
+        const params: Record<string, string> = {};
+        inputs.each((_d, idx, nodes) => {
             const input = nodes[idx];
             if (input.type == "checkbox")
                 params[input.name] = input.checked ? "1" : "";
@@ -276,7 +280,7 @@ export class SearchFilters {
 export class LiveSearch {
     _root_node: d3SelectionDiv;
     _search_button: d3.Selection<HTMLInputElement, unknown, any, unknown>;
-    _update_handler: () => {return};
+    _update_handler: () => void;
     _last_body = "";
     _sent_last_body = "";
     _check_interval = 300; // Check every 300ms
@@ -285,8 +289,8 @@ export class LiveSearch {
     _update_active = false;
     _enabled = false;
     _interval_id = 0;
-    constructor(root_node, update_handler) {
-        this._root_node = d3.select(root_node);
+    constructor(root_node_selector: string, update_handler: () => void) {
+        this._root_node = d3.select(root_node_selector);
         this._search_button =
             this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
@@ -312,7 +316,7 @@ export class LiveSearch {
         this._search_button.style("pointer-events", "all");
     }
 
-    _update_pending(_eta): void {
+    _update_pending(_eta: number): void {
         // May show an indicator for an upcoming update
         return;
         //this._search_button.property(
@@ -337,11 +341,11 @@ export class LiveSearch {
     }
 
     _check_update(): void {
-        if (this._enabled == false) return;
+        if (!this._enabled) return;
         this._trigger_update_if_required(this.get_filter_params());
     }
 
-    _trigger_update_if_required(params): void {
+    _trigger_update_if_required(params: Record<string, string>): void {
         const body = this._dict_to_url(params);
         if (body == this._sent_last_body) return;
 
@@ -361,12 +365,12 @@ export class LiveSearch {
         this._update_handler();
     }
 
-    get_filter_params(): {[name: string]: string} {
+    get_filter_params(): Record<string, string> {
         const inputs = this._root_node
             .select("div.simplebar-content")
             .selectAll<HTMLInputElement, null>("input,select");
-        const params = {live_search: "1"};
-        inputs.each((d, idx, nodes) => {
+        const params: Record<string, string> = {live_search: "1"};
+        inputs.each((_d, idx, nodes) => {
             const input = nodes[idx];
             if (input.type == "checkbox")
                 params[input.name] = input.checked ? "1" : "";
@@ -375,7 +379,7 @@ export class LiveSearch {
         return params;
     }
 
-    _dict_to_url(dict): string {
+    _dict_to_url(dict: Record<any, any>): string {
         const str: string[] = [];
         for (const p in dict) {
             str.push(encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]));

@@ -77,6 +77,13 @@ class TOTP:
         return binary % 10**self.code_length
 
     def calculate_generation(self, current_time: datetime.datetime) -> int:
+        """
+        Convert local time object into Epoch time step.
+
+        Ensure '.timestamp()' is the same locally and at utc:
+        >>> abs(datetime.datetime.now(datetime.timezone.utc).timestamp() - datetime.datetime.now().timestamp()) < 5
+        True
+        """
         return math.floor(current_time.timestamp() / self.time_step)
 
     def generate_totp(

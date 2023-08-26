@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,9 +17,10 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import make_confirm_delete_link
+from cmk.gui.permissions import Permission, PermissionRegistry
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link, PermissionSectionWATO
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.theme import theme
@@ -27,10 +28,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-
-
-def register(mode_registry: ModeRegistry) -> None:
-    mode_registry.register(ModeIcons)
 
 
 class ModeIcons(WatoMode):
@@ -177,3 +174,20 @@ class ModeIcons(WatoMode):
                 table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
                 table.cell(_("Name"), icon_name)
                 table.cell(_("Category"), category)
+
+
+def register(
+    mode_registry: ModeRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
+    mode_registry.register(ModeIcons)
+
+    permission_registry.register(
+        Permission(
+            section=PermissionSectionWATO,
+            name="icons",
+            title=_l("Manage Custom Icons"),
+            description=_l("Upload or delete custom icons"),
+            defaults=["admin"],
+        )
+    )

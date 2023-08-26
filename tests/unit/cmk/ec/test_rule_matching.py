@@ -10,7 +10,7 @@ from livestatus import SiteId
 from cmk.ec.config import MatchGroups, Rule, TextMatchResult
 from cmk.ec.event import Event
 from cmk.ec.rule_matcher import (
-    compile_matching_value,
+    compile_rule,
     MatchFailure,
     MatchPriority,
     MatchResult,
@@ -138,24 +138,20 @@ def test_match_message(
     cancel_groups: bool | None,
 ) -> None:
     m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
-    compiled_match = compile_matching_value("match", match_message)
-    rule = Rule() if compiled_match is None else Rule(match=compiled_match)
+    rule = (
+        Rule(match=match_message)
+        if cancel_message is None
+        else Rule(match=match_message, match_ok=cancel_message)
+    )
+    compile_rule(rule)
+    event = Event(text=message)
+    match_groups = MatchGroups()
 
-    if cancel_message is not None:
-        compiled_match_ok = compile_matching_value("match_ok", cancel_message)
-        assert compiled_match_ok is not None
-        rule["match_ok"] = compiled_match_ok
-
-    event: Event = {"text": message}
-
-    match_groups: MatchGroups = {}
     assert m.event_rule_matches_message(rule, event, match_groups) == result
     assert match_groups["match_groups_message"] == match_result
-
-    if cancel_message is not None:
-        assert match_groups["match_groups_message_ok"] == cancel_groups
-    else:
-        assert "match_groups_message_ok" not in match_groups
+    assert match_groups.get("match_groups_message_ok") == (
+        None if cancel_message is None else cancel_groups
+    )
 
 
 @pytest.mark.parametrize(
@@ -325,13 +321,8 @@ def test_match_site(rule: Rule, result: MatchResult) -> None:
 )
 def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
     m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
-
-    if "match_host" in rule:
-        rule = {
-            **rule,  # type: ignore[misc] # mypy bug https://github.com/python/mypy/issues/4122
-            "match_host": compile_matching_value("match_host", rule["match_host"]),
-        }
-
+    rule = rule.copy()
+    compile_rule(rule)
     assert m.event_rule_matches_host(rule, event) == result
 
 

@@ -11,6 +11,7 @@ from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
@@ -484,7 +485,7 @@ class ModeBIPacks(ABCBIMode):
                                             request,
                                             [
                                                 ("mode", "edit_ruleset"),
-                                                ("varname", "special_agents:bi"),
+                                                ("varname", RuleGroup.SpecialAgents("bi")),
                                             ],
                                         )
                                     ),
@@ -497,7 +498,7 @@ class ModeBIPacks(ABCBIMode):
                                             request,
                                             [
                                                 ("mode", "edit_ruleset"),
-                                                ("varname", "active_checks:bi_aggr"),
+                                                ("varname", RuleGroup.ActiveChecks("bi_aggr")),
                                             ],
                                         )
                                     ),

@@ -6,6 +6,7 @@
 
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
+import {OverlayElement} from "nodevis/layer_utils";
 import {
     compute_node_position,
     compute_node_positions_from_list_of_nodes,
@@ -17,7 +18,12 @@ import {
     StyleOptionSpec,
     StyleOptionSpecCheckbox,
 } from "nodevis/layout_utils";
-import {Coords, NodevisNode, RectangleWithCoords} from "nodevis/type_defs";
+import {
+    Coords,
+    d3SelectionSvg,
+    NodevisNode,
+    RectangleWithCoords,
+} from "nodevis/type_defs";
 import {get_bounding_rect_of_rotated_vertices, log} from "nodevis/utils";
 
 //#.
@@ -83,7 +89,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         });
 
         // Save old coords
-        const old_coords = {};
+        const old_coords: Record<string, Coords> = {};
         this.filtered_descendants.forEach(node => {
             old_coords[node.data.id] = {x: node.x, y: node.y};
         });
@@ -122,10 +128,10 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
             return [];
 
         if (node.children) {
-            node["children_backup"] = node.children;
+            node.children_backup = node.children;
             node.children = [];
-            for (const idx in node["children_backup"]) {
-                const child_node = node["children_backup"][idx];
+            for (const idx in node.children_backup) {
+                const child_node = node.children_backup[idx];
                 node.children = node.children.concat(
                     this._set_hierarchy_filter(child_node)
                 );
@@ -136,13 +142,12 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     }
 
     _reset_hierarchy_filter(node: NodevisNode): void {
-        if (!node["children_backup"]) return;
+        if (!node.children_backup) return;
 
-        for (const idx in node["children_backup"])
-            this._reset_hierarchy_filter(node["children_backup"][idx]);
-
-        node.children = node["children_backup"] as NodevisNode[];
-        delete node["children_backup"];
+        for (const idx in node.children_backup)
+            this._reset_hierarchy_filter(node.children_backup[idx]);
+        node.children = node.children_backup;
+        delete node.children_backup;
     }
 
     override zoomed(): void {
@@ -150,7 +155,9 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.generate_overlay();
     }
 
-    get_drag_callback(drag_function): d3.DragBehavior<any, any, any> {
+    get_drag_callback(
+        drag_function: (event: d3.D3DragEvent<any, any, any>) => void
+    ): d3.DragBehavior<any, any, any> {
         return d3
             .drag()
             .on("start.drag", event => this._drag_start(event))
@@ -158,7 +165,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
             .on("end.drag", () => this._drag_end());
     }
 
-    _drag_start(event): void {
+    _drag_start(event: d3.D3DragEvent<any, any, any>): void {
         this.drag_start_info.start_coords = [event.x, event.y];
         this.drag_start_info.delta = {x: 0, y: 0};
         this.drag_start_info.options = JSON.parse(
@@ -168,10 +175,14 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._world.layout_manager.dragging = true;
     }
 
-    _drag_drag(event, drag_function): void {
+    _drag_drag(
+        event: d3.D3DragEvent<any, any, any>,
+        drag_function: (event: d3.D3DragEvent<any, any, any>) => void
+    ): void {
         this.drag_start_info.delta.x += event.dx;
         this.drag_start_info.delta.y += event.dy;
         drag_function(event);
+        //@ts-ignore
         this.changed_options(event, this.style_config.options);
     }
 
@@ -180,7 +191,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._world.layout_manager.create_undo_step();
     }
 
-    change_rotation(_event): void {
+    change_rotation(_event: d3.D3DragEvent<any, any, any>): void {
         let rotation =
             (this.drag_start_info.options.rotation -
                 this.drag_start_info.delta.y) %
@@ -193,8 +204,13 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
-    static override class_name = "hierarchy";
-    static override description = "Hierarchical style";
+    override description(): string {
+        return "Hierarchical style";
+    }
+
+    override class_name(): string {
+        return "hierarchy";
+    }
 
     override type(): string {
         return "hierarchy";
@@ -250,14 +266,14 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         const cos_x = Math.cos(rad);
         const sin_x = Math.sin(rad);
 
+        // @ts-ignore
         d3_flextree.flextree().nodeSize(element => {
             const node = element as NodevisNode;
             const node_style: null | AbstractLayoutStyle = node.data.use_style;
             if (node_style && node != this.style_root_node) {
                 if (
-                    // @ts-ignore
-                    node_style.constructor.class_name ==
-                    LayoutStyleBlock.class_name
+                    node_style.class_name() ==
+                    LayoutStyleBlock.prototype.class_name()
                 ) {
                     return node_style.get_size();
                 }
@@ -300,9 +316,8 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
                 let extra_width = 0;
                 if (
-                    // @ts-ignore
-                    node_style.constructor.class_name ==
-                    LayoutStyleHierarchy.class_name
+                    node_style.class_name() ==
+                    LayoutStyleHierarchy.prototype.class_name()
                 )
                     extra_width =
                         Math.abs(bounding_rect.height * Math.sin(node_rad)) *
@@ -358,9 +373,9 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 )
                     apply_style_force = true;
                 else if (!this.style_root_node.parent) apply_style_force = true;
-                else if (this.style_config.options.detach_from_parent)
-                    apply_style_force = true;
-                else apply_style_force = false;
+                else
+                    apply_style_force =
+                        !!this.style_config.options.detach_from_parent;
             }
 
             if (apply_style_force) {
@@ -422,16 +437,18 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "scale",
                 image: "themes/facelift/images/icon_resize.png",
-                call: this.get_drag_callback(event =>
-                    this.resize_layer_drag(event)
+                call: this.get_drag_callback(
+                    (event: d3.D3DragEvent<any, any, any>) =>
+                        this.resize_layer_drag(event)
                 ),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(event =>
-                    this.change_rotation(event)
+                call: this.get_drag_callback(
+                    (event: d3.D3DragEvent<any, any, any>) =>
+                        this.change_rotation(event)
                 ),
             },
         ];
@@ -442,7 +459,9 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         this.add_option_icons(coords, elements);
     }
 
-    get_text_positioning(rad: number): (x) => any {
+    get_text_positioning(
+        rad: number
+    ): (x: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>) => any {
         rad = rad / 2;
         if (rad > (3 / 4) * Math.PI) rad = rad - Math.PI;
 
@@ -474,7 +493,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         };
     }
 
-    resize_layer_drag(event: MouseEvent): void {
+    resize_layer_drag(event: d3.D3DragEvent<any, any, any>): void {
         const rotation_rad =
             ((this.style_config.options.rotation as number) / 180) * Math.PI;
         const coords = d3.pointer(event);
@@ -518,7 +537,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     }
 
     get_hierarchy_size(): RectangleWithCoords {
-        const max_elements_per_layer = {};
+        const max_elements_per_layer: Record<number, number> = {};
 
         this.filtered_descendants.forEach(node => {
             if (node.children == null) return;
@@ -552,9 +571,15 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 }
 
 export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
-    static override class_name = "radial";
-    static override description = "Radial style";
     _text_rotations: number[] = [];
+
+    override description(): string {
+        return "Radial style";
+    }
+
+    override class_name(): string {
+        return "radial";
+    }
 
     override type(): string {
         return "radial";
@@ -626,8 +651,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 
                 let radius_reduction = 0;
                 if (!node.children) {
-                    radius_reduction =
-                        (this.style_config.options.radius as number) * 1;
+                    radius_reduction = Number(this.style_config.options.radius);
                 }
                 this.unrotated_vertices.push({
                     x: Math.cos(node.x) * (node.y - radius_reduction),
@@ -680,7 +704,6 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 retranslate_styled_sub_nodes.push(node);
             }
             // TODO: check this
-            // @ts-ignore
             node.force = -500;
         }
 
@@ -697,9 +720,9 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
     }
 
     _get_radial_text_positioning(
-        entry,
+        entry: [NodevisNode, number, number],
         node_rad: number
-    ): (d3SelectionSvg) => void {
+    ): (a: d3SelectionSvg) => void {
         const node = entry[0];
 
         if (this.style_root_node == node) return () => null;
@@ -790,33 +813,38 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
             .style("opacity", 0)
             .merge(path);
         this.add_optional_transition(path)
+            //@ts-ignore
             .attr("d", arc)
+            //@ts-ignore
             .style("opacity", null);
 
         // Icons
-        const elements = [
+        const elements: OverlayElement[] = [
             {
                 node: this.style_root_node,
                 type: "radius",
                 image: "themes/facelift/images/icon_resize.png",
-                call: this.get_drag_callback(event =>
-                    this.change_radius(event)
+                call: this.get_drag_callback(
+                    (event: d3.D3DragEvent<any, any, any>) =>
+                        this.change_radius(event)
                 ),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(event =>
-                    this.change_rotation(event)
+                call: this.get_drag_callback(
+                    (event: d3.D3DragEvent<any, any, any>) =>
+                        this.change_rotation(event)
                 ),
             },
             {
                 node: this.style_root_node,
                 type: "degree",
                 image: "themes/facelift/images/icon_pie_chart.png",
-                call: this.get_drag_callback(event =>
-                    this.change_degree(event)
+                call: this.get_drag_callback(
+                    (event: d3.D3DragEvent<any, any, any>) =>
+                        this.change_degree(event)
                 ),
             },
         ];
@@ -827,7 +855,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.add_option_icons(coords, elements);
     }
 
-    change_radius(event): void {
+    change_radius(event: d3.D3DragEvent<any, any, any>): void {
         this._world.layout_manager.toolbar_plugin
             .layout_style_configuration()
             .show_style_configuration(this);
@@ -844,11 +872,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.changed_options(event, this.style_config.options);
     }
 
-    change_degree(event): void {
+    change_degree(event: d3.D3DragEvent<any, any, any>): void {
         this._world.layout_manager.toolbar_plugin
             .layout_style_configuration()
             .show_style_configuration(this);
-        const degree = Math.floor(
+        this.style_config.options.degree = Math.floor(
             Math.min(
                 360,
                 Math.max(
@@ -858,14 +886,18 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 )
             )
         );
-        this.style_config.options.degree = degree;
         this.changed_options(event, this.style_config.options);
     }
 }
 
 export class LayoutStyleFixed extends AbstractLayoutStyle {
-    static override class_name = "fixed";
-    static override description = "Fixed position style";
+    override description(): string {
+        return "Fixed position style";
+    }
+
+    override class_name(): string {
+        return "fixed";
+    }
 
     override type(): string {
         return "fixed";
@@ -885,11 +917,17 @@ export class LayoutStyleFixed extends AbstractLayoutStyle {
 }
 
 export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
-    static override class_name = "block";
-    static override description = "Leaf-Nodes Block style";
     _width = 0;
     _height = 0;
     _leaf_childs: NodevisNode[] = [];
+
+    override description(): string {
+        return "Leaf-Nodes Block style";
+    }
+
+    override class_name(): string {
+        return "block";
+    }
 
     override type(): string {
         return "block";

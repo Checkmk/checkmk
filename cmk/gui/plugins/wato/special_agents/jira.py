@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsApps,
@@ -231,7 +233,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jira(),
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:jira",
+        name=RuleGroup.SpecialAgents("jira"),
         valuespec=_valuespec_special_agents_jira,
     )
 )

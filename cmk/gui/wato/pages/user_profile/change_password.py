@@ -63,7 +63,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
-            raise MKUserError("password2", _("The both new passwords do not match."))
+            raise MKUserError("password2", _("New passwords don't match."))
 
         verify_password_policy(password)
         user_spec["password"] = hash_password(password)

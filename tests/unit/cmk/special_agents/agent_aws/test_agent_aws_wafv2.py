@@ -11,6 +11,7 @@ from typing import Literal
 import pytest
 
 from cmk.special_agents.agent_aws import (
+    _get_wafv2_web_acls,
     AWSConfig,
     NamingConvention,
     OverallTags,
@@ -57,6 +58,34 @@ class FakeWAFV2Client:
 
 
 Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
+
+
+def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
+    fake_wafv2_client = FakeWAFV2Client()
+
+    def get_response_content(response, key, dflt=None):  # type: ignore[no-untyped-def]
+        if dflt is None:
+            dflt = []
+        if key in response:
+            return response[key]
+        return dflt
+
+    res = _get_wafv2_web_acls(fake_wafv2_client, "us-east-1", get_response_content, None, None)  # type: ignore[arg-type]
+    search_string = res[0]["Rules"][0]["Statement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+    assert isinstance(search_string, str)
+
+    for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
+        if "RateBasedStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "NotStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "AndStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["AndStatement"]["Statements"][0][
+                "ByteMatchStatement"
+            ]["SearchString"]
+            assert isinstance(search_string, str)
 
 
 def create_sections(names: object | None, tags: OverallTags, is_regional: bool) -> Wafv2Sections:

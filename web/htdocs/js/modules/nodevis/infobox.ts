@@ -70,7 +70,7 @@ export class InfoBox {
         }
     }
 
-    _find_formatter(data): InfoboxNodeFormatter | void {
+    _find_formatter(data: SearchResults): InfoboxNodeFormatter | void {
         for (const idx in this._formatters) {
             const formatter = this._formatters[idx];
             if (formatter.supports_data(data)) return formatter;
@@ -132,9 +132,13 @@ class InfoboxNodeFormatter {
             .each(function (d) {
                 d3.select(this).classed("state" + d.state, true);
             })
-            .on("click", (event, d) => this._zoom_node(d.name))
-            .on("mouseover", (event, d) => this._highlight_node(d.name, true))
-            .on("mouseout", (event, d) => this._highlight_node(d.name, false));
+            .on("click", (_event: Event, d) => this._zoom_node(d.name))
+            .on("mouseover", (_event: Event, d) =>
+                this._highlight_node(d.name, true)
+            )
+            .on("mouseout", (_event: Event, d) =>
+                this._highlight_node(d.name, false)
+            );
     }
 
     _highlight_node(node_id: string, highlight: boolean): void {

@@ -1040,7 +1040,7 @@ function drag_dashlet_start(event: MouseEvent) {
     return true;
 }
 
-function drag_dashlet(event: MouseEvent) {
+function drag_dashlet(event: MouseEvent): true | void {
     // mosue coords in px relative to dashboard
     const mouse_x = event.clientX - g_dashboard_left!;
     const mouse_y = event.clientY - g_dashboard_top!;
@@ -1203,7 +1203,9 @@ function resize_dashlet_start(event: MouseEvent) {
     return true;
 }
 
-function get_horizontal_direction(resizer: HTMLElement) {
+function get_horizontal_direction(
+    resizer: HTMLElement
+): "left" | "right" | void {
     if (
         utils.has_class(resizer, "resize0_0") ||
         utils.has_class(resizer, "resize_corner0") ||
@@ -1218,7 +1220,7 @@ function get_horizontal_direction(resizer: HTMLElement) {
         return "right";
 }
 
-function get_vertical_direction(resizer: HTMLElement) {
+function get_vertical_direction(resizer: HTMLElement): "top" | "bottom" | void {
     if (
         utils.has_class(resizer, "resize1_0") ||
         utils.has_class(resizer, "resize_corner0") ||
@@ -1233,7 +1235,7 @@ function get_vertical_direction(resizer: HTMLElement) {
         return "bottom";
 }
 
-function resize_dashlet(event: MouseEvent) {
+function resize_dashlet(event: MouseEvent): true | void {
     if (!g_resizing) return true;
 
     const dashlet_obj = (g_resizing as HTMLElement).parentNode!

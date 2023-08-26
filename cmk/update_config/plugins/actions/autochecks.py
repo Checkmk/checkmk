@@ -12,6 +12,7 @@ from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
@@ -101,7 +102,7 @@ def _transformed_params(
     if check_plugin is None:
         return None
 
-    ruleset_name = f"checkgroup_parameters:{check_plugin.check_ruleset_name}"
+    ruleset_name = RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
     if ruleset_name not in all_rulesets.get_rulesets():
         return None
 

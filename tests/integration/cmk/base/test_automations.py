@@ -15,6 +15,7 @@ from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable
@@ -81,7 +82,8 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
     site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
     icmp_rule_id = site.openapi.create_rule(
-        ruleset_name="active_checks:icmp", value={"address": "all_ipv4addresses"}
+        ruleset_name=RuleGroup.ActiveChecks("icmp"),
+        value={"address": "all_ipv4addresses"},
     )
 
     try:

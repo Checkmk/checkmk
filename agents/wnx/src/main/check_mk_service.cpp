@@ -27,7 +27,7 @@ namespace cma::cmdline {
 void PrintBlock(std::string_view title, Colors title_color,
                 const std::function<std::string()> &formatter) {
     xlog::sendStringToStdio(title.data(), title_color);
-    auto out = formatter();
+    const auto out = formatter();
     printf("%s", out.data());
 }
 

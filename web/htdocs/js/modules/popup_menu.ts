@@ -107,7 +107,7 @@ export function open_popup() {
 
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
-function handle_popup_close(event: Event | undefined) {
+function handle_popup_close(event: Event | undefined): true | void {
     const container = active_popup.container;
     const target = event!.target as HTMLElement;
 

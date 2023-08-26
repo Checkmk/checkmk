@@ -32,6 +32,12 @@ import {
 } from "nodevis/type_defs";
 import {get_bounding_rect} from "nodevis/utils";
 
+type _ExampleOptions = Record<string, number>;
+interface ExampleOptions extends _ExampleOptions {
+    total_nodes: number;
+    depth: number;
+}
+
 export class LayoutStyleExampleGenerator {
     _varprefix: string;
     _viewport_width = 600;
@@ -51,10 +57,7 @@ export class LayoutStyleExampleGenerator {
         total_nodes: StyleOptionSpec;
         depth: StyleOptionSpec;
     };
-    _example_options: {
-        total_nodes: number;
-        depth: number;
-    };
+    _example_options: ExampleOptions;
 
     _style_config: StyleConfig;
     _style_hierarchy: NodevisNode;
@@ -62,7 +65,7 @@ export class LayoutStyleExampleGenerator {
 
     _fake_world: NodevisWorld;
 
-    constructor(varprefix) {
+    constructor(varprefix: string) {
         this._varprefix = varprefix;
         this._example_generator_div = d3.select("#" + this._varprefix);
         const options = this._example_generator_div
@@ -187,15 +190,15 @@ export class LayoutStyleExampleGenerator {
                 style_class = null;
                 break;
             }
-            case LayoutStyleHierarchy.class_name: {
+            case LayoutStyleHierarchy.prototype.class_name(): {
                 style_class = LayoutStyleHierarchy;
                 break;
             }
-            case LayoutStyleRadial.class_name: {
+            case LayoutStyleRadial.prototype.class_name(): {
                 style_class = LayoutStyleRadial;
                 break;
             }
-            case LayoutStyleBlock.class_name: {
+            case LayoutStyleBlock.prototype.class_name(): {
                 style_class = LayoutStyleBlock;
                 break;
             }
@@ -209,6 +212,7 @@ export class LayoutStyleExampleGenerator {
             this._fake_world,
             this._style_config,
             this._style_hierarchy,
+            //@ts-ignore
             this._viewport_selection
         );
         this._style_instance.show_style_configuration = () => null;
@@ -248,7 +252,10 @@ export class LayoutStyleExampleGenerator {
             LayoutStyleBlock,
         ];
         use_styles.forEach(style => {
-            style_choices.push([style.class_name, style.description]);
+            style_choices.push([
+                style.prototype.class_name(),
+                style.prototype.description(),
+            ]);
         });
 
         style_choice_selection
@@ -299,7 +306,7 @@ export class LayoutStyleExampleGenerator {
 
         const options: StyleOptionSpec[] = [];
         options.push(this._example_options_spec.total_nodes);
-        if (this._style_config.type != LayoutStyleBlock.class_name)
+        if (this._style_config.type != LayoutStyleBlock.prototype.class_name())
             options.push(this._example_options_spec.depth);
 
         let rows = table
@@ -405,7 +412,7 @@ export class LayoutStyleExampleGenerator {
     }
 
     _create_example_hierarchy(
-        example_settings: {
+        _example_settings: {
             [name: string]: StyleOptionSpec;
         },
         example_options: StyleOptionValues
@@ -417,13 +424,12 @@ export class LayoutStyleExampleGenerator {
         let generated_nodes = 0;
 
         function _add_hierarchy_children(
-            parent_node,
-            cancel_delta,
-            cancel_chance
+            parent_node: NodeData,
+            cancel_delta: number,
+            cancel_chance: number
         ) {
             parent_node.children = [];
-            /* eslint-disable no-constant-condition */
-            while (true) {
+            for (;;) {
                 if (
                     generated_nodes >= maximum_nodes ||
                     (cancel_chance < 1 && cancel_chance - Math.random() <= 0)
@@ -432,7 +438,7 @@ export class LayoutStyleExampleGenerator {
                         delete parent_node.children;
                     break;
                 }
-                const new_child = {name: "child"};
+                const new_child = {name: "child"} as NodeData;
                 generated_nodes += 1;
                 _add_hierarchy_children(
                     new_child,
@@ -449,7 +455,7 @@ export class LayoutStyleExampleGenerator {
         } as unknown as NodeData;
         let cancel_delta = 1 / (example_options.depth as number);
         // Maximum depth of block style is 1
-        if (this._style_config.type == LayoutStyleBlock.class_name)
+        if (this._style_config.type == LayoutStyleBlock.prototype.class_name())
             cancel_delta = 1;
 
         _add_hierarchy_children(hierarchy_raw, cancel_delta, 1);

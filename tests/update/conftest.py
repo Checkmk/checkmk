@@ -21,17 +21,21 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    PExpectDialog,
-    restart_httpd,
-    spawn_expect_process,
-)
+from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--disable-interactive-mode",
+        action="store_true",
+        default=False,
+        help="Disable interactive site creation and update. Use CLI instead.",
+    )
 
 
 @dataclasses.dataclass
@@ -49,6 +53,7 @@ class BaseVersions:
         "2.2.0p5",
         "2.2.0p6",
         "2.2.0p7",
+        "2.2.0p8",
     ]
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
@@ -179,10 +184,9 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(
-    version: CMKVersion, base_site: Optional[Site] = None, interactive: bool = True
-) -> Site:
+def _get_site(version: CMKVersion, interactive: bool, base_site: Optional[Site] = None) -> Site:
     """Install or update the test site with the given version.
+
     An update installation is done automatically when an optional base_site is given.
     By default, both installing and updating is done directly via spawn_expect_process()."""
     update = base_site is not None and base_site.exists()
@@ -211,14 +215,9 @@ def _get_site(
     logger.info("Updating existing site" if update else "Creating new site")
 
     if interactive:
-        # bypass SiteFactory for interactive installations
         source_version = base_site.version.version_directory() if base_site else ""
         target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
-        # install the release
-        site.install_cmk()
-
-        # Run the CLI installer interactively and respond to expected dialogs.
 
         if not os.getenv("CI", "").strip().lower() == "true":
             print(
@@ -230,94 +229,21 @@ def _get_site(
                 "\033[0m"
             )
 
-        pexpect_dialogs = []
         if update:
-            if version_supported(source_version):
-                logger.info("Updating to a supported version.")
-                pexpect_dialogs.extend(
-                    [
-                        PExpectDialog(
-                            expect=(
-                                f"You are going to update the site {site.id} "
-                                f"from version {source_version} "
-                                f"to version {target_version}."
-                            ),
-                            send="u\r",
-                        ),
-                        PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
-                    ]
-                )
-            else:
-                logger.info("%s is not a supported version for %s", source_version, target_version)
-                pexpect_dialogs.extend(
-                    [
-                        PExpectDialog(
-                            expect=(
-                                f"ERROR: You are trying to update from {source_version} to "
-                                f"{target_version} which is not supported."
-                            ),
-                            send="\r",
-                        )
-                    ]
-                )
+            sf.interactive_update(
+                base_site,  # type: ignore
+                version,
+                CMKVersion(BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name()),
+            )
+            if not version_supported(source_version):
+                pytest.skip(f"{source_version} is not a supported version for {target_version}")
 
-        rc = spawn_expect_process(
-            [
-                "/usr/bin/sudo",
-                "/usr/bin/omd",
-                "-V",
-                target_version,
-                "update",
-                f"--conflict={update_conflict_mode}",
-                site.id,
-            ]
-            if update
-            else [
-                "/usr/bin/sudo",
-                "/usr/bin/omd",
-                "-V",
-                target_version,
-                "create",
-                "--admin-password",
-                site.admin_password,
-                "--apache-reload",
-                site.id,
-            ],
-            dialogs=pexpect_dialogs,
-            logfile_path=logfile_path,
-        )
+        else:  # interactive site creation
+            site = sf.interactive_create(site.id, logfile_path)
 
-        if update and not version_supported(source_version):
-            pytest.skip(f"{source_version} is not a supported version for {target_version}")
-
-        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
-
-        with open(logfile_path, "r") as logfile:
-            logger.debug("OMD automation logfile: %s", logfile.read())
-        # refresh the site object after creating the site
-        site = sf.get_existing_site("central")
-        # open the livestatus port
-        site.open_livestatus_tcp(encrypted=False)
-        # start the site after manually installing it
-        site.start()
     else:
         # use SiteFactory for non-interactive site creation/update
         site = sf.get_site("central")
-
-    verify_admin_password(site)
-
-    assert site.is_running(), "Site is not running!"
-    logger.info("Test-site %s is up", site.id)
-
-    restart_httpd()
-
-    site_version, site_edition = get_omd_version(site).rsplit(".", 1)
-    assert (
-        site.version.version == version.version == site_version
-    ), "Version mismatch during %s!" % ("update" if update else "installation")
-    assert (
-        site.version.edition.short == version.edition.short == site_edition
-    ), "Edition mismatch during %s!" % ("update" if update else "installation")
 
     return site
 
@@ -333,16 +259,18 @@ def version_supported(version: str) -> bool:
 def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
-    logger.info("Setting up test-site ...")
-    test_site = _get_site(base_version, interactive=True)
+    interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
+    logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
+    test_site = _get_site(base_version, interactive=not interactive_mode_off)
     yield test_site
     logger.info("Removing test-site...")
     test_site.rm()
 
 
-def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:
+def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bool) -> Site:
     """Update the test site to the target version."""
-    return _get_site(target_version, base_site=site, interactive=interactive)
+    logger.info("Updating site (interactive-mode=%s) ...", not interactive_mode_off)
+    return _get_site(target_version, base_site=site, interactive=not interactive_mode_off)
 
 
 def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:

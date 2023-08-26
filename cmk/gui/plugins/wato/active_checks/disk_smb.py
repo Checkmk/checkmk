@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
@@ -26,9 +28,13 @@ from cmk.gui.valuespec import (
 
 
 def _migrate(params: dict[str, Any]) -> Mapping[str, Any]:
-    if "host" not in params:
+    if (host_value := params.get("host")) is None:
         # Up to 2.1.0p31 and 2.2.0p5 the host was not required
         params["host"] = "use_parent_host"
+
+    elif host_value != "use_parent_host" and not isinstance(host_value, tuple):
+        # If the host was already define, transform to tuple
+        params["host"] = ("define_host", host_value)
 
     return params
 
@@ -154,7 +160,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:disk_smb",
+        name=RuleGroup.ActiveChecks("disk_smb"),
         valuespec=_valuespec_active_checks_disk_smb,
     )
 )

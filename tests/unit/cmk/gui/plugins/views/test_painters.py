@@ -1835,3 +1835,157 @@ def test_paint_custom_notes(
         f.write("<hr>".join(notes))
 
     assert notes_file.read_text() == _paint_custom_notes(notes_type, row)[1]
+
+
+@pytest.mark.parametrize(
+    "object_type, host_name, service_name, notes_dirs, notes, expected",
+    [
+        pytest.param(
+            "host",
+            "localhost",
+            "",
+            [
+                Path(default_config_dir) / "notes/hosts",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "localhost",
+                    "content": "Notes for host <tt>localhost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*ost",
+                    "content": "Notes for hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*",
+                    "content": "Notes for all hosts",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "ost",
+                    "content": "This note should be ignored",
+                },
+            ],
+            "<hr>".join(
+                [
+                    "Notes for host <tt>localhost</tt>",
+                    "Notes for hosts ending with <tt>ost</tt>",
+                    "Notes for all hosts",
+                ]
+            ),
+        ),
+        pytest.param(
+            "service",
+            "localhost",
+            "Uptime",
+            [
+                Path(default_config_dir) / "notes/services" / "*",
+                Path(default_config_dir) / "notes/services" / "*ost",
+                Path(default_config_dir) / "notes/services/localhost",
+                Path(default_config_dir) / "notes/services/no_match",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "Pendorcho",
+                    "content": "This note should be ignored (localhost:Pendorcho)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "Uptime",
+                    "content": "Notes for service <tt>Uptime</tt> on host <tt>localhost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*time",
+                    "content": "Notes for services ending with <tt>time</tt> on host <tt>localhost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*",
+                    "content": "Notes for all services on host <tt>localhost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "Pendorcho",
+                    "content": "This note should be ignored (*ost:Pendorcho)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "Uptime",
+                    "content": "Notes for service <tt>Uptime</tt> on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*time",
+                    "content": "Notes for services ending with <tt>time</tt> on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*",
+                    "content": "Notes for all services on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "Pendorcho",
+                    "content": "This note should be ignored (*:Pendorcho)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "Uptime",
+                    "content": "Notes for service <tt>Uptime</tt> on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*time",
+                    "content": "Notes for services ending with <tt>time</tt> on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*",
+                    "content": "Notes for all services on hosts ending with <tt>ost</tt>",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "Pendorcho",
+                    "content": "This note should be ignored (no_match:Pendorcho)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "Uptime",
+                    "content": "This note should be ignored (no_match:Uptime)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "*time",
+                    "content": "This note should be ignored (no_match:*time)",
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "*",
+                    "content": "This note should be ignored (no_match:*)",
+                },
+            ],
+            "<hr>".join(
+                [
+                    "Notes for service <tt>Uptime</tt> on host <tt>localhost</tt>",
+                    "Notes for services ending with <tt>time</tt> on host <tt>localhost</tt>",
+                    "Notes for all services on host <tt>localhost</tt>",
+                    "Notes for service <tt>Uptime</tt> on hosts ending with <tt>ost</tt>",
+                    "Notes for services ending with <tt>time</tt> on hosts ending with <tt>ost</tt>",
+                    "Notes for all services on hosts ending with <tt>ost</tt>",
+                    "Notes for service <tt>Uptime</tt> on hosts ending with <tt>ost</tt>",
+                    "Notes for services ending with <tt>time</tt> on hosts ending with <tt>ost</tt>",
+                    "Notes for all services on hosts ending with <tt>ost</tt>",
+                ]
+            ),
+        ),
+    ],
+)
+def test_paint_custom_notes_from_files(
+    object_type: Literal["host", "service"],
+    host_name: str,
+    service_name: str | None,
+    notes_dirs: list,
+    notes: list,
+    expected: str,
+) -> None:
+    for path in notes_dirs:
+        path.mkdir(parents=True, exist_ok=True)
+
+    for note in notes:
+        with open(note["file"], "w") as f:
+            f.write(note["content"])
+
+    row: Row = {
+        "host_name": host_name,
+        "service_description": service_name,
+        "site": "my_site",
+        "host_address": "127.0.0.1",
+    }
+
+    res = _paint_custom_notes(object_type, row)
+    assert res[1] == expected

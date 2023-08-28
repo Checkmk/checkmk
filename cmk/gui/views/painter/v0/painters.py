@@ -1559,7 +1559,7 @@ class PainterSvcAcknowledged(Painter):
         return paint_nagiosflag(row, "service_acknowledged", False)
 
 
-def notes_matching_pattern_entries(dirs: Iterable[Path], item: str) -> Iterable[Path]:
+def match_path_entries_with_item(dirs: Iterable[Path], item: str) -> Iterable[Path]:
     yield from (
         sub_path
         for directory in dirs
@@ -1573,17 +1573,15 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        dirs = [
-            Path(cmk.utils.paths.default_config_dir) / "notes/services" / host,
-            Path(cmk.utils.paths.default_config_dir) / "notes/services" / "*",
-        ]
+        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
+        dirs = match_path_entries_with_item([Path(notes_dir)], host)
         item = svc
     else:
         dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]
         item = host
 
     assert isinstance(item, str)
-    files = sorted(notes_matching_pattern_entries(dirs, item), reverse=True)
+    files = sorted(match_path_entries_with_item(dirs, item), reverse=True)
     contents = []
 
     def replace_tags(text: str) -> str:

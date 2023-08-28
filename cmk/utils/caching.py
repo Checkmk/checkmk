@@ -89,4 +89,4 @@ class DictCache(dict):
 # This cache manager holds all caches that rely on the configuration
 # and have to be flushed once the configuration is reloaded in the
 # keepalive mode
-config_manager = CacheManager()
+config_cache = CacheManager()

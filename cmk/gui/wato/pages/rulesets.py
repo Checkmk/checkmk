@@ -57,7 +57,6 @@ from cmk.gui.plugins.wato.utils import (
     DictHostTagCondition,
     HostTagCondition,
     LabelCondition,
-    make_confirm_delete_link,
     search_form,
 )
 from cmk.gui.site_config import wato_slave_sites
@@ -68,7 +67,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,

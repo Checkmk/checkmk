@@ -73,7 +73,6 @@ from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.transaction_manager import transactions as transactions
-from cmk.gui.utils.urls import make_confirm_delete_link as make_confirm_delete_link
 from cmk.gui.utils.urls import make_confirm_link as make_confirm_link
 from cmk.gui.valuespec import ABCPageListOfMultipleGetChoice as ABCPageListOfMultipleGetChoice
 from cmk.gui.valuespec import Alternative as Alternative

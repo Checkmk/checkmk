@@ -20,11 +20,11 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.plugins.wato.utils import make_confirm_delete_link
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
 from cmk.gui.wato import PermissionSectionWATO
 from cmk.gui.watolib.hosts_and_folders import make_action_link

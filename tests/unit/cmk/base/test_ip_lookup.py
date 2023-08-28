@@ -35,7 +35,7 @@ _PatchMapping = Mapping[ip_lookup.IPLookupCacheId, str | None]
 
 
 def patch_config_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:
-    monkeypatch.setattr(config_cache_, "get", lambda _x: cache)
+    monkeypatch.setattr(config_cache_, "obtain_cache", lambda _x: cache)
 
 
 def patch_persisted_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:

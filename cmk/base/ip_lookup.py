@@ -159,7 +159,7 @@ def cached_dns_lookup(
     """
     cache: dict[
         tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
-    ] = _config_cache.get("cached_dns_lookup")
+    ] = _config_cache.obtain_cache("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -349,9 +349,9 @@ def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if "ip_lookup" in _config_cache:
         # Return already created and initialized cache
-        return IPLookupCache(_config_cache.get("ip_lookup"))
+        return IPLookupCache(_config_cache.obtain_cache("ip_lookup"))
 
-    cache = IPLookupCache(_config_cache.get("ip_lookup"))
+    cache = IPLookupCache(_config_cache.obtain_cache("ip_lookup"))
     cache.load_persisted()
     return cache
 

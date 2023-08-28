@@ -1028,7 +1028,7 @@ def set_use_core_config(
 
 
 def strip_tags(tagged_hostlist: list[str]) -> list[HostName]:
-    cache = _config_cache.get("strip_tags")
+    cache = _config_cache.obtain_cache("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     with contextlib.suppress(KeyError):
@@ -1429,7 +1429,7 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
     )
 
     # Sanitize: remove illegal characters from a service description
-    cache = _config_cache.get("final_service_description")
+    cache = _config_cache.obtain_cache("final_service_description")
     with contextlib.suppress(KeyError):
         return cache[description]
 
@@ -1506,7 +1506,7 @@ def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.Tra
 
 
 def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
-    translations_cache = _config_cache.get("service_description_translations")
+    translations_cache = _config_cache.obtain_cache("service_description_translations")
     with contextlib.suppress(KeyError):
         return translations_cache[hostname]
 
@@ -2304,7 +2304,7 @@ class ConfigCache:
         self.__labels.clear()
         self.__label_sources.clear()
         self.__notification_plugin_parameters.clear()
-        self._check_table_cache = _config_cache.get("check_tables")
+        self._check_table_cache = _config_cache.obtain_cache("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
 
@@ -4483,7 +4483,7 @@ class ConfigCache:
 
 
 def get_config_cache() -> ConfigCache:
-    config_cache = _config_cache.get("config_cache")
+    config_cache = _config_cache.obtain_cache("config_cache")
     if not config_cache:
         cache_class = (
             ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache

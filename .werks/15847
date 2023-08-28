@@ -1,6 +1,6 @@
 Title: <tt>cisco_qos</tt>: Handle metric units consistently & drop averaged metrics
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1684161725
 Edition: cre

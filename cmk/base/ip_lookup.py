@@ -15,7 +15,7 @@ from typing import Any, NamedTuple
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.caching import cache_manager as _config_cache
+from cmk.utils.caching import cache_manager
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
@@ -159,7 +159,7 @@ def cached_dns_lookup(
     """
     cache: dict[
         tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
-    ] = _config_cache.obtain_cache("cached_dns_lookup")
+    ] = cache_manager.obtain_cache("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -347,11 +347,11 @@ class IPLookupCache:
 
 def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
-    if "ip_lookup" in _config_cache:
+    if "ip_lookup" in cache_manager:
         # Return already created and initialized cache
-        return IPLookupCache(_config_cache.obtain_cache("ip_lookup"))
+        return IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
 
-    cache = IPLookupCache(_config_cache.obtain_cache("ip_lookup"))
+    cache = IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
     cache.load_persisted()
     return cache
 

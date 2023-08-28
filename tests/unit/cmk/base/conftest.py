@@ -25,9 +25,9 @@ def fixture_core_scenario(monkeypatch):
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches(monkeypatch):
-    from cmk.utils.caching import cache_manager as _config_cache
+    from cmk.utils.caching import cache_manager
 
-    _config_cache.clear()
+    cache_manager.clear()
 
 
 class _MockVSManager(typing.NamedTuple):

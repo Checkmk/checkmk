@@ -32,7 +32,7 @@ import cmk.utils.password_store
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.caching import cache_manager as _config_cache
+from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
@@ -649,7 +649,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         discovered_host_labels_dir=base_discovered_host_labels_dir,
     ):
         try:
-            _config_cache.clear_all()
+            cache_manager.clear_all()
             config_cache.initialize()
 
             # reset these to their original value to create a correct config
@@ -666,7 +666,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     duplicates=config.duplicate_hosts(),
                 )
         finally:
-            _config_cache.clear_all()
+            cache_manager.clear_all()
             config_cache.initialize()
 
     return discovery_results, True

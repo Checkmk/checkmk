@@ -9,7 +9,7 @@ import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-from cmk.utils.caching import cache_manager as _config_cache
+from cmk.utils.caching import cache_manager
 from cmk.utils.exceptions import MKTimeout
 
 __all__ = [
@@ -55,7 +55,7 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
 
     # Note: This also returns True when the time period is unknown
     #       The following function time period_active handles this differently
-    return _config_cache.obtain_cache("timeperiods_cache").get(timeperiod, True)
+    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod, True)
 
 
 def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
@@ -67,13 +67,13 @@ def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return _config_cache.obtain_cache("timeperiods_cache").get(timeperiod)
+    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache() -> None:
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.obtain_cache("timeperiods_cache")
+    tp_cache = cache_manager.obtain_cache("timeperiods_cache")
 
     if not tp_cache:
         connection = livestatus.LocalConnection()
@@ -84,7 +84,7 @@ def update_timeperiods_cache() -> None:
 
 
 def cleanup_timeperiod_caches() -> None:
-    _config_cache.obtain_cache("timeperiods_cache").clear()
+    cache_manager.obtain_cache("timeperiods_cache").clear()
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

@@ -15,8 +15,7 @@ from typing import Iterable
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.caching import cache_manager as _config_cache
-from cmk.utils.caching import DictCache
+from cmk.utils.caching import cache_manager, DictCache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
@@ -338,8 +337,8 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 
 def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostName | None:
     """Find hostname belonging to an ip address."""
-    absent = "ip_to_hostname" not in _config_cache
-    cache = _config_cache.obtain_cache("ip_to_hostname")
+    absent = "ip_to_hostname" not in cache_manager
+    cache = cache_manager.obtain_cache("ip_to_hostname")
     if absent:
         _fill_ip_to_hostname_cache(cache, config_cache)
 

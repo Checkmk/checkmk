@@ -14,7 +14,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Final, Literal, NamedTuple, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, NamedTuple, NewType, overload, TypedDict, TypeVar, Union
 
 from pydantic import BaseModel, parse_obj_as
 
@@ -104,6 +104,7 @@ class GraphDataRange(_GraphDataRangeMandatory, total=False):
 
 GraphRangeSpec = tuple[int | str, int | str]
 GraphRange = tuple[float | None, float | None]
+SizeEx = NewType("SizeEx", int)
 
 
 class _GraphTemplateRegistrationMandatory(TypedDict):

@@ -55,6 +55,7 @@ from ._utils import (
     GraphRecipe,
     parse_raw_graph_recipe,
     render_color_icon,
+    SizeEx,
 )
 from ._valuespecs import migrate_graph_render_options_title_format
 
@@ -1064,10 +1065,10 @@ class GraphDestinations:
         ]
 
 
-def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> int:
+def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> SizeEx:
     if graph_render_options["show_title"] in [False, "inline"]:
-        return 0
-    return 1  # ex
+        return SizeEx(0)
+    return SizeEx(1)
 
 
 default_dashlet_graph_render_options: Mapping[str, Any] = {

@@ -7,10 +7,12 @@ fi
 [ "$1" ] && [ "$1" != "-" ] && _FILE_PATTERN=$1 || _FILE_PATTERN=
 [ "$2" ] && [ "$2" != "-" ] && _CHUNK_SIZE=$2 || _CHUNK_SIZE=50
 _CD=$(dirname "$0")
+_DATA_DIR=${DATA_DIR:-${_CD}}
+_DUMP_DIR=${DUMP_DIR:-${_DATA_DIR}/dumps}
 _ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 [ "${_ROOT}" == "" ] && _ROOT=../..
 _TMP=/tmp
-((_FILE_COUNT = $(find "${_CD}/dumps" -name "*${_FILE_PATTERN}*" -type f -printf "%f\n" | wc -l)))
+((_FILE_COUNT = $(find "${_DUMP_DIR}" -name "*${_FILE_PATTERN}*" -type f -printf "%f\n" | wc -l)))
 ((_CHUNK_MOD = _FILE_COUNT % _CHUNK_SIZE))
 ((_CHUNK_COUNT = _FILE_COUNT / _CHUNK_SIZE))
 [ ${_CHUNK_MOD} -gt 0 ] && ((_CHUNK_COUNT += 1))

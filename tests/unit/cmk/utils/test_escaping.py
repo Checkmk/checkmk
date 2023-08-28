@@ -24,6 +24,7 @@ def test_empty() -> None:
         ("<tt>abc</tt>", None),
         ("<i>abc</i>", None),
         ("<u>abc</u>", None),
+        ("<hr>", None),
         ("<br>", None),
         ("<nobr></nobr>", None),
         ("<pre></pre>", None),
@@ -111,7 +112,8 @@ def test_escape_text_with_links(inp: str, out: Optional[str]) -> None:
 
 
 @pytest.mark.parametrize(
-    "tagname", ("h1", "h2", "b", "tt", "i", "u", "br", "nobr", "pre", "sup", "p", "li", "ul", "ol")
+    "tagname",
+    ("h1", "h2", "b", "tt", "i", "u", "hr", "br", "nobr", "pre", "sup", "p", "li", "ul", "ol"),
 )
 def test_permissive_tags(tagname: str) -> None:
     """test for which tags are 'allowed' aka unescaped after escaping"""

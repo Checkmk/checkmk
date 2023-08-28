@@ -1,6 +1,5 @@
 use clap::Parser;
 use http::{HeaderMap, HeaderValue};
-use reqwest;
 use reqwest::header::USER_AGENT;
 use std::time::{Duration, Instant};
 

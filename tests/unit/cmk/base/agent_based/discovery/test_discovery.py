@@ -67,6 +67,7 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
+from cmk.base.api.agent_based.plugin_contexts import current_host
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,
@@ -970,43 +971,44 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
-    file_cache_options = FileCacheOptions()
-    parser = CMKParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("tests"),
-    )
-    fetcher = CMKFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=Mode.DISCOVERY,
-        on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=True,
-    )
-    commandline_discovery(
-        host_name=testhost,
-        ruleset_matcher=config_cache.ruleset_matcher,
-        parser=parser,
-        fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
-        section_error_handling=lambda *args, **kw: "error",
-        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-        plugins=DiscoveryPluginMapper(config_cache=config_cache),
-        run_plugin_names=EVERYTHING,
-        ignore_plugin=lambda *args, **kw: False,
-        arg_only_new=False,
-        on_error=OnError.RAISE,
-    )
+    with current_host(testhost):
+        file_cache_options = FileCacheOptions()
+        parser = CMKParser(
+            config_cache,
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("tests"),
+        )
+        fetcher = CMKFetcher(
+            config_cache,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            mode=Mode.DISCOVERY,
+            on_error=OnError.RAISE,
+            selected_sections=NO_SELECTION,
+            simulation_mode=True,
+        )
+        commandline_discovery(
+            host_name=testhost,
+            ruleset_matcher=config_cache.ruleset_matcher,
+            parser=parser,
+            fetcher=fetcher,
+            section_plugins=SectionPluginMapper(),
+            section_error_handling=lambda *args, **kw: "error",
+            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+            plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            run_plugin_names=EVERYTHING,
+            ignore_plugin=lambda *args, **kw: False,
+            arg_only_new=False,
+            on_error=OnError.RAISE,
+        )
 
-    entries = AutochecksStore(testhost).read()
-    found = {e.id(): e.service_labels for e in entries}
-    assert found == _expected_services
+        entries = AutochecksStore(testhost).read()
+        found = {e.id(): e.service_labels for e in entries}
+        assert found == _expected_services
 
-    store = DiscoveredHostLabelsStore(testhost)
-    assert store.load() == _expected_host_labels
+        store = DiscoveredHostLabelsStore(testhost)
+        assert store.load() == _expected_host_labels
 
 
 class RealHostScenario(NamedTuple):

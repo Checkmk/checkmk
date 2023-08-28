@@ -16,11 +16,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import (
-    configure_attributes,
-    get_hostnames_from_checkboxes,
-    get_hosts_from_checkboxes,
-)
+from cmk.gui.plugins.wato.utils import configure_attributes
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -37,6 +33,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+
+from ._bulk_actions import get_hostnames_from_checkboxes, get_hosts_from_checkboxes
 
 
 def register(mode_registry: ModeRegistry) -> None:

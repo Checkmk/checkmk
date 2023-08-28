@@ -104,8 +104,6 @@ else:
     managed = None  # type: ignore[assignment]
 
 from cmk.gui.plugins.wato.utils import (
-    get_hostnames_from_checkboxes,
-    get_hosts_from_checkboxes,
     get_search_expression,
     Levels,
     monitoring_macro_help,
@@ -230,8 +228,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "DictHostTagCondition",
         "flash",
         "FullPathFolderChoice",
-        "get_hostnames_from_checkboxes",
-        "get_hosts_from_checkboxes",
         "get_search_expression",
         "HostGroupSelection",
         "HostRulespec",

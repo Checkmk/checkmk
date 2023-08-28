@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import configure_attributes, get_hostnames_from_checkboxes
+from cmk.gui.plugins.wato.utils import configure_attributes
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import show_row_count, Table, table_element
@@ -86,6 +86,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+from ._bulk_actions import get_hostnames_from_checkboxes
 
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 

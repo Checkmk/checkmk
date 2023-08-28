@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import os
 import pprint
 import socket
@@ -17,6 +16,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import cache_manager as _config_cache
+from cmk.utils.caching import DictCache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
@@ -336,23 +336,24 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
     )
 
 
-# find hostname belonging to an ip address. We must not use
-# reverse DNS but the Checkmk mechanisms, since we do not
-# want to find the DNS name but the name of a matching host
-# from all_hosts
 def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostName | None:
-    if "ip_to_hostname" not in _config_cache:
-        cache = _config_cache.obtain_cache("ip_to_hostname")
-
-        for host in config_cache.all_active_realhosts():
-            try:
-                cache[config.lookup_ip_address(config_cache, host, family=socket.AF_INET)] = host
-            except Exception:
-                pass
-    else:
-        cache = _config_cache.obtain_cache("ip_to_hostname")
+    """Find hostname belonging to an ip address."""
+    absent = "ip_to_hostname" not in _config_cache
+    cache = _config_cache.obtain_cache("ip_to_hostname")
+    if absent:
+        _fill_ip_to_hostname_cache(cache, config_cache)
 
     return cache.get(ip)
+
+
+def _fill_ip_to_hostname_cache(cache: DictCache, config_cache: ConfigCache) -> None:
+    """We must not use reverse DNS but the Checkmk mechanisms, since we do not
+    want to find the DNS name but the name of a matching host from all_hosts"""
+    for host in config_cache.all_active_realhosts():
+        try:
+            cache[config.lookup_ip_address(config_cache, host, family=socket.AF_INET)] = host
+        except Exception:
+            pass
 
 
 def _ip_to_dnsname(ip: HostAddress) -> HostName | None:

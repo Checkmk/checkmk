@@ -1,31 +1,13 @@
-use clap::Parser;
 use http::{HeaderMap, HeaderValue};
+use clap::Parser;
+mod cli;
 use reqwest::header::USER_AGENT;
 use std::time::{Duration, Instant};
 
-#[derive(Parser, Debug)]
-#[command(about = "check_http")]
-struct Args {
-    /// URL to check
-    #[arg(short, long)]
-    url: String,
-
-    /// Set timeout in seconds
-    #[arg(long, default_value_t = 10)]
-    timeout: u64,
-
-    /// Wait for document body
-    #[arg(long)]
-    without_body: bool,
-
-    /// Set user-agent
-    #[arg(long)]
-    user_agent: Option<String>,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
+    let args = cli::Args::parse();
 
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = args.user_agent {

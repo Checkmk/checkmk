@@ -28,9 +28,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import flash
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float

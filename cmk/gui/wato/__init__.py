@@ -226,7 +226,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "CheckParameterRulespecWithoutItem",
         "ContactGroupSelection",
         "DictHostTagCondition",
-        "flash",
         "FullPathFolderChoice",
         "get_search_expression",
         "HostGroupSelection",

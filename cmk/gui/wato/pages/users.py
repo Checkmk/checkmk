@@ -50,11 +50,12 @@ from cmk.gui.plugins.userdb.utils import (
     new_user_template,
     UserAttribute,
 )
-from cmk.gui.plugins.wato.utils import flash, make_confirm_delete_link
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may

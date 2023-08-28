@@ -28,11 +28,12 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, make_confirm_delete_link
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions

@@ -71,7 +71,6 @@ from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText
 from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices
 from cmk.gui.utils.escaping import escape_to_html
-from cmk.gui.utils.flashed_messages import flash as flash
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.transaction_manager import transactions as transactions
 from cmk.gui.utils.urls import make_confirm_delete_link as make_confirm_delete_link

@@ -34,10 +34,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,

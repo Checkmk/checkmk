@@ -44,13 +44,13 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import (
     ContactGroupSelection,
-    flash,
     make_confirm_delete_link,
     notification_parameter_registry,
 )
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri
 from cmk.gui.valuespec import (

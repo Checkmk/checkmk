@@ -66,7 +66,7 @@ import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
-from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.caching import cache_manager as _config_cache
 from cmk.utils.check_utils import (
     maincheckify,
     ParametersTypeAlias,

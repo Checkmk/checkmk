@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.caching import config_cache as config_cache_
+from cmk.utils.caching import cache_manager as config_cache_
 from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID

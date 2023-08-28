@@ -160,7 +160,12 @@ export function update_argument_hints() {
             // @ts-ignore
             return this.closest("tbody");
         });
+        const span = node.select(function () {
+            // @ts-ignore
+            return this.closest("span");
+        });
         const required_inputs = rule_arguments.length;
+        if (span.style("display") == "none") return;
 
         // Create nodes
         let newNodes = rule_body
@@ -335,13 +340,20 @@ interface BIRulePreviewJsonData {
 }
 
 export class BIRulePreview extends BIPreview {
+    _span_title: any = null;
+    _span_arguments: any = null;
     _check_update() {
+        if (this._span_title == null)
+            this._span_title = d3.selectAll("span.title");
+        if (this._span_arguments == null)
+            this._span_arguments = d3.selectAll("span.arguments");
+
         if (this._preview_active) {
-            d3.selectAll("span.title").style("display", null);
-            d3.selectAll("span.arguments").style("display", null);
+            this._span_title.style("display", null);
+            this._span_arguments.style("display", null);
         } else {
-            d3.selectAll("span.title").style("display", "none");
-            d3.selectAll("span.arguments").style("display", "none");
+            this._span_title.style("display", "none");
+            this._span_arguments.style("display", "none");
         }
 
         if (!this._preview_active) {

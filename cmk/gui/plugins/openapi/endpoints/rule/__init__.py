@@ -41,6 +41,9 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     RuleOptions,
     Ruleset,
+    RulesetCollection,
+    visible_ruleset,
+    visible_rulesets,
 )
 
 PERMISSIONS = permissions.AllPerm(
@@ -170,13 +173,7 @@ def create_rule(param):
     folder.permissions.need_permission("write")
 
     rulesets = FolderRulesets.load_folder_rulesets(folder)
-    try:
-        ruleset = rulesets.get(ruleset_name)
-    except KeyError:
-        return problem(
-            status=400,
-            detail=f"Ruleset {ruleset_name!r} could not be found.",
-        )
+    ruleset = _retrieve_from_rulesets(rulesets, ruleset_name)
 
     try:
         ruleset.valuespec().validate_value(value, "")
@@ -238,14 +235,7 @@ def list_rules(param):
     all_rulesets = AllRulesets.load_all_rulesets()
     ruleset_name = param["ruleset_name"]
 
-    try:
-        ruleset = all_rulesets.get(ruleset_name)
-    except KeyError:
-        return problem(
-            status=400,
-            title="Unknown ruleset.",
-            detail=f"The ruleset of name {ruleset_name!r} is not known.",
-        )
+    ruleset = _retrieve_from_rulesets(all_rulesets, ruleset_name)
 
     result = []
     for folder, index, rule in ruleset.get_rules():
@@ -291,7 +281,7 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ig
     if all_rulesets is None:
         all_rulesets = AllRulesets.load_all_rulesets()
 
-    for ruleset in all_rulesets.get_rulesets().values():
+    for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         folder: Folder
         index: int
         rule: Rule
@@ -337,7 +327,7 @@ def delete_rule(param):
     all_rulesets = AllRulesets.load_all_rulesets()
 
     found = False
-    for ruleset in all_rulesets.get_rulesets().values():
+    for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
                 ruleset.delete_rule(rule)
@@ -351,6 +341,23 @@ def delete_rule(param):
         title="Rule not found.",
         detail=f"The rule with ID {rule_id!r} could not be found.",
     )
+
+
+def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> Ruleset:
+    ruleset_exception = ProblemException(
+        status=400,
+        title="Unknown ruleset.",
+        detail=f"The ruleset of name {ruleset_name!r} is not known.",
+    )
+    try:
+        ruleset = rulesets.get(ruleset_name)
+    except KeyError:
+        raise ruleset_exception
+
+    if not visible_ruleset(ruleset.rulespec.name):
+        raise ruleset_exception
+
+    return ruleset
 
 
 def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:

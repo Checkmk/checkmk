@@ -6,6 +6,8 @@
 import abc
 import typing as t
 
+from tests.unit.cmk.conftest import import_plugins
+
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -230,6 +232,7 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
+@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_plugin_vs_wato(fix_register: FixRegister) -> None:
     error_reporter = ErrorReporter()
     for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):

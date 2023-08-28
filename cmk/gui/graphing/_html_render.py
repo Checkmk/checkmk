@@ -55,8 +55,6 @@ from ._utils import (
     GraphRecipe,
     parse_raw_graph_recipe,
     render_color_icon,
-    Scalar,
-    SizeEx,
 )
 from ._valuespecs import migrate_graph_render_options_title_format
 
@@ -402,7 +400,7 @@ def render_pin_time_label(graph_artwork: GraphArtwork) -> str:
 
 def get_scalars(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
-) -> list[Scalar]:
+) -> list[tuple[str, str, bool]]:
     scalars = []
     for scalar, title in [
         ("min", _("Minimum")),
@@ -1066,7 +1064,7 @@ class GraphDestinations:
         ]
 
 
-def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> SizeEx:
+def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> int:
     if graph_render_options["show_title"] in [False, "inline"]:
         return 0
     return 1  # ex
@@ -1119,7 +1117,7 @@ def host_service_graph_dashlet_cmk(
         # compute_range needs tuple for computation
         timerange_tuple: tuple[str, Any] = (time_range[0], time_range[1])
         start_time, end_time = Timerange.compute_range(timerange_tuple).range
-    ## Age like 14400 and y1, d1,...
+    # Age like 14400 and y1, d1,...
     else:
         start_time, end_time = Timerange.compute_range(time_range).range
 

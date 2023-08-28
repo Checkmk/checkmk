@@ -33,7 +33,6 @@ from ._utils import (
     Curve,
     GraphDataRange,
     GraphRecipe,
-    SizeEx,
     unit_info,
 )
 
@@ -546,7 +545,7 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 def compute_graph_v_axis(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    height_ex: SizeEx,
+    height_ex: int,
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> VerticalAxis:
@@ -657,7 +656,7 @@ def compute_graph_v_axis(
 def compute_v_axis_min_max(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    height: SizeEx,
+    height: int,
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> tuple[tuple[float, float], float, float, float]:

@@ -91,9 +91,6 @@ class Curve(_CurveMandatory, total=False):
     scalars: dict[str, tuple[TimeSeriesValue, str]]
 
 
-Scalar = tuple[str, str, bool]
-
-
 class _GraphDataRangeMandatory(TypedDict):
     time_range: TimeRange
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
@@ -107,8 +104,6 @@ class GraphDataRange(_GraphDataRangeMandatory, total=False):
 
 GraphRangeSpec = tuple[int | str, int | str]
 GraphRange = tuple[float | None, float | None]
-
-SizeEx = int
 
 
 class _GraphTemplateRegistrationMandatory(TypedDict):

@@ -26,7 +26,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
@@ -47,6 +46,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
 from cmk.gui.watolib.utils import mk_repr
+
+from ._status_links import make_service_status_link
 
 
 def register(mode_registry: ModeRegistry) -> None:

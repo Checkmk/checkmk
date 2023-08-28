@@ -50,7 +50,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import PermissionName
@@ -92,6 +91,8 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
+
+from ._status_links import make_host_status_link
 
 AjaxDiscoveryRequest = dict[str, Any]
 

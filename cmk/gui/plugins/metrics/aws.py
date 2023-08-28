@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.utils.aws_constants import AWSEC2InstFamilies, AWSEC2InstTypes
 
+from cmk.gui.graphing._graph_specification import LineType
 from cmk.gui.graphing._utils import graph_info, indexed_color, metric_info
 from cmk.gui.i18n import _l
 
@@ -1004,13 +1007,19 @@ metric_info["aws_elasticache_subnet_groups"] = {
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info["aws_ec2_running_ondemand_instances"] = {
-    "title": _l("Total running On-Demand Instances"),
-    "metrics": [("aws_ec2_running_ondemand_instances_total", "line")]
-    + [
+
+def _aws_ec2_running_ondemand_instances_metrics() -> Sequence[tuple[str, LineType]]:
+    metrics: list[tuple[str, LineType]] = [("aws_ec2_running_ondemand_instances_total", "line")]
+    metrics += [
         ("aws_ec2_running_ondemand_instances_%s" % inst_type, "stack")
         for inst_type in AWSEC2InstTypes
-    ],
+    ]
+    return metrics
+
+
+graph_info["aws_ec2_running_ondemand_instances"] = {
+    "title": _l("Total running On-Demand Instances"),
+    "metrics": _aws_ec2_running_ondemand_instances_metrics(),
     "optional_metrics": [
         "aws_ec2_running_ondemand_instances_%s" % inst_type for inst_type in AWSEC2InstTypes
     ],

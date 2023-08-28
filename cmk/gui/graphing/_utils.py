@@ -79,7 +79,7 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
 
 
 class _CurveMandatory(TypedDict):
-    line_type: LineType
+    line_type: LineType | Literal["ref"]
     color: str
     title: str
     rrddata: TimeSeries
@@ -942,7 +942,7 @@ def _evaluate_literal(
 class TimeSeriesMetaData:
     title: str | None = None
     color: str | None = None
-    line_type: str | None = None
+    line_type: LineType | Literal["ref"] | None = None
 
 
 @dataclass(frozen=True)
@@ -1225,7 +1225,7 @@ class RenderableRecipe(NamedTuple):
     title: str
     expression: RenderingExpression
     color: str
-    line_type: str
+    line_type: LineType
     visible: bool
 
 
@@ -1234,7 +1234,7 @@ def metric_recipe_and_unit(
     service_description: ServiceName,
     metric_name: MetricName_,
     consolidation_function: str,
-    line_type: str = "stack",
+    line_type: LineType = "stack",
     visible: bool = True,
 ) -> tuple[RenderableRecipe, str]:
     mi = metric_info.get(metric_name, {})

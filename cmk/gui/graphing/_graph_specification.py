@@ -19,7 +19,7 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
 HorizontalRule = tuple[float, str, str, str]
-LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
+LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 MetricExpression = str
 MetricDefinitionWithoutTitle = tuple[MetricExpression, LineType]
 MetricDefinition = MetricDefinitionWithoutTitle | tuple[MetricExpression, LineType, str]

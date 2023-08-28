@@ -7,7 +7,7 @@ import functools
 import operator
 from collections.abc import Callable, Sequence
 from itertools import chain
-from typing import Literal, TypeVar
+from typing import assert_never, Literal, TypeVar
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -16,7 +16,7 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 
-from ._graph_specification import GraphMetric, RPNExpression
+from ._graph_specification import GraphMetric, LineType, RPNExpression
 from ._utils import (
     AugmentedTimeSeries,
     Curve,
@@ -46,6 +46,20 @@ def compute_graph_curves(
     metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
 ) -> list[Curve]:
+    def _parse_line_type(
+        mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
+    ) -> LineType | Literal["ref"]:
+        match ts_line_type:
+            case "line" | "-line":
+                return "line" if mirror_prefix == "" else "-line"
+            case "area" | "-area":
+                return "area" if mirror_prefix == "" else "-area"
+            case "stack" | "-stack":
+                return "stack" if mirror_prefix == "" else "-stack"
+            case "ref":
+                return "ref"
+        assert_never((mirror_prefix, ts_line_type))
+
     curves = []
     for metric_definition in metrics:
         expression = metric_definition.expression
@@ -54,7 +68,7 @@ def compute_graph_curves(
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix = "-" if metric_definition.line_type.startswith("-") else ""
+        mirror_prefix: Literal["", "-"] = "-" if metric_definition.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
             title = metric_definition.title
             if ts.metadata.title and multi:
@@ -69,9 +83,11 @@ def compute_graph_curves(
             curves.append(
                 Curve(
                     {
-                        "line_type": mirror_prefix + ts.metadata.line_type
-                        if multi and ts.metadata.line_type
-                        else metric_definition.line_type,
+                        "line_type": (
+                            _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                            if multi and ts.metadata.line_type
+                            else metric_definition.line_type
+                        ),
                         "color": color,
                         "title": title,
                         "rrddata": ts.data,

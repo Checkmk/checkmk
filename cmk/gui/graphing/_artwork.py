@@ -24,7 +24,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-from ._graph_specification import HorizontalRule
+from ._graph_specification import HorizontalRule, LineType
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, compute_graph_curves
 from ._utils import (
@@ -309,6 +309,15 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
             return p
         return -p
 
+    def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
+        if line_type == "-line":
+            return "line"
+        if line_type == "-area":
+            return "area"
+        if line_type == "-stack":
+            return "stack"
+        raise ValueError(line_type)
+
     layouted_curves = []
     for curve in curves:
         line_type = curve["line_type"]
@@ -320,7 +329,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
 
         if line_type[0] == "-":
             raw_points = list(map(mirror_point, raw_points))
-            line_type = line_type[1:]
+            line_type = _positive_line_type(line_type)
             mirrored = True
             stack_nr = 0
         else:

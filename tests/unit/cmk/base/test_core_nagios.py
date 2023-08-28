@@ -633,8 +633,7 @@ def test_create_nagios_servicedefs_active_check(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -731,8 +730,7 @@ def test_create_nagios_servicedefs_with_warnings(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -784,8 +782,7 @@ def test_create_nagios_servicedefs_omit_service(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
@@ -836,8 +833,7 @@ def test_create_nagios_servicedefs_invalid_args(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -907,8 +903,7 @@ def test_create_nagios_config_commands(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")

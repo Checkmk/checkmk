@@ -229,8 +229,7 @@ def test_automation_active_check(
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *_: service_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     active_check = check_mk.AutomationActiveCheck()
@@ -276,8 +275,7 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config.reset_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     active_check = check_mk.AutomationActiveCheck()

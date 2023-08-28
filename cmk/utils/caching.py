@@ -90,4 +90,5 @@ class DictCache(dict):
 # This cache manager holds all caches that rely on the configuration
 # and have to be flushed once the configuration is reloaded in the
 # keepalive mode
+# TODO(sk): Fix it(mutable global implicitly used)
 cache_manager = CacheManager()

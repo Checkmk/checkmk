@@ -394,12 +394,11 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
     assert not ip_lookup_cache()
 
     result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
+            ts.config_cache.ip_lookup_config(hn) for hn in ts.config_cache.all_active_hosts()
         ),
         configured_ipv4_addresses={},
         configured_ipv6_addresses={},

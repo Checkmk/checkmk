@@ -303,8 +303,7 @@ def test_iter_active_check_services(
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config.reset_config_cache()
 
     active_info = active_check_info[check_name]
     services = list(

@@ -4483,13 +4483,26 @@ class ConfigCache:
 
 
 def get_config_cache() -> ConfigCache:
+    """get current or create clean config cache using cache manager"""
     config_cache = cache_manager.obtain_cache("config_cache")
     if not config_cache:
-        cache_class = (
-            ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache
-        )
-        config_cache["cache"] = cache_class().initialize()
+        config_cache["cache"] = _create_config_cache()
     return config_cache["cache"]
+
+
+def reset_config_cache() -> ConfigCache:
+    """clean config cache using cache manager"""
+    config_cache = cache_manager.obtain_cache("config_cache")
+    config_cache["cache"] = _create_config_cache()
+    return config_cache["cache"]
+
+
+def _create_config_cache() -> ConfigCache:
+    """create clean config cache"""
+    cache_class = (
+        ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache
+    )
+    return cache_class().initialize()
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the

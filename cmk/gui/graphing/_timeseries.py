@@ -70,7 +70,7 @@ def compute_graph_curves(
                 Curve(
                     {
                         "line_type": mirror_prefix + ts.metadata.line_type
-                        if multi
+                        if multi and ts.metadata.line_type
                         else metric_definition.line_type,
                         "color": color,
                         "title": title,

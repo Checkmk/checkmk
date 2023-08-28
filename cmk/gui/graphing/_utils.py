@@ -942,7 +942,7 @@ def _evaluate_literal(
 class TimeSeriesMetaData:
     title: str | None = None
     color: str | None = None
-    line_type: str = ""
+    line_type: str | None = None
 
 
 @dataclass(frozen=True)

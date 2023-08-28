@@ -53,10 +53,10 @@ def main() {
     def build_image = true;
     def build_cloud_images = edition == "cloud";
 
-    // TODO: re-activate triggering int and comp tests for saas as soon as the work
-    def run_int_tests = true
+    // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
+    def run_int_tests = edition != "saas";
     def run_comp_tests = edition != "saas";
-    def run_image_tests = true;
+    def run_image_tests = edition != "saas";
     def run_update_tests = (edition in ["enterprise"]);
 
     print(

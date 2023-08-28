@@ -37,7 +37,10 @@ def load_pipfile():
 
 
 def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
-    unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
+    # certifi is just a collection of CA certificates
+    unpinned_packages = [
+        f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*" and n != "certifi"
+    ]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
         "For the sake of reproducibility, all deployment packages must be pinned to a version!"
@@ -248,7 +251,6 @@ CEE_UNUSED_PACKAGES = [
     "cachetools",
     "certifi",
     "cffi",
-    "chardet",
     "click",
     "defusedxml",
     "docutils",

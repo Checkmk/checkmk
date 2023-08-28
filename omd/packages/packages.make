@@ -123,9 +123,7 @@ include \
     packages/openssl/openssl.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
-    packages/lasso/lasso.make \
     packages/xinetd/xinetd.make \
-    packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/freetds/freetds.make \

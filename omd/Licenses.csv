@@ -3,9 +3,7 @@ asio,1.24.0,BSL-1.0,https://opensource.org/licenses/BSL-1.0,third_party/asio/asi
 cpp-httplib,0.11.3,MIT,https://opensource.org/licenses/MIT,omd/packages/httplib/cpp-httplib-0.13.3.tar.gz,
 fmt,9.0.0,MIT,https://opensource.org/licenses/MIT,third_party/fmt/fmt-9.0.0.tar.gz,
 googletest,1.10.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,third_party/googletest/googletest-71140c3ca7-patched.tar.gz,
-Lasso,2.7.0,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/lasso/lasso-2.7.0.tar.gz,
 mk-livestatus,2023.08.17,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/mk-livestatus/mk-livestatus-2023.08.17.tar.gz,
-mod_auth_mellon,0.18.0,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/mod_auth_mellon/mod_auth_mellon-0.18.0.tar.gz,
 mod_wsgi,4.9.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/mod_wsgi/mod_wsgi-4.9.4.tar.gz,
 NagVis,1.9.36,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/nagvis/nagvis-1.9.36.tar.gz,
 net-snmp,5.9.1,MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,omd/packages/net-snmp/net-snmp-5.9.1.zip,"Also MIT Expat and BSD-3-Clause: „Various copyrights apply to this package, listed in various separate parts below.“"

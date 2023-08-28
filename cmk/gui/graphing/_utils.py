@@ -86,7 +86,6 @@ class _CurveMandatory(TypedDict):
 
 
 class Curve(_CurveMandatory, total=False):
-    dont_paint: bool
     # Added during runtime by _compute_scalars
     scalars: dict[str, tuple[TimeSeriesValue, str]]
 

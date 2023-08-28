@@ -227,18 +227,17 @@ def compute_graph_artwork(
 ) -> GraphArtwork:
     graph_render_options = add_default_render_options(graph_render_options)
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
+    curves = list(
+        compute_graph_artwork_curves(
+            graph_recipe,
+            graph_data_range,
+            resolve_combined_single_metric_spec,
+        )
     )
-    curves_to_paint = list(graph_curves_to_be_painted(curves))
 
     pin_time = _load_graph_pin()
-    _compute_scalars(graph_recipe, curves_to_paint, pin_time)
-
-    layouted_curves, mirrored = _layout_graph_curves(curves_to_paint)  # do stacking, mirroring
-
+    _compute_scalars(graph_recipe, curves, pin_time)
+    layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
     width, height = graph_render_options["size"]
 
     try:
@@ -442,10 +441,6 @@ def _halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
 
 
 _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
-
-
-def graph_curves_to_be_painted(curves: Iterable[_TCurveType]) -> Iterator[_TCurveType]:
-    yield from (curve for curve in curves if not curve.get("dont_paint"))
 
 
 def order_graph_curves_for_legend_and_mouse_hover(

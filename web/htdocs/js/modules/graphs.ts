@@ -73,7 +73,6 @@ interface LayoutedCurveArea {
     points: [TimeSeriesValue, TimeSeriesValue][];
     //dynamic
     title?: string;
-    dont_paint: [number, number];
     color: string;
 }
 
@@ -82,7 +81,6 @@ interface LayoutedCurveLine {
     points: TimeSeriesValue[];
     //dynamic
     title?: string;
-    dont_paint: [number, number];
     color: string;
 }
 
@@ -600,8 +598,6 @@ function render_graph(graph: GraphArtwork) {
     for (let i = 0; i < curves.length; i++) {
         let t = graph["start_time"];
         const curve = curves[i];
-        if (curve["dont_paint"]) continue;
-
         const points = curve["points"];
         // the hex color code can have additional opacity information
         // if these are none existing default to 0.3 UX project

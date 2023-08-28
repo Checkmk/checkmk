@@ -13,7 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import GraphRenderOptions, RGBColor, SizeMM
 
-from ._artwork import graph_curves_to_be_painted, GraphArtwork, LayoutedCurve, LayoutedCurveArea
+from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
 from ._utils import darken_color, ForecastGraphRecipe, GraphDataRange, lighten_color, parse_color
 
 
@@ -161,7 +161,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     pdf_document.save_state()
     pdf_document.add_clip_rect(t_orig, v_orig, t_mm, v_mm)
     step = graph_artwork.step // 2
-    for curve in graph_curves_to_be_painted(graph_artwork.curves):
+    for curve in graph_artwork.curves:
         t = graph_artwork.start_time
         color = parse_color(curve["color"])
 
@@ -518,9 +518,5 @@ def graph_legend_height(
 
     return legend_top_margin + (
         legend_lineskip
-        * (
-            1
-            + len(list(graph_curves_to_be_painted(graph_artwork.curves)))
-            + len(graph_artwork.horizontal_rules)
-        )
+        * (1 + len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules))
     )

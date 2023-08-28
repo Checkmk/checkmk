@@ -40,7 +40,6 @@ from ._artwork import (
     compute_graph_artwork,
     compute_graph_artwork_curves,
     get_step_label,
-    graph_curves_to_be_painted,
     GraphArtwork,
     order_graph_curves_for_legend_and_mouse_hover,
     save_graph_pin,
@@ -486,8 +485,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
 
     # Render the curve related rows
     for curve in order_graph_curves_for_legend_and_mouse_hover(
-        graph_artwork.definition,
-        graph_curves_to_be_painted(graph_artwork.curves),
+        graph_artwork.definition, graph_artwork.curves
     ):
         html.open_tr()
         html.open_td(style=font_size_style)
@@ -1005,10 +1003,7 @@ def __render_ajax_graph_hover(
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
         "curve_values": list(
             compute_curve_values_at_timestamp(
-                order_graph_curves_for_legend_and_mouse_hover(
-                    graph_recipe,
-                    graph_curves_to_be_painted(curves),
-                ),
+                order_graph_curves_for_legend_and_mouse_hover(graph_recipe, curves),
                 graph_recipe.unit,
                 hover_time,
             )
@@ -1026,14 +1021,7 @@ def _graph_legend_height_ex(
     if not _graph_legend_enabled(graph_render_options, graph_artwork):
         return 0.0
     # Add header line + spacing: '3.0'
-    return (
-        3.0
-        + (
-            len(list(graph_curves_to_be_painted(graph_artwork.curves)))
-            + len(graph_artwork.horizontal_rules)
-        )
-        * 1.3
-    )
+    return 3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
 
 
 # .

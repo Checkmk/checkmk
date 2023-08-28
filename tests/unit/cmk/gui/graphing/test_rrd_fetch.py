@@ -18,8 +18,8 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
 from cmk.gui.graphing._rrd_fetch import (
+    _needed_elements_of_expression,
     fetch_rrd_data_for_graph,
-    needed_elements_of_expression,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
@@ -28,7 +28,7 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 def test_needed_elements_of_expression() -> None:
     assert set(
-        needed_elements_of_expression(
+        _needed_elements_of_expression(
             (
                 "transformation",
                 ("q90percentile", 95.0),

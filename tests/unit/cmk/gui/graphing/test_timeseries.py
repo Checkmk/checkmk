@@ -10,7 +10,7 @@ import pytest
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.prediction import TimeSeries
 
-from cmk.gui.graphing._timeseries import Operator, time_series_math
+from cmk.gui.graphing._timeseries import _time_series_math, Operator
 
 
 @pytest.mark.parametrize(
@@ -19,9 +19,9 @@ from cmk.gui.graphing._timeseries import Operator, time_series_math
         pytest.param(("%", []), id="Unknown symbol"),
     ],
 )
-def test_time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]]) -> None:
+def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]]) -> None:
     with pytest.raises(MKGeneralException, match="Undefined operator"):
-        time_series_math(*args)  # type: ignore[arg-type]
+        _time_series_math(*args)  # type: ignore[arg-type]
 
 
 @pytest.mark.skip(reason="Skip operations when incorrect amount of timeseries data for operator")
@@ -37,12 +37,12 @@ def test_time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]]
         ),
     ],
 )
-def test_time_series_math_exc(args: tuple[Operator, list[TimeSeries]]) -> None:
+def test__time_series_math_exc(args: tuple[Operator, list[TimeSeries]]) -> None:
     with pytest.raises(MKGeneralException):
-        time_series_math(*args)
+        _time_series_math(*args)
 
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
-def test_time_series_math_stable_singles(operator: Operator) -> None:
+def test__time_series_math_stable_singles(operator: Operator) -> None:
     test_ts = TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
-    assert time_series_math(operator, [test_ts]) == test_ts
+    assert _time_series_math(operator, [test_ts]) == test_ts

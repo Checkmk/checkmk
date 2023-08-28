@@ -17,8 +17,8 @@ import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._utils import (
+    _hex_color_to_rgb_color,
     AutomaticDict,
-    hex_color_to_rgb_color,
     NormalizedPerfData,
     TranslationInfo,
 )
@@ -186,10 +186,10 @@ def test_find_matching_translation(
         ),
     ],
 )
-def test_normalize_perf_data(
+def test__normalize_perf_data(
     perf_data: Perfdata, check_command: str, result: tuple[str, NormalizedPerfData]
 ) -> None:
-    assert utils.normalize_perf_data(perf_data, check_command) == result
+    assert utils._normalize_perf_data(perf_data, check_command) == result
 
 
 @pytest.mark.parametrize(
@@ -933,8 +933,8 @@ def test_horizontal_rules_from_thresholds(
         ("#123", (17, 34, 51)),
     ],
 )
-def test_hex_color_to_rgb_color(hex_color: str, expected_rgb: tuple[int, int, int]) -> None:
-    assert hex_color_to_rgb_color(hex_color) == expected_rgb
+def test__hex_color_to_rgb_color(hex_color: str, expected_rgb: tuple[int, int, int]) -> None:
+    assert _hex_color_to_rgb_color(hex_color) == expected_rgb
 
 
 @pytest.mark.parametrize(
@@ -974,7 +974,7 @@ def test_indexed_color_uses_color_wheel_first(idx: int) -> None:
 def test_indexed_color_sanity(idx: int, total: int) -> None:
     color = utils.indexed_color(idx, total)
     assert "/" not in color
-    r, g, b = utils.hex_color_to_rgb_color(color)
+    r, g, b = utils._hex_color_to_rgb_color(color)
     if r == g == b:
         assert all(100 <= component <= 200 for component in (r, g, b))
     else:

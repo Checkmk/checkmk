@@ -55,7 +55,7 @@ def fetch_rrd_data_for_graph(
         lambda v: v,
     )
 
-    by_service = group_needed_rrd_data_by_service(
+    by_service = _group_needed_rrd_data_by_service(
         (
             (
                 entry[0],
@@ -78,13 +78,13 @@ def fetch_rrd_data_for_graph(
                     data,
                     conversion=unit_conversion,
                 )
-    align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
-    chop_last_empty_step(graph_data_range, rrd_data)
+    _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
+    _chop_last_empty_step(graph_data_range, rrd_data)
 
     return rrd_data
 
 
-def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | None) -> None:
+def _align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | None) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -118,7 +118,7 @@ def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | 
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
+def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
     if not rrd_data:
         return
 
@@ -141,7 +141,7 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
         data.end -= step
 
 
-def needed_elements_of_expression(
+def _needed_elements_of_expression(
     expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
@@ -151,7 +151,7 @@ def needed_elements_of_expression(
         yield tuple(expression[1:])
     elif expression[0] in ["operator", "transformation"]:
         for operand in expression[2]:
-            yield from needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
+            yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
     elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
         raw_spec = expression[1]
         metrics = resolve_combined_single_metric_spec(
@@ -165,7 +165,7 @@ def needed_elements_of_expression(
         )
 
         for out in (
-            needed_elements_of_expression(m.expression, resolve_combined_single_metric_spec)
+            _needed_elements_of_expression(m.expression, resolve_combined_single_metric_spec)
             for m in metrics
         ):
             yield from out
@@ -188,7 +188,7 @@ def get_needed_sources(
     return {
         source  #
         for metric in metrics
-        for source in needed_elements_of_expression(
+        for source in _needed_elements_of_expression(
             metric.expression,
             resolve_combined_single_metric_spec,
         )
@@ -199,7 +199,7 @@ def get_needed_sources(
 MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 
-def group_needed_rrd_data_by_service(
+def _group_needed_rrd_data_by_service(
     needed_rrd_data: Iterable[RRDDataKey],
 ) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
     by_service: dict[

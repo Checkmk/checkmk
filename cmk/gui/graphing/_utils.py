@@ -409,10 +409,10 @@ def indexed_color(idx: int, total: int) -> str:
         (rgb_value_max - rgb_value_min) * (1 - idx_shifted / total_shifted)
     )
 
-    return rgb_color_to_hex_color(red * rgb_value, green * rgb_value, blue * rgb_value)
+    return _rgb_color_to_hex_color(red * rgb_value, green * rgb_value, blue * rgb_value)
 
 
-def parse_perf_values(
+def _parse_perf_values(
     data_str: str,
 ) -> tuple[str, str, tuple[str | None, str | None, str | None, str | None]]:
     "convert perf str into a tuple with values"
@@ -434,7 +434,7 @@ def parse_perf_values(
     return varname, value, other_parts
 
 
-def split_unit(value_text: str) -> tuple[float | None, str | None]:
+def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
 
     if not value_text.strip():
@@ -481,9 +481,9 @@ def parse_perf_data(
 
     for part in parts:
         try:
-            varname, value_text, value_parts = parse_perf_values(part)
+            varname, value_text, value_parts = _parse_perf_values(part)
 
-            value, unit_name = split_unit(value_text)
+            value, unit_name = _split_unit(value_text)
             if value is None or unit_name is None:
                 continue  # ignore useless empty variable
 
@@ -575,7 +575,7 @@ def find_matching_translation(
     return {}
 
 
-def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
+def _scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -588,7 +588,7 @@ def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no
     return scalars
 
 
-def normalize_perf_data(  # type: ignore[no-untyped-def]
+def _normalize_perf_data(  # type: ignore[no-untyped-def]
     perf_data, check_command
 ) -> tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
@@ -596,7 +596,7 @@ def normalize_perf_data(  # type: ignore[no-untyped-def]
     new_entry: NormalizedPerfData = {
         "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
-        "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
+        "scalar": _scalar_bounds(perf_data[3:], translation_entry["scale"]),
         "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
@@ -613,7 +613,7 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
         mi = MetricInfo(
             title=metric_name.title(),
             unit="",
-            color=get_palette_color_by_index(color_index),
+            color=_get_palette_color_by_index(color_index),
         )
 
     mie = MetricInfoExtended(
@@ -642,7 +642,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     for entry in perf_data:
         metric_name: str
 
-        metric_name, normalized = normalize_perf_data(entry, check_command)
+        metric_name, normalized = _normalize_perf_data(entry, check_command)
         mi, color_index = get_metric_info(metric_name, color_index)
         unit_conversion = mi["unit"].get("conversion", lambda v: v)
 
@@ -667,7 +667,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     return translated_metrics
 
 
-def perf_data_string_from_metric_names(metric_names: list[MetricName_]) -> str:
+def _perf_data_string_from_metric_names(metric_names: list[MetricName_]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -695,7 +695,7 @@ def available_metrics_translated(
 
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
 
-    rrd_perf_data_string = perf_data_string_from_metric_names(rrd_metrics)
+    rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
     rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
     if not rrd_perf_data + perf_data:
         return {}
@@ -910,7 +910,7 @@ def _evaluate_literal(
         if expression not in translated_metrics:
             return float(val), unit_info[""], "#000000"
 
-    varname = drop_metric_consolidation_advice(expression)
+    varname = _drop_metric_consolidation_advice(expression)
 
     percent = varname.endswith("(%)")
     if percent:
@@ -1063,13 +1063,13 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return generic_graph_template(template_id[7:])
+        return _generic_graph_template(template_id[7:])
     if template_id in graph_info:
         return graph_templates_internal()[template_id]
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def generic_graph_template(metric_name: str) -> GraphTemplate:
+def _generic_graph_template(metric_name: str) -> GraphTemplate:
     return GraphTemplate(
         id="METRIC_" + metric_name,
         title=None,
@@ -1134,7 +1134,7 @@ def _get_implicit_graph_templates(
 ) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            yield generic_graph_template(metric_name)
+            yield _generic_graph_template(metric_name)
 
 
 def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
@@ -1144,12 +1144,12 @@ def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
 
 def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
     for part in split_expression(metric_expression)[0].split(","):
-        metric_name = drop_metric_consolidation_advice(part)
+        metric_name = _drop_metric_consolidation_advice(part)
         if metric_name not in rpn_operators:
             yield metric_name
 
 
-def drop_metric_consolidation_advice(expression: MetricExpression) -> str:
+def _drop_metric_consolidation_advice(expression: MetricExpression) -> str:
     if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
         return expression.rsplit(".", 1)[0]
     return expression
@@ -1241,7 +1241,7 @@ def metric_recipe_and_unit(
         RenderableRecipe(
             title=metric_title(metric_name),
             expression=("rrd", host_name, service_description, metric_name, consolidation_function),
-            color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
+            color=parse_color_into_hexrgb(mi.get("color", _get_next_random_palette_color())),
             line_type=line_type,
             visible=visible,
         ),
@@ -1353,11 +1353,11 @@ _cmk_color_palette = {
 }
 
 
-def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
+def _rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
     return f"#{red:02x}{green:02x}{blue:02x}"
 
 
-def hex_color_to_rgb_color(color: str) -> tuple[int, int, int]:
+def _hex_color_to_rgb_color(color: str) -> tuple[int, int, int]:
     """Convert '#112233' or '#123' to (17, 34, 51)"""
     full_color = color
     if len(full_color) == 4:
@@ -1372,12 +1372,12 @@ def hex_color_to_rgb_color(color: str) -> tuple[int, int, int]:
 
 # These colors are also used in the CSS stylesheets, do not change one without changing the other.
 MONITORING_STATUS_COLORS = {
-    "critical/down": rgb_color_to_hex_color(255, 50, 50),
-    "unknown/unreachable": rgb_color_to_hex_color(255, 136, 0),
-    "warning": rgb_color_to_hex_color(255, 208, 0),
-    "in_downtime": rgb_color_to_hex_color(60, 194, 255),
-    "on_down_host": rgb_color_to_hex_color(16, 99, 176),
-    "ok/up": rgb_color_to_hex_color(19, 211, 137),
+    "critical/down": _rgb_color_to_hex_color(255, 50, 50),
+    "unknown/unreachable": _rgb_color_to_hex_color(255, 136, 0),
+    "warning": _rgb_color_to_hex_color(255, 208, 0),
+    "in_downtime": _rgb_color_to_hex_color(60, 194, 255),
+    "on_down_host": _rgb_color_to_hex_color(16, 99, 176),
+    "ok/up": _rgb_color_to_hex_color(19, 211, 137),
 }
 
 scalar_colors = {
@@ -1386,12 +1386,12 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
+def _get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return f"{color_key}/{shading}"
 
 
-def get_next_random_palette_color() -> str:
+def _get_next_random_palette_color() -> str:
     keys = list(_cmk_color_palette.keys())
     if "random_color_index" in g:
         last_index = g.random_color_index
@@ -1411,7 +1411,7 @@ def get_n_different_colors(n: int) -> list[str]:
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
-        colors.append(hsv_to_hexrgb((hue, 1, 1)))
+        colors.append(_hsv_to_hexrgb((hue, 1, 1)))
     return colors
 
 
@@ -1444,7 +1444,7 @@ def parse_color_into_hexrgb(color_string: str) -> str:
             factors = (1.0, 1.0, 0.8) if cmk_color_index[0] in ["2", "3"] else (1.0, 0.6, 1.0)
             hsv = _pointwise_multiplication(hsv, factors)
 
-        color_hexrgb = hsv_to_hexrgb(hsv)
+        color_hexrgb = _hsv_to_hexrgb(hsv)
         return color_hexrgb
 
     return "#808080"
@@ -1457,12 +1457,12 @@ def _pointwise_multiplication(
     return components[0], components[1], components[2]
 
 
-def hsv_to_hexrgb(hsv: tuple[float, float, float]) -> str:
+def _hsv_to_hexrgb(hsv: tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
 def render_color(color_rgb: RGBColor) -> str:
-    return rgb_color_to_hex_color(
+    return _rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
         int(color_rgb[2] * 255),
@@ -1471,7 +1471,7 @@ def render_color(color_rgb: RGBColor) -> str:
 
 def parse_color(color: str) -> RGBColor:
     """Convert '#ff0080' to (1.5, 0.0, 0.5)"""
-    rgb = hex_color_to_rgb_color(color)
+    rgb = _hex_color_to_rgb_color(color)
     return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0
 
 
@@ -1515,7 +1515,7 @@ def render_color_icon(color: str) -> HTML:
         class_="color",
         # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)
         style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;"
-        % (*hex_color_to_rgb_color(color), color),
+        % (*_hex_color_to_rgb_color(color), color),
     )
 
 

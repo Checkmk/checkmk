@@ -37,7 +37,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     # Styling for PDF graphs. Note: We could make some of these
     # configurable
     font_size = graph_render_options["font_size"]
-    mm_per_ex = mm_per_ex_by_render_options(graph_render_options)
+    mm_per_ex = _mm_per_ex_by_render_options(graph_render_options)
     v_label_margin = 1.0  # mm
     t_label_margin = _graph_time_label_margin()
     left_border = _graph_vertical_axis_width(graph_render_options)
@@ -165,7 +165,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         t = graph_artwork.start_time
         color = parse_color(curve["color"])
 
-        if is_area_layouted_curve(curve):
+        if _is_area_layouted_curve(curve):
             points = curve["points"]
             prev_lower = None
             prev_upper = None
@@ -233,12 +233,12 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
     # Show the inline title
     if graph_render_options["show_title"] == "inline":
-        title_top = top - (mm_per_ex_by_render_options(graph_render_options) * 2)
+        title_top = top - (_mm_per_ex_by_render_options(graph_render_options) * 2)
         pdf_document.render_aligned_text(
             left,
             title_top,
             width,
-            mm_per_ex_by_render_options(graph_render_options) * 2,
+            _mm_per_ex_by_render_options(graph_render_options) * 2,
             graph_artwork.title,
             align="center",
             bold=True,
@@ -246,12 +246,12 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         )
 
     if graph_render_options["show_graph_time"]:
-        title_top = top - (mm_per_ex_by_render_options(graph_render_options) * 2)
+        title_top = top - (_mm_per_ex_by_render_options(graph_render_options) * 2)
         pdf_document.render_aligned_text(
             left - right_margin,
             title_top,
             width,
-            mm_per_ex_by_render_options(graph_render_options) * 2,
+            _mm_per_ex_by_render_options(graph_render_options) * 2,
             graph_artwork.time_axis["title"],
             align="right",
             bold=True,
@@ -338,7 +338,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
     # Paint legend
     if graph_render_options["show_legend"]:
-        legend_lineskip = get_graph_legend_lineskip(graph_render_options)
+        legend_lineskip = _get_graph_legend_lineskip(graph_render_options)
         legend_top_margin = _graph_legend_top_margin()
         legend_top = bottom - legend_top_margin + bottom_margin
         legend_column_width = (width - left_margin - left_border - right_margin) / 7.0
@@ -407,7 +407,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     logger.debug("  Finished rendering graph")
 
 
-def is_area_layouted_curve(curve: LayoutedCurve) -> TypeGuard[LayoutedCurveArea]:
+def _is_area_layouted_curve(curve: LayoutedCurve) -> TypeGuard[LayoutedCurveArea]:
     return curve["type"] == "area"
 
 
@@ -433,7 +433,7 @@ def get_mm_per_ex(font_size: float) -> SizeMM:
     return font_size / 3.0
 
 
-def mm_per_ex_by_render_options(graph_render_options: GraphRenderOptions) -> SizeMM:
+def _mm_per_ex_by_render_options(graph_render_options: GraphRenderOptions) -> SizeMM:
     return get_mm_per_ex(graph_render_options["font_size"])
 
 
@@ -454,8 +454,8 @@ def _graph_time_label_margin() -> SizeMM:
     return 1.0  # mm
 
 
-def get_graph_legend_lineskip(graph_render_options: GraphRenderOptions) -> SizeMM:
-    return mm_per_ex_by_render_options(graph_render_options) * 1.5
+def _get_graph_legend_lineskip(graph_render_options: GraphRenderOptions) -> SizeMM:
+    return _mm_per_ex_by_render_options(graph_render_options) * 1.5
 
 
 def _graph_vertical_axis_width(graph_render_options: GraphRenderOptions) -> SizeMM:
@@ -468,7 +468,7 @@ def _graph_vertical_axis_width(graph_render_options: GraphRenderOptions) -> Size
     ):
         return get_mm_per_ex(graph_render_options["vertical_axis_width"][1])
 
-    return 5 * mm_per_ex_by_render_options(graph_render_options)
+    return 5 * _mm_per_ex_by_render_options(graph_render_options)
 
 
 def _graph_top_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
@@ -504,7 +504,7 @@ def _graph_left_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
 def graph_title_height(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_title"] in [False, "inline"]:
         return 0
-    return mm_per_ex_by_render_options(graph_render_options) * 2
+    return _mm_per_ex_by_render_options(graph_render_options) * 2
 
 
 def graph_legend_height(
@@ -513,7 +513,7 @@ def graph_legend_height(
     if not graph_render_options["show_legend"]:
         return 0
 
-    legend_lineskip = get_graph_legend_lineskip(graph_render_options)
+    legend_lineskip = _get_graph_legend_lineskip(graph_render_options)
     legend_top_margin = _graph_legend_top_margin()
 
     return legend_top_margin + (

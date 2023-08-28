@@ -92,7 +92,7 @@ def vs_graph_render_options(default_values=None, exclude=None):
     )
 
 
-def vs_title_infos() -> ListChoice:
+def _vs_title_infos() -> ListChoice:
     choices = [
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
@@ -134,7 +134,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
         (
             "title_format",
             MigrateNotUpdated(
-                valuespec=vs_title_infos(),
+                valuespec=_vs_title_infos(),
                 migrate=migrate_graph_render_options_title_format,
             ),
         ),

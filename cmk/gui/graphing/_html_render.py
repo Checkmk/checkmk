@@ -126,13 +126,13 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     )
 
 
-def render_graph_or_error_html(
+def _render_graph_or_error_html(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
 ) -> HTML:
     try:
-        return render_graph_html(graph_artwork, graph_data_range, graph_render_options)
+        return _render_graph_html(graph_artwork, graph_data_range, graph_render_options)
     except Exception as e:
         return render_graph_error_html(e)
 
@@ -159,7 +159,7 @@ def render_graph_error_html(msg_or_exc: Exception | str, title: str | None = Non
 
 # Render the complete HTML code of a graph - including its <div> container.
 # Later updates will just replace the content of that container.
-def render_graph_html(
+def _render_graph_html(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
@@ -176,7 +176,7 @@ def render_graph_html(
             json.dumps(html_code),
             graph_artwork.json(),
             json.dumps(graph_render_options),
-            json.dumps(graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)),
+            json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)),
         )
     )
 
@@ -185,7 +185,7 @@ def render_graph_html(
 # an update of the graph should be done. It must contain everything that we need to
 # create the HTML code of the graph. The entry "graph_id" will be set by the javascript
 # code since it is not known to us.
-def graph_ajax_context(
+def _graph_ajax_context(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
@@ -198,14 +198,14 @@ def graph_ajax_context(
     }
 
 
-def render_title_elements_plain(elements: Iterable[str]) -> str:
+def _render_title_elements_plain(elements: Iterable[str]) -> str:
     return " / ".join(_u(txt) for txt in elements if txt)
 
 
 def render_plain_graph_title(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
 ) -> str:
-    return render_title_elements_plain(
+    return _render_title_elements_plain(
         element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_options)
     )
 
@@ -232,12 +232,12 @@ def _render_graph_title_elements(
     if not isinstance(specification, TemplateGraphSpecification):
         return title_elements
 
-    title_elements.extend(title_info_elements(specification, title_format))
+    title_elements.extend(_title_info_elements(specification, title_format))
 
     return title_elements
 
 
-def title_info_elements(
+def _title_info_elements(
     spec_info: TemplateGraphSpecification, title_format: Sequence[str]
 ) -> Iterable[tuple[str, str]]:
     if "add_host_name" in title_format:
@@ -366,7 +366,7 @@ def _show_graph_add_to_icon_for_popup(
         data=[
             element_type_name,
             None,
-            graph_ajax_context(graph_artwork, graph_data_range, graph_render_options),
+            _graph_ajax_context(graph_artwork, graph_data_range, graph_render_options),
         ],
         style="z-index:2",
     )  # Ensures that graph canvas does not cover it
@@ -385,7 +385,7 @@ def _show_graph_canvas(graph_render_options: GraphRenderOptions) -> None:
     )
 
 
-def show_pin_time(graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions) -> bool:
+def _show_pin_time(graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions) -> bool:
     if not graph_render_options["show_pin"]:
         return False
 
@@ -393,12 +393,12 @@ def show_pin_time(graph_artwork: GraphArtwork, graph_render_options: GraphRender
     return timestamp is not None and graph_artwork.start_time <= timestamp <= graph_artwork.end_time
 
 
-def render_pin_time_label(graph_artwork: GraphArtwork) -> str:
+def _render_pin_time_label(graph_artwork: GraphArtwork) -> str:
     timestamp = graph_artwork.pin_time
     return cmk.utils.render.date_and_time(timestamp)[:-3]
 
 
-def get_scalars(
+def _get_scalars(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
 ) -> list[tuple[str, str, bool]]:
     scalars = []
@@ -414,8 +414,8 @@ def get_scalars(
 
     scalars.append(("last", _("Last"), False))
 
-    if show_pin_time(graph_artwork, graph_render_options):
-        scalars.append(("pin", render_pin_time_label(graph_artwork), False))
+    if _show_pin_time(graph_artwork, graph_render_options):
+        scalars.append(("pin", _render_pin_time_label(graph_artwork), False))
 
     return scalars
 
@@ -427,7 +427,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     graph_width = graph_render_options["size"][0] * html_size_per_ex
     font_size_style = "font-size: %dpt;" % graph_render_options["font_size"]
 
-    scalars = get_scalars(graph_artwork, graph_render_options)
+    scalars = _get_scalars(graph_artwork, graph_render_options)
 
     if graph_render_options["show_vertical_axis"] or graph_render_options["show_controls"]:
         legend_margin_left = 49
@@ -495,7 +495,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.close_td()
 
         for scalar, title, inactive in scalars:
-            if scalar == "pin" and not show_pin_time(graph_artwork, graph_render_options):
+            if scalar == "pin" and not _show_pin_time(graph_artwork, graph_render_options):
                 continue
 
             classes = ["scalar"]
@@ -557,7 +557,7 @@ def ajax_graph(
     try:
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
-        response_data = render_ajax_graph(context, resolve_combined_single_metric_spec)
+        response_data = _render_ajax_graph(context, resolve_combined_single_metric_spec)
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -566,7 +566,7 @@ def ajax_graph(
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph(
+def _render_ajax_graph(
     context: Mapping[str, Any],
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
@@ -621,7 +621,7 @@ def render_ajax_graph(
 
     # Persist the current data range for the graph editor
     if graph_render_options["editing"]:
-        save_user_graph_data_range(graph_data_range)
+        _save_user_graph_data_range(graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -655,7 +655,7 @@ def load_user_graph_data_range() -> GraphDataRange:
     )
 
 
-def save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
+def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
     user.save_file("graph_range", graph_data_range)
 
 
@@ -663,10 +663,10 @@ def forget_manual_vertical_zoom() -> None:
     user_range = load_user_graph_data_range()
     if "vertical_range" in user_range:
         del user_range["vertical_range"]
-        save_user_graph_data_range(user_range)
+        _save_user_graph_data_range(user_range)
 
 
-def resolve_graph_recipe_with_error_handling(
+def _resolve_graph_recipe_with_error_handling(
     graph_specification: GraphSpecification,
 ) -> Sequence[GraphRecipe] | HTML:
     try:
@@ -696,11 +696,11 @@ def render_graphs_from_specification_html(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    graph_recipes = resolve_graph_recipe_with_error_handling(graph_specification)
+    graph_recipes = _resolve_graph_recipe_with_error_handling(graph_specification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
 
-    return render_graphs_from_definitions(
+    return _render_graphs_from_definitions(
         graph_recipes,
         graph_data_range,
         graph_render_options,
@@ -710,7 +710,7 @@ def render_graphs_from_specification_html(
     )
 
 
-def render_graphs_from_definitions(
+def _render_graphs_from_definitions(
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
@@ -731,14 +731,14 @@ def render_graphs_from_definitions(
     output = HTML()
     for graph_recipe in graph_recipes:
         if render_async:
-            output += render_graph_container_html(
+            output += _render_graph_container_html(
                 graph_recipe,
                 graph_data_range,
                 graph_render_options,
                 graph_display_id=graph_display_id,
             )
         else:
-            output += render_graph_content_html(
+            output += _render_graph_content_html(
                 graph_recipe,
                 graph_data_range,
                 graph_render_options,
@@ -749,7 +749,7 @@ def render_graphs_from_definitions(
 
 
 # cmk.graphs.load_graph_content will call ajax_render_graph_content() via JSON to finally load the graph
-def render_graph_container_html(
+def _render_graph_container_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
@@ -802,7 +802,7 @@ def ajax_render_graph_content(
         api_request = request.get_request()
         resp = {
             "result_code": 0,
-            "result": render_graph_content_html(
+            "result": _render_graph_content_html(
                 parse_raw_graph_recipe(api_request["graph_recipe"]),
                 api_request["graph_data_range"],
                 api_request["graph_render_options"],
@@ -820,7 +820,7 @@ def ajax_render_graph_content(
     response.set_data(json.dumps(resp))
 
 
-def render_graph_content_html(
+def _render_graph_content_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
@@ -839,7 +839,7 @@ def render_graph_content_html(
             resolve_combined_single_metric_spec,
             graph_display_id=graph_display_id,
         )
-        main_graph_html = render_graph_or_error_html(
+        main_graph_html = _render_graph_or_error_html(
             graph_artwork, graph_data_range, graph_render_options
         )
 
@@ -848,7 +848,7 @@ def render_graph_content_html(
         ):
             output += HTMLWriter.render_div(
                 main_graph_html
-                + render_time_range_selection(
+                + _render_time_range_selection(
                     graph_recipe,
                     graph_render_options,
                     resolve_combined_single_metric_spec,
@@ -871,7 +871,7 @@ def render_graph_content_html(
     return output
 
 
-def render_time_range_selection(
+def _render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
@@ -918,7 +918,7 @@ def render_time_range_selection(
         )
         rows.append(
             HTMLWriter.render_td(
-                render_graph_html(graph_artwork, graph_data_range, graph_render_options),
+                _render_graph_html(graph_artwork, graph_data_range, graph_render_options),
                 title=_("Change graph timerange to: %s") % timerange_attrs["title"],
             )
         )
@@ -973,7 +973,7 @@ def ajax_graph_hover(
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
         hover_time = request.get_integer_input_mandatory("hover_time")
-        response_data = render_ajax_graph_hover(
+        response_data = __render_ajax_graph_hover(
             context, hover_time, resolve_combined_single_metric_spec
         )
         response.set_data(json.dumps(response_data))
@@ -984,7 +984,7 @@ def ajax_graph_hover(
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph_hover(
+def __render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
     resolve_combined_single_metric_spec: Callable[
@@ -1019,7 +1019,7 @@ def render_ajax_graph_hover(
 # TODO: This is not acurate! Especially when the font size is changed this does not lead to correct
 # results. But this is a more generic problem of the html_size_per_ex which is hard coded instead
 # of relying on the font as it should.
-def graph_legend_height_ex(
+def _graph_legend_height_ex(
     graph_render_options: GraphRenderOptions, graph_artwork: GraphArtwork
 ) -> float:
     if not _graph_legend_enabled(graph_render_options, graph_artwork):
@@ -1123,7 +1123,7 @@ def host_service_graph_dashlet_cmk(
 
     graph_data_range = make_graph_data_range((start_time, end_time), graph_render_options)
 
-    graph_recipes = resolve_graph_recipe_with_error_handling(graph_specification)
+    graph_recipes = _resolve_graph_recipe_with_error_handling(graph_specification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
     if graph_recipes:
@@ -1142,10 +1142,10 @@ def host_service_graph_dashlet_cmk(
             resolve_combined_single_metric_spec,
         )
         if graph_artwork.curves:
-            legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
+            legend_height = _graph_legend_height_ex(graph_render_options, graph_artwork)
             graph_render_options["size"] = (width, height - legend_height)
 
-    html_code = render_graphs_from_definitions(
+    html_code = _render_graphs_from_definitions(
         [graph_recipe],
         graph_data_range,
         graph_render_options,

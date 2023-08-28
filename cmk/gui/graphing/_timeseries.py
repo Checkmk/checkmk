@@ -108,12 +108,12 @@ def evaluate_time_series_expression(
     return expression_func(parameters, rrd_data)
 
 
-def expression_operator(
+def _expression_operator(
     parameters: ExpressionParams,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
     operator_id, operands = parameters
-    if result := time_series_math(
+    if result := _time_series_math(
         operator_id,
         [
             operand_evaluated.data
@@ -126,7 +126,7 @@ def expression_operator(
     return []
 
 
-def expression_rrd(
+def _expression_rrd(
     parameters: ExpressionParams,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
@@ -137,7 +137,7 @@ def expression_rrd(
     return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
-def expression_constant(
+def _expression_constant(
     parameters: ExpressionParams,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
@@ -156,7 +156,7 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, 
 Operator = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
 
 
-def time_series_math(
+def _time_series_math(
     operator_id: Operator,
     operands_evaluated: list[TimeSeries],
 ) -> TimeSeries | None:
@@ -205,17 +205,17 @@ def clean_time_series_point(tsp: TimeSeries | TimeSeriesValues) -> list[float]:
     return [x for x in tsp if x is not None]
 
 
-def time_series_operator_sum(tsp: TimeSeries | TimeSeriesValues) -> float:
+def _time_series_operator_sum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return sum(clean_time_series_point(tsp))
 
 
-def time_series_operator_product(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+def _time_series_operator_product(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp:
         return None
     return functools.reduce(operator.mul, tsp, 1)
 
 
-def time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+def _time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp:
         return None
     assert tsp[0] is not None
@@ -223,7 +223,7 @@ def time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float
     return tsp[0] - tsp[1]
 
 
-def time_series_operator_fraction(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+def _time_series_operator_fraction(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp or tsp[1] == 0:
         return None
     assert tsp[0] is not None
@@ -231,15 +231,15 @@ def time_series_operator_fraction(tsp: TimeSeries | TimeSeriesValues) -> float |
     return tsp[0] / tsp[1]
 
 
-def time_series_operator_maximum(tsp: TimeSeries | TimeSeriesValues) -> float:
+def _time_series_operator_maximum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return max(clean_time_series_point(tsp))
 
 
-def time_series_operator_minimum(tsp: TimeSeries | TimeSeriesValues) -> float:
+def _time_series_operator_minimum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return min(clean_time_series_point(tsp))
 
 
-def time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
+def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
     tsp_clean = clean_time_series_point(tsp)
     return sum(tsp_clean) / len(tsp_clean)
 
@@ -254,18 +254,18 @@ def time_series_operators() -> (
     ]
 ):
     return {
-        "+": (_("Sum"), time_series_operator_sum),
-        "*": (_("Product"), time_series_operator_product),
-        "-": (_("Difference"), time_series_operator_difference),
-        "/": (_("Fraction"), time_series_operator_fraction),
-        "MAX": (_("Maximum"), time_series_operator_maximum),
-        "MIN": (_("Minimum"), time_series_operator_minimum),
-        "AVERAGE": (_("Average"), time_series_operator_average),
+        "+": (_("Sum"), _time_series_operator_sum),
+        "*": (_("Product"), _time_series_operator_product),
+        "-": (_("Difference"), _time_series_operator_difference),
+        "/": (_("Fraction"), _time_series_operator_fraction),
+        "MAX": (_("Maximum"), _time_series_operator_maximum),
+        "MIN": (_("Minimum"), _time_series_operator_minimum),
+        "AVERAGE": (_("Average"), _time_series_operator_average),
         "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }
 
 
 def register_time_series_expressions(registy: TimeSeriesExpressionRegistry) -> None:
-    registy.register_expression("operator")(expression_operator)
-    registy.register_expression("rrd")(expression_rrd)
-    registy.register_expression("constant")(expression_constant)
+    registy.register_expression("operator")(_expression_operator)
+    registy.register_expression("rrd")(_expression_rrd)
+    registy.register_expression("constant")(_expression_constant)

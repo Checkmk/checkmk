@@ -13,12 +13,12 @@ from tests.testlib import set_timezone
 from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
 
 from cmk.gui.graphing._artwork import (
+    _areastack,
+    _compute_graph_t_axis,
+    _halfstep_interpolation,
     _purge_min_max,
     _t_axis_labels_seconds,
     _t_axis_labels_week,
-    areastack,
-    compute_graph_t_axis,
-    halfstep_interpolation,
     TimeAxis,
 )
 
@@ -73,7 +73,7 @@ def test_t_axis_labels_week() -> None:
 
 
 def test_halfstep_interpolation() -> None:
-    assert halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+    assert _halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
         5.0,
         5.0,
         5.0,
@@ -103,7 +103,7 @@ def test_fringe(
     args: tuple[Sequence[TimeSeriesValue], Sequence[TimeSeriesValue]],
     result: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]],
 ) -> None:
-    assert areastack(args[1], args[0]) == result
+    assert _areastack(args[1], args[0]) == result
 
 
 @pytest.mark.parametrize(
@@ -236,7 +236,7 @@ def test_compute_graph_t_axis(
 ) -> None:
     with set_timezone("Europe/Berlin"):
         assert (
-            compute_graph_t_axis(
+            _compute_graph_t_axis(
                 start_time=start_time,
                 end_time=end_time,
                 width=width,

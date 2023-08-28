@@ -254,10 +254,7 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
-    from cmk.utils.caching import runtime_cache as _runtime_cache
-
     config_cache_.clear()
-    _runtime_cache.clear()
 
 
 class TestIPLookupCacheSerialzer:

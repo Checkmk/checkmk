@@ -11,7 +11,7 @@ from typing import Final
 
 import cmk.utils.misc
 import cmk.utils.render as render
-from cmk.utils.caching import config_cache, runtime_cache
+from cmk.utils.caching import config_cache
 from cmk.utils.log import VERBOSE
 
 __all__ = [
@@ -122,7 +122,6 @@ class AbstractMemoryObserver(ABCResourceObserver):
         self._dump("APPROXIMATE SIZES: GLOBALS TOP 50", globals_sizes, 50)
         for title, module in [
             ("CONFIG CACHE", config_cache),
-            ("RUNTIME CACHE", runtime_cache),
         ]:
             self._dump("APPROXIMATE SIZES: %s" % title, module.dump_sizes(), None)
 

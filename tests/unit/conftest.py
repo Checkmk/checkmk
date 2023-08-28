@@ -235,7 +235,6 @@ def site(request):
 
 def _clear_caches():
     cmk.utils.caching.config_cache.clear()
-    cmk.utils.caching.runtime_cache.clear()
 
     cmk_version.edition.cache_clear()
 

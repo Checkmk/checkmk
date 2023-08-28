@@ -90,8 +90,3 @@ class DictCache(dict):
 # and have to be flushed once the configuration is reloaded in the
 # keepalive mode
 config_cache = CacheManager()
-
-# These caches are not automatically cleared during the whole execution
-# time of the current Checkmk process. Single cached may be cleaned
-# manually during execution.
-runtime_cache = CacheManager()

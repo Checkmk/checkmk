@@ -1,0 +1,12 @@
+Title: BI configuration: Fixed broken preview argument placeholders
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1693220753
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p9
+
+On larger setups with hundreds of rules, the preview arguments for <tt>Call a rule</tt> were not shown correctly.
+

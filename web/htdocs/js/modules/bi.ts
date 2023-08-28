@@ -147,7 +147,12 @@ export function update_argument_hints() {
                 // @ts-ignore
                 return this.closest("tbody");
             });
+            let span = node.select(function () {
+                // @ts-ignore
+                return this.closest("span");
+            });
             let required_inputs = rule_arguments.length;
+            if (span.style("display") == "none") return;
 
             // Create nodes
             nodes = rule_body
@@ -298,13 +303,18 @@ export class BIPreview {
 }
 
 export class BIRulePreview extends BIPreview {
+    _span_title: any = null;
+    _span_arguments: any = null;
     _check_update() {
         BIPreview.prototype._check_update.call(this);
         let display = this._preview_active ? null : "none";
-        // @ts-ignore
-        d3.selectAll("span.title").style("display", display);
-        // @ts-ignore
-        d3.selectAll("span.arguments").style("display", display);
+        if (this._span_title == null)
+            this._span_title = d3.selectAll("span.title");
+        this._span_title.style("display", display);
+
+        if (this._span_arguments == null)
+            this._span_arguments = d3.selectAll("span.arguments");
+        this._span_arguments.style("display", display);
 
         if (!this._preview_active) {
             setTimeout(() => this._check_update(), this._update_interval);

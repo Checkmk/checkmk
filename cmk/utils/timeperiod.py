@@ -9,7 +9,7 @@ import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.caching import config_manager as _config_cache
 from cmk.utils.exceptions import MKTimeout
 
 __all__ = [

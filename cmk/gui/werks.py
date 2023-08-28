@@ -10,16 +10,19 @@ import itertools
 import os
 import re
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
-from functools import cache
-from typing import Any, cast, Literal, NamedTuple
+from collections.abc import Callable, Iterable, Iterator
+from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.werks as utils_werks
 from cmk.utils.version import __version__, Edition, Version
+from cmk.utils.werks.acknowledgement import GuiWerk
+from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
+from cmk.utils.werks.acknowledgement import load_werk_entries
+from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
+from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
 from cmk.utils.werks.werk import Compatibility, NoWiki, Werk, WerkTranslator
 
 from cmk.gui.breadcrumb import (
@@ -68,45 +71,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
-
-
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("info")(AboutCheckmkPage)
     page_registry.register_page("change_log")(ChangeLogPage)
     page_registry.register_page_handler("werk", page_werk)
-
-
-class GuiWerk(NamedTuple):
-    """
-    Holds original Werk and attributes only used for the GUI
-    """
-
-    werk: Werk
-
-    def sort_by_version_and_component(self, translator: WerkTranslator) -> tuple[str | int, ...]:
-        werk_result = self.werk.sort_by_version_and_component(translator)
-        result = (*werk_result[:4], int(self.acknowledged), *werk_result[4:])
-        return result
-
-    @property
-    def acknowledged(self) -> bool:
-        return self.werk.id in load_acknowledgements() or version_is_pre_127(self.werk.version)
-
-    # @property
-    # @cache
-    # does not work with mypy: https://github.com/python/mypy/issues/5858
-    # so we fall back to a function:
-    def get_date_formatted(self) -> str:
-        # return date formatted as string in local timezone
-        return self.werk.date.astimezone().strftime(TIME_FORMAT)
-
-
-def sort_by_date(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
-    return sorted(werks, key=lambda w: w.werk.date, reverse=True)
 
 
 def render_description(description: str | NoWiki) -> HTML:
@@ -452,19 +421,6 @@ def _page_menu_entries_ack_werk(werk: GuiWerk) -> Iterator[PageMenuEntry]:
     )
 
 
-@cache
-def load_werk_entries() -> Sequence[GuiWerk]:
-    werks_raw = utils_werks.load()
-    werks = []
-    for werk in werks_raw.values():
-        werks.append(
-            GuiWerk(
-                werk=werk,
-            )
-        )
-    return werks
-
-
 def may_acknowledge() -> bool:
     return user.may("general.acknowledge_werks")
 
@@ -485,28 +441,16 @@ def acknowledge_werks(werks: Iterable[GuiWerk], check_permission: bool = True) -
 
 def save_acknowledgements(acknowledged_werks: list[int]) -> None:
     load_acknowledgements.cache_clear()  # type: ignore[attr-defined]
-    store.save_object_to_file(acknowledgement_path, acknowledged_werks)
+    werks_save_acknowledgements(acknowledged_werks)
 
 
 def acknowledge_all_werks(check_permission: bool = True) -> None:
     acknowledge_werks(unacknowledged_incompatible_werks(), check_permission)
 
 
-def version_is_pre_127(version: str) -> bool:
-    return version.startswith("1.2.5") or version.startswith("1.2.6")
-
-
 @request_memoize()
 def load_acknowledgements() -> set[int]:
-    return set(store.load_object_from_file(acknowledgement_path, default=[]))
-
-
-def unacknowledged_incompatible_werks() -> list[GuiWerk]:
-    return sort_by_date(
-        werk
-        for werk in load_werk_entries()
-        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE and not werk.acknowledged
-    )
+    return werks_load_acknowledgements()
 
 
 def num_unacknowledged_incompatible_werks() -> int:

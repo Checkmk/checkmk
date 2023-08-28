@@ -119,10 +119,13 @@ def dialog_yesno(
     yeslabel: str = "yes",
     nolabel: str = "no",
     default_no: bool = False,
+    scrollbar: bool = False,
 ) -> bool:
     command: list[str] = ["--yes-label", yeslabel, "--no-label", nolabel]
     if default_no:
         command += ["--defaultno"]
+    if scrollbar:
+        command += ["--scrollbar"]
     state, _response = _run_dialog(command + ["--yesno", text, "0", "0"])
     return state
 

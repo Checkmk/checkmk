@@ -124,6 +124,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
+from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]
@@ -2829,11 +2830,11 @@ def main_update(  # pylint: disable=too-many-branches
                 bail_out("Aborted.")
         exec_other_omd(site, to_version, "update")
 
+    cmk_from_version = _omd_to_check_mk_version(from_version)
+    cmk_to_version = _omd_to_check_mk_version(to_version)
     if (
         isinstance(
-            compatibility := versions_compatible(
-                _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
-            ),
+            compatibility := versions_compatible(cmk_from_version, cmk_to_version),
             VersionsIncompatible,
         )
         and not global_opts.force
@@ -2847,6 +2848,26 @@ def main_update(  # pylint: disable=too-many-branches
             "update with '-f'.\n"
             "But you will be on your own from there."
         )
+
+    # warn about unacknowledged werks
+    if cmk_from_version.base != cmk_to_version.base:
+        unack_werks = unacknowledged_incompatible_werks()
+        if len(unack_werks):
+            note_list_is_clipped = ""
+            werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks[:50])
+            if len(unack_werks) > 50:
+                note_list_is_clipped = "(Only showing the first 50 unacknowledged werks here, check the changelog in Checkmk for the whole list.)\n\n"
+            if not dialog_yesno(
+                f"The current site contains {len(unack_werks)} unacknowledged werks.\n\n"
+                "It is recommended to review these werks for changes you need to make to your sites configuration. "
+                "If you continue, those werks will be automatically acknowledged and "
+                f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n{note_list_is_clipped}"
+                f"{werks_list}",
+                "Acknowledge werks and continue",
+                "Abort",
+                scrollbar=True,
+            ):
+                bail_out("Aborted.")
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.

@@ -82,7 +82,7 @@ class NetworkScanResult(TypedDict):
 class MetaData(TypedDict):
     # All the NotRequired should be investigated and cleaned up via cmk-update-config
     created_at: NotRequired[float]
-    created_by: NotRequired[UserId]
+    created_by: NotRequired[UserId | None]
     updated_at: NotRequired[float]
 
 

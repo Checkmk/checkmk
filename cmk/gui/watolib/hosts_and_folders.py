@@ -866,7 +866,7 @@ def update_metadata(
     meta_data.setdefault("created_at", meta_data.get("updated_at", now_))
     # NOTE: Something here is screwed up regarding None... :-/
     # if created_by is not None:
-    meta_data.setdefault("created_by", created_by)  # type: ignore[typeddict-item]
+    meta_data.setdefault("created_by", created_by)
     meta_data["updated_at"] = now_
     return attributes
 

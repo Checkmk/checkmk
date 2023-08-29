@@ -16,7 +16,7 @@ _socket_exists() {
 }
 
 _query_site() {
-    echo -e "${2}" | waitmax 3 "/omd/sites/${1}/bin/unixcat" "/omd/sites/${1}/tmp/run/live"
+    echo -e "${2}" | LD_LIBRARY_PATH="/omd/sites/${1}/lib:${LD_LIBRARY_PATH}" waitmax 3 "/omd/sites/${1}/bin/unixcat" "/omd/sites/${1}/tmp/run/live"
 }
 
 #   .--queries-------------------------------------------------------------.

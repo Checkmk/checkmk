@@ -1173,10 +1173,14 @@ section_omd_core() {
     (
         cd /omd/sites || return
 
-        _sites_cmd() {
+        site_cmd() {
             # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
             # bin might point anywhere -> priv escalation.
             printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+        }
+
+        waitmax_for_unixcat_with_site_ld_library_path() {
+            LD_LIBRARY_PATH="/omd/sites/${2}/lib:${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
         }
 
         echo '<<<livestatus_status:sep(59)>>>'
@@ -1184,7 +1188,7 @@ section_omd_core() {
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
                 echo "GET status" |
-                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live"
+                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "live"
             fi
         done
 
@@ -1204,7 +1208,7 @@ section_omd_core() {
             if [ -S "/omd/sites/${site}/tmp/run/mkeventd/status" ]; then
                 echo "[\"${site}\"]"
                 (echo "GET status" && echo "OutputFormat: json") |
-                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/mkeventd/status"
+                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "mkeventd/status"
             fi
         done
 
@@ -1212,7 +1216,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
 GET hosts
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1226,7 +1230,7 @@ StatsAnd: 2
 Stats: scheduled_downtime_depth > 0
 Filter: custom_variable_names < _REALNAME
 LimitString
-                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
 GET services
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0

@@ -934,7 +934,7 @@ section_livestatus_status() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                echo "GET status" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
+                echo "GET status" | LD_LIBRARY_PATH="/omd/sites/${site}/lib:${LD_LIBRARY_PATH}" waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
             fi
         done
     fi

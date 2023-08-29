@@ -11,7 +11,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 from . import load
-from .werk import Compatibility, Werk, WerkTranslator
+from .werk import Compatibility, Werk
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -23,11 +23,6 @@ class GuiWerk(NamedTuple):
     """
 
     werk: Werk
-
-    def sort_by_version_and_component(self, translator: WerkTranslator) -> tuple[str | int, ...]:
-        werk_result = self.werk.sort_by_version_and_component(translator)
-        result = (*werk_result[:4], int(self.acknowledged), *werk_result[4:])
-        return result
 
     @property
     def acknowledged(self) -> bool:

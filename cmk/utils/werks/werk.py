@@ -6,7 +6,9 @@
 
 import abc
 import datetime
+from collections.abc import Iterable
 from enum import Enum
+from functools import partial
 from typing import NamedTuple, Union
 
 from cmk.utils.exceptions import MKGeneralException
@@ -70,16 +72,24 @@ class Werk(NamedTuple):
     component: str
     edition: Edition
 
-    def sort_by_version_and_component(self, translator: "WerkTranslator") -> tuple[str | int, ...]:
-        return (
-            -parse_check_mk_version(self.version),
-            translator.translate_component(self.component),
-            _CLASS_SORTING_VALUE.get(self.class_, 99),
-            -self.level.value,
-            # GuiWerk alters this tuple, and adds an element here!
-            _COMPATIBLE_SORTING_VALUE.get(self.compatible, 99),
-            self.title,
-        )
+
+def get_sort_key_by_version_and_component(
+    translator: "WerkTranslator", werk: Werk
+) -> tuple[str | int, ...]:
+    return (
+        -parse_check_mk_version(werk.version),
+        translator.translate_component(werk.component),
+        _CLASS_SORTING_VALUE.get(werk.class_, 99),
+        -werk.level.value,
+        # GuiWerk alters this tuple, and adds an element here!
+        _COMPATIBLE_SORTING_VALUE.get(werk.compatible, 99),
+        werk.title,
+    )
+
+
+def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+    translator = WerkTranslator()
+    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
 # This class is used to avoid repeated construction of dictionaries, including

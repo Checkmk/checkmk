@@ -18,7 +18,6 @@ only handle the Werk NamedTuple, which unifies both formats.
 """
 
 import itertools
-from collections.abc import Iterable
 from pathlib import Path
 from typing import IO, Protocol, TypeVar
 
@@ -27,7 +26,15 @@ from pydantic import BaseModel, parse_file_as
 import cmk.utils.paths
 from cmk.utils.i18n import _
 
-from .werk import Class, Compatibility, NoWiki, Werk, WerkError, WerkTranslator
+from .werk import (
+    Class,
+    Compatibility,
+    NoWiki,
+    sort_by_version_and_component,
+    Werk,
+    WerkError,
+    WerkTranslator,
+)
 from .werkv1 import load_werk_v1, RawWerkV1
 from .werkv2 import load_werk_v2, RawWerkV2
 
@@ -144,17 +151,3 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
 
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
-
-
-class SortKeyProtocol(Protocol):
-    def sort_by_version_and_component(self, translator: WerkTranslator) -> tuple[str | int, ...]:
-        pass
-
-
-T = TypeVar("T", bound=SortKeyProtocol)
-
-
-# sort by version and within one version by component
-def sort_by_version_and_component(werks: Iterable[T]) -> list[T]:
-    translator = WerkTranslator()
-    return sorted(werks, key=lambda w: w.sort_by_version_and_component(translator))

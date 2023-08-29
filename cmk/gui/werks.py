@@ -11,12 +11,13 @@ import os
 import re
 import time
 from collections.abc import Callable, Iterable, Iterator
+from functools import partial
 from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
 import cmk.utils.paths
-import cmk.utils.werks as utils_werks
+import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.acknowledgement import GuiWerk
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
@@ -599,6 +600,19 @@ def render_unacknowleged_werks() -> None:
         html.close_div()
 
 
+def get_sort_key_by_version_and_component(
+    translator: WerkTranslator, werk: GuiWerk
+) -> tuple[str | int, ...]:
+    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk.werk)
+    result = (*werk_result[:4], int(werk.acknowledged), *werk_result[4:])
+    return result
+
+
+def sort_by_version_and_component(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
+    translator = WerkTranslator()
+    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
+
+
 # NOTE: The sorter and the grouping function should better agree, otherwise chaos will ensue...
 _SORT_AND_GROUP: dict[
     str | None,
@@ -607,7 +621,7 @@ _SORT_AND_GROUP: dict[
         Callable[[GuiWerk], None | str],
     ],
 ] = {
-    "version": (utils_werks.sort_by_version_and_component, lambda werk: werk.werk.version),
+    "version": (sort_by_version_and_component, lambda werk: werk.werk.version),
     "day": (
         sort_by_date,
         lambda werk: werk.werk.date.astimezone().strftime("%Y-%m-%d"),

@@ -29,7 +29,6 @@ from ._graph_specification import GraphConsoldiationFunction, GraphMetric, RPNEx
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._utils import (
     CheckMetricEntry,
-    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     find_matching_translation,
     GraphDataRange,
@@ -46,7 +45,7 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> RRDData:
     needed_rrd_data = get_needed_sources(graph_recipe.metrics, resolve_combined_single_metric_spec)
@@ -144,7 +143,7 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
 def _needed_elements_of_expression(
     expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> Iterator[tuple[Any, ...]]:
     if expression[0] in ["rrd", "scalar"]:
@@ -174,7 +173,7 @@ def _needed_elements_of_expression(
 def get_needed_sources(
     metrics: Sequence[GraphMetric],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     condition: Callable[[GraphMetric], bool] = lambda x: True,

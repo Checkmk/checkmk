@@ -29,13 +29,16 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing._graph_specification import MetricExpression, parse_raw_graph_specification
+from cmk.gui.graphing._graph_specification import (
+    GraphMetric,
+    MetricExpression,
+    parse_raw_graph_specification,
+)
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
 from cmk.gui.graphing._utils import (
-    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     evaluate,
     LegacyPerfometer,
@@ -749,7 +752,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 def page_host_service_graph_popup(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `host_service_graph_popup`."""
@@ -779,7 +782,7 @@ def page_host_service_graph_popup(
 
 def page_graph_dashlet(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `graph_dashlet`."""

@@ -144,10 +144,6 @@ class CombinedSingleMetricSpec:
     presentation: GraphPresentation
 
 
-class CombinedGraphMetric(GraphMetric, frozen=True):
-    metric_definition: MetricDefinition
-
-
 class GraphRecipeBase(BaseModel, frozen=True):
     title: str
     unit: str

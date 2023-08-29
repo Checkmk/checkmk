@@ -40,10 +40,13 @@ from ._graph_pdf import (
     render_graph_pdf,
 )
 from ._graph_recipe_builder import build_graph_recipes
-from ._graph_specification import parse_raw_graph_specification, TemplateGraphSpecification
+from ._graph_specification import (
+    GraphMetric,
+    parse_raw_graph_specification,
+    TemplateGraphSpecification,
+)
 from ._html_render import GraphDestinations
 from ._utils import (
-    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     get_graph_data_from_livestatus,
     GraphDataRange,
@@ -56,7 +59,7 @@ from ._utils import (
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 def ajax_graph_images_for_notifications(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `noauth:ajax_graph_images`."""
@@ -71,7 +74,7 @@ def ajax_graph_images_for_notifications(
 
 def _answer_graph_image_request(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     try:
@@ -264,7 +267,7 @@ def graph_recipes_for_api_request(
 def graph_spec_from_request(
     api_request: dict[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, Any]:
     graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)

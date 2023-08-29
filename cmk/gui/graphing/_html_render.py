@@ -45,9 +45,8 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._graph_recipe_builder import build_graph_recipes
-from ._graph_specification import GraphSpecification, TemplateGraphSpecification
+from ._graph_specification import GraphMetric, GraphSpecification, TemplateGraphSpecification
 from ._utils import (
-    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     ForecastGraphRecipe,
     GraphDataRange,
@@ -94,7 +93,7 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     host_name,
     service_description,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ):
     graph_render_options = {
@@ -548,7 +547,7 @@ def _graph_margin_ex(  # type: ignore[no-untyped-def]
 
 def ajax_graph(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_graph`."""
@@ -568,7 +567,7 @@ def ajax_graph(
 def _render_ajax_graph(
     context: Mapping[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, Any]:
     graph_data_range = context["data_range"]
@@ -689,7 +688,7 @@ def render_graphs_from_specification_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     render_async: bool = True,
@@ -714,7 +713,7 @@ def _render_graphs_from_definitions(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     render_async: bool = True,
@@ -792,7 +791,7 @@ def _render_graph_container_html(
 # Called from javascript code via JSON to initially render a graph
 def ajax_render_graph_content(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_render_graph_content`."""
@@ -824,7 +823,7 @@ def _render_graph_content_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     graph_display_id: str = "",
@@ -874,7 +873,7 @@ def _render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     graph_display_id: str,
@@ -963,7 +962,7 @@ def estimate_graph_step_for_html(
 
 def ajax_graph_hover(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_graph_hover`."""
@@ -987,7 +986,7 @@ def __render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, object]:
     graph_data_range = context["data_range"]
@@ -1075,7 +1074,7 @@ def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
     custom_graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     graph_display_id: str = "",

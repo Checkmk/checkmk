@@ -21,7 +21,8 @@ from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._utils import CombinedGraphMetric, CombinedSingleMetricSpec
+from cmk.gui.graphing._graph_specification import GraphMetric
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -251,7 +252,7 @@ class Painter(abc.ABC):
 class Painter2(Painter):
     # Poor man's composition:  Renderer differs between CRE and non-CRE.
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ] | None = None
 
 

@@ -12,12 +12,12 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
+from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
 )
-from cmk.gui.graphing._utils import CombinedGraphMetric, CombinedSingleMetricSpec
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
@@ -145,7 +145,7 @@ def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     override_graph_render_options: GraphRenderOptions | None = None,
@@ -232,7 +232,7 @@ def paint_cmk_graphs_with_timeranges(
     row: Row,
     cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> tuple[Literal[""], HTML | str]:
     return paint_time_graph_cmk(

@@ -5,7 +5,6 @@ common: &common
     - "debian-12"
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-22.10"
     - "ubuntu-23.04"
     - "centos-8"
     - "almalinux-9"
@@ -17,7 +16,6 @@ common: &common
 daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-22.10"
     - "debian-10"
 
 editions:

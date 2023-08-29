@@ -1039,7 +1039,7 @@ class TableRenderer:
         self,
         header_texts: Sequence[str],
         raw_rows: RawTableRows,
-        font_size: SizeMM,
+        font_size: SizePT,
         show_headings: bool,
         padding: tuple[SizeMM, SizeMM],
         spacing: tuple[SizeMM, SizeMM],

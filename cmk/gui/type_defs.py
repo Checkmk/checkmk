@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NotRequired
+from typing import Any, Literal, NamedTuple, NewType, NotRequired
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -35,7 +35,7 @@ from cmk.utils.user import UserId
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-SizePT = float
+SizePT = NewType("SizePT", float)
 SizeMM = float
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str

@@ -115,7 +115,7 @@ pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 urllib3 = "==1.26.15"  # needed by requests
-pyopenssl = "~=20.0"
+pyopenssl = "~=22.0"
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
 requests = "~=2.28"

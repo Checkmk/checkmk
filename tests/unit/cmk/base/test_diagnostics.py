@@ -748,7 +748,7 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
     os.chmod(test_bin_filepath, 0o770)
 
     with monkeypatch.context() as m:
-        m.setenv("PATH", test_bin_dir)
+        m.setenv("PATH", str(test_bin_dir))
 
         diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")

@@ -75,9 +75,9 @@ from cmk.gui.plugins.userdb.utils import (
     load_roles,
     new_user_template,
     release_users_lock,
-    user_connector_registry,
     user_sync_config,
     UserConnector,
+    UserConnectorRegistry,
 )
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
@@ -100,6 +100,21 @@ if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
     default_customer_id = None  # type: ignore[assignment]
+
+
+def register(
+    user_connector_registry: UserConnectorRegistry,
+) -> None:
+    user_connector_registry.register(LDAPUserConnector)
+
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginMail)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAlias)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAuthExpire)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginPager)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToContactgroups)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupAttributes)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToRoles)
+
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -212,7 +227,6 @@ def _get_ad_locator():
     return FasterDetectLocator()
 
 
-@user_connector_registry.register
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -1702,7 +1716,7 @@ def register_user_attribute_sync_plugins() -> None:
                         ),
                     ],
                 ),
-                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: ldap_sync_simple(
+                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: _ldap_sync_simple(
                     user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
                 ),
             },
@@ -1734,7 +1748,7 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
     return connection._ldap_filter(*args, **kwargs)
 
 
-def ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str) -> dict:
+def _ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str) -> dict:
     if attr in ldap_user:
         attr_value = ldap_user[attr][0]
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
@@ -1744,7 +1758,7 @@ def ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, 
     return {}
 
 
-def get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
+def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
     choices: list[tuple[str | None, str]] = []
 
     if add_this:
@@ -1763,13 +1777,13 @@ def get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]
 # depending on the LDAP server to communicate with
 # OPENLDAP _member_attr() -> memberuid
 # AD _member_attr() -> member
-def get_group_member_cmp_val(connection, user_id, ldap_user):
+def _get_group_member_cmp_val(connection, user_id, ldap_user):
     return user_id.lower() if connection._member_attr() == "memberuid" else ldap_user["dn"]
 
 
-def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
+def _get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
     # Figure out how to check group membership.
-    user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+    user_cmp_val = _get_group_member_cmp_val(connection, user_id, ldap_user)
 
     # Get list of LDAP connections to query
     connections = {connection}
@@ -1821,13 +1835,12 @@ def _group_membership_parameters():
                 ),
                 # TODO typing: ListChoice doesn't actually allow None in the choice tuples
                 # (aka ListChoiceChoice), yet that's what we get here.
-                choices=lambda: get_connection_choices(add_this=False),  # type: ignore
+                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore
             ),
         ),
     ]
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -1893,7 +1906,6 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -1925,7 +1937,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        return ldap_sync_simple(
+        return _ldap_sync_simple(
             user_id,
             ldap_user,
             user,
@@ -1961,7 +1973,6 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     """Checks whether or not the user auth must be invalidated
 
@@ -2088,7 +2099,6 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2121,7 +2131,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        return ldap_sync_simple(
+        return _ldap_sync_simple(
             user_id,
             ldap_user,
             user,
@@ -2157,7 +2167,6 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2193,7 +2202,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         cg_names = load_contact_group_information().keys()
 
         return {
-            "contactgroups": get_groups_of_user(
+            "contactgroups": _get_groups_of_user(
                 connection,
                 user_id,
                 ldap_user,
@@ -2222,7 +2231,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     """Populate user attributes based on group memberships within LDAP"""
 
@@ -2266,7 +2274,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         cg_names = list({g["cn"] for g in params["groups"]})
 
         # Get the group names the user is member of
-        groups = get_groups_of_user(
+        groups = _get_groups_of_user(
             connection,
             user_id,
             ldap_user,
@@ -2360,7 +2368,6 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2400,7 +2407,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # posixGroup objects use the memberUid attribute to specify the group
         # memberships. This is the username instead of the users DN. So the
         # username needs to be used for filtering here.
-        user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+        user_cmp_val = _get_group_member_cmp_val(connection, user_id, ldap_user)
 
         roles = []
 
@@ -2498,7 +2505,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                                         ),
                                         DropdownChoice(
                                             title=_("Search<nobr> </nobr>in"),
-                                            choices=get_connection_choices,
+                                            choices=_get_connection_choices,
                                             default_value=None,
                                         ),
                                     ],

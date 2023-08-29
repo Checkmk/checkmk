@@ -56,7 +56,6 @@ from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_specification import (
-    CombinedGraphSpecification,
     ForecastGraphSpecification,
     GraphConsoldiationFunction,
     GraphMetric,
@@ -163,11 +162,6 @@ class GraphRecipe(GraphRecipeBase, frozen=True):
     specification: GraphSpecification
 
 
-class CombinedGraphRecipe(GraphRecipe, frozen=True):
-    metrics: Sequence[CombinedGraphMetric]
-    specification: CombinedGraphSpecification
-
-
 class ForecastGraphRecipe(GraphRecipe, frozen=True):
     is_forecast: Literal[True]
     model_params: Mapping[str, Any]
@@ -180,7 +174,7 @@ def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:
     # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
     # suppressions below
     return parse_obj_as(
-        CombinedGraphRecipe | ForecastGraphRecipe | GraphRecipe,  # type: ignore[arg-type]
+        ForecastGraphRecipe | GraphRecipe,  # type: ignore[arg-type]
         raw,
     )
 

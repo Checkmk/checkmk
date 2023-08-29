@@ -161,7 +161,6 @@ class ForecastGraphRecipe(GraphRecipe, frozen=True):
     is_forecast: Literal[True]
     model_params: Mapping[str, Any]
     model_params_html: str
-    metric_id: tuple[HostName, ServiceName, MetricName_, str] | None
     specification: ForecastGraphSpecification
 
 

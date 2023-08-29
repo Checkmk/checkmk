@@ -335,12 +335,10 @@ def _show_graph_html_content(
     if _graph_legend_enabled(graph_render_options, graph_artwork):
         _show_graph_legend(graph_artwork, graph_render_options)
 
-    if isinstance(
-        graph_definition := graph_artwork.definition, ForecastGraphRecipe
-    ) and graph_definition.model_params.get("display_model_parametrization"):
+    if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
-        html.h2(_("Forecast Parametrization"))
-        html.write_html(HTML(graph_definition.model_params_html))
+        html.h2(additional_html.title)
+        html.write_html(HTML(additional_html.html))
         html.close_div()
 
     html.close_div()

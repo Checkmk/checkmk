@@ -143,6 +143,11 @@ class CombinedSingleMetricSpec:
     presentation: GraphPresentation
 
 
+class AdditionalGraphHTML(BaseModel, frozen=True):
+    title: str
+    html: str
+
+
 class GraphRecipeBase(BaseModel, frozen=True):
     title: str
     unit: str
@@ -151,6 +156,7 @@ class GraphRecipeBase(BaseModel, frozen=True):
     omit_zero_metrics: bool
     consolidation_function: GraphConsoldiationFunction | None
     metrics: Sequence[GraphMetric]
+    additional_html: AdditionalGraphHTML | None = None
 
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
@@ -160,8 +166,8 @@ class GraphRecipe(GraphRecipeBase, frozen=True):
 class ForecastGraphRecipe(GraphRecipe, frozen=True):
     is_forecast: Literal[True]
     model_params: Mapping[str, Any]
-    model_params_html: str
     specification: ForecastGraphSpecification
+    additional_html: AdditionalGraphHTML | None
 
 
 def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:

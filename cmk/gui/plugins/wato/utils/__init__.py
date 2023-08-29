@@ -1085,14 +1085,6 @@ class _CheckTypeMgmtSelection(DualListChoice):
         ]
 
 
-def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguration]]:
-    """Sort given sites argument by local, followed by remote sites"""
-    return sorted(
-        sites.items(),
-        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
-    )
-
-
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
 #   "folder"      -> properties of folder or file

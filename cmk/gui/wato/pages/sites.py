@@ -14,7 +14,13 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, overload
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
+from livestatus import (
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+    TLSParams,
+)
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
@@ -48,7 +54,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import sort_sites
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
@@ -1500,3 +1505,11 @@ def _page_menu_entries_site_details(
                 )
             ),
         )
+
+
+def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguration]]:
+    """Sort given sites argument by local, followed by remote sites"""
+    return sorted(
+        sites.items(),
+        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+    )

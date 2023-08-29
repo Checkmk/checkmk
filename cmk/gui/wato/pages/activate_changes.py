@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import sort_sites
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -66,6 +65,8 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+
+from .sites import sort_sites
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

@@ -120,7 +120,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersPrinters,
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
-    sort_sites,
     UserIconOrAction,
 )
 from cmk.gui.watolib.translation import HostnameTranslation
@@ -287,7 +286,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "SimpleEditMode",
         "SimpleListMode",
         "SimpleModeType",
-        "sort_sites",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
         "WatoModule",

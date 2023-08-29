@@ -24,6 +24,7 @@ from cmk.gui.bi.foldable_tree_renderer import (
     FoldableTreeRendererTree,
 )
 from cmk.gui.data_source import ABCDataSource, RowTable
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -869,6 +870,11 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return render_tree_json(row)
 
 
+@request_memoize()
+def _get_cached_bi_manager():
+    return BIManager()
+
+
 def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     reference_name = row["aggr_id"]
     frozen_info = row["aggr_compiled_aggregation"].frozen_info
@@ -876,7 +882,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     original_aggr_group = row["aggr_group"]
     other_aggregation = frozen_info.based_on_aggregation_id
     other_branch = frozen_info.based_on_branch_title
-    bi_manager = BIManager()
+    bi_manager = _get_cached_bi_manager()
     found_aggr = bi_manager.compiler.get_aggregation_by_name(reference_name)
     if not found_aggr:
         raise MKGeneralException("Unable to find source aggregation for diff tree")

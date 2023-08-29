@@ -10,8 +10,6 @@ common: &common
     - "centos-8"
     - "almalinux-9"
     - "sles-12sp5"
-    - "sles-15sp1"
-    - "sles-15sp2"
     - "sles-15sp3"
     - "sles-15sp4"
 

@@ -24,10 +24,6 @@ class GuiWerk(NamedTuple):
 
     werk: Werk
 
-    @property
-    def acknowledged(self) -> bool:
-        return self.werk.id in load_acknowledgements() or version_is_pre_127(self.werk.version)
-
     # @property
     # @cache
     # does not work with mypy: https://github.com/python/mypy/issues/5858
@@ -35,6 +31,10 @@ class GuiWerk(NamedTuple):
     def get_date_formatted(self) -> str:
         # return date formatted as string in local timezone
         return self.werk.date.astimezone().strftime(TIME_FORMAT)
+
+
+def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
+    return werk.id in acknowledged_werk_ids or version_is_pre_127(werk.version)
 
 
 def load_acknowledgements() -> set[int]:
@@ -54,10 +54,12 @@ def sort_by_date(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
 
 
 def unacknowledged_incompatible_werks() -> list[GuiWerk]:
+    acknowledged_werk_ids = load_acknowledgements()
     return sort_by_date(
         werk
         for werk in load_werk_entries()
-        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE and not werk.acknowledged
+        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE
+        and not is_acknowledged(werk.werk, acknowledged_werk_ids)
     )
 
 

@@ -19,7 +19,7 @@ from typing_extensions import TypedDict
 import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks.acknowledgement import GuiWerk
+from cmk.utils.werks.acknowledgement import GuiWerk, is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import load_werk_entries
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
@@ -234,13 +234,14 @@ def handle_acknowledgement():
 
     if request.var("_werk_ack"):
         werk_id = request.get_integer_input_mandatory("_werk_ack")
-        gui_werk = get_werk_by_id(werk_id)
-        werk = gui_werk.werk
-        if werk.compatible == Compatibility.NOT_COMPATIBLE and not gui_werk.acknowledged:
-            acknowledge_werk(gui_werk)
+        werk = get_werk_by_id(werk_id)
+        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE and not is_acknowledged(
+            werk.werk, load_acknowledgements()
+        ):
+            acknowledge_werk(werk)
             html.show_message(
                 _("Werk %s - %s has been acknowledged.")
-                % (render_werk_id(werk), render_werk_title(werk))
+                % (render_werk_id(werk.werk), render_werk_title(werk.werk))
             )
             render_unacknowleged_werks()
 
@@ -375,8 +376,8 @@ def page_werk() -> None:
     )
     werk_table_row(
         _("Compatibility"),
-        compatibility_of(werk.compatible, gui_werk.acknowledged),
-        css="werkcomp werkcomp%s" % _to_ternary_compatibility(gui_werk),
+        compatibility_of(werk.compatible, is_acknowledged(werk, load_acknowledgements())),
+        css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
     werk_table_row(
         _("Description"), render_description(werk.description), css="nowiki"
@@ -416,7 +417,7 @@ def _page_menu_entries_ack_werk(werk: GuiWerk) -> Iterator[PageMenuEntry]:
         title=_("Acknowledge"),
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
-        is_enabled=not werk.acknowledged,
+        is_enabled=not is_acknowledged(werk.werk, load_acknowledgements()),
         is_shortcut=True,
         is_suggested=True,
     )
@@ -604,7 +605,11 @@ def get_sort_key_by_version_and_component(
     translator: WerkTranslator, werk: GuiWerk
 ) -> tuple[str | int, ...]:
     werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk.werk)
-    result = (*werk_result[:4], int(werk.acknowledged), *werk_result[4:])
+    result = (
+        *werk_result[:4],
+        int(is_acknowledged(werk.werk, load_acknowledgements())),
+        *werk_result[4:],
+    )
     return result
 
 
@@ -684,16 +689,16 @@ def render_werks_table_row(table: Table, translator: WerkTranslator, gui_werk: G
     )
     table.cell(
         _("Compatibility"),
-        compatibility_of(werk.compatible, gui_werk.acknowledged),
-        css=["werkcomp werkcomp%s" % _to_ternary_compatibility(gui_werk)],
+        compatibility_of(werk.compatible, is_acknowledged(werk, load_acknowledgements())),
+        css=["werkcomp werkcomp%s" % _to_ternary_compatibility(werk)],
     )
     table.cell(_("Component"), translator.component_of(werk), css=["nowrap"])
     table.cell(_("Title"), render_werk_title(werk))
 
 
-def _to_ternary_compatibility(werk: GuiWerk) -> str:
-    if werk.werk.compatible == Compatibility.NOT_COMPATIBLE:
-        if werk.acknowledged:
+def _to_ternary_compatibility(werk: Werk) -> str:
+    if werk.compatible == Compatibility.NOT_COMPATIBLE:
+        if is_acknowledged(werk, load_acknowledgements()):
             return "incomp_ack"
         return "incomp_unack"
     return "compat"
@@ -713,7 +718,7 @@ def werk_matches_options(gui_werk: GuiWerk, werk_table_options: WerkTableOptions
         (not werk_to_match or werk.id == werk_to_match)
         and werk.level.value in werk_table_options["levels"]
         and werk.class_.value in werk_table_options["classes"]
-        and _to_ternary_compatibility(gui_werk) in werk_table_options["compatibility"]
+        and _to_ternary_compatibility(werk) in werk_table_options["compatibility"]
         and werk_table_options["component"] in (None, werk.component)
         and werk.date.timestamp() >= werk_table_options["date_range"][0]
         and werk.date.timestamp() <= werk_table_options["date_range"][1]

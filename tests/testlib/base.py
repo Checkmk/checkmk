@@ -35,7 +35,7 @@ class Scenario:
 
     @staticmethod
     def _get_config_cache() -> ConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, ConfigCache)
         return cc
 
@@ -193,7 +193,7 @@ class CEEScenario(Scenario):
 
     @staticmethod
     def _get_config_cache() -> config.CEEConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, config.CEEConfigCache)
         return cc
 

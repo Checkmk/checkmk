@@ -23,7 +23,7 @@ import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Literal, overload, Protocol, Union
+from typing import Literal, NewType, overload, Protocol, Union
 
 from PIL import PngImagePlugin
 from PIL.Image import Image
@@ -48,7 +48,7 @@ RawTableColumn = tuple[Sequence[str], str | RawIconColumn | RawRendererColumn]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 SizeInternal = float
-SizeDPI = int
+SizeDPI = NewType("SizeDPI", int)
 Align = Literal["left", "right", "center"]
 VerticalAlign = Literal["bottom", "middle"]
 OddEven = Literal["even", "odd", "heading"]
@@ -450,7 +450,7 @@ class Document:
         pil: Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
-        resolution: int | None,
+        resolution: SizeDPI | None,
     ) -> None:
         width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
@@ -952,14 +952,14 @@ class Document:
         pil: Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
-        resolution_dpi: SizeDPI | None = None,
+        resolution: SizeDPI | None = None,
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()
         assert bbox is not None  # TODO: Why is this the case here?
         pix_width, pix_height = bbox[2], bbox[3]
-        if resolution_dpi is not None:
-            resolution_mm = resolution_dpi / 2.45
+        if resolution is not None:
+            resolution_mm = resolution / 2.45
             resolution_pt = resolution_mm / mm  # now we have pixels / pt # fixed: true-division
             width = pix_width / resolution_pt  # fixed: true-division
             height = pix_height / resolution_pt  # fixed: true-division

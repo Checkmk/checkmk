@@ -46,14 +46,7 @@ from ._artwork import (
 )
 from ._graph_recipe_builder import build_graph_recipes
 from ._graph_specification import GraphMetric, GraphSpecification, TemplateGraphSpecification
-from ._utils import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphRecipe,
-    parse_raw_graph_recipe,
-    render_color_icon,
-    SizeEx,
-)
+from ._utils import CombinedSingleMetricSpec, GraphDataRange, GraphRecipe, render_color_icon, SizeEx
 from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str
@@ -569,7 +562,7 @@ def _render_ajax_graph(
 ) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_render_options = context["render_options"]
-    graph_recipe = parse_raw_graph_recipe(context["definition"])
+    graph_recipe = GraphRecipe.parse_obj(context["definition"])
 
     start_time_var = request.var("start_time")
     end_time_var = request.var("end_time")
@@ -803,7 +796,7 @@ def ajax_render_graph_content(
         resp = {
             "result_code": 0,
             "result": _render_graph_content_html(
-                parse_raw_graph_recipe(api_request["graph_recipe"]),
+                GraphRecipe.parse_obj(api_request["graph_recipe"]),
                 api_request["graph_data_range"],
                 api_request["graph_render_options"],
                 resolve_combined_single_metric_spec,
@@ -990,7 +983,7 @@ def __render_ajax_graph_hover(
     ],
 ) -> dict[str, object]:
     graph_data_range = context["data_range"]
-    graph_recipe = parse_raw_graph_recipe(context["definition"])
+    graph_recipe = GraphRecipe.parse_obj(context["definition"])
 
     curves = compute_graph_artwork_curves(
         graph_recipe,

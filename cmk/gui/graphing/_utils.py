@@ -16,7 +16,7 @@ from functools import lru_cache
 from itertools import chain
 from typing import Any, Final, Literal, NamedTuple, NewType, overload, TypedDict, TypeVar, Union
 
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
@@ -57,7 +57,6 @@ from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_specification import (
-    ForecastGraphSpecification,
     GraphConsoldiationFunction,
     GraphMetric,
     GraphPresentation,
@@ -165,23 +164,6 @@ class GraphRecipeBase(BaseModel, frozen=True):
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
     specification: GraphSpecification
-
-
-class ForecastGraphRecipe(GraphRecipe, frozen=True):
-    specification: ForecastGraphSpecification
-    additional_html: AdditionalGraphHTML | None
-    render_options: GraphRenderOptions
-    data_range: GraphDataRange
-    mark_requested_end_time: bool
-
-
-def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:
-    # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
-    # suppressions below
-    return parse_obj_as(
-        ForecastGraphRecipe | GraphRecipe,  # type: ignore[arg-type]
-        raw,
-    )
 
 
 RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]

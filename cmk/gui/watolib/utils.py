@@ -20,6 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.watolib.mode import mode_registry
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -135,3 +136,7 @@ def format_php(data: object, lvl: int = 1) -> str:
         s += format_php(str(data))
 
     return s
+
+
+def ldap_connections_are_configurable() -> bool:
+    return mode_registry.get("ldap_config") is not None

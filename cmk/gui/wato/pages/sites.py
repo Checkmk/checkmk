@@ -112,6 +112,7 @@ from cmk.gui.watolib.sites import (
     site_globals_editable,
     SiteManagementFactory,
 )
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -448,7 +449,7 @@ class ModeEditSite(WatoMode):
         return MonitoredHostname(title=_("Host:"))
 
     def _replication_elements(self):
-        return [
+        elements = [
             (
                 "replication",
                 DropdownChoice(
@@ -515,34 +516,42 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
-            ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
-            (
-                "replicate_ec",
-                Checkbox(
-                    title=_("Replicate Event Console config"),
-                    label=_("Replicate Event Console configuration to this site"),
-                    help=_(
-                        "This option enables the distribution of global settings and rules of the Event Console "
-                        "to the remote site. Any change in the local Event Console settings will mark the site "
-                        "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                        "the remote site."
-                    ),
-                ),
-            ),
-            (
-                "replicate_mkps",
-                Checkbox(
-                    title=_("Replicate extensions"),
-                    label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
-                    help=_(
-                        "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                        "that are installed on your central site and all other files below the <tt>~/local/</tt> "
-                        "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
-                        "below <tt>~/local/</tt> on the remote site will be removed</b>."
-                    ),
-                ),
-            ),
         ]
+
+        if ldap_connections_are_configurable():
+            elements.append(("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)))
+
+        elements.extend(
+            [
+                (
+                    "replicate_ec",
+                    Checkbox(
+                        title=_("Replicate Event Console config"),
+                        label=_("Replicate Event Console configuration to this site"),
+                        help=_(
+                            "This option enables the distribution of global settings and rules of the Event Console "
+                            "to the remote site. Any change in the local Event Console settings will mark the site "
+                            "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                            "the remote site."
+                        ),
+                    ),
+                ),
+                (
+                    "replicate_mkps",
+                    Checkbox(
+                        title=_("Replicate extensions"),
+                        label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
+                        help=_(
+                            "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                            "that are installed on your central site and all other files below the <tt>~/local/</tt> "
+                            "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
+                            "below <tt>~/local/</tt> on the remote site will be removed</b>."
+                        ),
+                    ),
+                ),
+            ]
+        )
+        return elements
 
 
 class ModeDistributedMonitoring(WatoMode):

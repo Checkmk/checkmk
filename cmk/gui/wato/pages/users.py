@@ -78,6 +78,7 @@ from cmk.gui.watolib.users import (
     make_user_object_ref,
     verify_password_policy,
 )
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -228,11 +229,12 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "user_attrs")])),
             )
 
-        yield PageMenuEntry(
-            title=_("LDAP & Active Directory"),
-            icon_name="ldap",
-            item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
-        )
+        if ldap_connections_are_configurable():
+            yield PageMenuEntry(
+                title=_("LDAP & Active Directory"),
+                icon_name="ldap",
+                item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
+            )
 
         if edition() is not Edition.CRE:
             yield PageMenuEntry(

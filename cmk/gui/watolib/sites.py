@@ -56,7 +56,7 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.watolib.utils import ldap_connections_are_configurable, multisite_dir
 
 
 class SiteManagement:
@@ -302,8 +302,9 @@ class SiteManagement:
                 )
 
         # User synchronization
-        user_sync_valuespec = cls.user_sync_valuespec(site_id)
-        user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
+        if ldap_connections_are_configurable():
+            user_sync_valuespec = cls.user_sync_valuespec(site_id)
+            user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:

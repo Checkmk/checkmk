@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.version import edition, Edition
+
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
@@ -67,7 +69,8 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
-    ldap.register(mode_registry)
+    if edition() is not Edition.CSE:  # disabled in CSE
+        ldap.register(mode_registry)
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)
     object_parameters.register(mode_registry)

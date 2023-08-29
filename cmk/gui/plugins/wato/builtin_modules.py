@@ -599,7 +599,6 @@ class MainModuleRoles(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleLDAP(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -632,6 +631,10 @@ class MainModuleLDAP(ABCMainModule):
     @property
     def is_show_more(self) -> bool:
         return True
+
+
+if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
+    main_module_registry.register(MainModuleLDAP)
 
 
 @main_module_registry.register

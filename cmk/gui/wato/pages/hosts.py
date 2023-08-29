@@ -30,7 +30,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import configure_attributes
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -52,6 +51,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
+from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
 
 

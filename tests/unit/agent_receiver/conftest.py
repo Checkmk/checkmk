@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from agent_receiver import site_context
@@ -143,4 +143,4 @@ def fixture_client() -> TestClient:
 
 @pytest.fixture(name="uuid")
 def fixture_uuid() -> UUID4:
-    return UUID4(str(uuid4()))
+    return UUID(str(uuid4()))

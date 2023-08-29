@@ -6,6 +6,7 @@ import datetime
 
 import pydantic
 from kubernetes import client  # type: ignore[import]
+from pydantic import ConfigDict
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
@@ -13,11 +14,10 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform_json import _metadata_no_namespace_from_json
 
 
-class NodeConditions(pydantic.BaseModel):
-    __root__: list[api.NodeCondition] | None
+class NodeConditions(pydantic.RootModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    root: list[api.NodeCondition] | None
 
 
 class TestAPINode:
@@ -88,7 +88,7 @@ class TestAPINode:
         client_node_info = core_client.api_client.deserialize(
             FakeResponse(node_info), "V1NodeSystemInfo"
         )
-        parsed_node_info = api.NodeInfo.from_orm(client_node_info)
+        parsed_node_info = api.NodeInfo.model_validate(client_node_info)
         assert isinstance(parsed_node_info, api.NodeInfo)
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
@@ -142,7 +142,7 @@ class TestAPINode:
         }
 
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions is not None
         assert len(conditions) == 5
         assert any(c.type_ == "DiskPressure" for c in conditions)
@@ -155,7 +155,7 @@ class TestAPINode:
     ) -> None:
         node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions is None
 
     def test_parse_conditions_no_conditions(
@@ -163,5 +163,5 @@ class TestAPINode:
     ) -> None:
         node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions == []

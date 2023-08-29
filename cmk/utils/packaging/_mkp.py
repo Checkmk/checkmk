@@ -17,7 +17,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
@@ -62,24 +62,25 @@ class Manifest(BaseModel):
     download_url: str
     files: Mapping[PackagePart, Sequence[Path]]
 
-    class Config:
-        allow_population_by_field_name = True
-        allow_mutation = False
-        extra = Extra.allow  # we used to have 'num_files' :-(
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+        extra="allow",  # we used to have 'num_files' :-(
+    )
 
     def file_content(self) -> str:
         raw = {
-            **self.dict(by_alias=True),
+            **self.model_dump(by_alias=True),
             "files": {p.ident: [str(f) for f in files] for p, files in self.files.items()},
         }
         return f"{pprint.pformat(raw)}\n"
 
     def json_file_content(self) -> str:
-        return self.json(by_alias=True)
+        return self.model_dump_json(by_alias=True)
 
     @classmethod
     def parse_python_string(cls, raw: str) -> Manifest:
-        return cls.parse_obj(ast.literal_eval(raw))
+        return cls.model_validate(ast.literal_eval(raw))
 
     @property
     def id(self) -> PackageID:

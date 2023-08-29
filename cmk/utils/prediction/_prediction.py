@@ -6,6 +6,7 @@
 import logging
 import math
 import time
+import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -49,8 +50,7 @@ class PredictionParameters(BaseModel, frozen=True):
     levels_lower: LevelsSpec | None = None
 
 
-@dataclass(frozen=True)
-class DataStat:
+class DataStat(typing.NamedTuple):
     average: float
     min_: float
     max_: float

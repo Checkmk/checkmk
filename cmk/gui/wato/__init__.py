@@ -142,11 +142,6 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.plugins.wato.utils.html_elements import (
-    initialize_wato_html_head,
-    wato_html_footer,
-    wato_html_head,
-)
 from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
     MainMenu,
     register_modules,

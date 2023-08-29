@@ -54,7 +54,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
@@ -84,6 +83,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (

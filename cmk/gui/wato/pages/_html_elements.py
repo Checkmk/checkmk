@@ -9,9 +9,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-
-# TODO: Change all call sites to directly import from cmk.gui.page_menu
-from cmk.gui.page_menu import PageMenu, search_form  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.page_menu import PageMenu
 from cmk.gui.page_state import PageState
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 

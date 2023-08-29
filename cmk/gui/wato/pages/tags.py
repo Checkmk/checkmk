@@ -28,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,

@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-08-16 09:50+0000\n"
+"PO-Revision-Date: 2023-08-28 23:08+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -2982,9 +2982,8 @@ msgstr "Lizenzierungsmodus aufrufen"
 msgid "Access the licensing settings mode"
 msgstr "Lizenzierungseinstellungen aufrufen"
 
-#, fuzzy
 msgid "Access to AWS API"
-msgstr "Zugriff auf die Web-API"
+msgstr "Zugriff auf die AWS-API"
 
 msgid "Access to Livestatus via TCP"
 msgstr "Zugriff auf Livestatus über TCP"
@@ -12036,9 +12035,8 @@ msgstr ""
 "Routinen über alle verfügbaren Kerne innerhalb des letzten Prüfintervalls "
 "verwendet wird. Der zulässige Bereich reicht von 0% bis 100%"
 
-#, fuzzy
 msgid "Configure levels on smoke"
-msgstr "Keine Schwellwerte auf Inodes"
+msgstr "Rauch-Schwellwerte festlegen"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -17631,13 +17629,13 @@ msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Wollen Sie die ausgewählten Regeln wirklich verschieben?"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core and blocks %s until the next activation!"
 msgstr ""
-"Wollen Sie die folgenden Hosts wirklich umbenennen? Das erfordert einen "
-"Neustart des Monitoring-Kerns!"
+"Wollen Sie die folgenden Hosts wirklich umbenennen? Dies führt zu einem "
+"Neustart des Monitoring-Kerns und blockiert %s bis zur nächsten Aktivierung!"
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Wollen Sie den Modes des Ereignis Daemon wirklich umschalten?"
@@ -35014,9 +35012,8 @@ msgstr ""
 msgid "Monitoring state if failover link not up"
 msgstr "Monitoring-Zustand, wenn der Failover-Link nicht aktiv ist"
 
-#, fuzzy
 msgid "Monitoring state if no smoke is detected"
-msgstr "Monitoring State falls der Task nicht aktiviert ist"
+msgstr "Monitoring-Zustand, solange kein Rauch festgestellt wird"
 
 msgid "Monitoring state if not active/standby"
 msgstr "Monitoring-Zustand, wenn nicht aktiv/standby"
@@ -35030,9 +35027,8 @@ msgstr "Monitoring State falls der Service fehlgeschlagen ist"
 msgid "Monitoring state if service is inactive"
 msgstr "Monitoring State falls der Service inaktiv ist"
 
-#, fuzzy
 msgid "Monitoring state if smoke is detected"
-msgstr "Monitoring State falls der Task nicht aktiviert ist"
+msgstr "Monitoring-Zustand, wenn Rauch festgestellt wird"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Monitoring State falls der Task nicht aktiviert ist"
@@ -36462,9 +36458,8 @@ msgstr "Keine Versionsbeschränkung"
 msgid "No view defined with the name '%s'."
 msgstr "Ist gibt keine Ansicht mit dem Namen '%s'."
 
-#, fuzzy
 msgid "No, keep current name"
-msgstr "Momentaner Name"
+msgstr "Nein, aktuellen Namen beibehalten"
 
 msgid "No-TxCredits errors"
 msgstr "No-TXCredits Fehler"
@@ -44413,9 +44408,8 @@ msgstr "Rückgabecode Klasse 5xx (Server-Fehler)"
 msgid "Return process times within performance data"
 msgstr "Zeige Ausführungszeiten innerhalb der Leistungsdaten"
 
-#, fuzzy
 msgid "Revert all pending changes"
-msgstr "Alle anstehenden Änderungen verwerfen"
+msgstr "Alle aufgelaufenen Änderungen rückgängig machen"
 
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"
@@ -48518,13 +48512,11 @@ msgstr "Rauchmelder"
 msgid "Smoke Levels"
 msgstr "Rauch-Schwellwerte"
 
-#, fuzzy
 msgid "Smoke handling"
-msgstr "Fehlerbehandlung"
+msgstr "Behandlung von Rauch"
 
-#, fuzzy
 msgid "Smoke monitoring"
-msgstr "Netzwerk-Überwachung"
+msgstr "Rauch-Monitoring"
 
 msgid "Snapshot build currently in progress"
 msgstr "Erstellen der Sicherung läuft gerade"
@@ -68310,9 +68302,8 @@ msgstr "Jahr"
 msgid "Yes"
 msgstr "Ja"
 
-#, fuzzy
 msgid "Yes, rename"
-msgstr "Redis Servername"
+msgstr "Ja, umbenennen"
 
 msgid "Yes, that is exactly what I want."
 msgstr "Ja, das ist exakt das, was ich will."
@@ -69504,14 +69495,13 @@ msgstr ""
 msgid "You cannot query for time ranges that are before the horizon."
 msgstr "Sie können keine Zeitbereiche abfragen, die vor dem Horizont liegen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You cannot rename a host while you have pending changes on the site the host "
 "is monitored on (%s)."
 msgstr ""
-"Sie können einen Host nicht umbenennen, solange noch Änderungen auf der "
-"zentralen Site (%s) oder der Site, auf der dieser Host überwacht wird (%s), "
-"ausstehen."
+"Sie können einen Host nicht umbenennen, solange es noch aufgelaufene "
+"Änderungen auf der Instanz, auf der dieser Host überwacht wird (%s), gibt."
 
 msgid "You cannot save this rule."
 msgstr "Sie können diese Regel nicht speichern."

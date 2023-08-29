@@ -16,12 +16,11 @@ RawWerkV2 (for markdown) are used to handle the serializing and deserializing.
 But all this should be implementation details, because downstream tools should
 only handle the Werk NamedTuple, which unifies both formats.
 """
-
 import itertools
 from pathlib import Path
 from typing import IO, Protocol, TypeVar
 
-from pydantic import BaseModel, parse_file_as
+from pydantic import RootModel, TypeAdapter
 
 import cmk.utils.paths
 from cmk.utils.i18n import _
@@ -38,9 +37,7 @@ from .werk import (
 from .werkv1 import load_werk_v1, RawWerkV1
 from .werkv2 import load_werk_v2, RawWerkV2
 
-
-class Werks(BaseModel):
-    __root__: dict[int, RawWerkV1 | RawWerkV2]
+Werks = RootModel[dict[int, RawWerkV1 | RawWerkV2]]
 
 
 class GuiWerkProtocol(Protocol):
@@ -67,10 +64,11 @@ def load(base_dir: Path | None = None) -> dict[int, Werk]:
 
 def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     # ? what is the content of these files, to which the path shows
-    return {
-        werk_id: werk.to_werk()
-        for werk_id, werk in parse_file_as(dict[int, RawWerkV1 | RawWerkV2], path).items()
-    }
+    adapter = TypeAdapter(dict[int, RawWerkV1 | RawWerkV2])
+    with path.open("r", encoding="utf-8") as f:
+        return {
+            werk_id: _werk.to_werk() for werk_id, _werk in adapter.validate_json(f.read()).items()
+        }
 
 
 def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
@@ -92,7 +90,7 @@ def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
 
 def write_precompiled_werks(path: Path, werks: dict[int, RawWerkV1 | RawWerkV2]) -> None:
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(Werks.parse_obj(werks).json(by_alias=True))
+        fp.write(Werks.model_validate(werks).model_dump_json(by_alias=True))
 
 
 # this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo

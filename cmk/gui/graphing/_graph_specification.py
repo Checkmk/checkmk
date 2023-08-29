@@ -17,7 +17,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 HorizontalRule = tuple[float, str, str, str]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 MetricExpression = str

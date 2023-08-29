@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Annotated, Literal, NamedTuple
+from dataclasses import dataclass
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, parse_obj_as
 
@@ -23,10 +24,11 @@ LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 MetricExpression = str
 
 
-class MetricDefinition(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class MetricDefinition:
     expression: MetricExpression
     line_type: LineType
-    title: str
+    title: str = ""
 
 
 RPNExpression = tuple  # TODO: Improve this type

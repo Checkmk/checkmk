@@ -100,9 +100,13 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title=None,
         metrics=[
-            MetricDefinition("fs_used", "area", ""),
-            MetricDefinition("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
-            MetricDefinition("fs_size", "line", ""),
+            MetricDefinition(expression="fs_used", line_type="area"),
+            MetricDefinition(
+                expression="fs_size,fs_used,-#e3fff9",
+                line_type="stack",
+                title="Free space",
+            ),
+            MetricDefinition(expression="fs_size", line_type="line"),
         ],
         scalars=[
             "fs_used:warn",

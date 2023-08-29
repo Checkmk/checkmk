@@ -985,9 +985,18 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
             tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
         )
     ) -> MetricDefinition:
+        expression = metric_expression[0]
+        line_type = metric_expression[1]
         if len(metric_expression) == 2:
-            return MetricDefinition(metric_expression[0], metric_expression[1], "")
-        return MetricDefinition(*metric_expression)
+            return MetricDefinition(
+                expression=expression,
+                line_type=line_type,
+            )
+        return MetricDefinition(
+            expression=expression,
+            line_type=line_type,
+            title=str(metric_expression[-1]),
+        )
 
     return {
         template_id: GraphTemplate(
@@ -1060,7 +1069,7 @@ def _generic_graph_template(metric_name: str) -> GraphTemplate:
     return GraphTemplate(
         id="METRIC_" + metric_name,
         title=None,
-        metrics=[MetricDefinition(metric_name, "area", "")],
+        metrics=[MetricDefinition(expression=metric_name, line_type="area")],
         scalars=[
             metric_name + ":warn",
             metric_name + ":crit",

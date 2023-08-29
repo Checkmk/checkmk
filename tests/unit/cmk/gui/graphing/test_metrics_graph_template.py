@@ -109,7 +109,6 @@ def test_create_graph_recipe_from_template() -> None:
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],
-        presentation=None,
         consolidation_function=None,
         range=(0, "fs_used:max"),
         omit_zero_metrics=False,

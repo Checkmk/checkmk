@@ -115,7 +115,6 @@ class GraphTemplateRegistration(_GraphTemplateRegistrationMandatory, total=False
     scalars: Sequence[ScalarDefinition]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
-    presentation: GraphPresentation
     consolidation_function: GraphConsoldiationFunction
     range: GraphRangeSpec
     omit_zero_metrics: bool
@@ -128,7 +127,6 @@ class GraphTemplate:
     scalars: Sequence[ScalarDefinition]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
-    presentation: GraphPresentation | None
     consolidation_function: GraphConsoldiationFunction | None
     range: GraphRangeSpec | None
     omit_zero_metrics: bool
@@ -988,7 +986,6 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
             scalars=template.get("scalars", []),
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
-            presentation=template.get("presentation"),
             consolidation_function=template.get("consolidation_function"),
             range=template.get("range"),
             omit_zero_metrics=template.get("omit_zero_metrics", False),
@@ -1072,7 +1069,6 @@ def _generic_graph_template(metric_name: str) -> GraphTemplate:
         ],
         conflicting_metrics=[],
         optional_metrics=[],
-        presentation=None,
         consolidation_function=None,
         range=None,
         omit_zero_metrics=False,
@@ -1106,7 +1102,6 @@ def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iter
                 scalars=graph_template.scalars,
                 conflicting_metrics=graph_template.conflicting_metrics,
                 optional_metrics=graph_template.optional_metrics,
-                presentation=graph_template.presentation,
                 consolidation_function=graph_template.consolidation_function,
                 range=graph_template.range,
                 omit_zero_metrics=graph_template.omit_zero_metrics,

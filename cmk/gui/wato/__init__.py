@@ -154,6 +154,8 @@ from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
+from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
+from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
@@ -220,7 +222,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
         "ContactGroupSelection",
-        "DictHostTagCondition",
         "FullPathFolderChoice",
         "HostGroupSelection",
         "HostRulespec",

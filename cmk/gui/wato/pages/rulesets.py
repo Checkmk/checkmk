@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     search_form,
 )
-from cmk.gui.plugins.wato.utils import DictHostTagCondition, HostTagCondition, LabelCondition
+from cmk.gui.plugins.wato.utils import HostTagCondition
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
@@ -117,6 +117,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
+
+from ._rule_conditions import DictHostTagCondition, LabelCondition
 
 if bakery.has_agent_bakery():
     import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=import-error,no-name-in-module

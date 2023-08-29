@@ -15,7 +15,6 @@ from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -33,6 +32,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import DictHostTagCondition, LabelCondition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.bi import actions

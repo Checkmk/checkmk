@@ -19,6 +19,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _permissions, filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
+from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
     PainterHostFilename,
     PainterWatoFolderAbs,
@@ -56,6 +57,9 @@ def register(
 
     page_registry.register_page_handler("wato", page_handler)
     page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
+    page_registry.register_page("ajax_dict_host_tag_condition_get_choice")(
+        PageAjaxDictHostTagConditionGetChoice
+    )
 
     sync_remote_sites.register(automation_command_registry, job_registry)
     bi_config.register(mode_registry)

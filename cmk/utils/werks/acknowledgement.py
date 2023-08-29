@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Sequence
 from functools import cache
-from typing import NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -14,14 +13,6 @@ from . import load
 from .werk import Compatibility, Werk
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
-
-
-class GuiWerk(NamedTuple):
-    """
-    Holds original Werk and attributes only used for the GUI
-    """
-
-    werk: Werk
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
@@ -40,28 +31,21 @@ def version_is_pre_127(version: str) -> bool:
     return version.startswith("1.2.5") or version.startswith("1.2.6")
 
 
-def sort_by_date(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
-    return sorted(werks, key=lambda w: w.werk.date, reverse=True)
+def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
+    return sorted(werks, key=lambda werk: werk.date, reverse=True)
 
 
-def unacknowledged_incompatible_werks() -> list[GuiWerk]:
+def unacknowledged_incompatible_werks() -> list[Werk]:
     acknowledged_werk_ids = load_acknowledgements()
     return sort_by_date(
         werk
         for werk in load_werk_entries()
-        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE
-        and not is_acknowledged(werk.werk, acknowledged_werk_ids)
+        if werk.compatible == Compatibility.NOT_COMPATIBLE
+        and not is_acknowledged(werk, acknowledged_werk_ids)
     )
 
 
 @cache
-def load_werk_entries() -> Sequence[GuiWerk]:
+def load_werk_entries() -> Sequence[Werk]:
     werks_raw = load()
-    werks = []
-    for werk in werks_raw.values():
-        werks.append(
-            GuiWerk(
-                werk=werk,
-            )
-        )
-    return werks
+    return list(werks_raw.values())

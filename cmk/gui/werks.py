@@ -19,7 +19,7 @@ from typing_extensions import TypedDict
 import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks.acknowledgement import GuiWerk, is_acknowledged
+from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import load_werk_entries
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
@@ -87,9 +87,9 @@ def render_description(description: str | NoWiki) -> HTML:
     return HTML(description)
 
 
-def get_werk_by_id(werk_id: int) -> GuiWerk:
+def get_werk_by_id(werk_id: int) -> Werk:
     for werk in load_werk_entries():
-        if werk.werk.id == werk_id:
+        if werk.id == werk_id:
             return werk
     raise MKUserError("werk", _("This werk does not exist."))
 
@@ -237,13 +237,13 @@ def handle_acknowledgement():
     if request.var("_werk_ack"):
         werk_id = request.get_integer_input_mandatory("_werk_ack")
         werk = get_werk_by_id(werk_id)
-        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE and not is_acknowledged(
-            werk.werk, load_acknowledgements()
+        if werk.compatible == Compatibility.NOT_COMPATIBLE and not is_acknowledged(
+            werk, load_acknowledgements()
         ):
             acknowledge_werk(werk)
             html.show_message(
                 _("Werk %s - %s has been acknowledged.")
-                % (render_werk_id(werk.werk), render_werk_title(werk.werk))
+                % (render_werk_id(werk), render_werk_title(werk))
             )
             render_unacknowleged_werks()
 
@@ -333,8 +333,7 @@ def _show_werk_options_controls() -> None:
 
 
 def page_werk() -> None:
-    gui_werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
-    werk = gui_werk.werk
+    werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
 
     title = ("%s %s - %s") % (
         _("Werk"),
@@ -350,7 +349,7 @@ def page_werk() -> None:
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    make_header(html, title, breadcrumb, _page_menu_werk(breadcrumb, gui_werk))
+    make_header(html, title, breadcrumb, _page_menu_werk(breadcrumb, werk))
 
     html.open_table(class_=["data", "headerleft", "werks"])
 
@@ -390,7 +389,7 @@ def page_werk() -> None:
     html.footer()
 
 
-def _page_menu_werk(breadcrumb: Breadcrumb, werk: GuiWerk) -> PageMenu:
+def _page_menu_werk(breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -408,18 +407,18 @@ def _page_menu_werk(breadcrumb: Breadcrumb, werk: GuiWerk) -> PageMenu:
     )
 
 
-def _page_menu_entries_ack_werk(werk: GuiWerk) -> Iterator[PageMenuEntry]:
+def _page_menu_entries_ack_werk(werk: Werk) -> Iterator[PageMenuEntry]:
     if not may_acknowledge():
         return
 
     ack_url = makeactionuri(
-        request, transactions, [("_werk_ack", werk.werk.id)], filename="change_log.py"
+        request, transactions, [("_werk_ack", werk.id)], filename="change_log.py"
     )
     yield PageMenuEntry(
         title=_("Acknowledge"),
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
-        is_enabled=not is_acknowledged(werk.werk, load_acknowledgements()),
+        is_enabled=not is_acknowledged(werk, load_acknowledgements()),
         is_shortcut=True,
         is_suggested=True,
     )
@@ -429,17 +428,17 @@ def may_acknowledge() -> bool:
     return user.may("general.acknowledge_werks")
 
 
-def acknowledge_werk(werk: GuiWerk) -> None:
+def acknowledge_werk(werk: Werk) -> None:
     acknowledge_werks([werk])
 
 
-def acknowledge_werks(werks: Iterable[GuiWerk], check_permission: bool = True) -> None:
+def acknowledge_werks(werks: Iterable[Werk], check_permission: bool = True) -> None:
     if check_permission:
         user.need_permission("general.acknowledge_werks")
 
     ack_ids = load_acknowledgements()
     for werk in werks:
-        ack_ids.add(werk.werk.id)
+        ack_ids.add(werk.id)
     save_acknowledgements(list(ack_ids))
 
 
@@ -604,18 +603,18 @@ def render_unacknowleged_werks() -> None:
 
 
 def get_sort_key_by_version_and_component(
-    translator: WerkTranslator, werk: GuiWerk
+    translator: WerkTranslator, werk: Werk
 ) -> tuple[str | int, ...]:
-    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk.werk)
+    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk)
     result = (
         *werk_result[:4],
-        int(is_acknowledged(werk.werk, load_acknowledgements())),
+        int(is_acknowledged(werk, load_acknowledgements())),
         *werk_result[4:],
     )
     return result
 
 
-def sort_by_version_and_component(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
+def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
     translator = WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
@@ -629,18 +628,18 @@ def get_date_formatted(werk: Werk) -> str:
 _SORT_AND_GROUP: dict[
     str | None,
     tuple[
-        Callable[[Iterator[GuiWerk]], list[GuiWerk]],
-        Callable[[GuiWerk], None | str],
+        Callable[[Iterator[Werk]], list[Werk]],
+        Callable[[Werk], None | str],
     ],
 ] = {
-    "version": (sort_by_version_and_component, lambda werk: werk.werk.version),
+    "version": (sort_by_version_and_component, lambda werk: werk.version),
     "day": (
         sort_by_date,
-        lambda werk: werk.werk.date.astimezone().strftime("%Y-%m-%d"),
+        lambda werk: werk.date.astimezone().strftime("%Y-%m-%d"),
     ),
     "week": (
         sort_by_date,
-        lambda werk: werk.werk.date.astimezone().strftime("%s %%U - %%Y" % _("Week")),
+        lambda werk: werk.date.astimezone().strftime("%s %%U - %%Y" % _("Week")),
     ),
     None: (sort_by_date, lambda _werk: None),
 }
@@ -678,8 +677,7 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
     return compatibilities[(compatible, acknowledged)]
 
 
-def render_werks_table_row(table: Table, translator: WerkTranslator, gui_werk: GuiWerk) -> None:
-    werk = gui_werk.werk
+def render_werks_table_row(table: Table, translator: WerkTranslator, werk: Werk) -> None:
     table.row()
     table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
     table.cell(_("Version"), werk.version, css=["number narrow"])
@@ -711,11 +709,10 @@ def _to_ternary_compatibility(werk: Werk) -> str:
     return "compat"
 
 
-def werk_matches_options(gui_werk: GuiWerk, werk_table_options: WerkTableOptions) -> bool:
+def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bool:
     # TODO: Fix this silly typing chaos below!
     # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
-    werk = gui_werk.werk
     try:
         werk_to_match: int | str = int(werk_table_options["id"])
     except ValueError:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pydantic_factories
+import polyfactory.factories.pydantic_factory
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.kube_node_count import (
 from cmk.base.plugins.agent_based.utils.kube import CountableNode, NodeCount
 
 
-class CountableNodeFactory(pydantic_factories.ModelFactory):
+class CountableNodeFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = CountableNode
 
 

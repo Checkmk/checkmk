@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cmk.base.plugins.agent_based.utils.azure import FrontendIpConfiguration, Resource
 
@@ -49,7 +49,7 @@ class AppGateway(BaseModel):
     http_listeners: Mapping[str, HttpListener]
     backend_settings: Mapping[str, BackendHttpSettings]
     backend_address_pools: Mapping[str, BackendAddressPool]
-    waf_enabled: bool | None = None
+    waf_enabled: bool | None = Field(None)
 
 
 Section = Mapping[str, AppGateway]

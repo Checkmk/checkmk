@@ -221,9 +221,9 @@ class PydanticStore(ObjectStore[Model_T]):
     def __init__(self, path: Path, model: type[Model_T]) -> None:
         class PydanticSerializer:
             def serialize(self, data: Model_T) -> bytes:
-                return data.json().encode("utf-8")
+                return data.model_dump_json().encode("utf-8")
 
             def deserialize(self, raw: bytes) -> Model_T:
-                return model.parse_raw(raw.decode("utf-8"))
+                return model.model_validate_json(raw.decode("utf-8"))
 
         super().__init__(path, serializer=PydanticSerializer())

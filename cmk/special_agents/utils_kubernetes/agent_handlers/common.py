@@ -217,7 +217,7 @@ def pod_lifecycle_phase(pod_status: api.PodStatus) -> section.PodLifeCycle:
 def namespace_name(api_namespace: api.Namespace) -> api.NamespaceName:
     """The name of the namespace
     Examples:
-        >>> metadata = api.NamespaceMetaData.parse_obj({"name": "foo", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
+        >>> metadata = api.NamespaceMetaData.model_validate({"name": "foo", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
         >>> namespace = api.Namespace(metadata=metadata)
         >>> namespace_name(namespace)
         'foo'
@@ -282,7 +282,7 @@ class CheckmkHostSettings(NamedTuple):
 
 
 def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
-    return section.UpdateStrategy.parse_obj(controller.spec)
+    return section.UpdateStrategy.model_validate(controller.spec.model_dump())
 
 
 def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:

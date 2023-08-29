@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pydantic_factories
+import polyfactory.factories.pydantic_factory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_cronjob import inventory_kube_cronjob
 from cmk.base.plugins.agent_based.utils.kube import CronJobInfo
 
 
-class CronJobInfoFactory(pydantic_factories.ModelFactory):
+class CronJobInfoFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = CronJobInfo
 
 

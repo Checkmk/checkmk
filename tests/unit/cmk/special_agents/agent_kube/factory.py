@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to help generate pydantic based Kubernetes models
 
-Notice (for pydantic_factories):
+Notice (for polyfactory):
     For models which make use of validator such as api.StorageRequirement, the build function will
     first generate the field value before passing it through the validator function. This will in
     some cases raise an error.
@@ -19,7 +19,9 @@ import typing
 from collections.abc import Iterator, Sequence
 
 import pydantic
-from pydantic_factories import ModelFactory, Use
+from polyfactory import Use
+from polyfactory.factories.dataclass_factory import DataclassFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
@@ -391,7 +393,7 @@ class SampleFactory(ModelFactory):
 # Cluster related Factories
 
 
-class APIDataFactory(ModelFactory):
+class APIDataFactory(DataclassFactory):
     __model__ = APIData
 
     persistent_volume_claims = randomize_size(PersistentVolumeClaimFactory.batch)

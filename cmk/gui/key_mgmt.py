@@ -74,10 +74,10 @@ class KeypairStore:
             )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
-        return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}
+        return {key_id: Key.model_validate(raw_key) for key_id, raw_key in raw_keys.items()}
 
     def _unparse(self, keys: Mapping[int, Key]) -> dict[int, dict[str, Any]]:
-        return {key_id: key.dict() for key_id, key in keys.items()}
+        return {key_id: key.model_dump() for key_id, key in keys.items()}
 
     def choices(self) -> list[tuple[str, str]]:
         choices = []

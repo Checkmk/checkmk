@@ -10,7 +10,7 @@ from base64 import b64decode
 from collections.abc import Sequence
 from datetime import datetime
 
-from pydantic import BaseModel, parse_raw_as
+from pydantic import BaseModel, TypeAdapter
 
 
 class JSON(BaseModel, frozen=True):
@@ -56,7 +56,8 @@ SubSection = Result | ConfigReadingError | ConfigFileContent
 
 
 def _parse_line(line: str) -> SubSection:
-    return parse_raw_as(SubSection, line)  # type: ignore[arg-type]
+    adapter = TypeAdapter(SubSection)
+    return adapter.validate_json(line)  # type: ignore[return-value]
 
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:

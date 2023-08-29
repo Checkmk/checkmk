@@ -76,7 +76,7 @@ class TestManifest:
         )
 
     def test_roundtrip_json(self) -> None:
-        assert TEST_MANIFEST == Manifest.parse_raw(TEST_MANIFEST.json())
+        assert TEST_MANIFEST == Manifest.model_validate_json(TEST_MANIFEST.model_dump_json())
 
     def test_roundtrip_python(self) -> None:
         assert TEST_MANIFEST == Manifest.parse_python_string(TEST_MANIFEST.file_content())
@@ -94,7 +94,7 @@ def test_read_manifest_optionally_ok(tmp_path: Path) -> None:
 def test_read_manifest_optionally_invalid(tmp_path: Path) -> None:
     invalid_manifest_path = tmp_path / "invalid"
     invalid_manifest_dict = {
-        k: v for k, v in TEST_MANIFEST.dict(by_alias=True).items() if k != "name"
+        k: v for k, v in TEST_MANIFEST.model_dump(by_alias=True).items() if k != "name"
     }
     invalid_manifest_path.write_text(f"{pprint.pformat(invalid_manifest_dict)}\n")
 
@@ -136,7 +136,7 @@ def test_field_conversion_package_name() -> None:
 
 
 def test_field_conversion_package_part() -> None:
-    with pytest.raises(pydantic.ValidationError, match="value is not a valid enumeration member"):
+    with pytest.raises(pydantic.ValidationError, match="Input should be"):
         Manifest.parse_python_string(
             "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"

@@ -10,8 +10,7 @@ from typing import Any, Literal
 import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
-from pydantic import BaseModel, Field, validator
-from pydantic.error_wrappers import ValidationError
+from pydantic import BaseModel, Field, field_validator, ValidationError
 
 from cmk.utils.version import Version
 
@@ -33,28 +32,28 @@ class RawWerkV2(BaseModel, RawWerk):
     description: str
     title: str
 
-    @validator("version")
+    @field_validator("version")
     def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
         Version.from_str(v)
         return v
 
-    @validator("level", pre=True)
+    @field_validator("level", mode="before")
     def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
         try:
             return Level(int(v))
         except ValueError:
             raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead")
 
-    @validator("component")
+    @field_validator("component")
     def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
         components = {k for k, _ in WerkTranslator().components()}
         if v not in components:
-            raise TypeError(f"Component {v} not know. Choose from: {components}")
+            raise WerkError(f"Component {v} not know. Choose from: {components}")
         return v
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "RawWerkV2":
-        return cls.parse_obj(data)
+        return cls.model_validate(data)
 
     def to_json_dict(self) -> dict[str, object]:
         return {
@@ -157,7 +156,7 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
     werk["description"] = result
 
     try:
-        return RawWerkV2.parse_obj(werk)
+        return RawWerkV2.model_validate(werk)
     except ValidationError as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
 

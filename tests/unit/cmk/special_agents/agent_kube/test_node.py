@@ -163,18 +163,24 @@ def test_conditions_truthy_vs_status() -> None:
         c for _, c in node_conditions if isinstance(c, section.TruthyNodeCondition)
     ]
     assert len(truthy_conditions) > 0
-    assert all(c.is_ok() is (c.status == api.NodeConditionStatus.TRUE) for c in truthy_conditions)
+    # Check that all expected to be true states are actually true.
+    for name, value in api.EXPECTED_CONDITION_STATES.items():
+        if value == api.NodeConditionStatus.TRUE:
+            assert getattr(node_conditions, name).status == api.NodeConditionStatus.TRUE
 
 
 def test_conditions_falsy_vs_status() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
+    status = node_status(api.NodeConditionStatus.FALSE)
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
     node_conditions = _conditions(api_node)
     assert node_conditions is not None
 
     falsy_conditions = [c for _, c in node_conditions if isinstance(c, section.FalsyNodeCondition)]
     assert len(falsy_conditions) > 0
-    assert all(c.is_ok() is (c.status == api.NodeConditionStatus.FALSE) for c in falsy_conditions)
+    # Check that all expected to be false states are actually false.
+    for name, value in api.EXPECTED_CONDITION_STATES.items():
+        if value == api.NodeConditionStatus.FALSE:
+            assert getattr(node_conditions, name).status == api.NodeConditionStatus.FALSE
 
 
 def test_conditions_with_status_conditions_none() -> None:

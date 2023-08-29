@@ -29,7 +29,7 @@ from typing import TypeVar
 
 import requests
 import urllib3
-from pydantic import parse_raw_as
+from pydantic import TypeAdapter
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -442,7 +442,8 @@ Model = TypeVar("Model")
 
 
 def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
-    return parse_raw_as(list[RawMetrics], content)
+    adapter = TypeAdapter(list[RawMetrics])
+    return adapter.validate_json(content)
 
 
 def request_cluster_collector(

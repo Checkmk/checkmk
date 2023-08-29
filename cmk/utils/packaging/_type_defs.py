@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable
 from functools import cached_property
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator, GetCoreSchemaHandler
+from pydantic_core import core_schema
 from semver import VersionInfo
 
 
@@ -42,8 +43,12 @@ class PackageVersion(str):
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | PackageVersion], PackageVersion]]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     @staticmethod
     def parse_semver(raw: str) -> VersionInfo:
@@ -89,8 +94,12 @@ class PackageName(str):
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | PackageName], PackageName]]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     def __new__(cls, value: str) -> PackageName:
         if not cls._REGEX.match(value):
@@ -98,14 +107,20 @@ class PackageName(str):
         return super().__new__(cls, value)
 
 
-class PackageID(BaseModel, frozen=True):
+class PackageID(BaseModel):
+    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+
     name: PackageName
     version: PackageVersion
 
-    @validator("name")
+    @field_validator("name")
     def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
         return PackageName(value)
 
-    @validator("version")
+    @field_validator("version")
     def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
         return PackageVersion(value)

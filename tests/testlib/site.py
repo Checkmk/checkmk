@@ -1294,23 +1294,26 @@ class SiteFactory:
         logger.debug("Reused site %s", site.id)
         return site
 
-    def restore_site_from_backup(self, backup_path: Path, name: str) -> Site:
+    def restore_site_from_backup(self, backup_path: Path, name: str, reuse: bool = False) -> Site:
+        self._base_ident = ""
         site = self._site_obj(name)
 
-        assert (
-            not site.exists()
-        ), f"Site {name} already existing. Please remove it before restoring it from a backup."
-        site.install_cmk()
+        if not reuse:
+            assert (
+                not site.exists()
+            ), f"Site {name} already existing. Please remove it before restoring it from a backup."
 
+        site.install_cmk()
         logger.info("Creating %s site from backup...", name)
 
+        omd_restore_cmd = (
+            ["sudo", "/usr/bin/omd", "restore"]
+            + (["--reuse", "--kill"] if reuse else [])
+            + [backup_path]
+        )
+
         completed_process = subprocess.run(
-            [
-                "sudo",
-                "/usr/bin/omd",
-                "restore",
-                backup_path,
-            ],
+            omd_restore_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
@@ -1318,8 +1321,10 @@ class SiteFactory:
         )
 
         assert completed_process.returncode == 0
-        site = self.get_existing_site(name)
+
+        site = self.get_existing_site(site.id)
         site.start()
+
         return site
 
     def interactive_create(self, name: str, logfile_path: str = "/tmp/omd_install.out") -> Site:
@@ -1479,8 +1484,9 @@ class SiteFactory:
         auto_cleanup: bool = True,
         auto_restart_httpd: bool = False,
         init_livestatus: bool = True,
+        save_results: bool = True,
     ) -> Iterator[Site]:
-        """Return a fully setup test site (for use in site fixtures)."""
+        """Return a fully-setup test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
         # by default, the site will be cleaned up if REUSE=1 is not set
         # you can also explicitly set CLEANUP=[0|1] though (for debug purposes)
@@ -1512,7 +1518,8 @@ class SiteFactory:
             yield site
         finally:
             # teardown: saving results and removing site
-            site.save_results()
+            if save_results:
+                site.save_results()
             if auto_cleanup and cleanup_site:
                 logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
                 site.rm()

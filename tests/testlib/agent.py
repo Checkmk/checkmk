@@ -173,6 +173,7 @@ def register_controller(
         [
             "sudo",
             contoller_path.as_posix(),
+            "--verbose",
             "register",
             "--server",
             site_address if site_address else site.http_address,

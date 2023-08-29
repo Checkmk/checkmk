@@ -40,6 +40,7 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    GraphRenderOptions,
     Perfdata,
     PerfometerSpec,
     RGBColor,
@@ -157,6 +158,8 @@ class GraphRecipeBase(BaseModel, frozen=True):
     consolidation_function: GraphConsoldiationFunction | None
     metrics: Sequence[GraphMetric]
     additional_html: AdditionalGraphHTML | None = None
+    render_options: GraphRenderOptions = {}
+    data_range: GraphDataRange | None = None
 
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
@@ -165,9 +168,10 @@ class GraphRecipe(GraphRecipeBase, frozen=True):
 
 class ForecastGraphRecipe(GraphRecipe, frozen=True):
     is_forecast: Literal[True]
-    model_params: Mapping[str, Any]
     specification: ForecastGraphSpecification
     additional_html: AdditionalGraphHTML | None
+    render_options: GraphRenderOptions
+    data_range: GraphDataRange
 
 
 def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:

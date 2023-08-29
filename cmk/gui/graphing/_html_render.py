@@ -48,7 +48,6 @@ from ._graph_recipe_builder import build_graph_recipes
 from ._graph_specification import GraphMetric, GraphSpecification, TemplateGraphSpecification
 from ._utils import (
     CombinedSingleMetricSpec,
-    ForecastGraphRecipe,
     GraphDataRange,
     GraphRecipe,
     parse_raw_graph_recipe,
@@ -726,18 +725,23 @@ def _render_graphs_from_definitions(
 
     output = HTML()
     for graph_recipe in graph_recipes:
+        recipe_specific_render_options = graph_render_options | graph_recipe.render_options
+        recipe_specific_data_range = graph_data_range.copy()
+        if graph_recipe.data_range:
+            recipe_specific_data_range.update(graph_recipe.data_range)
+
         if render_async:
             output += _render_graph_container_html(
                 graph_recipe,
-                graph_data_range,
-                graph_render_options,
+                recipe_specific_data_range,
+                recipe_specific_render_options,
                 graph_display_id=graph_display_id,
             )
         else:
             output += _render_graph_content_html(
                 graph_recipe,
-                graph_data_range,
-                graph_render_options,
+                recipe_specific_data_range,
+                recipe_specific_render_options,
                 resolve_combined_single_metric_spec,
                 graph_display_id=graph_display_id,
             )
@@ -839,9 +843,7 @@ def _render_graph_content_html(
             graph_artwork, graph_data_range, graph_render_options
         )
 
-        if graph_render_options["show_time_range_previews"] and not isinstance(
-            graph_recipe, ForecastGraphRecipe
-        ):
+        if graph_render_options["show_time_range_previews"]:
             output += HTMLWriter.render_div(
                 main_graph_html
                 + _render_time_range_selection(

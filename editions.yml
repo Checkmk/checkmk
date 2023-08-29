@@ -7,7 +7,6 @@ common: &common
     - "ubuntu-22.04"
     - "ubuntu-22.10"
     - "ubuntu-23.04"
-    - "centos-7"
     - "centos-8"
     - "almalinux-9"
     - "sles-12sp5"
@@ -27,7 +26,7 @@ editions:
     enterprise:
         release: [*common, "cma-3"]
         daily: [*common, "cma-3"]
-        testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
+        testbuild: ["ubuntu-22.04", "centos-8", "cma-3"]
     cloud:
         release: [*common, "cma-3"]
         daily: *daily_reduced

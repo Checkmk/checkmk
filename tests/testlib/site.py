@@ -367,10 +367,7 @@ class Site:
 
         if preserve_env:
             # Skip the test cases calling this for some distros
-            if os.environ.get("DISTRO") in (
-                "centos-7",
-                "centos-8",
-            ):
+            if os.environ.get("DISTRO") in ("centos-8",):
                 pytest.skip("preserve env not possible in this environment")
             sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
             su_env_args = ["--whitelist-environment", ",".join(preserve_env)]

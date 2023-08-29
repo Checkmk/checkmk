@@ -75,7 +75,7 @@ build_binutils() {
             BINUTILS_CONFIGURE_ADD_OPTS=""
             ;;
     esac
-    # centos-7 and sles-12* have ancient makeinfo versions, so let's just skip
+    # sles-12* have ancient makeinfo versions, so let's just skip
     # info generation for all distros, we don't really need it.
     MAKEINFO=true ../binutils-${BINUTILS_VERSION}/configure \
         "${BINUTILS_CONFIGURE_ADD_OPTS}" \

@@ -359,5 +359,5 @@ def restart_httpd() -> None:
     """
 
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
+    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
         execute(["sudo", "httpd", "-k", "restart"])

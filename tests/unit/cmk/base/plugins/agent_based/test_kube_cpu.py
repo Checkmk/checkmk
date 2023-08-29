@@ -25,15 +25,7 @@ ONE_HOUR = 60 * ONE_MINUTE
 TIMESTAMP = 359
 
 USAGE = 0.09
-OK = 0.18  # value for request and limit to set state to OK
-WARN = 0.12  # value for request and limit to set state to WARN
-CRIT = 0.09  # value for request and limit to set state to CRIT
 ALLOCATABLE = 5.0  # value for allocatable cpu
-
-
-# Resources
-LIMIT = 2 * OK
-REQUEST = OK
 
 
 USAGE_SECTION = PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE))
@@ -49,8 +41,8 @@ PARAMS = kube_resources.Params(
 
 
 RESOURCES_SECTION = kube_resources.Resources(
-    request=REQUEST,
-    limit=LIMIT,
+    request=0.18,
+    limit=0.36,
     count_total=2,
     count_zeroed_limits=0,
     count_unspecified_limits=0,
@@ -104,10 +96,12 @@ def test_check_if_no_resources() -> None:
 
 
 def test_check_beginning_of_summaries_with_all_sections_present() -> None:
+    limit = RESOURCES_SECTION.limit
+    request = RESOURCES_SECTION.request
     expected_beginnings = [
         f"Usage: {USAGE:0.3f}",
-        f"Requests utilization: {render.percent(USAGE /  REQUEST * 100)} - {USAGE:0.3f} of {REQUEST:0.3f}",
-        f"Limits utilization: {render.percent(USAGE / LIMIT * 100)} - {USAGE:0.3f} of {LIMIT:0.3f}",
+        f"Requests utilization: {render.percent(USAGE /  request * 100)} - {USAGE:0.3f} of {request:0.3f}",
+        f"Limits utilization: {render.percent(USAGE / limit * 100)} - {USAGE:0.3f} of {limit:0.3f}",
     ]
     check_result = kube_cpu._check_kube_cpu(
         PARAMS, USAGE_SECTION, RESOURCES_SECTION, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
@@ -124,10 +118,10 @@ def test_check_yields_multiple_metrics_with_values() -> None:
     )
     expected = [
         ("kube_cpu_usage", USAGE),
-        ("kube_cpu_request", REQUEST),
-        ("kube_cpu_request_utilization", USAGE / REQUEST * 100),
-        ("kube_cpu_limit", LIMIT),
-        ("kube_cpu_limit_utilization", USAGE / LIMIT * 100),
+        ("kube_cpu_request", RESOURCES_SECTION.request),
+        ("kube_cpu_request_utilization", USAGE / RESOURCES_SECTION.request * 100),
+        ("kube_cpu_limit", RESOURCES_SECTION.limit),
+        ("kube_cpu_limit_utilization", USAGE / RESOURCES_SECTION.limit * 100),
         ("kube_cpu_allocatable", ALLOCATABLE),
         ("kube_cpu_node_allocatable_utilization", pytest.approx(USAGE / ALLOCATABLE * 100)),
     ]
@@ -144,9 +138,9 @@ def test_check_all_states_ok():
 @pytest.mark.parametrize(
     "limit, request_",
     [
-        (OK, OK),
-        (WARN, WARN),
-        (CRIT, CRIT),
+        (0.18, 0.18),
+        (0.12, 0.12),
+        (0.09, 0.09),
     ],
 )
 def test_check_all_states_ok_params_ignore(limit: int, request_: int) -> None:
@@ -166,9 +160,9 @@ def test_check_all_states_ok_params_ignore(limit: int, request_: int) -> None:
 @pytest.mark.parametrize(
     "limit, request_",
     [
-        (OK, OK),
-        (WARN, WARN),
-        (CRIT, CRIT),
+        (0.18, 0.18),
+        (0.12, 0.12),
+        (0.09, 0.09),
     ],
 )
 @pytest.mark.parametrize(
@@ -212,15 +206,15 @@ def test_check_abs_levels_with_mixed(
 @pytest.mark.parametrize(
     "request_, limit, expected_states",
     [
-        (OK, 2 * OK, [State.OK, State.OK, State.OK, State.OK]),
-        (OK, 2 * WARN, [State.OK, State.OK, State.WARN, State.OK]),
-        (OK, 2 * CRIT, [State.OK, State.OK, State.CRIT, State.OK]),
-        (WARN, 2 * OK, [State.OK, State.WARN, State.OK, State.OK]),
-        (CRIT, 2 * OK, [State.OK, State.CRIT, State.OK, State.OK]),
-        (WARN, 2 * WARN, [State.OK, State.WARN, State.WARN, State.OK]),
-        (WARN, 2 * CRIT, [State.OK, State.WARN, State.CRIT, State.OK]),
-        (CRIT, 2 * WARN, [State.OK, State.CRIT, State.WARN, State.OK]),
-        (CRIT, 2 * CRIT, [State.OK, State.CRIT, State.CRIT, State.OK]),
+        (0.18, 0.36, [State.OK, State.OK, State.OK, State.OK]),
+        (0.18, 0.24, [State.OK, State.OK, State.WARN, State.OK]),
+        (0.18, 0.18, [State.OK, State.OK, State.CRIT, State.OK]),
+        (0.12, 0.36, [State.OK, State.WARN, State.OK, State.OK]),
+        (0.09, 0.36, [State.OK, State.CRIT, State.OK, State.OK]),
+        (0.12, 0.24, [State.OK, State.WARN, State.WARN, State.OK]),
+        (0.12, 0.18, [State.OK, State.WARN, State.CRIT, State.OK]),
+        (0.09, 0.24, [State.OK, State.CRIT, State.WARN, State.OK]),
+        (0.09, 0.18, [State.OK, State.CRIT, State.CRIT, State.OK]),
     ],
 )
 def test_check_result_states_mixed(

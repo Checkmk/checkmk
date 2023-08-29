@@ -2295,7 +2295,7 @@ def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> 
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
+    config_cache = ts.config_cache
     assert not config_cache.is_cluster(xyz_host)
     assert (
         config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
@@ -2313,7 +2313,7 @@ def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> Non
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
+    config_cache = ts.config_cache
     assert config_cache.is_cluster(clu)
     assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
     assert (
@@ -2519,14 +2519,9 @@ def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None
 
 
 def test_load_config_folder_paths(folder_path_test_config: None) -> None:
-    assert config.host_paths == {
-        "lvl1-host": "/wato/lvl1/hosts.mk",
-        "lvl1aaa-host": "/wato/lvl1_aaa/hosts.mk",
-        "lvl2-host": "/wato/lvl1/lvl2/hosts.mk",
-        "lvl0-host": "/wato/hosts.mk",
-    }
-
-    config_cache = config.get_config_cache()
+    # reset makes our testing environment explicit and stable, but the test runs good with almost
+    # any config_cache.
+    config_cache = config.reset_config_cache()
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"

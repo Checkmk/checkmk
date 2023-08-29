@@ -240,3 +240,26 @@ def test_check_timesyncd_negative_time(
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
     with on_time(*wrong_server_time):
         assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
+
+
+@pytest.mark.parametrize(
+    ("ntp_message", "timezone", "expected_timestamp"),
+    [
+        pytest.param(
+            "NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-23, RootDelay=22.003ms, RootDispersion=21.194ms, Reference=C102015C, OriginateTimestamp=Fri 2019-07-19 13:59:53 IST, ReceiveTimestamp=Fri 2019-07-19 13:59:53 IST, TransmitTimestamp=Fri 2019-07-19 13:59:53 IST, DestinationTimestamp=Fri 2019-07-19 13:59:53 IST, Ignored=no PacketCount=1, Jitter=0 }",
+            "Timezone=Europe/Dublin",
+            1563541193.0,
+            id="ambiguous timezone abbreviation",
+        ),
+        pytest.param(
+            "NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-23, RootDelay=22.003ms, RootDispersion=21.194ms, Reference=C102015C, OriginateTimestamp=Tue 2023-08-29 21:49:01 AWCST, ReceiveTimestamp=Tue 2023-08-29 21:49:01 AWCST, TransmitTimestamp=Tue 2023-08-29 21:49:01 AWCST, DestinationTimestamp=Tue 2023-08-29 21:49:01 AWCST, Ignored=no PacketCount=1, Jitter=0 }",
+            "Timezone=Australia/Eucla",
+            1693314241.0,
+            id="uncommon timezone abbreviation",
+        ),
+    ],
+)
+def test_parse_ntp_message_timestamp(
+    ntp_message: str, timezone: str, expected_timestamp: float
+) -> None:
+    assert timesyncd._parse_ntp_message_timestamp(ntp_message, timezone) == expected_timestamp

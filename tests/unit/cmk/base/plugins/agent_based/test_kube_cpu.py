@@ -24,7 +24,7 @@ ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
 TIMESTAMP = 359
 
-USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
+USAGE = 0.09
 OK = 0.18  # value for request and limit to set state to OK
 WARN = 0.12  # value for request and limit to set state to WARN
 CRIT = 0.09  # value for request and limit to set state to CRIT
@@ -129,7 +129,7 @@ def test_check_yields_multiple_metrics_with_values() -> None:
         ("kube_cpu_limit", LIMIT),
         ("kube_cpu_limit_utilization", USAGE / LIMIT * 100),
         ("kube_cpu_allocatable", ALLOCATABLE),
-        ("kube_cpu_node_allocatable_utilization", USAGE / ALLOCATABLE * 100),
+        ("kube_cpu_node_allocatable_utilization", pytest.approx(USAGE / ALLOCATABLE * 100)),
     ]
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 

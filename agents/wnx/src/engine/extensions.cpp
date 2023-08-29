@@ -72,6 +72,35 @@ std::vector<Extension> GetAll(YAML::Node node) {
     return {};
 }
 
+namespace {
+/// Do not have DETACHED_PROCESS flag: powershell can't be executed with
+/// DETACHED_PROCESS
+bool RunExtension(const std::wstring &command) {
+    STARTUPINFOW si = {};
+    memset(&si, 0, sizeof si);
+    si.cb = sizeof STARTUPINFO;
+    si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
+
+    PROCESS_INFORMATION pi = {};
+    memset(&pi, 0, sizeof pi);
+
+    if (std::wstring c{command};
+        ::CreateProcessW(nullptr,   // stupid windows want null here
+                         c.data(),  // win32!
+                         nullptr,   // security attribute
+                         nullptr,   // thread attribute
+                         FALSE,     // no handle inheritance
+                         CREATE_NEW_PROCESS_GROUP,  // Creation Flags
+                         nullptr,                   // environment
+                         nullptr,                   // current directory
+                         &si, &pi) == TRUE) {
+        tools::ClosePi(pi);
+        return true;
+    }
+    return false;
+}
+}  // namespace
+
 std::vector<fs::path> StartAll(const std::vector<Extension> &extensions) {
     std::vector<fs::path> started;
     for (auto &&[name, binary, command_line, mode] : extensions) {
@@ -89,7 +118,7 @@ std::vector<fs::path> StartAll(const std::vector<Extension> &extensions) {
         if (!command_line.empty()) {
             to_run += L" "s + wtools::ConvertToUtf16(command_line);
         }
-        if (tools::RunDetachedProcess(to_run)) {
+        if (RunExtension(to_run)) {
             XLOG::l.i("Agent extension '{}' started", wtools::ToUtf8(to_run));
             started.emplace_back(path);
         } else {

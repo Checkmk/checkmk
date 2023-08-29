@@ -8,7 +8,7 @@ from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from datetime import datetime
 from typing import Any, NamedTuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -59,8 +59,8 @@ class FrontendIpConfiguration(BaseModel):
     id: str
     name: str
     privateIPAllocationMethod: str
-    privateIPAddress: str | None
-    public_ip_address: PublicIP | None
+    privateIPAddress: str | None = Field(None)
+    public_ip_address: PublicIP | None = Field(None)
 
 
 Section = Mapping[str, Resource]

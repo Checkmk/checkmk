@@ -7,6 +7,8 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterator
 
+import pydantic
+
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
     CheckmkHostSettings,
@@ -162,9 +164,15 @@ def _conditions(api_node: Node) -> section.NodeConditions | None:
     if not api_node.status.conditions:
         return None
 
-    return section.NodeConditions.parse_obj(
+    def dump_model(obj: object) -> object:
+        if isinstance(obj, pydantic.BaseModel):
+            return {key: dump_model(value) for key, value in obj.model_dump().items()}
+
+        return obj
+
+    return section.NodeConditions.model_validate(
         {
-            condition.type_.lower(): section.NodeCondition.parse_obj(condition)
+            condition.type_.lower(): section.NodeCondition.model_validate(dump_model(condition))
             for condition in api_node.status.conditions
             if condition.type_ in NATIVE_NODE_CONDITION_TYPES
         }
@@ -177,7 +185,7 @@ def _custom_conditions(api_node: Node) -> section.NodeCustomConditions | None:
 
     return section.NodeCustomConditions(
         custom_conditions=[
-            section.FalsyNodeCustomCondition.parse_obj(condition)
+            section.NodeCustomCondition.model_validate(condition.model_dump())
             for condition in api_node.status.conditions
             if condition.type_ not in NATIVE_NODE_CONDITION_TYPES
         ]

@@ -7,7 +7,7 @@
 
 
 import pytest
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APICronJobFactory,

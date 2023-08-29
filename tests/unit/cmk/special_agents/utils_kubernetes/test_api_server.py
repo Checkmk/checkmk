@@ -9,7 +9,7 @@ import logging
 from collections.abc import Mapping, Sequence
 from unittest.mock import patch
 
-import pydantic_factories
+import polyfactory.factories.pydantic_factory
 import pytest
 import requests
 
@@ -24,7 +24,7 @@ from cmk.special_agents.utils_kubernetes.api_server import (
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-class APISessionConfigFactory(pydantic_factories.ModelFactory):
+class APISessionConfigFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = query.APISessionConfig
 
 

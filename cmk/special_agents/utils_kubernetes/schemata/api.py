@@ -20,8 +20,6 @@ class Correct(BaseModel):
     a: int | None = None
 
 """
-from __future__ import annotations
-
 import datetime
 import enum
 import math
@@ -29,8 +27,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Literal, NewType, TypeGuard
 
-from pydantic import BaseModel
-from pydantic.class_validators import validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator, RootModel
 from pydantic.fields import Field
 
 CronJobUID = NewType("CronJobUID", str)
@@ -116,9 +113,10 @@ def namespaced_name(namespace: str, name: str) -> str:
 
 
 class ClientModel(BaseModel):
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 
 class Label(BaseModel):
@@ -274,19 +272,25 @@ def parse_annotations(annotations: Mapping[str, str] | None) -> Annotations:
 
 
 class MetaDataNoNamespace(ClientModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     creation_timestamp: Timestamp = Field(..., alias="creationTimestamp")
     labels: Labels = {}
     annotations: Annotations = {}
 
-    _parse_creation_timestamp = validator("creation_timestamp", pre=True, allow_reuse=True)(
-        convert_to_timestamp
+    _parse_creation_timestamp = field_validator(
+        "creation_timestamp", mode="before", check_fields=False
+    )(convert_to_timestamp)
+    _parse_labels = field_validator("labels", mode="before", check_fields=False)(parse_labels)
+    _parse_annotations = field_validator("annotations", mode="before", check_fields=False)(
+        parse_annotations
     )
-    _parse_labels = validator("labels", pre=True, allow_reuse=True)(parse_labels)
-    _parse_annotations = validator("annotations", pre=True, allow_reuse=True)(parse_annotations)
 
 
 class MetaData(MetaDataNoNamespace):
+    model_config = ConfigDict(from_attributes=True)
+
     namespace: NamespaceName
 
 
@@ -299,6 +303,8 @@ class NodeMetaData(MetaDataNoNamespace):
 
 
 class Namespace(ClientModel):
+    model_config = ConfigDict(from_attributes=True)
+
     metadata: NamespaceMetaData
 
 
@@ -385,9 +391,9 @@ class ResourceQuotaSpec(BaseModel):
         * PriorityClass scope verifies if the object has any PriorityClass associated with it
     """
 
-    hard: HardRequirement | None
-    scope_selector: ScopeSelector | None
-    scopes: Sequence[QuotaScope] | None
+    hard: HardRequirement | None = None
+    scope_selector: ScopeSelector | None = None
+    scopes: Sequence[QuotaScope] | None = None
 
 
 class ResourceQuota(BaseModel):
@@ -418,16 +424,25 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
+EXPECTED_CONDITION_STATES = {
+    "ready": NodeConditionStatus.TRUE,
+    "memorypressure": NodeConditionStatus.FALSE,
+    "diskpressure": NodeConditionStatus.FALSE,
+    "pidpressure": NodeConditionStatus.FALSE,
+    "networkunavailable": NodeConditionStatus.FALSE,
+}
+
+
 class NodeCondition(ClientModel):
     status: NodeConditionStatus
     type_: str = Field(..., alias="type")
-    reason: str | None
-    detail: str | None
-    last_transition_time: int | None = Field(..., alias="lastTransitionTime")
+    reason: str | None = None
+    detail: str | None = None
+    last_transition_time: int | None = Field(None, alias="lastTransitionTime")
 
-    _parse_last_transition_time = validator("last_transition_time", pre=True, allow_reuse=True)(
-        convert_to_timestamp
-    )
+    _parse_last_transition_time = field_validator(
+        "last_transition_time", mode="before", check_fields=False
+    )(convert_to_timestamp)
 
 
 class NodeResources(BaseModel):
@@ -435,9 +450,11 @@ class NodeResources(BaseModel):
     memory: int = 0
     pods: int = 0
 
-    _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
-    _parse_memory = validator("memory", pre=True, allow_reuse=True)(parse_resource_value)
-    _parse_pods = validator("pods", pre=True, allow_reuse=True)(parse_pod_number)
+    _parse_cpu = field_validator("cpu", mode="before", check_fields=False)(parse_cpu_cores)
+    _parse_memory = field_validator("memory", mode="before", check_fields=False)(
+        parse_resource_value
+    )
+    _parse_pods = field_validator("pods", mode="before", check_fields=False)(parse_pod_number)
 
 
 class HealthZ(BaseModel):
@@ -450,12 +467,6 @@ class APIHealth(BaseModel):
     live: HealthZ
 
 
-class OpenMetricSample(BaseModel):
-    metric_name: KubeletVolumeMetricName
-    labels: KubeletVolumeLabels
-    value: float
-
-
 class KubeletVolumeMetricName(enum.Enum):
     used = "kubelet_volume_stats_used_bytes"
     capacity = "kubelet_volume_stats_capacity_bytes"
@@ -465,6 +476,12 @@ class KubeletVolumeMetricName(enum.Enum):
 class KubeletVolumeLabels(BaseModel):
     namespace: str
     persistentvolumeclaim: str
+
+
+class OpenMetricSample(BaseModel):
+    metric_name: KubeletVolumeMetricName
+    labels: KubeletVolumeLabels
+    value: float
 
 
 class KubeletVolumeMetricSample(OpenMetricSample):
@@ -479,12 +496,14 @@ class UnusedKubeletMetricSample(BaseModel):
 _KubeletMetrics = KubeletVolumeMetricSample | UnusedKubeletMetricSample
 
 
-class KubeletMetricSample(BaseModel):
+class KubeletMetricSample(RootModel):
     # https://github.com/pydantic/pydantic/issues/675#issuecomment-513029543
-    __root__: _KubeletMetrics
+    root: _KubeletMetrics
 
 
 class NodeInfo(ClientModel):
+    model_config = ConfigDict(from_attributes=True)
+
     architecture: str
     kernel_version: str = Field(..., alias="kernelVersion")
     os_image: str = Field(..., alias="osImage")
@@ -507,7 +526,7 @@ NodeAddresses = Sequence[NodeAddress]
 class NodeStatus(ClientModel):
     allocatable: NodeResources = NodeResources()
     capacity: NodeResources = NodeResources()
-    conditions: Sequence[NodeCondition] | None
+    conditions: Sequence[NodeCondition] | None = None
     node_info: NodeInfo = Field(..., alias="nodeInfo")
     addresses: NodeAddresses = []
 
@@ -610,7 +629,7 @@ class RollingUpdate(BaseModel):
     the update.
     """
 
-    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate")
     max_surge: str  # This field was introduced in Kubernetes v1.21.
     max_unavailable: str
 
@@ -630,17 +649,17 @@ class StatefulSetRollingUpdate(BaseModel):
 
     """
 
-    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
+    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate")
     partition: int
-    max_unavailable: str | None
+    max_unavailable: str | None = Field(None)
 
 
 class Recreate(BaseModel):
-    type_: Literal["Recreate"] = Field("Recreate", const=True)
+    type_: Literal["Recreate"] = Field("Recreate")
 
 
 class OnDelete(BaseModel):
-    type_: Literal["OnDelete"] = Field("OnDelete", const=True)
+    type_: Literal["OnDelete"] = Field("OnDelete")
 
 
 class DeploymentSpec(ReplicasControllerSpec):
@@ -723,7 +742,7 @@ class ContainerSpec(BaseModel):
 
 class VolumePersistentVolumeClaimSource(ClientModel):
     claim_name: str
-    read_only: bool | None
+    read_only: bool | None = None
 
 
 class Volume(ClientModel):
@@ -735,7 +754,7 @@ class Volume(ClientModel):
     """
 
     name: VolumeName
-    persistent_volume_claim: VolumePersistentVolumeClaimSource | None
+    persistent_volume_claim: VolumePersistentVolumeClaimSource | None = None
 
 
 class PodSpec(BaseModel):
@@ -752,7 +771,7 @@ class PodSpec(BaseModel):
     init_containers: Sequence[ContainerSpec]
     priority_class_name: str | None = None
     active_deadline_seconds: int | None = None
-    volumes: Sequence[Volume] | None
+    volumes: Sequence[Volume] | None = None
 
 
 @enum.unique
@@ -763,30 +782,30 @@ class ContainerStateType(str, enum.Enum):
 
 
 class ContainerRunningState(BaseModel):
-    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running, const=True)
+    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running)
     start_time: int
 
 
 class ContainerWaitingState(BaseModel):
-    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
+    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting)
     reason: str
-    detail: str | None
+    detail: str | None = Field(None)
 
 
 class ContainerTerminatedState(BaseModel):
-    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
+    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated)
     exit_code: int
-    start_time: int | None
-    end_time: int | None
-    reason: str | None
-    detail: str | None
+    start_time: int | None = None
+    end_time: int | None = None
+    reason: str | None = None
+    detail: str | None = None
 
 
 ContainerState = ContainerTerminatedState | ContainerWaitingState | ContainerRunningState
 
 
 class ContainerStatus(BaseModel):
-    container_id: str | None  # container_id of non-ready container is None
+    container_id: str | None = None  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
@@ -821,27 +840,29 @@ class PodCondition(BaseModel):
     """
 
     status: bool
-    type: ConditionType | None
-    custom_type: str | None
-    reason: str | None
-    detail: str | None
-    last_transition_time: int | None
+    type: ConditionType | None = None
+    custom_type: str | None = None
+    reason: str | None = None
+    detail: str | None = None
+    last_transition_time: int | None = None
 
-    @validator("custom_type")
-    @classmethod
-    def verify_type(cls, v, values):
-        if "type" not in values and not v:
-            raise ValueError("either type or custom_type is required")
-        return v
+    @model_validator(mode="after")
+    @staticmethod
+    def verify_type(data: "PodCondition") -> "PodCondition":
+        if data.type or data.custom_type:
+            # Tests indicate implicit or
+            if not (data.type is not None or data.custom_type is not None):
+                raise ValueError("either type or custom_type is required")
+        return data
 
 
 class PodStatus(BaseModel):
-    conditions: list[PodCondition] | None
+    conditions: list[PodCondition] | None = None
     phase: Phase
-    start_time: Timestamp | None  # None if pod is faulty
+    start_time: Timestamp | None = None  # None if pod is faulty
     host_ip: IpAddress | None = None
     pod_ip: IpAddress | None = None
-    qos_class: QosClass | None
+    qos_class: QosClass | None = None
 
 
 class Controller(BaseModel):
@@ -855,7 +876,7 @@ class Controller(BaseModel):
     type_: str  # Relates to the field kind in OwnerReference
     uid: str
     name: str
-    namespace: str | None
+    namespace: str | None = None
 
 
 class Pod(BaseModel):
@@ -893,9 +914,9 @@ class CronJobStatus(BaseModel):
         information when was the last time the job successfully completed
     """
 
-    active: Sequence[JobUID] | None
-    last_schedule_time: Timestamp | None
-    last_successful_time: Timestamp | None
+    active: Sequence[JobUID] | None = None
+    last_schedule_time: Timestamp | None = None
+    last_successful_time: Timestamp | None = None
 
 
 class CronJob(BaseModel):
@@ -949,12 +970,12 @@ class JobStatus(BaseModel):
 
     """
 
-    active: int | None
-    start_time: Timestamp | None
-    completion_time: Timestamp | None
-    failed: int | None  # it appears that None is equivalent to 0 failed
-    succeeded: int | None
-    conditions: Sequence[JobCondition] | None
+    active: int | None = None
+    start_time: Timestamp | None = None
+    completion_time: Timestamp | None = None
+    failed: int | None = None  # it appears that None is equivalent to 0 failed
+    succeeded: int | None = None
+    conditions: Sequence[JobCondition] | None = None
 
 
 class Job(BaseModel):
@@ -965,17 +986,18 @@ class Job(BaseModel):
 
 
 class StorageRequirement(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     storage: int
 
-    _parse_storage = validator("storage", pre=True, allow_reuse=True)(parse_resource_value)
-
-    class Config:
-        allow_extra = False
+    _parse_storage = field_validator("storage", mode="before", check_fields=False)(
+        parse_resource_value
+    )
 
 
 class StorageResourceRequirements(ClientModel):
-    limits: StorageRequirement | None
-    requests: StorageRequirement | None
+    limits: StorageRequirement | None = None
+    requests: StorageRequirement | None = None
 
 
 class PersistentVolumeMode(enum.Enum):
@@ -1043,10 +1065,12 @@ class PersistentVolumeClaimSpec(ClientModel):
 
     """
 
-    access_modes: Sequence[AccessMode] | None
-    resources: StorageResourceRequirements | None
-    storage_class_name: str | None
-    volume_mode: PersistentVolumeMode | None
+    model_config = ConfigDict(from_attributes=True)
+
+    access_modes: Sequence[AccessMode] | None = None
+    resources: StorageResourceRequirements | None = None
+    storage_class_name: str | None = None
+    volume_mode: PersistentVolumeMode | None = None
     volume_name: VolumeName | None = None
 
 
@@ -1068,9 +1092,11 @@ class PersistentVolumeClaimPhase(enum.Enum):
 
 # TODO: bring consistency to models CMK-11887
 class PersistentVolumeClaimStatus(ClientModel):
-    phase: PersistentVolumeClaimPhase | None
-    access_modes: Sequence[AccessMode] | None
-    capacity: StorageRequirement | None
+    model_config = ConfigDict(from_attributes=True)
+
+    phase: PersistentVolumeClaimPhase | None = None
+    access_modes: Sequence[AccessMode] | None = None
+    capacity: StorageRequirement | None = None
 
 
 class PersistentVolumeClaim(BaseModel):
@@ -1107,7 +1133,7 @@ class KubernetesVersion(BaseModel):
 
 class OwnerReference(BaseModel):
     uid: str
-    controller: bool | None  # Optional, since some owner references
+    controller: bool | None = None  # Optional, since some owner references
     # are user-defined and the controller field can be omitted from the yaml.
     # This model is only intended for parsing. The absence of the controller
     # field can be interpreted as controller=False, but this interpretation is
@@ -1115,7 +1141,7 @@ class OwnerReference(BaseModel):
     # references happens.
     kind: str
     name: str
-    namespace: str | None
+    namespace: str | None = None
 
 
 OwnerReferences = Sequence[OwnerReference]

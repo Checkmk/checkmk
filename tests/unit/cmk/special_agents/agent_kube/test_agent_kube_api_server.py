@@ -7,7 +7,7 @@
 
 from collections.abc import Mapping
 
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.special_agents.utils_kubernetes.controllers import (
     _find_controllers,

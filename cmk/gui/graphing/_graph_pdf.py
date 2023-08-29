@@ -14,7 +14,7 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import GraphRenderOptions, RGBColor, SizeMM
 
 from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
-from ._utils import darken_color, ForecastGraphRecipe, GraphDataRange, lighten_color, parse_color
+from ._utils import darken_color, GraphDataRange, lighten_color, parse_color
 
 
 def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
@@ -396,7 +396,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                     parse_color(color_from_artwork), [str(title), None, None, None, readable]
                 )
 
-    if isinstance(graph_artwork.definition, ForecastGraphRecipe):
+    if graph_artwork.mark_requested_end_time:
         pin = trans_t(graph_artwork.requested_end_time)
         pdf_document.render_line(pin, v_orig, pin, trans_v(v_range_to), color=(0.0, 1.0, 0.0))
 

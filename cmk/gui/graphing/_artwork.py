@@ -85,6 +85,7 @@ class GraphArtwork(BaseModel):
     horizontal_rules: Sequence[HorizontalRule]
     vertical_axis: VerticalAxis
     time_axis: TimeAxis
+    mark_requested_end_time: bool
     # Displayed range
     start_time: Timestamp
     end_time: Timestamp
@@ -250,6 +251,7 @@ def compute_graph_artwork(
             graph_recipe, graph_data_range, height, layouted_curves, mirrored
         ),
         time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
+        mark_requested_end_time=graph_recipe.mark_requested_end_time,
         # Displayed range
         start_time=start_time,
         end_time=end_time,

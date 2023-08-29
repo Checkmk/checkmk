@@ -24,5 +24,6 @@ class ExplicitGraphRecipeBuilder:
                 horizontal_rules=spec.horizontal_rules,
                 metrics=spec.metrics,
                 specification=spec,
+                mark_requested_end_time=spec.mark_requested_end_time,
             )
         ]

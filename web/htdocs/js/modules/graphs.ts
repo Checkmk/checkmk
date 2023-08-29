@@ -128,6 +128,7 @@ export interface GraphArtwork {
     horizontal_rules: HorizontalRule[];
     vertical_axis: VerticalAxis;
     time_axis: TimeAxis;
+    mark_requested_end_time: boolean;
     //Displayed range
     start_time: Timestamp;
     end_time: Timestamp;
@@ -724,7 +725,7 @@ function render_graph(graph: GraphArtwork) {
         }
     }
     // paint forecast graph future start
-    if (graph.definition.is_forecast) {
+    if (graph.mark_requested_end_time) {
         const pin_x = trans_t(graph.requested_end_time);
         if (pin_x >= t_orig) {
             paint_line(

@@ -160,6 +160,7 @@ class GraphRecipeBase(BaseModel, frozen=True):
     additional_html: AdditionalGraphHTML | None = None
     render_options: GraphRenderOptions = {}
     data_range: GraphDataRange | None = None
+    mark_requested_end_time: bool = False
 
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
@@ -167,11 +168,11 @@ class GraphRecipe(GraphRecipeBase, frozen=True):
 
 
 class ForecastGraphRecipe(GraphRecipe, frozen=True):
-    is_forecast: Literal[True]
     specification: ForecastGraphSpecification
     additional_html: AdditionalGraphHTML | None
     render_options: GraphRenderOptions
     data_range: GraphDataRange
+    mark_requested_end_time: bool
 
 
 def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:

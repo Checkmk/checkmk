@@ -6,8 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, NotRequired, Optional, Sequence, Tuple
 
-import pytz
 from dateutil import parser as date_parser
+from dateutil import tz
 from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
@@ -141,13 +141,13 @@ def _parse_ntp_message_timestamp(ntp_message_raw: str, timezone_raw: str) -> flo
     ntp_message_parsed = dict((m.split("=", maxsplit=1) for m in ntp_message.split(", ")))
 
     receive_timestamp_raw = ntp_message_parsed["ReceiveTimestamp"]
-    tz_info = pytz.timezone(timezone_raw.removeprefix("Timezone="))
-    receive_datetime = date_parser.parse(receive_timestamp_raw)
-    if receive_datetime.tzinfo is None:  # parsing e.g. "CEST" does not always work
-        receive_datetime = tz_info.localize(receive_datetime)
+    tz_abbr = receive_timestamp_raw.split(" ")[-1]
+    tz_iana_id = timezone_raw.removeprefix("Timezone=")
+    receive_datetime = date_parser.parse(
+        receive_timestamp_raw, tzinfos={tz_abbr: tz.gettz(tz_iana_id)}
+    )
 
-    receive_timestamp = receive_datetime.astimezone(pytz.utc).timestamp()
-    return receive_timestamp
+    return receive_datetime.timestamp()
 
 
 def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection | None:

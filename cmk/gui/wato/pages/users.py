@@ -69,7 +69,7 @@ from cmk.gui.utils.urls import (
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
@@ -87,9 +87,9 @@ else:
     managed = None  # type: ignore[assignment]
 
 
-def register(mode_registry: ModeRegistry) -> None:
-    mode_registry.register(ModeUsers)
-    mode_registry.register(ModeEditUser)
+def register(_mode_registry: ModeRegistry) -> None:
+    _mode_registry.register(ModeUsers)
+    _mode_registry.register(ModeEditUser)
 
 
 class ModeUsers(WatoMode):
@@ -236,7 +236,8 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
             )
 
-        if edition() is not Edition.CRE:
+        # The SAML2 config mode is only registered under non-CRE, non-CSE editions
+        if mode_registry.get("saml_config") is not None:
             yield PageMenuEntry(
                 title=_("SAML authentication"),
                 icon_name="saml",

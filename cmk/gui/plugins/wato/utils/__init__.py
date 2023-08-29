@@ -63,9 +63,6 @@ from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicServices as Main
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicUsers as MainModuleTopicUsers
 from cmk.gui.plugins.wato.utils.main_menu import register_modules as register_modules
 from cmk.gui.plugins.wato.utils.main_menu import WatoModule as WatoModule
-from cmk.gui.plugins.wato.utils.simple_modes import SimpleEditMode as SimpleEditMode
-from cmk.gui.plugins.wato.utils.simple_modes import SimpleListMode as SimpleListMode
-from cmk.gui.plugins.wato.utils.simple_modes import SimpleModeType as SimpleModeType
 from cmk.gui.site_config import is_wato_slave_site as is_wato_slave_site
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText

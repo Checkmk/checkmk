@@ -105,10 +105,13 @@ PERMISSIONS = permissions.AllPerm(
 def activate_changes(params: Mapping[str, Any]) -> Response:
     """Activate pending changes
 
-    This endpoint will start an asynchronous background job activating the changes and
-    will return immediately with a response containing an ID for the just triggered activation run.
-    Use the 'wait-for-completion' endpoint with that ID to wait for the pending changes to activate.
-    Setting the 'redirect' flag to 'true' will redirect you to this endpoint.
+    This endpoint will start an asynchronous background job that will activate all pending changes.
+    It will either return a response immediately (when redirect=False) which includes the ID for
+    the just triggered activation run or will redirect (when redirect=True) to the "Wait for
+    completion" endpoint and only return a response when the background job is completed.
+    The relevant ETag for the current set of pending changes can be obtained from the 'Show all
+    pending changes' endpoint. However, if there are alterations to the list of pending changes, a
+    new query to the endpoint will be needed to acquire the updated ETag.
     """
     user.need_permission("wato.activate")
     body = params["body"]

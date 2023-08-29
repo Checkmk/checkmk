@@ -1,0 +1,14 @@
+Title: activate_changes: improve description for 'Activate pending changes' endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1693304398
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p9
+
+
+
+

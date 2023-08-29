@@ -14,7 +14,6 @@ from . import load
 from .werk import Compatibility, Werk
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class GuiWerk(NamedTuple):
@@ -23,14 +22,6 @@ class GuiWerk(NamedTuple):
     """
 
     werk: Werk
-
-    # @property
-    # @cache
-    # does not work with mypy: https://github.com/python/mypy/issues/5858
-    # so we fall back to a function:
-    def get_date_formatted(self) -> str:
-        # return date formatted as string in local timezone
-        return self.werk.date.astimezone().strftime(TIME_FORMAT)
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:

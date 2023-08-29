@@ -72,6 +72,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("info")(AboutCheckmkPage)
@@ -362,7 +364,7 @@ def page_werk() -> None:
     werk_table_row(_("ID"), render_werk_id(werk))
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
-    werk_table_row(_("Date"), gui_werk.get_date_formatted())
+    werk_table_row(_("Date"), get_date_formatted(werk))
     werk_table_row(_("Checkmk Version"), werk.version)
     werk_table_row(
         _("Level"),
@@ -618,6 +620,11 @@ def sort_by_version_and_component(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
+def get_date_formatted(werk: Werk) -> str:
+    # return date formatted as string in local timezone
+    return werk.date.astimezone().strftime(TIME_FORMAT)
+
+
 # NOTE: The sorter and the grouping function should better agree, otherwise chaos will ensue...
 _SORT_AND_GROUP: dict[
     str | None,
@@ -676,7 +683,7 @@ def render_werks_table_row(table: Table, translator: WerkTranslator, gui_werk: G
     table.row()
     table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
     table.cell(_("Version"), werk.version, css=["number narrow"])
-    table.cell(_("Date"), gui_werk.get_date_formatted(), css=["number narrow"])
+    table.cell(_("Date"), get_date_formatted(werk), css=["number narrow"])
     table.cell(
         _("Class"),
         translator.class_of(werk),

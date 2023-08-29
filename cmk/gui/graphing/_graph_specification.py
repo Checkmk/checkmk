@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Annotated, Literal
+from typing import Annotated, Literal, NamedTuple
 
 from pydantic import BaseModel, Field, parse_obj_as
 
@@ -21,8 +21,14 @@ GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 HorizontalRule = tuple[float, str, str, str]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 MetricExpression = str
-MetricDefinitionWithoutTitle = tuple[MetricExpression, LineType]
-MetricDefinition = MetricDefinitionWithoutTitle | tuple[MetricExpression, LineType, str]
+
+
+class MetricDefinition(NamedTuple):
+    expression: MetricExpression
+    line_type: LineType
+    title: str
+
+
 RPNExpression = tuple  # TODO: Improve this type
 
 
@@ -52,7 +58,7 @@ class CombinedGraphSpecification(BaseModel, frozen=True):
     presentation: GraphPresentation
     context: VisualContext
     graph_template: str
-    selected_metric: MetricDefinitionWithoutTitle | None = None
+    selected_metric: MetricDefinition | None = None
     consolidation_function: GraphConsoldiationFunction | None = None
     destination: str | None = None
 

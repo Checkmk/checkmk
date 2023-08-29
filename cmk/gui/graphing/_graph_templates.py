@@ -159,12 +159,12 @@ def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_unit_color(metric_definition[0], translated_metrics)
+        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
         return GraphMetric(
             title=metric_line_title(metric_definition, translated_metrics),
-            line_type=metric_definition[1],
+            line_type=metric_definition.line_type,
             expression=metric_expression_to_graph_recipe_expression(
-                metric_definition[0],
+                metric_definition.expression,
                 translated_metrics,
                 row,
                 graph_template.consolidation_function or "max",
@@ -297,12 +297,9 @@ def metric_expression_to_graph_recipe_expression(
 def metric_line_title(
     metric_definition: MetricDefinition, translated_metrics: TranslatedMetrics
 ) -> str:
-    if len(metric_definition) >= 3:
-        # mypy does not understand the variable length (Tuple index out of range)
-        metric_title = metric_definition[2]  # type: ignore[misc]
-        return metric_title
-
-    metric_name = next(metrics_used_in_expression(metric_definition[0]))
+    if metric_definition.title:
+        return metric_definition.title
+    metric_name = next(metrics_used_in_expression(metric_definition.expression))
     return translated_metrics[metric_name]["title"]
 
 

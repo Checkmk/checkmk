@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Any
 
 import pytest
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes

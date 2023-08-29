@@ -145,6 +145,11 @@ def test_time_slices(
     assert slices == result
 
 
+def approx(value_in: float) -> float:
+    # ApproxBase != float :-(
+    return pytest.approx(value_in)  # type: ignore[return-value]
+
+
 @pytest.mark.parametrize(
     "slices, result",
     [
@@ -164,10 +169,10 @@ def test_time_slices(
                 [2, None, 2, 4],
             ],
             [
-                DataStat(1.5, 1, 2, pytest.approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(1.5, 1, 2, approx(math.sqrt(2) / 2)),  # fixed: true-division
                 DataStat(5.0, 5, 5, None),
                 DataStat(2.0, 2, 2, None),
-                DataStat(5.0, 4, 6, pytest.approx(math.sqrt(2))),
+                DataStat(5.0, 4, 6, approx(math.sqrt(2))),
             ],
         ),
         (
@@ -177,12 +182,12 @@ def test_time_slices(
                 [3, 3, None, None, 2, 2],
             ],
             [
-                DataStat(pytest.approx(2.0), 1, 3, pytest.approx(1.0)),
-                DataStat(pytest.approx(3.333333), 2, 5, pytest.approx(1.527525)),
-                DataStat(2.5, 2, 3, pytest.approx(math.sqrt(2) / 2)),  # fixed: true-division
-                DataStat(pytest.approx(5.0), 4, 6, pytest.approx(math.sqrt(2))),
-                DataStat(pytest.approx(4.333333), 2, 8, pytest.approx(3.214550)),
-                DataStat(pytest.approx(3.5), 2, 5, pytest.approx(2.121320)),
+                DataStat(approx(2.0), 1, 3, approx(1.0)),
+                DataStat(approx(3.333333), 2, 5, approx(1.527525)),
+                DataStat(2.5, 2, 3, approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(approx(5.0), 4, 6, approx(math.sqrt(2))),
+                DataStat(approx(4.333333), 2, 8, approx(3.214550)),
+                DataStat(approx(3.5), 2, 5, approx(2.121320)),
             ],
         ),
         (
@@ -192,12 +197,12 @@ def test_time_slices(
                 [5, 5, 5, 5, 2, 2, 2],
             ],
             [
-                DataStat(3.0, 1, 5, pytest.approx(2.828427)),
-                DataStat(5.0, 5, 5, pytest.approx(0.0)),
-                DataStat(4.0, 3, 5, pytest.approx(1.414213)),
-                DataStat(3.5, 2, 5, pytest.approx(2.121320)),
-                DataStat(4.0, 2, 6, pytest.approx(2.828427)),
-                DataStat(5.0, 2, 8, pytest.approx(4.242640)),
+                DataStat(3.0, 1, 5, approx(2.828427)),
+                DataStat(5.0, 5, 5, approx(0.0)),
+                DataStat(4.0, 3, 5, approx(1.414213)),
+                DataStat(3.5, 2, 5, approx(2.121320)),
+                DataStat(4.0, 2, 6, approx(2.828427)),
+                DataStat(5.0, 2, 8, approx(4.242640)),
                 DataStat(2.0, 2, 2, None),
             ],
         ),

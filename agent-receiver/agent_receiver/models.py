@@ -7,14 +7,16 @@ from __future__ import annotations
 
 import re
 import socket
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Self
+from typing import Any, Literal, Self
+from uuid import UUID
 
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from fastapi import HTTPException
-from pydantic import BaseModel, UUID4, validator
+from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
+from pydantic_core import core_schema
 
 from .certs import extract_cn_from_csr
 
@@ -24,8 +26,12 @@ class CsrField:
     csr: CertificateSigningRequest
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[object], Self]]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     @classmethod
     def validate(cls, v: object) -> Self:
@@ -42,7 +48,7 @@ class CsrField:
         except IndexError:
             raise ValueError("CSR contains no CN")
         try:
-            UUID4(cn)
+            UUID(cn)
         except ValueError:
             raise ValueError(f"CN {cn} is not a valid version-4 UUID")
         return cls(csr)
@@ -136,7 +142,7 @@ class RegistrationWithHNBody(BaseModel, frozen=True):
     uuid: UUID4
     host_name: str
 
-    @validator("host_name")
+    @field_validator("host_name")
     @classmethod
     def valid_hostname(cls, v):
         if not _is_valid_hostname_or_ip(v):
@@ -152,9 +158,9 @@ class RegisterExistingBody(RegistrationWithHNBody):
     csr: CsrField
     host_name: str
 
-    @validator("host_name")
-    @classmethod
-    def valid_hostname(cls, v):
+    @field_validator("host_name")
+    @staticmethod
+    def valid_hostname(v):
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
                 status_code=400,

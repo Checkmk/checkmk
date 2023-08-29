@@ -9,7 +9,7 @@ import json
 from collections.abc import Mapping
 
 import pytest
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_pod_containers

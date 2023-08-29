@@ -127,8 +127,10 @@ def group_parsed_pvcs_by_namespace(
             pvc.metadata.namespace, {}
         )
         namespace_pvcs[pvc.metadata.name] = section.PersistentVolumeClaim(
-            metadata=section.PersistentVolumeClaimMetaData.parse_obj(pvc.metadata),
-            status=section.PersistentVolumeClaimStatus.parse_obj(pvc.status),
+            metadata=section.PersistentVolumeClaimMetaData.model_validate(
+                pvc.metadata.model_dump()
+            ),
+            status=section.PersistentVolumeClaimStatus.model_validate(pvc.status.model_dump()),
             volume_name=pvc.spec.volume_name,
         )
     return namespace_sorted_pvcs

@@ -7,7 +7,7 @@ import datetime
 import random
 import time
 
-import pydantic_factories
+import polyfactory.factories.pydantic_factory
 import pytest
 
 from cmk.base.plugins.agent_based import aws_status
@@ -20,7 +20,7 @@ def _random_time(oldest: float, newest: float) -> time.struct_time:
     return time.gmtime(random.uniform(oldest, newest))
 
 
-class EntryFactory(pydantic_factories.ModelFactory):
+class EntryFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = aws_status.Entry
 
     @classmethod
@@ -49,11 +49,11 @@ class OutdatedEntryFactory(EntryFactory):
         )
 
 
-class DiscoveryParamFactory(pydantic_factories.ModelFactory):
+class DiscoveryParamFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = aws_status.DiscoveryParam
 
 
-class AgentOutputFactory(pydantic_factories.ModelFactory):
+class AgentOutputFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = aws_status.AgentOutput
 
 

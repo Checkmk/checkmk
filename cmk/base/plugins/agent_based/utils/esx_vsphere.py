@@ -6,7 +6,7 @@ import enum
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 Section = OrderedDict
 
@@ -50,12 +50,11 @@ class ESXCpu(BaseModel):
         number of cores per socket
     """
 
+    model_config = ConfigDict(frozen=True)
+
     overall_usage: int
     cpus_count: int
     cores_per_socket: int
-
-    class Config:
-        allow_mutation = False
 
 
 class ESXDataStore(BaseModel):
@@ -85,6 +84,8 @@ class HeartBeat(BaseModel):
 
 
 class ESXVm(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     mounted_devices: Sequence[str]
     snapshots: Sequence[str]
     status: ESXStatus | None
@@ -95,9 +96,6 @@ class ESXVm(BaseModel):
     heartbeat: HeartBeat | None
     host: str | None
     name: str | None
-
-    class Config:
-        allow_mutation = False
 
 
 SectionVM = ESXVm | None

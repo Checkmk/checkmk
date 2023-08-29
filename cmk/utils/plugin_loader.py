@@ -40,7 +40,11 @@ def load_plugins(
         if exc := sys.exc_info()[1]:
             walk_errors.append((name, exc))
 
-    __import__(package_name)
+    try:
+        __import__(package_name)
+    except Exception as exc:
+        yield package_name, exc
+        return
     for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
         name = full_name.removeprefix(f"{package_name}.")
         try:

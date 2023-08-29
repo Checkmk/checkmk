@@ -32,6 +32,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
@@ -45,7 +46,6 @@ from cmk.gui.permissions import (
     permission_registry,
     permission_section_registry,
 )
-from cmk.gui.plugins.wato.utils import get_search_expression
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole

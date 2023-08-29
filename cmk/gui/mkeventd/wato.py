@@ -83,6 +83,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_confirmed_form_submit_link,
     make_simple_form_page_menu,
     make_simple_link,
@@ -100,7 +101,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
     ContactGroupSelection,
-    get_search_expression,
     HostRulespec,
     MainModuleTopicEvents,
     RulespecGroup,

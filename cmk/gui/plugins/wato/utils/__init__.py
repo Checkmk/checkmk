@@ -46,7 +46,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import search_form as search_form
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu as MainMenu
@@ -1663,13 +1662,6 @@ def common_host_rule_match_conditions() -> list[DictionaryEntry]:
             ),
         ),
     ]
-
-
-def get_search_expression() -> None | str:
-    search = request.get_str_input("search")
-    if search is not None:
-        search = search.strip().lower()
-    return search
 
 
 class FullPathFolderChoice(DropdownChoice):

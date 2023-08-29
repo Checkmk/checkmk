@@ -26,14 +26,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
+    search_form,
 )
-from cmk.gui.plugins.wato.utils import get_search_expression, search_form
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName

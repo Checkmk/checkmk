@@ -104,7 +104,6 @@ else:
     managed = None  # type: ignore[assignment]
 
 from cmk.gui.plugins.wato.utils import (
-    get_search_expression,
     Levels,
     monitoring_macro_help,
     PredictiveLevels,
@@ -143,7 +142,6 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.page_menu import search_form
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
     wato_html_footer,
@@ -229,7 +227,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "ContactGroupSelection",
         "DictHostTagCondition",
         "FullPathFolderChoice",
-        "get_search_expression",
         "HostGroupSelection",
         "HostRulespec",
         "HostTagCondition",
@@ -283,7 +280,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "RulespecGroupEnforcedServicesStorage",
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
-        "search_form",
         "ServiceGroupSelection",
         "ServiceRulespec",
         "UserIconOrAction",

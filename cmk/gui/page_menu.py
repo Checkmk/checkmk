@@ -826,6 +826,13 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
     )
 
 
+def get_search_expression() -> None | str:
+    search = request.get_str_input("search")
+    if search is not None:
+        search = search.strip().lower()
+    return search
+
+
 class PageMenuPopupsRenderer:
     """Render the contents of the popup forms referred to by PageMenuPopup entries"""
 

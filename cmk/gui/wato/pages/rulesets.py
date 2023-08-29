@@ -52,13 +52,9 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-)
-from cmk.gui.plugins.wato.utils import (
-    DictHostTagCondition,
-    HostTagCondition,
-    LabelCondition,
     search_form,
 )
+from cmk.gui.plugins.wato.utils import DictHostTagCondition, HostTagCondition, LabelCondition
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName

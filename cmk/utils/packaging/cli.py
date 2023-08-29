@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Command line interface for the Checkmk Extension Packages"""
+
 import argparse
 import json
 import logging
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
+
+from cmk.utils.version import edition, Edition
 
 from . import (
     disable,
@@ -700,6 +703,10 @@ def main(
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
+    if edition() is Edition.CSE:
+        sys.stderr.write(f"The mkp command is not available in the {Edition.CSE.title}.\n")
+        return 1
+
     args = _parse_arguments(argv)
     set_up_logging(args.verbose)
     try:

@@ -20,8 +20,6 @@ from cmk.utils.labels import (
 )
 from cmk.utils.sectionname import SectionName
 
-import cmk.base.config as config
-
 
 class TestServiceLabel:
     def test_label(self) -> None:
@@ -103,7 +101,6 @@ def test_label_validation() -> None:
 
 def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:
     hostname = "test.host.de"
-    config.get_config_cache().initialize()
     assert not (discovered_host_labels_dir / hostname).exists()
     DiscoveredHostLabelsStore(HostName(hostname)).save(
         [HostLabel("something", "wonderful", SectionName("norris"))]

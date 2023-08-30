@@ -78,6 +78,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     Host,
     make_action_link,
+    SearchFolder,
 )
 
 
@@ -256,6 +257,9 @@ class ModeFolder(WatoMode):
         )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
+        if isinstance(self._folder, SearchFolder):
+            return
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
@@ -566,6 +570,8 @@ class ModeFolder(WatoMode):
         # Operations on current FOLDER
 
         if request.has_var("_remove_tls_registration_from_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
             return None
 

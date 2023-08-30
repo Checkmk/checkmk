@@ -1,0 +1,15 @@
+Title: hosts: Remove invalid "Remove TLS registration" on host search results
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1693394073
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p9
+
+This werk addresses an issue found when trying to access the menu
+item Remove TLS registration after searching hosts. The search hosts
+results page no longer includes this option in the Host page menu
+because it was not intended to offer this action for search results.
+

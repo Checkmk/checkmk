@@ -21,8 +21,8 @@ struct Extension {
 };
 
 std::vector<Extension> GetAll(YAML::Node node);
-std::vector<std::filesystem::path> StartAll(
-    const std::vector<Extension> &extensions);
-void KillAll(const std::vector<std::filesystem::path> &paths);
+using ProcessInfo = std::pair<std::filesystem::path, uint32_t>;
+std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions);
+void KillAll(const std::vector<ProcessInfo> &processes);
 
 }  // namespace cma::cfg::extensions

@@ -75,7 +75,7 @@ std::vector<Extension> GetAll(YAML::Node node) {
 namespace {
 /// Do not have DETACHED_PROCESS flag: powershell can't be executed with
 /// DETACHED_PROCESS
-bool RunExtension(const std::wstring &command) {
+std::optional<uint32_t> RunExtension(const std::wstring &command) {
     STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
@@ -94,15 +94,16 @@ bool RunExtension(const std::wstring &command) {
                          nullptr,                   // environment
                          nullptr,                   // current directory
                          &si, &pi) == TRUE) {
+        uint32_t pid = ::GetProcessId(pi.hProcess);
         tools::ClosePi(pi);
-        return true;
+        return pid;
     }
-    return false;
+    return {};
 }
 }  // namespace
 
-std::vector<fs::path> StartAll(const std::vector<Extension> &extensions) {
-    std::vector<fs::path> started;
+std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
+    std::vector<ProcessInfo> started;
     for (auto &&[name, binary, command_line, mode] : extensions) {
         XLOG::l.i("Agent extension '{}' to be processed", name);
         if (binary.empty() || mode == Mode::no) {
@@ -118,9 +119,10 @@ std::vector<fs::path> StartAll(const std::vector<Extension> &extensions) {
         if (!command_line.empty()) {
             to_run += L" "s + wtools::ConvertToUtf16(command_line);
         }
-        if (RunExtension(to_run)) {
-            XLOG::l.i("Agent extension '{}' started", wtools::ToUtf8(to_run));
-            started.emplace_back(path);
+        if (auto pid = RunExtension(to_run); pid.has_value()) {
+            XLOG::l.i("Agent extension '{}' started, pid is {}",
+                      wtools::ToUtf8(to_run), *pid);
+            started.emplace_back(path, *pid);
         } else {
             XLOG::l("Agent extension '{}' failed to start",
                     wtools::ToUtf8(to_run));
@@ -129,10 +131,10 @@ std::vector<fs::path> StartAll(const std::vector<Extension> &extensions) {
     return started;
 }
 
-void KillAll(const std::vector<std::filesystem::path> &paths) {
+void KillAll(const std::vector<ProcessInfo> &processes) {
     XLOG::l.i("Killing Agent extensions");
-    for (auto &&path : paths) {
-        wtools::KillProcessesByFullPath(path);
+    for (auto &&[path, pid] : processes) {
+        wtools::KillProcessesByFullPathAndPid(path, pid);
     }
 }
 

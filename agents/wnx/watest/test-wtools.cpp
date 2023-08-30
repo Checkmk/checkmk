@@ -66,12 +66,17 @@ protected:
 
         int count = 0;
         for (int i = 0; i < requested; i++) {
-            if (cma::tools::RunDetachedCommand(cmd)) {
+            if (cma::tools::RunDetachedCommand(cmd).has_value()) {
                 count++;
             }
         }
 
         return count;
+    }
+    [[nodiscard]] std::optional<uint32_t> RunProcess() const {
+        const auto cmd = fmt::format("{} -t 8.8.8.8", test_exe_);
+
+        return cma::tools::RunDetachedCommand(cmd);
     }
 
     static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
@@ -96,7 +101,6 @@ protected:
         fs::create_directories(test_dir_);
         const fs::path ping(R"(c:\windows\system32\ping.exe)");
         ASSERT_TRUE(fs::copy_file(ping, test_exe_));
-        EXPECT_EQ(RunProcesses(1), 1);
     }
 
     void TearDown() override {
@@ -117,6 +121,7 @@ protected:
 };
 
 TEST_F(WtoolsKillProcFixture, KillProcByPid) {
+    EXPECT_EQ(RunProcesses(1), 1);
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(!path.empty());
     ASSERT_NE(pid, 0);
@@ -132,6 +137,7 @@ TEST_F(WtoolsKillProcFixture, KillProcByPid) {
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
+    EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
     auto test_dir = test_dir_.wstring();
     cma::tools::WideUpper(test_dir);
@@ -149,16 +155,46 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
+    EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
-    auto test_dir = test_dir_.wstring();
-    cma::tools::WideUpper(test_dir);
-
     KillProcessesByFullPath(test_exe_);
     cma::tools::sleep(500ms);
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
     EXPECT_EQ(pid, 0);
+}
+
+TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
+    const auto maybe_pid = RunProcess();
+    ASSERT_TRUE(maybe_pid.has_value());
+
+    // bad pid
+    {
+        KillProcessesByFullPathAndPid(test_exe_, 4);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_FALSE(path.empty());
+        EXPECT_EQ(pid, *maybe_pid);
+    }
+
+    // bad path
+    {
+        KillProcessesByFullPathAndPid(test_exe_ / "aa.exe", *maybe_pid);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_FALSE(path.empty());
+        EXPECT_EQ(pid, *maybe_pid);
+    }
+
+    // should kill
+    {
+        KillProcessesByFullPathAndPid(test_exe_, *maybe_pid);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_TRUE(path.empty());
+        EXPECT_EQ(pid, 0);
+    }
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {

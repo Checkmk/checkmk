@@ -160,11 +160,26 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
 void KillProcessesByFullPath(const fs::path &path) noexcept {
     ScanProcessList([path](const PROCESSENTRY32W &entry) {
         const auto pid = entry.th32ProcessID;
-        const auto exe = fs::path{wtools::GetProcessPath(pid)};
+        const auto exe = fs::path{GetProcessPath(pid)};
 
         if (exe == path) {
             XLOG::d.i("Killing process '{}'", exe);
             KillProcess(pid, 99);
+        }
+        return true;
+    });
+}
+
+void KillProcessesByFullPathAndPid(const fs::path &path,
+                                   uint32_t need_pid) noexcept {
+    ScanProcessList([&](const PROCESSENTRY32W &entry) {
+        const auto pid = entry.th32ProcessID;
+        const auto exe = fs::path{GetProcessPath(pid)};
+
+        if (exe == path && pid == need_pid) {
+            XLOG::d.i("Killing process '{}' with pid {}", exe, pid);
+            KillProcess(pid, 99);
+            return false;
         }
         return true;
     });

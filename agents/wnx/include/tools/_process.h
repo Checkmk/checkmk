@@ -63,7 +63,7 @@ inline bool RunCommandAndWait(const std::wstring &command) {
     return RunCommandAndWait(command, L"");
 }
 
-inline bool RunDetachedCommand(const std::string &command) {
+inline std::optional<uint32_t> RunDetachedCommand(const std::string &command) {
     STARTUPINFOA si = {};
     memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
@@ -82,10 +82,11 @@ inline bool RunDetachedCommand(const std::string &command) {
                          nullptr,   // environment
                          nullptr,   // current directory
                          &si, &pi) == TRUE) {
+        uint32_t pid = GetProcessId(pi.hProcess);
         ClosePi(pi);
-        return true;
+        return pid;
     }
-    return false;
+    return {};
 }
 
 inline bool RunDetachedProcess(const std::wstring &name) {

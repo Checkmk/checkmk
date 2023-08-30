@@ -1350,7 +1350,7 @@ void PluginEntry::restartIfRequired() {
         return;
     }
     XLOG::d.t("Starting '{}'", *filename);
-    if (tools::RunDetachedCommand(*filename)) {
+    if (tools::RunDetachedCommand(*filename).has_value()) {
         XLOG::d.i("Starting '{}' OK!", *filename);
     } else {
         XLOG::l("Starting '{}' FAILED with error [{}]", *filename,

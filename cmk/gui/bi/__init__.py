@@ -13,6 +13,9 @@ from ._compiler import is_part_of_aggregation as is_part_of_aggregation
 from ._packs import aggregation_group_choices as aggregation_group_choices
 from ._packs import get_aggregation_group_trees as get_aggregation_group_trees
 from ._packs import get_cached_bi_packs as get_cached_bi_packs
+from ._valuespecs import (
+    bi_config_aggregation_function_registry as bi_config_aggregation_function_registry,
+)
 from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 from .foldable_tree_renderer import FoldableTreeRendererTree
 

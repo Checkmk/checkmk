@@ -165,6 +165,8 @@ def register() -> None:
         cmk.gui.pages.page_registry,
         filter_registry,
         rename_host_hook_registry,
+        main_module_registry,
+        mode_registry,
     )
     robotmk.register(cmk.gui.pages.page_registry)
     cron.register(cmk.gui.pages.page_registry)

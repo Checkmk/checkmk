@@ -25,6 +25,7 @@ from cmk.utils.user import UserId
 import cmk.gui.bi as bi
 import cmk.gui.visuals
 from cmk.gui import sites
+from cmk.gui.bi import bi_config_aggregation_function_registry
 from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
@@ -62,7 +63,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
@@ -587,9 +587,7 @@ class NodeVisualizationBIDataMapper:
 
         aggregation_function = bi_compiled_rule.aggregation_function
         function_data = BIAggregationFunctionSchema().dump(aggregation_function)
-        aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-            aggregation_function.kind()
-        ]
+        aggr_func_gui = bi_config_aggregation_function_registry[aggregation_function.kind()]
 
         node_data["rule_id"] = {
             "pack": bi_compiled_rule.pack_id,

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 from pytest import param
 
-from cmk.gui.plugins.wato.bi_valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
+from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
 
 
 # This test covers the outermost TransformValuespec

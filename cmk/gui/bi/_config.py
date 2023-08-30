@@ -18,7 +18,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.type_defs import RequireConfirmation
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.main_menu import MainModuleTopic
@@ -29,14 +29,8 @@ except ImportError:
     managed = None  # type: ignore[assignment, unused-ignore]
 
 import cmk.gui.forms as forms
-
-# TODO: forbidden import, integrate into bi_config... ?
-# TODO: forbidden import, integrate into bi_config... ?
-import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
-from cmk.gui.bi import get_cached_bi_packs
-from cmk.gui.bi.bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -59,15 +53,8 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato.utils import (
-    ABCMainModule,
-    ContactGroupSelection,
-    main_module_registry,
-    MainMenu,
-    MainModuleTopicBI,
-    MenuItem,
-)
+from cmk.gui.permissions import Permission, PermissionRegistry
+from cmk.gui.plugins.wato.utils import ContactGroupSelection, MainMenu, MainModuleTopicBI, MenuItem
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -106,6 +93,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import PermissionSectionWATO
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.bi.actions import BICallARuleAction
@@ -117,8 +105,29 @@ from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
 
+from ._packs import get_cached_bi_packs
+from ._valuespecs import (
+    bi_config_aggregation_function_registry,
+    get_aggregation_function_choices,
+    get_bi_aggregation_node_choices,
+    get_bi_rule_node_choices_vs,
+    is_contact_for_pack,
+    may_use_rules_in_pack,
+)
+from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 
-def register(mode_registry: ModeRegistry) -> None:
+
+def register(
+    page_registry: PageRegistry,
+    main_module_registry: MainModuleRegistry,
+    mode_registry: ModeRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
+    page_registry.register_page("ajax_bi_rule_preview")(AjaxBIRulePreview)
+    page_registry.register_page("ajax_bi_aggregation_preview")(AjaxBIAggregationPreview)
+
+    main_module_registry.register(MainModuleBI)
+
     mode_registry.register(ModeBIEditPack)
     mode_registry.register(ModeBIPacks)
     mode_registry.register(ModeBIRules)
@@ -127,8 +136,33 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(BIModeAggregations)
     mode_registry.register(ModeBIRuleTree)
 
+    permission_registry.register(
+        Permission(
+            section=PermissionSectionWATO,
+            name="bi_rules",
+            title=_l("Business Intelligence Rules and Aggregations"),
+            description=_l(
+                "Use the Setup BI module, create, modify and delete BI rules and "
+                "aggregations in packs that you are a contact of."
+            ),
+            defaults=["admin", "user"],
+        )
+    )
 
-@main_module_registry.register
+    permission_registry.register(
+        Permission(
+            section=PermissionSectionWATO,
+            name="bi_admin",
+            title=_l("Business Intelligence Administration"),
+            description=_l(
+                "Edit all rules and aggregations for Business Intelligence, "
+                "create, modify and delete rule packs."
+            ),
+            defaults=["admin"],
+        )
+    )
+
+
 class MainModuleBI(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -198,7 +232,7 @@ class ABCBIMode(WatoMode):
         return self._bi_pack
 
     def verify_pack_permission(self, bi_pack: BIAggregationPack) -> None:
-        if not bi_valuespecs.is_contact_for_pack(bi_pack):
+        if not is_contact_for_pack(bi_pack):
             raise MKAuthException(
                 _("You have no permission for changes in this BI pack %s.") % bi_pack.title
             )
@@ -281,7 +315,7 @@ class ABCBIMode(WatoMode):
     def _allowed_rules(self) -> dict[str, BIRule]:
         allowed_rules = {}
         for bi_pack in sorted(self._bi_packs.get_packs().values(), key=lambda p: p.title):
-            if bi_valuespecs.may_use_rules_in_pack(bi_pack):
+            if may_use_rules_in_pack(bi_pack):
                 allowed_rules.update(bi_pack.get_rules())
         return allowed_rules
 
@@ -547,7 +581,7 @@ class ModeBIPacks(ABCBIMode):
     def page(self) -> None:
         with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
             for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
-                if not bi_valuespecs.may_use_rules_in_pack(pack):
+                if not may_use_rules_in_pack(pack):
                     continue
 
                 table.row()
@@ -659,7 +693,7 @@ class ModeBIRules(ABCBIMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         rules_entries = []
-        if bi_valuespecs.is_contact_for_pack(self.bi_pack):
+        if is_contact_for_pack(self.bi_pack):
             rules_entries.append(
                 PageMenuEntry(
                     title=_("Add rule"),
@@ -912,7 +946,7 @@ class ModeBIRules(ABCBIMode):
         return [
             (pack_id, bi_pack.title)
             for pack_id, bi_pack in self._bi_packs.get_packs().items()
-            if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
+            if pack_id is not self.bi_pack.id and is_contact_for_pack(bi_pack)
         ]
 
     def render_rules(self, title: str, only_unused: bool) -> None:
@@ -1012,7 +1046,7 @@ class ModeBIRules(ABCBIMode):
                     aggr_func_data = BIAggregationFunctionSchema().dump(
                         bi_rule.aggregation_function
                     )
-                    aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
+                    aggr_func_gui = bi_config_aggregation_function_registry[
                         bi_rule.aggregation_function.kind()
                     ]
 
@@ -1127,7 +1161,7 @@ class ModeBIEditRule(ABCBIMode):
             form_name="birule",
             button_name="_save",
             save_title=_("Create") if self._new else _("Save"),
-            save_is_enabled=bi_valuespecs.is_contact_for_pack(self.bi_pack),
+            save_is_enabled=is_contact_for_pack(self.bi_pack),
         )
 
     def action(self) -> ActionResult:
@@ -1192,7 +1226,7 @@ class ModeBIEditRule(ABCBIMode):
                 if isinstance(action, BICallARuleAction) and self._rule_id == action.rule_id:
                     uses_rule = True
                     break
-            if uses_rule and not bi_valuespecs.is_contact_for_pack(bi_pack):
+            if uses_rule and not is_contact_for_pack(bi_pack):
                 forbidden_packs.add(pack_id)
         return forbidden_packs
 
@@ -1234,7 +1268,7 @@ class ModeBIEditRule(ABCBIMode):
                 continue
 
             bi_pack = self._bi_packs.get_pack_of_rule(bi_rule.id)
-            if bi_pack is not None and not bi_valuespecs.may_use_rules_in_pack(bi_pack):
+            if bi_pack is not None and not may_use_rules_in_pack(bi_pack):
                 forbidden_pack = (bi_pack.id, bi_pack.title)
                 rules_without_permissions.setdefault(forbidden_pack, [])
                 rules_without_permissions[forbidden_pack].append(bi_rule.id)
@@ -1352,7 +1386,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "nodes",
                 ListOf(
-                    valuespec=bi_valuespecs.get_bi_rule_node_choices_vs(),
+                    valuespec=get_bi_rule_node_choices_vs(),
                     add_label=_("Add child node generator"),
                     title=_("Aggregated nodes"),
                     allow_empty=False,
@@ -1398,7 +1432,7 @@ class ModeBIEditRule(ABCBIMode):
                     label=_("do not apply this rule"),
                 ),
             ),
-            ("aggregation_function", bi_valuespecs.get_aggregation_function_choices()),
+            ("aggregation_function", get_aggregation_function_choices()),
         ]
 
         def convert_to_vs(value: dict) -> dict:
@@ -1471,7 +1505,6 @@ class BIAggregationForm(Dictionary):
         )
 
 
-@page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
     def page(self) -> PageResult:
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
@@ -1513,7 +1546,6 @@ class AjaxBIRulePreview(AjaxPage):
         }
 
 
-@page_registry.register_page("ajax_bi_aggregation_preview")
 class AjaxBIAggregationPreview(AjaxPage):
     def page(self) -> PageResult:
         # Prepare compiler
@@ -1679,7 +1711,7 @@ class BIModeEditAggregation(ABCBIMode):
             breadcrumb,
             form_name="biaggr",
             button_name="_save",
-            save_is_enabled=bi_valuespecs.is_contact_for_pack(self.bi_pack),
+            save_is_enabled=is_contact_for_pack(self.bi_pack),
         )
 
     def _get_aggregations_by_id(self) -> dict[str, tuple[BIAggregationPack, BIAggregation]]:
@@ -1789,7 +1821,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ("id", id_valuespec),
                 ("comment", RuleComment()),
                 ("groups", cls._get_vs_aggregation_groups()),
-                ("node", bi_valuespecs.get_bi_aggregation_node_choices()),
+                ("node", get_bi_aggregation_node_choices()),
                 ("computation_options", cls._get_vs_computation_options()),
                 ("aggregation_visualization", cls._get_vs_aggregation_visualization()),
             ],
@@ -2058,7 +2090,7 @@ class BIModeAggregations(ABCBIMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         aggr_entries = []
-        if self.have_rules() and bi_valuespecs.is_contact_for_pack(self.bi_pack):
+        if self.have_rules() and is_contact_for_pack(self.bi_pack):
             aggr_entries.append(
                 PageMenuEntry(
                     title=_("Add aggregation"),
@@ -2185,7 +2217,7 @@ class BIModeAggregations(ABCBIMode):
         return [
             (pack_id, bi_pack.title)
             for pack_id, bi_pack in self._bi_packs.get_packs().items()
-            if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
+            if pack_id is not self.bi_pack.id and is_contact_for_pack(bi_pack)
         ]
 
     def _render_aggregations(self) -> None:
@@ -2225,7 +2257,7 @@ class BIModeAggregations(ABCBIMode):
                 )
                 html.icon_button(clone_url, _("Create a copy of this aggregation"), "clone")
 
-                if bi_valuespecs.is_contact_for_pack(self.bi_pack):
+                if is_contact_for_pack(self.bi_pack):
                     delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_del_aggr", aggregation_id)]),
                         title=_("Delete BI aggregation #%s") % nr,
@@ -2331,47 +2363,3 @@ class ModeBIRuleTree(ABCBIMode):
                 table.row()
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_rule_tree(self._rule_id, self._rule_id)
-
-
-#   .--Setup Permissions---------------------------------------------------.
-#   |                     ____       _                                     |
-#   |                    / ___|  ___| |_ _   _ _ __                        |
-#   |                    \___ \ / _ \ __| | | | '_ \                       |
-#   |                     ___) |  __/ |_| |_| | |_) |                      |
-#   |                    |____/ \___|\__|\__,_| .__/                       |
-#   |                                         |_|                          |
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionWATO,
-        name="bi_rules",
-        title=_l("Business Intelligence Rules and Aggregations"),
-        description=_l(
-            "Use the Setup BI module, create, modify and delete BI rules and "
-            "aggregations in packs that you are a contact of."
-        ),
-        defaults=["admin", "user"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionWATO,
-        name="bi_admin",
-        title=_l("Business Intelligence Administration"),
-        description=_l(
-            "Edit all rules and aggregations for Business Intelligence, "
-            "create, modify and delete rule packs."
-        ),
-        defaults=["admin"],
-    )
-)

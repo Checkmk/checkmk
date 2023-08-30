@@ -61,20 +61,20 @@ def compute_graph_curves(
         assert_never((mirror_prefix, ts_line_type))
 
     curves = []
-    for metric in metrics:
-        expression = metric.expression
+    for metric_definition in metrics:
+        expression = metric_definition.expression
         time_series = evaluate_time_series_expression(expression, rrd_data)
         if not time_series:
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
+        mirror_prefix: Literal["", "-"] = "-" if metric_definition.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
-            title = metric.title
-            if multi and ts.metadata.title:
+            title = metric_definition.title
+            if ts.metadata.title and multi:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or metric.color
+            color = ts.metadata.color or metric_definition.color
             if i % 2 == 1 and not (
                 expression[0] == "transformation" and expression[1][0] == "forecast"
             ):
@@ -86,7 +86,7 @@ def compute_graph_curves(
                         "line_type": (
                             _parse_line_type(mirror_prefix, ts.metadata.line_type)
                             if multi and ts.metadata.line_type
-                            else metric.line_type
+                            else metric_definition.line_type
                         ),
                         "color": color,
                         "title": title,

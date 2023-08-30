@@ -45,7 +45,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu as MainMenu
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicAgents as MainModuleTopicAgents
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicBI as MainModuleTopicBI
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicEvents as MainModuleTopicEvents

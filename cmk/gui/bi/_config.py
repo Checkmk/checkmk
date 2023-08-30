@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.plugins.wato.utils import ContactGroupSelection, MainMenu, MainModuleTopicBI, MenuItem
+from cmk.gui.plugins.wato.utils import ContactGroupSelection, MainModuleTopicBI
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -90,10 +90,10 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.wato import PermissionSectionWATO
+from cmk.gui.wato import PermissionSectionWATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.bi.actions import BICallARuleAction
@@ -882,7 +882,7 @@ class ModeBIRules(ABCBIMode):
     def page(self) -> None:
         self.verify_pack_permission(self.bi_pack)
         if self.bi_pack.num_aggregations() == 0 and self.bi_pack.num_rules() == 0:
-            menu = MainMenu()
+            menu = TileMenuRenderer()
             menu.add_item(
                 MenuItem(
                     mode_or_url=self.url_to_pack([("mode", "bi_edit_rule")], self.bi_pack),

@@ -35,7 +35,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     search_form,
 )
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
@@ -45,6 +44,8 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
+
+from ._tile_menu import TileMenuRenderer
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -86,7 +87,7 @@ class ModeCheckPlugins(WatoMode):
             )
         )
 
-        menu = MainMenu()
+        menu = TileMenuRenderer()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
             menu.add_item(
                 MenuItem(
@@ -258,7 +259,7 @@ class ModeCheckPluginTopic(WatoMode):
 
         if len(self._path) == 1 and self._has_second_level:
             # For some topics we render a second level in the same optic as the first level
-            menu = MainMenu()
+            menu = TileMenuRenderer()
             for path_comp, subnode in self._manpages.items():
                 url = makeuri(request, [("topic", f"{self._path[0]}/{path_comp}")])
                 title = self._titles.get(path_comp, path_comp)

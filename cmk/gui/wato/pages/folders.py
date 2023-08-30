@@ -42,7 +42,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -88,6 +87,7 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes
 from ._status_links import make_folder_status_link
+from ._tile_menu import TileMenuRenderer
 
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
@@ -704,7 +704,7 @@ class ModeFolder(WatoMode):
                 ]
             )
 
-        MainMenu(menu_items).show()
+        TileMenuRenderer(menu_items).show()
 
     def _show_subfolders_of(self) -> None:
         if self._folder.has_subfolders():

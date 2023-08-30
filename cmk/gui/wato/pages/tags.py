@@ -28,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
@@ -71,6 +70,8 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     TagConfigFile,
 )
+
+from ._tile_menu import TileMenuRenderer
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -304,7 +305,7 @@ class ModeTags(ABCTagMode):
 
     def page(self) -> None:
         if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
-            MainMenu(
+            TileMenuRenderer(
                 [
                     MenuItem(
                         "edit_tag",

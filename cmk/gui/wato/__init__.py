@@ -143,7 +143,6 @@ import cmk.gui.watolib.config_domains
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
 from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
-    MainMenu,
     register_modules,
     WatoModule,
 )
@@ -163,6 +162,7 @@ from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
+from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
 
 # .
 #   .--Plugins-------------------------------------------------------------.
@@ -234,7 +234,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "is_wato_slave_site",
         "Levels",
         "main_module_registry",
-        "MainMenu",
         "MainModuleTopic",
         "MainModuleTopicAgents",
         "MainModuleTopicBI",

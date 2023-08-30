@@ -1,0 +1,16 @@
+Title: hosts: remove TLS registration on host search results caused a crash
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1693394073
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p33
+
+This werk addresses an issue found when trying to access the menu item
+Remove TLS registration after searching hosts. The search hosts
+results dashboard no longer includes this option in the Host dropdown
+menu.
+

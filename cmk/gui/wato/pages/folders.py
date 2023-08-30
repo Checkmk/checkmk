@@ -64,7 +64,7 @@ from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import BaseFolder
+from cmk.gui.watolib.hosts_and_folders import BaseFolder, SearchFolder
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -241,6 +241,9 @@ class ModeFolder(WatoMode):
         )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
+        if isinstance(self._folder, SearchFolder):
+            return
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
@@ -544,6 +547,8 @@ class ModeFolder(WatoMode):
         # Operations on current FOLDER
 
         if request.has_var("_remove_tls_registration_from_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
             return None
 

@@ -47,6 +47,7 @@ from cmk.gui.type_defs import (
     Row,
     TranslatedMetric,
     TranslatedMetrics,
+    TranslatedMetricScalar,
     UnitInfo,
     VisualContext,
 )
@@ -609,6 +610,21 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
     return mie, color_index
 
 
+def _translated_metric_scalar(
+    unit_conversion: Callable[[float], float], normalized_scalar: dict[str, float]
+) -> TranslatedMetricScalar:
+    scalar: TranslatedMetricScalar = {}
+    if (warning := normalized_scalar.get("warn")) is not None:
+        scalar["warn"] = unit_conversion(warning)
+    if (critical := normalized_scalar.get("crit")) is not None:
+        scalar["crit"] = unit_conversion(critical)
+    if (minimum := normalized_scalar.get("min")) is not None:
+        scalar["min"] = unit_conversion(minimum)
+    if (maximum := normalized_scalar.get("max")) is not None:
+        scalar["max"] = unit_conversion(maximum)
+    return scalar
+
+
 def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetrics:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
@@ -631,7 +647,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
         new_entry: TranslatedMetric = {
             "orig_name": normalized["orig_name"],
             "value": unit_conversion(normalized["value"]),
-            "scalar": {k: unit_conversion(v) for k, v in normalized["scalar"].items()},
+            "scalar": _translated_metric_scalar(unit_conversion, normalized["scalar"]),
             "scale": normalized["scale"],
             "auto_graph": normalized["auto_graph"],
             "title": str(mi["title"]),
@@ -890,29 +906,41 @@ def _evaluate_literal(
         if expression not in translated_metrics:
             return float(val), unit_info[""], "#000000"
 
-    varname = _drop_metric_consolidation_advice(expression)
+    var_name = _drop_metric_consolidation_advice(expression)
 
-    percent = varname.endswith("(%)")
+    percent = var_name.endswith("(%)")
     if percent:
-        varname = varname[:-3]
+        var_name = var_name[:-3]
 
-    if ":" in varname:
-        varname, scalarname = varname.split(":")
-        value = translated_metrics[varname]["scalar"].get(scalarname)
-        color = scalar_colors.get(scalarname, "#808080")
+    def _from_scalar(scalar_name: str, scalar: TranslatedMetricScalar) -> float | None:
+        match scalar_name:
+            case "warn":
+                return scalar.get("warn")
+            case "crit":
+                return scalar.get("crit")
+            case "min":
+                return scalar.get("min")
+            case "max":
+                return scalar.get("max")
+        return None
+
+    if ":" in var_name:
+        var_name, scalar_name = var_name.split(":")
+        value = _from_scalar(scalar_name, translated_metrics[var_name]["scalar"])
+        color = scalar_colors.get(scalar_name, "#808080")
     else:
-        value = translated_metrics[varname]["value"]
-        color = translated_metrics[varname]["color"]
+        value = translated_metrics[var_name]["value"]
+        color = translated_metrics[var_name]["color"]
 
     if percent and value is not None:
-        maxvalue = translated_metrics[varname]["scalar"]["max"]
+        maxvalue = translated_metrics[var_name]["scalar"]["max"]
         if maxvalue != 0:
             value = 100.0 * float(value) / maxvalue
         else:
             value = 0.0
         unit = unit_info["%"]
     else:
-        unit = translated_metrics[varname]["unit"]
+        unit = translated_metrics[var_name]["unit"]
 
     return value, unit, color
 

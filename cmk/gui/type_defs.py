@@ -603,6 +603,13 @@ class UnitInfo(TypedDict):
     perfometer_render: NotRequired[UnitRenderFunc]
 
 
+class TranslatedMetricScalar(TypedDict, total=False):
+    warn: float
+    crit: float
+    min: float
+    max: float
+
+
 class _TranslatedMetricRequired(TypedDict):
     scale: list[float]
 
@@ -613,7 +620,7 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     # CustomGraphPage._show_metric_type_combined_summary)
     orig_name: list[str]
     value: float
-    scalar: dict[str, float]
+    scalar: TranslatedMetricScalar
     auto_graph: bool
     title: str
     unit: UnitInfo

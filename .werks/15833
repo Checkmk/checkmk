@@ -1,0 +1,17 @@
+Title: Prevent overriding critical plugins with custom files
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1693383379
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Previously it was possible to override any Checkmk agent plugin using
+Custom files rule in Setup. In the case of the agent updater it may 
+lead to serious problems.
+
+Since this release the agent updater plugin is protected from overriding.
+
+CMK-6917

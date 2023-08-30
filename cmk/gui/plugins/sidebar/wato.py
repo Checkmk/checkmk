@@ -389,7 +389,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
                     name = item.name
                 targets.append((name, item.title))
 
-            if topic.title != selected_topic_name:
+            if topic.title.lower() != selected_topic_name.lower():
                 default = ""
                 style: str | None = "display:none"
             else:

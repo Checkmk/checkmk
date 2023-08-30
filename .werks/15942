@@ -1,0 +1,21 @@
+Title: Fix default selection of "Tree of folders" snapin
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1693385730
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you added the snapin "Tree of folders" to the sidebar, only the topic
+dropdown with the default "Overview" was shown. The second dropdown of the view
+choices was missing.
+
+A workaround was, to change the dropdown to another topic as "Overview". The
+second dropdown appeared and on change back to "Overview", you could choose a
+view of this topic.
+
+Note: This only occurs on the first use of the snapin. If you have already
+selected something, the dropdown values are read from user files.
+

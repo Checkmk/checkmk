@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable
+from typing import Any, Callable
 
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
+from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.plugin_registry import Registry
 
@@ -271,31 +272,22 @@ def _rename_hosts_in_check_mk(
 def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[str]:
     actions = []
 
-    def rename_in_event_rules(rules):
-        num_changed = 0
-        for rule in rules:
-            for key in ["match_hosts", "match_exclude_hosts"]:
-                if rule.get(key):
-                    if rename_host_in_list(rule[key], oldname, newname):
-                        num_changed += 1
-        return num_changed
-
     users = userdb.load_users(lock=True)
     some_user_changed = False
     for user in users.values():
         if unrules := user.get("notification_rules"):
-            if num_changed := rename_in_event_rules(unrules):
+            if num_changed := rename_in_event_rules(unrules, oldname, newname):
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
 
     nrules = load_notification_rules()
-    if num_changed := rename_in_event_rules(nrules):
+    if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
         save_notification_rules(nrules)
 
     if alert_handling:
         if arules := alert_handling.load_alert_handler_rules():
-            if num_changed := rename_in_event_rules(arules):
+            if num_changed := rename_in_event_rules(arules, oldname, newname):
                 actions += ["alert_rules"] * num_changed
                 alert_handling.save_alert_handler_rules(arules)
 
@@ -303,6 +295,20 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
         userdb.save_users(users, datetime.now())
 
     return actions
+
+
+def rename_in_event_rules(
+    rules: list[dict[str, Any]] | list[EventRule], oldname: HostName, newname: HostName
+) -> int:
+    num_changed = 0
+    for rule in rules:
+        if rule.get("match_hosts"):
+            if rename_host_in_list(rule["match_hosts"], oldname, newname):
+                num_changed += 1
+        if rule.get("match_exclude_hosts"):
+            if rename_host_in_list(rule["match_exclude_hosts"], oldname, newname):
+                num_changed += 1
+    return num_changed
 
 
 def _rename_host_in_multisite(oldname: HostName, newname: HostName) -> list[str]:

@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     search_form,
 )
-from cmk.gui.plugins.wato.utils import HostTagCondition
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
@@ -117,6 +116,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
+from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition, LabelCondition
 
 

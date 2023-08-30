@@ -154,6 +154,10 @@ from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
+from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
+from .pages._match_conditions import (
+    multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
+)
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
 from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
@@ -222,10 +226,8 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
         "ContactGroupSelection",
-        "FullPathFolderChoice",
         "HostGroupSelection",
         "HostRulespec",
-        "HostTagCondition",
         "HTTPProxyInput",
         "HTTPProxyReference",
         "MigrateToIndividualOrStoredPassword",
@@ -247,7 +249,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "ManualCheckParameterRulespec",
         "MenuItem",
         "monitoring_macro_help",
-        "multifolder_host_rule_match_conditions",
         "notification_parameter_registry",
         "NotificationParameter",
         "IndividualOrStoredPassword",

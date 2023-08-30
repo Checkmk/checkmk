@@ -12,11 +12,9 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    common_host_rule_match_conditions,
     ContactGroupChoice,
     FolderChoice,
     ServiceGroupChoice,
-    site_rule_match_condition,
     valuespec_check_plugin_selection,
 )
 from cmk.gui.userdb import UserSelection
@@ -33,6 +31,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
+
+from ._match_conditions import common_host_rule_match_conditions, site_rule_match_condition
 
 
 class ABCEventsMode(WatoMode, abc.ABC):

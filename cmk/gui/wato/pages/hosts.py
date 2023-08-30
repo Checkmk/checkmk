@@ -440,6 +440,11 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         )
 
 
+def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:
+    """Overridden in some editions to extend the page menu"""
+    yield from []
+
+
 def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry]:
     if mode_name != "edit_host":
         yield PageMenuEntry(
@@ -509,14 +514,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             ),
         )
 
-    if bakery.has_agent_bakery() and user.may("wato.download_agents"):
-        yield PageMenuEntry(
-            title=_("Monitoring agent"),
-            icon_name="agents",
-            item=make_simple_link(
-                folder_preserving_link([("mode", "agent_of_host"), ("host", host.name())])
-            ),
-        )
+    yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
         if user.may("wato.rename_hosts"):

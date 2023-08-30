@@ -10,10 +10,10 @@ import abc
 import json
 import pprint
 import re
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, overload
+from typing import Any, Callable, cast, overload
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
@@ -32,7 +32,6 @@ from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
-import cmk.gui.watolib.bakery as bakery
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
@@ -119,11 +118,6 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from ._rule_conditions import DictHostTagCondition, LabelCondition
-
-if bakery.has_agent_bakery():
-    import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
-else:
-    agent_bakery = None  # type: ignore[assignment]
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -749,6 +743,8 @@ def _is_used_rulesets_page(search_options) -> bool:  # type: ignore[no-untyped-d
 
 
 class ModeEditRuleset(WatoMode):
+    related_page_menu_hook: Callable[[str], Iterator[PageMenuEntry]] = lambda s: iter([])
+
     @classmethod
     def name(cls) -> str:
         return "edit_ruleset"
@@ -977,8 +973,7 @@ class ModeEditRuleset(WatoMode):
                     ),
                 )
 
-        if agent_bakery:
-            yield from agent_bakery.page_menu_entries_agent_bakery(self._name)
+        yield from ModeEditRuleset.related_page_menu_hook(self._name)
 
         if self._name == "logwatch_rules":
             yield PageMenuEntry(

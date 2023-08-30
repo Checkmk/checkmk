@@ -8,12 +8,12 @@ import abc
 import fnmatch
 import os
 from collections.abc import Collection, Iterator
+from typing import Callable
 
 import cmk.utils.paths
 import cmk.utils.render
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -37,6 +37,8 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ABCModeDownloadAgents(WatoMode):
+    related_page_menu_hook: Callable[[], Iterator[PageMenuEntry]] = lambda: iter([])
+
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return ["download_agents"]
@@ -59,12 +61,7 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if bakery.has_agent_bakery():
-            yield PageMenuEntry(
-                title=_("Windows, Linux, Solaris, AIX"),
-                icon_name="agents",
-                item=make_simple_link(folder_preserving_link([("mode", "agents")])),
-            )
+        yield from ABCModeDownloadAgents.related_page_menu_hook()
 
         if self.name() != "download_agents_windows":
             yield PageMenuEntry(

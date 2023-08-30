@@ -9,8 +9,10 @@ from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.watolib.host_rename import RenameHostHook, RenameHostHookRegistry, RenamePhase
 
 from . import _filters
+from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import PermissionBISeeAll, PermissionSectionBI
 from .view import (
@@ -48,6 +50,7 @@ def register(
     permission_registry: PermissionRegistry,
     page_registry: PageRegistry,
     filter_registry: FilterRegistry,
+    rename_host_hook_registry: RenameHostHookRegistry,
 ) -> None:
     data_source_registry.register(DataSourceBIAggregations)
     data_source_registry.register(DataSourceBIHostAggregations)
@@ -83,3 +86,7 @@ def register(
     page_registry.register_page_handler("bi_render_tree", ajax_render_tree)
 
     _filters.register(filter_registry)
+
+    rename_host_hook_registry.register(
+        RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)
+    )

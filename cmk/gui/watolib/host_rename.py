@@ -29,7 +29,6 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     job_registry,
 )
-from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -44,8 +43,6 @@ from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, Folder, f
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import rename_host_in_list
-
-from cmk.bi.packs import BIHostRenamer
 
 
 class RenamePhase(StrEnum):
@@ -109,8 +106,6 @@ def perform_rename_hosts(
             this_host_actions += _rename_parents(oldname, newname)
             update_interface(_("Renaming host(s) in rulesets..."))
             this_host_actions += _rename_host_in_rulesets(oldname, newname)
-            update_interface(_("Renaming host(s) in BI aggregations..."))
-            this_host_actions += _rename_host_in_bi(oldname, newname)
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
                 update_interface(_("Renaming host(s) in %s...") % hook.title)
@@ -245,10 +240,6 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
             actions += ["wato_rules"] * changed_rulesets.count(varname)
         return actions
     return []
-
-
-def _rename_host_in_bi(oldname: HostName, newname: HostName) -> list[str]:
-    return BIHostRenamer().rename_host(oldname, newname, get_cached_bi_packs())
 
 
 def _rename_hosts_in_check_mk(

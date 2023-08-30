@@ -5,7 +5,9 @@
 
 import json
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Callable
 
 from pydantic import BaseModel
 
@@ -16,6 +18,7 @@ import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import background_job, userdb
 from cmk.gui.background_job import (
@@ -46,6 +49,20 @@ try:
     import cmk.gui.cee.alert_handling as alert_handling
 except ImportError:
     alert_handling = None  # type: ignore[assignment]
+
+
+@dataclass(frozen=True)
+class RenameHostHook:
+    title: str
+    func: Callable[[HostName, HostName], list[str]]
+
+
+class RenameHostHookRegistry(Registry[RenameHostHook]):
+    def plugin_name(self, instance: RenameHostHook) -> str:
+        return instance.title
+
+
+rename_host_hook_registry = RenameHostHookRegistry()
 
 
 def perform_rename_hosts(
@@ -106,7 +123,12 @@ def perform_rename_hosts(
         actions += _rename_host_in_event_rules(oldname, newname)
         actions += _rename_host_in_multisite(oldname, newname)
 
-    # 4. Update UUID links
+    # 4. Trigger updates in decoupled (e.g. edition specific) features
+    for hook in rename_host_hook_registry.values():
+        update_interface(_("Renaming host(s) in %s...") % hook.title)
+        actions += hook.func(oldname, newname)
+
+    # 5. Update UUID links
     update_interface(_("Renaming host(s): Update UUID links..."))
     actions += _rename_host_in_uuid_link_manager(renamings_by_site)
 

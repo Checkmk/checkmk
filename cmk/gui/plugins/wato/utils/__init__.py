@@ -348,12 +348,12 @@ class _GroupSelection(ElementSelection):
 
 def ContactGroupSelection(**kwargs: Any) -> ElementSelection:
     """Select a single contact group"""
-    return _GroupSelection("contact", choices=_sorted_contact_group_choices, **kwargs)
+    return _GroupSelection("contact", choices=sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupSelection(**kwargs: Any) -> ElementSelection:
     """Select a single service group"""
-    return _GroupSelection("service", choices=_sorted_service_group_choices, **kwargs)
+    return _GroupSelection("service", choices=sorted_service_group_choices, **kwargs)
 
 
 def HostGroupSelection(**kwargs: Any) -> ElementSelection:
@@ -361,23 +361,13 @@ def HostGroupSelection(**kwargs: Any) -> ElementSelection:
     return _GroupSelection("host", choices=sorted_host_group_choices, **kwargs)
 
 
-def ContactGroupChoice(**kwargs: Any) -> DualListChoice:
-    """Select multiple contact groups"""
-    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)
-
-
-def ServiceGroupChoice(**kwargs: Any) -> DualListChoice:
-    """Select multiple service groups"""
-    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)
-
-
 @request_memoize()
-def _sorted_contact_group_choices() -> Sequence[tuple[str, str]]:
+def sorted_contact_group_choices() -> Sequence[tuple[str, str]]:
     return _group_choices(load_contact_group_information())
 
 
 @request_memoize()
-def _sorted_service_group_choices() -> Sequence[tuple[str, str]]:
+def sorted_service_group_choices() -> Sequence[tuple[str, str]]:
     return _group_choices(load_service_group_information())
 
 
@@ -1127,13 +1117,6 @@ def register_notification_parameters(scriptname, valuespec):
         },
     )
     notification_parameter_registry.register(parameter_class)
-
-
-class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = folder_tree().folder_choices
-        kwargs.setdefault("title", _("Folder"))
-        DropdownChoice.__init__(self, **kwargs)
 
 
 @request_memoize()

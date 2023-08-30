@@ -12,9 +12,8 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    ContactGroupChoice,
-    FolderChoice,
-    ServiceGroupChoice,
+    sorted_contact_group_choices,
+    sorted_service_group_choices,
     valuespec_check_plugin_selection,
 )
 from cmk.gui.userdb import UserSelection
@@ -22,6 +21,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoice,
+    DualListChoice,
     Labels,
     ListChoice,
     ListOf,
@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     RegExp,
     Tuple,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
@@ -123,24 +124,26 @@ class ABCEventsMode(WatoMode, abc.ABC):
             ),
             (
                 "match_servicegroups",
-                ServiceGroupChoice(
+                DualListChoice(
                     title=_("Match service groups"),
                     help=_(
                         "The service must be in one of the selected service groups. For host events this condition "
                         "never matches as soon as at least one group is selected."
                     ),
                     allow_empty=False,
+                    choices=sorted_service_group_choices,
                 ),
             ),
             (
                 "match_exclude_servicegroups",
-                ServiceGroupChoice(
+                DualListChoice(
                     title=_("Exclude service groups"),
                     help=_(
                         "The service must not be in one of the selected service groups. For host events this condition "
                         "is simply ignored."
                     ),
                     allow_empty=False,
+                    choices=sorted_service_group_choices,
                 ),
             ),
             (
@@ -261,13 +264,14 @@ class ABCEventsMode(WatoMode, abc.ABC):
             ),
             (
                 "match_contactgroups",
-                ContactGroupChoice(
+                DualListChoice(
                     title=_("Match contact groups"),
                     help=_(
                         "The host/service must be in one of the selected contact groups. This only works with Checkmk Micro Core. "
                         "If you don't use the CMC that filter will not apply"
                     ),
                     allow_empty=False,
+                    choices=sorted_contact_group_choices,
                 ),
             ),
             *cls._match_service_level_elements(),
@@ -349,13 +353,14 @@ def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
 def _single_folder_rule_match_condition() -> DictionaryEntry:
     return (
         "match_folder",
-        FolderChoice(
+        DropdownChoice(
             title=_("Match folder"),
             help=_(
                 "This condition makes the rule match only hosts that are managed "
                 "via Setup and that are contained in this folder - either directly "
                 "or in one of its subfolders."
             ),
+            choices=folder_tree().folder_choices,
         ),
     )
 

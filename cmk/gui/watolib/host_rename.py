@@ -46,11 +46,6 @@ from cmk.gui.watolib.utils import rename_host_in_list
 
 from cmk.bi.packs import BIHostRenamer
 
-try:
-    import cmk.gui.cee.alert_handling as alert_handling
-except ImportError:
-    alert_handling = None  # type: ignore[assignment]
-
 
 @dataclass(frozen=True)
 class RenameHostHook:
@@ -284,12 +279,6 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
         save_notification_rules(nrules)
-
-    if alert_handling:
-        if arules := alert_handling.load_alert_handler_rules():
-            if num_changed := rename_in_event_rules(arules, oldname, newname):
-                actions += ["alert_rules"] * num_changed
-                alert_handling.save_alert_handler_rules(arules)
 
     if some_user_changed:
         userdb.save_users(users, datetime.now())

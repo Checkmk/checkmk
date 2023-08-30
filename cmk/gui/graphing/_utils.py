@@ -64,6 +64,7 @@ from ._graph_specification import (
     HorizontalRule,
     LineType,
     MetricDefinition,
+    MetricDefinitionWithoutTitle,
     MetricExpression,
 )
 
@@ -105,9 +106,7 @@ SizeEx = NewType("SizeEx", int)
 
 
 class _GraphTemplateRegistrationMandatory(TypedDict):
-    metrics: Sequence[
-        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    ]
+    metrics: Sequence[MetricDefinition | tuple[MetricExpression, LineType, LazyString]]
 
 
 class GraphTemplateRegistration(_GraphTemplateRegistrationMandatory, total=False):
@@ -138,7 +137,7 @@ class GraphTemplate:
 class CombinedSingleMetricSpec:
     datasource: str
     context: VisualContext
-    selected_metric: MetricDefinition
+    selected_metric: MetricDefinitionWithoutTitle
     consolidation_function: GraphConsoldiationFunction
     presentation: GraphPresentation
 
@@ -972,15 +971,6 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 
 def graph_templates_internal() -> dict[str, GraphTemplate]:
-    def _parse_metric_expression(
-        metric_expression: (
-            tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-        )
-    ) -> MetricDefinition:
-        if len(metric_expression) == 2:
-            return MetricDefinition(metric_expression[0], metric_expression[1], "")
-        return MetricDefinition(*metric_expression)
-
     return {
         template_id: GraphTemplate(
             id=template_id,
@@ -994,8 +984,18 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
             # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
             # https://github.com/python/mypy/issues/1178
             metrics=[
-                _parse_metric_expression(metric_expression)
-                for metric_expression in template["metrics"]
+                (
+                    metric
+                    if len(metric) == 2
+                    else (
+                        metric[0],
+                        metric[1],
+                        str(
+                            metric[2],  # type: ignore[misc]
+                        ),
+                    )
+                )
+                for metric in template["metrics"]
             ],
         )
         for template_id, template in graph_info.items()
@@ -1052,7 +1052,9 @@ def _generic_graph_template(metric_name: str) -> GraphTemplate:
     return GraphTemplate(
         id="METRIC_" + metric_name,
         title=None,
-        metrics=[MetricDefinition(metric_name, "area", "")],
+        metrics=[
+            (metric_name, "area"),
+        ],
         scalars=[
             metric_name + ":warn",
             metric_name + ":crit",
@@ -1114,7 +1116,7 @@ def _get_implicit_graph_templates(
 
 def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
     for metric_definition in graph_template.metrics:
-        yield from metrics_used_in_expression(metric_definition.expression)
+        yield from metrics_used_in_expression(metric_definition[0])
 
 
 def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
@@ -1163,7 +1165,7 @@ def _filter_renderable_graph_metrics(
 ) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:
         try:
-            evaluate(metric_definition.expression, translated_metrics)
+            evaluate(metric_definition[0], translated_metrics)
             yield metric_definition
         except KeyError as err:  # because can't find necessary metric_name in translated_metrics
             metric_name = err.args[0]

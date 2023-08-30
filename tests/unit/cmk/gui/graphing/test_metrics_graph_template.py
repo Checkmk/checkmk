@@ -13,7 +13,6 @@ import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.graphing._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
-    MetricDefinition,
     MetricExpression,
     RPNExpression,
 )
@@ -100,9 +99,9 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title=None,
         metrics=[
-            MetricDefinition("fs_used", "area", ""),
-            MetricDefinition("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
-            MetricDefinition("fs_size", "line", ""),
+            ("fs_used", "area"),
+            ("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
+            ("fs_size", "line"),
         ],
         scalars=[
             "fs_used:warn",

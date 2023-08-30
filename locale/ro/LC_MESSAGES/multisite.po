@@ -39308,6 +39308,14 @@ msgstr ""
 "Ieșirea din `mkp show-all --json`. Pentru mai multe detalii, consultați "
 "ajutorul corespunzător din linia de comandă."
 
+#, fuzzy
+msgid ""
+"Output of `sestatus`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+"Ieșire din `mkp list --json`. Pentru mai multe detalii, consultați ajutorul "
+"corespunzător din linia de comandă."
+
 msgid "Output power"
 msgstr "Puterea de ieșire"
 
@@ -45253,6 +45261,10 @@ msgstr "SELECT Obiect returnat"
 
 msgid "SELECT Object Scanned"
 msgstr "SELECT Obiect scanat"
+
+#, fuzzy
+msgid "SELinux information"
+msgstr "Informații contextuale"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"

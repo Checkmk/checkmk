@@ -39272,6 +39272,14 @@ msgstr ""
 "Salida de `mkp show-all --json`. Consulte la ayuda de la línea de comandos "
 "correspondiente para obtener más detalles."
 
+#, fuzzy
+msgid ""
+"Output of `sestatus`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+"Salida de `mkp list --json`. Consulte la ayuda de la línea de comandos "
+"correspondiente para obtener más detalles."
+
 msgid "Output power"
 msgstr "Potencia de salida"
 
@@ -45230,6 +45238,10 @@ msgstr "Objeto SELECT devuelto"
 
 msgid "SELECT Object Scanned"
 msgstr "SELECT Objeto escaneado"
+
+#, fuzzy
+msgid "SELinux information"
+msgstr "Información de contexto"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"

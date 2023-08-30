@@ -38477,6 +38477,14 @@ msgstr ""
 "「mkp show-all --json」の出力。詳細は対応するコマンドラインヘルプを参照してく"
 "ださい。"
 
+#, fuzzy
+msgid ""
+"Output of `sestatus`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+"「mkp list --json」の出力。詳細は対応するコマンドラインヘルプを参照してくださ"
+"い。"
+
 msgid "Output power"
 msgstr "出力電力"
 
@@ -44344,6 +44352,10 @@ msgstr "SELECTオブジェクトが返されました"
 
 msgid "SELECT Object Scanned"
 msgstr "スキャンされたオブジェクトの選択"
+
+#, fuzzy
+msgid "SELinux information"
+msgstr "コンテキスト情報"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1(SHA-96)"

@@ -1,5 +1,5 @@
 OPENSSL := openssl
-OPENSSL_VERS := 1.1.1t
+OPENSSL_VERS := 3.0.11
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 
 OPENSSL_BUILD := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-build
@@ -63,8 +63,8 @@ $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 	patchelf --set-rpath "\$$ORIGIN/../lib" \
 	    "$(DESTDIR)$(OMD_ROOT)/bin/openssl" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so" \
-	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so.1.1" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so.3" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so" \
-	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.1.1"
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"
 	$(TOUCH) $@
 endif

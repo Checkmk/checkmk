@@ -16,6 +16,10 @@ configure_make(
          "--openssldir='skel/etc/ssl'",
          "enable-md2",
          "no-tests",
+         # default is lib64 since 3.x some other software might be surprised to find artifacts under lib
+         "--libdir=lib",
+         # Do not build shared legacy module
+         "no-module",
     ],
     args=["-j6"],
 
@@ -48,9 +52,9 @@ configure_make(
         # Note that for Linux builds, libssl must come before libcrypto on the
         # linker command-line. As such, libssl must be listed before libcrypto.
         "libssl.so",
-        "libssl.so.1.1",
+        "libssl.so.3",
         "libcrypto.so",
-        "libcrypto.so.1.1",
+        "libcrypto.so.3",
     ],
     out_static_libs=[
         "libssl.a",
@@ -59,7 +63,6 @@ configure_make(
     out_data_dirs=[
         "skel",
         "lib/pkgconfig",
-        "lib/engines-1.1",
+        "lib/engines-3",
     ],
 )
-

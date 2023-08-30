@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1t
+OPENSSL_VERSION=3.0.11
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR="/opt"
@@ -18,7 +18,7 @@ TARGET_DIR="/opt"
 CONFIG_COMMAND=config
 [ "${ARCHITECTURE}" = i386 ] && CONFIG_COMMAND="Configure linux-x86"
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=4
+BUILD_ID=7
 
 build_package() {
     mkdir -p "$TARGET_DIR/src"
@@ -30,7 +30,7 @@ build_package() {
     # Now build the package
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
-    ./"${CONFIG_COMMAND}" --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
+    ./"${CONFIG_COMMAND}" --libdir=lib --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
     make -j6
     make install
 

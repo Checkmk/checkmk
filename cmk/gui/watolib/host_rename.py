@@ -7,6 +7,7 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from enum import auto, StrEnum
 from typing import Any, Callable
 
 from pydantic import BaseModel
@@ -47,8 +48,14 @@ from cmk.gui.watolib.utils import rename_host_in_list
 from cmk.bi.packs import BIHostRenamer
 
 
+class RenamePhase(StrEnum):
+    SETUP = auto()
+    POST_CMK_BASE = auto()
+
+
 @dataclass(frozen=True)
 class RenameHostHook:
+    phase: RenamePhase
     title: str
     func: Callable[[HostName, HostName], list[str]]
 
@@ -56,6 +63,9 @@ class RenameHostHook:
 class RenameHostHookRegistry(Registry[RenameHostHook]):
     def plugin_name(self, instance: RenameHostHook) -> str:
         return instance.title
+
+    def hooks_by_phase(self, phase: RenamePhase) -> list[RenameHostHook]:
+        return [h for h in self.values() if h.phase == phase]
 
 
 rename_host_hook_registry = RenameHostHookRegistry()
@@ -101,6 +111,11 @@ def perform_rename_hosts(
             this_host_actions += _rename_host_in_rulesets(oldname, newname)
             update_interface(_("Renaming host(s) in BI aggregations..."))
             this_host_actions += _rename_host_in_bi(oldname, newname)
+
+            for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
+                update_interface(_("Renaming host(s) in %s...") % hook.title)
+                actions += hook.func(oldname, newname)
+
             actions += this_host_actions
             successful_renamings.append((folder, oldname, newname))
         except MKAuthException as e:
@@ -120,7 +135,7 @@ def perform_rename_hosts(
         actions += _rename_host_in_multisite(oldname, newname)
 
     # 4. Trigger updates in decoupled (e.g. edition specific) features
-    for hook in rename_host_hook_registry.values():
+    for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.POST_CMK_BASE):
         update_interface(_("Renaming host(s) in %s...") % hook.title)
         actions += hook.func(oldname, newname)
 

@@ -38,6 +38,15 @@ Mode ToMode(std::string_view mode) {
     return Mode::no;
 }
 
+std::string FindBinary(std::string_view name) {
+    if (tools::IsEqual(name, "powershell") ||
+        tools::IsEqual(name, "powershell.exe")) {
+        auto found = wtools::ToUtf8(cma::FindPowershellExe());
+        return found.empty() ? std::string{name} : found;
+    }
+    return std::string{name};
+}
+
 std::vector<Extension> GatherExtensions(const YAML::Node &group) {
     auto executions = GetNode(group, vars::kExtensionsExecution);
     std::vector<Extension> exts;
@@ -56,7 +65,7 @@ std::vector<Extension> GatherExtensions(const YAML::Node &group) {
             GetVal<std::string>(entry, vars::kExecutionCmdLine, "");
         auto mode = GetVal<std::string>(entry, vars::kExecutionRun, "");
         exts.emplace_back(Extension{.name = name,
-                                    .binary = binary,
+                                    .binary = FindBinary(binary),
                                     .command_line = command_line,
                                     .mode = ToMode(mode)});
     }
@@ -111,11 +120,13 @@ std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
         }
 
         fs::path path{ReplacePredefinedMarkers(binary)};
-        if (std::error_code ec; !fs::exists(path, ec)) {
+        if (std::error_code ec; !fs::exists(path, ec) && (mode != Mode::yes)) {
+            XLOG::l.i("'{}' not found, skipping", path);
             continue;
         }
 
         auto to_run = path.wstring();
+
         if (!command_line.empty()) {
             to_run += L" "s + wtools::ConvertToUtf16(command_line);
         }
@@ -134,7 +145,7 @@ std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
 void KillAll(const std::vector<ProcessInfo> &processes) {
     XLOG::l.i("Killing Agent extensions");
     for (auto &&[path, pid] : processes) {
-        wtools::KillProcessesByFullPathAndPid(path, pid);
+        wtools::KillProcessesByPathEndAndPid(path, pid);
     }
 }
 

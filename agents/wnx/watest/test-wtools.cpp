@@ -171,7 +171,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
 
     // bad pid
     {
-        KillProcessesByFullPathAndPid(test_exe_, 4);
+        KillProcessesByPathEndAndPid(test_exe_.filename(), 4);
         cma::tools::sleep(500ms);
         auto [path, pid] = FindExpectedProcess();
         EXPECT_FALSE(path.empty());
@@ -180,7 +180,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
 
     // bad path
     {
-        KillProcessesByFullPathAndPid(test_exe_ / "aa.exe", *maybe_pid);
+        KillProcessesByPathEndAndPid("aa.exe", *maybe_pid);
         cma::tools::sleep(500ms);
         auto [path, pid] = FindExpectedProcess();
         EXPECT_FALSE(path.empty());
@@ -189,7 +189,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
 
     // should kill
     {
-        KillProcessesByFullPathAndPid(test_exe_, *maybe_pid);
+        KillProcessesByPathEndAndPid(test_exe_.filename(), *maybe_pid);
         cma::tools::sleep(500ms);
         auto [path, pid] = FindExpectedProcess();
         EXPECT_TRUE(path.empty());

@@ -170,13 +170,14 @@ void KillProcessesByFullPath(const fs::path &path) noexcept {
     });
 }
 
-void KillProcessesByFullPathAndPid(const fs::path &path,
-                                   uint32_t need_pid) noexcept {
+void KillProcessesByPathEndAndPid(const fs::path &path_end,
+                                  uint32_t need_pid) noexcept {
     ScanProcessList([&](const PROCESSENTRY32W &entry) {
         const auto pid = entry.th32ProcessID;
         const auto exe = fs::path{GetProcessPath(pid)};
 
-        if (exe == path && pid == need_pid) {
+        if ((exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
+            pid == need_pid) {
             XLOG::d.i("Killing process '{}' with pid {}", exe, pid);
             KillProcess(pid, 99);
             return false;

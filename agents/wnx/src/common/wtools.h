@@ -116,8 +116,8 @@ std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 [[nodiscard]] int KillProcessesByDir(const std::filesystem::path &dir) noexcept;
 
 void KillProcessesByFullPath(const std::filesystem::path &path) noexcept;
-void KillProcessesByFullPathAndPid(const std::filesystem::path &path,
-                                   uint32_t need_pid) noexcept;
+void KillProcessesByPathEndAndPid(const std::filesystem::path &path_end,
+                                  uint32_t need_pid) noexcept;
 
 uint32_t GetParentPid(uint32_t pid);
 

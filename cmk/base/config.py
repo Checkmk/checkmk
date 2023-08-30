@@ -2245,7 +2245,7 @@ class ConfigCache:
         self.__notification_plugin_parameters: dict[
             tuple[HostName, CheckPluginNameStr], Mapping[str, object]
         ] = {}
-        self._initialize_caches()
+        self.initialize()
 
     def is_cluster(self, host_name: HostName) -> bool:
         return host_name in self.all_configured_clusters()
@@ -4502,7 +4502,7 @@ def _create_config_cache() -> ConfigCache:
     cache_class = (
         ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache
     )
-    return cache_class().initialize()
+    return cache_class()
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the
@@ -4568,6 +4568,7 @@ def _boil_down_agent_rules(
     return boiled_down
 
 
+# TODO(sk): rework hierarchy - inheriting from the concrete class should be avoided. It;s not easy
 class CEEConfigCache(ConfigCache):
     def _initialize_caches(self) -> None:
         super()._initialize_caches()

@@ -12,11 +12,7 @@ XMLSEC1_INSTALL := $(BUILD_HELPER_DIR)/$(XMLSEC1_DIR)-install
 XMLSEC1_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XMLSEC1_DIR)
 
 $(XMLSEC1_BUILD): $(XMLSEC1_UNPACK) $(OPENSSL_CACHE_PKG_PROCESS)
-ifeq ($(DISTRO_CODE),el8)
-	BAZEL_EXTRA_ARGS="--define no-own-openssl=true" $(BAZEL_BUILD) @xmlsec1//:xmlsec1
-else
 	$(BAZEL_BUILD) @xmlsec1//:xmlsec1
-endif
 
 $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
 	$(RSYNC) -r --chmod=u+w "bazel-bin/external/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"

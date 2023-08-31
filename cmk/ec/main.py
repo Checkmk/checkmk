@@ -33,7 +33,7 @@ from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, Literal
+from typing import Any, assert_never, Literal
 
 from setproctitle import setthreadtitle
 from typing_extensions import TypedDict
@@ -1762,13 +1762,15 @@ class EventServer(ECServerThread):
     def _get_event_limit(
         self, ty: LimitKind, event: Event, host_config: HostInfo | None
     ) -> tuple[int, str]:
-        if ty == "overall":
-            return self._get_overall_event_limit()
-        if ty == "by_rule":
-            return self._get_rule_event_limit(event["rule_id"])
-        if ty == "by_host":
-            return self._get_host_event_limit(host_config)
-        raise NotImplementedError()
+        match ty:
+            case "overall":
+                return self._get_overall_event_limit()
+            case "by_rule":
+                return self._get_rule_event_limit(event["rule_id"])
+            case "by_host":
+                return self._get_host_event_limit(host_config)
+            case _ as unreachable:
+                assert_never(unreachable)
 
     def _get_overall_event_limit(self) -> tuple[int, str]:
         return (
@@ -1825,47 +1827,48 @@ class EventServer(ECServerThread):
         }
         self._add_rule_contact_groups_to_event({}, new_event)
 
-        if ty == "overall":
-            new_event["text"] = (
-                f"The overall event limit of {limit} open events has been reached. Not "
-                "opening any additional event until open events have been "
-                "archived."
-            )
+        match ty:
+            case "overall":
+                new_event["text"] = (
+                    f"The overall event limit of {limit} open events has been reached. Not "
+                    "opening any additional event until open events have been "
+                    "archived."
+                )
 
-        elif ty == "by_host":
-            new_event.update(
-                {
-                    "host": event["host"],
-                    "ipaddress": event["ipaddress"],
-                    "text": (
-                        f'The host event limit of {limit} open events has been reached for host "{event["host"]}". '
-                        "Not opening any additional event for this host until open events have "
-                        "been archived."
-                    ),
-                }
-            )
+            case "by_host":
+                new_event.update(
+                    {
+                        "host": event["host"],
+                        "ipaddress": event["ipaddress"],
+                        "text": (
+                            f'The host event limit of {limit} open events has been reached for host "{event["host"]}". '
+                            "Not opening any additional event for this host until open events have "
+                            "been archived."
+                        ),
+                    }
+                )
 
-            # Lookup the monitoring core hosts and add the core host
-            # name to the event when one can be matched
-            self._add_core_host_to_new_event(new_event)
+                # Lookup the monitoring core hosts and add the core host
+                # name to the event when one can be matched
+                self._add_core_host_to_new_event(new_event)
 
-        elif ty == "by_rule":
-            new_event.update(
-                {
-                    "rule_id": event["rule_id"],
-                    "contact_groups": event["contact_groups"],
-                    "contact_groups_notify": event.get("contact_groups_notify", False),
-                    "contact_groups_precedence": event.get("contact_groups_precedence", "host"),
-                    "text": (
-                        f'The rule event limit of {limit} open events has been reached for rule "{event["rule_id"]}". '
-                        "Not opening any additional event for this rule until open events have "
-                        "been archived."
-                    ),
-                }
-            )
+            case "by_rule":
+                new_event.update(
+                    {
+                        "rule_id": event["rule_id"],
+                        "contact_groups": event["contact_groups"],
+                        "contact_groups_notify": event.get("contact_groups_notify", False),
+                        "contact_groups_precedence": event.get("contact_groups_precedence", "host"),
+                        "text": (
+                            f'The rule event limit of {limit} open events has been reached for rule "{event["rule_id"]}". '
+                            "Not opening any additional event for this rule until open events have "
+                            "been archived."
+                        ),
+                    }
+                )
 
-        else:
-            raise NotImplementedError()
+            case _ as unreachable:
+                assert_never(unreachable)
 
         return new_event
 
@@ -2943,13 +2946,15 @@ class EventStatus:
 
     # protected by self.lock
     def get_num_existing_events_by(self, ty: LimitKind, event: Event) -> int:
-        if ty == "overall":
-            return self.num_existing_events
-        if ty == "by_rule":
-            return self.num_existing_events_by_rule.get(event["rule_id"], 0)
-        if ty == "by_host":
-            return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
-        raise NotImplementedError()
+        match ty:
+            case "overall":
+                return self.num_existing_events
+            case "by_rule":
+                return self.num_existing_events_by_rule.get(event["rule_id"], 0)
+            case "by_host":
+                return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
+            case _ as unreachable:
+                assert_never(unreachable)
 
     def cancel_events(
         self,

@@ -5,9 +5,10 @@
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 from logging import Logger
 from types import TracebackType
-from typing import Callable, Literal, TypeAlias, TypeVar
+from typing import Literal, TypeAlias, TypeVar
 
 # Our tokens are bytes, so we use a memoryview as a stream of bytes.
 Tokens: TypeAlias = memoryview

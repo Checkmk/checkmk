@@ -67,7 +67,6 @@ def _check_netapp_api_luns(
     if lun.get("online") != "true":
         yield Result(state=State.CRIT, summary="LUN is offline")
 
-
     read_only = lun.get("read-only") == "true"
     if read_only != params.get("read_only"):
         expected = str(params.get("read_only")).lower()

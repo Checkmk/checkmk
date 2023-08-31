@@ -6,13 +6,13 @@
 #include <numeric>
 #include <ranges>
 
-#include "carrier.h"
-#include "cfg.h"
 #include "common/wtools.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
+#include "wnx/carrier.h"
+#include "wnx/cfg.h"
+#include "wnx/service_processor.h"
 using namespace std::chrono_literals;
 namespace rs = std::ranges;
 namespace fs = std::filesystem;

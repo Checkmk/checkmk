@@ -6,15 +6,15 @@
 #include <filesystem>
 #include <vector>
 
-#include "cfg.h"
-#include "cfg_engine.h"
 #include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
 #include "providers/logwatch_event_details.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_engine.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
 

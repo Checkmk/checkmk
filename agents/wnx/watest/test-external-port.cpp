@@ -6,13 +6,13 @@
 
 #include <numeric>
 
-#include "agent_controller.h"
-#include "asio.h"
-#include "carrier.h"
 #include "common/mailslot_transport.h"
-#include "external_port.h"
-#include "realtime.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/agent_controller.h"
+#include "wnx/asio.h"
+#include "wnx/carrier.h"
+#include "wnx/external_port.h"
+#include "wnx/realtime.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;

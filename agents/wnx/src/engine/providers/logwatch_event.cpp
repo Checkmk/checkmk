@@ -13,13 +13,13 @@
 #include <regex>
 #include <string>
 
-#include "cfg.h"
-#include "cfg_engine.h"
 #include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
-#include "logger.h"
 #include "providers/logwatch_event_details.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_engine.h"
+#include "wnx/logger.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 

@@ -3,13 +3,13 @@
 
 #include "pch.h"
 
-#include "carrier.h"
-#include "commander.h"
+#include "wnx/carrier.h"
+#include "wnx/commander.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "service_processor.h"
-#include "test_tools.h"
+#include "wnx/service_processor.h"
+#include "watest/test_tools.h"
 #include "tools/_misc.h"
 
 using namespace std::chrono_literals;

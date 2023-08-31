@@ -12,9 +12,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "cfg.h"
 #include "common/cfg_info.h"
 #include "tools/_raii.h"
+#include "wnx/cfg.h"
 
 using namespace std::string_literals;
 namespace rs = std::ranges;

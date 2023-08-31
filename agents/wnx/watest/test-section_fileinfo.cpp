@@ -7,16 +7,16 @@
 #include <filesystem>
 #include <ranges>
 
-#include "cfg.h"
 #include "common/wtools.h"
-#include "glob_match.h"
 #include "providers/fileinfo.h"
 #include "providers/fileinfo_details.h"
-#include "service_processor.h"
-#include "test-utf-names.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test-utf-names.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/glob_match.h"
+#include "wnx/service_processor.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;

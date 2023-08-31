@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "cfg_engine.h"
+#include "wnx/cfg_engine.h"
 
 // we want to avoid those data public
 namespace cma::cfg::engine {

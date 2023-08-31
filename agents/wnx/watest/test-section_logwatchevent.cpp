@@ -6,14 +6,14 @@
 #include <filesystem>
 #include <ranges>
 
-#include "cfg.h"
-#include "cfg_engine.h"
 #include "common/wtools.h"
 #include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_engine.h"
+#include "wnx/service_processor.h"
 
 using cma::evl::SkipDuplicatedRecords;
 using std::chrono::steady_clock;
@@ -195,7 +195,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
         auto end = steady_clock::now();
         EXPECT_TRUE(
             std::chrono::duration_cast<std::chrono::seconds>(end - start)
-            .count() < 2);
+                .count() < 2);
     }
 }
 
@@ -700,7 +700,7 @@ public:
                                               "    - {}\n",
                                               entry_text
 
-            )));
+                                              )));
         lw_.loadConfig();
         UpdateStates(st_, lw_.entries(), lw_.defaultEntry());
     }

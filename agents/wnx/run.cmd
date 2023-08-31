@@ -205,7 +205,7 @@ goto :eof
 :set_wnx_version
 if not "%arg_build%" == "1" goto :eof
 :: read version from the C++ agent
-set /p wnx_version_raw=<src\common\wnx_version.h
+set /p wnx_version_raw=<include\common\wnx_version.h
 :: parse version
 set wnx_version=%wnx_version_raw:~30,60%
 

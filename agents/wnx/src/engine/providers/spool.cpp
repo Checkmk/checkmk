@@ -11,10 +11,10 @@
 #include <filesystem>
 #include <string>
 
-#include "cfg.h"
-#include "cma_core.h"
-#include "logger.h"
-#include "read_file.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 

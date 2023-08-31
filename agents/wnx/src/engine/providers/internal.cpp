@@ -8,8 +8,8 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
 #include "common/mailslot_transport.h"
+#include "wnx/cfg.h"
 
 using namespace std::chrono_literals;
 

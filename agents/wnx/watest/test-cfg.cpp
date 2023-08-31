@@ -6,19 +6,19 @@
 #include <filesystem>
 #include <ranges>
 
-#include "cap.h"
-#include "cfg.h"
-#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "install_api.h"
-#include "read_file.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "upgrade.h"
+#include "watest/test_tools.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/install_api.h"
+#include "wnx/read_file.h"
+#include "wnx/service_processor.h"
+#include "wnx/upgrade.h"
 
 using namespace std::chrono_literals;
 using namespace std::literals;

@@ -5,15 +5,15 @@
 
 #include <filesystem>
 
-#include "cap.h"
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/yaml.h"
 #include "lwa/types.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;

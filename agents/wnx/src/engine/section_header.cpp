@@ -12,7 +12,7 @@
 
 #include "stdafx.h"
 
-#include "section_header.h"
+#include "wnx/section_header.h"
 
 namespace cma::section {
 

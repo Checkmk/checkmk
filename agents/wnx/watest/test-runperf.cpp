@@ -7,16 +7,16 @@
 #include <filesystem>
 #include <future>
 
-#include "carrier.h"
-#include "cfg.h"
-#include "cma_core.h"
+#include "wnx/carrier.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/wtools.h"
-#include "logger.h"
+#include "wnx/logger.h"
 #include "providers/perf_counters_cl.h"
-#include "service_processor.h"
-#include "test_tools.h"
+#include "wnx/service_processor.h"
+#include "watest/test_tools.h"
 #include "tools/_raii.h"
 
 constexpr const wchar_t *kUniqueTestId = L"0345246";

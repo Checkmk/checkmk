@@ -8,16 +8,16 @@
 
 #include <iostream>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "cstdint"  // for int64_t, uint32_t, uint64_t
-#include "install_api.h"
-#include "logger.h"
-#include "on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
 #include "providers/perf_counters_cl.h"
-#include "windows_service_api.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/install_api.h"
+#include "wnx/logger.h"
+#include "wnx/on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
+#include "wnx/windows_service_api.h"
 
 using namespace std::chrono_literals;
 using XLOG::Colors;

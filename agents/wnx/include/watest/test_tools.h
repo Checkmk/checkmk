@@ -12,11 +12,11 @@
 #include <functional>
 #include <vector>
 
-#include "cfg.h"
+#include "wnx/cfg.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
 #include "iosfwd"                // for ofstream
-#include "on_start.h"            // for OnStart, AppType, AppType::test
+#include "wnx/on_start.h"            // for OnStart, AppType, AppType::test
 #include "system_error"          // for error_code
 #include "xstring"               // for string, basic_string, wstring
 #include "yaml-cpp/node/impl.h"  // for Node::Node, Node::~Node

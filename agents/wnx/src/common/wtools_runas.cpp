@@ -1,7 +1,7 @@
 // Windows extremely speccual Tools-RunAs
 #include "stdafx.h"
 
-#include "wtools_runas.h"
+#include "common/wtools_runas.h"
 
 #include <Sddl.h>
 #include <UserEnv.h>
@@ -11,9 +11,9 @@
 #include <psapi.h>
 #include <winsafer.h>
 
-#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "wnx/logger.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
 #pragma comment(lib, "Userenv.lib")

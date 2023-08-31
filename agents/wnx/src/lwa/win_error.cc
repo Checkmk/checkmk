@@ -5,10 +5,10 @@
 
 #include "stdafx.h"
 
-#include "win_error.h"
+#include "lwa/win_error.h"
 
+#include "lwa/types.h"
 #include "tools/_raii.h"
-#include "types.h"
 
 std::string get_win_error_as_string(DWORD error_id /* = GET_LAST_ERROR */) {
     // Get the error message, if any.

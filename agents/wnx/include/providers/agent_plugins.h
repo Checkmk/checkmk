@@ -12,7 +12,7 @@
 #include <string>
 
 #include "providers/internal.h"
-#include "section_header.h"
+#include "wnx/section_header.h"
 
 namespace cma::provider {
 

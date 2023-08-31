@@ -10,9 +10,9 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
 #include "common/wtools.h"
-#include "logger.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 
 namespace rs = std::ranges;
 

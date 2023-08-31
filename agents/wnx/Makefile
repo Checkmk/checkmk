@@ -62,7 +62,7 @@ clean_artifacts:
 
 
 setversion:
-	@python patch_windows_agent_version.py src\common\wnx_version.h $(NEW_VERSION)
+	@python patch_windows_agent_version.py include\common\wnx_version.h $(NEW_VERSION)
 
 install_extlibs: $(EXTLIBS)\$(ASIO_VERSION) $(EXTLIBS)\$(FMT_VERSION) $(EXTLIBS)\$(OHM_VERSION) $(EXTLIBS)\$(SIMPLEINI_VERSION) $(EXTLIBS)\$(YAML_VERSION) $(EXTLIBS)\$(GTEST_VERSION)
 

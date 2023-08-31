@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "wtools.h"
+#include "common/wtools.h"
 
 #include <Psapi.h>
 #include <WinSock2.h>
@@ -18,13 +18,13 @@
 #include <random>
 #include <string>
 
-#include "cap.h"
-#include "cfg.h"
 #include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
-#include "logger.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 #pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "Sensapi.lib")

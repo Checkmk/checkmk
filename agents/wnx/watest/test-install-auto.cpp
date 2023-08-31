@@ -7,9 +7,9 @@
 #include <fstream>
 
 #include "common/wtools.h"
-#include "install_api.h"
-#include "service_processor.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/install_api.h"
+#include "wnx/service_processor.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;

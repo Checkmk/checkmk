@@ -50,6 +50,7 @@ API_DOMAIN = Literal[
     "notification_rule",
     "comment",
     "event_console",
+    "audit_log",
 ]
 
 
@@ -2016,9 +2017,6 @@ class CommentClient(RestApiClient):
         )
 
 
-APIDCD = dict[str, Any]
-
-
 class DcdClient(RestApiClient):
     domain: Literal["dcd"] = "dcd"
 
@@ -2131,6 +2129,53 @@ class DcdClient(RestApiClient):
         )
 
 
+class AuditLogClient(RestApiClient):
+    domain: API_DOMAIN = "audit_log"
+
+    def get_all(
+        self,
+        date: Any = "now",
+        object_type: str | None = None,
+        object_id: str | None = None,
+        user_id: str | None = None,
+        regexp: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query = _only_set_keys(
+            {
+                "date": date,
+                "object_type": object_type,
+                "object_id": object_id,
+                "user_id": user_id,
+                "regexp": regexp,
+            },
+        )
+
+        result = self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params=query,
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            result.assert_status_code(200)
+
+        return result
+
+    def clear(self, expect_ok: bool = True) -> Response:
+        result = self.request(
+            "delete",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            result.assert_status_code(204)
+
+        return result
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2155,6 +2200,7 @@ class ClientRegistry:
     Comment: CommentClient
     EventConsole: EventConsoleClient
     Dcd: DcdClient
+    AuditLog: AuditLogClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2181,4 +2227,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
         Dcd=DcdClient(request_handler, url_prefix),
+        AuditLog=AuditLogClient(request_handler, url_prefix),
     )

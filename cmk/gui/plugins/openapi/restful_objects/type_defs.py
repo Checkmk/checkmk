@@ -17,6 +17,7 @@ DomainType = Literal[
     "activation_run",
     "agent",
     "agent_binary",
+    "audit_log",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",

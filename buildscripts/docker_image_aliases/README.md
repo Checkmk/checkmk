@@ -36,6 +36,12 @@ Remember to login to the registry once by
 ./register.py IMAGE_CMK_BASE debian:buster-slim
 ```
 
+In case of a SUSE image you might need to pull it from the SUSE registry and use the following command
+
+```bash
+./register.py IMAGES_SLES_15SP5 registry.suse.com/suse/sle15:15.5
+```
+
 A directory named after the image alias containing a `Dockerfile` and `meta.yml` gets created.
 `git add` and `commit` them in order to make your image alias official.
 
@@ -66,9 +72,11 @@ resulting in the exact same image ID.
 
 Dockerfiles which shall be based on an image alias have to reference it using a build argument:
 
-        ARG IMAGE_CMK_BASE
-        # hadolint ignore=DL3006
-        FROM ${IMAGE_CMK_BASE} as base
+```
+ARG IMAGE_CMK_BASE
+# hadolint ignore=DL3006
+FROM ${IMAGE_CMK_BASE} as base
+```
 
 Note that you can choose a different name for the argument, but for consistancy please use the
 same name as for the alias. This way it's easy to get the context.
@@ -87,22 +95,30 @@ docker build \
 Whereever you `run` (or somehow reference) an image you would have referenced directly you now run
 `resolve.sh` to get the image behind the alias. E.g. in scripts/Makefiles instead of writing 
 
-        docker run --rm -i hadolint/hadolint < Dockerfile
+```bash
+docker run --rm -i hadolint/hadolint < Dockerfile
+```
 
 you can now run s.th. like
 
-        docker run --rm -i $$(<PATH_TO>/resolve.sh IMAGE_HADOLINT) < Dockerfile
+```bash
+docker run --rm -i $$(<PATH_TO>/resolve.sh IMAGE_HADOLINT) < Dockerfile
+```
 
 You can also use the Dockerfiles contained in the alias directories directly if possible. E.g. in 
 Jenkins/Groovy scripts you write
 
-        docker.build("<NAME>", "--pull <PATH-TO-ALIAS>").inside(<ARGS>) {
-            <CODE>
-        }
+```
+docker.build("<NAME>", "--pull <PATH-TO-ALIAS>").inside(<ARGS>) {
+    <CODE>
+}
+```
 
 Which is equivalent to
-        def IMAGE_ID = sh("<PATH_TO>/resolve.sh IMAGE_HADOLINT");
-        docker.image(IMAGE_ID).inside(<ARGS>) {
-            <CODE>
-        }
 
+```
+def IMAGE_ID = sh("<PATH_TO>/resolve.sh IMAGE_HADOLINT");
+docker.image(IMAGE_ID).inside(<ARGS>) {
+    <CODE>
+}
+```

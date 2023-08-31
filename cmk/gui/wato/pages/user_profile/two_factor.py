@@ -272,7 +272,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
 class RegisterTotpSecret(ABCUserProfilePage):
     def _page_title(self) -> str:
-        return _("Register Authenticatior App")
+        return _("Register Authenticator App")
 
     def __init__(self, secret: bytes | None = None) -> None:
         super().__init__("general.manage_2fa")
@@ -305,7 +305,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
         vs = self._valuespec()
         provided_otp = vs.from_html_vars("profile")
         now_time = otp.calculate_generation(datetime.datetime.now())
-        if otp.check_totp(provided_otp["Validate OTP"], now_time):
+        if otp.check_totp(provided_otp["ValidateOTP"], now_time):
             totp_uuid = str(uuid4())
             credentials["totp_credentials"][totp_uuid] = {
                 "credential_id": totp_uuid,
@@ -324,9 +324,6 @@ class RegisterTotpSecret(ABCUserProfilePage):
     def _show_form(self) -> None:
         assert user.id is not None
 
-        if not request.is_ssl_request:
-            origtarget = "user_two_factor_overview.py"
-            raise redirect(origtarget)
         if not self.secret:
             self.secret = TOTP.generate_secret()
         base32_secret = b32encode(self.secret).decode()
@@ -367,7 +364,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
             render="form",
             elements=[
                 (
-                    "Validate OTP",
+                    "ValidateOTP",
                     TextInput(title=_("Validate OTP")),
                 ),
             ],

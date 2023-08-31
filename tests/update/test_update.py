@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(
-    os.environ.get("DISTRO") == "sles-15sp4",
+    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
     reason="Test currently failing for missing `php7`. "
     "This will be fixed starting from  base-version 2.1.0p31",
 )

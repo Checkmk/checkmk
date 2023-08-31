@@ -15,6 +15,7 @@ common: &common
     - "sles-15sp2"
     - "sles-15sp3"
     - "sles-15sp4"
+    - "sles-15sp5"
 
 # A reduced set of distros for the daily builds
 daily_reduced: &daily_reduced

@@ -115,12 +115,14 @@ inline bool RunDetachedProcess(const std::wstring &name) {
     return ret == TRUE;
 }
 
+enum class WaitForEnd { yes, no };
+
 // NOTE: LAST and BEST attempt to have standard windows starter
 // Returns process id on success
 /// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
 inline uint32_t RunStdCommand(
     std::wstring_view command,  // full command with arguments
-    bool wait_for_end,          // important flag! set false when you are sure
+    WaitForEnd wait_for_end,    // important flag! set false when you are sure
     BOOL inherit_handle,        // recommended option FALSE
     HANDLE stdio_handle,        // when we want to catch output
     HANDLE stderr_handle,       // same
@@ -151,8 +153,15 @@ inline uint32_t RunStdCommand(
                          nullptr,         // current directory
                          &si, &pi) == TRUE) {
         const auto process_id = pi.dwProcessId;
-        if (wait_for_end && pi.hProcess != nullptr) {
-            WaitForSingleObject(pi.hProcess, INFINITE);
+        switch (wait_for_end) {
+            case WaitForEnd::yes:
+                if (pi.hProcess != nullptr) {
+                    WaitForSingleObject(pi.hProcess, INFINITE);
+                }
+                break;
+            case WaitForEnd::no:
+                // do nothing
+                break;
         }
         ClosePi(pi);
         return process_id;
@@ -160,7 +169,8 @@ inline uint32_t RunStdCommand(
     return 0;
 }
 
-inline uint32_t RunStdCommand(std::wstring_view command, bool wait_for_end) {
+inline uint32_t RunStdCommand(std::wstring_view command,
+                              WaitForEnd wait_for_end) {
     return RunStdCommand(command, wait_for_end, FALSE, nullptr, nullptr, 0, 0);
 }
 

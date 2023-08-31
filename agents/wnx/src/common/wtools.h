@@ -1044,17 +1044,14 @@ void ProtectFileFromUserWrite(const std::filesystem::path &path,
 void ProtectPathFromUserAccess(const std::filesystem::path &entry,
                                std::vector<std::wstring> &commands);
 
-/// Create cmd file in %Temp% and run it.
-///
-/// Returns script name path to be executed
-std::filesystem::path ExecuteCommandsAsync(
-    std::wstring_view name, const std::vector<std::wstring> &commands);
+enum class ExecuteMode { sync, async };
 
 /// Create cmd file in %Temp% and run it.
 ///
 /// Returns script name path to be executed
-std::filesystem::path ExecuteCommandsSync(
-    std::wstring_view name, const std::vector<std::wstring> &commands);
+std::filesystem::path ExecuteCommands(std::wstring_view name,
+                                      const std::vector<std::wstring> &commands,
+                                      ExecuteMode mode);
 
 /// Changes Access Rights in Windows crazy manner
 ///

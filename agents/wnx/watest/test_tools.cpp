@@ -382,7 +382,7 @@ bool TempCfgFs::loadContent(std::string_view content) {
 void TempCfgFs::allowUserAccess() const {
     std::vector<std::wstring> commands;
     tst::AllowReadWriteAccess(base_, commands);
-    wtools::ExecuteCommandsSync(L"all", commands);
+    wtools::ExecuteCommands(L"all", commands, wtools::ExecuteMode::sync);
 }
 
 [[nodiscard]] bool TempCfgFs::createFile(const fs::path &filepath,

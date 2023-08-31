@@ -822,7 +822,8 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
 
             security::ProtectAll(
                 fs::path(app_data_folder) / kAppDataCompanyName, commands);
-            wtools::ExecuteCommandsAsync(L"all", commands);
+            wtools::ExecuteCommands(L"all", commands,
+                                    wtools::ExecuteMode::async);
         }
 
         if (ret == 0) {
@@ -1266,7 +1267,7 @@ void ConfigInfo::initFolders(
         std::vector<std::wstring> commands;
         wtools::ProtectFileFromUserWrite(exe_path, commands);
         wtools::ProtectPathFromUserAccess(root, commands);
-        wtools::ExecuteCommandsAsync(L"data", commands);
+        wtools::ExecuteCommands(L"data", commands, wtools::ExecuteMode::async);
     }
 
     if (folders_.getData().empty()) {
@@ -2049,7 +2050,7 @@ bool UninstallProduct(std::string_view name) {
         return false;
     }
     XLOG::l.i("Starting uninstallation command '{}'", fname);
-    auto pid = tools::RunStdCommand(fname.wstring(), true);
+    auto pid = tools::RunStdCommand(fname.wstring(), tools::WaitForEnd::yes);
     if (pid == 0) {
         XLOG::l("Failed to start '{}'", fname);
         return false;

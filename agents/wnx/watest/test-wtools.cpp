@@ -237,7 +237,8 @@ protected:
         tst::CreateTextFile(exe_b, "@echo start\n@call " + ToStr(exe_c));
         tst::CreateTextFile(exe_c,
                             "@echo start\n@powershell Start-Sleep 10000");
-        return cma::tools::RunStdCommand(exe_a.wstring(), false);
+        return cma::tools::RunStdCommand(exe_a.wstring(),
+                                         cma::tools::WaitForEnd::no);
     }
 
     static [[nodiscard]] bool findProcessByPid(uint32_t pid) {
@@ -750,7 +751,7 @@ TEST(Wtools, ExecuteCommandsAsync) {
                                    ::GetCurrentProcessId());
     const std::vector<std::wstring> commands{L"echo x>" + output_file,
                                              L"@echo powershell Start-Sleep 1"};
-    const auto result = ExecuteCommandsAsync(L"test", commands);
+    const auto result = ExecuteCommands(L"test", commands, ExecuteMode::async);
     std::error_code ec;
     ON_OUT_OF_SCOPE({
         if (!result.empty()) {

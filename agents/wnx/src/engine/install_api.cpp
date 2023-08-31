@@ -545,7 +545,8 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         }
 
         auto command = eu.getCommand();
-        return {command, tools::RunStdCommand(command, false) != 0};
+        return {command,
+                tools::RunStdCommand(command, tools::WaitForEnd::no) != 0};
     } catch (const std::exception &e) {
         auto log_text = fmt::format(
             "Unexpected exception '{}' during attempt to execute agent update",

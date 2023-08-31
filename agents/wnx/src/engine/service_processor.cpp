@@ -379,7 +379,7 @@ void ServiceProcessor::resetOhm() noexcept {
     cmd_line += std::wstring(provider::ohm::kResetCommand);
     XLOG::l.i("I'm going to execute '{}'", wtools::ToUtf8(cmd_line));
 
-    tools::RunStdCommand(cmd_line, true);
+    tools::RunStdCommand(cmd_line, tools::WaitForEnd::yes);
 }
 
 bool ServiceProcessor::stopRunningOhmProcess() noexcept {

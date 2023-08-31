@@ -593,7 +593,7 @@ private:
                     logExeNotFound(exe_name);
                     return false;
                 }
-                auto cmd_line = fmt::format(
+                const auto cmd_line = fmt::format(
                     L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
                     full_path,  // exe
                     log_file.empty() ? L"" : L"@" + log_file + L" ",
@@ -602,7 +602,8 @@ private:
                     AnswerIdToNumber(answer),                       // answer id
                     tout, command);
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
-                if (tools::RunStdCommand(cmd_line, false) == 0) {
+                if (tools::RunStdCommand(cmd_line, tools::WaitForEnd::no) ==
+                    0) {
                     XLOG::l("Exec is failed with error [{}]", ::GetLastError());
                     return false;
                 }

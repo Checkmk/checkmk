@@ -665,7 +665,8 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     cma::cfg::SetupPluginEnvironment();
 
     ModifyStdio(false);
-    auto proc_id = cma::tools::RunStdCommand(command_to_run, true);
+    auto proc_id =
+        cma::tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
     ModifyStdio(true);
 
     if (proc_id > 0) {

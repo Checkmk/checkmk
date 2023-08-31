@@ -25,7 +25,12 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 
-from ._graph_specification import GraphConsoldiationFunction, GraphMetric, RPNExpression
+from ._graph_specification import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    MetricDefinition,
+    RPNExpression,
+)
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._utils import (
     CheckMetricEntry,
@@ -157,7 +162,11 @@ def _needed_elements_of_expression(
             CombinedSingleMetricSpec(
                 datasource=raw_spec["datasource"],
                 context=raw_spec["context"],
-                selected_metric=raw_spec["selected_metric"],
+                selected_metric=MetricDefinition(
+                    raw_spec["selected_metric"][0],
+                    raw_spec["selected_metric"][1],
+                    "",
+                ),
                 consolidation_function=raw_spec["consolidation_function"],
                 presentation=raw_spec["presentation"],
             )

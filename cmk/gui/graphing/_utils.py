@@ -14,7 +14,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Final, Literal, NamedTuple, NewType, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, NamedTuple, NewType, TypedDict, TypeVar, Union
 
 from pydantic import BaseModel
 
@@ -66,6 +66,7 @@ from ._graph_specification import (
     LineType,
     MetricDefinition,
     MetricExpression,
+    RPNExpressionMetric,
 )
 
 LegacyPerfometer = tuple[str, Any]
@@ -743,22 +744,6 @@ def split_expression(expression: MetricExpression) -> tuple[str, str | None, str
     return expression, explicit_unit_name, explicit_color
 
 
-@overload
-def evaluate(
-    expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
-) -> tuple[float, UnitInfo, str]:
-    ...
-
-
-@overload
-def evaluate(
-    expression: int | float,
-    translated_metrics: TranslatedMetrics,
-) -> tuple[float | None, UnitInfo, str]:
-    ...
-
-
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -772,33 +757,22 @@ def evaluate(
 def evaluate(
     expression: MetricExpression | int | float,
     translated_metrics: TranslatedMetrics,
-) -> tuple[float | None, UnitInfo, str]:
+) -> RPNExpressionMetric:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
-
-    value, unit, color = _evaluate_rpn(expression, translated_metrics)
-
-    if explicit_color:
-        color = "#" + explicit_color
-
-    if explicit_unit_name:
-        unit = unit_info[explicit_unit_name]
-
-    return value, unit, color
-
-
-def _evaluate_rpn(
-    expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
-) -> tuple[float, UnitInfo, str]:
-    # stack of (value, unit, color)
-    return stack_resolver(
+    rpn_expr_metric = stack_resolver(
         expression.split(","),
         lambda x: x in rpn_operators,
         lambda op, a, b: rpn_operators[op](a, b),
         lambda x: _evaluate_literal(x, translated_metrics),
+    )
+
+    return RPNExpressionMetric(
+        rpn_expr_metric.value,
+        unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr_metric.unit_info,
+        "#" + explicit_color if explicit_color else rpn_expr_metric.color,
     )
 
 
@@ -837,32 +811,68 @@ def stack_resolver(
 
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
-    "+": lambda a, b: ((a[0] + b[0]), _unit_mult(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "-": lambda a, b: ((a[0] - b[0]), _unit_sub(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "*": lambda a, b: ((a[0] * b[0]), _unit_add(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    "+": lambda a, b: (
+        RPNExpressionMetric(
+            a.value + b.value,
+            _unit_mult(a.unit_info, b.unit_info),
+            _choose_operator_color(a.color, b.color),
+        )
+    ),
+    "-": lambda a, b: (
+        RPNExpressionMetric(
+            a.value - b.value,
+            _unit_sub(a.unit_info, b.unit_info),
+            _choose_operator_color(a.color, b.color),
+        )
+    ),
+    "*": lambda a, b: (
+        RPNExpressionMetric(
+            a.value * b.value,
+            _unit_add(a.unit_info, b.unit_info),
+            _choose_operator_color(a.color, b.color),
+        )
+    ),
     # Handle zero division by always adding a tiny bit to the divisor
     "/": lambda a, b: (
-        (a[0] / (b[0] + 1e-16)),
-        _unit_div(a[1], b[1]),
-        _choose_operator_color(a[2], b[2]),
+        RPNExpressionMetric(
+            a.value / (b.value + 1e-16),
+            _unit_div(a.unit_info, b.unit_info),
+            _choose_operator_color(a.color, b.color),
+        )
     ),
-    ">": lambda a, b: ((a[0] > b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
-    "<": lambda a, b: ((a[0] < b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
-    ">=": lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
-    "<=": lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
+    ">": lambda a, b: RPNExpressionMetric(
+        a.value > b.value and 1.0 or 0.0,
+        unit_info[""],
+        "#000000",
+    ),
+    "<": lambda a, b: RPNExpressionMetric(
+        a.value < b.value and 1.0 or 0.0,
+        unit_info[""],
+        "#000000",
+    ),
+    ">=": lambda a, b: RPNExpressionMetric(
+        a.value >= b.value and 1.0 or 0.0,
+        unit_info[""],
+        "#000000",
+    ),
+    "<=": lambda a, b: RPNExpressionMetric(
+        a.value <= b.value and 1.0 or 0.0,
+        unit_info[""],
+        "#000000",
+    ),
     "MIN": lambda a, b: _operator_minmax(a, b, min),
     "MAX": lambda a, b: _operator_minmax(a, b, max),
 }
 
 
 # TODO: real unit computation!
-def _unit_mult(u1: dict[str, Any], u2: dict[str, Any]) -> dict[str, Any]:
+def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
     return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
 
 
-_unit_div: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
-_unit_add: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
-_unit_sub: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
+_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
 
 
 def _choose_operator_color(a: str, b: str) -> str:
@@ -873,39 +883,40 @@ def _choose_operator_color(a: str, b: str) -> str:
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
 
-def _operator_minmax(a, b, func):
-    v = func(a[0], b[0])
+def _operator_minmax(
+    a: RPNExpressionMetric, b: RPNExpressionMetric, func: Callable[[float, float], float]
+) -> RPNExpressionMetric:
+    v = func(a.value, b.value)
     # Use unit and color of the winner. If the winner
     # has none (e.g. it is a scalar like 0), then take
     # unit and color of the loser.
-    if v == a[0]:
+    if v == a.value:
         winner = a
         loser = b
     else:
         winner = b
         loser = a
 
-    if winner[1] != unit_info[""]:
-        unit = winner[1]
+    if winner.unit_info != unit_info[""]:
+        unit = winner.unit_info
     else:
-        unit = loser[1]
+        unit = loser.unit_info
 
-    return v, unit, winner[2] or loser[2]
+    return RPNExpressionMetric(v, unit, winner.color or loser.color)
 
 
 def _evaluate_literal(
-    expression: int | float | str,
-    translated_metrics: TranslatedMetrics,
-) -> tuple[float | None, UnitInfo, str]:
+    expression: int | float | str, translated_metrics: TranslatedMetrics
+) -> RPNExpressionMetric:
     if isinstance(expression, int):
-        return float(expression), unit_info["count"], "#000000"
+        return RPNExpressionMetric(float(expression), unit_info["count"], "#000000")
 
     if isinstance(expression, float):
-        return expression, unit_info[""], "#000000"
+        return RPNExpressionMetric(expression, unit_info[""], "#000000")
 
     if val := _float_or_int(expression):
         if expression not in translated_metrics:
-            return float(val), unit_info[""], "#000000"
+            return RPNExpressionMetric(float(val), unit_info[""], "#000000")
 
     var_name = _drop_metric_consolidation_advice(expression)
 
@@ -933,7 +944,10 @@ def _evaluate_literal(
         value = translated_metrics[var_name]["value"]
         color = translated_metrics[var_name]["color"]
 
-    if percent and value is not None:
+    if value is None:
+        raise ValueError(value)
+
+    if percent:
         maxvalue = translated_metrics[var_name]["scalar"]["max"]
         if maxvalue != 0:
             value = 100.0 * float(value) / maxvalue
@@ -943,7 +957,7 @@ def _evaluate_literal(
     else:
         unit = translated_metrics[var_name]["unit"]
 
-    return value, unit, color
+    return RPNExpressionMetric(value, unit, color)
 
 
 @dataclass(frozen=True)
@@ -1045,24 +1059,28 @@ def get_graph_range(
     if not graph_template.range:
         return None, None  # Compute range of displayed data points
 
+    # TODO really? see test_create_graph_recipe_from_template
     try:
-        return (
-            evaluate(graph_template.range[0], translated_metrics)[0],
-            evaluate(graph_template.range[1], translated_metrics)[0],
-        )
+        from_ = evaluate(graph_template.range[0], translated_metrics).value
     except Exception:
-        return None, None
+        from_ = None
+
+    try:
+        to = evaluate(graph_template.range[1], translated_metrics).value
+    except Exception:
+        to = None
+    return from_, to
 
 
 def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
     def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
-        expression = match.group()[2:-1]
-        value, unit, _color = evaluate(expression, translated_metrics)
-        if value is not None:
-            return unit["render"](value)
-        return _("n/a")
+        try:
+            rpn_expr_metric = evaluate(match.group()[2:-1], translated_metrics)
+        except ValueError:
+            return _("n/a")
+        return rpn_expr_metric.unit_info["render"](rpn_expr_metric.value)
 
     r = cmk.utils.regex.regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)
@@ -1279,13 +1297,12 @@ def horizontal_rules_from_thresholds(
                 title = expression
 
         try:
-            value, unit, color = evaluate(expression, translated_metrics)
-            if value:
+            if (rpn_expr_metric := evaluate(expression, translated_metrics)).value:
                 horizontal_rules.append(
                     (
-                        value,
-                        unit["render"](value),
-                        color,
+                        rpn_expr_metric.value,
+                        rpn_expr_metric.unit_info["render"](rpn_expr_metric.value),
+                        rpn_expr_metric.color,
                         str(title),
                     )
                 )

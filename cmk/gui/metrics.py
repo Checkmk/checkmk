@@ -359,8 +359,7 @@ class Perfometers:
 
         if "condition" in perfometer:
             try:
-                value, _color, _unit = evaluate(perfometer["condition"], translated_metrics)
-                if value == 0.0:
+                if evaluate(perfometer["condition"], translated_metrics).value == 0.0:
                     return False
             except Exception:
                 return False
@@ -446,13 +445,15 @@ class MetricometerRenderer(abc.ABC):
                 return ""
 
             expr, unit_name = self._perfometer["label"]
-            value, unit, _color = evaluate(expr, self._translated_metrics)
-            unit = unit_info[unit_name] if unit_name else unit
+            rpn_expr_metric = evaluate(expr, self._translated_metrics)
+            unit_info_ = unit_info[unit_name] if unit_name else rpn_expr_metric.unit_info
 
             if isinstance(expr, int | float):
-                value = unit.get("conversion", lambda v: v)(expr)
+                value = unit_info_.get("conversion", lambda v: v)(expr)
+            else:
+                value = rpn_expr_metric.value
 
-            return self._render_value(unit, value)
+            return self._render_value(unit_info_, value)
 
         return self._get_type_label()
 
@@ -501,29 +502,28 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             )
 
     def get_stack(self) -> MetricRendererStack:
-        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        rpn_expr_metric = evaluate(self._perfometer["metric"], self._translated_metrics)
         return [
             self.get_stack_from_values(
-                value,
+                rpn_expr_metric.value,
                 *self.estimate_parameters_for_converted_units(
-                    unit.get(
+                    rpn_expr_metric.unit_info.get(
                         "conversion",
                         lambda v: v,
                     )
                 ),
-                color,
+                rpn_expr_metric.color,
             )
         ]
 
     def _get_type_label(self) -> str:
-        value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return self._render_value(unit, value)
+        rpn_expr_metric = evaluate(self._perfometer["metric"], self._translated_metrics)
+        return self._render_value(rpn_expr_metric.unit_info, rpn_expr_metric.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return value
+        return evaluate(self._perfometer["metric"], self._translated_metrics).value
 
     @staticmethod
     def get_stack_from_values(
@@ -604,8 +604,8 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         else:
             for ex in self._perfometer["segments"]:
-                value, _unit, color = evaluate(ex, self._translated_metrics)
-                entry.append((100.0 * value / total, color))
+                rpn_expr_metric = evaluate(ex, self._translated_metrics)
+                entry.append((100.0 * rpn_expr_metric.value / total, rpn_expr_metric.color))
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
@@ -616,28 +616,23 @@ class MetricometerRendererLinear(MetricometerRenderer):
     def _evaluate_total(self, total_expression: MetricExpression | int | float) -> float:
         if isinstance(total_expression, float | int):
             return self._unit().get("conversion", lambda v: v)(total_expression)
-        total, _unit, _color = evaluate(total_expression, self._translated_metrics)
-        return total
+        return evaluate(total_expression, self._translated_metrics).value
 
     def _unit(self) -> UnitInfo:
         # We assume that all expressions across all segments have the same unit
-        _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return unit
+        return evaluate(self._perfometer["segments"][0], self._translated_metrics).unit_info
 
     def _get_type_label(self) -> str:
         return self._render_value(self._unit(), self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
-        value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return value
+        return evaluate(self._perfometer["segments"][0], self._translated_metrics).value
 
     def _get_summed_values(self):
-        summed = 0.0
-        for ex in self._perfometer["segments"]:
-            value, _unit, _color = evaluate(ex, self._translated_metrics)
-            summed += value
-        return summed
+        return sum(
+            evaluate(ex, self._translated_metrics).value for ex in self._perfometer["segments"]
+        )
 
 
 @renderer_registry.register

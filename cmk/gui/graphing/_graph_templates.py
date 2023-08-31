@@ -309,7 +309,7 @@ def metric_unit_color(
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:
-        _value, unit, color = evaluate(metric_expression, translated_metrics)
+        rpn_expr_metric = evaluate(metric_expression, translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
@@ -322,4 +322,4 @@ def metric_unit_color(
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )
         )
-    return {"unit": unit["id"], "color": color}
+    return {"unit": rpn_expr_metric.unit_info["id"], "color": rpn_expr_metric.color}

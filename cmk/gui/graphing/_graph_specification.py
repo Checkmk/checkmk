@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.gui.type_defs import SingleInfos, UnitInfo, VisualContext
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -32,6 +32,13 @@ class MetricDefinition:
 
 
 RPNExpression = tuple  # TODO: Improve this type
+
+
+@dataclass(frozen=True)
+class RPNExpressionMetric:
+    value: float
+    unit_info: UnitInfo
+    color: str
 
 
 class GraphMetric(BaseModel, frozen=True):

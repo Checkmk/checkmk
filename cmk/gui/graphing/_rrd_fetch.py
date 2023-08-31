@@ -163,9 +163,8 @@ def _needed_elements_of_expression(
                 datasource=raw_spec["datasource"],
                 context=raw_spec["context"],
                 selected_metric=MetricDefinition(
-                    raw_spec["selected_metric"][0],
-                    raw_spec["selected_metric"][1],
-                    "",
+                    expression=raw_spec["selected_metric"][0],
+                    line_type=raw_spec["selected_metric"][1],
                 ),
                 consolidation_function=raw_spec["consolidation_function"],
                 presentation=raw_spec["presentation"],

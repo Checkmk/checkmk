@@ -11,9 +11,10 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired
 
 from marshmallow import fields
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

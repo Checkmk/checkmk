@@ -13,7 +13,9 @@ from collections.abc import (
     Sequence,
 )
 from re import Pattern
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions

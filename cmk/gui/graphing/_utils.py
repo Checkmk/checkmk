@@ -15,19 +15,10 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import (
-    Any,
-    assert_never,
-    Final,
-    get_args,
-    Literal,
-    NamedTuple,
-    NewType,
-    TypedDict,
-    TypeVar,
-)
+from typing import Any, assert_never, Final, get_args, Literal, NamedTuple, NewType, TypeVar
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

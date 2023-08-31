@@ -7,7 +7,9 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
-from typing import Any, overload, TypedDict
+from typing import Any, overload
+
+from typing_extensions import TypedDict
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException

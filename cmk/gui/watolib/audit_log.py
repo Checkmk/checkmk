@@ -10,7 +10,9 @@ import json
 import re
 import time
 from collections.abc import Sequence
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, NamedTuple
+
+from typing_extensions import TypedDict
 
 from cmk.utils.user import UserId
 

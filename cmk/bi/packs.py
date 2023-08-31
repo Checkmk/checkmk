@@ -6,9 +6,10 @@
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, NamedTuple, NotRequired, TypedDict
+from typing import Any, NamedTuple, NotRequired
 
 from marshmallow import fields, pre_dump
+from typing_extensions import TypedDict
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException

@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Literal, TypedDict
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, parse_obj_as
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

@@ -19,7 +19,9 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, assert_never, Literal, TypedDict
+from typing import Any, assert_never, Literal
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

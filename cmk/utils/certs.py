@@ -60,7 +60,7 @@ class _CNTemplate:
 
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
-_DEFAULT_VALIDITY = relativedelta(years=999)
+_DEFAULT_VALIDITY = relativedelta(years=10)
 
 
 class RootCA(NamedTuple):
@@ -160,7 +160,7 @@ def _save_cert_chain(
 def _make_private_key() -> RSAPrivateKeyWithSerialization:
     return generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=4096,
     )
 
 

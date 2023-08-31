@@ -202,7 +202,7 @@ def test_load_cert_and_private_key(
 
 
 def test_make_private_key() -> None:
-    assert _make_private_key().key_size == 2048
+    assert _make_private_key().key_size == 4096
 
 
 def test_make_root_certificate() -> None:

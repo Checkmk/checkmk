@@ -16,40 +16,49 @@ from cmk.gui.watolib.audit_log import AuditLogStore
 
 BASE_DATE = "2023-08-16"
 
-BASE_ENTRIES = [
-    {
-        "time": 1692174326,
-        "object_ref": {"object_type": "Host", "ident": "tst"},
-        "user_id": "ghost-user",
-        "action": "create-host",
-        "text": ["str", "Created new host tst."],
-        "diff_text": "Nothing was changed.",
-    },
-    {
-        "time": 1692174332,
-        "object_ref": None,
-        "user_id": "cmkadmin",
-        "action": "snapshot-created",
-        "text": ["str", "Created snapshot wato-snapshot-2023-08-16-10-25-32.tar"],
-        "diff_text": None,
-    },
-    {
-        "time": 1692174332,
-        "object_ref": None,
-        "user_id": "cmkadmin",
-        "action": "activate-changes",
-        "text": ["str", "Starting activation (Sites: heute)"],
-        "diff_text": None,
-    },
-    {
-        "time": 1692174332,
-        "object_ref": None,
-        "user_id": "cmkadmin",
-        "action": "activate-changes",
-        "text": ["str", "Started activation of site heute"],
-        "diff_text": None,
-    },
-]
+
+@pytest.fixture(name="base_audit_log_entries")
+def _base_audit_log_entries() -> list:
+    time_entry = math.floor(
+        datetime.datetime.strptime(BASE_DATE, "%Y-%m-%d")
+        .replace(hour=8, minute=0, second=0)
+        .timestamp()
+    )
+
+    return [
+        {
+            "time": time_entry,
+            "object_ref": {"object_type": "Host", "ident": "tst"},
+            "user_id": "ghost-user",
+            "action": "create-host",
+            "text": ["str", "Created new host tst."],
+            "diff_text": "Nothing was changed.",
+        },
+        {
+            "time": time_entry + 60,
+            "object_ref": None,
+            "user_id": "cmkadmin",
+            "action": "snapshot-created",
+            "text": ["str", "Created snapshot wato-snapshot-2023-08-16-10-25-32.tar"],
+            "diff_text": None,
+        },
+        {
+            "time": time_entry + 120,
+            "object_ref": None,
+            "user_id": "cmkadmin",
+            "action": "activate-changes",
+            "text": ["str", "Starting activation (Sites: heute)"],
+            "diff_text": None,
+        },
+        {
+            "time": time_entry + 180,
+            "object_ref": None,
+            "user_id": "cmkadmin",
+            "action": "activate-changes",
+            "text": ["str", "Started activation of site heute"],
+            "diff_text": None,
+        },
+    ]
 
 
 def generate_random_audit_log(numdays: int = 10, events_per_day: int | None = None) -> list:
@@ -116,8 +125,8 @@ def populate_audit_log(audit_log_store: AuditLogStore, entries: list) -> None:
 
 
 @pytest.fixture
-def populated_audit_log(audit_log_store: AuditLogStore) -> None:
-    populate_audit_log(audit_log_store, BASE_ENTRIES)
+def populated_audit_log(audit_log_store: AuditLogStore, base_audit_log_entries: list) -> None:
+    populate_audit_log(audit_log_store, base_audit_log_entries)
 
 
 @pytest.fixture(name="populated_two_day_entries_audit_log")

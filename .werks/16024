@@ -1,0 +1,13 @@
+Title: Add support for SLES 15 SP5
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1693483265
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this werk, Checkmk is build for SLES 15 SP5
+
+

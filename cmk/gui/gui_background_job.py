@@ -473,7 +473,7 @@ class JobRenderer:
             background_job.JobStatusStates.INITIALIZED: "state statep",
             background_job.JobStatusStates.RUNNING: "state job_running",
             background_job.JobStatusStates.EXCEPTION: "state state2",
-            background_job.JobStatusStates.STOPPED: "state state2",  # same css as exception
+            background_job.JobStatusStates.STOPPED: "state state1",  # same css as warn
             background_job.JobStatusStates.FINISHED: "state state0",
         }
         return job_css_map.get(job_state, "")

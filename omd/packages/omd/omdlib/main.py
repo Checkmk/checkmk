@@ -2850,7 +2850,11 @@ def main_update(  # pylint: disable=too-many-branches
         )
 
     # warn about unacknowledged werks
-    if cmk_from_version.base != cmk_to_version.base:
+    is_major_update = cmk_from_version.base != cmk_to_version.base
+    # but we can only do this if we have access to the version we upgrade from:
+    # (docker installations have only a single version, the one they run and update to.)
+    access_to_from_version = os.path.exists(os.path.join(site.real_dir, "version"))
+    if is_major_update and access_to_from_version:
         unack_werks = unacknowledged_incompatible_werks()
         if len(unack_werks):
             note_list_is_clipped = ""

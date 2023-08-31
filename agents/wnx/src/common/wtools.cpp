@@ -216,8 +216,8 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view command_line) noexcept {
         prepareResources(command_line, true);
 
         auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
-            command_line.data(), TRUE, stdio_.getWrite(), stderr_.getWrite(), 0,
-            0);
+            command_line.data(), cma::tools::InheritHandle::yes,
+            stdio_.getWrite(), stderr_.getWrite(), 0, 0);
         // store data to reuse
         process_id_ = pid;
         job_handle_ = jh;
@@ -286,8 +286,11 @@ uint32_t AppRunner::goExec(std::wstring_view command_line,
         prepareResources(command_line, use_pipe == UsePipe::yes);
 
         process_id_ = cma::tools::RunStdCommand(
-            command_line, cma::tools::WaitForEnd::no, TRUE, stdio_.getWrite(),
-            stderr_.getWrite(), CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0);
+                          command_line, cma::tools::WaitForEnd::no,
+                          cma::tools::InheritHandle::yes, stdio_.getWrite(),
+                          stderr_.getWrite(),
+                          CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0)
+                          .value_or(0);
         if (process_id_ != 0) {
             return process_id_;
         }

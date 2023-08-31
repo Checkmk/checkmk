@@ -2044,19 +2044,22 @@ fs::path CreateWmicUninstallFile(const fs::path &temp_dir,
 }
 
 bool UninstallProduct(std::string_view name) {
-    fs::path temp{GetTempDir()};
-    auto fname = CreateWmicUninstallFile(temp, name);
+    const fs::path temp{GetTempDir()};
+    const auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;
     }
     XLOG::l.i("Starting uninstallation command '{}'", fname);
-    auto pid = tools::RunStdCommand(fname.wstring(), tools::WaitForEnd::yes);
-    if (pid == 0) {
-        XLOG::l("Failed to start '{}'", fname);
-        return false;
+
+    if (const auto pid =
+            tools::RunStdCommand(fname.wstring(), tools::WaitForEnd::yes);
+        pid.has_value()) {
+        XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname,
+                  *pid);
+        return true;
     }
-    XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname, pid);
-    return true;
+    XLOG::l("Failed to start '{}'", fname);
+    return false;
 }
 
 details::ConfigInfo &GetCfg() noexcept { return details::g_config_info; }

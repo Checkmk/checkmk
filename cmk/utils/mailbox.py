@@ -30,7 +30,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 import urllib3
 from exchangelib import (  # type: ignore[import]
@@ -335,11 +335,11 @@ class Mailbox:
         except Exception as exc:
             raise ConnectError(f"Failed to connect to {self._args.fetch_server}: {exc}")
 
-    def inbox_protocol(self) -> str:
+    def inbox_protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
             return "POP3"
         if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
-            return "IMAP4"
+            return "IMAP"
         if isinstance(self._connection, EWS):
             return "EWS"
         raise AssertionError("connection must be POP3[_SSL], IMAP4[_SSL] or EWS")
@@ -347,7 +347,7 @@ class Mailbox:
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
         assert self._connection
-        if self.inbox_protocol() == "IMAP4":
+        if self.inbox_protocol() == "IMAP":
             return extract_folder_names(
                 e for e in verified_result(self._connection.list()) if isinstance(e, bytes)
             )
@@ -393,7 +393,7 @@ class Mailbox:
             inbox_protocol = self.inbox_protocol()
             if inbox_protocol == "POP3":
                 return _fetch_mails_pop3()
-            if inbox_protocol == "IMAP4":
+            if inbox_protocol == "IMAP":
                 return _fetch_mails_imap()
             raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
         except Exception as exc:
@@ -412,7 +412,7 @@ class Mailbox:
         """Select folder @folder_name and return the number of mails contained"""
         assert self._connection
         try:
-            if self.inbox_protocol() == "IMAP4":
+            if self.inbox_protocol() == "IMAP":
                 encoded_number = verified_result(
                     self._connection.select(_mutf_7_encode(f'"{folder_name}"'))
                 )[0]
@@ -501,7 +501,7 @@ class Mailbox:
             if self.inbox_protocol() == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
-            elif self.inbox_protocol() == "IMAP4":
+            elif self.inbox_protocol() == "IMAP":
                 for mail_index in mails:
                     verified_result(self._connection.store(mail_index, "+FLAGS", "\\Deleted"))
                 self._connection.expunge()
@@ -510,7 +510,7 @@ class Mailbox:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy_mails(self, mails: list[int], folder: str) -> None:
-        assert self._connection and self.inbox_protocol() == "IMAP4"
+        assert self._connection and self.inbox_protocol() == "IMAP"
         try:
             for mail_index in mails:
                 # The user wants the message to be moved to the folder
@@ -534,7 +534,7 @@ class Mailbox:
             return
         if self.inbox_protocol() == "POP3":
             verified_result(self._connection.quit())
-        elif self.inbox_protocol() == "IMAP4":
+        elif self.inbox_protocol() == "IMAP":
             with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
                 verified_result(self._connection.close())
             verified_result(self._connection.logout())

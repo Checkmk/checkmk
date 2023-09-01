@@ -74,6 +74,38 @@ from cmk.ec.event import (
             },
         ),
         (
+            # Variant 2: zypper SLES15 without forwarding(?)
+            "<10>Aug 31 14:34:18 localhost RPM[1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
+            # Variant 2a: zypper SLES15
+            "<10>Aug 31 14:34:18 localhost [RPM][1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
             "<134>Jan 24 10:04:57 xygtldc-blaaa-pn02 pfsp: The configuration was changed on leader xygtldc-blaaa-pn02 to version 1111111 by xygtldc-blaaa-pn02/admin at 2019-01-18 11:04:54 CET",
             {
                 "application": "pfsp",

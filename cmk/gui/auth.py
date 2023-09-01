@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import re
 import traceback
 import uuid
 from datetime import datetime
@@ -79,7 +80,13 @@ def check_auth() -> tuple[UserId, AuthType]:
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
-    permitted by rule "Direct login to Web GUI allowed" """
+    permitted by rule "Direct login to Web GUI allowed".  This also applies to
+    all rest-api requests, they should also be allowed in this scenario otherwise
+    the agent-receiver won't work."""
+
+    if re.match("/[^/]+/check_mk/api/", request.path) is not None:
+        return True
+
     if requested_file_name(request) == "login":
         if (origtarget_var := request.var("_origtarget")) is None:
             return False

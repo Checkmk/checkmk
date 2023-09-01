@@ -18,6 +18,7 @@ import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
 from cmk.gui.cron import register_job as _register_job
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
+from cmk.gui.watolib import _sync_remote_sites
 from cmk.gui.watolib import autodiscovery as _autodiscovery
 from cmk.gui.watolib import automatic_host_removal as _automatic_host_removal
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
@@ -52,6 +53,9 @@ def register() -> None:
     _register_pages()
     _register_cronjobs()
     _register_folder_stub_validators()
+    _sync_remote_sites.register(
+        _automation_commands.automation_command_registry, _background_job.job_registry
+    )
 
 
 def _register_automation_commands() -> None:

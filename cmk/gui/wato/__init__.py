@@ -91,7 +91,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato import sync_remote_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML

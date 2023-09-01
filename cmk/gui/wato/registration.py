@@ -8,7 +8,6 @@ from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
-from cmk.gui.plugins.wato import sync_remote_sites
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -61,7 +60,6 @@ def register(
         PageAjaxDictHostTagConditionGetChoice
     )
 
-    sync_remote_sites.register(automation_command_registry, job_registry)
     filters.register(filter_registry)
     pages.register(page_registry, mode_registry)
     _permissions.register(permission_section_registry, permission_registry)

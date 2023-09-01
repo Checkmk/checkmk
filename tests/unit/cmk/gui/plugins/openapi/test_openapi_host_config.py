@@ -351,6 +351,27 @@ def test_openapi_host_update_after_move(
     )
 
 
+def test_openapi_host_move_no_contact_groups(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="folder1",
+        parent="/",
+    )
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="folder2",
+        parent="/",
+    )
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/",
+    )
+    clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+    )
+
+
 def test_openapi_bulk_hosts(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
@@ -1008,7 +1029,7 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
         fullname="user1_fullname",
         contactgroups=["test_contact_group"],
         auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
-        roles=["admin"],
+        roles=["user"],
     )
 
     clients.Folder.create(
@@ -1042,32 +1063,24 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
 
     resp.assert_status_code(403)
     assert resp.json["title"] == "Permission denied"
-    assert (
-        resp.json["detail"]
-        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder2', 'Folder2')"
-    )
+    assert resp.json["detail"] == "You lack the permissions to move host TestHost1 to ~Folder2."
 
 
 def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) -> None:
+    # Create test contact group
     clients.ContactGroup.create(
         name="test_contact_group",
         alias="cg_alias",
     )
 
-    clients.User.create(
-        username="user1",
-        fullname="user1_fullname",
-        contactgroups=["test_contact_group"],
-        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
-        roles=["admin"],
-    )
-
+    # Create folder, no contact group
     clients.Folder.create(
         folder_name="Folder1",
         title="Folder1",
         parent="/",
     )  # no contact group set
 
+    # Create folder with test contact group
     clients.Folder.create(
         folder_name="Folder2",
         title="Folder2",
@@ -1075,16 +1088,28 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
         attributes={"contactgroups": {"groups": ["test_contact_group"]}},
     )
 
+    # Create host in Folder 1, no contact group
     clients.HostConfig.create(
         host_name="TestHost1",
         folder="/Folder1",
     )
 
-    clients.HostConfig.set_credentials(
+    # Create test user with role = user
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["user"],
+    )
+
+    # Set test client's credentials to test user
+    clients.User.set_credentials(
         username="user1",
         password="asflkjas^asf@adf%5Ah!@%^sfadf",
     )
 
+    # Try to move the test host to folder2
     resp = clients.HostConfig.move(
         host_name="TestHost1",
         target_folder="/Folder2",
@@ -1093,10 +1118,7 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
 
     resp.assert_status_code(403)
     assert resp.json["title"] == "Permission denied"
-    assert (
-        resp.json["detail"]
-        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder1', 'Folder1'), Host('TestHost1')"
-    )
+    assert resp.json["detail"] == "You lack the permissions to move host TestHost1 to ~Folder2."
 
 
 def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
@@ -1127,10 +1149,9 @@ def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
         fullname="user1_fullname",
         contactgroups=["test_contact_group_1"],
         auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
-        roles=["admin"],
+        roles=["user"],
     )
 
-    # As admin api user, create a host in test_contact_group2
     clients.HostConfig.create(
         host_name="TestHost1",
         folder="/Folder1",
@@ -1143,19 +1164,32 @@ def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
         password="asflkjas^asf@adf%5Ah!@%^sfadf",
     )
 
-    # Try to move the Host
-    resp = clients.HostConfig.move(
+    # Move the Host
+    clients.HostConfig.move(
         host_name="TestHost1",
         target_folder="/Folder2",
-        expect_ok=False,
     )
 
-    resp.assert_status_code(403)
-    assert resp.json["title"] == "Permission denied"
-    assert (
-        resp.json["detail"]
-        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Host('TestHost1')"
+
+@managedtest
+def test_move_host_to_the_same_folder(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
     )
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+    )
+
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder1",
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    resp.json["title"] = "Invalid move action"
 
 
 @pytest.mark.usefixtures("custom_host_attribute")

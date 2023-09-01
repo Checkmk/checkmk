@@ -78,9 +78,45 @@ class RPNExpressionOperator:
         self._operands.extend(operands)
 
 
+# TODO transformation is not part of cre but we first have to fix all types
+@dataclass(frozen=True)
+class RPNExpressionTransformation:
+    # "percentile", {"percentile": INT}
+    # "forecast", {
+    #     "past": ...,
+    #     "future": ...,
+    #     "changepoint_prior_scale": CHOICE::[0.001, 0.01, 0.05, 0.1, 0.2,],
+    #     "seasonality_mode": CHOICE::["additive", "multiplicative"],
+    #     ""interval_width: CHOICE::[0.68, 0.86, 0.95],
+    #     "display_past": INT,
+    #     "display_model_parametrization": CHECKBOX,  # TODO
+    # }
+    # TODO Check params
+    parameters: tuple[Literal["percentile"], float] | tuple[
+        Literal["forecast"], Mapping[str, object]
+    ]
+    _operands: list[RPNExpression] = field(default_factory=list)
+
+    @property
+    def ident(self) -> Literal["transformation"]:
+        return "transformation"
+
+    @property
+    def mode(self) -> Literal["percentile", "forecast"]:
+        return self.parameters[0]
+
+    @property
+    def operands(self) -> Sequence[RPNExpression]:
+        return self._operands
+
+
 RPNExpression = (
-    RPNExpressionConstant | RPNExpressionScalar | RPNExpressionOperator | tuple
-)  # TODO: Improve this type
+    RPNExpressionConstant
+    | RPNExpressionScalar
+    | RPNExpressionOperator
+    | RPNExpressionTransformation
+    | tuple  # TODO: Improve this type
+)
 
 
 class GraphMetric(BaseModel, frozen=True):

@@ -16,7 +16,11 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
+from cmk.gui.graphing._graph_specification import (
+    GraphMetric,
+    RPNExpressionTransformation,
+    TemplateGraphSpecification,
+)
 from cmk.gui.graphing._rrd_fetch import (
     _needed_elements_of_expression,
     fetch_rrd_data_for_graph,
@@ -30,9 +34,8 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 def test_needed_elements_of_expression() -> None:
     assert set(
         _needed_elements_of_expression(
-            (
-                "transformation",
-                ("q90percentile", 95.0),
+            RPNExpressionTransformation(
+                ("percentile", 95.0),
                 [("rrd", "heute", "CPU utilization", "util", "max")],
             ),
             lambda *args: (),

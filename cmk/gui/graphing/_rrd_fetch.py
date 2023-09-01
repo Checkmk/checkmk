@@ -33,6 +33,7 @@ from ._graph_specification import (
     RPNExpressionConstant,
     RPNExpressionOperator,
     RPNExpressionScalar,
+    RPNExpressionTransformation,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._utils import (
@@ -182,7 +183,7 @@ def _needed_elements_of_expression(
             expression.service_name,
         )
 
-    elif isinstance(expression, RPNExpressionOperator):
+    elif isinstance(expression, (RPNExpressionOperator, RPNExpressionTransformation)):
         for operand in expression.operands:
             yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
 
@@ -193,10 +194,6 @@ def _needed_elements_of_expression(
             yield NeededElementForRRDDataKey(*params)
         else:
             raise TypeError(params)
-
-    elif expression[0] == "transformation":
-        for operand in expression[2]:
-            yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
 
     elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
         raw_spec = expression[1]

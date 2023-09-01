@@ -28,6 +28,7 @@ from ._graph_specification import (
     RPNExpressionConstant,
     RPNExpressionOperator,
     RPNExpressionScalar,
+    RPNExpressionTransformation,
 )
 from ._utils import (
     AugmentedTimeSeries,
@@ -86,11 +87,9 @@ def compute_graph_curves(
                 title += " - " + ts.metadata.title
 
             color = ts.metadata.color or metric.color
-            if i % 2 == 1 and (
-                isinstance(
-                    expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator)
-                )
-                or not (expression[0] == "transformation" and expression[1][0] == "forecast")
+            if i % 2 == 1 and not (
+                isinstance(expression, RPNExpressionTransformation)
+                and expression.mode == "forecast"
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 
@@ -116,7 +115,15 @@ def evaluate_time_series_expression(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator)):
+    if isinstance(
+        expression,
+        (
+            RPNExpressionConstant,
+            RPNExpressionScalar,
+            RPNExpressionOperator,
+            RPNExpressionTransformation,
+        ),
+    ):
         ident = expression.ident
     else:
         ident = expression[0]
@@ -167,7 +174,15 @@ def _expression_rrd(
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
     if (
-        isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator))
+        isinstance(
+            expression,
+            (
+                RPNExpressionConstant,
+                RPNExpressionScalar,
+                RPNExpressionOperator,
+                RPNExpressionTransformation,
+            ),
+        )
         or expression[0] != "rrd"
     ):
         raise TypeError(expression)

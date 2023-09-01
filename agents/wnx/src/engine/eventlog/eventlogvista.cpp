@@ -1,12 +1,12 @@
 #include "stdafx.h"
 
-#include "eventlogvista.h"
+#include "eventlog/eventlogvista.h"
 
 #include <algorithm>
 #include <cstdint>
 
-#include "logger.h"
 #include "tools/_misc.h"
+#include "wnx/logger.h"
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the

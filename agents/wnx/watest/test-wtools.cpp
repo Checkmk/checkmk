@@ -12,9 +12,9 @@
 
 #include "common/wtools.h"
 #include "common/wtools_user_control.h"
-#include "test_tools.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
 
 using namespace std::string_literals;
 using namespace std::chrono_literals;

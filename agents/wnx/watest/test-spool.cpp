@@ -5,11 +5,11 @@
 
 #include <filesystem>
 
-#include "cfg.h"
-#include "cma_core.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
 #include "common/cfg_info.h"
 #include "providers/spool.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
 
 namespace cma::provider {
 

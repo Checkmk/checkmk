@@ -1,15 +1,15 @@
 #include "stdafx.h"
 
-#include "carrier.h"
+#include "wnx/carrier.h"
 
 #include <fstream>
 #include <iostream>
 #include <ranges>
 
-#include "commander.h"
 #include "common/mailslot_transport.h"
-#include "logger.h"
 #include "tools/_misc.h"
+#include "wnx/commander.h"
+#include "wnx/logger.h"
 
 namespace rs = std::ranges;
 

@@ -10,9 +10,9 @@
 #include <string>
 #include <string_view>
 
-#include "cma_core.h"
+#include "wnx/cma_core.h"
 #include "providers/internal.h"
-#include "section_header.h"
+#include "wnx/section_header.h"
 
 namespace cma::provider {
 namespace config {

@@ -7,11 +7,11 @@
 #include <numeric>
 #include <ranges>
 
-#include "agent_controller.h"
-#include "cfg.h"
 #include "common/mailslot_transport.h"
-#include "test_tools.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
+#include "wnx/agent_controller.h"
+#include "wnx/cfg.h"
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;

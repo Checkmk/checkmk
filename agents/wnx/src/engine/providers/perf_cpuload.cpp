@@ -12,11 +12,11 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "cfg.h"
 #include "common/wtools.h"
 #include "providers/p_perf_counters.h"
-#include "section_header.h"
 #include "tools/_misc.h"
+#include "wnx/cfg.h"
+#include "wnx/section_header.h"
 
 #pragma comment(lib, "pdh.lib")
 

@@ -1,13 +1,13 @@
 
 #include "stdafx.h"
 
-#include "eventlogbase.h"
+#include "eventlog/eventlogbase.h"
 
 #include <fmt/core.h>
 
-#include "eventlogstd.h"
-#include "eventlogvista.h"
-#include "logger.h"
+#include "eventlog/eventlogstd.h"
+#include "eventlog/eventlogvista.h"
+#include "wnx/logger.h"
 
 namespace cma::evl {
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,

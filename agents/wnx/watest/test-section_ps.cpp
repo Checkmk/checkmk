@@ -5,11 +5,11 @@
 
 #include "pch.h"
 
-#include "cfg.h"
+#include "wnx/cfg.h"
 #include "common/wtools.h"
 #include "providers/ps.h"
-#include "service_processor.h"
-#include "test_tools.h"
+#include "wnx/service_processor.h"
+#include "watest/test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 

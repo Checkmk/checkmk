@@ -8,8 +8,8 @@
 #include <string>
 
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_raii.h"
+#include "wnx/logger.h"
 namespace cma::evl {
 std::vector<std::wstring> MessageResolver::getMessageFiles(
     LPCWSTR source) const {

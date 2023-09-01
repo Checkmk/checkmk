@@ -5,9 +5,9 @@
 
 #include <string>  // for string
 
-#include "cfg.h"
 #include "providers/mrpe.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;

@@ -1,7 +1,7 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#include "cfg.h"
+#include "wnx/cfg.h"
 
 #include <ShlObj.h>  // known path
 #include <VersionHelpers.h>
@@ -13,21 +13,21 @@
 #include <ranges>
 #include <string>
 
-#include "cap.h"
-#include "cfg_details.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/object_repo.h"
 #include "common/version.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
-#include "logger.h"
-#include "read_file.h"
 #include "tools/_misc.h"     // setenv
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_tgt.h"      // we need IsDebug
-#include "upgrade.h"
-#include "windows_service_api.h"
+#include "wnx/cap.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
+#include "wnx/read_file.h"
+#include "wnx/upgrade.h"
+#include "wnx/windows_service_api.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::string_literals;

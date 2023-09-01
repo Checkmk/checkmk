@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "windows_service_api.h"  // windows api abstracted
+#include "wnx/windows_service_api.h"  // windows api abstracted
 
 #include <shlobj_core.h>
 
@@ -9,22 +9,22 @@
 #include <iostream>  // test commands
 #include <numeric>
 
-#include "cap.h"
-#include "cfg.h"
-#include "commander.h"
 #include "common/version.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
-#include "cvt.h"
-#include "external_port.h"  // windows api abstracted
-#include "firewall.h"
-#include "install_api.h"  // install
-#include "modules.h"
-#include "realtime.h"
-#include "service_processor.h"  // cmk service implementation class
 #include "tools/_kbd.h"
 #include "tools/_process.h"
-#include "upgrade.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/commander.h"
+#include "wnx/cvt.h"
+#include "wnx/external_port.h"  // windows api abstracted
+#include "wnx/firewall.h"
+#include "wnx/install_api.h"  // install
+#include "wnx/modules.h"
+#include "wnx/realtime.h"
+#include "wnx/service_processor.h"  // cmk service implementation class
+#include "wnx/upgrade.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;

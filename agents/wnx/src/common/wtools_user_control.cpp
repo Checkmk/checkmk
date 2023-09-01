@@ -1,22 +1,17 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "wtools_user_control.h"
+#include "common/wtools_user_control.h"
 
-#include <ranges>
-// WINDOWS STUFF
-#if defined(_WIN32)
-#include <minwindef.h>
-//
 #include <lmaccess.h>
 #include <lmapibuf.h>
 #include <lmerr.h>
 
-#pragma comment(lib, "netapi32.lib")
-#endif
+#include <ranges>
 
-#include "logger.h"
-#include "winerror.h"  // for ERROR_NO_SUCH_ALIAS, ERROR_ALIAS_EXISTS, ERROR_MEMBER_IN_ALIAS
+#include "wnx/logger.h"
+
+#pragma comment(lib, "netapi32.lib")
 
 namespace rs = std::ranges;
 

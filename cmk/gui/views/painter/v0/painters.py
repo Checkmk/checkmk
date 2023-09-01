@@ -1602,7 +1602,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
 
     for f in files:
         contents.append(replace_tags(f.read_text(encoding="utf8").strip()))
-    return "", "<hr>".join(contents)
+    return "", HTML("<hr>".join(contents))
 
 
 class PainterSvcCustomNotes(Painter):

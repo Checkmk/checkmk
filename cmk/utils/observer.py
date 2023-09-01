@@ -116,8 +116,10 @@ class AbstractMemoryObserver(ABCResourceObserver):
         return new_memory_usage <= self.hard_limit()
 
     def _print_global_memory_usage(self) -> None:
+        storage = dict(globals())  # to be sure that globals will not be changed
+
         globals_sizes = {
-            varname: cmk.utils.misc.total_size(value) for (varname, value) in globals().items()
+            varname: cmk.utils.misc.total_size(value) for (varname, value) in storage.items()
         }
         self._dump("APPROXIMATE SIZES: GLOBALS TOP 50", globals_sizes, 50)
         for title, module in [

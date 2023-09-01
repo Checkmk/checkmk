@@ -57520,6 +57520,10 @@ msgstr "Acest URL nu poate fi folosit ca marcaj."
 msgid "This account has no permission for automation."
 msgstr "Acest cont nu are permisiunea de automatizare."
 
+#, fuzzy
+msgid "This action can not be performed on search results"
+msgstr "Limitarea numărului de rezultate de căutare procesate"
+
 msgid ""
 "This action invalidates the stored connection data and the host connections "
 "will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "

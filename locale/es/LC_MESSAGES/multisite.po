@@ -57467,6 +57467,10 @@ msgstr "Esta URL no puede ser utilizada como marcador"
 msgid "This account has no permission for automation."
 msgstr "Esta cuenta no tiene permiso para la automatización."
 
+#, fuzzy
+msgid "This action can not be performed on search results"
+msgstr "Limitar el número de resultados de búsqueda procesados"
+
 msgid ""
 "This action invalidates the stored connection data and the host connections "
 "will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "

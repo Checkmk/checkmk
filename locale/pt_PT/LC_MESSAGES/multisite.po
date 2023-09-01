@@ -57096,6 +57096,10 @@ msgstr "Este URL não pode ser usado como bookmark"
 msgid "This account has no permission for automation."
 msgstr "Esta conta não tem permissão para automatização."
 
+#, fuzzy
+msgid "This action can not be performed on search results"
+msgstr "Número limite de resultados de pesquisa processados"
+
 msgid ""
 "This action invalidates the stored connection data and the host connections "
 "will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "

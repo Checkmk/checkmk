@@ -56119,6 +56119,10 @@ msgstr "このURLをブックマークとして使用することはできませ
 msgid "This account has no permission for automation."
 msgstr "このアカウントには自動化の権限がありません。"
 
+#, fuzzy
+msgid "This action can not be performed on search results"
+msgstr "処理される検索結果の数を制限する"
+
 msgid ""
 "This action invalidates the stored connection data and the host connections "
 "will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "

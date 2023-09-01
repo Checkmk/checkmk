@@ -56977,6 +56977,10 @@ msgstr "Deze URL mag niet als bladwijzer gebruikt worden"
 msgid "This account has no permission for automation."
 msgstr "Deze rekening heeft geen toestemming voor automatisering."
 
+#, fuzzy
+msgid "This action can not be performed on search results"
+msgstr "Beperk het aantal verwerkte zoekresultaten"
+
 msgid ""
 "This action invalidates the stored connection data and the host connections "
 "will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "

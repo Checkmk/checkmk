@@ -144,10 +144,10 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml"
-      COMMAND: 'make --quiet test-mypy-docker'
+      COMMAND: 'make --quiet test-mypy-docker &> ${RESULTS}/python-typing.txt'
       TEXT_ON_SKIP: 'No Python files changed'
-      RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/mypy.xml"
+      RESULT_CHECK_TYPE: "MYPY"
+      RESULT_CHECK_FILE_PATTERN: "results/python-typing.txt"
 
     - NAME: 'Python Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_BLACK_SCRIPT

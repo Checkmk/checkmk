@@ -1,17 +1,19 @@
 import logging
 import os
 from pathlib import Path
-from pprint import pformat
 
 import pytest
 
 from tests.testlib.site import SiteFactory
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion
+from tests.update.conftest import (
+    BaseVersions,
+    get_host_services,
+    get_services_with_status,
+)
 
 from cmk.utils.version import Edition
-
-from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
 
@@ -37,32 +39,43 @@ def test_update_from_backup() -> None:
 
     # TODO: introduce agent installation and hosts registration
 
-    # TODO: unify data retrieval with test_update.py
     base_services = {}
+    base_ok_services = {}
     for hostname in hostnames:
-        logger.info("Retrieving services from %s host...", hostname)
-        services = []
-        for service in base_site.openapi.get_host_services(hostname, columns=["state"]):
-            services.append(service["title"])
-
-        base_services[hostname] = services
-        logger.debug("Found services: %s", pformat(base_services[hostname]))
+        base_site.schedule_check(hostname, "Check_MK")
+        base_services[hostname] = get_host_services(base_site, hostname)
+        base_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
     target_site = sf.interactive_update(base_site, target_version, min_version)
 
-    # TODO: unify data retrieval with test_update.py
     target_services = {}
+    target_ok_services = {}
     for hostname in hostnames:
-        logger.info("Retrieving services from %s host...", hostname)
-        services = []
-        for service in target_site.openapi.get_host_services(hostname, columns=["state"]):
-            services.append(service["title"])
+        target_site.schedule_check(hostname, "Check_MK")
+        target_services[hostname] = get_host_services(target_site, hostname)
+        target_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
-        target_services[hostname] = services
-        logger.debug("Found services: %s", pformat(base_services[hostname]))
+        not_found_services = [
+            service
+            for service in base_services[hostname]
+            if service not in target_services[hostname]
+        ]
 
-    for hostname in hostnames:
-        assert base_services[hostname].sort() == target_services[hostname].sort()
+        err_msg = (
+            f"In the {hostname} host the following services were found in base-version but not in "
+            f"target-version: "
+            f"{not_found_services}"
+        )
+        assert len(target_services[hostname]) >= len(base_services[hostname]), err_msg
 
-    logger.info("Removing test-site...")
-    target_site.rm()
+        not_ok_services = [
+            service
+            for service in base_ok_services[hostname]
+            if service not in target_ok_services[hostname]
+        ]
+        err_msg = (
+            f"In the {hostname} host the following services were `OK` in base-version but not in "
+            f"target-version: "
+            f"{not_ok_services}"
+        )
+        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg

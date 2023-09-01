@@ -16,6 +16,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricDefinition,
     MetricExpression,
     RPNExpression,
+    RPNExpressionConstant,
 )
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
@@ -73,10 +74,10 @@ def test_rpn_consolidation_exception(
                         "MIN",
                         [
                             ("rrd", "", "", "", "growth", "min", 12.136296296296296),
-                            ("constant", 0.0),
+                            RPNExpressionConstant(0.0),
                         ],
                     ),
-                    ("constant", -1.0),
+                    RPNExpressionConstant(-1.0),
                 ],
             ),
         ),

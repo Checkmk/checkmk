@@ -1247,12 +1247,9 @@ def metric_title(metric_name: MetricName_) -> str:
     return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
 
 
-RenderingExpression = tuple[Any, ...]
-
-
 class RenderableRecipe(NamedTuple):
     title: str
-    expression: RenderingExpression
+    expression: RPNExpression
     color: str
     line_type: LineType
     visible: bool

@@ -20,7 +20,13 @@ from cmk.utils.servicename import ServiceName
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 
-from ._graph_specification import GraphConsoldiationFunction, GraphMetric, LineType, RPNExpression
+from ._graph_specification import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    LineType,
+    RPNExpression,
+    RPNExpressionConstant,
+)
 from ._utils import (
     AugmentedTimeSeries,
     Curve,
@@ -78,8 +84,9 @@ def compute_graph_curves(
                 title += " - " + ts.metadata.title
 
             color = ts.metadata.color or metric.color
-            if i % 2 == 1 and not (
-                expression[0] == "transformation" and expression[1][0] == "forecast"
+            if i % 2 == 1 and (
+                isinstance(expression, RPNExpressionConstant)
+                or not (expression[0] == "transformation" and expression[1][0] == "forecast")
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 
@@ -105,7 +112,10 @@ def evaluate_time_series_expression(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    ident = expression[0]
+    if isinstance(expression, RPNExpressionConstant):
+        ident = expression.ident
+    else:
+        ident = expression[0]
 
     try:
         expression_func = time_series_expression_registry[ident]
@@ -131,7 +141,7 @@ def _expression_operator(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if expression[0] != "operator":
+    if isinstance(expression, RPNExpressionConstant) or expression[0] != "operator":
         raise TypeError(expression)
 
     operator_id, operands = expression[1], expression[2:]
@@ -152,7 +162,7 @@ def _expression_rrd(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if expression[0] != "rrd":
+    if isinstance(expression, RPNExpressionConstant) or expression[0] != "rrd":
         raise TypeError(expression)
 
     def _parse_cf_name(cf_name: str | None) -> GraphConsoldiationFunction | None:
@@ -186,11 +196,11 @@ def _expression_constant(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if expression[0] != "constant":
+    if not isinstance(expression, RPNExpressionConstant):
         raise TypeError(expression)
 
     num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [AugmentedTimeSeries(data=TimeSeries([expression[1]] * num_points, twindow))]
+    return [AugmentedTimeSeries(data=TimeSeries([expression.value] * num_points, twindow))]
 
 
 def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:

@@ -23,6 +23,7 @@ from ._graph_specification import (
     MetricDefinition,
     MetricExpression,
     RPNExpression,
+    RPNExpressionConstant,
     TemplateGraphSpecification,
 )
 from ._utils import (
@@ -282,14 +283,21 @@ def metric_expression_to_graph_recipe_expression(
 
         else:
             try:
-                atoms.append(("constant", float(part)))
+                atoms.append(RPNExpressionConstant(float(part)))
             except ValueError:
                 atoms.append(("operator", part))
 
+    def _apply_operator(
+        expression: RPNExpression, left: RPNExpression, right: RPNExpression
+    ) -> RPNExpression:
+        if isinstance(expression, RPNExpressionConstant) or expression[0] != "operator":
+            raise TypeError(expression)
+        return expression + ([left, right],)
+
     return stack_resolver(
         atoms,
-        is_operator=lambda x: x[0] == "operator",
-        apply_operator=lambda op, a, b: (op + ([a, b],)),
+        is_operator=lambda x: not isinstance(x, RPNExpressionConstant) and x[0] == "operator",
+        apply_operator=_apply_operator,
         apply_element=lambda x: x,
     )
 

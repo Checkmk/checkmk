@@ -30,6 +30,7 @@ from ._graph_specification import (
     GraphMetric,
     MetricDefinition,
     RPNExpression,
+    RPNExpressionConstant,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._utils import (
@@ -170,7 +171,10 @@ def _needed_elements_of_expression(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-    if expression[0] in ["rrd", "scalar"]:
+    if isinstance(expression, RPNExpressionConstant):
+        yield from ()
+
+    elif expression[0] in ["rrd", "scalar"]:
         if len(params := expression[1:]) == 4:
             yield NeededElementForTranslation(params[0], params[1])
         elif len(params) == 6:

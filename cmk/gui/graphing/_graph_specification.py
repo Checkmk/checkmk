@@ -31,14 +31,23 @@ class MetricDefinition:
     title: str = ""
 
 
-RPNExpression = tuple  # TODO: Improve this type
-
-
 @dataclass(frozen=True)
 class RPNExpressionMetric:
     value: float
     unit_info: UnitInfo
     color: str
+
+
+@dataclass(frozen=True)
+class RPNExpressionConstant:
+    value: float
+
+    @property
+    def ident(self) -> Literal["constant"]:
+        return "constant"
+
+
+RPNExpression = RPNExpressionConstant | tuple  # TODO: Improve this type
 
 
 class GraphMetric(BaseModel, frozen=True):

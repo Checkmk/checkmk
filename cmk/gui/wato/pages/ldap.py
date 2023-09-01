@@ -27,7 +27,6 @@ from cmk.gui.plugins.userdb.utils import (
     load_connection_config,
     save_connection_config,
 )
-from cmk.gui.plugins.wato.utils import MigrateNotUpdatedToIndividualOrStoredPassword
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.ldap_connector import (
@@ -65,12 +64,12 @@ from cmk.gui.wato.pages.userdb_common import (
     get_affected_sites,
     render_connections_page,
 )
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
-from cmk.gui.watolib.mode import ModeRegistry
+from ._password_store_valuespecs import MigrateNotUpdatedToIndividualOrStoredPassword
 
 
 def register(mode_registry: ModeRegistry) -> None:

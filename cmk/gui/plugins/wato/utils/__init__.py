@@ -445,23 +445,6 @@ def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     )
 
 
-def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    allow_empty: bool = True,
-    size: int = 25,
-) -> MigrateNotUpdated:
-    return MigrateNotUpdated(
-        valuespec=IndividualOrStoredPassword(
-            title=title,
-            help=help,
-            allow_empty=allow_empty,
-            size=size,
-        ),
-        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
-    )
-
-
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
 
 

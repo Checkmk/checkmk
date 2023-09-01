@@ -157,6 +157,9 @@ from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoic
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
 )
+from .pages._password_store_valuespecs import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
 from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode

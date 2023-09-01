@@ -4482,8 +4482,7 @@ class CEEConfigCache(ConfigCache):
         return self.service_extra_conf(
             hostname,
             description,
-            service_recurring_downtimes
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            service_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
     def flap_settings_of_service(
@@ -4492,18 +4491,15 @@ class CEEConfigCache(ConfigCache):
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_flap_settings,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_flap_settings,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
     def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_long_output_in_monitoring_history,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=False,
         )
 
@@ -4511,8 +4507,7 @@ class CEEConfigCache(ConfigCache):
         entries = self.service_extra_conf(
             hostname,
             description,
-            service_state_translation
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            service_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
         spec: dict = {}
@@ -4525,10 +4520,8 @@ class CEEConfigCache(ConfigCache):
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_check_timeout,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_check_timeout,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
     def graphite_metrics_of(
@@ -4543,8 +4536,7 @@ class CEEConfigCache(ConfigCache):
                 iter(
                     self.host_extra_conf(
                         hostname,
-                        cmc_graphite_host_metrics,
-                        # type: ignore[name-defined] # pylint: disable=undefined-variable
+                        cmc_graphite_host_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
                     )
                 ),
                 default,
@@ -4553,8 +4545,7 @@ class CEEConfigCache(ConfigCache):
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_graphite_service_metrics,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=default,
         )
 
@@ -4571,8 +4562,7 @@ class CEEConfigCache(ConfigCache):
         value = self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_influxdb_service_metrics,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_influxdb_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=None,
         )
         return default if value is None else value
@@ -4626,27 +4616,24 @@ class CEEHostConfig:
     def recurring_downtimes(self) -> list[RecurringDowntime]:
         return self._config_cache.host_extra_conf(
             self.hostname,
-            host_recurring_downtimes,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
     @property
     def flap_settings(self) -> tuple[float, float, float]:
         values = self._config_cache.host_extra_conf(
             self.hostname,
-            cmc_host_flap_settings
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_host_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
         return (
-            values[0] if values else cmc_flap_settings
-        )  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            values[0] if values else cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
     @property
     def log_long_output(self) -> bool:
         entries = self._config_cache.host_extra_conf(
             self.hostname,
-            cmc_host_long_output_in_monitoring_history,
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
         return entries[0] if entries else False
 
@@ -4654,8 +4641,7 @@ class CEEHostConfig:
     def state_translation(self) -> dict:
         entries = self._config_cache.host_extra_conf(
             self.hostname,
-            host_state_translation
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            host_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
         spec: dict = {}
@@ -4668,8 +4654,7 @@ class CEEHostConfig:
         settings = {"timeout": 2.5}
         settings |= self._config_cache.host_extra_conf_merged(
             self.hostname,
-            cmc_smartping_settings
-            # type: ignore[name-defined] # pylint: disable=undefined-variable
+            cmc_smartping_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
         return settings
 

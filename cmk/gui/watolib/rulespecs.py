@@ -992,6 +992,60 @@ def register_rule(
     rulespec_registry.register(base_class(**class_kwargs))
 
 
+def register_check_parameters(
+    subgroup,
+    checkgroup,
+    title,
+    valuespec,
+    itemspec,
+    match_type,
+    has_inventory=True,
+    register_static_check=True,
+    deprecated=False,
+):
+    """Legacy registration of check parameters"""
+    if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
+        raise MKGeneralException(
+            "Check parameter definition for %s has type Dictionary, but match_type %s"
+            % (checkgroup, match_type)
+        )
+
+    if not valuespec:
+        raise NotImplementedError()
+
+    # Added during 1.6 development for easier transition. Convert all legacy subgroup
+    # parameters (which are either str/unicode to group classes
+    if isinstance(subgroup, str):
+        subgroup = get_rulegroup("checkparams/" + subgroup).__class__
+
+    # Register rule for discovered checks
+    if has_inventory:
+        kwargs = {
+            "group": subgroup,
+            "title": lambda: title,
+            "match_type": match_type,
+            "is_deprecated": deprecated,
+            "parameter_valuespec": lambda: valuespec,
+            "check_group_name": checkgroup,
+            "create_manual_check": register_static_check,
+        }
+
+        if itemspec:
+            rulespec_registry.register(
+                CheckParameterRulespecWithItem(item_spec=lambda: itemspec, **kwargs)
+            )
+        else:
+            rulespec_registry.register(CheckParameterRulespecWithoutItem(**kwargs))
+
+    if not (valuespec and has_inventory) and register_static_check:
+        raise MKGeneralException(
+            "Sorry, registering manual check parameters without discovery "
+            "check parameters is not supported anymore using the old API. "
+            "Please register the manual check rulespec using the new API. "
+            "Checkgroup: %s" % checkgroup
+        )
+
+
 # NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
 # to nest ifs in a slightly ugly way.
 def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -> type[Rulespec]:

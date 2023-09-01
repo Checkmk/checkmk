@@ -105,7 +105,6 @@ from cmk.gui.plugins.wato.utils import (
     Levels,
     monitoring_macro_help,
     PredictiveLevels,
-    register_check_parameters,
     register_hook,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
@@ -118,6 +117,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersVirtualization,
     UserIconOrAction,
 )
+from cmk.gui.watolib.rulespecs import register_check_parameters as register_check_parameters
 from cmk.gui.watolib.translation import HostnameTranslation
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
@@ -222,6 +222,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         ("register_notification_parameters", register_notification_parameters),
         ("NotificationParameter", NotificationParameter),
         ("notification_parameter_registry", notification_parameter_registry),
+        ("register_check_parameters", register_check_parameters),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -259,7 +260,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "IndividualOrStoredPassword",
         "PluginCommandLine",
         "PredictiveLevels",
-        "register_check_parameters",
         "register_hook",
         "ReplicationPath",
         "RulespecGroup",

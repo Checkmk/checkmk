@@ -17,8 +17,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.wato
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
+from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
+from cmk.gui.wato import register_check_parameters
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (

@@ -1,0 +1,13 @@
+Title: custom notes: Allow html tags on custom notes for hosts and services
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1693554207
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p34
+
+This Werk enables the use of html tags in custom host and service notes. Previously, such tags were escaped and therefore it was not possible to use html content in the notes.
+

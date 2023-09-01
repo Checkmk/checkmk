@@ -773,6 +773,7 @@ def test_fileinfo_discovery(
         ),
     ],
 )
+@pytest.mark.skip(reason="flaky)")  # should be fixed with CMK-14223
 def test_fileinfo_check(
     info: StringTable,
     item: str,

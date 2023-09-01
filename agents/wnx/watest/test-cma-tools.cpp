@@ -8,6 +8,7 @@
 #include "wnx/cfg.h"
 #include "wnx/cma_core.h"
 #include "wnx/glob_match.h"
+#include "wnx/read_file.h"
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -304,21 +305,6 @@ std::pair<std::vector<char>, std::string> GetGoodTestPair() {
     return {good_input, std::string{expected_result}};
 }
 
-std::pair<std::vector<char>, std::string> GetBadTestPairMix_8_16() {
-    constexpr auto base = "ÜÖÄa\nФИФИ"sv;
-    std::wstring bad{*ToWideView({base.data(), base.size()})};
-    bad += L"\nAB";
-    auto bad_input = JoinBomLe(bad);
-    return {bad_input, std::string{base} + "\nAB"s};
-}
-std::pair<std::vector<char>, std::string> GetBadTestPairMix_8_16_8() {
-    constexpr auto base = "ÜÖÄa\nФИФИ"sv;
-    std::wstring bad{*ToWideView({base.data(), base.size()})};
-    bad += L"\nAB\n";
-    auto bad_input = JoinBomLe(bad);
-    bad_input.append_range(base);
-    return {bad_input, std::string{base} + "\nAB\n"s + std::string{base}};
-}
 std::pair<std::vector<char>, std::string> GetBadTestPairMix_Odd_16_Odd() {
     std::vector<char> bad{
         '\xFF', '\xFE',             //
@@ -328,7 +314,7 @@ std::pair<std::vector<char>, std::string> GetBadTestPairMix_Odd_16_Odd() {
         '\x0A', '\0',               // \n
         'A',    'B',    'C',        // "ABC"
     };
-    return {bad, std::string{"\nAB\n"s}};
+    return {bad, std::string{"ABC\nAB\nABC"s}};
 }
 TEST(CmaTools, ConvertUtfDataGood) {
     const auto [good, expected] = GetGoodTestPair();
@@ -336,25 +322,30 @@ TEST(CmaTools, ConvertUtfDataGood) {
     EXPECT_EQ(ConvertUtfData(good, repair_by_line), expected);
 }
 
-TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_8_16) {
-    const auto [bad_input, expected] = GetBadTestPairMix_8_16();
-
-    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
-    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
-}
-
-TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_8_16_8) {
-    const auto [bad_input, expected] = GetBadTestPairMix_8_16_8();
-
-    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
-    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
-}
-
 TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_Odd_16_Odd) {
     const auto [bad_input, expected] = GetBadTestPairMix_Odd_16_Odd();
 
     EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
     EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
+}
+
+auto GetBadUtfMix() -> std::vector<char> {
+    const auto file_data = ReadFileInVector(tst::MakePathToUnitTestFiles() /
+                                            "utf_16_mix_16_8_16.txt");
+    const auto raw_data = reinterpret_cast<const char *>(file_data->data());
+    return {raw_data, raw_data + file_data->size()};
+}
+
+// Special test to check repairing of UTF
+TEST(CmaTools, ConvertUtfDataUsingUtfMixIntegration) {
+    // consists from UTF0-16 UTF-8 mix
+    const auto data = GetBadUtfMix();
+    ASSERT_FALSE(data.empty());
+    const auto converted_1 = ConvertUtfData(data, basic);
+    EXPECT_TRUE(converted_1.empty());
+    const auto converted_2 = ConvertUtfData(data, repair_by_line);
+    EXPECT_EQ(converted_2.size(), 270U);
+    XLOG::l("{}", converted_2);
 }
 
 namespace win {

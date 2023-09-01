@@ -702,12 +702,6 @@ DisassembleView DisassembleString(std::string_view s) {
     return {.s = {s.data(), sz}, .has_cr = has_cr, .has_lf = has_lf};
 }
 
-bool IsLikelyUtf8(std::string_view s) {
-    return s.size() >= 10 &&  // string to be long enough short to be sure
-           ::MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, s.data(),
-                                 static_cast<int>(s.size()), nullptr, 0) != 0;
-}
-
 void AppendDisassembledTail(std::string &data,
                             const DisassembleView &disassembled) {
     if (disassembled.has_cr) {
@@ -732,17 +726,13 @@ std::string ConvertWithRepair(std::string_view data_block) {
         data.reserve(data_block.size());
         tools::ScanView(data_block.substr(2), LF_16, [&data](auto s) {
             auto disassembled = DisassembleString(s);
-            if (IsLikelyUtf8(disassembled.s)) {
-                AppendDisassembled(data, disassembled);
-            } else {
-                if (const auto wide_string = tools::ToWideView(s);
-                    wide_string) {
-                    data += wtools::ToUtf8(*wide_string);
-                } else {
-                    XLOG::t("Invalid UTF-8 string '{}' -> skip", s);
-                    AppendDisassembledTail(data, disassembled);
+            if (const auto wide_string = tools::ToWideView(s); wide_string) {
+                if (auto utf8 = wtools::ToUtf8(*wide_string); !utf8.empty()) {
+                    data += utf8;
+                    return;
                 }
             }
+            AppendDisassembled(data, disassembled);
         });
     } else {
         data.assign(data_block.begin(), data_block.end());
@@ -765,6 +755,13 @@ std::string ConvertUtfData(const std::vector<char> &data_block,
                            tools::UtfConversionMode mode) {
     switch (mode) {
         case tools::UtfConversionMode::basic:
+            if (data_block.size() % 2 == 1) {
+                XLOG::d(
+                    "UTF-16 string has odd length, cut last char try repair option");
+                return wtools::ConditionallyConvertFromUtf16(std::vector<char>(
+                    data_block.data(),
+                    data_block.data() + data_block.size() - 1));
+            }
             return wtools::ConditionallyConvertFromUtf16(data_block);
         case tools::UtfConversionMode::repair_by_line:
             return ConvertWithRepair(tools::ToView(data_block));

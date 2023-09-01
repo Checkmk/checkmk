@@ -1,0 +1,15 @@
+Title: hosts: fix permission checking for moving hosts to other folders
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1693580903
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue that was introduced recently with regards to
+moving hosts to other folders.  Permission checking was mistakingly
+carried out by checking for the correct contact groups on the host,
+source folder and target folder.  This is no longer the case.
+

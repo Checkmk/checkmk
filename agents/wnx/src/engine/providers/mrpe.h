@@ -12,9 +12,9 @@
 #include <string_view>
 #include <utility>
 
-#include "wnx/cma_core.h"
+#include "cma_core.h"
 #include "providers/internal.h"
-#include "wnx/section_header.h"
+#include "section_header.h"
 
 namespace cma::provider {
 constexpr bool kParallelMrpe{false};

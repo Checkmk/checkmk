@@ -5,11 +5,11 @@
 
 #include <vector>
 
-#include "wnx/cma_core.h"
+#include "cma_core.h"
 #include "common/wtools.h"
 #include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
-#include "watest/test_tools.h"
+#include "test_tools.h"
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 

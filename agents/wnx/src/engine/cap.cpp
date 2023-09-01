@@ -2,20 +2,20 @@
 
 #include "stdafx.h"
 
-#include "wnx/cap.h"
+#include "cap.h"
 
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <string>
 
+#include "cfg.h"
+#include "cma_core.h"
 #include "common/cma_yml.h"
 #include "common/yaml.h"
+#include "logger.h"
 #include "tools/_win.h"
-#include "wnx/cfg.h"
-#include "wnx/cma_core.h"
-#include "wnx/logger.h"
-#include "wnx/upgrade.h"
+#include "upgrade.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::chrono_literals;

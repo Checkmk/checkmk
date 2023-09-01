@@ -13,7 +13,7 @@
 #include <string_view>
 
 #include "common/yaml.h"
-#include "wnx/logger.h"
+#include "logger.h"
 namespace cma::yml {
 void LogException(const std::string &format, std::string_view group,
                   std::string_view name, const std::exception &e);

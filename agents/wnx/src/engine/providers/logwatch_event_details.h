@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "wnx/cma_core.h"
+#include "cma_core.h"
 #include "providers/logwatch_event.h"
 
 namespace cma::provider::details {

@@ -5,12 +5,12 @@
 
 #include <thread>
 
+#include "asio.h"
+#include "cfg.h"
 #include "common/cfg_info.h"
+#include "realtime.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
-#include "wnx/asio.h"
-#include "wnx/cfg.h"
-#include "wnx/realtime.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view str) {

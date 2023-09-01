@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "common/wtools.h"
-#include "wnx/logger.h"
+#include "logger.h"
 
 #if (__SIZEOF_POINTER__ == 8 || defined(_WIN64))
 #define PRIdword "d"

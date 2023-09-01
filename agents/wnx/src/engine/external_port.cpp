@@ -1,17 +1,17 @@
 #include "stdafx.h"
 
-#include "wnx/external_port.h"
+#include "external_port.h"
 
 #include <chrono>
 #include <filesystem>
 #include <iostream>
 
+#include "agent_controller.h"
+#include "asio.h"
+#include "cfg.h"
 #include "common/mailslot_transport.h"
-#include "wnx/agent_controller.h"
-#include "wnx/asio.h"
-#include "wnx/cfg.h"
-#include "wnx/encryption.h"
-#include "wnx/realtime.h"
+#include "encryption.h"
+#include "realtime.h"
 
 using asio::ip::tcp;
 using namespace std::chrono_literals;

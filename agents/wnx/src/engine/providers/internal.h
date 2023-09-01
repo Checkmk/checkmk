@@ -15,9 +15,9 @@
 #include <string>
 #include <string_view>
 
-#include "wnx/carrier.h"
+#include "carrier.h"
 #include "common/stop_watch.h"
-#include "wnx/section_header.h"
+#include "section_header.h"
 
 namespace cma::srv {
 class ServiceProcessor;

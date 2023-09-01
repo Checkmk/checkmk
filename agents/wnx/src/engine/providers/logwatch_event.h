@@ -14,11 +14,11 @@
 #include <string_view>
 #include <utility>
 
-#include "wnx/cfg_engine.h"
+#include "cfg_engine.h"
 #include "common/cfg_info.h"
 #include "eventlog/eventlogbase.h"
 #include "providers/internal.h"
-#include "wnx/section_header.h"
+#include "section_header.h"
 
 namespace cma::provider {
 constexpr std::string_view kLogWatchEventStateFileName{"eventstate"};

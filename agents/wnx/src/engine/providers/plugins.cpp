@@ -15,11 +15,11 @@
 #include <string_view>
 #include <vector>
 
+#include "cfg.h"
+#include "cma_core.h"
 #include "common/wtools.h"
-#include "wnx/cfg.h"
-#include "wnx/cma_core.h"
-#include "wnx/logger.h"
-#include "wnx/service_processor.h"
+#include "logger.h"
+#include "service_processor.h"
 
 using namespace std::literals;
 namespace vs = std::views;

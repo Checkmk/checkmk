@@ -10,9 +10,9 @@
 #include <filesystem>
 #include <fstream>
 
+#include "cfg.h"
 #include "common/wtools.h"
 #include "tools/_misc.h"
-#include "wnx/cfg.h"
 namespace fs = std::filesystem;
 using namespace std::string_literals;
 

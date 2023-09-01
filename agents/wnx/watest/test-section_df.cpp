@@ -5,7 +5,7 @@
 
 #include <ranges>
 
-#include "wnx/cfg.h"
+#include "cfg.h"
 #include "common/wtools.h"
 #include "providers/df.h"
 namespace rs = std::ranges;

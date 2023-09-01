@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "wnx/extensions.h"
+#include "extensions.h"
 
 #include <filesystem>
 #include <set>
@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "common/cfg_yaml.h"
+#include "logger.h"
 #include "tools/_process.h"
-#include "wnx/logger.h"
 
 namespace fs = std::filesystem;
 using namespace std::string_literals;

@@ -10,10 +10,10 @@
 #include <filesystem>
 #include <iterator>
 
-#include "watest/test_tools.h"
-#include "wnx/cfg.h"
-#include "wnx/cfg_details.h"
-#include "wnx/modules.h"
+#include "cfg.h"
+#include "cfg_details.h"
+#include "modules.h"
+#include "test_tools.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;

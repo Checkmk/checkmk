@@ -4,13 +4,13 @@
 #include "pch.h"
 
 #include "common/wtools.h"
-#include "wnx/firewall.h"
-#include "wnx/service_processor.h"
-#include "watest/test_tools.h"
+#include "firewall.h"
+#include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "wnx/windows_service_api.h"
+#include "windows_service_api.h"
 
 using namespace std::chrono_literals;
 

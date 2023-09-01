@@ -5,10 +5,10 @@
 
 #include "stdafx.h"
 
-#include "wnx/onlyfrom.h"
+#include "onlyfrom.h"
 
 //
-#include "wnx/asio.h"
+#include "asio.h"
 //
 #include <asio/ip/address_v4.hpp>
 #include <asio/ip/address_v6.hpp>
@@ -17,8 +17,8 @@
 #include <string>
 #include <string_view>
 
-#include "wnx/cfg.h"
-#include "wnx/logger.h"
+#include "cfg.h"
+#include "logger.h"
 
 namespace cma::cfg::of {
 

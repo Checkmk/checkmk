@@ -8,10 +8,10 @@
 #include <string>
 #include <string_view>
 
+#include "cfg.h"
+#include "cma_core.h"
+#include "logger.h"
 #include "tools/_process.h"
-#include "wnx/cfg.h"
-#include "wnx/cma_core.h"
-#include "wnx/logger.h"
 
 namespace fs = std::filesystem;
 

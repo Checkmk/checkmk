@@ -1,14 +1,14 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "common/wtools_service.h"
+#include "wtools_service.h"
 
 #include <cstdint>
 #include <vector>
 
+#include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_win.h"
-#include "wnx/logger.h"
 
 namespace wtools {
 

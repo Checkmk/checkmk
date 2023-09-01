@@ -4,8 +4,8 @@
 //
 #include "pch.h"
 
-#include "watest/test_tools.h"
-#include "wnx/extensions.h"
+#include "extensions.h"
+#include "test_tools.h"
 
 namespace cma::cfg::extensions {
 

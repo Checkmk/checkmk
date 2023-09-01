@@ -5,12 +5,12 @@
 
 #include "stdafx.h"
 
-#include "wnx/commander.h"
+#include "commander.h"
 
 #include <string_view>
 
-#include "wnx/cfg.h"
-#include "wnx/logger.h"
+#include "cfg.h"
+#include "logger.h"
 
 namespace cma::commander {
 

@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "wnx/upgrade.h"
+#include "upgrade.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -9,16 +9,16 @@
 #include <optional>
 #include <string>
 
+#include "cfg_details.h"
+#include "cvt.h"
+#include "glob_match.h"
+#include "install_api.h"
+#include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-#include "wnx/cfg_details.h"
-#include "wnx/cvt.h"
-#include "wnx/glob_match.h"
-#include "wnx/install_api.h"
-#include "wnx/logger.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 

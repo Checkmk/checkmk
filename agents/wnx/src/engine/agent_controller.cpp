@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 
-#include "wnx/agent_controller.h"
+#include "agent_controller.h"
 
 #include <VersionHelpers.h>
 
@@ -10,13 +10,13 @@
 #include <iosfwd>
 #include <ranges>
 
+#include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/cfg_yaml.h"
 #include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "wnx/cfg.h"
-#include "wnx/read_file.h"
+#include "read_file.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;

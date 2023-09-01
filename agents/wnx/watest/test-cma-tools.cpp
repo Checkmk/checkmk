@@ -3,11 +3,11 @@
 
 #include "pch.h"
 
-#include "watest/test-utf-names.h"
-#include "watest/test_tools.h"
-#include "wnx/cfg.h"
-#include "wnx/cma_core.h"
-#include "wnx/glob_match.h"
+#include "cfg.h"
+#include "cma_core.h"
+#include "glob_match.h"
+#include "test-utf-names.h"
+#include "test_tools.h"
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;

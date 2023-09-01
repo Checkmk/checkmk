@@ -3,8 +3,8 @@
 
 #include "pch.h"
 
-#include "wnx/cfg.h"
-#include "wnx/cma_core.h"
+#include "cfg.h"
+#include "cma_core.h"
 
 namespace cma {
 extern std::unordered_map<std::wstring, wtools::InternalUser> g_users;

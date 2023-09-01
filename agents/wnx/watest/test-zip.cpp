@@ -7,8 +7,8 @@
 
 #include <filesystem>
 
-#include "watest/test_tools.h"
-#include "wnx/zip.h"
+#include "test_tools.h"
+#include "zip.h"
 namespace fs = std::filesystem;
 
 namespace cma::tools::zip {

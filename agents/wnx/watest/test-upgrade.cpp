@@ -6,14 +6,14 @@
 
 #include <filesystem>
 
-#include "wnx/cap.h"
-#include "wnx/cfg.h"
-#include "wnx/read_file.h"
-#include "watest/test_tools.h"
+#include "cap.h"
+#include "cfg.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "wnx/upgrade.h"
+#include "upgrade.h"
 
 namespace fs = std::filesystem;
 

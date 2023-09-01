@@ -6,18 +6,18 @@
 #include <filesystem>
 #include <ranges>
 
+#include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
 #include "providers/mrpe.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "watest/test_tools.h"
-#include "wnx/cfg.h"
-#include "wnx/cfg_details.h"
-#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;

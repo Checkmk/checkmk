@@ -1,16 +1,16 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#include "wnx/on_start.h"
+#include "on_start.h"
 
 #include <atomic>
 #include <string>
 
+#include "cfg.h"
+#include "cfg_details.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
-#include "wnx/cfg.h"
-#include "wnx/cfg_details.h"
-#include "wnx/cma_core.h"
-#include "wnx/windows_service_api.h"
+#include "windows_service_api.h"
 
 namespace fs = std::filesystem;
 

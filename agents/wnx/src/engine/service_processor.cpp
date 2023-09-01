@@ -1,8 +1,9 @@
 
 #include "stdafx.h"
 
-#include "wnx/service_processor.h"
+#include "service_processor.h"
 
+#include <cfg_details.h>
 #include <fcntl.h>
 #include <io.h>
 #include <sensapi.h>
@@ -11,24 +12,23 @@
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
+#include "agent_controller.h"
+#include "cap.h"
+#include "commander.h"
 #include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
 #include "common/yaml.h"
+#include "extensions.h"
+#include "external_port.h"
+#include "firewall.h"
+#include "install_api.h"
 #include "providers/perf_counters_cl.h"
+#include "realtime.h"
 #include "tools/_process.h"
-#include "wnx/agent_controller.h"
-#include "wnx/cap.h"
-#include "wnx/cfg_details.h"
-#include "wnx/commander.h"
-#include "wnx/extensions.h"
-#include "wnx/external_port.h"
-#include "wnx/firewall.h"
-#include "wnx/install_api.h"
-#include "wnx/realtime.h"
-#include "wnx/upgrade.h"
-#include "wnx/windows_service_api.h"
+#include "upgrade.h"
+#include "windows_service_api.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;

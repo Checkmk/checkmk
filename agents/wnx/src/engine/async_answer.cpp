@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "wnx/async_answer.h"
+#include "async_answer.h"
 
 #include <chrono>
 #include <cstdint>
@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "common/cfg_info.h"
-#include "wnx/logger.h"
-#include "wnx/section_header.h"       // names
-#include "wnx/windows_service_api.h"  // global situation
+#include "logger.h"
+#include "section_header.h"       // names
+#include "windows_service_api.h"  // global situation
 
 using std::chrono::milliseconds;
 using std::chrono::steady_clock;

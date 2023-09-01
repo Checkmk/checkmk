@@ -4,21 +4,21 @@
 // source code package.
 
 #pragma once
-#ifndef SERVICES_H
-#define SERVICES_H
+#ifndef SYSTEM_TIME_H
+#define SYSTEM_TIME_H
 
 #include <string>
 
 #include "providers/internal.h"
-#include "wnx/section_header.h"
+#include "section_header.h"
 
 namespace cma::provider {
 
-class Services final : public Asynchronous {
+class SystemTime final : public Synchronous {
 public:
-    Services() : Asynchronous(cma::section::kServices) {}
-    Services(const std::string &name, char separator)
-        : Asynchronous(name, separator) {}
+    SystemTime() : Synchronous(section::kSystemTime) {}
+    SystemTime(const std::string &name, char separator)
+        : Synchronous(name, separator) {}
 
 private:
     std::string makeBody() override;
@@ -26,4 +26,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // SERVICES_H
+#endif  // SYSTEM_TIME_H

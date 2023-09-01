@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "wnx/zip.h"
+#include "zip.h"
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -18,8 +18,8 @@
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
+#include "logger.h"
 #include "tools/_process.h"
-#include "wnx/logger.h"
 namespace fs = std::filesystem;
 
 namespace cma::tools::zip {

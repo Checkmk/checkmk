@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "wnx/cfg.h"
+#include "cfg.h"
 #include "providers/check_mk.h"
 
 namespace cma::provider {

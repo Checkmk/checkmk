@@ -5,11 +5,11 @@
 
 #include <ranges>
 
+#include "cma_core.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
-#include "watest/test_tools.h"
-#include "wnx/cma_core.h"
-#include "wnx/windows_service_api.h"
+#include "test_tools.h"
+#include "windows_service_api.h"
 
 using namespace std::string_literals;
 

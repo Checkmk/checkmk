@@ -1,9 +1,10 @@
 #include "stdafx.h"
 
-#include "wnx/logger.h"
+#include "logger.h"
 
+#include "cfg.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
-#include "wnx/cma_core.h"
 namespace fs = std::filesystem;
 
 namespace XLOG {

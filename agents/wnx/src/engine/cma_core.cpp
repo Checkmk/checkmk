@@ -2,7 +2,7 @@
 //
 #include "stdafx.h"
 
-#include "wnx/cma_core.h"
+#include "cma_core.h"
 
 #include <chrono>
 #include <ctime>
@@ -15,11 +15,11 @@
 #include <vector>
 
 #include "common/wtools.h"
+#include "glob_match.h"
+#include "section_header.h"  // we have logging here
+#include "service_processor.h"
 #include "tools/_misc.h"
-#include "wnx/glob_match.h"
-#include "wnx/section_header.h"  // we have logging here
-#include "wnx/service_processor.h"
-#include "wnx/windows_service_api.h"
+#include "windows_service_api.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;

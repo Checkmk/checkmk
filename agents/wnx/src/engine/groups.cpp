@@ -7,12 +7,12 @@
 #include <ranges>
 #include <string>
 
+#include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
 #include "tools/_tgt.h"  // we need IsDebug
-#include "wnx/cfg.h"
-#include "wnx/cfg_details.h"
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;

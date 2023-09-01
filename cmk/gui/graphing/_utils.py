@@ -68,6 +68,7 @@ from ._graph_specification import (
     MetricExpression,
     RPNExpression,
     RPNExpressionMetric,
+    RPNExpressionRRDChoice,
 )
 
 LegacyPerfometer = tuple[str, Any]
@@ -1263,11 +1264,25 @@ def metric_recipe_and_unit(
     line_type: LineType = "stack",
     visible: bool = True,
 ) -> tuple[RenderableRecipe, str]:
+    def _parse_consolidation_func_name(name: str) -> GraphConsoldiationFunction:
+        if name == "max":
+            return "max"
+        if name == "min":
+            return "min"
+        if name == "average":
+            return "average"
+        raise ValueError(name)
+
     mi = metric_info.get(metric_name, {})
     return (
         RenderableRecipe(
             title=metric_title(metric_name),
-            expression=("rrd", host_name, service_description, metric_name, consolidation_function),
+            expression=RPNExpressionRRDChoice(
+                HostName(host_name),
+                service_description,
+                metric_name,
+                _parse_consolidation_func_name(consolidation_function),
+            ),
             color=parse_color_into_hexrgb(mi.get("color", _get_next_random_palette_color())),
             line_type=line_type,
             visible=visible,

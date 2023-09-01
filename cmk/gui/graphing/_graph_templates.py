@@ -22,9 +22,9 @@ from ._graph_specification import (
     GraphMetric,
     MetricDefinition,
     MetricExpression,
-    RPNExpression,
     RPNExpressionConstant,
     RPNExpressionOperator,
+    RPNExpressionRRD,
     TemplateGraphSpecification,
 )
 from ._utils import (
@@ -244,7 +244,7 @@ def metric_expression_to_graph_recipe_expression(
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> RPNExpression:
+) -> RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant:
     """Convert 'user,util,+,2,*' into this:
 
         ('operator',
@@ -256,12 +256,9 @@ def metric_expression_to_graph_recipe_expression(
                 u'heute',
                 u'CPU utilization',
     ...."""
-    rrd_base_element = (
-        "rrd",
-        lq_row["site"],
-        lq_row["host_name"],
-        lq_row.get("service_description", "_HOST_"),
-    )
+    site_id = lq_row["site"]
+    host_name = lq_row["host_name"]
+    service_name = lq_row.get("service_description", "_HOST_")
 
     def _parse_operator(part: str) -> RPNExpressionOperator:
         if part == "+":
@@ -283,7 +280,7 @@ def metric_expression_to_graph_recipe_expression(
         raise ValueError(part)
 
     expression = split_expression(expression)[0]
-    atoms: list[RPNExpression] = []
+    atoms: list[RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant] = []
     # Break the RPN into parts and translate each part separately
     for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
         # Some parts are operators. We leave them. We are just interested in
@@ -297,7 +294,16 @@ def metric_expression_to_graph_recipe_expression(
             # of the df check. So the CMC could not really distinguish this from
             # the RPN operator /.
             for metric_name, scale in zip(metric_names, tme["scale"]):
-                atoms.append(rrd_base_element + (pnp_cleanup(metric_name), cf, scale))
+                atoms.append(
+                    RPNExpressionRRD(
+                        site_id,
+                        host_name,
+                        service_name,
+                        pnp_cleanup(metric_name),
+                        cf,
+                        scale,
+                    )
+                )
             if len(metric_names) > 1:
                 atoms.append(RPNExpressionOperator("MERGE"))
 
@@ -308,8 +314,10 @@ def metric_expression_to_graph_recipe_expression(
                 atoms.append(_parse_operator(part))
 
     def _apply_operator(
-        expression: RPNExpression, left: RPNExpression, right: RPNExpression
-    ) -> RPNExpression:
+        expression: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
+        left: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
+        right: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
+    ) -> RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant:
         if not isinstance(expression, RPNExpressionOperator):
             raise TypeError(expression)
         expression.add_operands([left, right])

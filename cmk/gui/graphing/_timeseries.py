@@ -9,24 +9,21 @@ from collections.abc import Callable, Sequence
 from itertools import chain
 from typing import assert_never, Literal, TypeVar
 
-from livestatus import SiteId
-
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
-from cmk.utils.servicename import ServiceName
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 
 from ._graph_specification import (
-    GraphConsoldiationFunction,
     GraphMetric,
     LineType,
     RPNExpression,
     RPNExpressionConstant,
     RPNExpressionOperator,
+    RPNExpressionRRD,
+    RPNExpressionRRDChoice,
     RPNExpressionScalar,
     RPNExpressionTransformation,
 )
@@ -121,6 +118,8 @@ def evaluate_time_series_expression(
             RPNExpressionConstant,
             RPNExpressionScalar,
             RPNExpressionOperator,
+            RPNExpressionRRDChoice,
+            RPNExpressionRRD,
             RPNExpressionTransformation,
         ),
     ):
@@ -173,39 +172,17 @@ def _expression_rrd(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if (
-        isinstance(
-            expression,
-            (
-                RPNExpressionConstant,
-                RPNExpressionScalar,
-                RPNExpressionOperator,
-                RPNExpressionTransformation,
-            ),
-        )
-        or expression[0] != "rrd"
-    ):
+    if not isinstance(expression, RPNExpressionRRD):
         raise TypeError(expression)
-
-    def _parse_cf_name(cf_name: str | None) -> GraphConsoldiationFunction | None:
-        if cf_name is None:
-            return None
-        if cf_name == "max":
-            return "max"
-        if cf_name == "min":
-            return "min"
-        if cf_name == "average":
-            return "average"
-        raise ValueError(cf_name)
 
     if (
         key := (
-            SiteId(expression[1]),
-            HostName(expression[2]),
-            ServiceName(expression[3]),
-            str(expression[4]),
-            _parse_cf_name(expression[5]),
-            float(expression[6]),
+            expression.site_id,
+            expression.host_name,
+            expression.service_name,
+            expression.metric_name,
+            expression.consolidation_func_name,
+            expression.scale,
         )
     ) in rrd_data:
         return [AugmentedTimeSeries(data=rrd_data[key])]

@@ -7,7 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
+from livestatus import SiteId
+
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.graphing._graph_specification import (
@@ -18,6 +21,7 @@ from cmk.gui.graphing._graph_specification import (
     RPNExpression,
     RPNExpressionConstant,
     RPNExpressionOperator,
+    RPNExpressionRRD,
 )
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
@@ -58,8 +62,8 @@ def test_rpn_consolidation_exception(
             RPNExpressionOperator(
                 "-",
                 [
-                    ("rrd", "", "", "", "fs_size", None, 1048576),
-                    ("rrd", "", "", "", "_", None, 1048576),
+                    RPNExpressionRRD(SiteId(""), HostName(""), "", "fs_size", None, 1048576),
+                    RPNExpressionRRD(SiteId(""), HostName(""), "", "_", None, 1048576),
                 ],
             ),
         ),
@@ -71,7 +75,9 @@ def test_rpn_consolidation_exception(
                     RPNExpressionOperator(
                         "MIN",
                         [
-                            ("rrd", "", "", "", "growth", "min", 12.136296296296296),
+                            RPNExpressionRRD(
+                                SiteId(""), HostName(""), "", "growth", "min", 12.136296296296296
+                            ),
                             RPNExpressionConstant(0.0),
                         ],
                     ),
@@ -132,7 +138,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#00ffc6",
                 title="Used space",
                 line_type="area",
-                expression=("rrd", "", "", "", "_", "max", 1048576),
+                expression=RPNExpressionRRD(SiteId(""), HostName(""), "", "_", "max", 1048576),
                 visible=True,
             ),
             GraphMetric(
@@ -143,8 +149,8 @@ def test_create_graph_recipe_from_template() -> None:
                 expression=RPNExpressionOperator(
                     "-",
                     [
-                        ("rrd", "", "", "", "fs_size", "max", 1048576),
-                        ("rrd", "", "", "", "_", "max", 1048576),
+                        RPNExpressionRRD(SiteId(""), HostName(""), "", "fs_size", "max", 1048576),
+                        RPNExpressionRRD(SiteId(""), HostName(""), "", "_", "max", 1048576),
                     ],
                 ),
                 visible=True,
@@ -154,7 +160,9 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#006040",
                 title="Total size",
                 line_type="line",
-                expression=("rrd", "", "", "", "fs_size", "max", 1048576),
+                expression=RPNExpressionRRD(
+                    SiteId(""), HostName(""), "", "fs_size", "max", 1048576
+                ),
                 visible=True,
             ),
         ],

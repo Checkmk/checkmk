@@ -78,6 +78,32 @@ class RPNExpressionOperator:
         self._operands.extend(operands)
 
 
+@dataclass(frozen=True)
+class RPNExpressionRRDChoice:
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    consolidation_func_name: GraphConsoldiationFunction | None
+
+    @property
+    def ident(self) -> Literal["rrd_choice"]:
+        return "rrd_choice"
+
+
+@dataclass(frozen=True)
+class RPNExpressionRRD:
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    consolidation_func_name: GraphConsoldiationFunction | None
+    scale: float
+
+    @property
+    def ident(self) -> Literal["rrd"]:
+        return "rrd"
+
+
 # TODO transformation is not part of cre but we first have to fix all types
 @dataclass(frozen=True)
 class RPNExpressionTransformation:
@@ -114,6 +140,8 @@ RPNExpression = (
     RPNExpressionConstant
     | RPNExpressionScalar
     | RPNExpressionOperator
+    | RPNExpressionRRDChoice
+    | RPNExpressionRRD
     | RPNExpressionTransformation
     | tuple  # TODO: Improve this type
 )

@@ -32,6 +32,8 @@ from ._graph_specification import (
     RPNExpression,
     RPNExpressionConstant,
     RPNExpressionOperator,
+    RPNExpressionRRD,
+    RPNExpressionRRDChoice,
     RPNExpressionScalar,
     RPNExpressionTransformation,
 )
@@ -177,7 +179,7 @@ def _needed_elements_of_expression(
     if isinstance(expression, RPNExpressionConstant):
         yield from ()
 
-    elif isinstance(expression, RPNExpressionScalar):
+    elif isinstance(expression, (RPNExpressionScalar, RPNExpressionRRDChoice)):
         yield NeededElementForTranslation(
             expression.host_name,
             expression.service_name,
@@ -187,13 +189,15 @@ def _needed_elements_of_expression(
         for operand in expression.operands:
             yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
 
-    elif expression[0] == "rrd":
-        if len(params := expression[1:]) == 4:
-            yield NeededElementForTranslation(params[0], params[1])
-        elif len(params) == 6:
-            yield NeededElementForRRDDataKey(*params)
-        else:
-            raise TypeError(params)
+    elif isinstance(expression, RPNExpressionRRD):
+        yield NeededElementForRRDDataKey(
+            expression.site_id,
+            expression.host_name,
+            expression.service_name,
+            expression.metric_name,
+            expression.consolidation_func_name,
+            expression.scale,
+        )
 
     elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
         raw_spec = expression[1]

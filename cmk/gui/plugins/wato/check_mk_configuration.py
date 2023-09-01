@@ -79,6 +79,7 @@ from cmk.gui.valuespec import (
     NetworkPort,
     Optional,
     PasswordSpec,
+    Percentage,
     RegExp,
     TextInput,
     Transform,
@@ -2376,7 +2377,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableUserIdleTimeout(ConfigVariable):
+class ConfigVariableSessionManagement(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
@@ -2384,22 +2385,59 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
         return ConfigDomainGUI
 
     def ident(self) -> str:
-        return "user_idle_timeout"
+        return "session_mgmt"
 
     def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=vs_idle_timeout_duration(),
-            title=_("Login session idle timeout"),
-            label=_("Enable a login session idle timeout"),
+        return Dictionary(
+            title=_("Session management"),
             help=_(
-                "Normally a user login session is valid until the password is changed or "
-                "the user is locked. By enabling this option, you can apply a time limit "
-                "to login sessions which is applied when the user stops interacting with "
-                "the GUI for a given amount of time. When a user is exceeding the configured "
-                "maximum idle time, the user will be logged out and redirected to the login "
-                "screen to renew the login session. This setting can be overridden for each "
-                "user individually in the profile of the users."
+                "TBA",
             ),
+            elements=[
+                (
+                    "max_duration",
+                    Dictionary(
+                        title=_("Maximum session duration"),
+                        help=_(
+                            "TBA",
+                        ),
+                        elements=[
+                            (
+                                "enforce_reauth",
+                                Age(
+                                    title=_("Enforce re-authentication after:"),
+                                    display=["minutes", "hours", "days"],
+                                    minvalue=60,
+                                    help=_(
+                                        "TBA",
+                                    ),
+                                    default_value=86400,
+                                ),
+                            ),
+                            (
+                                "force_authuser",
+                                Percentage(
+                                    title=_(
+                                        "Prevent data loss of forms by forcing re-authentication after"
+                                    ),
+                                    help=_(
+                                        "TBA",
+                                    ),
+                                    allow_int=True,
+                                    unit="% of the time",
+                                    default_value=50,
+                                ),
+                            ),
+                        ],
+                        required_keys=["enforce_reauth"],
+                    ),
+                ),
+                (
+                    "user_idle_timeout",
+                    vs_idle_timeout_duration(),
+                ),
+            ],
+            optional_keys=["max_duration", "user_idle_timeout"],
         )
 
 

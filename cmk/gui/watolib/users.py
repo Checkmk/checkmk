@@ -257,6 +257,15 @@ def vs_idle_timeout_duration() -> Age:
         title=_("Set an individual idle timeout"),
         display=["minutes", "hours", "days"],
         minvalue=60,
+        help=_(
+            "Normally a user login session is valid until the password is changed or "
+            "the user is locked. By enabling this option, you can apply a time limit "
+            "to login sessions which is applied when the user stops interacting with "
+            "the GUI for a given amount of time. When a user is exceeding the configured "
+            "maximum idle time, the user will be logged out and redirected to the login "
+            "screen to renew the login session. This setting can be overridden for each "
+            "user individually in the profile of the users."
+        ),
         default_value=5400,
     )
 

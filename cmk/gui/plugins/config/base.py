@@ -370,7 +370,11 @@ class CREConfig:
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
     lock_on_logon_failures: int | None = 10
-    user_idle_timeout: int | None = 5400
+    session_mgmt: dict[str, Any] = field(
+        default_factory=lambda: {
+            "user_idle_timeout": 5400,
+        }
+    )
     single_user_session: int | None = None
     password_policy: dict[str, Any] = field(
         default_factory=lambda: {

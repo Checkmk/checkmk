@@ -231,7 +231,7 @@ def _check_login_timeout(username: UserId, idle_time: float) -> None:
         user_id=username, key="idle_timeout", parser=convert_idle_timeout
     )
     if idle_timeout is None:
-        idle_timeout = active_config.user_idle_timeout
+        idle_timeout = active_config.session_mgmt.get("user_idle_timeout")
     if idle_timeout is not None and idle_timeout is not False and idle_time > idle_timeout:
         raise MKAuthException(f"{username} login timed out (Inactivity exceeded {idle_timeout})")
 

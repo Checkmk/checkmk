@@ -331,7 +331,7 @@ def test_on_access_logout_on_idle_timeout(
 ) -> None:
     user_id, session_info = timed_out_session()
     session_timed_out = session_info.session_id
-    with set_config(user_idle_timeout=8):
+    with set_config(session_mgmt={"user_idle_timeout": 8}):
         with pytest.raises(MKAuthException, match="login timed out"):
             userdb.on_access(user_id, session_timed_out, datetime.now())
 

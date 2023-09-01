@@ -2424,7 +2424,7 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                         "TBA",
                                     ),
                                     allow_int=True,
-                                    unit="% of the time",
+                                    unit=_("% of the time"),
                                     default_value=50,
                                 ),
                             ),

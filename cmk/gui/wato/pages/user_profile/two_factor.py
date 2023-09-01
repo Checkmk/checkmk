@@ -7,28 +7,25 @@
 import abc
 import datetime
 import http.client as http_client
-import json
 import time
 from base64 import b32decode, b32encode
 from collections.abc import Sequence
+from typing import Any
 from urllib import parse
 from uuid import uuid4
 
-import fido2
-from fido2.server import Fido2Server
-from fido2.webauthn import (
+from fido2 import cbor  # type: ignore[import]
+from fido2.client import ClientData  # type: ignore[import]
+from fido2.ctap2 import (  # type: ignore[import]
+    AttestationObject,
     AttestedCredentialData,
-    AuthenticatorAssertionResponse,
-    AuthenticatorAttachment,
-    AuthenticatorAttestationResponse,
-    PublicKeyCredentialRpEntity,
-    PublicKeyCredentialUserEntity,
-    UserVerificationRequirement,
+    AuthenticatorData,
 )
+from fido2.server import Fido2Server  # type: ignore[import]
+from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.site import omd_site
 from cmk.utils.totp import TOTP, TotpVersion
 
@@ -58,7 +55,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import TotpCredential, WebAuthnActionState, WebAuthnCredential
+from cmk.gui.type_defs import TotpCredential, WebAuthnCredential
 from cmk.gui.userdb import (
     is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
@@ -82,13 +79,11 @@ from cmk.gui.watolib.mode import redirect
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
 
-fido2.features.webauthn_json_mapping.enabled = True
-
 
 def make_fido2_server() -> Fido2Server:
     rp_id = request.host
     logger.debug("Using %r as relaying party ID", rp_id)
-    return Fido2Server(PublicKeyCredentialRpEntity(name="Checkmk", id=rp_id))
+    return Fido2Server(PublicKeyCredentialRpEntity(rp_id, "Checkmk"))
 
 
 overview_page_name: str = "user_two_factor_overview"
@@ -498,11 +493,14 @@ class EditCredentialAlias(ABCUserProfilePage):
         )
 
 
-class JsonPage(Page, abc.ABC):
+CBORPageResult = dict[str, Any]
+
+
+class CBORPage(Page, abc.ABC):
     def handle_page(self) -> None:
         try:
-            response.set_content_type("application/json")
-            response.set_data(json.dumps(self.page()))
+            response.set_content_type("application/cbor")
+            response.set_data(cbor.encode(self.page()))
         except MKGeneralException as e:
             response.status_code = http_client.BAD_REQUEST
             response.set_data(str(e))
@@ -515,75 +513,62 @@ class JsonPage(Page, abc.ABC):
             response.set_data(str(e))
 
     @abc.abstractmethod
-    def page(self) -> JsonSerializable:
+    def page(self) -> CBORPageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
 
-def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
-    """the fido2 lib used to use native types and we use literal_eval. Now the
-    fido2 lib uses enums and dataclasses, so we need to convert between the
-    literal_eval world and the fido2 world..."""
-
-    if "challenge" in state and "user_verification" in state:
-        return WebAuthnActionState(
-            challenge=state["challenge"],
-            user_verification=state["user_verification"].value,
-        )
-    raise NotImplementedError
-
-
-class UserWebAuthnRegisterBegin(JsonPage):
-    def page(self) -> JsonSerializable:
+class UserWebAuthnRegisterBegin(CBORPage):
+    def page(self) -> CBORPageResult:
         assert user.id is not None
         user.need_permission("general.manage_2fa")
 
         registration_data, state = make_fido2_server().register_begin(
-            PublicKeyCredentialUserEntity(
-                name=user.id,
-                id=user.id.encode("utf-8"),
-                display_name=user.alias,
-            ),
+            {
+                "id": user.id.encode("utf-8"),
+                "name": user.id,
+                "displayName": user.alias,
+                "icon": "",
+            },
             [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
             ],
-            user_verification=UserVerificationRequirement.DISCOURAGED,
-            authenticator_attachment=AuthenticatorAttachment.CROSS_PLATFORM,
+            user_verification="discouraged",
+            authenticator_attachment="cross-platform",
         )
 
-        session.session_info.webauthn_action_state = _serialize_webauthn_state(state)
+        session.session_info.webauthn_action_state = state
         logger.debug("Registration data: %r", registration_data)
-        return dict(registration_data)
+        return registration_data
 
 
-class UserWebAuthnRegisterComplete(JsonPage):
-    def page(self) -> JsonSerializable:
+class UserWebAuthnRegisterComplete(CBORPage):
+    def page(self) -> CBORPageResult:
         assert user.id is not None
         user.need_permission("general.manage_2fa")
 
         raw_data = request.get_data()
         logger.debug("Raw request: %r", raw_data)
-        data = AuthenticatorAttestationResponse.from_dict(json.loads(raw_data))
-        logger.debug("Client data: %r", data.client_data)
-        logger.debug("Attestation object: %r", data.attestation_object)
+        data: dict[str, object] = cbor.decode(raw_data)
+        client_data = ClientData(data["clientDataJSON"])
+        att_obj = AttestationObject(data["attestationObject"])
+        logger.debug("Client data: %r", client_data)
+        logger.debug("Attestation object: %r", att_obj)
 
         try:
             auth_data = make_fido2_server().register_complete(
-                state=session.session_info.webauthn_action_state,
-                client_data=data.client_data,
-                attestation_object=data.attestation_object,
+                session.session_info.webauthn_action_state, client_data, att_obj
             )
         except ValueError as e:
             if "Invalid origin in ClientData" in str(e):
                 raise MKGeneralException(
                     "The origin %r is not valid. You need to access the UI via HTTPS "
                     "and you need to use a valid host or domain name. See werk #13325 for "
-                    "further information" % data.client_data.origin
+                    "further information" % client_data.get("origin")
                 ) from e
             raise
 
-        assert auth_data.credential_data is not None
         ident = auth_data.credential_data.credential_id.hex()
         credentials = load_two_factor_credentials(user.id, lock=True)
 
@@ -776,8 +761,8 @@ class UserLoginTwoFactor(Page):
         html.footer()
 
 
-class UserWebAuthnLoginBegin(JsonPage):
-    def page(self) -> JsonSerializable:
+class UserWebAuthnLoginBegin(CBORPage):
+    def page(self) -> CBORPageResult:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):
@@ -788,35 +773,39 @@ class UserWebAuthnLoginBegin(JsonPage):
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
             ],
-            user_verification=UserVerificationRequirement.DISCOURAGED,
+            user_verification="discouraged",
         )
 
-        session.session_info.webauthn_action_state = _serialize_webauthn_state(state)
+        session.session_info.webauthn_action_state = state
         logger.debug("Authentication data: %r", auth_data)
-        return dict(auth_data)
+        return auth_data
 
 
-class UserWebAuthnLoginComplete(JsonPage):
-    def page(self) -> JsonSerializable:
+class UserWebAuthnLoginComplete(CBORPage):
+    def page(self) -> CBORPageResult:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
 
-        data = AuthenticatorAssertionResponse.from_dict(json.loads(request.get_data()))
-        logger.debug("ClientData: %r", data.client_data)
-        logger.debug("AuthenticatorData: %r", data.authenticator_data)
+        data: dict[str, object] = cbor.decode(request.get_data())
+        credential_id = data["credentialId"]
+        client_data = ClientData(data["clientDataJSON"])
+        auth_data = AuthenticatorData(data["authenticatorData"])
+        signature = data["signature"]
+        logger.debug("ClientData: %r", client_data)
+        logger.debug("AuthenticatorData: %r", auth_data)
 
         make_fido2_server().authenticate_complete(
-            state=session.session_info.webauthn_action_state,
-            credentials=[
+            session.session_info.webauthn_action_state,
+            [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
             ],
-            credential_id=data.credential_id,
-            client_data=data.client_data,
-            auth_data=data.authenticator_data,
-            signature=data.signature,
+            credential_id,
+            client_data,
+            auth_data,
+            signature,
         )
         session.session_info.webauthn_action_state = None
         session.session_info.two_factor_completed = True

@@ -65,7 +65,6 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.plugins.wato.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -141,13 +140,9 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
-    register_modules,
-    WatoModule,
-)
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
-from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
@@ -213,11 +208,14 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.wato as api_module
     import cmk.gui.plugins.wato.datasource_programs as datasource_programs
+    import cmk.gui.plugins.wato.utils as wato_utils
 
     for name, value in [
         ("PermissionSectionWATO", PermissionSectionWATO),
+        ("register_modules", register_modules),
+        ("WatoModule", WatoModule),
     ]:
-        api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name] = value
+        api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
     for name in (
         "ABCHostAttributeNagiosText",
@@ -257,7 +255,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "PredictiveLevels",
         "register_check_parameters",
         "register_hook",
-        "register_modules",
         "register_notification_parameters",
         "ReplicationPath",
         "RulespecGroup",
@@ -282,7 +279,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "ServiceRulespec",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
-        "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name in (

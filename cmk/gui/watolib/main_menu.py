@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import re
 from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
@@ -182,3 +183,32 @@ class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]
 
 
 main_module_registry = MainModuleRegistry()
+
+
+class WatoModule(MenuItem):
+    """Used with register_modules() in pre 1.6 versions to register main modules"""
+
+
+def register_modules(*args: WatoModule) -> None:
+    """Register one or more top level modules to Checkmk Setup.
+    The registered modules are displayed in the navigation of Setup."""
+    for wato_module in args:
+        assert isinstance(wato_module, WatoModule)
+
+        internal_name = re.sub("[^a-zA-Z]", "", wato_module.mode_or_url)
+
+        cls = type(
+            "LegacyMainModule%s" % internal_name.title(),
+            (ABCMainModule,),
+            {
+                "mode_or_url": wato_module.mode_or_url,
+                "topic": main_module_topic_registry["exporter"],
+                "title": wato_module.title,
+                "icon": wato_module.icon,
+                "permission": wato_module.permission,
+                "description": wato_module.description,
+                "sort_index": wato_module.sort_index,
+                "is_show_more": False,
+            },
+        )
+        main_module_registry.register(cls)

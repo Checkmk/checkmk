@@ -21,9 +21,9 @@ def test_register_modules(monkeypatch: MonkeyPatch) -> None:
     )
     main_menu.register_modules(module)
 
-    modules = main_menu.get_modules()
+    modules = list(main_menu.main_module_registry.values())  # type: ignore[attr-defined]
     assert len(modules) == 1
-    registered = modules[0]
+    registered = modules[0]()
     assert isinstance(registered, ABCMainModule)
     assert registered.mode_or_url == "dang"
     assert registered.description == "descr"

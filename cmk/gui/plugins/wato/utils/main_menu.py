@@ -44,12 +44,6 @@ def register_modules(*args: WatoModule) -> None:
         main_module_registry.register(cls)
 
 
-def get_modules() -> list[ABCMainModule]:
-    return sorted(
-        [m() for m in main_module_registry.values()], key=lambda m: (m.sort_index, m.title)
-    )
-
-
 #   .--Topics--------------------------------------------------------------.
 #   |                     _____           _                                |
 #   |                    |_   _|__  _ __ (_) ___ ___                       |

@@ -24,7 +24,7 @@ from ._graph_specification import (
     MetricExpression,
     RPNExpression,
     RPNExpressionConstant,
-    RPNExpressionScalar,
+    RPNExpressionOperator,
     TemplateGraphSpecification,
 )
 from ._utils import (
@@ -263,6 +263,25 @@ def metric_expression_to_graph_recipe_expression(
         lq_row.get("service_description", "_HOST_"),
     )
 
+    def _parse_operator(part: str) -> RPNExpressionOperator:
+        if part == "+":
+            return RPNExpressionOperator("+")
+        if part == "*":
+            return RPNExpressionOperator("*")
+        if part == "-":
+            return RPNExpressionOperator("-")
+        if part == "/":
+            return RPNExpressionOperator("/")
+        if part == "MAX":
+            return RPNExpressionOperator("MAX")
+        if part == "MIN":
+            return RPNExpressionOperator("MIN")
+        if part == "AVERAGE":
+            return RPNExpressionOperator("AVERAGE")
+        if part == "MERGE":
+            return RPNExpressionOperator("MERGE")
+        raise ValueError(part)
+
     expression = split_expression(expression)[0]
     atoms: list[RPNExpression] = []
     # Break the RPN into parts and translate each part separately
@@ -280,29 +299,25 @@ def metric_expression_to_graph_recipe_expression(
             for metric_name, scale in zip(metric_names, tme["scale"]):
                 atoms.append(rrd_base_element + (pnp_cleanup(metric_name), cf, scale))
             if len(metric_names) > 1:
-                atoms.append(("operator", "MERGE"))
+                atoms.append(RPNExpressionOperator("MERGE"))
 
         else:
             try:
                 atoms.append(RPNExpressionConstant(float(part)))
             except ValueError:
-                atoms.append(("operator", part))
+                atoms.append(_parse_operator(part))
 
     def _apply_operator(
         expression: RPNExpression, left: RPNExpression, right: RPNExpression
     ) -> RPNExpression:
-        if (
-            isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar))
-            or expression[0] != "operator"
-        ):
+        if not isinstance(expression, RPNExpressionOperator):
             raise TypeError(expression)
-        return expression + ([left, right],)
+        expression.add_operands([left, right])
+        return expression
 
     return stack_resolver(
         atoms,
-        is_operator=lambda x: (
-            not isinstance(x, (RPNExpressionConstant, RPNExpressionScalar)) and x[0] == "operator"
-        ),
+        is_operator=lambda x: isinstance(x, RPNExpressionOperator),
         apply_operator=_apply_operator,
         apply_element=lambda x: x,
     )

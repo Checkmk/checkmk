@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, parse_obj_as
@@ -59,7 +61,26 @@ class RPNExpressionScalar:
         return "scalar"
 
 
-RPNExpression = RPNExpressionConstant | RPNExpressionScalar | tuple  # TODO: Improve this type
+@dataclass(frozen=True)
+class RPNExpressionOperator:
+    operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+    _operands: list[RPNExpression] = field(default_factory=list)
+
+    @property
+    def ident(self) -> Literal["operator"]:
+        return "operator"
+
+    @property
+    def operands(self) -> Sequence[RPNExpression]:
+        return self._operands
+
+    def add_operands(self, operands: Sequence[RPNExpression]) -> None:
+        self._operands.extend(operands)
+
+
+RPNExpression = (
+    RPNExpressionConstant | RPNExpressionScalar | RPNExpressionOperator | tuple
+)  # TODO: Improve this type
 
 
 class GraphMetric(BaseModel, frozen=True):

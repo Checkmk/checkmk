@@ -26,6 +26,7 @@ from ._graph_specification import (
     LineType,
     RPNExpression,
     RPNExpressionConstant,
+    RPNExpressionOperator,
     RPNExpressionScalar,
 )
 from ._utils import (
@@ -86,7 +87,9 @@ def compute_graph_curves(
 
             color = ts.metadata.color or metric.color
             if i % 2 == 1 and (
-                isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar))
+                isinstance(
+                    expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator)
+                )
                 or not (expression[0] == "transformation" and expression[1][0] == "forecast")
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
@@ -113,7 +116,7 @@ def evaluate_time_series_expression(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar)):
+    if isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator)):
         ident = expression.ident
     else:
         ident = expression[0]
@@ -142,19 +145,16 @@ def _expression_operator(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if (
-        isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar))
-        or expression[0] != "operator"
-    ):
+    if not isinstance(expression, RPNExpressionOperator):
         raise TypeError(expression)
 
-    operator_id, operands = expression[1], expression[2:]
     if result := _time_series_math(
-        operator_id,
+        expression.operator_name,
         [
             operand_evaluated.data
             for operand_evaluated in chain.from_iterable(
-                evaluate_time_series_expression(a, rrd_data) for a in operands
+                evaluate_time_series_expression(operand, rrd_data)
+                for operand in expression.operands
             )
         ],
     ):
@@ -167,7 +167,7 @@ def _expression_rrd(
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
     if (
-        isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar))
+        isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar, RPNExpressionOperator))
         or expression[0] != "rrd"
     ):
         raise TypeError(expression)

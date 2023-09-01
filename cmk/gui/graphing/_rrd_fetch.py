@@ -31,6 +31,7 @@ from ._graph_specification import (
     MetricDefinition,
     RPNExpression,
     RPNExpressionConstant,
+    RPNExpressionOperator,
     RPNExpressionScalar,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
@@ -181,6 +182,10 @@ def _needed_elements_of_expression(
             expression.service_name,
         )
 
+    elif isinstance(expression, RPNExpressionOperator):
+        for operand in expression.operands:
+            yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
+
     elif expression[0] == "rrd":
         if len(params := expression[1:]) == 4:
             yield NeededElementForTranslation(params[0], params[1])
@@ -189,7 +194,7 @@ def _needed_elements_of_expression(
         else:
             raise TypeError(params)
 
-    elif expression[0] in ["operator", "transformation"]:
+    elif expression[0] == "transformation":
         for operand in expression[2]:
             yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
 

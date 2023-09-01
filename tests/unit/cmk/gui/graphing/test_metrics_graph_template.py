@@ -17,6 +17,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricExpression,
     RPNExpression,
     RPNExpressionConstant,
+    RPNExpressionOperator,
 )
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
@@ -54,8 +55,7 @@ def test_rpn_consolidation_exception(
     [
         (
             "fs_size,fs_used,-",
-            (
-                "operator",
+            RPNExpressionOperator(
                 "-",
                 [
                     ("rrd", "", "", "", "fs_size", None, 1048576),
@@ -65,12 +65,10 @@ def test_rpn_consolidation_exception(
         ),
         (
             "fs_growth.min,0,MIN,-1,*",
-            (
-                "operator",
+            RPNExpressionOperator(
                 "*",
                 [
-                    (
-                        "operator",
+                    RPNExpressionOperator(
                         "MIN",
                         [
                             ("rrd", "", "", "", "growth", "min", 12.136296296296296),
@@ -142,8 +140,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#e3fff9",
                 title="Free space",
                 line_type="stack",
-                expression=(
-                    "operator",
+                expression=RPNExpressionOperator(
                     "-",
                     [
                         ("rrd", "", "", "", "fs_size", "max", 1048576),

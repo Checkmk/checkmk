@@ -10,6 +10,7 @@ import shlex
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -28,42 +29,41 @@ class CheckModes(IntEnum):
     UPDATE = 2
 
 
+@dataclass
 class CheckConfig:
-    def load(
-        self,
-        mode: CheckModes = CheckModes.DEFAULT,
-        skip_masking: bool = False,
-        dump_types: str | None = None,
-        data_dir: str | None = None,
-        dump_dir: str | None = None,
-        response_dir: str | None = None,
-        diff_dir: str | None = None,
-        host_names: str | None = None,
-        check_names: str | None = None,
-    ) -> None:
-        self.mode = mode
-        self.skip_masking = skip_masking
-        self.data_dir = str(data_dir or os.getenv("DATA_DIR", os.path.dirname(__file__)))
-        self.dump_dir = str(dump_dir or os.getenv("DUMP_DIR", f"{self.data_dir}/dumps"))
+    mode: CheckModes = CheckModes.DEFAULT
+    skip_masking: bool = False
+    dump_types: list[str] | None = None
+    data_dir: str | None = None
+    dump_dir: str | None = None
+    response_dir: str | None = None
+    diff_dir: str | None = None
+    host_names: list[str] | None = None
+    check_names: list[str] | None = None
+    api_services_cols: list | None = None
+
+    def load(self):
+        self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", os.path.dirname(__file__)))
+        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", f"{self.data_dir}/dumps"))
         self.response_dir = str(
-            response_dir or os.getenv("RESPONSE_DIR", f"{self.data_dir}/responses")
+            self.response_dir or os.getenv("RESPONSE_DIR", f"{self.data_dir}/responses")
         )
-        self.diff_dir = str(diff_dir or os.getenv("DIFF_DIR", "/tmp"))
-        self.host_names: list[str] = [
-            _.strip()
-            for _ in str(host_names or os.getenv("HOST_NAMES", "")).split(",")
-            if _.strip()
-        ]
-        self.check_names: list[str] = [
-            _.strip()
-            for _ in str(check_names or os.getenv("CHECK_NAMES", "")).split(",")
-            if _.strip()
-        ]
-        self.dump_types: list[str] = [
-            _.strip()
-            for _ in str(dump_types or os.getenv("DUMP_TYPES", "agent,snmp")).split(",")
-            if _.strip()
-        ]
+        self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
+        self.host_names = (
+            [_.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()]
+            if not self.host_names
+            else self.host_names
+        )
+        self.check_names = (
+            [_.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()]
+            if not self.check_names
+            else self.check_names
+        )
+        self.dump_types = (
+            [_.strip() for _ in str(os.getenv("DUMP_TYPES", "agent,snmp")).split(",") if _.strip()]
+            if not self.dump_types
+            else self.dump_types
+        )
 
         # these SERVICES table columns will be returned via the get_host_services() openapi call
         # NOTE: extending this list will require an update of the check output (--update-checks)
@@ -233,7 +233,7 @@ def _verify_check_result(
 
     if mode != CheckModes.UPDATE:
         # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}
+        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore
 
     if not config.skip_masking:
         _apply_regexps(check_id, canon_data, result_data)
@@ -327,7 +327,7 @@ def process_check_output(
         passed = False
         diffs[check_id] = diff
     if diffs:
-        os.makedirs(config.diff_dir, exist_ok=True)
+        os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore
         with open(
             f"{config.diff_dir}/{host_name}.json",
             mode="a",

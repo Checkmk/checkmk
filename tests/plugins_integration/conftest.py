@@ -100,21 +100,23 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     # parse options that control the test execution
-    checks.config.load(
-        mode=checks.CheckModes.UPDATE
+    checks.config.mode = (
+        checks.CheckModes.UPDATE
         if config.getoption("--update-checks")
         else checks.CheckModes.ADD
         if config.getoption("--add-checks")
-        else checks.CheckModes.DEFAULT,
-        skip_masking=config.getoption("--skip-masking"),
-        data_dir=config.getoption(name="--data-dir"),
-        dump_dir=config.getoption(name="--dump-dir"),
-        response_dir=config.getoption(name="--response-dir"),
-        diff_dir=config.getoption(name="--diff-dir"),
-        host_names=config.getoption(name="--host-names"),
-        check_names=config.getoption(name="--check-names"),
-        dump_types=config.getoption(name="--dump-types"),
+        else checks.CheckModes.DEFAULT
     )
+    checks.config.skip_masking = config.getoption("--skip-masking")
+    checks.config.data_dir = config.getoption(name="--data-dir")
+    checks.config.dump_dir = config.getoption(name="--dump-dir")
+    checks.config.response_dir = config.getoption(name="--response-dir")
+    checks.config.diff_dir = config.getoption(name="--diff-dir")
+    checks.config.host_names = config.getoption(name="--host-names")
+    checks.config.check_names = config.getoption(name="--check-names")
+    checks.config.dump_types = config.getoption(name="--dump-types")
+
+    checks.config.load()
 
 
 def pytest_collection_modifyitems(config, items):
@@ -157,7 +159,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
                 == 0
             )
 
-        for dump_type in checks.config.dump_types:
+        for dump_type in checks.config.dump_types:  # type: ignore
             host_folder = f"/{dump_type}"
             if site.openapi.get_folder(host_folder):
                 logger.info('Host folder "%s" already exists!', host_folder)

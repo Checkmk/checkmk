@@ -47,7 +47,19 @@ class RPNExpressionConstant:
         return "constant"
 
 
-RPNExpression = RPNExpressionConstant | tuple  # TODO: Improve this type
+@dataclass(frozen=True)
+class RPNExpressionScalar:
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    scalar_name: Literal["warn", "crit", "min", "max"] | None
+
+    @property
+    def ident(self) -> Literal["scalar"]:
+        return "scalar"
+
+
+RPNExpression = RPNExpressionConstant | RPNExpressionScalar | tuple  # TODO: Improve this type
 
 
 class GraphMetric(BaseModel, frozen=True):

@@ -24,6 +24,7 @@ from ._graph_specification import (
     MetricExpression,
     RPNExpression,
     RPNExpressionConstant,
+    RPNExpressionScalar,
     TemplateGraphSpecification,
 )
 from ._utils import (
@@ -290,13 +291,18 @@ def metric_expression_to_graph_recipe_expression(
     def _apply_operator(
         expression: RPNExpression, left: RPNExpression, right: RPNExpression
     ) -> RPNExpression:
-        if isinstance(expression, RPNExpressionConstant) or expression[0] != "operator":
+        if (
+            isinstance(expression, (RPNExpressionConstant, RPNExpressionScalar))
+            or expression[0] != "operator"
+        ):
             raise TypeError(expression)
         return expression + ([left, right],)
 
     return stack_resolver(
         atoms,
-        is_operator=lambda x: not isinstance(x, RPNExpressionConstant) and x[0] == "operator",
+        is_operator=lambda x: (
+            not isinstance(x, (RPNExpressionConstant, RPNExpressionScalar)) and x[0] == "operator"
+        ),
         apply_operator=_apply_operator,
         apply_element=lambda x: x,
     )

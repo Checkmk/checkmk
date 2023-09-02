@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypedDict
 
 from pydantic import BaseModel, Field, parse_obj_as
 
@@ -136,6 +136,26 @@ class RPNExpressionTransformation:
         return self._operands
 
 
+# TODO Check: Similar to CombinedSingleMetricSpec
+class SingleMetricSpec(TypedDict):
+    datasource: str
+    context: VisualContext
+    selected_metric: tuple[str, LineType]
+    consolidation_function: GraphConsoldiationFunction | None
+    presentation: GraphPresentation
+    single_infos: list[str]
+
+
+# TODO combined is not part of cre but we first have to fix all types
+@dataclass(frozen=True)
+class RPNExpressionCombined:
+    single_metric_spec: SingleMetricSpec
+
+    @property
+    def ident(self) -> Literal["combined"]:
+        return "combined"
+
+
 RPNExpression = (
     RPNExpressionConstant
     | RPNExpressionScalar
@@ -143,7 +163,7 @@ RPNExpression = (
     | RPNExpressionRRDChoice
     | RPNExpressionRRD
     | RPNExpressionTransformation
-    | tuple  # TODO: Improve this type
+    | RPNExpressionCombined
 )
 
 

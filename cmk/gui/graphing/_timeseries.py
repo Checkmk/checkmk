@@ -23,8 +23,6 @@ from ._graph_specification import (
     RPNExpressionConstant,
     RPNExpressionOperator,
     RPNExpressionRRD,
-    RPNExpressionRRDChoice,
-    RPNExpressionScalar,
     RPNExpressionTransformation,
 )
 from ._utils import (
@@ -112,25 +110,10 @@ def evaluate_time_series_expression(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if isinstance(
-        expression,
-        (
-            RPNExpressionConstant,
-            RPNExpressionScalar,
-            RPNExpressionOperator,
-            RPNExpressionRRDChoice,
-            RPNExpressionRRD,
-            RPNExpressionTransformation,
-        ),
-    ):
-        ident = expression.ident
-    else:
-        ident = expression[0]
-
     try:
-        expression_func = time_series_expression_registry[ident]
+        expression_func = time_series_expression_registry[expression.ident]
     except KeyError:
-        if cmk_version.edition() is cmk_version.Edition.CRE and ident in [
+        if cmk_version.edition() is cmk_version.Edition.CRE and expression.ident in [
             "combined",
             "transformation",
         ]:
@@ -142,7 +125,7 @@ def evaluate_time_series_expression(
                 )
             )
 
-        raise MKGeneralException("Unrecognized expressions type %s" % ident)
+        raise MKGeneralException("Unrecognized expressions type %s" % expression.ident)
 
     return expression_func(expression, rrd_data)
 

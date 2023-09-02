@@ -30,6 +30,7 @@ from ._graph_specification import (
     GraphMetric,
     MetricDefinition,
     RPNExpression,
+    RPNExpressionCombined,
     RPNExpressionConstant,
     RPNExpressionOperator,
     RPNExpressionRRD,
@@ -199,18 +200,22 @@ def _needed_elements_of_expression(
             expression.scale,
         )
 
-    elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
-        raw_spec = expression[1]
+    elif (
+        isinstance(expression, RPNExpressionCombined)
+        and cmk_version.edition() is not cmk_version.Edition.CRE
+    ):
+        if (cf := expression.single_metric_spec["consolidation_function"]) is None:
+            raise TypeError(cf)
         metrics = resolve_combined_single_metric_spec(
             CombinedSingleMetricSpec(
-                datasource=raw_spec["datasource"],
-                context=raw_spec["context"],
+                datasource=expression.single_metric_spec["datasource"],
+                context=expression.single_metric_spec["context"],
                 selected_metric=MetricDefinition(
-                    expression=raw_spec["selected_metric"][0],
-                    line_type=raw_spec["selected_metric"][1],
+                    expression=expression.single_metric_spec["selected_metric"][0],
+                    line_type=expression.single_metric_spec["selected_metric"][1],
                 ),
-                consolidation_function=raw_spec["consolidation_function"],
-                presentation=raw_spec["presentation"],
+                consolidation_function=cf,
+                presentation=expression.single_metric_spec["presentation"],
             )
         )
 

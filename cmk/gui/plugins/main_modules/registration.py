@@ -74,7 +74,7 @@ from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
 )
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
-from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
@@ -167,6 +167,7 @@ def register() -> None:
         cmk.gui.pages.page_registry,
         filter_registry,
         rename_host_hook_registry,
+        main_module_topic_registry,
         main_module_registry,
         mode_registry,
     )

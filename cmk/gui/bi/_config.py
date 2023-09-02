@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.plugins.wato.utils import ContactGroupSelection, MainModuleTopicBI
+from cmk.gui.plugins.wato.utils import ContactGroupSelection
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -93,7 +93,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import PermissionSectionWATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MenuItem
+from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
+    MainModuleRegistry,
+    MainModuleTopicRegistry,
+    MenuItem,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.bi.actions import BICallARuleAction
@@ -119,6 +124,7 @@ from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIMan
 
 def register(
     page_registry: PageRegistry,
+    main_module_topic_registry: MainModuleTopicRegistry,
     main_module_registry: MainModuleRegistry,
     mode_registry: ModeRegistry,
     permission_registry: PermissionRegistry,
@@ -126,6 +132,7 @@ def register(
     page_registry.register_page("ajax_bi_rule_preview")(AjaxBIRulePreview)
     page_registry.register_page("ajax_bi_aggregation_preview")(AjaxBIAggregationPreview)
 
+    main_module_topic_registry.register(MainModuleTopicBI)
     main_module_registry.register(MainModuleBI)
 
     mode_registry.register(ModeBIEditPack)
@@ -161,6 +168,14 @@ def register(
             defaults=["admin"],
         )
     )
+
+
+MainModuleTopicBI = MainModuleTopic(
+    name="bi",
+    title=_l("Business Intelligence"),
+    icon_name="topic_bi",
+    sort_index=30,
+)
 
 
 class MainModuleBI(ABCMainModule):

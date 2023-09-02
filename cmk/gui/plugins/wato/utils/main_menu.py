@@ -27,15 +27,6 @@ MainModuleTopicServices = main_module_topic_registry.register(
     )
 )
 
-MainModuleTopicBI = main_module_topic_registry.register(
-    MainModuleTopic(
-        name="bi",
-        title=_l("Business Intelligence"),
-        icon_name="topic_bi",
-        sort_index=30,
-    )
-)
-
 MainModuleTopicAgents = main_module_topic_registry.register(
     MainModuleTopic(
         name="agents",

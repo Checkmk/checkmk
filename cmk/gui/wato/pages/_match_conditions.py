@@ -15,7 +15,6 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
-from cmk.gui.plugins.wato.utils import sorted_host_group_choices
 from cmk.gui.type_defs import Choices
 from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices
 from cmk.gui.valuespec import (
@@ -31,6 +30,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+from .._group_selection import sorted_host_group_choices
 
 
 def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:

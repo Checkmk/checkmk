@@ -155,6 +155,9 @@ from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
+from ._group_selection import ContactGroupSelection as ContactGroupSelection
+from ._group_selection import HostGroupSelection as HostGroupSelection
+from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
 from ._notification_parameter import (
     notification_parameter_registry as notification_parameter_registry,
 )
@@ -241,6 +244,9 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         ("MainModuleTopicMaintenance", MainModuleTopicMaintenance),
         ("MainModuleTopicServices", MainModuleTopicServices),
         ("MainModuleTopicUsers", MainModuleTopicUsers),
+        ("ContactGroupSelection", ContactGroupSelection),
+        ("ServiceGroupSelection", ServiceGroupSelection),
+        ("HostGroupSelection", HostGroupSelection),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -252,8 +258,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
-        "ContactGroupSelection",
-        "HostGroupSelection",
         "HostRulespec",
         "HTTPProxyInput",
         "HTTPProxyReference",
@@ -289,7 +293,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "RulespecGroupEnforcedServicesStorage",
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
-        "ServiceGroupSelection",
         "ServiceRulespec",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",

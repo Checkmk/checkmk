@@ -92,7 +92,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.plugins.wato.check_parameters.logwatch_ec import RulespecLogwatchEC
-from cmk.gui.plugins.wato.utils import ContactGroupSelection
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -138,7 +137,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import MainModuleTopicEvents
+from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,

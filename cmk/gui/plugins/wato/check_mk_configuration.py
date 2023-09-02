@@ -29,9 +29,7 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-    ContactGroupSelection,
     get_section_information,
-    HostGroupSelection,
     HostRulespec,
     HTTPProxyInput,
     PluginCommandLine,
@@ -48,7 +46,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupMonitoringConfigurationServiceChecks,
     RulespecGroupMonitoringConfigurationVarious,
     RulespecSubGroup,
-    ServiceGroupSelection,
     ServiceRulespec,
     UserIconOrAction,
     valuespec_check_plugin_selection,
@@ -90,6 +87,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.icon import icon_and_action_registry
+from cmk.gui.wato import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.config_domain_name import (

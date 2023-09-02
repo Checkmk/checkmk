@@ -11,7 +11,6 @@ from cmk.utils.version import edition, Edition
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import valuespec_check_plugin_selection
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -29,6 +28,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
+from .._check_plugin_selection import CheckPluginSelection
 from .._group_selection import sorted_contact_group_choices, sorted_service_group_choices
 from ._match_conditions import common_host_rule_match_conditions, site_rule_match_condition
 
@@ -228,7 +228,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
             ),
             (
                 "match_checktype",
-                valuespec_check_plugin_selection(
+                CheckPluginSelection(
                     title=_("Match check types"),
                     help_=_(
                         "Only apply the rule if the notification originates from certain types of check plugins. "

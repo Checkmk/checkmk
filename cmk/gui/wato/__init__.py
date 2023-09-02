@@ -155,6 +155,7 @@ from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
+from ._check_plugin_selection import CheckPluginSelection as CheckPluginSelection
 from ._group_selection import ContactGroupSelection as ContactGroupSelection
 from ._group_selection import HostGroupSelection as HostGroupSelection
 from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
@@ -295,7 +296,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "RulespecSubGroup",
         "ServiceRulespec",
         "UserIconOrAction",
-        "valuespec_check_plugin_selection",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name in (

@@ -48,7 +48,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecSubGroup,
     ServiceRulespec,
     UserIconOrAction,
-    valuespec_check_plugin_selection,
 )
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
@@ -87,7 +86,12 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.wato import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from cmk.gui.wato import (
+    CheckPluginSelection,
+    ContactGroupSelection,
+    HostGroupSelection,
+    ServiceGroupSelection,
+)
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.config_domain_name import (
@@ -3958,7 +3962,7 @@ rulespec_registry.register(
 
 
 def _valuespec_ignored_checks():
-    return valuespec_check_plugin_selection(
+    return CheckPluginSelection(
         title=_("Disabled checks"),
         help_=_(
             "This ruleset is similar to 'Disabled services', but selects checks to be disabled "

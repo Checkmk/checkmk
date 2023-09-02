@@ -69,7 +69,6 @@ from cmk.gui.valuespec import Password as Password
 from cmk.gui.valuespec import Percentage as Percentage
 from cmk.gui.valuespec import RegExp as RegExp
 from cmk.gui.valuespec import TextInput as TextInput
-from cmk.gui.valuespec import Transform as Transform
 from cmk.gui.valuespec import Tuple as Tuple
 from cmk.gui.valuespec import Url as Url
 from cmk.gui.valuespec import ValueSpec as ValueSpec
@@ -77,7 +76,6 @@ from cmk.gui.valuespec import ValueSpecHelp as ValueSpecHelp
 from cmk.gui.valuespec import ValueSpecText as ValueSpecText
 from cmk.gui.watolib.attributes import IPMIParameters as IPMIParameters
 from cmk.gui.watolib.attributes import SNMPCredentials as SNMPCredentials
-from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.check_mk_automations import (
     get_section_information as get_section_information_automation,
 )
@@ -841,60 +839,6 @@ def Levels(
         match=match_levels_alternative,
         default_value=default_value,
     )
-
-
-def valuespec_check_plugin_selection(
-    *,
-    title: str,
-    help_: str,
-) -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=title,
-            help=help_,
-            elements=[
-                ("host", _CheckTypeHostSelection(title=_("Checks on regular hosts"))),
-                ("mgmt", _CheckTypeMgmtSelection(title=_("Checks on management boards"))),
-            ],
-            optional_keys=["mgmt"],
-        ),
-        # omit empty mgmt key
-        to_valuespec=lambda list_: {
-            k: v
-            for k, v in (
-                ("host", [name for name in list_ if not name.startswith("mgmt_")]),
-                ("mgmt", [name[5:] for name in list_ if name.startswith("mgmt_")]),
-            )
-            if v or k == "host"
-        },
-        from_valuespec=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
-    )
-
-
-class _CheckTypeHostSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(rows=25, **kwargs)
-
-    def get_elements(self):
-        checks = get_check_information_cached()
-        return [
-            (str(cn), (str(cn) + " - " + c["title"])[:60])
-            for (cn, c) in checks.items()
-            # filter out plugins implemented *explicitly* for management boards
-            if not cn.is_management_name()
-        ]
-
-
-class _CheckTypeMgmtSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(rows=25, **kwargs)
-
-    def get_elements(self):
-        checks = get_check_information_cached()
-        return [
-            (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])
-            for (cn, c) in checks.items()
-        ]
 
 
 # TODO: Kept for compatibility with pre-1.6 Setup plugins

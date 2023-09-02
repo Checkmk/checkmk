@@ -7,13 +7,11 @@ from pytest import MonkeyPatch
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.plugins.wato.utils as utils
-
-# Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib.rulespecs as rulespecs
-from cmk.gui.plugins.wato.utils import register_notification_parameters
 from cmk.gui.valuespec import Dictionary
+from cmk.gui.wato import register_notification_parameters  # type: ignore[attr-defined]
+from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.wato._notification_parameter import _registry
 
 expected_plugins = [
     "asciimail",
@@ -36,7 +34,7 @@ expected_plugins = [
 
 
 def test_registered_notification_parameters() -> None:
-    registered_plugins = sorted(utils.notification_parameter_registry.keys())
+    registered_plugins = sorted(notification_parameter_registry.keys())
     assert registered_plugins == sorted(expected_plugins)
 
 
@@ -44,7 +42,7 @@ def test_register_legacy_notification_parameters(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        utils, "notification_parameter_registry", utils.NotificationParameterRegistry()
+        _registry, "notification_parameter_registry", _registry.NotificationParameterRegistry()
     )
     rulespec_group_registry = rulespecs.RulespecGroupRegistry()
     monkeypatch.setattr(rulespecs, "rulespec_group_registry", rulespec_group_registry)
@@ -53,7 +51,7 @@ def test_register_legacy_notification_parameters(
     )
 
     assert RuleGroup.NotificationParameters("xyz") not in rulespecs.rulespec_registry
-    assert "xyz" not in utils.notification_parameter_registry
+    assert "xyz" not in _registry.notification_parameter_registry
     register_notification_parameters(
         "xyz",
         Dictionary(
@@ -62,7 +60,7 @@ def test_register_legacy_notification_parameters(
         ),
     )
 
-    cls = utils.notification_parameter_registry["xyz"]
+    cls = _registry.notification_parameter_registry["xyz"]
     assert isinstance(cls.spec, Dictionary)
     assert cls.spec.help() == "slosh"
 

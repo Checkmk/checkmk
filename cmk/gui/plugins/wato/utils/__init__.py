@@ -222,7 +222,6 @@ from cmk.gui.watolib.translation import (
     ServiceDescriptionTranslation as ServiceDescriptionTranslation,
 )
 from cmk.gui.watolib.translation import translation_elements as translation_elements
-from cmk.gui.watolib.users import notification_script_title
 
 
 def PluginCommandLine() -> ValueSpec:
@@ -1042,61 +1041,6 @@ class _CheckTypeMgmtSelection(DualListChoice):
 # TODO: Kept for compatibility with pre-1.6 Setup plugins
 def register_hook(name, func):
     hooks.register_from_plugin(name, func)
-
-
-class NotificationParameter(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def spec(self) -> Dictionary:
-        raise NotImplementedError()
-
-
-class NotificationParameterRegistry(
-    cmk.utils.plugin_registry.Registry[type[NotificationParameter]]
-):
-    def plugin_name(self, instance):
-        return instance().ident
-
-    # TODO: Make this registration_hook actually take an instance. Atm it takes a class and
-    #       instantiates it
-    def registration_hook(self, instance):
-        plugin = instance()
-
-        script_title = notification_script_title(plugin.ident)
-
-        valuespec = plugin.spec
-        # TODO: Cleanup this hack
-        valuespec._title = _("Call with the following parameters:")
-
-        _rulespecs.register_rule(
-            rulespec_group_registry["monconf/notifications"],
-            RuleGroup.NotificationParameters(plugin.ident),
-            valuespec,
-            _("Parameters for %s") % script_title,
-            itemtype=None,
-            match="dict",
-        )
-
-
-notification_parameter_registry = NotificationParameterRegistry()
-
-
-# TODO: Kept for pre 1.6 plugin compatibility
-def register_notification_parameters(scriptname, valuespec):
-    parameter_class = type(
-        "NotificationParameter%s" % scriptname.title(),
-        (NotificationParameter,),
-        {
-            "ident": scriptname,
-            "spec": valuespec,
-        },
-    )
-    notification_parameter_registry.register(parameter_class)
 
 
 @request_memoize()

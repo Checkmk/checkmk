@@ -107,7 +107,6 @@ from cmk.gui.plugins.wato.utils import (
     PredictiveLevels,
     register_check_parameters,
     register_hook,
-    register_notification_parameters,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
@@ -146,6 +145,12 @@ from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
+from ._notification_parameter import (
+    notification_parameter_registry as notification_parameter_registry,
+)
+from ._notification_parameter import NotificationParameter as NotificationParameter
+from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
+from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
@@ -214,6 +219,9 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         ("PermissionSectionWATO", PermissionSectionWATO),
         ("register_modules", register_modules),
         ("WatoModule", WatoModule),
+        ("register_notification_parameters", register_notification_parameters),
+        ("NotificationParameter", NotificationParameter),
+        ("notification_parameter_registry", notification_parameter_registry),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -248,14 +256,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "ManualCheckParameterRulespec",
         "MenuItem",
         "monitoring_macro_help",
-        "notification_parameter_registry",
-        "NotificationParameter",
         "IndividualOrStoredPassword",
         "PluginCommandLine",
         "PredictiveLevels",
         "register_check_parameters",
         "register_hook",
-        "register_notification_parameters",
         "ReplicationPath",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",

@@ -11,10 +11,7 @@
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    ConfigVariableGroupNotifications,
-    notification_parameter_registry,
-)
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupNotifications
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -23,6 +20,7 @@ from cmk.gui.valuespec import (
     Integer,
     ValueSpec,
 )
+from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,

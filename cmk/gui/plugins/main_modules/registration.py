@@ -64,6 +64,7 @@ from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
+from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -135,6 +136,7 @@ def register() -> None:
             rulespec_registry,
             autocompleter_registry,
             filter_registry,
+            notification_parameter_registry,
         )
         custom_icons_register(
             mode_registry,

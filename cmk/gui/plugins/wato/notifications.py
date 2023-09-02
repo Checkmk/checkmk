@@ -23,8 +23,6 @@ from cmk.gui.plugins.wato.utils import (
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
     notification_macro_help,
-    notification_parameter_registry,
-    NotificationParameter,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -46,6 +44,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato import notification_parameter_registry, NotificationParameter
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 

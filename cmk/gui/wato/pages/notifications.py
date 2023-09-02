@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import ContactGroupSelection, notification_parameter_registry
+from cmk.gui.plugins.wato.utils import ContactGroupSelection
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -93,6 +93,8 @@ from cmk.gui.watolib.sample_config import get_default_notification_rule, new_not
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+from .._notification_parameter import notification_parameter_registry
 
 
 def register(mode_registry: ModeRegistry) -> None:

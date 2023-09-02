@@ -16,8 +16,17 @@ from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
 
-from . import _main_module_topics, _main_modules, _permissions, _pre_21_plugin_api, filters, pages
+from . import (
+    _main_module_topics,
+    _main_modules,
+    _permissions,
+    _pre_21_plugin_api,
+    _rulespec_groups,
+    filters,
+    pages,
+)
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
@@ -44,6 +53,7 @@ def register(
     permission_registry: PermissionRegistry,
     main_module_topic_registry: MainModuleTopicRegistry,
     main_module_registry: MainModuleRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -68,4 +78,5 @@ def register(
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
     _main_modules.register(main_module_registry)
+    _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()

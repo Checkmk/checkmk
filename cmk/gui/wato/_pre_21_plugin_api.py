@@ -22,6 +22,7 @@ import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
+from cmk.gui.hooks import register_hook
 from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
@@ -35,7 +36,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.watolib.main_menu import register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
-from cmk.gui.watolib.rulespecs import register_check_parameters
+from cmk.gui.watolib.rulespecs import register_check_parameters, register_rule
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the Setup plugin context
@@ -116,6 +117,8 @@ def register() -> None:  # pylint: disable=too-many-branches
         ("IndividualOrStoredPassword", IndividualOrStoredPassword),
         ("PasswordFromStore", PasswordFromStore),
         ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
+        ("register_rule", register_rule),
+        ("register_hook", register_hook),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -140,7 +143,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "monitoring_macro_help",
         "PluginCommandLine",
         "PredictiveLevels",
-        "register_hook",
         "ReplicationPath",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",
@@ -206,7 +208,6 @@ def register() -> None:  # pylint: disable=too-many-branches
     ):
         api_module.__dict__[name] = cmk.gui.watolib.hosts_and_folders.__dict__[name]
     for name in (
-        "register_rule",
         "Rulespec",
         "rulespec_group_registry",
         "rulespec_registry",

@@ -5,13 +5,6 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import syslog_facilities
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    ServiceRulespec,
-)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -29,6 +22,13 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+)
+from cmk.gui.wato import RulespecGroupCheckParametersApplications
+from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
+    HostRulespec,
+    rulespec_registry,
+    ServiceRulespec,
 )
 
 

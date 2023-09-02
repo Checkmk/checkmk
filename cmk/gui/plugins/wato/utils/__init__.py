@@ -62,8 +62,6 @@ from cmk.gui.valuespec import ListChoice as ListChoice
 from cmk.gui.valuespec import ListOf as ListOf
 from cmk.gui.valuespec import ListOfMultiple as ListOfMultiple
 from cmk.gui.valuespec import ListOfStrings as ListOfStrings
-from cmk.gui.valuespec import Migrate as Migrate
-from cmk.gui.valuespec import MigrateNotUpdated as MigrateNotUpdated
 from cmk.gui.valuespec import MonitoredHostname as MonitoredHostname
 from cmk.gui.valuespec import Password as Password
 from cmk.gui.valuespec import Percentage as Percentage
@@ -130,7 +128,6 @@ from cmk.gui.watolib.main_menu import main_module_registry as main_module_regist
 from cmk.gui.watolib.main_menu import MainModuleTopic as MainModuleTopic
 from cmk.gui.watolib.main_menu import MenuItem as MenuItem
 from cmk.gui.watolib.password_store import PasswordStore as PasswordStore
-from cmk.gui.watolib.password_store import passwordstore_choices as passwordstore_choices
 from cmk.gui.watolib.rulespec_groups import RulespecGroupAgentSNMP as RulespecGroupAgentSNMP
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupEnforcedServicesApplications as RulespecGroupEnforcedServicesApplications,
@@ -288,69 +285,6 @@ def _list_user_icons_and_actions() -> DropdownChoiceEntries:
 
         choices.append((key, label))
     return sorted(choices, key=lambda x: x[1])
-
-
-def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    allow_empty: bool = True,
-    size: int = 25,
-) -> CascadingDropdown:
-    """ValueSpec for a password that can be entered directly or selected from a password store
-
-    One should look into using :func:`password_store.extract` to translate the reference to the
-    actual password.
-    """
-    return CascadingDropdown(
-        title=title,
-        help=help,
-        choices=[
-            (
-                "password",
-                _("Explicit"),
-                Password(
-                    allow_empty=allow_empty,
-                    size=size,
-                ),
-            ),
-            (
-                "store",
-                _("From password store"),
-                DropdownChoice(
-                    choices=passwordstore_choices,
-                    sorted=True,
-                    invalid_choice="complain",
-                    invalid_choice_title=_("Password does not exist or using not permitted"),
-                    invalid_choice_error=_(
-                        "The configured password has either be removed or you "
-                        "are not permitted to use this password. Please choose "
-                        "another one."
-                    ),
-                ),
-            ),
-        ],
-        orientation="horizontal",
-    )
-
-
-PasswordFromStore = IndividualOrStoredPassword  # CMK-12228
-
-
-def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    allow_empty: bool = True,
-    size: int = 25,
-) -> Migrate:
-    return Migrate(
-        valuespec=IndividualOrStoredPassword(
-            title=title,
-            help=help,
-            allow_empty=allow_empty,
-            size=size,
-        ),
-        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
-    )
 
 
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})

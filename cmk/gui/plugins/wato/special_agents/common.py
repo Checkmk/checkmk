@@ -11,12 +11,6 @@ from cmk.utils import aws_constants
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_yes
-from cmk.gui.plugins.wato.utils import (
-    MigrateToIndividualOrStoredPassword,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecSubGroup,
-)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -29,6 +23,8 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, RulespecGroup, RulespecSubGroup
 
 
 @rulespec_group_registry.register

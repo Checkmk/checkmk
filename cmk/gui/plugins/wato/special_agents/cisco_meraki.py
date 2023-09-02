@@ -8,13 +8,10 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    HTTPProxyReference,
-    IndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.utils import HTTPProxyReference
 from cmk.gui.valuespec import Dictionary, DualListChoice, ListOfStrings, ValueSpec
+from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agent_cisco_meraki() -> ValueSpec:

@@ -13,12 +13,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    HTTPProxyReference,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.utils import HTTPProxyReference
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -34,6 +29,8 @@ from cmk.gui.valuespec import (
     Tuple,
     Url,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _validate(url: str, varprefix: str) -> None:

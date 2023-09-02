@@ -11,7 +11,6 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsApps,
     validate_aws_tags,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -22,7 +21,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _factory_default_special_agents_jira():

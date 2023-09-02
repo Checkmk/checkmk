@@ -74,6 +74,11 @@ from ._notification_parameter import (
     register_notification_parameters,
 )
 from ._permissions import PermissionSectionWATO
+from .pages._password_store_valuespecs import (
+    IndividualOrStoredPassword,
+    MigrateToIndividualOrStoredPassword,
+    PasswordFromStore,
+)
 
 
 def register() -> None:  # pylint: disable=too-many-branches
@@ -108,6 +113,9 @@ def register() -> None:  # pylint: disable=too-many-branches
         ("ContactGroupSelection", ContactGroupSelection),
         ("ServiceGroupSelection", ServiceGroupSelection),
         ("HostGroupSelection", HostGroupSelection),
+        ("IndividualOrStoredPassword", IndividualOrStoredPassword),
+        ("PasswordFromStore", PasswordFromStore),
+        ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -122,7 +130,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "HostRulespec",
         "HTTPProxyInput",
         "HTTPProxyReference",
-        "MigrateToIndividualOrStoredPassword",
         "is_wato_slave_site",
         "Levels",
         "main_module_registry",
@@ -131,7 +138,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "ManualCheckParameterRulespec",
         "MenuItem",
         "monitoring_macro_help",
-        "IndividualOrStoredPassword",
         "PluginCommandLine",
         "PredictiveLevels",
         "register_hook",

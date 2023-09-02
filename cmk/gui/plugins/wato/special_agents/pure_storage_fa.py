@@ -8,8 +8,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer
+from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_pure_storage_fa() -> Dictionary:

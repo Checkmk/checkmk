@@ -70,7 +70,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import IndividualOrStoredPassword
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.flashed_messages import flash
@@ -101,6 +100,7 @@ from cmk.gui.valuespec import (
     Timeofday,
     ValueSpecText,
 )
+from cmk.gui.wato import IndividualOrStoredPassword
 
 # .
 #   .--Config--------------------------------------------------------------.

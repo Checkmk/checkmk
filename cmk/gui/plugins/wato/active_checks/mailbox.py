@@ -13,11 +13,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import syslog_facilities
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -38,6 +33,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:

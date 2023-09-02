@@ -15,11 +15,6 @@ from cmk.gui.plugins.wato.active_checks.common import (
     ip_address_family_http,
     RulespecGroupActiveChecks,
 )
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -36,6 +31,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _active_checks_http_proxyspec() -> Dictionary:

@@ -15,11 +15,6 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupVMCloudContainer,
     validate_aws_tags,
 )
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -37,6 +32,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
 

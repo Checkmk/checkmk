@@ -9,11 +9,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Checkbox,
@@ -24,7 +19,8 @@ from cmk.gui.valuespec import (
     NetworkPort,
     TextInput,
 )
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _factory_default_special_agents_vsphere():

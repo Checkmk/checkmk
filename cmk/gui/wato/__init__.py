@@ -139,6 +139,16 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
+from cmk.gui.wato._main_module_topics import MainModuleTopicAgents as MainModuleTopicAgents
+from cmk.gui.wato._main_module_topics import MainModuleTopicEvents as MainModuleTopicEvents
+from cmk.gui.wato._main_module_topics import MainModuleTopicExporter as MainModuleTopicExporter
+from cmk.gui.wato._main_module_topics import MainModuleTopicGeneral as MainModuleTopicGeneral
+from cmk.gui.wato._main_module_topics import MainModuleTopicHosts as MainModuleTopicHosts
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicMaintenance as MainModuleTopicMaintenance,
+)
+from cmk.gui.wato._main_module_topics import MainModuleTopicServices as MainModuleTopicServices
+from cmk.gui.wato._main_module_topics import MainModuleTopicUsers as MainModuleTopicUsers
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
@@ -223,6 +233,14 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         ("NotificationParameter", NotificationParameter),
         ("notification_parameter_registry", notification_parameter_registry),
         ("register_check_parameters", register_check_parameters),
+        ("MainModuleTopicAgents", MainModuleTopicAgents),
+        ("MainModuleTopicEvents", MainModuleTopicEvents),
+        ("MainModuleTopicExporter", MainModuleTopicExporter),
+        ("MainModuleTopicGeneral", MainModuleTopicGeneral),
+        ("MainModuleTopicHosts", MainModuleTopicHosts),
+        ("MainModuleTopicMaintenance", MainModuleTopicMaintenance),
+        ("MainModuleTopicServices", MainModuleTopicServices),
+        ("MainModuleTopicUsers", MainModuleTopicUsers),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -244,14 +262,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "Levels",
         "main_module_registry",
         "MainModuleTopic",
-        "MainModuleTopicAgents",
-        "MainModuleTopicEvents",
-        "MainModuleTopicExporter",
-        "MainModuleTopicGeneral",
-        "MainModuleTopicHosts",
-        "MainModuleTopicMaintenance",
-        "MainModuleTopicServices",
-        "MainModuleTopicUsers",
         "make_confirm_link",
         "ManualCheckParameterRulespec",
         "MenuItem",

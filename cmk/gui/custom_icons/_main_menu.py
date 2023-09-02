@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicGeneral
 from cmk.gui.type_defs import Icon
+from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleTopic
 
 

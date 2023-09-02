@@ -45,16 +45,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicAgents as MainModuleTopicAgents
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicEvents as MainModuleTopicEvents
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicExporter as MainModuleTopicExporter
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicGeneral as MainModuleTopicGeneral
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicHosts as MainModuleTopicHosts
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainModuleTopicMaintenance as MainModuleTopicMaintenance,
-)
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicServices as MainModuleTopicServices
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicUsers as MainModuleTopicUsers
 from cmk.gui.site_config import is_wato_slave_site as is_wato_slave_site
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText

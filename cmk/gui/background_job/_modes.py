@@ -22,10 +22,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.plugins.wato.utils import MainModuleTopicMaintenance
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.wato import MainModuleTopicMaintenance
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 

@@ -92,19 +92,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.plugins.wato.check_parameters.logwatch_ec import RulespecLogwatchEC
-from cmk.gui.plugins.wato.utils import (
-    ABCMainModule,
-    ConfigVariableGroupNotifications,
-    ConfigVariableGroupUserInterface,
-    ConfigVariableGroupWATO,
-    ContactGroupSelection,
-    HostRulespec,
-    MainModuleTopicEvents,
-    RulespecGroup,
-    RulespecGroupHostsMonitoringRulesVarious,
-    RulespecGroupMonitoringConfigurationVarious,
-    ServiceRulespec,
-)
+from cmk.gui.plugins.wato.utils import ContactGroupSelection
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -150,6 +138,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import MainModuleTopicEvents
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
@@ -167,11 +156,26 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_variable_groups import (
+    ConfigVariableGroupNotifications,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
+)
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
-from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringConfigurationVarious,
+)
+from cmk.gui.watolib.rulespecs import (
+    HostRulespec,
+    RulespecGroup,
+    RulespecGroupRegistry,
+    RulespecRegistry,
+    ServiceRulespec,
+)
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     MatchItem,

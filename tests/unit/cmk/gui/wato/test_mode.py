@@ -8,8 +8,8 @@ from collections.abc import Collection, Iterable
 import pytest
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicHosts
 from cmk.gui.type_defs import Icon, PermissionName
+from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import _base, WatoMode
 

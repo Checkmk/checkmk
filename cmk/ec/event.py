@@ -100,6 +100,9 @@ def parse_message(line: str, ipaddress: str) -> Event:
     # Variant 2: syslog message including facility (RFC 3164)
     # <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
+    # Variant 2a: forwarded message from zypper on SLES15 with brackets around application
+    # <78>May 26 13:45:01 Klapprechner [CRON][8046]:  message....
+
     # Variant 3: local Nagios alert posted by mkevent -n
     # <154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che
 
@@ -138,7 +141,7 @@ def parse_message(line: str, ipaddress: str) -> Event:
     # for details.
 
     event = _make_event(line, ipaddress)
-    # Variant 2,3,4,5,6,7,7a,8
+    # Variant 2,2a,3,4,5,6,7,7a,8
     if line.startswith("<"):
         i = line.find(">")
         prio = int(line[1:i])
@@ -199,7 +202,7 @@ def parse_message(line: str, ipaddress: str) -> Event:
         event["text"] = line
         event["time"] = mktime(strptime(time_part, "%Y %b %d %H:%M:%S"))
 
-    # Variant 1,1a,2,4
+    # Variant 1,1a,2,2a,4
     else:
         month_name, day, timeofday, rest = line.split(None, 3)
 
@@ -220,7 +223,7 @@ def parse_message(line: str, ipaddress: str) -> Event:
             # TODO: host gets overwritten, strange... Is this OK?
             event.update(parse_monitoring_info(rest))
 
-        # Variant 1, 2
+        # Variant 1, 2, 2a
         else:
             event.update(parse_syslog_info(rest))
 
@@ -273,7 +276,8 @@ def parse_syslog_info(content: str) -> Event:
         pid = 0
         text = content.strip()
     elif "[" in parts[0]:  # TAG followed by pid
-        application, pid_str = parts[0].split("[", 1)
+        application, pid_str = parts[0].rsplit("[", 1)
+        application = application.lstrip("[").rstrip("]")
         try:
             pid = int(pid_str.rstrip("]"))
         except ValueError:

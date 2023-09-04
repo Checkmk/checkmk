@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name,line-too-long
-# pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
-
 import logging
-from typing import Any, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any, Optional
 
 import pytest
 
@@ -74,6 +71,38 @@ from cmk.ec.event import (
                 "priority": 6,
                 "text": "message",
                 "time": 1558871101.0,
+            },
+        ),
+        (
+            # Variant 2: zypper SLES15 without forwarding(?)
+            "<10>Aug 31 14:34:18 localhost RPM[1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
+            # Variant 2a: zypper SLES15
+            "<10>Aug 31 14:34:18 localhost [RPM][1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
             },
         ),
         (
@@ -355,7 +384,7 @@ from cmk.ec.event import (
         ),
     ],
 )
-def test_create_event_from_line(line, expected):
+def test_create_event_from_line(line: str, expected: Mapping[str, Any]) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
@@ -537,7 +566,7 @@ def test_remove_leading_bom(teststr: str, expected_result: str) -> None:
     ],
 )
 def test_split_syslog_structured_data_and_message(
-    sd_and_message: str, expected_result: Tuple[Optional[str], str]
+    sd_and_message: str, expected_result: tuple[Optional[str], str]
 ) -> None:
     assert split_syslog_structured_data_and_message(sd_and_message) == expected_result
 
@@ -605,7 +634,7 @@ def test_split_syslog_structured_data_and_message(
 )
 def test_split_syslog_nonnil_sd_and_message(
     sd_and_message: str,
-    expected_result: Tuple[str, str],
+    expected_result: tuple[str, str],
 ) -> None:
     assert _split_syslog_nonnil_sd_and_message(sd_and_message) == expected_result
 
@@ -624,7 +653,9 @@ def test_split_syslog_nonnil_sd_and_message(
     ],
 )
 def test_split_syslog_structured_data_and_message_exception(sd_and_message: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Invalid RFC 5424 syslog message: structured data has the wrong format"
+    ):
         split_syslog_structured_data_and_message(sd_and_message)
 
 
@@ -689,13 +720,16 @@ def test_split_syslog_structured_data_and_message_exception(sd_and_message: str)
 )
 def test_parse_syslog_message_structured_data(
     structured_data: str,
-    expected_result: Tuple[Mapping[str, str], str],
+    expected_result: tuple[Mapping[str, str], str],
 ) -> None:
     assert parse_syslog_message_structured_data(structured_data) == expected_result
 
 
 def test_parse_syslog_message_structured_data_exception() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Invalid RFC 5424 syslog message: Found Checkmk structured data element multiple times",
+    ):
         parse_syslog_message_structured_data(
             '[Checkmk@18662 sl="0" ipaddress="127.0.0.1"][Checkmk@18662 sl="0" ipaddress="127.0.0.2"]'
         )

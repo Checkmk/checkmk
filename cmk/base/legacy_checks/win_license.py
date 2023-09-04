@@ -27,7 +27,7 @@ def parse_win_license(string_table):
 
         # Depending on Windows version this variable reads
         # Time remaining or Volume activation expiration or is not present
-        if line[0] in ["Time", "Volume"]:
+        if line[0] in ["Time", "Timebased", "Volume"]:
             expiration = " ".join(line).split(":")[1].strip()
             parsed["expiration"] = expiration
             time_left_re = regex(r"(\d+) minute")

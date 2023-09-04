@@ -1,0 +1,16 @@
+Title: win_licenses: Failed to read time until license expiration
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1693829699
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In some cases, the "Windows License" Service failed to parse and display
+the license expiration information.
+
+As a result, the service also failed to apply the configured levels according
+"Time until license expiration" ruleset entry.
+

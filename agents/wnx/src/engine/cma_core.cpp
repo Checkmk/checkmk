@@ -755,13 +755,6 @@ std::string ConvertUtfData(const std::vector<char> &data_block,
                            tools::UtfConversionMode mode) {
     switch (mode) {
         case tools::UtfConversionMode::basic:
-            if (data_block.size() % 2 == 1) {
-                XLOG::d(
-                    "UTF-16 string has odd length, cut last char try repair option");
-                return wtools::ConditionallyConvertFromUtf16(std::vector<char>(
-                    data_block.data(),
-                    data_block.data() + data_block.size() - 1));
-            }
             return wtools::ConditionallyConvertFromUtf16(data_block);
         case tools::UtfConversionMode::repair_by_line:
             return ConvertWithRepair(tools::ToView(data_block));

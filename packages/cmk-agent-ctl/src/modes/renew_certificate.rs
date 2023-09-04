@@ -56,7 +56,10 @@ fn site_id_from_ident(registry: &config::Registry, ident: &str) -> AnyhowResult<
     };
 
     let Ok(uuid) = uuid::Uuid::from_str(ident) else {
-        bail!("Provided connection identifier '{}' is neither valid as site ID nor as UUID", ident);
+        bail!(
+            "Provided connection identifier '{}' is neither valid as site ID nor as UUID",
+            ident
+        );
     };
     registry
         .retrieve_standard_connection_by_uuid(&uuid)

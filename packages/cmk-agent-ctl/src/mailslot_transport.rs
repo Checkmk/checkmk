@@ -120,7 +120,9 @@ impl MailSlotBackend {
         let (rx, tx) = channel::<Vec<u8>>();
         let stop = Arc::new(AtomicBool::new(false));
         let result = Self::start_mailslot_server_thread(name, rx, Arc::clone(&stop));
-        let Ok((handle, mailslot_name)) = result else { bail!(result.unwrap_err()); };
+        let Ok((handle, mailslot_name)) = result else {
+            bail!(result.unwrap_err());
+        };
         Ok(MailSlotBackend {
             srv: Some(handle),
             stop_flag: Arc::clone(&stop),

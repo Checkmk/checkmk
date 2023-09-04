@@ -245,7 +245,7 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load_all_agent_based_plugins(
+    base_config.load_all_plugins(
         get_check_api_context,
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,

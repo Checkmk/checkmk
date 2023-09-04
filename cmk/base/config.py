@@ -1582,7 +1582,7 @@ def max_cachefile_age(
 #   '----------------------------------------------------------------------'
 
 
-def load_all_agent_based_plugins(
+def load_all_plugins(
     get_check_api_context: GetCheckApiContext,
     *,
     local_checks_dir: Path,

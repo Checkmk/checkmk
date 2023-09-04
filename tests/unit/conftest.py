@@ -263,7 +263,7 @@ class FixRegister:
         config._initialize_data_structures()
         assert not config.check_info
 
-        errors = config.load_all_agent_based_plugins(
+        errors = config.load_all_plugins(
             check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
             checks_dir=str(repo_path() / "cmk/base/legacy_checks"),

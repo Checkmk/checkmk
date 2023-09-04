@@ -7,7 +7,6 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
-
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp4 sles15sp4 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
@@ -23,7 +22,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp4 sles15sp4 \
     rrdtool-devel \
     sudo \
     && zypper clean -a \
-
 
 RUN zypper ref -s \
     && zypper -n in -y --force-resolution \

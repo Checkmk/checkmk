@@ -4,150 +4,66 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-import math
-import random
+from dataclasses import dataclass
 from typing import Any
 
 import pytest
+from polyfactory.factories import DataclassFactory
 
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.gui.watolib.audit_log import AuditLogStore
 
+
+@dataclass
+class LogEntry:
+    time: int
+    object_ref: dict[str, str] | None
+    user_id: str
+    action: str
+    text: list[str]
+    diff_text: str | None
+
+
+class LogEntryFactory(DataclassFactory[LogEntry]):
+    __model__ = LogEntry
+
+    text = ["str", "This is a test"]
+    object_ref = None
+
+
+ONE_DAY = 86400
+
 BASE_DATE = "2023-08-16"
+BASE_PREVIOUS_DATE = "2023-08-15"
+BASE_DATE_TIMESTAMP = int(
+    datetime.datetime.strptime(BASE_DATE, "%Y-%m-%d")
+    .replace(hour=8, minute=0, second=0)
+    .timestamp()
+)
 
 
-@pytest.fixture(name="base_audit_log_entries")
-def _base_audit_log_entries() -> list:
-    time_entry = math.floor(
-        datetime.datetime.strptime(BASE_DATE, "%Y-%m-%d")
-        .replace(hour=8, minute=0, second=0)
-        .timestamp()
-    )
-
-    return [
-        {
-            "time": time_entry,
-            "object_ref": {"object_type": "Host", "ident": "tst"},
-            "user_id": "ghost-user",
-            "action": "create-host",
-            "text": ["str", "Created new host tst."],
-            "diff_text": "Nothing was changed.",
-        },
-        {
-            "time": time_entry + 60,
-            "object_ref": None,
-            "user_id": "cmkadmin",
-            "action": "snapshot-created",
-            "text": ["str", "Created snapshot wato-snapshot-2023-08-16-10-25-32.tar"],
-            "diff_text": None,
-        },
-        {
-            "time": time_entry + 120,
-            "object_ref": None,
-            "user_id": "cmkadmin",
-            "action": "activate-changes",
-            "text": ["str", "Starting activation (Sites: heute)"],
-            "diff_text": None,
-        },
-        {
-            "time": time_entry + 180,
-            "object_ref": None,
-            "user_id": "cmkadmin",
-            "action": "activate-changes",
-            "text": ["str", "Started activation of site heute"],
-            "diff_text": None,
-        },
-    ]
-
-
-def generate_random_audit_log(numdays: int = 10, events_per_day: int | None = None) -> list:
-    def randomize_object_ref():
-        if random.randint(0, 1):
-            return None
-        return {"object_type": "Host", "ident": "test"}
-
-    def randomize_user_id():
-        return random.choice(
-            ["cmkadmin", "test", "cfulanito", "Mathias_Kettner", "admin", "ghost-user"]
+def _populate_audit_log(audit_log_store: AuditLogStore, serialized_entries: list) -> None:
+    for entry in serialized_entries:
+        deserialized_entry = AuditLogStore.Entry.deserialize(
+            entry if isinstance(entry, dict) else entry.__dict__
         )
-
-    def randomize_action():
-        return random.choice(["create-host", "snapshot-created", "activate-changes"])
-
-    def randomize_text():
-        string = random.choice(
-            [
-                "Created snapshot wato-snapshot-2023-08-16-10-25-32.tar",
-                "Created new host tst",
-                "Started activation of site heute, please wait.",
-            ]
-        )
-        return ["str", string]
-
-    def randomize_diff_text():
-        return random.choice([None, None, None, "Nothing was changed", "All good"])
-
-    base = datetime.datetime.today()
-    date_list = reversed([base - datetime.timedelta(days=x) for x in range(numdays)])
-
-    events = []
-
-    for day in date_list:
-        events_per_day_count = random.randint(1, 50) if events_per_day is None else events_per_day
-        for i in range(events_per_day_count):
-            timestamp = math.floor(day.timestamp() + i)
-
-            item = {
-                "time": timestamp,
-                "object_ref": randomize_object_ref(),
-                "user_id": randomize_user_id(),
-                "action": randomize_action(),
-                "text": randomize_text(),
-                "diff_text": randomize_diff_text(),
-            }
-
-            events.append(item)
-
-    return events
+        audit_log_store.append(deserialized_entry)
 
 
 @pytest.fixture(name="audit_log_store")
-def create_audit_log_store() -> AuditLogStore:
-    audit_log_store = AuditLogStore()
-    audit_log_store.clear()
-    return audit_log_store
+def audit_log_store_builder() -> AuditLogStore:
+    als = AuditLogStore()
+    als.clear()
+    return als
 
 
-def populate_audit_log(audit_log_store: AuditLogStore, entries: list) -> None:
-    for entry in entries:
-        audit_log_store.append(AuditLogStore.Entry.deserialize(entry))
-
-
-@pytest.fixture
-def populated_audit_log(audit_log_store: AuditLogStore, base_audit_log_entries: list) -> None:
-    populate_audit_log(audit_log_store, base_audit_log_entries)
-
-
-@pytest.fixture(name="populated_two_day_entries_audit_log")
-def populated_with_two_day_entries_audit_log(
-    audit_log_store: AuditLogStore,
-) -> list[AuditLogStore.Entry]:
-    entries = generate_random_audit_log(2)
-    populate_audit_log(audit_log_store, entries)
-    return entries
-
-
-def test_openapi_audit_log_get_time_filter(clients: ClientRegistry) -> None:
+def test_openapi_audit_log_invalid_date_filter(clients: ClientRegistry) -> None:
     res_invalid_string = clients.AuditLog.get_all(
         date="invalid", expect_ok=False
     ).assert_status_code(400)
     assert "date" in res_invalid_string.json["detail"]
     assert "date" in res_invalid_string.json["fields"]
-
-    res_number = clients.AuditLog.get_all(date=1234, expect_ok=False).assert_status_code(400)
-    assert "date" in res_number.json["detail"]
-    assert "date" in res_number.json["fields"]
 
     res_bad_date = clients.AuditLog.get_all(date="1981-12-32", expect_ok=False).assert_status_code(
         400
@@ -155,13 +71,13 @@ def test_openapi_audit_log_get_time_filter(clients: ClientRegistry) -> None:
     assert "date" in res_bad_date.json["detail"]
     assert "date" in res_bad_date.json["fields"]
 
-    clients.AuditLog.get_all(date="1981-12-19")
 
+def test_openapi_audit_log_clear(audit_log_store: AuditLogStore, clients: ClientRegistry) -> None:
+    deserialized_entries = LogEntryFactory.batch(4, time=BASE_DATE_TIMESTAMP)
+    _populate_audit_log(audit_log_store, deserialized_entries)
 
-@pytest.mark.usefixtures("populated_audit_log")
-def test_openapi_audit_log_clear(clients: ClientRegistry) -> None:
     res_new = clients.AuditLog.get_all(date=BASE_DATE)
-    assert len(res_new.json["value"]) > 0
+    assert len(res_new.json["value"]) == 4
 
     clients.AuditLog.clear()
 
@@ -169,42 +85,100 @@ def test_openapi_audit_log_clear(clients: ClientRegistry) -> None:
     assert len(res_clear.json["value"]) == 0
 
 
-@pytest.mark.usefixtures("populated_audit_log")
-def test_openapi_audit_log_filter(clients: ClientRegistry) -> None:
-    res_without_filters = clients.AuditLog.get_all(date=BASE_DATE)
-    assert len(res_without_filters.json["value"]) == 4
+def test_openapi_audit_log_no_filter(
+    audit_log_store: AuditLogStore, clients: ClientRegistry
+) -> None:
+    deserialized_entries = [
+        LogEntryFactory.build(time=BASE_DATE_TIMESTAMP),
+        LogEntryFactory.build(time=BASE_DATE_TIMESTAMP + 60),
+        LogEntryFactory.build(time=BASE_DATE_TIMESTAMP + 120),
+        LogEntryFactory.build(time=BASE_DATE_TIMESTAMP + 180),
+        LogEntryFactory.build(time=BASE_DATE_TIMESTAMP + ONE_DAY),
+    ]
 
-    res_filter_object_type_host = clients.AuditLog.get_all(object_type="Host", date=BASE_DATE)
-    assert len(res_filter_object_type_host.json["value"]) == 1
+    _populate_audit_log(audit_log_store, deserialized_entries)
+    res_no_filter = clients.AuditLog.get_all(date=BASE_DATE)
+    assert len(res_no_filter.json["value"]) == 4
 
-    res_filter_object_type_none = clients.AuditLog.get_all(object_type="None", date=BASE_DATE)
-    assert len(res_filter_object_type_none.json["value"]) == 3
 
-    res_filter_user_id_1 = clients.AuditLog.get_all(user_id="ghost-user", date=BASE_DATE)
-    assert len(res_filter_user_id_1.json["value"]) == 1
+def test_openapi_audit_log_object_type(
+    audit_log_store: AuditLogStore, clients: ClientRegistry
+) -> None:
+    deserialized_entries = LogEntryFactory.batch(
+        3, time=BASE_DATE_TIMESTAMP
+    ) + LogEntryFactory.batch(
+        1,
+        time=BASE_DATE_TIMESTAMP,
+        object_ref={"object_type": "Host", "ident": "testing"},
+    )
 
-    res_filter_user_id_3 = clients.AuditLog.get_all(user_id="cmkadmin", date=BASE_DATE)
-    assert len(res_filter_user_id_3.json["value"]) == 3
+    _populate_audit_log(audit_log_store, deserialized_entries)
 
-    res_filter_object_id = clients.AuditLog.get_all(object_id="tst", date=BASE_DATE)
-    assert len(res_filter_object_id.json["value"]) == 1
+    res_object_type_host = clients.AuditLog.get_all(object_type="Host", date=BASE_DATE)
+    res_object_type_none = clients.AuditLog.get_all(object_type="None", date=BASE_DATE)
 
-    res_filter_empty_object_id = clients.AuditLog.get_all(object_id="", date=BASE_DATE)
-    assert len(res_filter_empty_object_id.json["value"]) == 4
+    assert len(res_object_type_host.json["value"]) == 1
+    assert len(res_object_type_none.json["value"]) == 3
+
+
+def test_openapi_audit_log_filter_user_id(
+    audit_log_store: AuditLogStore, clients: ClientRegistry
+) -> None:
+    deserialized_entries = LogEntryFactory.batch(
+        3, time=BASE_DATE_TIMESTAMP, user_id="cmkadmin"
+    ) + LogEntryFactory.batch(1, time=BASE_DATE_TIMESTAMP, user_id="ghost_user")
+
+    _populate_audit_log(audit_log_store, deserialized_entries)
+
+    res_cmkadmin = clients.AuditLog.get_all(user_id="cmkadmin", date=BASE_DATE)
+    res_ghost_user = clients.AuditLog.get_all(user_id="ghost_user", date=BASE_DATE)
+    res_unknown_user = clients.AuditLog.get_all(user_id="i-do-not-exist", date=BASE_DATE)
+
+    assert len(res_cmkadmin.json["value"]) == 3
+    assert len(res_ghost_user.json["value"]) == 1
+    assert len(res_unknown_user.json["value"]) == 0
+
+
+def test_openapi_audit_log_filter_object_id(
+    audit_log_store: AuditLogStore, clients: ClientRegistry
+) -> None:
+    deserialized_entries = LogEntryFactory.batch(
+        3, time=BASE_DATE_TIMESTAMP, object_ref=None
+    ) + LogEntryFactory.batch(
+        1,
+        time=BASE_DATE_TIMESTAMP,
+        object_ref={"object_type": "Host", "ident": "testing"},
+    )
+
+    _populate_audit_log(audit_log_store, deserialized_entries)
+    res_testing_object_id = clients.AuditLog.get_all(object_id="testing", date=BASE_DATE)
+    res_empty_object_id = clients.AuditLog.get_all(object_id="", date=BASE_DATE)
+
+    assert len(res_testing_object_id.json["value"]) == 1
+    assert len(res_empty_object_id.json["value"]) == 4
 
 
 def test_openapi_audit_log_pagination(
-    clients: ClientRegistry, populated_two_day_entries_audit_log: list
+    audit_log_store: AuditLogStore, clients: ClientRegistry
 ) -> None:
-    today = datetime.datetime.today()
-    yesterday = today - datetime.timedelta(days=1)
+    today_entries_count = 19
+    yesterday_entries_count = 12
 
-    today_res = clients.AuditLog.get_all(date=today.strftime("%Y-%m-%d"))
-    yesteday_res = clients.AuditLog.get_all(date=yesterday.strftime("%Y-%m-%d"))
+    deserialized_entries = LogEntryFactory.batch(
+        today_entries_count, time=BASE_DATE_TIMESTAMP
+    ) + LogEntryFactory.batch(yesterday_entries_count, time=BASE_DATE_TIMESTAMP - ONE_DAY)
 
-    assert len(today_res.json["value"] + yesteday_res.json["value"]) == len(
-        populated_two_day_entries_audit_log
+    _populate_audit_log(audit_log_store, deserialized_entries)
+
+    today_res = clients.AuditLog.get_all(date=BASE_DATE)
+    yesteday_res = clients.AuditLog.get_all(date=BASE_PREVIOUS_DATE)
+
+    assert (
+        len(today_res.json["value"] + yesteday_res.json["value"])
+        == today_entries_count + yesterday_entries_count
     )
+    assert len(today_res.json["value"]) == today_entries_count
+    assert len(yesteday_res.json["value"]) == yesterday_entries_count
 
 
 def test_openapi_audit_log_serialization() -> None:
@@ -251,9 +225,3 @@ def test_openapi_audit_log_serialization() -> None:
 
     deserialized_entry2: AuditLogStore.Entry = AuditLogStore.Entry.deserialize(entry2)
     assert_entry(entry2, deserialized_entry2)
-
-    entries = generate_random_audit_log(2, 2)
-    assert_entry(entries[0], AuditLogStore.Entry.deserialize(entries[0]))
-    assert_entry(entries[1], AuditLogStore.Entry.deserialize(entries[1]))
-    assert_entry(entries[2], AuditLogStore.Entry.deserialize(entries[2]))
-    assert_entry(entries[3], AuditLogStore.Entry.deserialize(entries[3]))

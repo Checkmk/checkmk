@@ -536,7 +536,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(
         ),
     ],
 )
-def test_lookup_mgmt_board_ip_address_unresolveable(
+def test_lookup_mgmt_board_ip_address_unresolvable(
     monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID], family: socket.AddressFamily
 ) -> None:
     hostname = HostName("unresolveable-hostname")
@@ -544,4 +544,26 @@ def test_lookup_mgmt_board_ip_address_unresolveable(
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None
+
+
+def test_lookup_mgmt_board_ip_address_unresolvable_2(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def fake_lookup_ip_address(*_a, **_kw):
+        raise MKIPAddressLookupError("Failed to ...")
+
+    hostname = HostName("hostname")
+    ts = Scenario()
+    ts.add_host(hostname)
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            "hostname": {"management_address": "lolo"},
+        },
+    )
+
     assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None

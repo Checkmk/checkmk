@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name,line-too-long
-# pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
-
 import logging
 from collections.abc import Mapping
 from typing import Any
@@ -74,6 +71,38 @@ from cmk.ec.event import (
                 "priority": 6,
                 "text": "message",
                 "time": 1558871101.0,
+            },
+        ),
+        (
+            # Variant 2: zypper SLES15 without forwarding(?)
+            "<10>Aug 31 14:34:18 localhost RPM[1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
+            # Variant 2a: zypper SLES15
+            "<10>Aug 31 14:34:18 localhost [RPM][1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
             },
         ),
         (

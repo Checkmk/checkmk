@@ -93,7 +93,7 @@ boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with 
 pexpect = "*" # used for update testing
 dill = "*"
 jsonschema = "==4.17.3"
-polyfactory = "==2.8.0" # used for generating mock data for unit tests
+polyfactory = "*" # used for generating mock data for unit tests
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

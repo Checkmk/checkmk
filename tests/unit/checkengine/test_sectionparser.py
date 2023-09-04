@@ -3,22 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
     ResolvedResult,
     SectionPlugin,
+    SectionsParser,
 )
-
-# import pytest
 
 
 def _section(
@@ -125,3 +125,88 @@ class TestParsedSectionsResolver:
             ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
             ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
         ]
+
+
+def _test_section(
+    *,
+    section_name: str,
+    parsed_section_name: str,
+    parse_function: Callable,
+    supersedes: Iterable[str],
+) -> tuple[SectionName, SectionPlugin]:
+    return SectionName(section_name), SectionPlugin(
+        supersedes={SectionName(n) for n in supersedes},
+        parse_function=parse_function,
+        parsed_section_name=ParsedSectionName(parsed_section_name),
+    )
+
+
+SECTION_ONE = _test_section(
+    section_name="one",
+    parsed_section_name="parsed",
+    parse_function=lambda x: {"parsed_by": "one", "node": x[0][0]},
+    supersedes=(),
+)
+
+SECTION_TWO = _test_section(
+    section_name="two",
+    parsed_section_name="parsed",
+    parse_function=lambda x: {"parsed_by": "two", "node": x[0][0]},
+    supersedes={"one"},
+)
+
+SECTION_THREE = _test_section(
+    section_name="three",
+    parsed_section_name="parsed2",
+    parse_function=lambda x: {"parsed_by": "three", "node": x[0][0]},
+    supersedes=(),
+)
+
+SECTION_FOUR = _test_section(
+    section_name="four",
+    parsed_section_name="parsed_four",
+    parse_function=lambda x: {"parsed_by": "four", "node": x[0][0]},
+    supersedes={"one"},
+)
+
+NODE_1: Sequence[AgentRawDataSectionElem] = [
+    ["node1", "data 1"],
+    ["node1", "data 2"],
+]
+
+NODE_2: Sequence[AgentRawDataSectionElem] = [
+    ["node2", "data 1"],
+    ["node2", "data 2"],
+]
+
+
+def make_parser() -> SectionsParser:
+    return SectionsParser(
+        HostSections[AgentRawDataSection](
+            sections={
+                SectionName("one"): NODE_1,
+                SectionName("four"): NODE_1,
+            }
+        ),
+        host_name=HostName("some-host"),
+        error_handling=lambda *args, **kw: "error",
+    )
+
+
+def test_parse_sections_unsuperseded() -> None:
+    assert (
+        ParsedSectionsResolver(
+            make_parser(),
+            section_plugins=dict((SECTION_ONE, SECTION_THREE)),
+        ).resolve(ParsedSectionName("parsed"))
+        is not None
+    )
+
+
+def test_parse_sections_superseded() -> None:
+    assert (
+        ParsedSectionsResolver(
+            make_parser(), section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR))
+        ).resolve(ParsedSectionName("parsed"))
+        is None
+    )

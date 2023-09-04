@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c68c49ecb3c2c5300cb2aa6b07b4c571ae8a92f5744bf37ea03fd4956665b321"
+            "sha256": "1c567d37c72abcf042f91b0d089ebc95305b6958c520920f640b4f9c674e68e4"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -3992,6 +3992,14 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==1.3.0"
+        },
+        "polyfactory": {
+            "hashes": [
+                "sha256:20346bb77f4a46deef7dcda5b65dd5bd51f606b2e53c6121aea3fdc50320c73a",
+                "sha256:cbd501a354659d8f281e13b78614c3010d21b457ae4b98165a157c838211c5b9"
+            ],
+            "index": "pypi",
+            "version": "==2.8.0"
         },
         "pre-commit": {
             "hashes": [

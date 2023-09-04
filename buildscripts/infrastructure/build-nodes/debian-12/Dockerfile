@@ -5,7 +5,6 @@ FROM ${IMAGE_DEBIAN_12} as base
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-#    python-dev \
 RUN apt-get update \
     && apt-get install -y \
     default-libmysqlclient-dev \
@@ -25,7 +24,6 @@ RUN apt-get update \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-#    dpatch \
 RUN apt-get update \
     && apt-get install -y \
     apache2 \

@@ -5,12 +5,18 @@
 
 import copy
 import pickle
+from collections.abc import Container
 
 import pytest
 
 from cmk.utils.sectionname import SectionName
+from cmk.utils.validatedstr import ValidatedString
 
-from cmk.checkengine.checking import CheckPluginName
+
+class VS(ValidatedString):
+    @classmethod
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
 @pytest.mark.parametrize(
@@ -18,21 +24,21 @@ from cmk.checkengine.checking import CheckPluginName
 )
 def test_invalid_plugin_name(str_name) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises((TypeError, ValueError)):
-        CheckPluginName(str_name)
+        VS(str_name)
 
 
 def test_plugin_name_repr() -> None:
-    assert repr(CheckPluginName("Margo")) == "CheckPluginName('Margo')"
+    assert repr(VS("Margo")) == "VS('Margo')"
 
 
 def test_plugin_name_str() -> None:
-    assert str(CheckPluginName("Margo")) == "Margo"
+    assert str(VS("Margo")) == "Margo"
 
 
 def test_plugin_name_equal() -> None:
-    assert CheckPluginName("Stuart") == CheckPluginName("Stuart")
+    assert VS("Stuart") == VS("Stuart")
     with pytest.raises(TypeError):
-        _ = CheckPluginName("Stuart") == "Stuart"
+        _ = VS("Stuart") == "Stuart"
 
 
 def test_copyability() -> None:
@@ -44,25 +50,25 @@ def test_copyability() -> None:
 
 def test_plugin_name_as_key() -> None:
     plugin_dict = {
-        CheckPluginName("Stuart"): None,
+        VS("Stuart"): None,
     }
-    assert CheckPluginName("Stuart") in plugin_dict
+    assert VS("Stuart") in plugin_dict
 
 
 def test_plugin_name_sort() -> None:
     plugin_dict = {
-        CheckPluginName("Stuart"): None,
-        CheckPluginName("Bob"): None,
-        CheckPluginName("Dave"): None,
+        VS("Stuart"): None,
+        VS("Bob"): None,
+        VS("Dave"): None,
     }
 
     assert sorted(plugin_dict) == [
-        CheckPluginName("Bob"),
-        CheckPluginName("Dave"),
-        CheckPluginName("Stuart"),
+        VS("Bob"),
+        VS("Dave"),
+        VS("Stuart"),
     ]
 
 
 def test_cross_class_comparison_fails() -> None:
     with pytest.raises(TypeError):
-        _ = CheckPluginName("foo") == SectionName("foo")
+        _ = VS("foo") == SectionName("foo")

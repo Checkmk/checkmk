@@ -7,6 +7,7 @@
 
 import enum
 from collections.abc import Sequence
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -22,6 +23,8 @@ class Test(BaseModel, frozen=True):
     name: str
     id_: str
     status: Outcome
+    starttime: datetime
+    endtime: datetime
 
 
 class Result(BaseModel, frozen=True):

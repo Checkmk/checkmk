@@ -2204,3 +2204,12 @@ perfometer_info.append(
         "total": 100.0,
     },
 )
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "test_runtime",
+        "half_value": 864000.0,
+        "exponent": 2,
+    }
+)

@@ -3,15 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import assert_never
+from typing import assert_never, TypedDict
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils import robotmk_api  # Should be replaced by external package
+
+
+class Params(TypedDict):
+    test_runtime: tuple[int, int] | None
+
+
+DEFAULT: Params = {"test_runtime": None}
 
 
 def _remap_state(status: robotmk_api.Outcome) -> State:
@@ -46,16 +60,24 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
             yield Service(item=_item(result, test))
 
 
-def _check_test(test: robotmk_api.Test) -> CheckResult:
+def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
     yield Result(state=_remap_state(test.status), summary=f"{test.status.value}")
+    runtime = (test.endtime - test.starttime).total_seconds()
+    yield from check_levels(
+        runtime,
+        label="Test runtime",
+        levels_upper=params["test_runtime"],
+        metric_name="test_runtime",
+        render_func=render.timespan,
+    )
 
 
-def check(item: str, section: robotmk_api.Section) -> CheckResult:
+def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
     for result in section:
         for test in result.tests:
             if _item(result, test) == item:
-                yield from _check_test(test)
+                yield from _check_test(params, test)
 
 
 register.check_plugin(
@@ -64,4 +86,6 @@ register.check_plugin(
     service_name="%s",
     discovery_function=discover,
     check_function=check,
+    check_ruleset_name="robotmk",
+    check_default_parameters=DEFAULT,
 )

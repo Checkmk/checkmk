@@ -513,31 +513,16 @@ def test_lookup_mgmt_board_ip_address_dual_host(
 
 
 @pytest.mark.parametrize(
-    "tags, family",
+    "tags",
     [
-        ({}, socket.AF_INET),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v4-only"),
-            },
-            socket.AF_INET,
-        ),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v6-only"),
-            },
-            socket.AF_INET6,
-        ),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v4v6"),
-            },
-            socket.AF_INET,
-        ),
+        {},
+        {TagGroupID("address_family"): TagID("ip-v4-only")},
+        {TagGroupID("address_family"): TagID("ip-v6-only")},
+        {TagGroupID("address_family"): TagID("ip-v4v6")},
     ],
 )
 def test_lookup_mgmt_board_ip_address_unresolvable(
-    monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID], family: socket.AddressFamily
+    monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID]
 ) -> None:
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()

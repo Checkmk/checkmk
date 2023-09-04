@@ -9,18 +9,21 @@ from collections.abc import Callable, Sequence
 from itertools import chain
 from typing import assert_never, Literal, TypeVar
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 
-from ._graph_specification import GraphMetric, LineType, RPNExpression
+from ._graph_specification import GraphConsoldiationFunction, GraphMetric, LineType, RPNExpression
 from ._utils import (
     AugmentedTimeSeries,
     Curve,
-    ExpressionParams,
     fade_color,
     parse_color,
     render_color,
@@ -102,7 +105,7 @@ def evaluate_time_series_expression(
     expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    ident, parameters = expression[0], expression[1:]
+    ident = expression[0]
 
     try:
         expression_func = time_series_expression_registry[ident]
@@ -121,14 +124,17 @@ def evaluate_time_series_expression(
 
         raise MKGeneralException("Unrecognized expressions type %s" % ident)
 
-    return expression_func(parameters, rrd_data)
+    return expression_func(expression, rrd_data)
 
 
 def _expression_operator(
-    parameters: ExpressionParams,
+    expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    operator_id, operands = parameters
+    if expression[0] != "operator":
+        raise TypeError(expression)
+
+    operator_id, operands = expression[1], expression[2:]
     if result := _time_series_math(
         operator_id,
         [
@@ -143,22 +149,48 @@ def _expression_operator(
 
 
 def _expression_rrd(
-    parameters: ExpressionParams,
+    expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    key = (parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
-    if key in rrd_data:
+    if expression[0] != "rrd":
+        raise TypeError(expression)
+
+    def _parse_cf_name(cf_name: str | None) -> GraphConsoldiationFunction | None:
+        if cf_name is None:
+            return None
+        if cf_name == "max":
+            return "max"
+        if cf_name == "min":
+            return "min"
+        if cf_name == "average":
+            return "average"
+        raise ValueError(cf_name)
+
+    if (
+        key := (
+            SiteId(expression[1]),
+            HostName(expression[2]),
+            ServiceName(expression[3]),
+            str(expression[4]),
+            _parse_cf_name(expression[5]),
+            float(expression[6]),
+        )
+    ) in rrd_data:
         return [AugmentedTimeSeries(data=rrd_data[key])]
+
     num_points, twindow = _derive_num_points_twindow(rrd_data)
     return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
 def _expression_constant(
-    parameters: ExpressionParams,
+    expression: RPNExpression,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
+    if expression[0] != "constant":
+        raise TypeError(expression)
+
     num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [AugmentedTimeSeries(data=TimeSeries([parameters[0]] * num_points, twindow))]
+    return [AugmentedTimeSeries(data=TimeSeries([expression[1]] * num_points, twindow))]
 
 
 def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:

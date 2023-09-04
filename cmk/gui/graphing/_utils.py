@@ -66,6 +66,7 @@ from ._graph_specification import (
     LineType,
     MetricDefinition,
     MetricExpression,
+    RPNExpression,
     RPNExpressionMetric,
 )
 
@@ -973,8 +974,7 @@ class AugmentedTimeSeries:
     metadata: TimeSeriesMetaData = TimeSeriesMetaData()
 
 
-ExpressionParams = Sequence[Any]
-ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[AugmentedTimeSeries]]
+ExpressionFunc = Callable[[RPNExpression, RRDData], Sequence[AugmentedTimeSeries]]
 
 
 class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):

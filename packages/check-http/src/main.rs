@@ -1,13 +1,15 @@
-use http::{HeaderMap, HeaderValue};
 use clap::Parser;
-mod cli;
+use http::{HeaderMap, HeaderValue};
 use reqwest::header::USER_AGENT;
 use std::time::{Duration, Instant};
 
+mod cli;
+mod pwstore;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = cli::Args::parse();
+    let patched_args = replace_passwords::patch_args(std::env::args());
+    let args = cli::Args::parse_from(patched_args);
 
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = args.user_agent {
@@ -21,10 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let now = Instant::now();
 
-    let resp = client
-        .get(args.url)
-        .send()
-        .await?;
+    let resp = client.get(args.url).send().await?;
 
     let headers = resp.headers();
     println!("{:#?}", headers);

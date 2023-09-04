@@ -12,13 +12,11 @@ from PIL import Image, PngImagePlugin
 import cmk.utils.paths
 import cmk.utils.store as store
 
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -42,15 +40,6 @@ class ModeIcons(WatoMode):
 
     def title(self) -> str:
         return _("Custom icons")
-
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            _("Icon"),
-            breadcrumb,
-            form_name="upload_form",
-            button_name="_save",
-            save_title=_("Upload"),
-        )
 
     def _load_custom_icons(self):
         s = IconSelector(show_builtin_icons=False, with_emblem=False)
@@ -151,6 +140,7 @@ class ModeIcons(WatoMode):
 
         html.begin_form("upload_form", method="POST")
         self._vs_upload().render_input("_upload_icon", None)
+        html.button(varname="_save", title=_("Upload"), cssclass="hot")
         html.hidden_fields()
         html.end_form()
 

@@ -47,6 +47,7 @@ SYSTEM_TESTS := \
     test-plugins-integration \
     test-composition \
     test-update \
+    test-openapi \
     test-plugins \
     test-gui-crawl \
     test-xss-crawl \
@@ -270,6 +271,9 @@ test-extension-compatibility:
 
 test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
+
+test-openapi:
+	$(PYTEST) -T openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath openapi)
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)

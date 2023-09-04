@@ -90,7 +90,6 @@ RUN apt-get update \
     msitools \
     && rm -rf /var/lib/apt/lists/*
 
-
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2

@@ -21,7 +21,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp4 sles15sp4 \
     python3-devel \
     rrdtool-devel \
     sudo \
-    && zypper clean -a \
+    && zypper clean -a
 
 RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
@@ -80,7 +80,7 @@ RUN zypper ref -s \
     vim \
     && zypper clean -a
 
-# krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced \
+# krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced
 # This is needed and expected by setup.py of pykerberos for properly linking against the needed libs.
 # However we're executing the make targets within the container in a "non-login" shell and /etc/profile is not sourced.
 # Sourcing this file during the container creation led to several other issues (no tty available etc.).

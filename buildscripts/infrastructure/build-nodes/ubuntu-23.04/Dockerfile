@@ -29,7 +29,6 @@ RUN apt-get update \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-# dpatch \
 RUN apt-get update \
     && apt-get install -y \
     apache2 \

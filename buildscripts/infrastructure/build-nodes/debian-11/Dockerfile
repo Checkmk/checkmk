@@ -5,8 +5,6 @@ FROM ${IMAGE_DEBIAN_11} as base
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-#    libenchant1c2a \
-
 RUN apt-get update \
     && apt-get install -y \
     default-libmysqlclient-dev \

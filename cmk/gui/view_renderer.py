@@ -494,15 +494,6 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-        if display_options.enabled(display_options.D):
-            display_dropdown.topics.insert(
-                0,
-                PageMenuTopic(
-                    title=_("Format"),
-                    entries=list(self._page_menu_entries_view_format()),
-                ),
-            )
-
         if display_options.enabled(display_options.F):
             display_dropdown.topics.insert(
                 0,
@@ -523,17 +514,17 @@ class GUIViewRenderer(ABCViewRenderer):
             is_shortcut=True,
         )
 
-    def _page_menu_entries_view_format(self) -> Iterator[PageMenuEntry]:
-        painter_options = PainterOptions.get_instance()
-        yield PageMenuEntry(
-            title=_("Modify display options"),
-            icon_name="painteroptions",
-            item=PageMenuPopup(self._render_painter_options_form()),
-            name="display_painter_options",
-            is_enabled=painter_options.painter_option_form_enabled(),
-        )
-
     def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
+        if display_options.enabled(display_options.D):
+            painter_options = PainterOptions.get_instance()
+            yield PageMenuEntry(
+                title=_("Modify display options"),
+                icon_name="painteroptions",
+                item=PageMenuPopup(self._render_painter_options_form()),
+                name="display_painter_options",
+                is_enabled=painter_options.painter_option_form_enabled(),
+            )
+
         checkboxes_toggleable = (
             self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         )

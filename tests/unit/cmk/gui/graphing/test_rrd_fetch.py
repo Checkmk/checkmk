@@ -20,6 +20,7 @@ from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpec
 from cmk.gui.graphing._rrd_fetch import (
     _needed_elements_of_expression,
     fetch_rrd_data_for_graph,
+    NeededElementForTranslation,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
@@ -36,7 +37,7 @@ def test_needed_elements_of_expression() -> None:
             ),
             lambda *args: (),
         )
-    ) == {("heute", "CPU utilization", "util", "max")}
+    ) == {NeededElementForTranslation(HostName("heute"), "CPU utilization")}
 
 
 @contextmanager

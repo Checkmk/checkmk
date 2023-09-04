@@ -9,7 +9,7 @@ import collections
 import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any
+from dataclasses import dataclass
 
 import livestatus
 from livestatus import SiteId
@@ -53,23 +53,24 @@ def fetch_rrd_data_for_graph(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> RRDData:
-    needed_rrd_data = get_needed_sources(graph_recipe.metrics, resolve_combined_single_metric_spec)
     unit_conversion = unit_info[graph_recipe.unit].get(
         "conversion",
         lambda v: v,
     )
-
     by_service = _group_needed_rrd_data_by_service(
         (
             (
-                entry[0],
-                entry[1],
-                entry[2],
-                entry[3],
-                entry[4],
-                entry[5],
+                entry.site_id,
+                entry.host_name,
+                entry.service_name,
+                entry.metric_name,
+                entry.consolidation_func_name,
+                entry.scale,
             )
-            for entry in needed_rrd_data
+            for entry in get_needed_sources(
+                graph_recipe.metrics, resolve_combined_single_metric_spec
+            )
+            if isinstance(entry, NeededElementForRRDDataKey)
         )
     )
     rrd_data: RRDData = {}
@@ -145,17 +146,42 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
         data.end -= step
 
 
+@dataclass(frozen=True)
+class NeededElementForTranslation:
+    host_name: HostName
+    service_name: ServiceName
+
+
+@dataclass(frozen=True)
+class NeededElementForRRDDataKey:
+    # TODO Intermediate step, will be cleaned up:
+    # Relates to RPNExpression::rrd with SiteId, etc.
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: str
+    consolidation_func_name: GraphConsoldiationFunction | None
+    scale: float
+
+
 def _needed_elements_of_expression(
     expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
-) -> Iterator[tuple[Any, ...]]:
+) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
     if expression[0] in ["rrd", "scalar"]:
-        yield tuple(expression[1:])
+        if len(params := expression[1:]) == 4:
+            yield NeededElementForTranslation(params[0], params[1])
+        elif len(params) == 6:
+            yield NeededElementForRRDDataKey(*params)
+        else:
+            raise TypeError(params)
+
     elif expression[0] in ["operator", "transformation"]:
         for operand in expression[2]:
             yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
+
     elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
         raw_spec = expression[1]
         metrics = resolve_combined_single_metric_spec(
@@ -185,7 +211,7 @@ def get_needed_sources(
     ],
     *,
     condition: Callable[[GraphMetric], bool] = lambda x: True,
-) -> set[tuple[Any, ...]]:
+) -> set[NeededElementForTranslation | NeededElementForRRDDataKey]:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -193,9 +219,9 @@ def get_needed_sources(
     condition: Callable
         Filter function for metrics that are considered"""
     return {
-        source  #
+        element
         for metric in metrics
-        for source in _needed_elements_of_expression(
+        for element in _needed_elements_of_expression(
             metric.expression,
             resolve_combined_single_metric_spec,
         )

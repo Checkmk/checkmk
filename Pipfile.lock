@@ -3407,11 +3407,11 @@
         },
         "hypothesis": {
             "hashes": [
-                "sha256:be11b9a0ec89ed561a3d4b08d1d78e2e2d427a1c2c842a9809d88bc1e782e396",
-                "sha256:c88895c8ab0ed86d4edf4b13b7d6100d69f6cc3dd32131b87948715ad7725247"
+                "sha256:446ecc9665a23fc67a6d32bafbe4233d77fef10eb90d4ede8ab1e76474a63215",
+                "sha256:d91a48fd896666d9ab04590bdd840eb97c8a04db16d7dd6c79a47df8ed412a79"
             ],
             "index": "pypi",
-            "version": "==6.83.2"
+            "version": "==6.84.0"
         },
         "hypothesis-graphql": {
             "hashes": [

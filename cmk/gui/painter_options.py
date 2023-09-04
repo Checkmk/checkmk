@@ -193,8 +193,8 @@ class PainterOptions:
             vs.render_input("po_%s" % name, view_spec.get(name, self.get(name)))
         forms.end()
 
-        html.button("_update_painter_options", _("Submit"), "submit")
-        html.button("_reset_painter_options", _("Reset"), "submit")
+        html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
+        html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
 
         html.hidden_fields()
         html.end_form()

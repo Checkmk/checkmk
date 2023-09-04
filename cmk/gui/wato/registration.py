@@ -14,9 +14,10 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
+from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import _permissions, filters, pages
+from . import _main_modules, _permissions, filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
@@ -41,6 +42,7 @@ def register(
     mode_registry: ModeRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
+    main_module_registry: MainModuleRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -63,3 +65,4 @@ def register(
     filters.register(filter_registry)
     pages.register(page_registry, mode_registry)
     _permissions.register(permission_section_registry, permission_registry)
+    _main_modules.register(main_module_registry)

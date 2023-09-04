@@ -16,8 +16,6 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    ABCMainModule,
-    main_module_registry,
     MainModuleTopicAgents,
     MainModuleTopicEvents,
     MainModuleTopicGeneral,
@@ -28,10 +26,54 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
-from cmk.gui.watolib.main_menu import MainModuleTopic
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
 
-@main_module_registry.register
+def register(main_module_registry: MainModuleRegistry) -> None:
+    main_module_registry.register(MainModuleFolder)
+    main_module_registry.register(MainModuleTags)
+    main_module_registry.register(MainModuleGlobalSettings)
+    main_module_registry.register(MainModuleReadOnly)
+    main_module_registry.register(MainModuleRuleSearch)
+    main_module_registry.register(MainModulePredefinedConditions)
+    main_module_registry.register(MainModuleHostAndServiceParameters)
+    main_module_registry.register(MainModuleHWSWInventory)
+    main_module_registry.register(MainModuleNetworkingServices)
+    main_module_registry.register(MainModuleOtherServices)
+    main_module_registry.register(MainModuleCheckPlugins)
+    main_module_registry.register(MainModuleHostGroups)
+    main_module_registry.register(MainModuleHostCustomAttributes)
+    main_module_registry.register(MainModuleServiceGroups)
+    main_module_registry.register(MainModuleUsers)
+    main_module_registry.register(MainModuleRoles)
+    if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
+        main_module_registry.register(MainModuleLDAP)
+    main_module_registry.register(MainModuleUserCustomAttributes)
+    main_module_registry.register(MainModuleContactGroups)
+    main_module_registry.register(MainModuleNotifications)
+    main_module_registry.register(MainModuleTimeperiods)
+    main_module_registry.register(MainModuleSites)
+    main_module_registry.register(MainModulePasswords)
+    main_module_registry.register(MainModuleAuditLog)
+    main_module_registry.register(MainModuleAnalyzeConfig)
+    main_module_registry.register(MainModuleDiagnostics)
+    main_module_registry.register(MainModuleMonitoringRules)
+    main_module_registry.register(MainModuleDiscoveryRules)
+    main_module_registry.register(MainModuleEnforcedServices)
+    main_module_registry.register(MainModuleAgentRules)
+    main_module_registry.register(MainModuleOtherAgents)
+    main_module_registry.register(MainModuleAgentAccessRules)
+    main_module_registry.register(MainModuleSNMPRules)
+    main_module_registry.register(MainModuleVMCloudContainer)
+    main_module_registry.register(MainModuleOtherIntegrations)
+
+    # Register the builtin agent download page on the top level of Setup only when the agent bakery
+    # does not exist (e.g. when using CRE)
+    if cmk_version.edition() in (cmk_version.Edition.CRE, cmk_version.Edition.CSE):
+        main_module_registry.register(MainModuleAgentsWindows)
+        main_module_registry.register(MainModuleAgentsLinux)
+
+
 class MainModuleFolder(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -66,7 +108,6 @@ class MainModuleFolder(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleTags(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -103,7 +144,6 @@ class MainModuleTags(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleGlobalSettings(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -138,7 +178,6 @@ class MainModuleGlobalSettings(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleReadOnly(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -173,7 +212,6 @@ class MainModuleReadOnly(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleRuleSearch(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -208,7 +246,6 @@ class MainModuleRuleSearch(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModulePredefinedConditions(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -243,7 +280,6 @@ class MainModulePredefinedConditions(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -278,7 +314,6 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleHWSWInventory(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -313,7 +348,6 @@ class MainModuleHWSWInventory(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleNetworkingServices(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -351,7 +385,6 @@ class MainModuleNetworkingServices(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleOtherServices(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -389,7 +422,6 @@ class MainModuleOtherServices(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleCheckPlugins(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -424,7 +456,6 @@ class MainModuleCheckPlugins(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleHostGroups(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -459,7 +490,6 @@ class MainModuleHostGroups(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleHostCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -494,7 +524,6 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleServiceGroups(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -529,7 +558,6 @@ class MainModuleServiceGroups(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleUsers(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -564,7 +592,6 @@ class MainModuleUsers(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleRoles(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -633,11 +660,6 @@ class MainModuleLDAP(ABCMainModule):
         return True
 
 
-if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
-    main_module_registry.register(MainModuleLDAP)
-
-
-@main_module_registry.register
 class MainModuleUserCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -672,7 +694,6 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleContactGroups(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -707,7 +728,6 @@ class MainModuleContactGroups(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleNotifications(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -742,7 +762,6 @@ class MainModuleNotifications(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleTimeperiods(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -779,7 +798,6 @@ class MainModuleTimeperiods(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleSites(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -814,7 +832,6 @@ class MainModuleSites(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModulePasswords(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -849,7 +866,6 @@ class MainModulePasswords(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleAuditLog(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -884,7 +900,6 @@ class MainModuleAuditLog(ABCMainModule):
         return True
 
 
-@main_module_registry.register
 class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -919,7 +934,6 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleDiagnostics(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -957,7 +971,6 @@ class MainModuleDiagnostics(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleMonitoringRules(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -992,7 +1005,6 @@ class MainModuleMonitoringRules(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleDiscoveryRules(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1027,7 +1039,6 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleEnforcedServices(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1130,14 +1141,6 @@ class MainModuleAgentsLinux(ABCMainModule):
         return False
 
 
-# Register the builtin agent download page on the top level of Setup only when the agent bakery
-# does not exist (e.g. when using CRE)
-if cmk_version.edition() is cmk_version.Edition.CRE:
-    main_module_registry.register(MainModuleAgentsWindows)
-    main_module_registry.register(MainModuleAgentsLinux)
-
-
-@main_module_registry.register
 class MainModuleAgentRules(ABCMainModule):
     @property
     def enabled(self) -> bool:
@@ -1187,7 +1190,6 @@ class MainModuleAgentRules(ABCMainModule):
         )
 
 
-@main_module_registry.register
 class MainModuleOtherAgents(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1222,7 +1224,6 @@ class MainModuleOtherAgents(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleAgentAccessRules(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1257,7 +1258,6 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleSNMPRules(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1292,7 +1292,6 @@ class MainModuleSNMPRules(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleVMCloudContainer(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -1327,7 +1326,6 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return False
 
 
-@main_module_registry.register
 class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def mode_or_url(self) -> str:

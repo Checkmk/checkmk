@@ -157,6 +157,7 @@ def register() -> None:
         mode_registry,
         permission_section_registry,
         permission_registry,
+        main_module_registry,
     )
     bi_registration.register(
         data_source_registry,

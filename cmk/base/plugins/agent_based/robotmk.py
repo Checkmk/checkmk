@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import assert_never
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -10,6 +12,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils import robotmk_api  # Should be replaced by external package
+
+
+def _remap_state(status: robotmk_api.Outcome) -> State:
+    match status:
+        case robotmk_api.Outcome.PASS:
+            return State.OK
+        case robotmk_api.Outcome.FAIL:
+            return State.CRIT
+        case robotmk_api.Outcome.NOT_RUN | robotmk_api.Outcome.SKIP:
+            return State.WARN
+        case _:
+            assert_never(status)
 
 
 def parse(string_table: StringTable) -> robotmk_api.Section:
@@ -34,6 +48,7 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
 
 def _check_test(test: robotmk_api.Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
+    yield Result(state=_remap_state(test.status), summary=f"{test.status.value}")
 
 
 def check(item: str, section: robotmk_api.Section) -> CheckResult:

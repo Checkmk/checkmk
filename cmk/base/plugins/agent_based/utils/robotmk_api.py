@@ -5,14 +5,23 @@
 
 # Should be replaced by external package
 
+import enum
 from collections.abc import Sequence
 
 from pydantic import BaseModel
 
 
+class Outcome(enum.Enum):
+    FAIL = "FAIL"
+    PASS = "PASS"
+    SKIP = "SKIP"
+    NOT_RUN = "NOT RUN"
+
+
 class Test(BaseModel, frozen=True):
     name: str
     id_: str
+    status: Outcome
 
 
 class Result(BaseModel, frozen=True):

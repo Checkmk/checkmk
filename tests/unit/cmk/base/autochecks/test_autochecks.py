@@ -20,21 +20,12 @@ from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.parameters import TimespecificParameters
 
-from cmk.base.config import ConfigCache
-
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 
 
 @pytest.fixture(autouse=True)
 def autochecks_dir(monkeypatch, tmp_path):
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
-
-
-@pytest.fixture()
-def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
-    ts = Scenario()
-    ts.add_host(HostName("host"))
-    return ts.apply(monkeypatch)
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -61,15 +52,19 @@ def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
     ],
 )
 def test_manager_get_autochecks_of(
-    test_config: ConfigCache,
     autochecks_content: str,
     expected_result: Sequence[ConfiguredService],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
-    manager = test_config._autochecks_manager
+    ts = Scenario()
+    ts.add_host(HostName("host"))
+    config_cache = ts.apply(monkeypatch)
+
+    manager = config_cache._autochecks_manager
 
     result = manager.get_autochecks_of(
         HostName("host"),
@@ -82,7 +77,7 @@ def test_manager_get_autochecks_of(
     assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL
 
     # Check that the ConfigCache method also returns the correct data
-    assert test_config.get_autochecks_of(HostName("host")) == result
+    assert config_cache.get_autochecks_of(HostName("host")) == result
 
 
 def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:

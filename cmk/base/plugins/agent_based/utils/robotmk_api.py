@@ -10,7 +10,14 @@ from collections.abc import Sequence
 from pydantic import BaseModel
 
 
+class Test(BaseModel, frozen=True):
+    name: str
+    id_: str
+
+
 class Result(BaseModel, frozen=True):
+    suite_name: str
+    tests: list[Test]
     xml: str
 
 

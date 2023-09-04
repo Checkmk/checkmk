@@ -1,0 +1,10 @@
+title: Robotmk
+agents: robotmk
+catalog: robotframework
+license: GPLv2
+distribution: check_mk
+description:
+ Dummy manpage. All fields need to be adjusted.
+
+discovery:
+ One service is created per Robotmk test.

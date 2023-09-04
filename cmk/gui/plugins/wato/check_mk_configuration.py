@@ -4556,7 +4556,18 @@ def _valuespec_extra_host_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Hosts"),
-        help=_("With this setting you can set links to documentations for Hosts"),
+        help=_(
+            "With this setting you can set links to documentations for Hosts. "
+            "You can use some macros within the URL which are dynamically "
+            "replaced for each object. These are:<br>"
+            "<ul>"
+            "<li>$HOSTNAME$: Contains the name of the host</li>"
+            "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
+            "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
+            "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
+            "<li>$USER_ID$: The user ID of the currently active user</li>"
+            "</ul>"
+        ),
         size=80,
     )
 
@@ -4611,7 +4622,21 @@ def _valuespec_extra_service_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Services"),
-        help=_("With this setting you can set links to documentations for each service"),
+        help=_(
+            "With this setting you can set links to documentations for each service. "
+            "You can use some macros within the URL which are dynamically "
+            "replaced for each object. These are:<br>"
+            "<ul>"
+            "<li>$HOSTNAME$: Contains the name of the host</li>"
+            "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
+            "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
+            "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
+            "<li>$SERVICEDESC$: Contains the service description "
+            "(in case this is a service)</li>"
+            "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
+            "<li>$USER_ID$: The user ID of the currently active user</li>"
+            "</ul>"
+        ),
         size=80,
     )
 

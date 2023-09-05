@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -12,11 +11,12 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import (
+    LabelManager,
     matches_tag_condition,
     RuleConditionsSpec,
+    RulesetMatcher,
     RulesetMatchObject,
     RuleSpec,
     TagCondition,
@@ -157,13 +157,25 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     ],
 )
 def test_ruleset_matcher_get_host_ruleset_values_labels(
-    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: Sequence[str]
+    hostname_str: str, expected_result: Sequence[str]
 ) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("host1"), labels={"os": "linux", "abc": "xä", "hu": "ha"})
-    ts.add_host(HostName("host2"))
-    config_cache = ts.apply(monkeypatch)
-    matcher = config_cache.ruleset_matcher
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={HostName("host1"): {}, HostName("host2"): {}},
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={
+                HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
+                HostName("host2"): {},
+            },
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={HostName("host1"), HostName("host2")},
+        clusters_of={},
+        nodes_of={},
+    )
 
     assert (
         list(
@@ -180,32 +192,38 @@ def test_ruleset_matcher_get_host_ruleset_values_labels(
 def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
-    ts = Scenario()
-    ts.set_ruleset(
-        "service_label_rules",
-        [
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+    ruleset_matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=[
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                    },
+                    "value": {"label1": "val1"},
                 },
-                "value": {"label1": "val1"},
-            },
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                    },
+                    "value": {"label2": "val2"},
                 },
-                "value": {"label2": "val2"},
-            },
-        ],
+            ],
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={test_host, xyz_host},
+        clusters_of={},
+        nodes_of={},
     )
 
-    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
-    ruleset_matcher = ts.apply(monkeypatch).ruleset_matcher
-
-    assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
-    assert ruleset_matcher.label_sources_of_service(xyz_host, "CPU load") == {}
+    assert not ruleset_matcher.labels_of_service(xyz_host, "CPU load")
+    assert not ruleset_matcher.label_sources_of_service(xyz_host, "CPU load")
 
     assert ruleset_matcher.labels_of_service(test_host, "CPU load") == {
         "label1": "val1",
@@ -218,44 +236,62 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_labels_of_service_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+def test_labels_of_service_discovered_labels() -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
-    ts = Scenario()
-    ts.add_host(test_host)
+    ruleset_matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={test_host: {}},
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=(
+                lambda host_name, *args, **kw: {"äzzzz": "eeeeez"} if host_name == test_host else {}
+            ),
+        ),
+        all_configured_hosts={test_host},
+        clusters_of={},
+        nodes_of={},
+    )
 
-    monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:
-        f.write(
-            """[
-    {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
-]"""
-        )
+    service_description = "CPU load"
 
-    config_cache = ts.apply(monkeypatch)
-    ruleset_matcher = config_cache.ruleset_matcher
+    assert not ruleset_matcher.labels_of_service(xyz_host, "CPU load")
+    assert not ruleset_matcher.label_sources_of_service(xyz_host, "CPU load")
 
-    service = config_cache.get_autochecks_of(test_host)[0]
-    assert service.description == "CPU load"
-
-    assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
-    assert ruleset_matcher.label_sources_of_service(xyz_host, "CPU load") == {}
-
-    assert ruleset_matcher.labels_of_service(test_host, service.description) == {"äzzzz": "eeeeez"}
-    assert ruleset_matcher.label_sources_of_service(test_host, service.description) == {
+    assert ruleset_matcher.labels_of_service(test_host, service_description) == {"äzzzz": "eeeeez"}
+    assert ruleset_matcher.label_sources_of_service(test_host, service_description) == {
         "äzzzz": "discovered"
     }
 
 
-def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("xyz"))
-    ts.add_host(HostName("host1"))
-    ts.add_host(HostName("host2"))
-    config_cache = ts.apply(monkeypatch)
-    matcher = config_cache.ruleset_matcher
+def test_basic_get_host_ruleset_values() -> None:
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={
+            HostName("abc"): {},
+            HostName("xyz"): {},
+            HostName("host1"): {},
+            HostName("host2"): {},
+        },
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={
+            HostName("abc"),
+            HostName("xyz"),
+            HostName("host1"),
+            HostName("host2"),
+        },
+        clusters_of={},
+        nodes_of={},
+    )
 
     assert not list(
         matcher.get_host_ruleset_values(
@@ -287,15 +323,37 @@ def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
     ) == ["BLUB"]
 
 
-def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("xyz"))
-    ts.add_host(HostName("lvl1"), host_path="/lvl1/hosts.mk")
-    ts.add_host(HostName("lvl2"), host_path="/lvl1/lvl2/hosts.mk")
-    ts.add_host(HostName("lvl1a"), host_path="/lvl1_a/hosts.mk")
-    config_cache = ts.apply(monkeypatch)
-    matcher = config_cache.ruleset_matcher
+def test_basic_get_host_ruleset_values_subfolders() -> None:
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={
+            HostName("abc"): {},
+            HostName("xyz"): {},
+            HostName("lvl1"): {},
+            HostName("lvl2"): {},
+            HostName("lvl1a"): {},
+        },
+        host_paths={
+            HostName("lvl1"): "/lvl1/hosts.mk",
+            HostName("lvl2"): "/lvl1/lvl2/hosts.mk",
+            HostName("lvl1a"): "/lvl1_a/hosts.mk",
+        },
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={
+            HostName("abc"),
+            HostName("xyz"),
+            HostName("lvl1"),
+            HostName("lvl2"),
+            HostName("lvl1a"),
+        },
+        clusters_of={},
+        nodes_of={},
+    )
 
     assert not list(
         matcher.get_host_ruleset_values(
@@ -368,16 +426,32 @@ dict_ruleset: Sequence[RuleSpec[dict[str, str]]] = [
 ]
 
 
-def test_basic_host_ruleset_get_merged_dict_values(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("xyz"))
-    ts.add_host(HostName("host1"))
-    ts.add_host(HostName("host2"))
-    config_cache = ts.apply(monkeypatch)
+def test_basic_host_ruleset_get_merged_dict_values() -> None:
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={
+            HostName("abc"): {},
+            HostName("xyz"): {},
+            HostName("host1"): {},
+            HostName("host2"): {},
+        },
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={
+            HostName("abc"),
+            HostName("xyz"),
+            HostName("host1"),
+            HostName("host2"),
+        },
+        clusters_of={},
+        nodes_of={},
+    )
 
-    matcher = config_cache.ruleset_matcher
     assert (
         matcher.get_host_ruleset_merged_dict(
             RulesetMatchObject(host_name=HostName("abc"), service_description=None),
@@ -447,15 +521,31 @@ binary_ruleset: list[RuleSpec] = [
 
 
 def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("xyz"))
-    ts.add_host(HostName("host1"))
-    ts.add_host(HostName("host2"))
-    config_cache = ts.apply(monkeypatch)
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={
+            HostName("abc"): {},
+            HostName("xyz"): {},
+            HostName("host1"): {},
+            HostName("host2"): {},
+        },
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={
+            HostName("abc"),
+            HostName("xyz"),
+            HostName("host1"),
+            HostName("host2"),
+        },
+        clusters_of={},
+        nodes_of={},
+    )
 
-    matcher = config_cache.ruleset_matcher
     assert (
         matcher.is_matching_host_ruleset(
             RulesetMatchObject(host_name=HostName("abc"), service_description=None),
@@ -568,36 +658,40 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
     ],
 )
 def test_ruleset_matcher_get_host_ruleset_values_tags(
-    monkeypatch: MonkeyPatch,
-    hostname: HostName,
-    expected_result: Sequence[str],
+    hostname: HostName, expected_result: Sequence[str]
 ) -> None:
-    ts = Scenario()
-    ts.add_host(
-        HostName("host1"),
-        tags={
-            TagGroupID("criticality"): TagID("prod"),
-            TagGroupID("agent"): TagID("cmk-agent"),
-            TagGroupID("networking"): TagID("lan"),
+    matcher = RulesetMatcher(
+        tag_to_group_map={},
+        host_tags={
+            HostName("host1"): {
+                TagGroupID("criticality"): TagID("prod"),
+                TagGroupID("agent"): TagID("cmk-agent"),
+                TagGroupID("networking"): TagID("lan"),
+            },
+            HostName("host2"): {
+                TagGroupID("criticality"): TagID("test"),
+                TagGroupID("networking"): TagID("wan"),
+            },
+            HostName("host3"): {
+                TagGroupID("criticality"): TagID("test"),
+                TagGroupID("networking"): TagID("dmz"),
+            },
         },
-    )
-    ts.add_host(
-        HostName("host2"),
-        tags={
-            TagGroupID("criticality"): TagID("test"),
-            TagGroupID("networking"): TagID("wan"),
+        host_paths={},
+        labels=LabelManager(
+            explicit_host_labels={},
+            host_label_rules=(),
+            service_label_rules=(),
+            discovered_labels_of_service=lambda *args, **kw: {},
+        ),
+        all_configured_hosts={
+            HostName("host1"),
+            HostName("host2"),
+            HostName("host3"),
         },
+        clusters_of={},
+        nodes_of={},
     )
-    ts.add_host(
-        HostName("host3"),
-        tags={
-            TagGroupID("criticality"): TagID("test"),
-            TagGroupID("networking"): TagID("dmz"),
-        },
-    )
-    config_cache = ts.apply(monkeypatch)
-    matcher = config_cache.ruleset_matcher
-
     assert (
         list(
             matcher.get_host_ruleset_values(

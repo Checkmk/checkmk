@@ -1277,7 +1277,7 @@ class ModeEditRuleset(WatoMode):
                 _(
                     "This rule matches, but some of its parameters are overridden by previous rules."
                 ),
-                "pmatch",
+                "partly_match",
             )
         if match_state["matched"] and ruleset.match_type() != "all":
             return (

@@ -75,6 +75,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.plugins.mail")),
             _in_component(imported=imported, component=Component("cmk.discover_plugins")),
             _in_component(imported=imported, component=Component("cmk.agent_based")),
+            _in_component(imported=imported, component=Component("cmk.rulesets")),
             _in_component(imported=imported, component=Component("cmk.werks")),
         )
     )
@@ -386,6 +387,7 @@ _COMPONENTS = (
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
     (Component("cmk.utils.packaging"), _in_component),  # wants to grow up to be a package one day
+    (Component("cmk.rulesets"), _in_component),
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),

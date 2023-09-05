@@ -17,6 +17,7 @@ a look at the articles about extending Checkmk in our `user guide <https://docs.
    cmk.base.plugins.bakery.bakery_api/index
    cmk.config_generation/index
    cmk.graphing/index
+   cmk.rulesets/index
 
 .. toctree::
    :caption: Dynamic configuration

@@ -32,9 +32,9 @@ set target=i686-pc-windows-msvc
 set exe_name=agent_keeper.exe
 set exe=target\%target%\release\%exe_name%
 rustup toolchain list
-rustup default 1.68.0
+rustup default 1.72.0
 rustup target add %target%
-rustup update 1.68.0
+rustup update 1.72.0
 @echo RUST versions:
 cd
 cargo -V

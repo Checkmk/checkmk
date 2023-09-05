@@ -2097,7 +2097,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 )
                                 icon = "rulepmatch"
                             else:
-                                icon = "rulematch"
+                                icon = "rule_match"
                                 have_match = True
                     html.icon(icon, msg)
 
@@ -2410,7 +2410,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                                 msg = _("This rule does a cancelling match.")
                             else:
                                 msg = _("This rule matches.")
-                            icon = "rulematch"
+                            icon = "rule_match"
                             have_match = True
                         if groups:
                             msg += _(" Match groups: %s") % ",".join(

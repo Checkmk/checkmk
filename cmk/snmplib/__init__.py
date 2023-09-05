@@ -15,6 +15,7 @@ from ._table import SNMPRawDataElem as SNMPRawDataElem
 from ._table import SNMPTable as SNMPTable
 from ._typedefs import BackendOIDSpec as BackendOIDSpec
 from ._typedefs import BackendSNMPTree as BackendSNMPTree
+from ._typedefs import ensure_str as ensure_str
 from ._typedefs import OID as OID
 from ._typedefs import OIDRange as OIDRange
 from ._typedefs import RangeLimit as RangeLimit

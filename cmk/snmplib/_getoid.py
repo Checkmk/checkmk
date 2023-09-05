@@ -14,7 +14,7 @@ from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
 from ._table import SNMPDecodedString
-from ._typedefs import OID, SNMPBackend
+from ._typedefs import ensure_str, OID, SNMPBackend
 
 
 # Contextes can only be used when check_plugin_name is given.
@@ -63,8 +63,8 @@ def get_single_oid(
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value: SNMPDecodedString | None = backend.config.ensure_str(
-            value
+        decoded_value: SNMPDecodedString | None = ensure_str(
+            value, encoding=backend.config.character_encoding
         )  # used ensure_str function with different possible encoding arguments
     else:
         decoded_value = value

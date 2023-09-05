@@ -60,6 +60,17 @@ class SNMPBackendEnum(enum.Enum):
         return cls[name]
 
 
+def ensure_str(value: str | bytes, *, encoding: str | None) -> str:
+    if isinstance(value, str):
+        return value
+    if encoding:
+        return value.decode(encoding)
+    try:
+        return value.decode()
+    except UnicodeDecodeError:
+        return value.decode("latin1")
+
+
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(NamedTuple):
     is_ipv6_primary: bool
@@ -91,16 +102,6 @@ class SNMPHostConfig(NamedTuple):
             if ty is None or ty == section_name_str:
                 return rules
         return [None]
-
-    def ensure_str(self, value: str | bytes) -> str:
-        if isinstance(value, str):
-            return value
-        if self.character_encoding:
-            return value.decode(self.character_encoding)
-        try:
-            return value.decode()
-        except UnicodeDecodeError:
-            return value.decode("latin1")
 
     def serialize(self):
         serialized = self._asdict()

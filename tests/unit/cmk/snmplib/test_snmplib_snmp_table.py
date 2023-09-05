@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 
 import pytest
 from pytest import MonkeyPatch
@@ -18,6 +19,7 @@ import cmk.snmplib._table as _snmp_table
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
+    ensure_str,
     get_snmp_table,
     SNMPBackend,
     SNMPBackendEnum,
@@ -100,7 +102,7 @@ def test_get_snmp_table(
 
 
 @pytest.mark.parametrize(
-    "encoding,columns,expected",
+    "encoding, columns, expected",
     [
         (None, [([b"\xc3\xbc"], "string")], [["ü"]]),  # utf-8
         (None, [([b"\xc3\xbc"], "binary")], [[[195, 188]]]),  # utf-8
@@ -112,28 +114,14 @@ def test_get_snmp_table(
     ],
 )
 def test_sanitize_snmp_encoding(
-    monkeypatch: MonkeyPatch,
     encoding: str | None,
     columns: _snmp_table._ResultColumnsSanitized,
     expected: _snmp_table._ResultColumnsDecoded,
 ) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("localhost"))
-    ts.set_ruleset(
-        "snmp_character_encodings",
-        [
-            {
-                "condition": {},
-                "value": encoding,
-            },
-        ],
+    assert (
+        _snmp_table._sanitize_snmp_encoding(columns, partial(ensure_str, encoding=encoding))
+        == expected
     )
-    config_cache = ts.apply(monkeypatch)
-
-    snmp_config = config_cache.make_snmp_config(
-        HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
-    )
-    assert _snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:

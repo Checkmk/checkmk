@@ -12,6 +12,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import (
     BackendSNMPTree,
+    ensure_str,
     evaluate_snmp_detection,
     get_snmp_table,
     SNMPBackendEnum,
@@ -50,7 +51,7 @@ def snmp_is_detected(section_name: SectionName, snmp_walk: Path) -> bool:
         value = backend.get(oid)
         if value is None:
             return None
-        return backend.config.ensure_str(value)
+        return ensure_str(value, encoding=backend.config.character_encoding)
 
     return evaluate_snmp_detection(
         detect_spec=section.detect_spec,

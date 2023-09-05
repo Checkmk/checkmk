@@ -315,7 +315,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     if what == "match":
                         html.icon("rulematch", _("This rule matches"))
                     elif what == "miss":
-                        html.icon("rulenmatch", _("This rule does not match: %s") % reason)
+                        html.icon("rule_no_match", _("This rule does not match: %s") % reason)
 
                 if show_buttons and self._actions_allowed(rule):
                     table.cell("#", css=["narrow nowrap"])

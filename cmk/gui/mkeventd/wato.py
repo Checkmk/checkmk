@@ -2078,12 +2078,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                     if matches == 0:
                         msg = _("None of the rules in this pack matches")
-                        icon = "rulenmatch"
+                        icon = "rule_no_match"
                     else:
                         msg = _("Number of matching rules in this pack: %d") % matches
                         if skips:
                             msg += _(", the first match skips this rule pack")
-                            icon = "rulenmatch"
+                            icon = "rule_no_match"
                         else:
                             if cancelling:
                                 msg += _(", first match is a cancelling match")
@@ -2399,7 +2399,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                     result = match_event_rule(self._rule_pack, rule, event)
                     if not isinstance(result, ec.MatchSuccess):
-                        html.icon("rulenmatch", _("Rule does not match: %s") % result.reason)
+                        html.icon("rule_no_match", _("Rule does not match: %s") % result.reason)
                     else:
                         cancelling, groups = result.match_groups, result.match_groups
                         if have_match:

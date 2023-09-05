@@ -1187,7 +1187,7 @@ class ModeEditRuleset(WatoMode):
         if analyse_rule_matching:
             table.cell(_("Match"))
             title, img = self._match(match_state, rule, service_labels=service_labels)
-            html.icon("rule%s" % img, title)
+            html.icon("rule_%s" % img, title)
 
         table.cell("#", css=["narrow nowrap"])
         html.write_text(rulenr)
@@ -1253,7 +1253,7 @@ class ModeEditRuleset(WatoMode):
             )
         )
         if reasons:
-            return _("This rule does not match: %s") % " ".join(reasons), "nmatch"
+            return _("This rule does not match: %s") % " ".join(reasons), "no_match"
         ruleset = rule.ruleset
         if ruleset.match_type() == "dict":
             new_keys = set(rule.value.keys())

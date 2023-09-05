@@ -306,20 +306,20 @@ class ModePatternEditor(WatoMode):
                                         "This logfile pattern matches but another matched first."
                                     )
                             else:
-                                match_img = "nmatch"
+                                match_img = "no_match"
                                 match_title = _(
                                     "This logfile pattern does not match the given string."
                                 )
                         else:
                             # rule does not match
-                            match_img = "nmatch"
+                            match_img = "no_match"
                             match_title = _("The rule conditions do not match.")
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
                         html.write_text(rulenr)
                         table.cell(_("Match"))
-                        html.icon("rule%s" % match_img, match_title)
+                        html.icon("rule_%s" % match_img, match_title)
 
                         cls = (
                             ["state%d" % logwatch.level_state(state), "fillbackground"]

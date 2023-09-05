@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import assert_never, TypedDict
+from pathlib import Path
+from typing import assert_never, Literal, TypedDict
 
+from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
+
+from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+    service_description,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
     register,
     render,
     Result,
     Service,
+    ServiceLabel,
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -26,6 +34,19 @@ class Params(TypedDict):
 
 
 DEFAULT: Params = {"test_runtime": None}
+
+
+LivestatusFile = Literal["suite_last_log.html", "suite_last_error_log.html"]
+
+
+def _transmit_to_livestatus(
+    content: str,
+    filename: LivestatusFile,
+) -> None:
+    file_path = Path(robotmk_html_log_dir) / host_name() / service_description() / filename
+    file_path.parent.absolute().mkdir(exist_ok=True, parents=True)
+    # I'm sure there are no race conditions between livestatus and the checkengine here.
+    file_path.write_text(content)
 
 
 def _remap_state(status: robotmk_api.Outcome) -> State:
@@ -57,7 +78,14 @@ def _item(result: robotmk_api.Result, test: robotmk_api.Test) -> str:
 def discover(section: robotmk_api.Section) -> DiscoveryResult:
     for result in section:
         for test in result.tests:
-            yield Service(item=_item(result, test))
+            yield Service(
+                item=_item(result, test),
+                labels=[
+                    ServiceLabel("robotmk", "true"),
+                    ServiceLabel("robotmk/html_last_error_log", "yes"),
+                    ServiceLabel("robotmk/html_last_log", "yes"),
+                ],
+            )
 
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
@@ -77,6 +105,10 @@ def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResul
     for result in section:
         for test in result.tests:
             if _item(result, test) == item:
+                html = result.decode_html()
+                _transmit_to_livestatus(html, "suite_last_log.html")
+                if test.status is robotmk_api.Outcome.FAIL:
+                    _transmit_to_livestatus(html, "suite_last_error_log.html")
                 yield from _check_test(params, test)
 
 

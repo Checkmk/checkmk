@@ -6,6 +6,7 @@
 # Should be replaced by external package
 
 import enum
+from base64 import b64decode
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -31,6 +32,10 @@ class Result(BaseModel, frozen=True):
     suite_name: str
     tests: list[Test]
     xml: str
+    html: bytes
+
+    def decode_html(self) -> str:
+        return b64decode(self.html).decode("utf-8")
 
 
 Section = list[Result]

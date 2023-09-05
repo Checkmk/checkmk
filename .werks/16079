@@ -1,0 +1,11 @@
+Title: cisco_temperature: Regression in temperature level evaluation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1693916294
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Commit #1

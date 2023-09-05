@@ -3340,7 +3340,7 @@ def _valuespec_check_periods():
     return TimeperiodSelection(
         title=_("Check period for passive Checkmk services"),
         help=_(
-            "If you specify a notification period for a Check_MK service then "
+            "If you specify a check period for a Check_MK service then "
             "results will be processed only within this period."
         ),
     )

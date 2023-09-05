@@ -8,4 +8,7 @@ Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
-Commit #2
+This Werk fixes a regression that occured since Checkmk 2.1.0p31 and 2.2.0p8.
+
+In some cases, upper levels could be misinterpreted as lower levels, leading to
+false-positive <tt>WARN</tt> and <tt>CRIT</tt> states of <i>Temperature</i> services.

@@ -6,10 +6,6 @@
 from collections.abc import Generator, Sequence
 from itertools import chain
 
-from pytest import MonkeyPatch
-
-from tests.testlib.base import Scenario
-
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.hostaddress import HostName
@@ -42,9 +38,7 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(
-    monkeypatch: MonkeyPatch, fix_register: FixRegister
-) -> None:
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRegister) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -62,8 +56,6 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(
     just add an exception below. If maintaining this test becvomes too tedious,
     we can probably just remove it.
     """
-    Scenario().apply(monkeypatch)  # host_extra_conf needs the ruleset_matcher
-
     plugins_expected_to_discover_upon_empty = {
         "ewon",
         "printer_alerts",

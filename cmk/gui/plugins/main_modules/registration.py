@@ -185,7 +185,7 @@ def register() -> None:
     login.register(cmk.gui.pages.page_registry)
     sidebar.register(cmk.gui.pages.page_registry)
     message.register(cmk.gui.pages.page_registry)
-    userdb.register(cmk.gui.pages.page_registry)
+    userdb.register(cmk.gui.pages.page_registry, job_registry)
     cmk.gui.help.register(cmk.gui.pages.page_registry)
     main.register(cmk.gui.pages.page_registry)
     logwatch.register(cmk.gui.pages.page_registry)

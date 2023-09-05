@@ -28,9 +28,9 @@ import cmk.gui.utils as utils
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
+    BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
@@ -111,8 +111,10 @@ __all__ = [
 auth_logger = gui_logger.getChild("auth")
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, job_registry: BackgroundJobRegistry) -> None:
     page_registry.register_page_handler("ajax_userdb_sync", ajax_sync)
+    job_registry.register(UserSyncBackgroundJob)
+    job_registry.register(UserProfileCleanupBackgroundJob)
 
 
 def load_plugins() -> None:
@@ -711,7 +713,6 @@ def ajax_sync() -> None:
         response.set_data("ERROR %s\n" % e)
 
 
-@job_registry.register
 class UserSyncBackgroundJob(BackgroundJob):
     job_prefix = "user_sync"
 
@@ -807,7 +808,6 @@ def execute_user_profile_cleanup_job() -> None:
     job.start(job.do_execute)
 
 
-@job_registry.register
 class UserProfileCleanupBackgroundJob(BackgroundJob):
     job_prefix = "user_profile_cleanup"
 

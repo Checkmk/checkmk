@@ -31,7 +31,6 @@ from cmk.gui import (
     robotmk,
     sidebar,
     user_message,
-    userdb,
     valuespec,
     visuals,
     watolib,
@@ -144,7 +143,12 @@ def register() -> None:
             permission_registry,
         )
     mobile.register(layout_registry)
-    userdb_registration.register(user_attribute_registry, user_connector_registry, job_registry)
+    userdb_registration.register(
+        cmk.gui.pages.page_registry,
+        user_attribute_registry,
+        user_connector_registry,
+        job_registry,
+    )
     watolib.register()
     wato_registration.register(
         cmk.gui.pages.page_registry,
@@ -185,7 +189,6 @@ def register() -> None:
     login.register(cmk.gui.pages.page_registry)
     sidebar.register(cmk.gui.pages.page_registry)
     message.register(cmk.gui.pages.page_registry)
-    userdb.register(cmk.gui.pages.page_registry, job_registry)
     cmk.gui.help.register(cmk.gui.pages.page_registry)
     main.register(cmk.gui.pages.page_registry)
     logwatch.register(cmk.gui.pages.page_registry)

@@ -13,7 +13,7 @@ def test_registered_jobs() -> None:
         "cmk.gui.inventory.execute_inventory_housekeeping_job",
         "cmk.gui.background_job._manager.execute_housekeeping_job",
         "cmk.gui.watolib.hosts_and_folders.rebuild_folder_lookup_cache",
-        "cmk.gui.userdb.execute_userdb_job",
+        "cmk.gui.userdb._user_sync.execute_userdb_job",
         "cmk.gui.userdb._user_profile_cleanup.execute_user_profile_cleanup_job",
         "cmk.gui.watolib.network_scan.execute_network_scan_job",
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job",

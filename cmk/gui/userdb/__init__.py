@@ -88,6 +88,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 
+from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
+
 __all__ = [
     "contactgroups_of_user",
     "create_cmk_automation_user",
@@ -106,14 +108,10 @@ __all__ = [
     "Users",
     "UserSpec",
     "write_contacts_and_users_file",
+    "UserSyncBackgroundJob",
 ]
 
 auth_logger = gui_logger.getChild("auth")
-
-
-def register(page_registry: PageRegistry, job_registry: BackgroundJobRegistry) -> None:
-    page_registry.register_page_handler("ajax_userdb_sync", ajax_sync)
-    job_registry.register(UserSyncBackgroundJob)
 
 
 def load_plugins() -> None:
@@ -652,138 +650,3 @@ def show_exception(connection_id: str, title: str, e: Exception, debug: bool = T
         "<b>" + connection_id + " - " + title + "</b>"
         "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
     )
-
-
-def execute_userdb_job() -> None:
-    """This function is called by the GUI cron job once a minute.
-
-    Errors are logged to var/log/web.log."""
-    if not userdb_sync_job_enabled():
-        return
-
-    job = UserSyncBackgroundJob()
-    if job.is_active():
-        gui_logger.debug("Another synchronization job is already running: Skipping this sync")
-        return
-
-    job.start(
-        lambda job_interface: job.do_sync(
-            job_interface=job_interface,
-            add_to_changelog=False,
-            enforce_sync=False,
-            load_users_func=load_users,
-            save_users_func=save_users,
-        )
-    )
-
-
-def userdb_sync_job_enabled() -> bool:
-    cfg = user_sync_config()
-
-    if cfg is None:
-        return False  # not enabled at all
-
-    if cfg == "master" and is_wato_slave_site():
-        return False
-
-    return True
-
-
-def ajax_sync() -> None:
-    try:
-        job = UserSyncBackgroundJob()
-        try:
-            job.start(
-                lambda job_interface: job.do_sync(
-                    job_interface=job_interface,
-                    add_to_changelog=False,
-                    enforce_sync=True,
-                    load_users_func=load_users,
-                    save_users_func=save_users,
-                )
-            )
-        except BackgroundJobAlreadyRunning as e:
-            raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
-        response.set_data("OK Started synchronization\n")
-    except Exception as e:
-        gui_logger.exception("error synchronizing user DB")
-        if active_config.debug:
-            raise
-        response.set_data("ERROR %s\n" % e)
-
-
-class UserSyncBackgroundJob(BackgroundJob):
-    job_prefix = "user_sync"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("User synchronization")
-
-    def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-            ),
-        )
-
-    def _back_url(self) -> str:
-        return makeuri_contextless(request, [("mode", "users")], filename="wato.py")
-
-    def do_sync(
-        self,
-        job_interface: BackgroundProcessInterface,
-        add_to_changelog: bool,
-        enforce_sync: bool,
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
-    ) -> None:
-        job_interface.send_progress_update(_("Synchronization started..."))
-        if self._execute_sync_action(
-            job_interface,
-            add_to_changelog,
-            enforce_sync,
-            load_users_func,
-            save_users_func,
-            datetime.now(),
-        ):
-            job_interface.send_result_message(_("The user synchronization completed successfully."))
-        else:
-            job_interface.send_exception(_("The user synchronization failed."))
-
-    def _execute_sync_action(
-        self,
-        job_interface: BackgroundProcessInterface,
-        add_to_changelog: bool,
-        enforce_sync: bool,
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
-        now: datetime,
-    ) -> bool:
-        for connection_id, connection in active_connections():
-            try:
-                if not enforce_sync and not connection.sync_is_needed():
-                    continue
-
-                job_interface.send_progress_update(
-                    _("[%s] Starting sync for connection") % connection_id
-                )
-                connection.do_sync(
-                    add_to_changelog=add_to_changelog,
-                    only_username=None,
-                    load_users_func=load_users,
-                    save_users_func=save_users,
-                )
-                job_interface.send_progress_update(
-                    _("[%s] Finished sync for connection") % connection_id
-                )
-            except Exception as e:
-                job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
-                gui_logger.error(
-                    "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
-                )
-
-        job_interface.send_progress_update(_("Finalizing synchronization"))
-        general_userdb_job(now)
-        return True

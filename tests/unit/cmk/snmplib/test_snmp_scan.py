@@ -11,8 +11,6 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.base import Scenario
-
 from tests.unit.conftest import FixPluginLegacy
 
 from cmk.utils.exceptions import MKSNMPError, OnError
@@ -167,14 +165,6 @@ def backend() -> Iterator[SNMPBackend]:
 
 
 @pytest.fixture
-def scenario(backend, monkeypatch):
-    # Set the `ruleset_matcher` on the config.
-    ts = Scenario()
-    ts.add_host(backend.hostname)
-    ts.apply(monkeypatch)
-
-
-@pytest.fixture
 def cache_oids(backend):
     # Cache OIDs to avoid actual SNMP I/O.
     snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
@@ -184,7 +174,6 @@ def cache_oids(backend):
     snmp_cache._clear_other_hosts_oid_cache(backend.hostname)
 
 
-@pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 @pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
 def test_snmp_scan_prefetch_description_object__oid_missing(oid: OID, backend: SNMPBackend) -> None:
@@ -194,7 +183,6 @@ def test_snmp_scan_prefetch_description_object__oid_missing(oid: OID, backend: S
         snmp_scan._prefetch_description_object(backend=backend)
 
 
-@pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_prefetch_description_object__success(backend: SNMPBackend) -> None:
     sys_desc = snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
@@ -209,7 +197,6 @@ def test_snmp_scan_prefetch_description_object__success(backend: SNMPBackend) ->
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] == sys_obj
 
 
-@pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_fake_description_object__success(backend: SNMPBackend) -> None:
     snmp_scan._fake_description_object()
@@ -218,7 +205,6 @@ def test_snmp_scan_fake_description_object__success(backend: SNMPBackend) -> Non
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] == ""
 
 
-@pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
     sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
@@ -233,7 +219,6 @@ def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
     assert len(sections) > len(found)
 
 
-@pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_gather_available_raw_section_names_defaults(
     backend: SNMPBackend, mocker: MockerFixture

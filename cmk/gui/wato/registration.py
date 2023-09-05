@@ -17,7 +17,7 @@ from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import _main_module_topics, _main_modules, _permissions, filters, pages
+from . import _main_module_topics, _main_modules, _permissions, _pre_21_plugin_api, filters, pages
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
@@ -68,3 +68,4 @@ def register(
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
     _main_modules.register(main_module_registry)
+    _pre_21_plugin_api.register()

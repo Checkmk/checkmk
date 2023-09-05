@@ -46,6 +46,14 @@ def fixture_config_path():
         shutil.rmtree(ConfigPath.ROOT)
 
 
+@pytest.fixture(name="core_scenario")
+def fixture_core_scenario(monkeypatch):
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
+    return ts.apply(monkeypatch)
+
+
 def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
     core_config.do_create_config(create_core("nagios"), core_scenario, duplicates=())
 

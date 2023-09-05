@@ -9,22 +9,10 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.base import Scenario
-
-from cmk.utils.hostaddress import HostName
-
-
-@pytest.fixture(name="core_scenario")
-def fixture_core_scenario(monkeypatch):
-    ts = Scenario()
-    ts.add_host(HostName("test-host"))
-    ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
-    return ts.apply(monkeypatch)
-
 
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
-def clear_config_caches(monkeypatch):
+def clear_config_caches():
     from cmk.utils.caching import cache_manager
 
     cache_manager.clear()

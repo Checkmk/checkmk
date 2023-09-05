@@ -18,7 +18,7 @@ import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Literal, Optional
+from typing import Final, Literal
 
 import pytest
 
@@ -174,7 +174,7 @@ class Site:
         hostname: str,
         state: int,
         output: str,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
         wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
@@ -198,7 +198,7 @@ class Site:
         service_description: str,
         state: int,
         output: str,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
         wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
@@ -221,7 +221,7 @@ class Site:
         self,
         hostname: str,
         service_description: str,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
         wait_timeout: int = 20,
     ) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
@@ -258,7 +258,7 @@ class Site:
         hostname: str,
         last_check_before: float,
         command_timestamp: float,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
         wait_timeout: int = 20,
     ) -> None:
         query: str = (
@@ -289,7 +289,7 @@ class Site:
         service_description: str,
         last_check_before: float,
         command_timestamp: float,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
         wait_timeout: int = 20,
     ) -> None:
         query: str = (
@@ -322,7 +322,7 @@ class Site:
         last_check: float,
         last_check_before: float,
         state: int,
-        expected_state: Optional[int],
+        expected_state: int | None,
         plugin_output: str,
         wait_timeout: int = 20,
     ) -> None:

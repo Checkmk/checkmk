@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import livestatus
 

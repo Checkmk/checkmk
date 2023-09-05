@@ -2,8 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Sequence
-from typing import List
 
 import pytest
 
@@ -46,7 +46,7 @@ _STRING_TABLE = [
     ],
 )
 def test_discover_vsp_switches_power_supply(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
@@ -87,7 +87,7 @@ def test_discover_vsp_switches_power_supply(
     ],
 )
 def test_check_vsp_switches_fan(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     item: str,
     expected_check_result: Sequence[Result],
 ) -> None:

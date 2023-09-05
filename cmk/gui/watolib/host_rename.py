@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, StrEnum
-from typing import Any, Callable
+from typing import Any
 
 from pydantic import BaseModel
 

@@ -5,7 +5,7 @@
 
 from collections import Counter
 from inspect import signature
-from typing import Iterable  # We MUST use the Iterable from typing because of the signature hack
+from typing import Iterable
 
 import pytest
 

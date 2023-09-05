@@ -5,8 +5,8 @@
 
 import abc
 import re
-from collections.abc import Iterable
-from typing import Callable, Literal
+from collections.abc import Callable, Iterable
+from typing import Literal
 
 from cmk.gui import query_filters
 from cmk.gui.htmllib.html import html

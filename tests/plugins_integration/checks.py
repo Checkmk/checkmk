@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -116,7 +116,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(site: Optional[Site] = None) -> list[str]:
+def get_host_names(site: Site | None = None) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
     host_names = []
     if site:

@@ -7,8 +7,7 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Collection, Iterator
-from typing import Callable
+from collections.abc import Callable, Collection, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render

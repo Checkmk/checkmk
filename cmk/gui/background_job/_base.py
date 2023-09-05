@@ -9,7 +9,8 @@ import os
 import shutil
 import signal
 import time
-from typing import Callable, NoReturn, TypedDict
+from collections.abc import Callable
+from typing import NoReturn, TypedDict
 
 import psutil
 

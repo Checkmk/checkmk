@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple, Optional
+from typing import Any, AnyStr, NamedTuple
 
 import requests
 
@@ -191,7 +191,7 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
 
-    def get_user(self, username: str) -> Optional[tuple[dict[Any, str], str]]:
+    def get_user(self, username: str) -> tuple[dict[Any, str], str] | None:
         """
         Returns
             a tuple with the user details and the Etag header if the user was found
@@ -226,8 +226,8 @@ class CMKOpenApiSession(requests.Session):
     def create_folder(
         self,
         folder: str,
-        title: Optional[str] = None,
-        attributes: Optional[Mapping[str, Any]] = None,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
     ) -> None:
         if folder.count("/") > 1:
             parent_folder, folder_name = folder.rsplit("/", 1)
@@ -246,7 +246,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def get_folder(self, folder: str) -> Optional[tuple[dict[Any, str], str]]:
+    def get_folder(self, folder: str) -> tuple[dict[Any, str], str] | None:
         """
         Returns
             a tuple with the folder details and the Etag header if the folder was found
@@ -266,7 +266,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         hostname: str,
         folder: str = "/",
-        attributes: Optional[Mapping[str, Any]] = None,
+        attributes: Mapping[str, Any] | None = None,
         bake_agent: bool = False,
     ) -> requests.Response:
         query_string = "?bake_agent=1" if bake_agent else ""
@@ -297,7 +297,7 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()
         return value
 
-    def get_host(self, hostname: str) -> Optional[tuple[dict[Any, str], str]]:
+    def get_host(self, hostname: str) -> tuple[dict[Any, str], str] | None:
         """
         Returns
             a tuple with the host details and the Etag header if the host was found
@@ -450,7 +450,7 @@ class CMKOpenApiSession(requests.Session):
                 time.sleep(0.5)
 
     def get_host_services(
-        self, hostname: str, pending: Optional[bool] = None, columns: Optional[list[str]] = None
+        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
     ) -> list[dict[str, Any]]:
         if pending is not None:
             if columns is None:

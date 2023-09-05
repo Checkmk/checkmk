@@ -5,8 +5,7 @@
 
 """Show a list of all visuals of a given type with actions to delete/clone/edit"""
 
-from collections.abc import Iterable
-from typing import Callable
+from collections.abc import Callable, Iterable
 
 from cmk.utils.packaging import PackageName
 from cmk.utils.user import UserId

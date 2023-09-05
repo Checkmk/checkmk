@@ -7,9 +7,9 @@ from __future__ import annotations
 import enum
 import re
 from collections import defaultdict
-from collections.abc import Collection, Sequence
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass
-from typing import Callable, Literal, NamedTuple, TypeVar
+from typing import Literal, NamedTuple, TypeVar
 
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api, section

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, get_args, Literal
+from typing import get_args, Literal
 
 import cmk.gui.query_filters as query_filters
 from cmk.gui.exceptions import MKUserError

@@ -10,9 +10,9 @@ from __future__ import annotations
 import functools
 import itertools
 import logging
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Callable, Final
+from typing import Final
 
 import cmk.utils.debug
 import cmk.utils.resulttype as result

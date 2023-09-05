@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Sequence
-from typing import Callable
+from collections.abc import Callable, Sequence
 
 from cmk.utils.hostaddress import HostName
 

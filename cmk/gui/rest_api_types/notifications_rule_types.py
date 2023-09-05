@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal, Optional
+from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
@@ -1533,7 +1533,7 @@ class RecoveryState:
         r["value"] = {"start_predefined": self.value["start"]}
         return r
 
-    def to_mk_file_format(self) -> Optional[RecoveryStateMk]:
+    def to_mk_file_format(self) -> RecoveryStateMk | None:
         return self.value
 
 

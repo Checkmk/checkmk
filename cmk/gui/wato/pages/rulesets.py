@@ -10,10 +10,10 @@ import abc
 import json
 import pprint
 import re
-from collections.abc import Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, Callable, cast, overload
+from typing import Any, cast, overload
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName

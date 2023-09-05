@@ -9,7 +9,6 @@ import subprocess
 from collections.abc import Generator, Iterator
 from pathlib import Path
 from pprint import pformat
-from typing import Optional
 
 import pytest
 
@@ -158,7 +157,7 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(version: CMKVersion, interactive: bool, base_site: Optional[Site] = None) -> Site:
+def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
     """Install or update the test site with the given version.
 
     An update installation is done automatically when an optional base_site is given.

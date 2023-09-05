@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Literal
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils.hostaddress import HostName

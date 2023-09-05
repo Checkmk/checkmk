@@ -5,9 +5,10 @@
 
 import os
 import pickle
+from collections.abc import Callable
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, cast, Final, Generic, get_args, TypeVar
+from typing import Any, cast, Final, Generic, get_args, TypeVar
 
 import cmk.utils
 import cmk.utils.paths

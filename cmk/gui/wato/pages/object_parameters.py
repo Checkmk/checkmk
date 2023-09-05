@@ -6,8 +6,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 import functools
-from collections.abc import Collection, Iterator
-from typing import Callable
+from collections.abc import Callable, Collection, Iterator
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup

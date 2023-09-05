@@ -12,9 +12,9 @@ import os
 import signal
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 from types import FrameType
-from typing import Callable
 
 from setproctitle import setthreadtitle
 

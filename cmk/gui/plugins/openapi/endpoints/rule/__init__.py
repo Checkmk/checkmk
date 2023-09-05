@@ -10,6 +10,7 @@ import typing
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
 from cmk.gui.i18n import _l
@@ -21,6 +22,7 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     RuleCollection,
     RuleObject,
     RuleSearchOptions,
+    UpdateRuleObject,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
@@ -45,6 +47,12 @@ from cmk.gui.watolib.rulesets import (
     visible_ruleset,
     visible_rulesets,
 )
+
+
+class FieldValidationException(Exception):
+    title: str
+    detail: str
+
 
 PERMISSIONS = permissions.AllPerm(
     [
@@ -166,45 +174,27 @@ def create_rule(param):
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
     body = param["body"]
-    folder: Folder = body["folder"]
     value = body["value_raw"]
     ruleset_name = body["ruleset"]
 
+    folder: Folder = body["folder"]
     folder.permissions.need_permission("write")
 
     rulesets = FolderRulesets.load_folder_rulesets(folder)
     ruleset = _retrieve_from_rulesets(rulesets, ruleset_name)
 
     try:
-        ruleset.valuespec().validate_value(value, "")
-    except exceptions.MKUserError as exc:
-        if exc.varname is None:
-            title = "A field has a problem"
-        else:
-            field_name = strip_tags(exc.varname.replace("_p_", ""))
-            title = f"Problem in (sub-)field {field_name!r}"
+        _validate_value(ruleset, value)
 
+    except FieldValidationException as exc:
         return problem(
             status=400,
-            detail=strip_tags(exc.message),
-            title=title,
+            detail=exc.detail,
+            title=exc.title,
         )
 
-    rule = Rule(
-        gen_id(),
-        folder,
-        ruleset,
-        RuleConditions(
-            host_folder=folder.path(),
-            host_tags=body["conditions"].get("host_tags"),
-            host_labels=body["conditions"].get("host_labels"),
-            host_name=body["conditions"].get("host_name"),
-            service_description=body["conditions"].get("service_description"),
-            service_labels=body["conditions"].get("service_labels"),
-        ),
-        RuleOptions.from_config(body["properties"]),
-        value,
-    )
+    rule = _create_rule(folder, ruleset, body["conditions"], body["properties"], value, gen_id())
+
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
     # TODO Duplicated code is in pages/rulesets.py:2670-
@@ -341,6 +331,96 @@ def delete_rule(param):
         title="Rule not found.",
         detail=f"The rule with ID {rule_id!r} could not be found.",
     )
+
+
+@Endpoint(
+    constructors.object_href(domain_type="rule", obj_id="{rule_id}"),
+    ".../update",
+    method="put",
+    etag="both",
+    path_params=[RULE_ID],
+    request_schema=UpdateRuleObject,
+    response_schema=RuleObject,
+    permissions_required=RW_PERMISSIONS,
+)
+def edit_rule(param):
+    """Modify a rule"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.rulesets")
+    body = param["body"]
+    value = body["value_raw"]
+    rule_entry = _get_rule_by_id(param["rule_id"])
+
+    folder: Folder = rule_entry.folder
+    folder.permissions.need_permission("write")
+
+    ruleset = rule_entry.ruleset
+    rulesets = rule_entry.all_rulesets
+    current_rule = rule_entry.rule
+
+    try:
+        _validate_value(ruleset, value)
+
+    except FieldValidationException as exc:
+        return problem(
+            status=400,
+            detail=exc.detail,
+            title=exc.title,
+        )
+
+    new_rule = _create_rule(
+        folder, ruleset, body["conditions"], body["properties"], value, param["rule_id"]
+    )
+
+    ruleset.edit_rule(current_rule, new_rule)
+    rulesets.save_folder(folder)
+
+    new_rule_entry = _get_rule_by_id(param["rule_id"])
+    return serve_json(_serialize_rule(new_rule_entry))
+
+
+def _validate_value(ruleset: Ruleset, value: typing.Any) -> None:
+    try:
+        ruleset.valuespec().validate_value(value, "")
+
+    except exceptions.MKUserError as exc:
+        if exc.varname is None:
+            title = "A field has a problem"
+        else:
+            field_name = strip_tags(exc.varname.replace("_p_", ""))
+            title = f"Problem in (sub-)field {field_name!r}"
+
+        exception = FieldValidationException()
+        exception.title = title
+        exception.detail = strip_tags(exc.message)
+        raise exception
+
+
+def _create_rule(
+    folder: Folder,
+    ruleset: Ruleset,
+    conditions: dict[str, typing.Any],
+    properties: RuleOptionsSpec,
+    value: typing.Any,
+    rule_id: str = gen_id(),
+) -> Rule:
+    rule = Rule(
+        rule_id,
+        folder,
+        ruleset,
+        RuleConditions(
+            host_folder=folder.path(),
+            host_tags=conditions.get("host_tags"),
+            host_labels=conditions.get("host_labels"),
+            host_name=conditions.get("host_name"),
+            service_description=conditions.get("service_description"),
+            service_labels=conditions.get("service_labels"),
+        ),
+        RuleOptions.from_config(properties),
+        value,
+    )
+
+    return rule
 
 
 def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> Ruleset:

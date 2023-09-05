@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import cast, ClassVar, Literal, Protocol, Type
+from typing import cast, ClassVar, Literal, Protocol
 
 from cmk.utils.notify_types import (
     CustomPluginName,
@@ -1713,7 +1713,7 @@ class CustomPlugin:
         return self.custom_plugin_name, self.plugin_params
 
 
-def plugin_selector(plugin_name: NotificationPluginNameStr) -> Type[NotificationPlugin] | None:
+def plugin_selector(plugin_name: NotificationPluginNameStr) -> type[NotificationPlugin] | None:
     match plugin_name:
         case "cisco_webex_teams":
             return CiscoWebexPlugin

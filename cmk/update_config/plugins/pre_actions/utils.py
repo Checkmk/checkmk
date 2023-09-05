@@ -5,8 +5,9 @@
 
 import enum
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Final, Sequence
+from typing import Final
 
 from cmk.utils import paths
 from cmk.utils.packaging import (

@@ -11,10 +11,10 @@ import logging
 import mimetypes
 import traceback
 import urllib.parse
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory

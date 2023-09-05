@@ -39,8 +39,8 @@ To search for hosts with specific tags set on them:
 
 """
 import ast
-from collections.abc import Mapping
-from typing import Any, Generator, Sequence
+from collections.abc import Generator, Mapping, Sequence
+from typing import Any
 
 from cmk.utils.livestatus_helpers.queries import Query, ResultRow
 from cmk.utils.livestatus_helpers.tables import Hosts

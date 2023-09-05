@@ -8,9 +8,8 @@ import socket
 import subprocess
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable
 
 import cmk.utils.debug
 import cmk.utils.paths

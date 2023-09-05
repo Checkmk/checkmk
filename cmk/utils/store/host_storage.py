@@ -7,11 +7,11 @@ from __future__ import annotations
 import abc
 import enum
 import io
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Generic, Sequence, TypeVar
+from typing import Any, Generic, TypeVar
 
 from typing_extensions import TypedDict
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, get_args, Type
+from typing import Any, get_args
 
 from marshmallow import post_dump, post_load, ValidationError
 from marshmallow.schema import Schema
@@ -67,7 +67,7 @@ class CheckboxOneOfSchema(OneOfSchema):
     type_field = "state"
     type_field_remove = False
 
-    def __init__(self, value_schema: Type[Schema], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, value_schema: type[Schema], *args: Any, **kwargs: Any) -> None:
         self.type_schemas = {"disabled": Checkbox, "enabled": value_schema}
         super().__init__(*args, **kwargs)
 

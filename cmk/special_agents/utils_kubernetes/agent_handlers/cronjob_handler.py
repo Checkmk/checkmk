@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,

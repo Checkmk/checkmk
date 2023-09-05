@@ -5,7 +5,7 @@
 
 """Realizes the steps before getting to the editor: Select the context type"""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import HTTPRedirect, MKUserError

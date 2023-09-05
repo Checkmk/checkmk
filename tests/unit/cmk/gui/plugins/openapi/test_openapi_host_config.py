@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 from collections.abc import Iterator, Sequence
-from typing import Literal, Tuple
+from typing import Literal
 from unittest.mock import MagicMock
 
 import pytest
@@ -971,7 +971,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
 
 @freeze_time("1998-02-09")
 def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
-    clients: ClientRegistry, with_admin: Tuple[str, str]
+    clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     """We take 'meta_data' as the example attributes, it's a CheckmkTuple type that is stored as a
     tuple in the .mk files, but read and written as a dict in the REST API."""
@@ -1206,7 +1206,7 @@ def test_openapi_host_config_effective_attributes_includes_tags_regression(
 
 @managedtest
 def test_openapi_host_config_correct_contactgroup_default(
-    clients: ClientRegistry, with_admin: Tuple[str, str]
+    clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)
@@ -1228,7 +1228,7 @@ def test_openapi_host_config_correct_contactgroup_default(
 @freeze_time("2022-11-05")
 @import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
-    clients: ClientRegistry, with_admin: Tuple[str, str]
+    clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)

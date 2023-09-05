@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterator
 from itertools import permutations
-from typing import Any, get_args, Iterator, Literal
+from typing import Any, get_args, Literal
 
 import pytest
 

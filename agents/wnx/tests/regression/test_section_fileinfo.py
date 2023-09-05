@@ -7,7 +7,8 @@ import os
 import platform
 import re
 import shutil
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import pytest
 

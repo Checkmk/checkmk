@@ -9,8 +9,9 @@ import json
 import os
 import re
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, NamedTuple, NewType
+from typing import NamedTuple, NewType
 
 import pkg_resources as pkg
 import pytest

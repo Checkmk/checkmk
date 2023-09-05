@@ -38,7 +38,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import cast, IO, Literal, Set
+from typing import cast, IO, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -1447,7 +1447,7 @@ class LDAPUserConnector(UserConnector):
 
         self._set_last_sync_time()
 
-    def _find_changed_user_keys(self, keys: Set[str], user: Mapping, new_user: Mapping) -> dict:
+    def _find_changed_user_keys(self, keys: set[str], user: Mapping, new_user: Mapping) -> dict:
         changed = {}
         for key in keys:
             # Skip user notification rules, not relevant here

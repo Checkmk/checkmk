@@ -5,7 +5,7 @@
 
 
 from collections.abc import Mapping
-from typing import Any, cast, Type
+from typing import Any, cast
 
 from cmk.utils.notify_types import NotificationPluginNameStr
 
@@ -85,7 +85,7 @@ class PluginBase(BaseSchema):
 
     def dump(self, obj: APINotifyPlugin, *args: Any, **kwargs: Any) -> Mapping:
         schema_mapper = cast(
-            Mapping[NotificationPluginNameStr, Type[BaseSchema]],
+            Mapping[NotificationPluginNameStr, type[BaseSchema]],
             {
                 "mail": HTMLEmailParamsResponse,
                 "cisco_webex_teams": CiscoWebexPluginResponse,

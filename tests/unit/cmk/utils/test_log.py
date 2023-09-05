@@ -6,8 +6,8 @@
 import contextlib
 import logging
 import queue
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from pytest import CaptureFixture
 

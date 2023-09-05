@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator, Sequence
+from collections.abc import Iterator, Sequence
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,

@@ -6,7 +6,8 @@
 """ Edit global settings of the visual """
 
 import copy
-from typing import Any, cast, Sequence
+from collections.abc import Sequence
+from typing import Any, cast
 
 from cmk.utils.user import UserId
 

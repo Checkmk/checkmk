@@ -6,11 +6,11 @@
 import logging
 import math
 import time
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
-from typing import Final, Literal, Mapping, NamedTuple, NewType, Sequence
+from typing import Final, Literal, NamedTuple, NewType
 
 from pydantic import BaseModel
 

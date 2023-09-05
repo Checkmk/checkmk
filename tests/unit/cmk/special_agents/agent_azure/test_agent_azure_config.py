@@ -5,7 +5,6 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Type
 
 import pytest
 
@@ -124,7 +123,7 @@ def test_parse_arguments(
     ],
 )
 def test_explicit_config_incorrect_config(
-    config: Sequence[str], error_type: Type[Exception], error_message: str
+    config: Sequence[str], error_type: type[Exception], error_message: str
 ) -> None:
     with pytest.raises(error_type, match=error_message):
         ExplicitConfig(config)

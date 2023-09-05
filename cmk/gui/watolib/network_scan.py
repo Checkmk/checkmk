@@ -10,7 +10,8 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Literal, NamedTuple, Sequence, TypeGuard
+from collections.abc import Sequence
+from typing import Literal, NamedTuple, TypeGuard
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException

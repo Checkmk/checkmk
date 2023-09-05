@@ -9,10 +9,10 @@ import enum
 import json
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, assert_never, Container, Final, Iterator, Literal, NamedTuple
+from typing import Any, assert_never, Final, Literal, NamedTuple
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict

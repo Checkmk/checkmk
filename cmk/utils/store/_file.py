@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Protocol, Type, TypeVar
+from typing import Any, Final, Generic, Protocol, TypeVar
 
 from pydantic import BaseModel
 
@@ -193,7 +193,7 @@ class ObjectStore(Generic[TObject]):
     """
 
     def __init__(
-        self, path: Path, *, serializer: Serializer[TObject], io: Type[FileIo] = RealIo
+        self, path: Path, *, serializer: Serializer[TObject], io: type[FileIo] = RealIo
     ) -> None:
         self.path: Final = path
         self._serializer = serializer
@@ -218,7 +218,7 @@ Model_T = TypeVar("Model_T", bound=BaseModel)
 
 
 class PydanticStore(ObjectStore[Model_T]):
-    def __init__(self, path: Path, model: Type[Model_T]) -> None:
+    def __init__(self, path: Path, model: type[Model_T]) -> None:
         class PydanticSerializer:
             def serialize(self, data: Model_T) -> bytes:
                 return data.json().encode("utf-8")

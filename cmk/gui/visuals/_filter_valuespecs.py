@@ -6,8 +6,8 @@
 import json
 import sys
 import traceback
+from collections.abc import Iterator, Sequence
 from itertools import chain
-from typing import Iterator, Sequence
 
 from livestatus import LivestatusTestingError
 

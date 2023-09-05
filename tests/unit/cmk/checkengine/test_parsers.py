@@ -10,9 +10,8 @@ import itertools
 import logging
 import time
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Mapping
 
 import pytest
 

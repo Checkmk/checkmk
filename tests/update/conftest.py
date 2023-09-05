@@ -6,10 +6,10 @@ import dataclasses
 import logging
 import os
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 from pprint import pformat
-from typing import Generator, Optional
+from typing import Optional
 
 import pytest
 

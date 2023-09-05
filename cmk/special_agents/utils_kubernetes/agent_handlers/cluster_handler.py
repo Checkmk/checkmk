@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterable, Iterator
+from collections.abc import Iterable, Iterator
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     _node_collector_replicas,

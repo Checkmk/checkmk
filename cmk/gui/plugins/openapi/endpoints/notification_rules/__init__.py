@@ -15,7 +15,8 @@ all notification rules configured.
 
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.notify_types import NotificationRuleID
 

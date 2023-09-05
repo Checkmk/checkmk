@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Iterator, Literal, Mapping, Optional, Sequence
+from typing import Any, cast, Literal, Optional
 
 from typing_extensions import TypedDict
 

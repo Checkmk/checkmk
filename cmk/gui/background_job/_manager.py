@@ -9,7 +9,7 @@ import logging
 import os
 import time
 import traceback
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.gui import log
 

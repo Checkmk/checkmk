@@ -7,8 +7,8 @@
 import json
 import pprint
 import traceback
-from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import Any, Container, Literal, NamedTuple
+from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
+from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
 

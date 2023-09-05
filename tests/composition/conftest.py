@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 

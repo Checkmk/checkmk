@@ -8,10 +8,11 @@ import os
 import re
 import shlex
 import subprocess
+from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any, Optional
 
 import yaml
 

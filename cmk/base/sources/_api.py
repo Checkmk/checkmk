@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import abc
-from typing import Generic, Sized, TypeVar
+from collections.abc import Sized
+from typing import Generic, TypeVar
 
 from cmk.fetchers import Fetcher
 from cmk.fetchers.filecache import FileCache, FileCacheOptions

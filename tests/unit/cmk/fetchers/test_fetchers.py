@@ -8,10 +8,10 @@ import io
 import json
 import os
 import socket
-from collections.abc import Sequence
+from collections.abc import Sequence, Sized
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Generic, Literal, NamedTuple, Sized, TypeVar
+from typing import Any, Generic, Literal, NamedTuple, TypeVar
 from unittest import mock
 from zlib import compress
 

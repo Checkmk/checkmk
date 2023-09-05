@@ -15,7 +15,7 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.graphing._utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_specification import HorizontalRule, RPNExpressionMetric
+from cmk.gui.graphing._graph_specification import HorizontalRule, RPNExpression
 from cmk.gui.graphing._utils import (
     _hex_color_to_rgb_color,
     AutomaticDict,
@@ -719,14 +719,14 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
 def test_evaluate() -> None:
     perfdata: Perfdata = [(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]]
     translated_metrics = utils.translate_metrics(perfdata, "check_mk-openvpn_clients")
-    assert utils.evaluate("if_in_octets,8,*@bits/s", translated_metrics) == RPNExpressionMetric(
+    assert utils.evaluate("if_in_octets,8,*@bits/s", translated_metrics) == RPNExpression(
         16.0,
         utils.unit_info["bits/s"],
         "#00e060",
     )
     perfdata = [(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]]
     translated_metrics = utils.translate_metrics(perfdata, "check_mk-df")
-    assert utils.evaluate("fs_size,fs_used,-#e3fff9", translated_metrics) == RPNExpressionMetric(
+    assert utils.evaluate("fs_size,fs_used,-#e3fff9", translated_metrics) == RPNExpression(
         6291456,
         utils.unit_info["bytes"],
         "#e3fff9",
@@ -740,14 +740,14 @@ def test_evaluate() -> None:
         utils.translate_metrics(
             utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0], "check_mk_active-icmp"
         ),
-    ) == RPNExpressionMetric(5, utils.unit_info[""], "#cc00ff")
+    ) == RPNExpression(5, utils.unit_info[""], "#cc00ff")
 
     # Here the user has a metrics that represent subnets, but the values look like floats
     # Test that evaluation recognizes the metric from the perf data
     assert utils.evaluate(
         "10.172",
         utils.translate_metrics(utils.parse_perf_data("10.172=6")[0], "check_mk-local"),
-    ) == RPNExpressionMetric(6, utils.unit_info[""], "#cc00ff")
+    ) == RPNExpression(6, utils.unit_info[""], "#cc00ff")
 
 
 @pytest.mark.parametrize(

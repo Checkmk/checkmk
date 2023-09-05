@@ -46,8 +46,8 @@ from cmk.gui.type_defs import (
     RGBColor,
     Row,
     TranslatedMetric,
+    TranslatedMetricOpScalar,
     TranslatedMetrics,
-    TranslatedMetricScalar,
     UnitInfo,
     VisualContext,
 )
@@ -66,9 +66,9 @@ from ._graph_specification import (
     LineType,
     MetricDefinition,
     MetricExpression,
+    MetricOperation,
+    MetricOpRRDChoice,
     RPNExpression,
-    RPNExpressionMetric,
-    RPNExpressionRRDChoice,
 )
 
 LegacyPerfometer = tuple[str, Any]
@@ -616,8 +616,8 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
 
 def _translated_metric_scalar(
     unit_conversion: Callable[[float], float], normalized_scalar: dict[str, float]
-) -> TranslatedMetricScalar:
-    scalar: TranslatedMetricScalar = {}
+) -> TranslatedMetricOpScalar:
+    scalar: TranslatedMetricOpScalar = {}
     if (warning := normalized_scalar.get("warn")) is not None:
         scalar["warn"] = unit_conversion(warning)
     if (critical := normalized_scalar.get("crit")) is not None:
@@ -759,7 +759,7 @@ def split_expression(expression: MetricExpression) -> tuple[str, str | None, str
 def evaluate(
     expression: MetricExpression | int | float,
     translated_metrics: TranslatedMetrics,
-) -> RPNExpressionMetric:
+) -> RPNExpression:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
@@ -771,7 +771,7 @@ def evaluate(
         lambda x: _evaluate_literal(x, translated_metrics),
     )
 
-    return RPNExpressionMetric(
+    return RPNExpression(
         rpn_expr_metric.value,
         unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr_metric.unit_info,
         "#" + explicit_color if explicit_color else rpn_expr_metric.color,
@@ -814,21 +814,21 @@ def stack_resolver(
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
     "+": lambda a, b: (
-        RPNExpressionMetric(
+        RPNExpression(
             a.value + b.value,
             _unit_mult(a.unit_info, b.unit_info),
             _choose_operator_color(a.color, b.color),
         )
     ),
     "-": lambda a, b: (
-        RPNExpressionMetric(
+        RPNExpression(
             a.value - b.value,
             _unit_sub(a.unit_info, b.unit_info),
             _choose_operator_color(a.color, b.color),
         )
     ),
     "*": lambda a, b: (
-        RPNExpressionMetric(
+        RPNExpression(
             a.value * b.value,
             _unit_add(a.unit_info, b.unit_info),
             _choose_operator_color(a.color, b.color),
@@ -836,28 +836,28 @@ rpn_operators = {
     ),
     # Handle zero division by always adding a tiny bit to the divisor
     "/": lambda a, b: (
-        RPNExpressionMetric(
+        RPNExpression(
             a.value / (b.value + 1e-16),
             _unit_div(a.unit_info, b.unit_info),
             _choose_operator_color(a.color, b.color),
         )
     ),
-    ">": lambda a, b: RPNExpressionMetric(
+    ">": lambda a, b: RPNExpression(
         a.value > b.value and 1.0 or 0.0,
         unit_info[""],
         "#000000",
     ),
-    "<": lambda a, b: RPNExpressionMetric(
+    "<": lambda a, b: RPNExpression(
         a.value < b.value and 1.0 or 0.0,
         unit_info[""],
         "#000000",
     ),
-    ">=": lambda a, b: RPNExpressionMetric(
+    ">=": lambda a, b: RPNExpression(
         a.value >= b.value and 1.0 or 0.0,
         unit_info[""],
         "#000000",
     ),
-    "<=": lambda a, b: RPNExpressionMetric(
+    "<=": lambda a, b: RPNExpression(
         a.value <= b.value and 1.0 or 0.0,
         unit_info[""],
         "#000000",
@@ -886,8 +886,8 @@ def _choose_operator_color(a: str, b: str) -> str:
 
 
 def _operator_minmax(
-    a: RPNExpressionMetric, b: RPNExpressionMetric, func: Callable[[float, float], float]
-) -> RPNExpressionMetric:
+    a: RPNExpression, b: RPNExpression, func: Callable[[float, float], float]
+) -> RPNExpression:
     v = func(a.value, b.value)
     # Use unit and color of the winner. If the winner
     # has none (e.g. it is a scalar like 0), then take
@@ -904,21 +904,21 @@ def _operator_minmax(
     else:
         unit = loser.unit_info
 
-    return RPNExpressionMetric(v, unit, winner.color or loser.color)
+    return RPNExpression(v, unit, winner.color or loser.color)
 
 
 def _evaluate_literal(
     expression: int | float | str, translated_metrics: TranslatedMetrics
-) -> RPNExpressionMetric:
+) -> RPNExpression:
     if isinstance(expression, int):
-        return RPNExpressionMetric(float(expression), unit_info["count"], "#000000")
+        return RPNExpression(float(expression), unit_info["count"], "#000000")
 
     if isinstance(expression, float):
-        return RPNExpressionMetric(expression, unit_info[""], "#000000")
+        return RPNExpression(expression, unit_info[""], "#000000")
 
     if val := _float_or_int(expression):
         if expression not in translated_metrics:
-            return RPNExpressionMetric(float(val), unit_info[""], "#000000")
+            return RPNExpression(float(val), unit_info[""], "#000000")
 
     var_name = _drop_metric_consolidation_advice(expression)
 
@@ -926,7 +926,7 @@ def _evaluate_literal(
     if percent:
         var_name = var_name[:-3]
 
-    def _from_scalar(scalar_name: str, scalar: TranslatedMetricScalar) -> float | None:
+    def _from_scalar(scalar_name: str, scalar: TranslatedMetricOpScalar) -> float | None:
         match scalar_name:
             case "warn":
                 return scalar.get("warn")
@@ -959,7 +959,7 @@ def _evaluate_literal(
     else:
         unit = translated_metrics[var_name]["unit"]
 
-    return RPNExpressionMetric(value, unit, color)
+    return RPNExpression(value, unit, color)
 
 
 @dataclass(frozen=True)
@@ -975,7 +975,7 @@ class AugmentedTimeSeries:
     metadata: TimeSeriesMetaData = TimeSeriesMetaData()
 
 
-ExpressionFunc = Callable[[RPNExpression, RRDData], Sequence[AugmentedTimeSeries]]
+ExpressionFunc = Callable[[MetricOperation, RRDData], Sequence[AugmentedTimeSeries]]
 
 
 class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
@@ -1250,7 +1250,7 @@ def metric_title(metric_name: MetricName_) -> str:
 
 class RenderableRecipe(NamedTuple):
     title: str
-    expression: RPNExpression
+    expression: MetricOperation
     color: str
     line_type: LineType
     visible: bool
@@ -1277,7 +1277,7 @@ def metric_recipe_and_unit(
     return (
         RenderableRecipe(
             title=metric_title(metric_name),
-            expression=RPNExpressionRRDChoice(
+            expression=MetricOpRRDChoice(
                 HostName(host_name),
                 service_description,
                 metric_name,

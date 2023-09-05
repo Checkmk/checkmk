@@ -22,9 +22,9 @@ from ._graph_specification import (
     GraphMetric,
     MetricDefinition,
     MetricExpression,
-    RPNExpressionConstant,
-    RPNExpressionOperator,
-    RPNExpressionRRD,
+    MetricOpConstant,
+    MetricOpOperator,
+    MetricOpRRDSource,
     TemplateGraphSpecification,
 )
 from ._utils import (
@@ -244,7 +244,7 @@ def metric_expression_to_graph_recipe_expression(
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant:
+) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     """Convert 'user,util,+,2,*' into this:
 
         ('operator',
@@ -260,27 +260,27 @@ def metric_expression_to_graph_recipe_expression(
     host_name = lq_row["host_name"]
     service_name = lq_row.get("service_description", "_HOST_")
 
-    def _parse_operator(part: str) -> RPNExpressionOperator:
+    def _parse_operator(part: str) -> MetricOpOperator:
         if part == "+":
-            return RPNExpressionOperator("+")
+            return MetricOpOperator("+")
         if part == "*":
-            return RPNExpressionOperator("*")
+            return MetricOpOperator("*")
         if part == "-":
-            return RPNExpressionOperator("-")
+            return MetricOpOperator("-")
         if part == "/":
-            return RPNExpressionOperator("/")
+            return MetricOpOperator("/")
         if part == "MAX":
-            return RPNExpressionOperator("MAX")
+            return MetricOpOperator("MAX")
         if part == "MIN":
-            return RPNExpressionOperator("MIN")
+            return MetricOpOperator("MIN")
         if part == "AVERAGE":
-            return RPNExpressionOperator("AVERAGE")
+            return MetricOpOperator("AVERAGE")
         if part == "MERGE":
-            return RPNExpressionOperator("MERGE")
+            return MetricOpOperator("MERGE")
         raise ValueError(part)
 
     expression = split_expression(expression)[0]
-    atoms: list[RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant] = []
+    atoms: list[MetricOpRRDSource | MetricOpOperator | MetricOpConstant] = []
     # Break the RPN into parts and translate each part separately
     for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
         # Some parts are operators. We leave them. We are just interested in
@@ -295,7 +295,7 @@ def metric_expression_to_graph_recipe_expression(
             # the RPN operator /.
             for metric_name, scale in zip(metric_names, tme["scale"]):
                 atoms.append(
-                    RPNExpressionRRD(
+                    MetricOpRRDSource(
                         site_id,
                         host_name,
                         service_name,
@@ -305,27 +305,27 @@ def metric_expression_to_graph_recipe_expression(
                     )
                 )
             if len(metric_names) > 1:
-                atoms.append(RPNExpressionOperator("MERGE"))
+                atoms.append(MetricOpOperator("MERGE"))
 
         else:
             try:
-                atoms.append(RPNExpressionConstant(float(part)))
+                atoms.append(MetricOpConstant(float(part)))
             except ValueError:
                 atoms.append(_parse_operator(part))
 
     def _apply_operator(
-        expression: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
-        left: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
-        right: RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant,
-    ) -> RPNExpressionRRD | RPNExpressionOperator | RPNExpressionConstant:
-        if not isinstance(expression, RPNExpressionOperator):
+        expression: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
+        left: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
+        right: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
+    ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+        if not isinstance(expression, MetricOpOperator):
             raise TypeError(expression)
         expression.add_operands([left, right])
         return expression
 
     return stack_resolver(
         atoms,
-        is_operator=lambda x: isinstance(x, RPNExpressionOperator),
+        is_operator=lambda x: isinstance(x, MetricOpOperator),
         apply_operator=_apply_operator,
         apply_element=lambda x: x,
     )

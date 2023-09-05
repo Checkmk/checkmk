@@ -19,11 +19,11 @@ from cmk.gui.i18n import _
 from ._graph_specification import (
     GraphMetric,
     LineType,
-    RPNExpression,
-    RPNExpressionConstant,
-    RPNExpressionOperator,
-    RPNExpressionRRD,
-    RPNExpressionTransformation,
+    MetricOpConstant,
+    MetricOperation,
+    MetricOpOperator,
+    MetricOpRRDSource,
+    MetricOpTransformation,
 )
 from ._utils import (
     AugmentedTimeSeries,
@@ -83,8 +83,7 @@ def compute_graph_curves(
 
             color = ts.metadata.color or metric.color
             if i % 2 == 1 and not (
-                isinstance(expression, RPNExpressionTransformation)
-                and expression.mode == "forecast"
+                isinstance(expression, MetricOpTransformation) and expression.mode == "forecast"
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 
@@ -107,7 +106,7 @@ def compute_graph_curves(
 
 
 def evaluate_time_series_expression(
-    expression: RPNExpression,
+    expression: MetricOperation,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
     try:
@@ -131,10 +130,10 @@ def evaluate_time_series_expression(
 
 
 def _expression_operator(
-    expression: RPNExpression,
+    expression: MetricOperation,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, RPNExpressionOperator):
+    if not isinstance(expression, MetricOpOperator):
         raise TypeError(expression)
 
     if result := _time_series_math(
@@ -152,10 +151,10 @@ def _expression_operator(
 
 
 def _expression_rrd(
-    expression: RPNExpression,
+    expression: MetricOperation,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, RPNExpressionRRD):
+    if not isinstance(expression, MetricOpRRDSource):
         raise TypeError(expression)
 
     if (
@@ -175,10 +174,10 @@ def _expression_rrd(
 
 
 def _expression_constant(
-    expression: RPNExpression,
+    expression: MetricOperation,
     rrd_data: RRDData,
 ) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, RPNExpressionConstant):
+    if not isinstance(expression, MetricOpConstant):
         raise TypeError(expression)
 
     num_points, twindow = _derive_num_points_twindow(rrd_data)

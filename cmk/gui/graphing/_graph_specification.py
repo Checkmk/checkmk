@@ -34,14 +34,14 @@ class MetricDefinition:
 
 
 @dataclass(frozen=True)
-class RPNExpressionMetric:
+class RPNExpression:
     value: float
     unit_info: UnitInfo
     color: str
 
 
 @dataclass(frozen=True)
-class RPNExpressionConstant:
+class MetricOpConstant:
     value: float
 
     @property
@@ -50,7 +50,7 @@ class RPNExpressionConstant:
 
 
 @dataclass(frozen=True)
-class RPNExpressionScalar:
+class MetricOpScalar:
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
@@ -62,24 +62,24 @@ class RPNExpressionScalar:
 
 
 @dataclass(frozen=True)
-class RPNExpressionOperator:
+class MetricOpOperator:
     operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
-    _operands: list[RPNExpression] = field(default_factory=list)
+    _operands: list[MetricOperation] = field(default_factory=list)
 
     @property
     def ident(self) -> Literal["operator"]:
         return "operator"
 
     @property
-    def operands(self) -> Sequence[RPNExpression]:
+    def operands(self) -> Sequence[MetricOperation]:
         return self._operands
 
-    def add_operands(self, operands: Sequence[RPNExpression]) -> None:
+    def add_operands(self, operands: Sequence[MetricOperation]) -> None:
         self._operands.extend(operands)
 
 
 @dataclass(frozen=True)
-class RPNExpressionRRDChoice:
+class MetricOpRRDChoice:
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
@@ -91,7 +91,7 @@ class RPNExpressionRRDChoice:
 
 
 @dataclass(frozen=True)
-class RPNExpressionRRD:
+class MetricOpRRDSource:
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -106,7 +106,7 @@ class RPNExpressionRRD:
 
 # TODO transformation is not part of cre but we first have to fix all types
 @dataclass(frozen=True)
-class RPNExpressionTransformation:
+class MetricOpTransformation:
     # "percentile", {"percentile": INT}
     # "forecast", {
     #     "past": ...,
@@ -121,7 +121,7 @@ class RPNExpressionTransformation:
     parameters: tuple[Literal["percentile"], float] | tuple[
         Literal["forecast"], Mapping[str, object]
     ]
-    _operands: list[RPNExpression] = field(default_factory=list)
+    _operands: list[MetricOperation] = field(default_factory=list)
 
     @property
     def ident(self) -> Literal["transformation"]:
@@ -132,7 +132,7 @@ class RPNExpressionTransformation:
         return self.parameters[0]
 
     @property
-    def operands(self) -> Sequence[RPNExpression]:
+    def operands(self) -> Sequence[MetricOperation]:
         return self._operands
 
 
@@ -148,7 +148,7 @@ class SingleMetricSpec(TypedDict):
 
 # TODO combined is not part of cre but we first have to fix all types
 @dataclass(frozen=True)
-class RPNExpressionCombined:
+class MetricOpCombined:
     single_metric_spec: SingleMetricSpec
 
     @property
@@ -156,21 +156,21 @@ class RPNExpressionCombined:
         return "combined"
 
 
-RPNExpression = (
-    RPNExpressionConstant
-    | RPNExpressionScalar
-    | RPNExpressionOperator
-    | RPNExpressionRRDChoice
-    | RPNExpressionRRD
-    | RPNExpressionTransformation
-    | RPNExpressionCombined
+MetricOperation = (
+    MetricOpConstant
+    | MetricOpScalar
+    | MetricOpOperator
+    | MetricOpRRDChoice
+    | MetricOpRRDSource
+    | MetricOpTransformation
+    | MetricOpCombined
 )
 
 
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    expression: RPNExpression
+    expression: MetricOperation
     unit: str
     color: str
     visible: bool

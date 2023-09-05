@@ -18,9 +18,9 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
-    RPNExpressionRRD,
-    RPNExpressionRRDChoice,
-    RPNExpressionTransformation,
+    MetricOpRRDChoice,
+    MetricOpRRDSource,
+    MetricOpTransformation,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._rrd_fetch import (
@@ -36,9 +36,9 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 def test_needed_elements_of_expression() -> None:
     assert set(
         _needed_elements_of_expression(
-            RPNExpressionTransformation(
+            MetricOpTransformation(
                 ("percentile", 95.0),
-                [RPNExpressionRRDChoice(HostName("heute"), "CPU utilization", "util", "max")],
+                [MetricOpRRDChoice(HostName("heute"), "CPU utilization", "util", "max")],
             ),
             lambda *args: (),
         )
@@ -77,7 +77,7 @@ _GRAPH_RECIPE = GraphRecipe(
         GraphMetric(
             title="Temperature",
             line_type="area",
-            expression=RPNExpressionRRD(
+            expression=MetricOpRRDSource(
                 SiteId("NO_SITE"),
                 HostName("my-host"),
                 "Temperature Zone 6",

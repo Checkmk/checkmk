@@ -29,14 +29,14 @@ from ._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
     MetricDefinition,
-    RPNExpression,
-    RPNExpressionCombined,
-    RPNExpressionConstant,
-    RPNExpressionOperator,
-    RPNExpressionRRD,
-    RPNExpressionRRDChoice,
-    RPNExpressionScalar,
-    RPNExpressionTransformation,
+    MetricOpCombined,
+    MetricOpConstant,
+    MetricOperation,
+    MetricOpOperator,
+    MetricOpRRDChoice,
+    MetricOpRRDSource,
+    MetricOpScalar,
+    MetricOpTransformation,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._utils import (
@@ -158,7 +158,7 @@ class NeededElementForTranslation:
 @dataclass(frozen=True)
 class NeededElementForRRDDataKey:
     # TODO Intermediate step, will be cleaned up:
-    # Relates to RPNExpression::rrd with SiteId, etc.
+    # Relates to MetricOperation::rrd with SiteId, etc.
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -168,25 +168,25 @@ class NeededElementForRRDDataKey:
 
 
 def _needed_elements_of_expression(
-    expression: RPNExpression,
+    expression: MetricOperation,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-    if isinstance(expression, RPNExpressionConstant):
+    if isinstance(expression, MetricOpConstant):
         yield from ()
 
-    elif isinstance(expression, (RPNExpressionScalar, RPNExpressionRRDChoice)):
+    elif isinstance(expression, (MetricOpScalar, MetricOpRRDChoice)):
         yield NeededElementForTranslation(
             expression.host_name,
             expression.service_name,
         )
 
-    elif isinstance(expression, (RPNExpressionOperator, RPNExpressionTransformation)):
+    elif isinstance(expression, (MetricOpOperator, MetricOpTransformation)):
         for operand in expression.operands:
             yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
 
-    elif isinstance(expression, RPNExpressionRRD):
+    elif isinstance(expression, MetricOpRRDSource):
         yield NeededElementForRRDDataKey(
             expression.site_id,
             expression.host_name,
@@ -197,7 +197,7 @@ def _needed_elements_of_expression(
         )
 
     elif (
-        isinstance(expression, RPNExpressionCombined)
+        isinstance(expression, MetricOpCombined)
         and cmk_version.edition() is not cmk_version.Edition.CRE
     ):
         if (cf := expression.single_metric_spec["consolidation_function"]) is None:

@@ -18,10 +18,10 @@ from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     MetricDefinition,
     MetricExpression,
-    RPNExpression,
-    RPNExpressionConstant,
-    RPNExpressionOperator,
-    RPNExpressionRRD,
+    MetricOpConstant,
+    MetricOperation,
+    MetricOpOperator,
+    MetricOpRRDSource,
 )
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
@@ -59,35 +59,35 @@ def test_rpn_consolidation_exception(
     [
         (
             "fs_size,fs_used,-",
-            RPNExpressionOperator(
+            MetricOpOperator(
                 "-",
                 [
-                    RPNExpressionRRD(SiteId(""), HostName(""), "", "fs_size", None, 1048576),
-                    RPNExpressionRRD(SiteId(""), HostName(""), "", "_", None, 1048576),
+                    MetricOpRRDSource(SiteId(""), HostName(""), "", "fs_size", None, 1048576),
+                    MetricOpRRDSource(SiteId(""), HostName(""), "", "_", None, 1048576),
                 ],
             ),
         ),
         (
             "fs_growth.min,0,MIN,-1,*",
-            RPNExpressionOperator(
+            MetricOpOperator(
                 "*",
                 [
-                    RPNExpressionOperator(
+                    MetricOpOperator(
                         "MIN",
                         [
-                            RPNExpressionRRD(
+                            MetricOpRRDSource(
                                 SiteId(""), HostName(""), "", "growth", "min", 12.136296296296296
                             ),
-                            RPNExpressionConstant(0.0),
+                            MetricOpConstant(0.0),
                         ],
                     ),
-                    RPNExpressionConstant(-1.0),
+                    MetricOpConstant(-1.0),
                 ],
             ),
         ),
     ],
 )
-def test_rpn_stack(expression: MetricExpression, result: RPNExpression) -> None:
+def test_rpn_stack(expression: MetricExpression, result: MetricOperation) -> None:
     translated_metrics = translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )
@@ -138,7 +138,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#00ffc6",
                 title="Used space",
                 line_type="area",
-                expression=RPNExpressionRRD(SiteId(""), HostName(""), "", "_", "max", 1048576),
+                expression=MetricOpRRDSource(SiteId(""), HostName(""), "", "_", "max", 1048576),
                 visible=True,
             ),
             GraphMetric(
@@ -146,11 +146,11 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#e3fff9",
                 title="Free space",
                 line_type="stack",
-                expression=RPNExpressionOperator(
+                expression=MetricOpOperator(
                     "-",
                     [
-                        RPNExpressionRRD(SiteId(""), HostName(""), "", "fs_size", "max", 1048576),
-                        RPNExpressionRRD(SiteId(""), HostName(""), "", "_", "max", 1048576),
+                        MetricOpRRDSource(SiteId(""), HostName(""), "", "fs_size", "max", 1048576),
+                        MetricOpRRDSource(SiteId(""), HostName(""), "", "_", "max", 1048576),
                     ],
                 ),
                 visible=True,
@@ -160,7 +160,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#006040",
                 title="Total size",
                 line_type="line",
-                expression=RPNExpressionRRD(
+                expression=MetricOpRRDSource(
                     SiteId(""), HostName(""), "", "fs_size", "max", 1048576
                 ),
                 visible=True,

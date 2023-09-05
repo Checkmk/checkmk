@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from pytest import MonkeyPatch
-
-from tests.testlib.base import Scenario
-
 from cmk.utils.crash_reporting import CrashReportStore
 from cmk.utils.hostaddress import HostName
 
@@ -36,9 +32,8 @@ def _check_generic_crash_info(crash):
         )
 
 
-def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
+def test_check_crash_report_from_exception() -> None:
     hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
     crash = None
     try:
         raise Exception("DING")
@@ -62,9 +57,8 @@ def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     assert crash.crash_info["exc_value"] == "DING"
 
 
-def test_check_crash_report_save(monkeypatch: MonkeyPatch) -> None:
+def test_check_crash_report_save() -> None:
     hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
     store = CrashReportStore()
     try:
         raise Exception("DING")

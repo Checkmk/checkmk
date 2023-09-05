@@ -3,61 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# WATO
-#
-# This file contain actual page handlers and Setup modes. It does HTML creation
-# and implement AJAX handlers. It uses classes, functions and globals
-# from watolib.py.
+"""WATO aka Setup - The UI used to configure Checkmk
 
-#   .--README--------------------------------------------------------------.
-#   |               ____                _                                  |
-#   |              |  _ \ ___  __ _  __| |  _ __ ___   ___                 |
-#   |              | |_) / _ \/ _` |/ _` | | '_ ` _ \ / _ \                |
-#   |              |  _ <  __/ (_| | (_| | | | | | | |  __/                |
-#   |              |_| \_\___|\__,_|\__,_| |_| |_| |_|\___|                |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | A few words about the implementation details of Setup.                |
-#   `----------------------------------------------------------------------'
-
-# [1] Files and Folders
-# Setup organizes hosts in folders. A wato folder is represented by a
-# OS directory. If the folder contains host definitions, then in that
-# directory a file name "hosts{.mk|.cfg}" is kept.
-# The directory hierarchy of Setup is rooted at etc/check_mk/conf.d/wato.
-# All files in and below that directory are kept by Setup. Setup does not
-# touch any other files or directories in conf.d.
-# A *path* in Setup means a relative folder path to that directory. The
-# root folder has the empty path (""). Folders are separated by slashes.
-# Each directory contains a file ".wato" which keeps information needed
-# by Setup but not by Checkmk itself.
-
-# [3] Convention for variable names:
-# site_id     --> The id of a site, None for the local site in non-distributed setup
-# site        --> The dictionary datastructure of a site
-# host_name   --> A string containing a host name
-# host        --> An instance of the class Host
-# folder_path --> A relative specification of a folder (e.g. "linux/prod")
-# folder      --> An instance of the class Folder
-
-# .
-#   .--Init----------------------------------------------------------------.
-#   |                           ___       _ _                              |
-#   |                          |_ _|_ __ (_) |_                            |
-#   |                           | || '_ \| | __|                           |
-#   |                           | || | | | | |_                            |
-#   |                          |___|_| |_|_|\__|                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Importing, Permissions, global variables                             |
-#   `----------------------------------------------------------------------'
+This package implements the backend rendered UI part of the setup, while `cmk.gui.watolib` holds the
+backend business and persistence logic, which is also shared with the REST API.
+"""
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
 # flake8: noqa
 # pylint: disable=unused-import
-from typing import Any
-
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -196,11 +151,6 @@ from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
 
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
-
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the Setup plugin context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
@@ -213,20 +163,6 @@ subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
 subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
-# .
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   +----------------------------------------------------------------------+
-#   | Prepare plugin-datastructures and load Setup plugins                  |
-#   '----------------------------------------------------------------------'
-
-modes: dict[str, Any] = {}
-
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
@@ -235,9 +171,3 @@ def load_plugins() -> None:
     watolib.load_watolib_plugins()
 
     utils.load_web_plugins("wato", globals())
-
-    if modes:
-        raise MKGeneralException(
-            _("Deprecated Setup modes found: %r. They need to be refactored to new API.")
-            % list(modes.keys())
-        )

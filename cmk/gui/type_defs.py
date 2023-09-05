@@ -98,6 +98,11 @@ class TwoFactorCredentials(TypedDict):
     totp_credentials: dict[str, TotpCredential]
 
 
+class WebAuthnActionState(TypedDict):
+    challenge: str
+    user_verification: str
+
+
 SessionId = str
 AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
 
@@ -112,7 +117,7 @@ class SessionInfo:
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
-    webauthn_action_state: object = None
+    webauthn_action_state: WebAuthnActionState | None = None
 
     logged_out: bool = field(default=False)
     auth_type: AuthType | None = None

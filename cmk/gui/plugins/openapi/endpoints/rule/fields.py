@@ -770,7 +770,71 @@ class RuleCollection(response_schemas.DomainObjectCollection):
     )
 
 
-class InputRuleObject(base.BaseSchema):
+class UpdateRuleObject(base.BaseSchema):
+    """A schema to validate the values coming from the API clients.
+
+    Examples:
+
+        >>> s = UpdateRuleObject()
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.livestatus_utils.testing import mock_site
+        >>> with mock_site(), application_and_request_context():
+        ...     rv = s.load({
+        ...         'properties': {'disabled': False},
+        ...         'conditions': {
+        ...              'host_name': {
+        ...                  'match_on': ['example.com', 'heute'],
+        ...                  'operator': 'one_of',
+        ...              },
+        ...              'host_labels': [
+        ...                   {'key': 'os', 'operator': 'is', 'value': 'windows'},
+        ...                   {'key': 'foo', 'operator': 'is_not', 'value': 'bar'},
+        ...              ],
+        ...              'host_tags': [
+        ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
+        ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
+        ...              ],
+        ...         }
+        ...     })
+        >>> rv
+        {'properties': {'disabled': False}, \
+'conditions': {\
+'host_name': ['example.com', 'heute'], \
+'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
+'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
+
+        >>> s.dump(rv)
+        {'properties': {'disabled': False}, \
+'conditions': {\
+'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
+'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
+'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
+
+    """
+
+    cast_to_dict = True
+
+    properties = fields.Nested(
+        RuleProperties,
+        description="Configuration values for rules.",
+        example={"disabled": False},
+    )
+    value_raw = gui_fields.PythonString(
+        description=(
+            "The raw parameter value for this rule. To create the correct structure, for now use "
+            "the 'export for API' menu item in the Rule Editor of the GUI. The value is expected "
+            "to be a valid Python type."
+        ),
+        example="{'cmk/os_family': 'linux'}",
+    )
+    conditions = fields.Nested(
+        RuleConditions,
+        description="Conditions.",
+        example={},
+    )
+
+
+class InputRuleObject(UpdateRuleObject):
     """A schema to validate the values coming from the API clients.
 
     Examples:
@@ -799,21 +863,21 @@ class InputRuleObject(base.BaseSchema):
         ...         }
         ...     })
         >>> rv
-        {'ruleset': 'host', 'folder': Folder('', 'Main'), 'properties': {'disabled': False}, \
+        {'properties': {'disabled': False}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
+'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}, 'ruleset': 'host', 'folder': Folder('', 'Main')}
 
         >>> rv['folder'].path()
         ''
 
         >>> s.dump(rv)
-        {'ruleset': 'host', 'folder': '/', 'properties': {'disabled': False}, \
-'conditions': {\
+        {'properties': {'disabled': False}, 'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
+'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}, \
+'ruleset': 'host', 'folder': '/'}
 
     """
 
@@ -825,24 +889,6 @@ class InputRuleObject(base.BaseSchema):
         required=True,
     )
     folder = gui_fields.FolderField(required=True, example="~hosts~linux")
-    properties = fields.Nested(
-        RuleProperties,
-        description="Configuration values for rules.",
-        example={"disabled": False},
-    )
-    value_raw = gui_fields.PythonString(
-        description=(
-            "The raw parameter value for this rule. To create the correct structure, for now use "
-            "the 'export for API' menu item in the Rule Editor of the GUI. The value is expected "
-            "to be a valid Python type."
-        ),
-        example="{'cmk/os_family': 'linux'}",
-    )
-    conditions = fields.Nested(
-        RuleConditions,
-        description="Conditions.",
-        example={},
-    )
 
 
 def _unpack_value(

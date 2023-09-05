@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import logging
-import os
-import typing
 import uuid
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 
 import pytest
 from flask import Flask
@@ -80,7 +77,7 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
         userdb.load_users.cache_clear()  # type: ignore[attr-defined]
 
 
-TimedOutSession = typing.Callable[[], tuple[UserId, SessionInfo]]
+TimedOutSession = Callable[[], tuple[UserId, SessionInfo]]
 
 
 @pytest.fixture(name="timed_out_session")
@@ -695,62 +692,6 @@ def test_load_custom_attr_convert(user_id: UserId) -> None:
         )
         == "a"
     )
-
-
-def create_new_profile_dir(paths: Iterable[Path]) -> Path:
-    profile_dir = cmk.utils.paths.profile_dir / "profile"
-    assert not profile_dir.exists()
-    profile_dir.mkdir()
-    for path in paths:
-        (profile_dir / path.with_suffix(".mk")).touch()
-    return profile_dir
-
-
-def touch_profile_files(profile_dir: Path, file_times: datetime) -> None:
-    assert profile_dir.exists()
-    timestamp = file_times.timestamp()
-    for path in profile_dir.glob("*.mk"):
-        os.utime(path, (timestamp, timestamp))
-
-
-def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
-    now = datetime.now()
-    profile_dir = create_new_profile_dir([Path("bla")])
-    touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
-    assert profile_dir.exists()
-
-
-def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
-    now = datetime.now()
-    profile_dir = create_new_profile_dir([])
-    touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
-    assert not profile_dir.exists()
-
-
-def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
-    now = datetime.now()
-    profile_dir = create_new_profile_dir([Path("bla")])
-    touch_profile_files(profile_dir, now - timedelta(days=50))
-    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
-    assert not profile_dir.exists()
-
-
-def test_cleanup_user_profiles_keep_active_profile(user_id: UserId) -> None:
-    now = datetime.now()
-    profile_dir = cmk.utils.paths.profile_dir / user_id
-    touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
-    assert profile_dir.exists()
-
-
-def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
-    now = datetime.now()
-    profile_dir = cmk.utils.paths.profile_dir / user_id
-    touch_profile_files(profile_dir, now - timedelta(days=50))
-    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
-    assert profile_dir.exists()
 
 
 def test_load_two_factor_credentials_unset(user_id: UserId) -> None:

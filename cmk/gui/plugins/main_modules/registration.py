@@ -144,7 +144,7 @@ def register() -> None:
             permission_registry,
         )
     mobile.register(layout_registry)
-    userdb_registration.register(user_attribute_registry, user_connector_registry)
+    userdb_registration.register(user_attribute_registry, user_connector_registry, job_registry)
     watolib.register()
     wato_registration.register(
         cmk.gui.pages.page_registry,

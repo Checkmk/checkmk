@@ -377,20 +377,11 @@ class Site:
 
         kwargs.setdefault("encoding", "utf-8")
         cmd_txt = " ".join(
-            [
-                "sudo",
-            ]
+            ["sudo"]
             + sudo_env_args
-            + [
-                "su",
-                "-l",
-                self.id,
-            ]
+            + ["su", "-l", self.id]
             + su_env_args
-            + [
-                "-c",
-                shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
-            ]
+            + ["-c", shlex.quote(shlex.join(cmd))]
         )
         logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True

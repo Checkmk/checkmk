@@ -20,7 +20,7 @@ def check_checkpoint_firewall(item, params, info):
     if info:
         state, filter_name, filter_date, major, minor = info[0]
         if state.lower() == "installed":
-            return 0, "%s (v%s.%s), filter: %s (since %s)" % (
+            return 0, "{} (v{}.{}), filter: {} (since {})".format(
                 state,
                 major,
                 minor,

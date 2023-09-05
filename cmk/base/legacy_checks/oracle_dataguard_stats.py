@@ -61,7 +61,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
-                yield 0, "Observer connected %s from host %s" % (
+                yield 0, "Observer connected {} from host {}".format(
                     dgdata["fs_failover_observer_present"].lower(),
                     dgdata["fs_failover_observer_host"],
                 )

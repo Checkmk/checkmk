@@ -64,7 +64,7 @@ def check_netapp_api_cluster(item, params, info):
         )
     elif state != params["state"]:
         had_errors = True
-        yield 1, "Cluster state is %s. (%s expected)" % (state, params.get("state"))
+        yield 1, "Cluster state is {}. ({} expected)".format(state, params.get("state"))
 
     if data.get("is-interconnect-up") != "true":
         had_errors = True
@@ -76,7 +76,7 @@ def check_netapp_api_cluster(item, params, info):
 
     if data.get("partner") != item:
         had_errors = True
-        yield 1, "Partner name changed: %s instead of %s" % (data.get("partner", "None"), item)
+        yield 1, "Partner name changed: {} instead of {}".format(data.get("partner", "None"), item)
 
     if not had_errors:
         yield 0, "Cluster Status OK"

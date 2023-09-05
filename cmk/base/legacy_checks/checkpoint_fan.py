@@ -24,7 +24,7 @@ def check_checkpoint_fan(item, params, info):
     for name, value, unit, dev_status in info:
         if format_item_checkpoint_fan(name) == item:
             state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
-            yield state, "Status: %s, %s %s" % (state_readable, value, unit)
+            yield state, f"Status: {state_readable}, {value} {unit}"
 
 
 check_info["checkpoint_fan"] = LegacyCheckDefinition(

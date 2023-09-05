@@ -70,7 +70,9 @@ def test_extension_compatibility(
                 ),
             ),
         ]
-        assert not errors_human_readable, "Extension %s encountered the following issues:\n%s" % (
+        assert (
+            not errors_human_readable
+        ), "Extension {} encountered the following issues:\n{}".format(
             extension_name,
             "\n".join(
                 errors_human_readable,
@@ -146,12 +148,12 @@ def _errors_human_readable(
     expected_import_errors: frozenset[str],
 ) -> Iterator[str]:
     if encountered_but_not_expected_errors := encountered_import_errors - expected_import_errors:
-        yield "Unexpectedly encountered import errors in %s:\n%s" % (
+        yield "Unexpectedly encountered import errors in {}:\n{}".format(
             component_name,
             "\n".join(encountered_but_not_expected_errors),
         )
     if expected_but_not_encountered_errors := expected_import_errors - encountered_import_errors:
-        yield "Expected but unencountered import errors in %s:\n%s" % (
+        yield "Expected but unencountered import errors in {}:\n{}".format(
             component_name,
             "\n".join(expected_but_not_encountered_errors),
         )

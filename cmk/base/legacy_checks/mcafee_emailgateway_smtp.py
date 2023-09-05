@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEW
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
-    return 0, "Total connections: %s (%s), Kernel blocked: %s, Kernel active: %s" % (
+    return 0, "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
         total_connections,
         get_bytes_human_readable(total_bytes),
         kernel_mode_blocked,

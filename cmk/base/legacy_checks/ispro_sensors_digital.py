@@ -40,7 +40,7 @@ def check_ispro_sensors_digital(item, params, info):
             alarm_state, alarm_state_readable, alarm_device_state_readable = map_states[
                 "alarm"
             ].get(alarm, (3, "unknown", "unexpected(%s)" % alarm))
-            return alarm_state, "Status: %s, Alarm status: %s (device: %s)" % (
+            return alarm_state, "Status: {}, Alarm status: {} (device: {})".format(
                 map_states["state"].get(state, "unexpected(%s)" % state),
                 alarm_state_readable,
                 alarm_device_state_readable,

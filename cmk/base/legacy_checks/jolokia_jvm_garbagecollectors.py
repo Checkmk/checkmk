@@ -21,7 +21,7 @@ def parse_jolokia_jvm_garbagecollectors(string_table):
             name = data.get("Name")
             if not name:
                 continue
-            item = "%s GC %s" % (instance, name)
+            item = f"{instance} GC {name}"
             parsed.setdefault(item, {}).update(data)
 
     return parsed

@@ -351,7 +351,7 @@ class _FilterTree:
 
     def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
         filter_nodes = _consolidate_filter_funcs(self._filter_choices_nodes)
-        return set(n for n in node_names if filter_nodes(n)).union(self.filters_by_name)
+        return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:

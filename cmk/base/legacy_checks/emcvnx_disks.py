@@ -137,7 +137,7 @@ def check_emcvnx_disks(item, params, parsed):
         return None
 
     diskstate = data["state"]
-    message = "Enclosure %s is %s" % (item, diskstate)
+    message = f"Enclosure {item} is {diskstate}"
     if diskstate in ["Unbound", "Hot Spare Ready", "Enabled", "Ready"]:
         nagstate = 0
     elif diskstate == "Rebuilding":

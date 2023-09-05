@@ -79,10 +79,11 @@ def inventory_intel_true_scale_psus(parsed):
 def check_intel_true_scale_psus(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        yield state, "Operational status: %s, Source: %s" % (state_readable, parsed[item]["source"])
+        yield state, "Operational status: {}, Source: {}".format(
+            state_readable, parsed[item]["source"]
+        )
 
-        for res in check_elphase(item, params, parsed):
-            yield res
+        yield from check_elphase(item, params, parsed)
 
 
 check_info["intel_true_scale_psus"] = LegacyCheckDefinition(

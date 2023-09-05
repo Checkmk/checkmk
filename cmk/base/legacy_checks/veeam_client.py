@@ -89,7 +89,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         size_info.append(get_bytes_human_readable(TransferedSizeByte))
         size_legend.append("transferred")
 
-    infotexts.append("Size (%s): %s" % ("/".join(size_legend), "/ ".join(size_info)))
+    infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
     # Bugged agent plugins were reporting . instead of : as separator for
     # the time. This has been fixed in the agent, but be compatible to old agent.
@@ -114,18 +114,18 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: %s/%s)" % (
+            levels = " (Warn/Crit: {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: %s/%s)" % (
+            levels = " (Warn/Crit: {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
-        infotexts.append("Last backup: %s ago%s%s" % (get_age_human_readable(age), label, levels))
+        infotexts.append(f"Last backup: {get_age_human_readable(age)} ago{label}{levels}")
 
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
@@ -143,7 +143,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
     if "AvgSpeedBps" in data:
         avg_speed_bps = int(data["AvgSpeedBps"])
         perfdata.append(("avgspeed", avg_speed_bps))
-        infotexts.append(("Average Speed: %s" % render.iobandwidth(avg_speed_bps)))
+        infotexts.append("Average Speed: %s" % render.iobandwidth(avg_speed_bps))
 
     # Append backup server if available
     if "BackupServer" in data:

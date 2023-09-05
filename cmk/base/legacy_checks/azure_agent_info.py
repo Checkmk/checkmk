@@ -130,16 +130,15 @@ def agent_issues(issues, params):
         )
 
     for i in sorted(issues.get("exception", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Exception: %s (!!)" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Exception: {} (!!)".format(i["issued_by"], i["msg"])
     for i in sorted(issues.get("warning", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Warning: %s (!)" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Warning: {} (!)".format(i["issued_by"], i["msg"])
     for i in sorted(issues.get("info", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Info: %s" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Info: {}".format(i["issued_by"], i["msg"])
 
 
 def check_azure_agent_info(_no_item, params, parsed):
-    for subresult in agent_bailouts(parsed.get("agent-bailout", [])):
-        yield subresult
+    yield from agent_bailouts(parsed.get("agent-bailout", []))
 
     reads = parsed.get("remaining-reads")
     if reads is not None:
@@ -154,8 +153,7 @@ def check_azure_agent_info(_no_item, params, parsed):
     if resource_infos[0]:
         yield 1, resource_infos[0]
 
-    for subresult in agent_issues(parsed.get("issues", {}), params):
-        yield subresult
+    yield from agent_issues(parsed.get("issues", {}), params)
 
     if resource_infos[1]:
         yield 0, "\n%s" % resource_infos[1]

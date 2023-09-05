@@ -22,11 +22,11 @@ def check_innovaphone_channels(item, params, info):
         if line[0] == item:
             link, physical = line[1:3]
             if link != "Up" or physical != "Up":
-                return 2, "Link: %s, Physical: %s" % (link, physical)
+                return 2, f"Link: {link}, Physical: {physical}"
             idle, total = map(float, line[3:])
             perc_used = (idle / total) * 100  # fixed: true-division
             perc_free = 100 - perc_used
-            message = "(used: %.0f, free: %.0f, total: %.0f)" % (total - idle, idle, total)
+            message = f"(used: {total - idle:.0f}, free: {idle:.0f}, total: {total:.0f})"
             return check_innovaphone(params, [[None, perc_free]], "%", message)
     return 3, "No Channel information found"
 

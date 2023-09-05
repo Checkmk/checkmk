@@ -85,14 +85,14 @@ def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-bra
 
     state = 0
     if expired_since >= 0:
-        status_text = "Certificate expired on %s (%s ago) " % (
+        status_text = "Certificate expired on {} ({} ago) ".format(
             expiry_date_text,
             get_age_human_readable(expired_since),
         )
         state = 2
 
     else:
-        status_text = "Certificate will expire on %s (in %s)" % (
+        status_text = "Certificate will expire on {} (in {})".format(
             expiry_date_text,
             get_age_human_readable(-expired_since),
         )
@@ -101,7 +101,7 @@ def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-bra
         elif -expired_since <= warn:
             state = 1
         if state:
-            status_text += " (warn/crit below %s/%s)" % (
+            status_text += " (warn/crit below {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )

@@ -54,8 +54,7 @@ def check_ucd_mem(item, params, parsed):
         params["levels_ram"] = params.pop("levels")
 
     results = check_memory_dict(parsed, params)
-    for state, infotext, perfdata in results.values():
-        yield state, infotext, perfdata
+    yield from results.values()
 
     # swap errors
     if "error_swap" in parsed:

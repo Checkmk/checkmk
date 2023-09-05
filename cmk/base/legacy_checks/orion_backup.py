@@ -23,7 +23,7 @@ def check_orion_backup(item, params, info):
 
     backup_time_status, backup_time = info[0]
     state, state_readable = map_states[backup_time_status]
-    return state, "Status: %s, Expected time: %s minutes" % (state_readable, backup_time)
+    return state, f"Status: {state_readable}, Expected time: {backup_time} minutes"
 
 
 check_info["orion_backup"] = LegacyCheckDefinition(

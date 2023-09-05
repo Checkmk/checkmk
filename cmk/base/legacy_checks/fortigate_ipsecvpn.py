@@ -51,7 +51,7 @@ def check_fortigate_ipsecvpn(item, params, info):
     elif warn is not None and num_down_and_not_ignored >= warn:
         status = 1
     if status:
-        infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        infotext += f" (warn/crit at {warn}/{crit})"
 
     yield status, infotext, [("active_vpn_tunnels", num_up, "", "", 0, num_total)]
 

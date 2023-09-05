@@ -35,7 +35,7 @@ def check_hp_procurve_mem(item, params, info):
 
     if isinstance(params, tuple):
         params = {"levels": ("perc_used", params)}
-    mem_total, mem_used = [int(mem) for mem in info[0]]
+    mem_total, mem_used = (int(mem) for mem in info[0])
     return check_memory_element(
         "Usage",
         mem_used,

@@ -80,35 +80,29 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
             if ctime >= crit:
                 state = 2
                 lockcount += 1
-                infotext += (
-                    "locktime %s (!!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; "
-                    % (
-                        get_age_human_readable(ctime),
-                        sidnr,
-                        serial,
-                        process,
-                        machine,
-                        osuser,
-                        object_owner,
-                        object_name,
-                    )
+                infotext += "locktime {} (!!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
+                    get_age_human_readable(ctime),
+                    sidnr,
+                    serial,
+                    process,
+                    machine,
+                    osuser,
+                    object_owner,
+                    object_name,
                 )
 
             elif ctime >= warn:
                 state = max(1, state)
                 lockcount += 1
-                infotext += (
-                    "locktime %s (!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; "
-                    % (
-                        get_age_human_readable(ctime),
-                        sidnr,
-                        serial,
-                        process,
-                        machine,
-                        osuser,
-                        object_owner,
-                        object_name,
-                    )
+                infotext += "locktime {} (!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
+                    get_age_human_readable(ctime),
+                    sidnr,
+                    serial,
+                    process,
+                    machine,
+                    osuser,
+                    object_owner,
+                    object_name,
                 )
 
         if line[0] == item and line[1] == "":

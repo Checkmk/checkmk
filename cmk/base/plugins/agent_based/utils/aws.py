@@ -106,7 +106,7 @@ def check_aws_limits(
             limit_ref = p_limit
 
         if is_valid_aws_limits_perf_data(resource_key):
-            yield Metric(name="aws_%s_%s" % (aws_service, resource_key), value=amount)
+            yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
 
         if not limit_ref:
             continue

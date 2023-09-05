@@ -276,7 +276,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
-                yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), [
+                yield 0, f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%", [
                     ("%shit_ratio" % key, hit_ratio, None, None, 0, 100)
                 ]
 
@@ -295,7 +295,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
     # these values may be missing, this is ok too
     # in this case just do not report these values
     if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
-        yield 0, "Arc Meta %s used, Limit %s, Max %s" % (
+        yield 0, "Arc Meta {} used, Limit {}, Max {}".format(
             get_bytes_human_readable(parsed["arc_meta_used"]),
             get_bytes_human_readable(parsed["arc_meta_limit"]),
             get_bytes_human_readable(parsed["arc_meta_max"]),

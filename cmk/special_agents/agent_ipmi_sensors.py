@@ -273,8 +273,9 @@ def _main(args: Args) -> int:
                 )
             except FileNotFoundError as e:
                 raise Exception(
-                    "Could not find '%s' command (PATH: %s)"
-                    % (args.ipmi_cmd, os.environ.get("PATH"))
+                    "Could not find '{}' command (PATH: {})".format(
+                        args.ipmi_cmd, os.environ.get("PATH")
+                    )
                 ) from e
 
             if completed_process.stderr:

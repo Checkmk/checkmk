@@ -30,7 +30,7 @@ def check_orion_batterytest(item, params, info):
         # dcBatteryTestResult:
         # This parameter is valid only if there is a test result available.
         state, state_readable = map_states.get(test_result, (3, "unknown[%s]" % test_result))
-        infotext = "Last performed: %s, Result: %s" % (last_test_date, state_readable)
+        infotext = f"Last performed: {last_test_date}, Result: {state_readable}"
         return state, infotext
     return 0, "No test result available"
 

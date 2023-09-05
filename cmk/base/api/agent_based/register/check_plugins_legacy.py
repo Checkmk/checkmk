@@ -94,8 +94,7 @@ def _resolve_string_parameters(
         )
     except Exception:
         raise ValueError(
-            "Invalid check parameter string '%s' found in discovered service %r"
-            % (params_unresolved, check_name)
+            f"Invalid check parameter string '{params_unresolved}' found in discovered service {check_name!r}"
         )
 
 

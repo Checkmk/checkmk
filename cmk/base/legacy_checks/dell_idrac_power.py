@@ -84,7 +84,7 @@ def check_dell_idrac_power_unit(item, _no_params, info):
         if index == item:
             state, state_readable = translate_status[status]
             psu_type_readable = translate_type[psu_type]
-            yield state, "Status: %s, Type: %s, Name: %s" % (
+            yield state, "Status: {}, Type: {}, Name: {}".format(
                 state_readable,
                 psu_type_readable,
                 location,

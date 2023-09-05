@@ -209,26 +209,22 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         if crit_upper_trend is not None and trend > crit_upper_trend:
             combiner(
                 2,
-                "rising faster than %s/%g min(!!)"
-                % (render_temp(crit_upper_trend, output_unit, True), trend_range_min),
+                f"rising faster than {render_temp(crit_upper_trend, output_unit, True)}/{trend_range_min:g} min(!!)",
             )
         elif warn_upper_trend is not None and trend > warn_upper_trend:
             combiner(
                 1,
-                "rising faster than %s/%g min(!)"
-                % (render_temp(warn_upper_trend, output_unit, True), trend_range_min),
+                f"rising faster than {render_temp(warn_upper_trend, output_unit, True)}/{trend_range_min:g} min(!)",
             )
         elif crit_lower_trend is not None and trend < crit_lower_trend:
             combiner(
                 2,
-                "falling faster than %s/%g min(!!)"
-                % (render_temp(crit_lower_trend, output_unit, True), trend_range_min),
+                f"falling faster than {render_temp(crit_lower_trend, output_unit, True)}/{trend_range_min:g} min(!!)",
             )
         elif warn_lower_trend is not None and trend < warn_lower_trend:
             combiner(
                 1,
-                "falling faster than %s/%g min(!)"
-                % (render_temp(warn_lower_trend, output_unit, True), trend_range_min),
+                f"falling faster than {render_temp(warn_lower_trend, output_unit, True)}/{trend_range_min:g} min(!)",
             )
 
         if "trend_timeleft" in params:

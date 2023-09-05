@@ -84,8 +84,7 @@ def check_jolokia_jvm_memory(item, params, parsed):
     mem_data = instance_data.get("Memory", {})
 
     for mem_type, value, value_max in _iter_type_value_max(mem_data):
-        for subresult in _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
-            yield subresult
+        yield from _jolokia_check_abs_and_perc(mem_type, value, value_max, params)
 
 
 check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
@@ -117,7 +116,7 @@ def discover_jolokia_jvm_memory_pools(parsed):
         for data in instance_info.get("MemoryPool", {}).values():
             pool = data.get("Name")
             if pool:
-                yield "%s Memory Pool %s" % (instance, pool), {}
+                yield f"{instance} Memory Pool {pool}", {}
 
 
 def _get_jolokia_jvm_mempool_data(item, parsed):
@@ -138,8 +137,7 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
     value_max = usage.get("max", -1)
     value_max = value_max if value_max > 0 else None
-    for subresult in _jolokia_check_abs_and_perc("used", usage["used"], value_max, params):
-        yield subresult
+    yield from _jolokia_check_abs_and_perc("used", usage["used"], value_max, params)
 
     init = usage.get("init")
     if init is not None:

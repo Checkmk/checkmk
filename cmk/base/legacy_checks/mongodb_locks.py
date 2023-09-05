@@ -27,14 +27,14 @@ def check_mongodb_locks(_no_item, params, info):
         param_name = "clients" if what.startswith("active") else "queue"
         warn, crit = None, None
         state = 0
-        if "%s_%s_locks" % (param_name, name) in params:
-            warn, crit = params["%s_%s_locks" % (param_name, name)]
+        if f"{param_name}_{name}_locks" in params:
+            warn, crit = params[f"{param_name}_{name}_locks"]
             if count >= crit:
                 state = 2
             elif count >= warn:
                 state = 1
-        yield state, "%s-%s: %s" % (param_name.title(), name.title(), count), [
-            ("%s_%s_locks" % (param_name, name), count, warn, crit)
+        yield state, f"{param_name.title()}-{name.title()}: {count}", [
+            (f"{param_name}_{name}_locks", count, warn, crit)
         ]
 
 

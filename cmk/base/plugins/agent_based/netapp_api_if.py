@@ -258,7 +258,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
             home_attribute = "is %shome port" % ("" if is_home_port else "not ")
             yield Result(
                 state=State(mon_state),
-                summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
+                summary="Current Port: {} ({})".format(vif["home_port"], home_attribute),
             )
 
         if "failover_ports" in vif:
@@ -303,7 +303,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
                 else:
                     yield Result(
                         state=State(mon_state),
-                        summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
+                        summary=f"{member_name}({interfaces.statename(member_state)})",
                     )
 
         if "speed_differs" in vif and speed_info_included:

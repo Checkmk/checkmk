@@ -156,7 +156,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                     infotext += "(!)"
                     state = max(1, state)
 
-            infotext += " (warn/crit at %s/%s )" % (
+            infotext += " (warn/crit at {}/{} )".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
@@ -177,7 +177,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
             if params.get("backup_age"):
                 warn, crit = params["backup_age"]
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_age_human_readable(warn),
                     get_age_human_readable(crit),
                 )

@@ -31,7 +31,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
 
     for region in regions_sorted:
         tables_region = tables_by_region[region]
-        yield 0, "%s: %s" % (region, len(tables_region))
+        yield 0, f"{region}: {len(tables_region)}"
 
         tables_names_sorted = sorted(tables_region.keys())
         long_output.append("%s:" % region)

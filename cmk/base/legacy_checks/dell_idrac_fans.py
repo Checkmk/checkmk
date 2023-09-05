@@ -34,7 +34,7 @@ def check_dell_idrac_fans(item, params, info):
     for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
         if index == item:
             state, state_readable = DELL_IDRAC_FANS_STATE_MAP[status]
-            yield state, "Status: %s, Name: %s" % (state_readable, name)
+            yield state, f"Status: {state_readable}, Name: {name}"
             if state_readable in ("OTHER", "UNKNOWN", "FAILED"):
                 return
 

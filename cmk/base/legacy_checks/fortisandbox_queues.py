@@ -60,7 +60,7 @@ def check_fortisandbox_queues(item, params, parsed):
             perfdata = [("queue", length, warn, crit)]
             infotext = "Queue length: %s" % length
             if state:
-                infotext += " (warn/crit at %s/%s)" % (warn, crit)
+                infotext += f" (warn/crit at {warn}/{crit})"
             return state, infotext, perfdata
     return None
 

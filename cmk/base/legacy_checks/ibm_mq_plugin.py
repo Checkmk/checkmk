@@ -36,7 +36,7 @@ def check_tool(tool_name, parsed):
     status, text = 0, parsed[tool_name]
     if text != "OK":
         status = 2
-    return status, "%s: %s" % (tool_name, text)
+    return status, f"{tool_name}: {text}"
 
 
 def check_ibm_mq_plugin(_no_item, params, parsed):

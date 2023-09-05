@@ -360,7 +360,7 @@ class LogwatchBlock:
 
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
-        header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
+        header = f"<<<{self._timestamp} {state_str}>>>\n"
         return [header] + self.lines
 
     def add_line(self, line, reclassify):
@@ -386,7 +386,7 @@ class LogwatchBlock:
             self.states_counter[level] += 1
 
         if reclassify and level != "I":
-            self.lines.append("%s %s\n" % (level, text))
+            self.lines.append(f"{level} {text}\n")
 
 
 class LogwatchBlockCollector:

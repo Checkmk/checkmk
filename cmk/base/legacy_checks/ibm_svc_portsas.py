@@ -55,7 +55,7 @@ def parse_ibm_svc_portsas(string_table):
         except IndexError:
             continue
         if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
-            item_name = "Node %s Slot %s Port %s" % (
+            item_name = "Node {} Slot {} Port {}".format(
                 data["node_id"],
                 data["adapter_location"],
                 data["adapter_port_id"],
@@ -85,7 +85,7 @@ def check_ibm_svc_portsas(item, params, parsed):
     else:
         state = 2
 
-    infotext += ", Speed: %s, Type: %s" % (data["port_speed"], data["type"])
+    infotext += ", Speed: {}, Type: {}".format(data["port_speed"], data["type"])
 
     yield state, infotext
 

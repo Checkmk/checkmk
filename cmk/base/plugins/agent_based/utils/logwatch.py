@@ -158,7 +158,7 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
         for error_msg in node_data.errors:
             yield Result(
                 state=State.UNKNOWN,
-                summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
+                summary=error_msg if node is None else f"[{node}] {error_msg}",
             )
 
 

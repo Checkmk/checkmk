@@ -34,11 +34,11 @@ def check_cisco_asa_connections(_no_item, params, info):
         elif used_conns >= warn:
             state = 1
         if state > 0:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
     else:
         perfdata = [("fw_connections_active", used_conns)]
 
-    return state, "%s, Max. since system startup: %s" % (infotext, overall_used_conns), perfdata
+    return state, f"{infotext}, Max. since system startup: {overall_used_conns}", perfdata
 
 
 check_info["cisco_asa_connections"] = LegacyCheckDefinition(

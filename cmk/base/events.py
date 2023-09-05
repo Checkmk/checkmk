@@ -207,7 +207,7 @@ def expand_backslashes(value: str) -> str:
 
 def render_context_dump(raw_context: EventContext) -> str:
     return "Raw context:\n" + "\n".join(
-        "                    %s=%s" % v for v in sorted(raw_context.items())  #
+        "                    %s=%s" % v for v in sorted(raw_context.items())
     )
 
 
@@ -225,10 +225,7 @@ def find_host_service_in_context(context: EventContext) -> str:
 def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> ContactList | None:
     try:
         if service:
-            query = (
-                "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts"
-                % (host, service)
-            )
+            query = f"GET services\nFilter: host_name = {host}\nFilter: service_description = {service}\nColumns: contacts"
         else:
             query = "GET hosts\nFilter: host_name = %s\nColumns: contacts" % host
 
@@ -618,8 +615,9 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
                 )
 
             return (
-                "The service is only in the groups %s. None of these patterns match: %s"
-                % ('"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups))
+                "The service is only in the groups {}. None of these patterns match: {}".format(
+                    '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)
+                )
                 + '"'
             )
 
@@ -670,13 +668,7 @@ def _event_match_exclude_servicegroups(
                     )
 
                     if r.search(match_value):
-                        return (
-                            'The service group "{}" ({}) is excluded per regex pattern: {}'.format(
-                                match_value,
-                                match_value_inverse,
-                                group,
-                            )
-                        )
+                        return f'The service group "{match_value}" ({match_value_inverse}) is excluded per regex pattern: {group}'
             elif group in servicegroups:
                 return "The service group %s is excluded" % group
     return None

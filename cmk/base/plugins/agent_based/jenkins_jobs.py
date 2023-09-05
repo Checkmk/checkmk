@@ -223,7 +223,7 @@ def _handle_job_type(data, new_dict, folder=""):
         if item_name is None:
             item_name = "%s" % job_type["name"]
         else:
-            item_name = "%s%s" % (item_name, job_type["name"])
+            item_name = "{}{}".format(item_name, job_type["name"])
 
         job = _handle_single_job(job_type)
 

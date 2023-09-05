@@ -602,7 +602,7 @@ class ContainerExec:
 
 
 def _copy_directory(
-    container: "docker.types.containers.Container", src_path: Path, dest_path: Path
+    container: docker.types.containers.Container, src_path: Path, dest_path: Path
 ) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 

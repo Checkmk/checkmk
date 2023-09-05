@@ -36,7 +36,7 @@ def check_veeam_jobs(item, _no_params, info):
             continue  # Skip not matching lines
 
         if job_last_state in ["Working", "Postprocessing"]:
-            return 0, "Running since %s (current state is: %s)" % (
+            return 0, "Running since {} (current state is: {})".format(
                 job_creation_time,
                 job_last_state,
             )
@@ -53,7 +53,7 @@ def check_veeam_jobs(item, _no_params, info):
         else:
             state = 3
 
-        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % (
+        return state, "State: {}, Result: {}, Creation time: {}, End time: {}, Type: {}".format(
             job_last_state,
             job_last_result,
             job_creation_time,

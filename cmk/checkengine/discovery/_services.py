@@ -50,12 +50,11 @@ def find_plugins(
     ) -> Iterable[ParsedSectionName]:
         for provider in providers:
             # filter section names for sections that cannot be resolved
-            for section_name in (
+            yield from (
                 section_name
                 for section_name in section_names
                 if provider.resolve(section_name) is not None
-            ):
-                yield section_name
+            )
 
     parsed_sections_of_interest = frozenset(
         itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
@@ -192,8 +191,7 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                "  Exception in discovery function of check plugin '%s': %s"
-                % (check_plugin_name, e)
+                f"  Exception in discovery function of check plugin '{check_plugin_name}': {e}"
             )
 
 

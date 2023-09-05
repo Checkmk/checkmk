@@ -27,7 +27,7 @@ def check_filehandler(_no_item, params, info):
     allocated, _used_or_unused, maximum = info[0]
     state = 0
     perc = float(allocated) / float(maximum) * 100.0
-    infotext = "%.1f%% used (%s of %s file handles)" % (perc, allocated, maximum)
+    infotext = f"{perc:.1f}% used ({allocated} of {maximum} file handles)"
     warn, crit = params["levels"]
 
     if perc >= crit:
@@ -35,7 +35,7 @@ def check_filehandler(_no_item, params, info):
     elif perc >= warn:
         state = 1
     if state > 0:
-        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+        infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
     return state, infotext, [("filehandler_perc", perc, warn, crit)]
 

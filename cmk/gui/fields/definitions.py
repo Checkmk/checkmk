@@ -580,7 +580,7 @@ class HostField(base.String):
             return
 
         if host:
-            host._user_needs_permission(("read"))
+            host._user_needs_permission("read")
             if self._permission_type == "setup_write":
                 host._user_needs_permission("write")
 

@@ -26,7 +26,7 @@ expected_files = {
 }
 
 
-with open(sys.argv[1], "r") as inp:
+with open(sys.argv[1]) as inp:
     lines = inp.readlines()
     files = {l.split()[0] for l in lines}
     hashes = {l.split()[1] for l in lines}

@@ -53,7 +53,7 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
         if line[1] == "config":
             instance.update(
                 {
-                    "version_info": "%s - %s" % (line[2], line[3]),
+                    "version_info": f"{line[2]} - {line[3]}",
                     "cluster_name": line[4],
                     "config_version": line[2],
                     "config_edition": line[3],
@@ -70,8 +70,7 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
         elif line[1] == "details":
             instance.update(
                 {
-                    "prod_version_info": "%s (%s) (%s) - %s"
-                    % (_parse_prod_version(line[2]), line[3], line[2], line[4]),
+                    "prod_version_info": f"{_parse_prod_version(line[2])} ({line[3]}) ({line[2]}) - {line[4]}",
                     "details_version": line[2],
                     "details_product": _parse_prod_version(line[2]),
                     "details_edition": line[3],

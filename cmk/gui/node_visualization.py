@@ -287,13 +287,11 @@ class ABCTopologyPage(Page):
         )
 
         html.javascript(
-            "topology_instance = new cmk.nodevis.TopologyVisualization(%s,%s);"
-            % (json.dumps(div_id), json.dumps(topology_configuration.type))
+            f"topology_instance = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},{json.dumps(topology_configuration.type)});"
         )
 
         html.javascript(
-            "topology_instance.show_topology(%s,%s)"
-            % (topology_configuration.frontend.to_json(), json.dumps(search_frontend_settings))
+            f"topology_instance.show_topology({topology_configuration.frontend.to_json()},{json.dumps(search_frontend_settings)})"
         )
 
     def _get_overlays_config(self) -> dict[str, Any]:

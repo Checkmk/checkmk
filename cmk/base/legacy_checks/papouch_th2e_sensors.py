@@ -92,7 +92,7 @@ def check_papouch_th2e_sensors_temp(item, params, parsed, what):
         return check_temperature(
             reading,
             params,
-            "papouch_th2e_sensors_%s_%s" % (what, item),
+            f"papouch_th2e_sensors_{what}_{item}",
             dev_unit=unit,
             dev_status=state,
             dev_status_name=state_readable,

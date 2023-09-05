@@ -272,8 +272,9 @@ def main(sys_args=None):
             file_stats = get_timestamp(sftp, paths)
             states.append(0)
             messages.append(
-                "Timestamp of %s is: %s"
-                % (paths["timestamp_filename"], time.ctime(file_stats.st_mtime))
+                "Timestamp of {} is: {}".format(
+                    paths["timestamp_filename"], time.ctime(file_stats.st_mtime)
+                )
             )
     except Exception:
         if opt_verbose:

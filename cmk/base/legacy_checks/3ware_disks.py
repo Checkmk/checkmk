@@ -58,7 +58,7 @@ def check_3ware_disks(item, _no_params, info):
         size_type = line[4]
         disk_type = line[5]
         model = line[-1]
-        infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (
+        infotext = "{} (unit: {}, size: {},{}, type: {}, model: {})".format(
             status,
             unit_type,
             size,

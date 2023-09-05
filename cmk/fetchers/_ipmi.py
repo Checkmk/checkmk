@@ -270,9 +270,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         return AgentRawData(
             b"<<<ipmi_firmware:sep(124)>>>\n"
             + b"".join(
-                self._make_line(
-                    (str(f).encode("utf8") for f in (entity_name, attribute_name, value))
-                )
+                self._make_line(str(f).encode("utf8") for f in (entity_name, attribute_name, value))
                 for entity_name, attributes in firmware_entries
                 for attribute_name, value in attributes.items()
             )

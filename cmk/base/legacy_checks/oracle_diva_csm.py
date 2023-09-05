@@ -38,7 +38,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
 def item_name_oracle_diva_csm(name, element_id):
-    return ("%s %s" % (name, element_id)).strip()
+    return (f"{name} {element_id}").strip()
 
 
 def inventory_oracle_diva_csm_status(name, idx, info):
@@ -163,7 +163,7 @@ def check_oracle_diva_csm_objects(item, params, info):
     if len(info) > 4 and len(info[4]) > 0:
         object_count, remaining_size, total_size = map(int, info[4][0])
 
-        infotext = "managed objects: %s, remaining size: %s GB of %s GB" % (
+        infotext = "managed objects: {}, remaining size: {} GB of {} GB".format(
             object_count,
             remaining_size,
             total_size,

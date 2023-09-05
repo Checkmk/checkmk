@@ -35,7 +35,7 @@ def fireeye_counter_generic(value, what, average):
     if average:
         avg = get_average(get_value_store(), " %s avg" % counter, this_time, rate, average)
         return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
-    return (state, "%s: %.2f mails/s" % (what, rate), perfdata)
+    return (state, f"{what}: {rate:.2f} mails/s", perfdata)
 
 
 #   .--mail----------------------------------------------------------------.
@@ -221,7 +221,7 @@ def check_fireeye_mail_statistics(_no_item, params, info):
                 average,
             ), perfdata
         else:
-            yield 0, "%s: %.2f per minute" % (mail_containing, rate * 60), perfdata
+            yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
 
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
@@ -249,7 +249,7 @@ check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
 
 def check_fireeye_mail_received(_no_item, params, info):
     start, end, received = info[0][13:16]
-    yield 0, "Mails received between %s and %s: %s" % (start, end, received)
+    yield 0, f"Mails received between {start} and {end}: {received}"
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
     end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
     rate = float(received) / (end_timestamp - start_timestamp)

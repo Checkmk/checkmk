@@ -114,7 +114,7 @@ def check_emcvnx_hba(item, _no_params, parsed):
 
     return (
         0,
-        "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec),
+        f"Read: {read_blocks_per_sec} Blocks/s, Write: {write_blocks_per_sec} Blocks/s",
         perfdata,
     )
 

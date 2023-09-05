@@ -138,7 +138,7 @@ def parse_timesyncd(string_table: StringTable) -> Section:
 
 def _parse_ntp_message_timestamp(ntp_message_raw: str, timezone_raw: str) -> float:
     ntp_message = ntp_message_raw.removeprefix("NTPMessage={ ").removesuffix(" }")
-    ntp_message_parsed = dict((m.split("=", maxsplit=1) for m in ntp_message.split(", ")))
+    ntp_message_parsed = dict(m.split("=", maxsplit=1) for m in ntp_message.split(", "))
 
     receive_timestamp_raw = ntp_message_parsed["ReceiveTimestamp"]
     tz_abbr = receive_timestamp_raw.split(" ")[-1]

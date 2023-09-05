@@ -188,7 +188,7 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
             if entry.reading is not None:
                 # This is a performance value, has no output
                 yield Metric("value", entry.reading)
-                output = "%0.2f%s" % (entry.reading, entry.unit)
+                output = f"{entry.reading:0.2f}{entry.unit}"
             else:
                 # This is a status field without perfdata
                 output = entry.output

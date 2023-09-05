@@ -114,8 +114,7 @@ def check_win_diskstat(item, params, info):
     perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
     return (
         0,
-        "reading %.1f MB/s, writing %.1f MB/s"
-        % (read_per_sec / 1024.0**2, write_per_sec / 1024.0**2),
+        f"reading {read_per_sec / 1024.0**2:.1f} MB/s, writing {write_per_sec / 1024.0**2:.1f} MB/s",
         perfdata,
     )
 

@@ -122,7 +122,7 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
             svr_entitytype, "unknown (%s)" % svr_entitytype
         ),
         "protocol": netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
-        "socket": "%s:%s" % (ip, port),
+        "socket": f"{ip}:{port}",
         "request_rate": int(request_rate),
         "rx_bytes": int(rx_bytes),
         "tx_bytes": int(tx_bytes),

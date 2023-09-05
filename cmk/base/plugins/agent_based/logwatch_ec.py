@@ -384,7 +384,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     syslog_messages = []
     cur_time = int(time.time())
 
-    forwarded_logfiles = set([])
+    forwarded_logfiles = set()
 
     # Keep track of reclassifed lines
     rclfd_total = 0
@@ -547,7 +547,7 @@ class MessageForwarder:
             return LogwatchFordwardResult()
 
         split_files = self._split_file_messages(
-            (message + "\n" for message in map(repr, syslog_messages))
+            message + "\n" for message in map(repr, syslog_messages)
         )
         for file_index, file_content in enumerate(split_files):
             spool_file = self._get_new_spool_file(method, file_index)

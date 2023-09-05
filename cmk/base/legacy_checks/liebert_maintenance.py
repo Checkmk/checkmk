@@ -38,7 +38,7 @@ def check_liebert_maintenance(_no_item, params, parsed):
     if None in (month, year):
         return
 
-    yield 0, "Next maintenance: %s/%s" % (month, year)
+    yield 0, f"Next maintenance: {month}/{year}"
 
     time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()
 

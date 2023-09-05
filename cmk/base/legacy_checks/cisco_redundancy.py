@@ -66,7 +66,7 @@ def check_cisco_redundancy(_no_item, params, info):
     infotexts = {}
     for what, states in [("now", info[0][:5]), ("init", params["init_states"])]:
         unit_id, unit_state, peer_id, peer_state, duplex_mode = states
-        infotexts[what] = "Unit ID: %s (%s), Peer ID: %s (%s), Duplex mode: %s" % (
+        infotexts[what] = "Unit ID: {} ({}), Peer ID: {} ({}), Duplex mode: {}".format(
             unit_id,
             map_states["unit_state"][unit_state],
             peer_id,
@@ -78,7 +78,7 @@ def check_cisco_redundancy(_no_item, params, info):
 
     if params["init_states"] == info[0][:5]:
         state = 0
-        infotext = "%s, Last swact reason code: %s" % (
+        infotext = "{}, Last swact reason code: {}".format(
             infotexts["now"],
             map_states["swact_reason"][info[0][5]],
         )
@@ -88,7 +88,7 @@ def check_cisco_redundancy(_no_item, params, info):
         else:
             state = 2
 
-        infotext = "Switchover - Old status: %s, New status: %s" % (
+        infotext = "Switchover - Old status: {}, New status: {}".format(
             infotexts["init"],
             infotexts["now"],
         )

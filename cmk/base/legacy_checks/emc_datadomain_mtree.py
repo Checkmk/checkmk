@@ -34,8 +34,9 @@ def check_emc_datadomain_mtree(item, params, parsed):
     )
     yield (
         params.get(dev_state_str, 3),
-        "Status: %s, Precompiled: %s"
-        % (dev_state_str, get_bytes_human_readable(mtree_data["precompiled"])),
+        "Status: {}, Precompiled: {}".format(
+            dev_state_str, get_bytes_human_readable(mtree_data["precompiled"])
+        ),
         [("precompiled", mtree_data["precompiled"])],
     )
 

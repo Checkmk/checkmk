@@ -23,7 +23,7 @@ def check_stormshield_updates(item, params, info):
         if item == subsystem:
             if lastrun == "":
                 lastrun = "Never"
-            infotext = "Subsystem %s is %s, last update: %s" % (subsystem, state, lastrun)
+            infotext = f"Subsystem {subsystem} is {state}, last update: {lastrun}"
             monitoringstate = params.get(state, 3)
             yield monitoringstate, infotext
 

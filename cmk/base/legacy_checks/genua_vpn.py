@@ -45,7 +45,7 @@ def check_genua_vpn(item, params, info):
             if ip_opposite:
                 ip_info += " (%s)" % ip_opposite
 
-            infotext = "Hostname: %s%s, VPN private: %s, VPN remote: %s" % (
+            infotext = "Hostname: {}{}, VPN private: {}, VPN remote: {}".format(
                 hostname_opposite,
                 ip_info,
                 vpn_private,

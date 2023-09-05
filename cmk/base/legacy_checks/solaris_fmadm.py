@@ -187,7 +187,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
     event = parsed["event"]
     state, state_readable = map_state.get(event["severity"], (3, "unknown"))
-    yield state, "Severity: %s (%s)" % (state_readable, event["time"])
+    yield state, "Severity: {} ({})".format(state_readable, event["time"])
 
     problems = parsed["problems"]
     if problems:

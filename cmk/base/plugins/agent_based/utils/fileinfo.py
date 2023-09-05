@@ -496,12 +496,12 @@ def _fileinfo_check_conjunctions(
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
             if level is not None and value and value is not None and value >= level:
-                match_texts.append("%s at %s" % (title.lower(), readable_f(level)))
+                match_texts.append(f"{title.lower()} at {readable_f(level)}")
                 matches += 1
 
             level_lower = levels.get("%s_lower" % key)
             if level_lower is not None and value is not None and value < level_lower:
-                match_texts.append("%s below %s" % (title.lower(), readable_f(level_lower)))
+                match_texts.append(f"{title.lower()} below {readable_f(level_lower)}")
                 matches += 1
 
         if matches == len(levels):
@@ -534,7 +534,7 @@ def check_fileinfo_groups_data(
         yield Result(state=State.UNKNOWN, summary="No group pattern found.")
         return
 
-    group_patterns = set((p, "") if isinstance(p, str) else p for p in raw_group_patterns)
+    group_patterns = {(p, "") if isinstance(p, str) else p for p in raw_group_patterns}
 
     include_patterns = [i for i, _e in group_patterns]
     exclude_patterns = [e for _i, e in group_patterns if e != ""]

@@ -921,8 +921,9 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         self.show_job_details()
         html.close_div()
         html.javascript(
-            "cmk.backup.refresh_job_details('%s', '%s', %s)"
-            % (self._update_url(), self.ident, "true")
+            "cmk.backup.refresh_job_details('{}', '{}', {})".format(
+                self._update_url(), self.ident, "true"
+            )
         )
 
     def _update_url(self) -> str:

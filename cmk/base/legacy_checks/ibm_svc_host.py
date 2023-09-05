@@ -75,7 +75,7 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
             ("offline", offline),
             ("other", other),
         ]
-        yield 0, "%s active, %s inactive" % (active, inactive), perfdata
+        yield 0, f"{active} active, {inactive} inactive", perfdata
 
         if degraded > 0:
             yield (not params["always_ok"] and 1 or 0), "%s degraded" % degraded
@@ -107,7 +107,7 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
                 state = 1
             else:
                 state = 0
-            yield state, "%s %s" % (value, ident), [(ident, value, warn, crit)]
+            yield state, f"{value} {ident}", [(ident, value, warn, crit)]
 
 
 check_info["ibm_svc_host"] = LegacyCheckDefinition(

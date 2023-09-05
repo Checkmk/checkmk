@@ -72,7 +72,7 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
     yield 0, "%d Fans" % len(my_fans)
     for key, fan in sorted(my_fans.items()):
         if fan["OperState"] != "operable":
-            yield 2, "Fan %s %s: average speed %s RPM" % (
+            yield 2, "Fan {} {}: average speed {} RPM".format(
                 key.split()[-1][2:],
                 fan["OperState"],
                 fan.get("SpeedAvg"),
@@ -112,7 +112,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
             loc = key.split()[-1].split(".")
             sensor_list.append(
                 (
-                    "Module %s Fan %s" % (loc[0], loc[1]),
+                    f"Module {loc[0]} Fan {loc[1]}",
                     float(values.get("AmbientTemp")),
                 )
             )

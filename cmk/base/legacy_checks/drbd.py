@@ -333,16 +333,16 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
         params_diskstates_dict = dict(params.get("diskstates", []))
         diskstates_info = set()
         for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
-            diskstate = "%s_%s" % (ro.lower(), ds)
+            diskstate = f"{ro.lower()}_{ds}"
             params_diskstate = params_diskstates_dict.get(diskstate)
 
             if params_diskstate is not None:
                 state = max(state, params_diskstate)
-                diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[params_diskstate]))
+                diskstates_info.add(f"{ro}/{ds} is {state_markers[params_diskstate]}")
             else:
                 default_state = drbd_ds_map.get(diskstate, 3)
                 if default_state > 0:
-                    diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[default_state]))
+                    diskstates_info.add(f"{ro}/{ds} is {state_markers[default_state]}")
                 state = max(state, drbd_ds_map.get(diskstate, 3))
         if diskstates_info:
             output += " (%s)" % ", ".join(diskstates_info)
@@ -366,10 +366,10 @@ def drbd_get_rates(list_):
     perfdata = []
     for type_, name, item, value, uom in list_:
         rate = get_rate(
-            get_value_store(), "%s.%s.%s" % (type_, name, item), now, value, raise_overflow=True
+            get_value_store(), f"{type_}.{name}.{item}", now, value, raise_overflow=True
         )
         perfdata.append((name, rate))
-        output += " %s/sec: %s%s" % (name, rate, uom)
+        output += f" {name}/sec: {rate}{uom}"
     return (output, perfdata)
 
 
@@ -444,7 +444,7 @@ def check_drbd_stats(item, params, info):
             ("oos", "kb out of sync"),
         ]:
             if key in parsed:
-                output += "%s: %s, " % (label, parsed[key])
+                output += f"{label}: {parsed[key]}, "
             else:
                 parsed[key] = "0"  # perfdata must always have same number of entries
             if parsed[key].isdigit():

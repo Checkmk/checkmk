@@ -175,7 +175,7 @@ def _check_common_juniper_trpz_aps_sessions(
         state=state_code,
         summary="%sStatus: %s"
         % (
-            "" if "" in section else ("[%s/%s] " % (item_active_node, item_passive_node)),
+            "" if "" in section else (f"[{item_active_node}/{item_passive_node}] "),
             state_string,
         ),
     )

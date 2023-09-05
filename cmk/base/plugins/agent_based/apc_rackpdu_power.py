@@ -74,7 +74,7 @@ def parse_apc_rackpdu_power(string_table: List[type_defs.StringTable]) -> Option
             continue
 
         parsed.setdefault(
-            "%s %s" % (name_part, num), {"current": get_status_info(amperage_str, device_state)}
+            f"{name_part} {num}", {"current": get_status_info(amperage_str, device_state)}
         )
     return parsed
 

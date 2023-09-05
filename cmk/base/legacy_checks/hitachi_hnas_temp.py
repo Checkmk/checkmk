@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
 def format_hitachi_hnas_name(nodeid, sensorid, new_format):
     # net item format is used in 1.2.7i? and newer
     if new_format:
-        return "Node %s Sensor %s" % (nodeid, sensorid)
-    return "%s.%s" % (nodeid, sensorid)
+        return f"Node {nodeid} Sensor {sensorid}"
+    return f"{nodeid}.{sensorid}"
 
 
 def inventory_hitachi_hnas_temp(info):

@@ -37,7 +37,7 @@ def parse_chrony(string_table):
     parsed: Dict[str, Any] = {}
     for line in string_table:
         if ":" in line:
-            key, value = [e.strip() for e in " ".join(line).split(":", 1)]
+            key, value = (e.strip() for e in " ".join(line).split(":", 1))
             if key == "Reference ID":
                 parsed[key] = value
                 try:

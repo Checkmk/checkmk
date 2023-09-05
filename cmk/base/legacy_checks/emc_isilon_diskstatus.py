@@ -18,7 +18,7 @@ def inventory_emc_isilon_diskstatus(info):
 def check_emc_isilon_diskstatus(item, _no_params, info):
     for disk_id, name, disk_status, serial in info:
         if disk_id == item:
-            message = "Disk %s, serial number %s status is %s" % (name, serial, disk_status)
+            message = f"Disk {name}, serial number {serial} status is {disk_status}"
             if disk_status in ["HEALTHY", "L3"]:
                 status = 0
             else:

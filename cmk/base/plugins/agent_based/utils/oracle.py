@@ -83,44 +83,36 @@ def _error_summary_text(agent_output_string: str) -> str:
     return f'Found error in agent output "{agent_output_string}"'
 
 
-DataFiles = TypedDict(
-    "DataFiles",
-    {
-        "autoextensible": bool,
-        "file_online_status": str,
-        "name": str,
-        "status": str,
-        "ts_status": str,
-        "ts_type": str,
-        "block_size": Optional[int],
-        "size": Optional[int],
-        "max_size": Optional[int],
-        "used_size": Optional[int],
-        "free_space": Optional[int],
-        "increment_size": Optional[int],
-    },
-)
+class DataFiles(TypedDict):
+    autoextensible: bool
+    file_online_status: str
+    name: str
+    status: str
+    ts_status: str
+    ts_type: str
+    block_size: Optional[int]
+    size: Optional[int]
+    max_size: Optional[int]
+    used_size: Optional[int]
+    free_space: Optional[int]
+    increment_size: Optional[int]
 
-TableSpaces = TypedDict(
-    "TableSpaces",
-    {
-        "amount_missing_filenames": int,
-        "autoextensible": bool,
-        "datafiles": List[DataFiles],
-        "db_version": int,
-        "status": str,
-        "type": str,
-    },
-)
+
+class TableSpaces(TypedDict):
+    amount_missing_filenames: int
+    autoextensible: bool
+    datafiles: List[DataFiles]
+    db_version: int
+    status: str
+    type: str
+
 
 ErrorSids = Dict[str, OraErrors]
-SectionTableSpaces = TypedDict(
-    "SectionTableSpaces",
-    {
-        "error_sids": ErrorSids,
-        "tablespaces": Dict[Tuple[str, str], TableSpaces],
-    },
-)
+
+
+class SectionTableSpaces(TypedDict):
+    error_sids: ErrorSids
+    tablespaces: Dict[Tuple[str, str], TableSpaces]
 
 
 InstancePerformance = Mapping[str, Mapping[str, Any]]

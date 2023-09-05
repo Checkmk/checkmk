@@ -36,9 +36,9 @@ def check_liebert_system(item: str, section: liebert.SystemSection) -> CheckResu
     # used in this check funtion.
     for key, value in sorted(section.items()):
         if key == "System Status" and "Normal Operation" not in value:
-            yield Result(state=State.CRIT, summary="%s: %s" % (key, value))
+            yield Result(state=State.CRIT, summary=f"{key}: {value}")
         else:
-            yield Result(state=State.OK, summary="%s: %s" % (key, value))
+            yield Result(state=State.OK, summary=f"{key}: {value}")
 
 
 register.snmp_section(

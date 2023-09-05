@@ -26,14 +26,14 @@ def check_emc_datadomain_fans(item, _no_params, info):
     }
     fan_level = {"0": "Unknown", "1": "Low", "2": "Medium", "3": "High"}
     for line in info:
-        if item == "%s-%s" % (line[0], line[1]):
+        if item == f"{line[0]}-{line[1]}":
             dev_descr = line[2]
             dev_level = line[3]
             dev_state = line[4]
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
             dev_level_str = fan_level.get(dev_level, "Unknown")
-            infotext = "%s %s RPM %s" % (dev_descr, dev_state_str, dev_level_str)
+            infotext = f"{dev_descr} {dev_state_str} RPM {dev_level_str}"
             return dev_state_rc, infotext
     return None
 

@@ -39,7 +39,7 @@ def render_bi_infos(infos) -> None | list[str]:  # type: ignore[no-untyped-def]
     lines = []
     if "error" in own_infos:
         lines.append(
-            "%s %s" % (state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
+            "{} {}".format(state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
         )
     if "custom" in own_infos:
         lines.append(own_infos["custom"]["output"])

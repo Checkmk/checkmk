@@ -72,7 +72,7 @@ for suite in suites:
             suites[suite][attr] = suites[suite].get(attr, 0.0) + float(child.attrib.get(attr))
         for attr in set_attr:
             items = suites[suite].get(attr, "").split(",") + [child.attrib.get(attr)]
-            suites[suite][attr] = ", ".join(set(_ for _ in items if _))
+            suites[suite][attr] = ", ".join({_ for _ in items if _})
         for attr in min_attr:
             suites[suite][attr] = min(
                 child.attrib.get(attr), suites[suite].get(attr, child.attrib.get(attr))

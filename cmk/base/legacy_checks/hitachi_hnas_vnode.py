@@ -45,8 +45,7 @@ def check_hitachi_hnas_vnode(item, _no_params, info):
                 nodetype = "This is a administrative node."
             return (
                 statusmap[status][1],
-                "EVS is hosted by PNode %s and reports status %s. %s"
-                % (hosted_by, statusmap[status][0], nodetype),
+                f"EVS is hosted by PNode {hosted_by} and reports status {statusmap[status][0]}. {nodetype}",
             )
 
     return 3, "SNMP did not report a status of this EVS"

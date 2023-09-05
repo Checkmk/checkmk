@@ -100,16 +100,16 @@ def check_hyperv_vms(item, params, parsed):
         # this means that the check is executed as a manual check
         if discovery_state is None:
             service_state = 3
-            message = "State is %s (%s), discovery state is not available" % (
+            message = "State is {} ({}), discovery state is not available".format(
                 vm["state"],
                 vm["state_msg"],
             )
         elif vm["state"] == discovery_state:
             service_state = 0
-            message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
+            message = "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
         else:
             service_state = 2
-            message = "State %s (%s) does not match discovery (%s)" % (
+            message = "State {} ({}) does not match discovery ({})".format(
                 vm["state"],
                 vm["state_msg"],
                 params["state"],
@@ -122,10 +122,10 @@ def check_hyperv_vms(item, params, parsed):
         # as a precaution, if in the future there are new VM states we do not know about
         if service_state is None:
             service_state = 3
-            message = "Unknown state %s (%s)" % (vm["state"], vm["state_msg"])
+            message = "Unknown state {} ({})".format(vm["state"], vm["state_msg"])
 
         else:
-            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+            message = "State is {} ({})".format(vm["state"], vm["state_msg"])
 
     yield service_state, message
 

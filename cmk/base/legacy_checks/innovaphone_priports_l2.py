@@ -42,7 +42,7 @@ def check_innovaphone_priports_l2(item, params, info):
                 state = 2
                 mode_label = "(!!)"
 
-            return state, "State: %s%s, Mode: %s%s" % (
+            return state, "State: {}{}, Mode: {}{}".format(
                 states[l2state],
                 state_label,
                 modes[l2mode],

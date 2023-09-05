@@ -25,7 +25,7 @@ class Section(typing.NamedTuple):
 def parse(string_table: v1.type_defs.StringTable) -> Section | None:
     if not string_table:
         return None
-    http, httpv2, https = [int(x) if x.isdigit() else None for x in string_table[0]]
+    http, httpv2, https = (int(x) if x.isdigit() else None for x in string_table[0])
     return Section(http=http, httpv2=httpv2, https=https)
 
 

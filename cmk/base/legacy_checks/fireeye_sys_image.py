@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 def check_fireeye_sys_image(_no_item, _no_params, info):
     installed, version, latest_version, is_latest = info[0]
     state = 0
-    infotext = "Image: %s, Version: %s" % (installed, version)
+    infotext = f"Image: {installed}, Version: {version}"
 
     if is_latest != "1":
         state = 1

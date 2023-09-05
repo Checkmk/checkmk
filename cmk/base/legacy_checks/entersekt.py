@@ -81,10 +81,10 @@ def check_entersekt_emrerrors(item, params, info):
     infotext = "Item not found in SNMP output"
     if int(info[0][1]) > crit:
         status = 2
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][1]), crit)
+        infotext = f"Number of errors is {int(info[0][1])} which is higher than {crit}"
     elif int(info[0][1]) > warn:
         status = 1
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][1]), warn)
+        infotext = f"Number of errors is {int(info[0][1])} which is higher than {warn}"
     else:
         status = 0
         infotext = "Number of errors is %s " % (info[0][1])
@@ -133,10 +133,10 @@ def check_entersekt_ecerterrors(item, params, info):
     infotext = "Item not found in SNMP output"
     if int(info[0][2]) > crit:
         status = 2
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][2]), crit)
+        infotext = f"Number of errors is {int(info[0][2])} which is higher than {crit}"
     elif int(info[0][2]) > warn:
         status = 1
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][2]), warn)
+        infotext = f"Number of errors is {int(info[0][2])} which is higher than {warn}"
     else:
         status = 0
         infotext = "Number of errors is %s " % (info[0][2])
@@ -184,10 +184,10 @@ def check_entersekt_soaperrors(item, params, info):
     infotext = "Item not found in SNMP output"
     if int(info[0][3]) > crit:
         status = 2
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][3]), crit)
+        infotext = f"Number of errors is {int(info[0][3])} which is higher than {crit}"
     elif int(info[0][3]) > warn:
         status = 1
-        infotext = "Number of errors is %s which is higher than %s" % (int(info[0][3]), warn)
+        infotext = f"Number of errors is {int(info[0][3])} which is higher than {warn}"
     else:
         status = 0
         infotext = "Number of errors is %s " % (info[0][3])
@@ -242,13 +242,13 @@ def check_entersekt_certexpiry(item, params, info):
     infotext = "Item not found in SNMP output"
     if int(info[0][4]) < warn:
         status = 1
-        infotext = "Number of days until expiration is %s which is less than %s" % (
+        infotext = "Number of days until expiration is {} which is less than {}".format(
             int(info[0][4]),
             warn,
         )
         if int(info[0][4]) < crit:
             status = 2
-            infotext = "Number of days until expiration is %s which is less than %s" % (
+            infotext = "Number of days until expiration is {} which is less than {}".format(
                 int(info[0][4]),
                 crit,
             )

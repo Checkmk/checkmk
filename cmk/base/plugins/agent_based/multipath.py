@@ -128,7 +128,7 @@ def parse_multipath(  # pylint: disable=too-many-branches
             if reg_prio.search(l):
                 group["state"] = "".join(line[3:])
             elif len(line) >= 4 and reg_lun.match(line[1]):
-                luninfo = "%s(%s)" % (line[1], line[2])
+                luninfo = f"{line[1]}({line[2]})"
                 lun_info.append(luninfo)
                 state = line[4]
                 if "active" not in state:

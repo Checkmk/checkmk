@@ -54,7 +54,7 @@ def check_oracle_sessions(item, params, parsed):
                 elif sessions_perc >= warn_perc:
                     state = 1
                 if state:
-                    infotext_perc += " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
+                    infotext_perc += f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
             yield state, infotext_perc
 
         else:

@@ -293,8 +293,7 @@ class ValuesWithUnits(CascadingDropdown):
         metric_ref_prefix = root_prefix + self._metric_vs_name
         # This will load an event listener between the unit and the metric valuespec
         html.javascript(
-            "cmk.valuespecs.update_unit_selector(%s, %s)"
-            % (json.dumps(varprefix), json.dumps(metric_ref_prefix))
+            f"cmk.valuespecs.update_unit_selector({json.dumps(varprefix)}, {json.dumps(metric_ref_prefix)})"
         )
 
 

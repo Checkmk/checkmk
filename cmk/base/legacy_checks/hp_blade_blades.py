@@ -68,8 +68,7 @@ def check_hp_blade_blades(item, params, info):
             status = hp_blade_status2nagios_map[snmp_state]
             return (
                 status,
-                "Blade status is %s (Product: %s Name: %s S/N: %s)"
-                % (snmp_state, line[3], line[4], line[5]),
+                f"Blade status is {snmp_state} (Product: {line[3]} Name: {line[4]} S/N: {line[5]})",
             )
     return (3, "item not found in snmp data")
 

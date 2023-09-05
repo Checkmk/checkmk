@@ -45,7 +45,7 @@ def parse_postgres_stat_database(string_table):
             line[1] if line[1] else "access_to_shared_objects"
         )  # https://www.postgresql.org/message-id/CABUevEzMHzdAQjvpWO6eGSZeg8FKmLLPhdwVoqaOXR8VWnyd8w%40mail.gmail.com
         if instance_name:
-            db_name = "%s/%s" % (instance_name, datname)
+            db_name = f"{instance_name}/{datname}"
         else:
             db_name = datname
 
@@ -79,12 +79,12 @@ def check_postgres_stat_database(item, params, parsed):
     ]:
         rate = get_rate(
             get_value_store(),
-            "postgres_stat_database.%s.%s" % (item, what),
+            f"postgres_stat_database.{item}.{what}",
             this_time,
             stats[what],
             raise_overflow=True,
         )
-        infos.append("%s: %.2f/s" % (title, rate))
+        infos.append(f"{title}: {rate:.2f}/s")
         if what in params:
             warn, crit = params[what]
             if rate >= crit:

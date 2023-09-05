@@ -45,7 +45,7 @@ def check_mcafee_emailgateway_bridge(item, params, info):
             value_store, f"mcafee_emailgateway_bridge.{key}", now, int(packets), raise_overflow=True
         )
         perfdata = ["%s_packets_received" % key, packets_rate]
-        infotext = "%s: %.2f packets received/s" % (title, packets_rate)
+        infotext = f"{title}: {packets_rate:.2f} packets received/s"
         state = 0
         if params.get(key):
             warn, crit = params[key]
@@ -55,7 +55,7 @@ def check_mcafee_emailgateway_bridge(item, params, info):
             elif packets_rate >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s packets/s)" % (warn, crit)
+                infotext += f" (warn/crit at {warn}/{crit} packets/s)"
         yield state, infotext, [tuple(perfdata)]
 
 

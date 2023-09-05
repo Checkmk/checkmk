@@ -60,7 +60,7 @@ def check_ibm_svc_array(item, _no_params, parsed):
         status = 1
 
     # add information
-    message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
+    message += f", RAID Level: {raid_level}, Tier: {tier}"
 
     yield status, message
 

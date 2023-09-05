@@ -29,12 +29,12 @@ def check_vbox_guest(_no_item, _no_params, info):
     revision = d.get("GuestAdd/Revision")
     if not version or not version[0].isdigit():
         return (3, "No guest addition version available")
-    infotext = "version: %s, revision: %s" % (version, revision)
+    infotext = f"version: {version}, revision: {revision}"
 
     host_version = d["HostInfo/VBoxVer"]
     host_revision = d["HostInfo/VBoxRev"]
     if (host_version, host_revision) != (version, revision):
-        return (1, infotext + ", Host has %s/%s" % (host_version, host_revision))
+        return (1, infotext + f", Host has {host_version}/{host_revision}")
     return (0, infotext)
 
 

@@ -56,7 +56,7 @@ def check_sap_hana_connect(item, params, parsed):
     if not (data := parsed.get(item)):
         return
     state = data["cmk_state"]
-    message = "%s\nODBC Driver Version: %s, Server Node: %s, Timestamp: %s" % (
+    message = "{}\nODBC Driver Version: {}, Server Node: {}, Timestamp: {}".format(
         data["message"],
         data["driver_version"],
         data["server_node"],

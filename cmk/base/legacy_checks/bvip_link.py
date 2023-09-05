@@ -38,7 +38,7 @@ def check_bvip_link(_no_item, params, info):
             state = 1
         else:
             state = 3
-        yield state, "%s: State: %s" % (
+        yield state, "{}: State: {}".format(
             count,
             states.get(link_status, "Not Implemented (%s)" % link_status),
         )

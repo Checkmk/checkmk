@@ -107,7 +107,7 @@ def inventory_mongodb_cluster_shards(databases_dict):
     db_coll_list = []
     for db_name in databases_dict.get("databases", {}):
         db_coll_list += [
-            ("%s.%s" % (db_name, coll_name), {})
+            (f"{db_name}.{coll_name}", {})
             for coll_name in databases_dict.get("databases").get(db_name).get("collections", [])
         ]
     return db_coll_list
@@ -359,7 +359,7 @@ def _generate_mongodb_cluster_long_output(
             )
         )
 
-    return 0, "\n%s\n%s" % ("\n".join(collections_info), "\n".join(shard_info)), perf_data
+    return 0, "\n{}\n{}".format("\n".join(collections_info), "\n".join(shard_info)), perf_data
 
 
 def _mongodb_cluster_get_shard_statistic_info(
@@ -392,7 +392,7 @@ def _mongodb_cluster_get_shard_statistic_info(
     estChunkData = (float(shard_size) / number_of_chunks) if number_of_chunks > 0 else 0
     estChunkCount = (float(number_of_documents) / number_of_chunks) if number_of_chunks > 0 else 0
 
-    shard_name_info = "%s%s" % (shard_name, " (primary)" if is_primary else "")
+    shard_name_info = "{}{}".format(shard_name, " (primary)" if is_primary else "")
 
     output = ["Shard %s" % shard_name_info]
     output.append("- Chunks: %d" % number_of_chunks)

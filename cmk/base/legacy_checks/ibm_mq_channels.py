@@ -69,7 +69,7 @@ def check_ibm_mq_channels(item, params, parsed):
     status = data.get("STATUS", "INACTIVE")
     check_state = map_ibm_mq_channel_status(status, params)
     chltype = data.get("CHLTYPE")
-    infotext = "Status: %s, Type: %s" % (status, chltype)
+    infotext = f"Status: {status}, Type: {chltype}"
     if "XMITQ" in data:
         infotext += ", Xmitq: %s" % data["XMITQ"]
     yield check_state, infotext, []

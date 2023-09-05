@@ -19,7 +19,7 @@ def check_bintec_info(checktype, params, info):
     if len(info[0]) < 2:
         return (3, "No data retrieved")
     sw_version, serial = info[0]
-    return (0, "Serial: %s, Software: %s" % (serial, sw_version))
+    return (0, f"Serial: {serial}, Software: {sw_version}")
 
 
 # 1.3.6.1.4.1.272.4.1.26.0 SW Version

@@ -89,17 +89,17 @@ def normalize_levels(
 
     mode_split = mode.split("_", 1)
     if mode_split[0] not in ("perc", "abs") or mode_split[-1] not in ("used", "free"):
-        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+        raise NotImplementedError(f"unknown levels mode: {mode!r}")
 
     # normalize percent -> absolute
     if mode.startswith("perc"):
         warn_used = warn / 100.0 * _perc_total
         crit_used = crit / 100.0 * _perc_total
-        levels_text = "%s/%s" % (render.percent(warn), render.percent(crit))
+        levels_text = f"{render.percent(warn)}/{render.percent(crit)}"
     else:  # absolute
         warn_used = float(warn)
         crit_used = float(crit)
-        levels_text = "%s/%s" % (render.bytes(warn * render_unit), render.bytes(crit * render_unit))
+        levels_text = f"{render.bytes(warn * render_unit)}/{render.bytes(crit * render_unit)}"
 
     # normalize free -> used
     if mode.endswith("free"):
@@ -161,7 +161,7 @@ def check_element(
         show_value = used
         show_text = ""
 
-    infotext = "%s: %s%s - %s of %s%s" % (
+    infotext = "{}: {}{} - {} of {}{}".format(
         label,
         render.percent(100.0 * show_value / total),
         show_text,
@@ -179,7 +179,7 @@ def check_element(
 
     my_state = compute_state(used, warn, crit)
     if my_state != State.OK and levels_text:
-        infotext = "%s (%s)" % (infotext, levels_text)
+        infotext = f"{infotext} ({levels_text})"
     yield Result(state=my_state, summary=infotext)
 
     if metric_name:

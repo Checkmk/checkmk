@@ -302,8 +302,7 @@ def create_graph(name, size, bounds, v_range, legend):
     html.close_tr()
     html.close_table()
     html.javascript(
-        'cmk.prediction.create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);'
-        % (name, bounds[0], bounds[1], v_range[0], v_range[1])
+        f'cmk.prediction.create_graph("content_{name}", {bounds[0]:.4f}, {bounds[1]:.4f}, {v_range[0]:.4f}, {v_range[1]:.4f});'
     )
 
 
@@ -322,8 +321,7 @@ def render_curve(points, color, width=1, square=False) -> None:  # type: ignore[
 
 def render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
-        "cmk.prediction.render_point(%s, %s, %s);"
-        % (json.dumps(t), json.dumps(v), json.dumps(color))
+        f"cmk.prediction.render_point({json.dumps(t)}, {json.dumps(v)}, {json.dumps(color)});"
     )
 
 
@@ -335,8 +333,7 @@ def render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-de
 
 def render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
-        "cmk.prediction.render_area_reverse(%s, %s, %f);"
-        % (json.dumps(points), json.dumps(color), alpha)
+        f"cmk.prediction.render_area_reverse({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
@@ -344,6 +341,5 @@ def render_dual_area(  # type: ignore[no-untyped-def]
     lower_points, upper_points, color, alpha=1.0
 ) -> None:
     html.javascript(
-        "cmk.prediction.render_dual_area(%s, %s, %s, %f);"
-        % (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha)
+        f"cmk.prediction.render_dual_area({json.dumps(lower_points)}, {json.dumps(upper_points)}, {json.dumps(color)}, {alpha:f});"
     )

@@ -23,7 +23,7 @@ def inventory_cisco_ucs_system(info):
 def check_cisco_ucs_system(_no_item, _no_params, info):
     model, serial, status = info[0]
     state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
-    return state, "Status: %s, Model: %s, SN: %s" % (state_readable, model, serial)
+    return state, f"Status: {state_readable}, Model: {model}, SN: {serial}"
 
 
 check_info["cisco_ucs_system"] = LegacyCheckDefinition(

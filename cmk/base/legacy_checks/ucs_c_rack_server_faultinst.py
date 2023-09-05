@@ -35,7 +35,7 @@ def check_ucs_c_rack_server_faultinst(
     severity_counter = collections.Counter(parsed["Severity"])
     yield overall_state, "Found faults: " + ", ".join(
         [
-            "%s with severity '%s'" % (severity_counter[severity], severity)
+            f"{severity_counter[severity]} with severity '{severity}'"
             for severity in sorted(severity_counter.keys())
         ]
     )
@@ -45,7 +45,7 @@ def check_ucs_c_rack_server_faultinst(
     for index in sorted(range(len(states)), key=lambda idx: states[idx]):
         yield states[index], start_str + ", ".join(
             [
-                "%s: %s" % (key, parsed[key][index])
+                f"{key}: {parsed[key][index]}"
                 for key in ["Severity", "Description", "Cause", "Code", "Affected DN"]
             ]
         )

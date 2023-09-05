@@ -393,9 +393,9 @@ def mode_list_checks() -> None:
 
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    all_checks: list[CheckPluginName | str] = [  #
+    all_checks: list[CheckPluginName | str] = [
         p.name for p in agent_based_register.iter_all_check_plugins()
-    ]
+    ]  #
     all_checks += ["check_%s" % name for name in config.active_check_info]
 
     for plugin_name in sorted(all_checks, key=str):
@@ -1899,8 +1899,9 @@ def _preprocess_hostnames(
     }
 
     console.verbose(
-        "Discovering %shost labels on: %s\n"
-        % ("services and " if not only_host_labels else "", ", ".join(sorted(node_names)))
+        "Discovering {}host labels on: {}\n".format(
+            "services and " if not only_host_labels else "", ", ".join(sorted(node_names))
+        )
     )
 
     return node_names

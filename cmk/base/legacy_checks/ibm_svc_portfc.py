@@ -61,7 +61,7 @@ def parse_ibm_svc_portfc(string_table):
         except IndexError:
             continue
         if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
-            item_name = "Node %s Slot %s Port %s" % (
+            item_name = "Node {} Slot {} Port {}".format(
                 data["node_id"],
                 data["adapter_location"],
                 data["adapter_port_id"],
@@ -83,7 +83,9 @@ def check_ibm_svc_portfc(item, _no_params, parsed):
     if not (data := parsed.get(item)):
         return
     port_status = data["status"]
-    infotext = "Status: %s, Speed: %s, WWPN: %s" % (port_status, data["port_speed"], data["WWPN"])
+    infotext = "Status: {}, Speed: {}, WWPN: {}".format(
+        port_status, data["port_speed"], data["WWPN"]
+    )
 
     if port_status == "active":
         state = 0

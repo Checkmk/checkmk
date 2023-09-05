@@ -84,7 +84,7 @@ def check_cisco_vss(item, params, info):
             state = 2
         else:
             state = 0
-        yield state, "chassis %s: %s" % (switch_id, cisco_vss_role_names[chassis_role])
+        yield state, f"chassis {switch_id}: {cisco_vss_role_names[chassis_role]}"
 
     yield 0, "%d VSL connections configured" % len(ports)
 
@@ -93,7 +93,7 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "core switch %s: VSL %s" % (
+        yield state, "core switch {}: VSL {}".format(
             core_switch_id,
             cisco_vss_operstatus_names[operstatus],
         )
@@ -102,7 +102,7 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "%s/%s ports operational" % (op_portcount, conf_portcount)
+        yield state, f"{op_portcount}/{conf_portcount} ports operational"
 
 
 check_info["cisco_vss"] = LegacyCheckDefinition(

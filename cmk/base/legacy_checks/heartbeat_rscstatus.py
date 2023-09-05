@@ -40,7 +40,7 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
     if expected_state == heartbeat_rsc_status:
         yield 0, "Current state: %s" % heartbeat_rsc_status
     else:
-        yield 2, "Current state: %s (Expected: %s)" % (heartbeat_rsc_status, expected_state)
+        yield 2, f"Current state: {heartbeat_rsc_status} (Expected: {expected_state})"
 
 
 check_info["heartbeat_rscstatus"] = LegacyCheckDefinition(

@@ -42,7 +42,7 @@ def check_stormshield_cluster(item, params, info):
         faulty_links = int(faulty_links)
 
         yield sync_status_mapping[sync], "Sync Status: %s" % sync_name_mapping[sync]
-        yield 0, "Member: %s, Active: %s, Links used: %s" % (number, active, eth_links)
+        yield 0, f"Member: {number}, Active: {active}, Links used: {eth_links}"
 
         if not_replying > 0:
             status = 2

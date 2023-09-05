@@ -32,7 +32,7 @@ def check_seh_ports(item, params, parsed):
         return
     for key in ("tag", "status"):
         if key in data:
-            yield 0, "%s: %s" % (key.title(), data[key])
+            yield 0, f"{key.title()}: {data[key]}"
 
     if params.get("status_at_discovery") != data.get("status"):
         yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")

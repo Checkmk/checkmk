@@ -22,7 +22,7 @@ def parse_informix_dbspaces(string_table):
             and line[2] == "DBSPACE"
         ):
             entry = {}
-            ts = "%s %s" % (instance, line[1])
+            ts = f"{instance} {line[1]}"
             parsed.setdefault(ts, [])
             parsed[ts].append(entry)
 
@@ -50,7 +50,7 @@ def check_informix_dbspaces(item, params, parsed):
             size += int(entry["chksize"]) * pagesize
 
         used = size - free
-        infotext = "Data files: %s, Size: %s, Used: %s" % (
+        infotext = "Data files: {}, Size: {}, Used: {}".format(
             len(datafiles),
             get_bytes_human_readable(size),
             get_bytes_human_readable(used),
@@ -63,7 +63,7 @@ def check_informix_dbspaces(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_bytes_human_readable(warn),
                     get_bytes_human_readable(crit),
                 )
@@ -80,7 +80,7 @@ def check_informix_dbspaces(item, params, parsed):
             elif used_perc >= warn_perc:
                 state = 1
             if state:
-                infotext += " (warn/crit at %.2f%%/%.2f%%)" % (warn_perc, crit_perc)
+                infotext += f" (warn/crit at {warn_perc:.2f}%/{crit_perc:.2f}%)"
 
             yield state, infotext
 

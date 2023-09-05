@@ -58,15 +58,16 @@ def check_aws_ebs_summary(item, params, parsed):
         stores_by_state.setdefault(row["State"], []).append(volume_id)
         stores_by_type.setdefault(row["VolumeType"], []).append(volume_id)
         long_output.append(
-            "Volume: %s, Status: %s, Type: %s, Encrypted: %s, Creation time: %s"
-            % (volume_id, row["State"], row["VolumeType"], row["Encrypted"], row["CreateTime"])
+            "Volume: {}, Status: {}, Type: {}, Encrypted: {}, Creation time: {}".format(
+                volume_id, row["State"], row["VolumeType"], row["Encrypted"], row["CreateTime"]
+            )
         )
 
     yield 0, "Stores: %s" % len(parsed)
     for state, stores in stores_by_state.items():
-        yield 0, "%s: %s" % (state, len(stores))
+        yield 0, f"{state}: {len(stores)}"
     for type_, stores in stores_by_type.items():
-        yield 0, "%s: %s" % (AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores))
+        yield 0, "{}: {}".format(AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores))
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 
@@ -96,7 +97,7 @@ def check_aws_ebs_summary_health(item, params, parsed):
     ebs_status = metrics["Status"]
     yield 0 if ebs_status.lower() == "ok" else 2, "Status: %s" % ebs_status
     for row in metrics["Details"]:
-        yield 0, "%s: %s" % (row["Name"], row["Status"])
+        yield 0, "{}: {}".format(row["Name"], row["Status"])
 
 
 check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(

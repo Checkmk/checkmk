@@ -113,9 +113,9 @@ def _render_vlan_lists(vlans: Sequence[int]) -> str:
         if succ_vals and i - 1 in succ_vals[-1]:
             succ_vals[-1].add(i)
         else:
-            succ_vals.append(set((i,)))
+            succ_vals.append({i})
 
-    return ", ".join((str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals))
+    return ", ".join(str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals)
 
 
 def parse_inv_cisco_vlans(string_table: StringTable) -> Section:

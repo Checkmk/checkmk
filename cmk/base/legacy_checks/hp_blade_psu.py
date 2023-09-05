@@ -97,7 +97,7 @@ def check_hp_blade_psu(item, params, info):
 
             return (
                 status,
-                "PSU is %s%s (S/N: %s)" % (snmp_state, detail_output, line[6]),
+                f"PSU is {snmp_state}{detail_output} (S/N: {line[6]})",
                 perfdata,
             )
     return (3, "item not found in snmp data")

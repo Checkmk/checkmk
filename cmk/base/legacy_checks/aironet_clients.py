@@ -61,15 +61,7 @@ def check_aironet_clients(item, params, info):
     avg = sum(saveint(line[index]) for line in info) / float(len(info))
     warn, crit = params
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
-    infotxt = "signal %s at %.1f%s (warn/crit at %s%s/%s%s)" % (
-        item,
-        avg,
-        unit,
-        warn,
-        unit,
-        crit,
-        unit,
-    )
+    infotxt = f"signal {item} at {avg:.1f}{unit} (warn/crit at {warn}{unit}/{crit}{unit})"
 
     if neg * avg <= neg * crit:
         return (2, infotxt, perfdata)

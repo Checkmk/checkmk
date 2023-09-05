@@ -24,7 +24,7 @@ def check_bluecat_dns_queries(item, _no_params, info):
         rate = get_rate(
             value_store, f"bluecat_dns_queries.{name}", now, int(value), raise_overflow=True
         )
-        yield 0, "%s: %s" % (name, rate), [(name, rate)]
+        yield 0, f"{name}: {rate}", [(name, rate)]
 
 
 check_info["bluecat_dns_queries"] = LegacyCheckDefinition(

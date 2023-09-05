@@ -91,20 +91,20 @@ def sensor_id(type_: SensorType, variable: Variable, device: str) -> str:
         return item
     if type_ == "phase":
         if "Phase" in variable[0]:
-            return "%s %s %s" % (
+            return "{} {} {}".format(
                 device,
                 "Phase",
                 variable[0].replace("Phase", "").replace("L", "").strip(),
             )
-        return "%s %s %s %s" % (
+        return "{} {} {} {}".format(
             device,
             variable[0],
             "Phase",
             variable[1].replace("Phase", "").replace("L", "").strip(),
         )
     if type_ in ["psm_plugs", "can_current"]:
-        return "%s %s" % (device, ".".join(variable))
-    return "%s %s" % (device, variable[0])
+        return "{} {}".format(device, ".".join(variable))
+    return f"{device} {variable[0]}"
 
 
 def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: ignore[no-untyped-def]
@@ -156,7 +156,7 @@ def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devic
             dev_name = name + "-" + str(num)
 
         if dev_name in states:
-            dev_name = "%s %s" % (alias, endoid)
+            dev_name = f"{alias} {endoid}"
 
         devices.setdefault(endoid, dev_name)
 
@@ -174,7 +174,7 @@ def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     for item, sensor in sensors.items():
         template = {k: v for k, v in sensor.items() if k not in in_out_values}
         for value in in_out_values:
-            in_out_item = "%s %s" % (
+            in_out_item = "{} {}".format(
                 item,
                 value.replace("-", " ").replace("Bot", "Bottom").replace("Mid", "Middle"),
             )

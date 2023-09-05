@@ -98,7 +98,7 @@ def check_websphere_mq_channels(item, params, parsed):
             elif messages_perc >= warn:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     render.percent(warn),
                     render.percent(crit),
                 )

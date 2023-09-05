@@ -189,7 +189,7 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
     return (
         0,
-        "%s read, %s write" % (render.iobandwidth(read_bytes), render.iobandwidth(write_bytes)),
+        f"{render.iobandwidth(read_bytes)} read, {render.iobandwidth(write_bytes)} write",
         perfdata,
     )
 
@@ -229,7 +229,7 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
     write_iops = data["w_io"]
     perfdata = [("read", read_iops), ("write", write_iops)]
 
-    return 0, "%s IO/s read, %s IO/s write" % (read_iops, write_iops), perfdata
+    return 0, f"{read_iops} IO/s read, {write_iops} IO/s write", perfdata
 
 
 check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
@@ -267,7 +267,7 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     write_latency = data["w_ms"]
     perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
-    return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), perfdata
+    return 0, f"Latency is {read_latency} ms for read, {write_latency} ms for write", perfdata
 
 
 check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(

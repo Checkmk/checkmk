@@ -60,7 +60,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
         elif key == "NAME":
             # build a dict for each package initiator = PKGINST
             # concat solaris pkginst and name to mk inventory name and write to dict
-            entry = {"name": "%s - %s" % (pkginst, value)}
+            entry = {"name": f"{pkginst} - {value}"}
         elif key == "INSTDATE":
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server

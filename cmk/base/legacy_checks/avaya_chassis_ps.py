@@ -30,7 +30,7 @@ def check_avaya_chassis_ps(item, _no_params, info):
             ps_status_code = int(line[1])
 
     status, status_name, description = avaya_chassis_ps_status_codes[ps_status_code]
-    return status, "%s (%s)" % (description, status_name)
+    return status, f"{description} ({status_name})"
 
 
 check_info["avaya_chassis_ps"] = LegacyCheckDefinition(

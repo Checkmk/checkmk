@@ -30,9 +30,12 @@ from .utils.esx_vsphere import Section
 FIRST_ELEMENT: Final = lambda v: v[0]
 FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])
 JOIN_LIST: Final = " ".join
-SUB_SECTION = TypedDict(
-    "SUB_SECTION", {"path": List[str], "translation": Dict[str, Tuple[str, Callable]]}
-)
+
+
+class SUB_SECTION(TypedDict):
+    path: List[str]
+    translation: Dict[str, Tuple[str, Callable]]
+
 
 # This giant dict describes how the section translates into the different nodes of the inventory
 SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {

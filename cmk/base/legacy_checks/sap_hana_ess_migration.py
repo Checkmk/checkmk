@@ -62,7 +62,7 @@ def check_sap_hana_ess_migration(item, params, parsed):
     states = sap_hana_ess_migration_state_map.get(
         key, {"cmk_state": 3, "state_readable": "Unknown [%s]" % data["log"]}
     )
-    infotext = "ESS State: %s Timestamp: %s" % (states["state_readable"], data["timestamp"])
+    infotext = "ESS State: {} Timestamp: {}".format(states["state_readable"], data["timestamp"])
     yield states["cmk_state"], infotext
 
 

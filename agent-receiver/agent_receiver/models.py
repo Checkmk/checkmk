@@ -92,12 +92,12 @@ def _is_valid_ipv4_address(address: str) -> bool:
     except AttributeError:  # no inet_pton here, sorry
         try:
             socket.inet_aton(address)
-        except socket.error:
+        except OSError:
             return False
 
         return address.count(".") == 3
 
-    except socket.error:  # not a valid address
+    except OSError:  # not a valid address
         return False
 
     return True
@@ -109,7 +109,7 @@ def _is_valid_ipv6_address(address: str) -> bool:
     try:
         address = address.split("%")[0]
         socket.inet_pton(socket.AF_INET6, address)
-    except socket.error:  # not a valid address
+    except OSError:  # not a valid address
         return False
     return True
 

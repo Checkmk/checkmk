@@ -31,7 +31,7 @@ def check_netscaler_dnsrates(_no_item, params, info):
     for name, counter in [("query", queries), ("answer", answers)]:
         rate = get_rate(value_store, name, now, counter, raise_overflow=True)
         warn, crit = params[name]
-        infotext = "%s rate %.1f/sec" % (name, rate)
+        infotext = f"{name} rate {rate:.1f}/sec"
         perfdata = [(name + "_rate", rate, warn, crit, 0)]
 
         state = 0
@@ -40,7 +40,7 @@ def check_netscaler_dnsrates(_no_item, params, info):
         elif rate >= warn:
             state = 1
         if state > 0:
-            infotext += " (warn/crit at %.1f/%.1f /sec)" % (warn, crit)
+            infotext += f" (warn/crit at {warn:.1f}/{crit:.1f} /sec)"
 
         yield state, infotext, perfdata
 

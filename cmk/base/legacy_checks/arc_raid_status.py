@@ -36,7 +36,7 @@ def check_arc_raid_status(item, params, info):
             elif raid_state != "Normal":
                 state = 2
                 label = "(!!)"
-            messages.append("Raid in state: %s%s" % (raid_state, label))
+            messages.append(f"Raid in state: {raid_state}{label}")
 
             # Check the number of disks
             i_disks = params

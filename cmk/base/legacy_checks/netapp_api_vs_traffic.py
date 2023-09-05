@@ -200,7 +200,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
     now = time.time()
     value_store = get_value_store()
     for protocol, (protoname, values) in protocol_map.items():
-        data = parsed.get("%s.%s" % (protocol, item))
+        data = parsed.get(f"{protocol}.{item}")
         if not data:
             continue
 

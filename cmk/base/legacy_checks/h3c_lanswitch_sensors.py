@@ -33,11 +33,11 @@ def check_h3c_lanswitch_sensors(
     # the values are:   active     (1), deactive   (2), not-install  (3), unsupport    (4)
     match status:
         case "2":
-            yield 2, "Sensor %s status is %s" % (item, status)
+            yield 2, f"Sensor {item} status is {status}"
         case "1":
-            yield 0, "Sensor %s status is %s" % (item, status)
+            yield 0, f"Sensor {item} status is {status}"
         case _:
-            yield 1, "Sensor % status is %s" % (item, status)
+            yield 1, f"Sensor {item: }tatus is {status}"
 
 
 check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(

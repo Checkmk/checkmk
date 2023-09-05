@@ -826,8 +826,9 @@ def main_delete(args: argparse.Namespace) -> None:
 
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
-                "Deleted werk %s (%s).\n"
-                % (format_werk_id(werk_id), g_werks[int(werk_id)]["title"])
+                "Deleted werk {} ({}).\n".format(
+                    format_werk_id(werk_id), g_werks[int(werk_id)]["title"]
+                )
             )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)

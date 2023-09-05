@@ -71,10 +71,10 @@ def check_safenet_hsm_events(_no_item, params, parsed):
         event_rate = get_rate(
             get_value_store(), event_type + "_events", now, events, raise_overflow=True
         )
-        infotext = "%.2f %s events/s" % (event_rate, event_type)
+        infotext = f"{event_rate:.2f} {event_type} events/s"
         if params.get(event_type + "_event_rate"):
             warn, crit = params[event_type + "_event_rate"]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             perfdata = [(event_type + "event_rate", event_rate, warn, crit)]
             if event_rate >= crit:
                 status = 2
@@ -150,7 +150,7 @@ def check_safenet_hsm(_no_item, params, parsed):
         infotext = "%.2f operation errors/s" % error_rate
         if params.get("error_rate"):
             warn, crit = params["error_rate"]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             perfdata = [("error_rate", error_rate, warn, crit)]
             if error_rate >= crit:
                 status = 2

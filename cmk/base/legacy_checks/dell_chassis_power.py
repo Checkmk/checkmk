@@ -28,11 +28,13 @@ def check_dell_chassis_power(item, _no_params, info):
     }
     infotext, state = state_table.get(status, ("unknown state, ", 3))
 
-    infotext += "Power: %.1f W, PotentialPower: %.1f W, MaxPower: %.1f W, Current: %.1f A" % (
-        savefloat(power),
-        savefloat(PotentialPower),
-        savefloat(MaxPowerSpec),
-        savefloat(current),
+    infotext += (
+        "Power: {:.1f} W, PotentialPower: {:.1f} W, MaxPower: {:.1f} W, Current: {:.1f} A".format(
+            savefloat(power),
+            savefloat(PotentialPower),
+            savefloat(MaxPowerSpec),
+            savefloat(current),
+        )
     )
 
     perfdata = [("power", power + "Watt", 0, PotentialPower, "", MaxPowerSpec)]

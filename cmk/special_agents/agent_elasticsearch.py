@@ -121,25 +121,17 @@ def handle_nodes(response: Mapping[str, object]) -> None:
     with SectionWriter("elasticsearch_nodes", separator=" ") as writer:
         for node_response in _NodesReponse.parse_obj(response).nodes.values():
             writer.append(
-                "{} open_file_descriptors {}".format(
-                    node_response.name, node_response.process.open_file_descriptors
-                )
+                f"{node_response.name} open_file_descriptors {node_response.process.open_file_descriptors}"
             )
             writer.append(
-                "{} max_file_descriptors {}".format(
-                    node_response.name, node_response.process.max_file_descriptors
-                )
+                f"{node_response.name} max_file_descriptors {node_response.process.max_file_descriptors}"
             )
             writer.append(f"{node_response.name} cpu_percent {node_response.process.cpu.percent}")
             writer.append(
-                "{} cpu_total_in_millis {}".format(
-                    node_response.name, node_response.process.cpu.total_in_millis
-                )
+                f"{node_response.name} cpu_total_in_millis {node_response.process.cpu.total_in_millis}"
             )
             writer.append(
-                "{} mem_total_virtual_in_bytes {}".format(
-                    node_response.name, node_response.process.mem.total_virtual_in_bytes
-                )
+                f"{node_response.name} mem_total_virtual_in_bytes {node_response.process.mem.total_virtual_in_bytes}"
             )
 
 

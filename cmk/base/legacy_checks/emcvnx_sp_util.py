@@ -64,7 +64,7 @@ def check_emcvnx_sp_util(item, params, parsed):
         state = 0
 
     if state > 0:
-        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+        infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
     return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
 

@@ -69,7 +69,7 @@ def parse_db2_counters(string_table):
             if node_infos:
                 element_offset.setdefault(line[1], 0)
                 offset = element_offset[line[1]]
-                key = "%s DPF %s" % (line[0], node_infos[offset])
+                key = f"{line[0]} DPF {node_infos[offset]}"
                 element_offset[line[1]] += 1
             else:
                 key = line[0]
@@ -111,11 +111,11 @@ def check_db2_counters(item, params, parsed):
         warn, crit = params.get(counter, (None, None))
         perfdata = [(counter, rate, warn, crit)]
         if crit is not None and rate >= crit:
-            yield 2, "%s: %.1f/s" % (label, rate), perfdata
+            yield 2, f"{label}: {rate:.1f}/s", perfdata
         elif warn is not None and rate >= warn:
-            yield 1, "%s: %.1f/s" % (label, rate), perfdata
+            yield 1, f"{label}: {rate:.1f}/s", perfdata
         else:
-            yield 0, "%s: %.1f/s" % (label, rate), perfdata
+            yield 0, f"{label}: {rate:.1f}/s", perfdata
 
     if wrapped:
         raise IgnoreResultsError("Some counter(s) wrapped, no data this time")

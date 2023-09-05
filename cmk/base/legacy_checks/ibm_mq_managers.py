@@ -74,26 +74,26 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
     check_state = map_ibm_mq_manager_status(status, params)
     yield check_state, "Status: %s" % status
     yield ibm_mq_check_version(instversion, params, "Version")
-    yield 0, "Installation: %s (%s), Default: %s" % (instpath, instname, default)
+    yield 0, f"Installation: {instpath} ({instname}), Default: {default}"
 
     standby = data["STANDBY"]
     instances = data.get("INSTANCES", [])
     ha = data.get("HA")
     if ha == "REPLICATED":
         if len(instances) > 0:
-            yield 0, "High availability: replicated, Instance: %s" % (instances[0][0],)
+            yield 0, f"High availability: replicated, Instance: {instances[0][0]}"
         else:
             yield 0, "High availability: replicated"
     elif standby == "PERMITTED":
         if len(instances) == 2:
-            yield 0, "Multi-Instance: %s=%s and %s=%s" % (
+            yield 0, "Multi-Instance: {}={} and {}={}".format(
                 instances[0][0],
                 instances[0][1],
                 instances[1][0],
                 instances[1][1],
             )
         elif len(instances) == 1:
-            yield 2, "Multi-Instance: %s=%s and missing partner" % (
+            yield 2, "Multi-Instance: {}={} and missing partner".format(
                 instances[0][0],
                 instances[0][1],
             )
@@ -101,7 +101,7 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
             yield 2, "Multi-Instance: unknown instances (%s)" % instances
     elif standby == "NOT PERMITTED":
         if len(instances) == 1:
-            yield 0, "Single-Instance: %s=%s" % (instances[0][0], instances[0][1])
+            yield 0, f"Single-Instance: {instances[0][0]}={instances[0][1]}"
         else:
             yield 2, "Single-Instance: unknown instances (%s)" % instances
     elif standby == "NOT APPLICABLE":

@@ -29,7 +29,7 @@ def check_dell_idrac_raid(item, _no_params, info):
     for index, name, status in info[0]:
         if index == item:
             state, state_readable = translate_status[status]
-            yield state, "Status of %s: %s" % (name, state_readable)
+            yield state, f"Status of {name}: {state_readable}"
 
 
 check_info["dell_idrac_raid"] = LegacyCheckDefinition(

@@ -50,7 +50,7 @@ def check_ucd_processes(item, _no_params, info):
                 state = 2
                 if pr_err_msg:
                     infotext += ", %s" % pr_err_msg
-                infotext += " (lower/upper crit at %s/%s)" % (pr_min_str, pr_max_str)
+                infotext += f" (lower/upper crit at {pr_min_str}/{pr_max_str})"
 
             return state, infotext, [("processes", int(pr_count_str))]
     return None

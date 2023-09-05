@@ -20,7 +20,7 @@ def parse_lnx_cpuinfo(string_table: StringTable) -> Section:
     """
     node: dict[str, Union[str, int]] = {}
     num_threads_total = 0
-    sockets = set([])
+    sockets = set()
     for varname, value in string_table:
         if varname == "cpu cores":
             node["cores_per_cpu"] = int(value)

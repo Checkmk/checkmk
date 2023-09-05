@@ -564,8 +564,9 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
             return
 
     html.show_message(
-        "<b>%s</b><p>%s</p>"
-        % (_("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg)
+        "<b>{}</b><p>{}</p>".format(
+            _("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg
+        )
     )
     html.footer()
 

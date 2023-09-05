@@ -1355,7 +1355,7 @@ class SiteFactory:
 
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
 
-        with open(logfile_path, "r") as logfile:
+        with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # refresh the site object after creating the site
@@ -1451,7 +1451,7 @@ class SiteFactory:
         )
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
 
-        with open(logfile_path, "r") as logfile:
+        with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # refresh the site object after creating the site

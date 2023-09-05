@@ -28,7 +28,7 @@ def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:
 
 def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
     for guest, status in sorted(section.items()):
-        yield Result(state=State.OK, summary="Guest [%s] is %s" % (guest, status))
+        yield Result(state=State.OK, summary=f"Guest [{guest}] is {status}")
 
 
 register.snmp_section(

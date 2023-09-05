@@ -77,7 +77,7 @@ def check_saprouter_cert(_no_item, params, parsed):
         validity_age = not_after - time.time()
 
         warn, crit = params["validity_age"]
-        infotext = "Valid from %s to %s, %s to go" % (
+        infotext = "Valid from {} to {}, {} to go".format(
             not_before_readable,
             not_after_readable,
             get_age_human_readable(validity_age),
@@ -90,7 +90,7 @@ def check_saprouter_cert(_no_item, params, parsed):
             state = 1
 
         if state:
-            infotext += " (warn/crit below %s/%s)" % (
+            infotext += " (warn/crit below {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )

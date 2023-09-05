@@ -46,7 +46,7 @@ def check_datapower_raid_bat(item, _no_params, info):
         if item == controller_id:
             state, state_txt = datapower_raid_bat_status[status]
             type_txt = datapower_raid_bat_type[bat_type]
-            infotext = "Status: %s, Name: %s, Type: %s, Serial: %s" % (
+            infotext = "Status: {}, Name: {}, Type: {}, Serial: {}".format(
                 state_txt,
                 name,
                 type_txt,

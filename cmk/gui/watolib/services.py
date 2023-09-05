@@ -616,7 +616,7 @@ def checkbox_id(check_type: str, item: Item) -> str:
         A string representing the service checkbox
 
     """
-    return f"{check_type}:{item or ''}".encode("utf8").hex()
+    return f"{check_type}:{item or ''}".encode().hex()
 
 
 def checkbox_service(checkbox_id_value: str) -> tuple[CheckPluginNameStr, Item]:

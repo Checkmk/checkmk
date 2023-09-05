@@ -280,8 +280,7 @@ class PageCrash(ABCCrashReportPage):
             )
             html.close_div()
             html.javascript(
-                "cmk.transfer.submit_crash_report(%s, %s);"
-                % (json.dumps(active_config.crash_report_url), json.dumps(url_encoded_params))
+                f"cmk.transfer.submit_crash_report({json.dumps(active_config.crash_report_url)}, {json.dumps(url_encoded_params)});"
             )
         except MKUserError as e:
             user_errors.add(e)

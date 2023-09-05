@@ -86,7 +86,7 @@ def inventory_j4p_performance_apps(info, what):
         levels = j4p_performance_app_sess_default_levels
     for inst, vals in parsed.items():
         for app in vals.get("apps", {}):
-            inv.append(("%s %s" % (inst, app), levels))
+            inv.append((f"{inst} {app}", levels))
     return inv
 
 
@@ -99,7 +99,7 @@ def inventory_j4p_performance_serv(info, what):
     for inst, vals in parsed.items():
         for app, val in vals.get("apps", {}).items():
             for serv in val.get("servlets", {}):
-                inv.append(("%s %s %s" % (inst, app, serv), levels))
+                inv.append((f"{inst} {app} {serv}", levels))
     return inv
 
 
@@ -117,12 +117,14 @@ def check_j4p_performance_mem(item, params, info):
         ("heap", heap, warn, crit),
         ("nonheap", non_heap, warn, crit),
     ]
-    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap) (warn/crit at %.0f/%.0f)" % (
-        total,
-        heap,
-        non_heap,
-        warn,
-        crit,
+    infotext = (
+        "{:.0f} MB total ({:.0f} MB heap, {:.0f} MB non-heap) (warn/crit at {:.0f}/{:.0f})".format(
+            total,
+            heap,
+            non_heap,
+            warn,
+            crit,
+        )
     )
     if total >= crit:
         return 2, infotext, perfdata

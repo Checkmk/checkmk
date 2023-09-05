@@ -234,8 +234,9 @@ def check_alertmanager_groups(item: str, params: CheckParams, section: Section) 
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s"
-                    % (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="{}: {}".format(
+                        rule.rule_name, rule.message if rule.message else "No message"
+                    ),
                 )
 
 
@@ -276,8 +277,9 @@ def check_alertmanager_summary(params: CheckParams, section: Section) -> CheckRe
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s"
-                    % (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="{}: {}".format(
+                        rule.rule_name, rule.message if rule.message else "No message"
+                    ),
                 )
 
 

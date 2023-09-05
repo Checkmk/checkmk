@@ -53,7 +53,7 @@ def check_dell_compellent_disks(item, _no_params, parsed):
         health_state, health_state_readable = dell_compellent_disks_health_map.get(
             health, (3, "unknown[%s]" % health)
         )
-        yield health_state, "Health: %s, Reason: %s" % (health_state_readable, health_message)
+        yield health_state, f"Health: {health_state_readable}, Reason: {health_message}"
 
 
 def discover_dell_compellent_disks(section):

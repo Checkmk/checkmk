@@ -154,7 +154,7 @@ check_info["rstcli"] = LegacyCheckDefinition(
 def inventory_rstcli_pdisks(parsed):
     for key, volume in parsed.items():
         for disk in volume["Disks"]:
-            yield "%s/%s" % (key, disk["ID"]), None
+            yield "{}/{}".format(key, disk["ID"]), None
 
 
 def check_rstcli_pdisks(item, _no_params, parsed):
@@ -163,7 +163,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
     disks = parsed.get(volume, {}).get("Disks", [])
     for disk in disks:
         if disk["ID"] == disk_id:
-            infotext = "%s (unit: %s, size: %s, type: %s, model: %s, serial: %s)" % (
+            infotext = "{} (unit: {}, size: {}, type: {}, model: {}, serial: {})".format(
                 disk["State"],
                 volume,
                 disk["Size"],

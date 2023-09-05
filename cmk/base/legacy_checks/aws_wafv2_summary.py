@@ -35,7 +35,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
     for region in regions_sorted:
         web_acls_region = web_acls_by_region[region]
-        yield 0, "%s: %s" % (region, len(web_acls_region))
+        yield 0, f"{region}: {len(web_acls_region)}"
 
         web_acl_names_sorted = sorted(web_acls_region.keys())
         long_output.append("%s:" % region)
@@ -48,8 +48,9 @@ def check_aws_wafv2_summary(item, params, parsed):
                 description = "[no description]"
 
             long_output.append(
-                "%s -- Description: %s, Number of rules and rule groups: %s"
-                % (web_acl_name, description, len(web_acl["Rules"]))
+                "{} -- Description: {}, Number of rules and rule groups: {}".format(
+                    web_acl_name, description, len(web_acl["Rules"])
+                )
             )
 
     if long_output:

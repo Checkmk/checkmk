@@ -40,7 +40,7 @@ def check_informix_sessions(item, params, parsed):
         elif sessions >= warn:
             state = 0
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
         return state, infotext, [("sessions", sessions)]
     return None
 

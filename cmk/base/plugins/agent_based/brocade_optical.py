@@ -331,8 +331,8 @@ def _infotext(
     if reading[0] < -214748.0:
         reading_text = "off"
     else:
-        reading_text = "%.1f %s" % (reading[0], unit)
-    return "%s %s (%s)" % (title, reading_text, reading[1])
+        reading_text = f"{reading[0]:.1f} {unit}"
+    return f"{title} {reading_text} ({reading[1]})"
 
 
 def _check_light(
@@ -390,7 +390,7 @@ def check_brocade_optical(
     if add_info:
         yield Result(
             state=State.OK,
-            summary="[%s] Operational %s" % (", ".join(add_info), oper_status_readable),
+            summary="[{}] Operational {}".format(", ".join(add_info), oper_status_readable),
         )
     else:
         yield Result(

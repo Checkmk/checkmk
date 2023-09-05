@@ -39,11 +39,11 @@ def check_openvpn_clients(item, _no_params, info):
             _name, _address, inbytes, outbytes, _date = line
             this_time = time.time()
             for what, val in [("in", int(inbytes)), ("out", int(outbytes))]:
-                countername = "openvpn_clients.%s.%s" % (item, what)
+                countername = f"openvpn_clients.{item}.{what}"
                 bytes_per_sec = get_rate(
                     get_value_store(), countername, this_time, val, raise_overflow=True
                 )
-                infos.append("%s: %s" % (what, render.iobandwidth(bytes_per_sec)))
+                infos.append(f"{what}: {render.iobandwidth(bytes_per_sec)}")
                 perfdata.append((what, bytes_per_sec))
             return 0, ", ".join(infos), perfdata
 

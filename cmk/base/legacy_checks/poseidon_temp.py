@@ -37,7 +37,7 @@ def check_poseidon_temp(item, params, parsed):
     mk_status = 0
     if sensor_state_value != "1":
         mk_status = 2
-    yield mk_status, "Sensor %s, State %s" % (item, sensor_state_txt)
+    yield mk_status, f"Sensor {item}, State {sensor_state_txt}"
 
     temp = data.get("temp")
     if temp:

@@ -58,7 +58,7 @@ def parse_vnx_quotas(string_table: StringTable) -> Section:
                 continue
 
             dms, fs, mp, used_str, limit_str = line
-            name = "%s %s" % (dms.strip(), mp.strip())
+            name = f"{dms.strip()} {mp.strip()}"
             section.quotas.append(
                 Quota(
                     name=name,
@@ -102,7 +102,7 @@ def discover_vnx_quotas(params: List[Mapping[str, Any]], section: Section) -> Di
         if params and params[0]:
             dms = vnx_quotas_renaming(dms, params[0]["dms_names"])
             mpt = vnx_quotas_renaming(mpt, params[0]["mp_names"])
-        yield Service(item="%s %s" % (dms, mpt), parameters={"pattern": quota.name})
+        yield Service(item=f"{dms} {mpt}", parameters={"pattern": quota.name})
 
 
 def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Optional[Quota]:

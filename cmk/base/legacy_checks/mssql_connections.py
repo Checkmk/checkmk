@@ -21,7 +21,7 @@ def parse_mssql_connections(string_table):
         try:
             instance, db_name, connection_count = line
             connection_count = int(connection_count)
-            parsed.setdefault("%s %s" % (instance, db_name), connection_count)
+            parsed.setdefault(f"{instance} {db_name}", connection_count)
         except ValueError:
             pass
     return parsed

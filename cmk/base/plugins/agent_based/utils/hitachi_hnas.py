@@ -36,7 +36,7 @@ def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
 
         map_label[volume_id] = label
 
-        volume = "%s %s" % (volume_id, label)
+        volume = f"{volume_id} {label}"
         status = STATUS_MAP.get(status_id, "unidentified")
         size_mb = int(size) / 1048576.0 if size else None
         avail_mb = int(avail) / 1048576.0 if avail else None
@@ -61,7 +61,7 @@ def parse_virtual_volumes(map_label: Dict, virtual_volumes: Iterable, quotas: It
     map_quota_oid: Dict = {}
     for oid_end, phys_volume_id, virtual_volume_label in virtual_volumes:
         phys_volume_label = map_label[phys_volume_id]
-        volume = "%s on %s" % (virtual_volume_label, phys_volume_label)
+        volume = f"{virtual_volume_label} on {phys_volume_label}"
         parsed[volume] = None, None
 
         ref_oid_end = quota_oid_end(phys_volume_id, oid_end)

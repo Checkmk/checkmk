@@ -27,7 +27,7 @@ def check_huawei_osn_laser(item, params, info):
             state = 0
 
         if state:
-            return state, "(warn/crit below %s/%s dBm)" % (warn, crit)
+            return state, f"(warn/crit below {warn}/{crit} dBm)"
         return 0, None
 
     for line in info:
@@ -54,7 +54,7 @@ def check_huawei_osn_laser(item, params, info):
             fec_before = line[3]
             fec_after = line[4]
             if not fec_before == "" and not fec_after == "":
-                yield 0, "FEC Correction before/after: %s/%s" % (fec_before, fec_after)
+                yield 0, f"FEC Correction before/after: {fec_before}/{fec_after}"
 
 
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(

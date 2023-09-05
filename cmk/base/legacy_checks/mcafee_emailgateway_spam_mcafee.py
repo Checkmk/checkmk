@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEW
 
 def check_mcafee_emailgateway_spam_mcafee(item, params, info):
     eng_version, rules_version = info[0]
-    return 0, "Engine version: %s, Rules version: %s" % (eng_version, rules_version)
+    return 0, f"Engine version: {eng_version}, Rules version: {rules_version}"
 
 
 check_info["mcafee_emailgateway_spam_mcafee"] = LegacyCheckDefinition(

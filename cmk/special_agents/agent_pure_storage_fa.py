@@ -205,11 +205,9 @@ class PureStorageFlashArray:
             raise APIVersionError()
 
         return max(
-            (
-                v
-                for r in api_version_response.json()["version"]
-                if _REST_VERSION.major == (v := _RestVersion.from_raw(r)).major
-            )
+            v
+            for r in api_version_response.json()["version"]
+            if _REST_VERSION.major == (v := _RestVersion.from_raw(r)).major
         )
 
     def collect_section_data(

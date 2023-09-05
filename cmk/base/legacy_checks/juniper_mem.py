@@ -34,7 +34,7 @@ def check_juniper_mem(item, params, info):
                 state = 0
 
             if state > 0:
-                infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+                infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
             return state, infotext, [("mem_used_percent", memory_percent, warn, crit, 0, 100.0)]
     return None

@@ -165,7 +165,7 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
     for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
             yield Service(
-                item="%s.%s" % (sid, ts_name),
+                item=f"{sid}.{ts_name}",
                 parameters={"autoextend": tablespace["autoextensible"]},
             )
 

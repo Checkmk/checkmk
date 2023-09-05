@@ -247,8 +247,8 @@ def format_process_list(processes: Iterable[_Process], html_output: bool) -> str
         if unit == "kB":
             return render.bytes(float(value) * 1024)
         if isinstance(value, float):
-            return "%.1f%s" % (value, unit)
-        unescaped = "%s%s" % (value, unit)
+            return f"{value:.1f}{unit}"
+        unescaped = f"{value}{unit}"
         # Handling of backslash-n vs newline is fundamentally broken when talking to the core.
         # If we're creating HTML anyway, we can circumnavigate that...
         return escape(unescaped).replace("\\", "&bsol;") if html_output else unescaped

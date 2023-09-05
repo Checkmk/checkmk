@@ -128,7 +128,7 @@ def check_mssql_blocked_sessions(
             % (
                 ", ".join(
                     [
-                        "%s blocked by %s ID(s)" % (k, v)
+                        f"{k} blocked by {v} ID(s)"
                         for k, v in sorted(blocked_sessions_counter.items())
                     ]
                 )

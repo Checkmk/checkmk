@@ -41,7 +41,7 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
             if error_state == "0":
                 count_ok_sensors += 1
             else:
-                yield 2, "%s: %s" % (sensor_label, state_readable)
+                yield 2, f"{sensor_label}: {state_readable}"
 
     if count_ok_sensors > 0:
         yield 0, "%d sensors are OK" % count_ok_sensors

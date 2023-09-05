@@ -109,7 +109,7 @@ def test_cluster_allocatable_cpu_resource():
 def test_write_cluster_api_sections_registers_sections_to_be_written() -> None:
     cluster = Cluster.from_api_resources((), APIDataFactory.build())
     sections = create_api_sections(cluster, "cluster")
-    assert set(s.section_name for s in sections) == cluster_api_sections()
+    assert {s.section_name for s in sections} == cluster_api_sections()
 
 
 @pytest.mark.parametrize("cluster_node_count", [0, 10, 20])

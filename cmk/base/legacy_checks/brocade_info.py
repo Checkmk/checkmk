@@ -58,7 +58,7 @@ def check_brocade_info(item, params, info):
     data = "".join((model, ssn, fw, wwn))
     if data != "----":
         wwn = brocade_info_parse_wwn(wwn)
-        infotext = "Model: %s, SSN: %s, Firmware Version: %s, WWN: %s" % (
+        infotext = "Model: {}, SSN: {}, Firmware Version: {}, WWN: {}".format(
             model,
             ssn,
             fw,

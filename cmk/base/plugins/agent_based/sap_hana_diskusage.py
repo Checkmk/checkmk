@@ -26,7 +26,7 @@ def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSectio
             if len(line) < 3:
                 continue
             inst = section.setdefault(
-                "%s - %s" % (sid_instance, line[0]),
+                f"{sid_instance} - {line[0]}",
                 {
                     "state_name": line[1],
                 },

@@ -40,7 +40,7 @@ def check_lgp_info(item, params, info):
             for id_, manufacturer, unit_number in info[1]:
                 id_ = lgp_info_devices.get(id_, id_)
                 devices.append(
-                    "ID: %s, Manufacturer: %s, Unit-Number: %s" % (id_, manufacturer, unit_number)
+                    f"ID: {id_}, Manufacturer: {manufacturer}, Unit-Number: {unit_number}"
                 )
             device_output = "\n".join(devices)
 

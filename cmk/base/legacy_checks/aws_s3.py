@@ -54,7 +54,7 @@ def check_aws_s3_objects(item, params, parsed):
     bucket_sizes = metrics["BucketSizeBytes"]
     storage_infos = []
     for storage_type, value in bucket_sizes.items():
-        storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
+        storage_infos.append(f"{storage_type}: {get_bytes_human_readable(value)}")
     sum_size = sum(bucket_sizes.values())
     yield check_levels(
         sum_size,
@@ -75,7 +75,7 @@ def check_aws_s3_objects(item, params, parsed):
 
     tag_infos = []
     for tag in metrics.get("Tagging", {}):
-        tag_infos.append("%s: %s" % (tag["Key"], tag["Value"]))
+        tag_infos.append("{}: {}".format(tag["Key"], tag["Value"]))
     if tag_infos:
         yield 0, "[Tags] %s" % ", ".join(tag_infos)
 
@@ -123,7 +123,7 @@ def check_aws_s3_summary(item, params, parsed):
     )
 
     if largest_bucket:
-        yield 0, "Largest bucket: %s (%s)" % (
+        yield 0, "Largest bucket: {} ({})".format(
             largest_bucket,
             get_bytes_human_readable(largest_bucket_size),
         ), [("aws_largest_bucket_size", largest_bucket_size)]

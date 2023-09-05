@@ -323,7 +323,7 @@ def _parse_path(raw_path):
     head, middle = raw_path.split("(", 1)
     address, tail = middle.split(")", 1)
     head = head.strip(".").split(".")
-    return head[:-1] + ["%s(%s)" % (head[-1], address)] + tail.strip(".").split(".")
+    return head[:-1] + [f"{head[-1]}({address})"] + tail.strip(".").split(".")
 
 
 def _create_hierarchy(path, instance):

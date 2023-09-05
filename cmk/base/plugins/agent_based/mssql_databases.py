@@ -36,10 +36,10 @@ def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
         if len(line) == 6:
             data = dict(zip(headers, line))
         elif len(line) == 7:
-            data = dict(zip(headers, line[:2] + ["%s %s" % (line[2], line[3])] + line[-3:]))
+            data = dict(zip(headers, line[:2] + [f"{line[2]} {line[3]}"] + line[-3:]))
         else:
             continue
-        parsed.setdefault("%s %s" % (data["Instance"], data["DBname"]), data)
+        parsed.setdefault("{} {}".format(data["Instance"], data["DBname"]), data)
 
     return parsed
 
@@ -81,7 +81,7 @@ def check_mssql_databases(
     for what in ["close", "shrink"]:
         state_int, state_readable = map_states[data["auto_%s" % what]]
         state_int = params.get("map_auto_%s_state" % what, {}).get(state_readable, state_int)
-        yield Result(state=State(state_int), summary="Auto %s: %s" % (what, state_readable))
+        yield Result(state=State(state_int), summary=f"Auto {what}: {state_readable}")
 
 
 def cluster_check_mssql_databases(

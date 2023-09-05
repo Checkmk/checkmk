@@ -126,7 +126,7 @@ def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
             None,
             levels[1:],
             human_readable_func=get_age_human_readable,
-            infoname="%s is behind %s for" % (member_name, name),
+            infoname=f"{member_name} is behind {name} for",
         )
 
         if last_timestamp == 0:
@@ -268,13 +268,13 @@ def check_mongodb_primary_election(_item, _params, status_dict):
 
     # warning if primary has changed
     if last_primary_dict and (primary_name_changed or election_date_changed):
-        yield 1, "New primary '%s' elected %s %s" % (
+        yield 1, "New primary '{}' elected {} {}".format(
             primary_name,
             get_timestamp_human_readable(primary_election_time),
             "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
         )
     else:
-        yield 0, "Primary '%s' elected %s" % (
+        yield 0, "Primary '{}' elected {}".format(
             primary_name,
             get_timestamp_human_readable(primary_election_time),
         )

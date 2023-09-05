@@ -97,7 +97,7 @@ def check_hpux_tunables(info, params, tunable, descr):
             state = 0
 
         if state > 0:
-            yield state, "(warn/crit at %s/%s)" % (warn, crit)
+            yield state, f"(warn/crit at {warn}/{crit})"
 
     else:
         yield 3, "tunable not found in agent output"

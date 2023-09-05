@@ -26,7 +26,7 @@ def check_dell_chassis_powersupplies(item, _no_params, info):
             power = savefloat(voltage) * savefloat(current)
             state = 0
             infotext = ""
-            infotext += "current/max Power: %.2f / %s, Current: %s, Voltage: %s" % (
+            infotext += "current/max Power: {:.2f} / {}, Current: {}, Voltage: {}".format(
                 power,
                 maxpower,
                 current,

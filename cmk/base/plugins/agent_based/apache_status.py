@@ -94,7 +94,7 @@ def apache_status_parse_legacy(info: StringTable) -> Section:
         if port == "None":
             item = address
         else:
-            item = "%s:%s" % (address, port)
+            item = f"{address}:{port}"
 
         if item not in data:
             data[item] = {}
@@ -140,11 +140,11 @@ def apache_status_parse(string_table: StringTable) -> Section:
         value = caster(status)
 
         if instance and port != "None":
-            item = "%s:%s" % (instance, port)
+            item = f"{instance}:{port}"
         elif instance:
             item = instance
         elif port != "None":
-            item = "%s:%s" % (address, port)
+            item = f"{address}:{port}"
         else:
             item = address
 

@@ -95,14 +95,14 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
         infotext = values[1]
 
         if info == "cluster_name":
-            yield 0, "%s: %s" % (infotext, value)
+            yield 0, f"{infotext}: {value}"
         elif info == "status":
             default_state = infotext
             infotext = "Status:"
             if value in params:
-                yield params[value], "%s %s (State changed by rule)" % (infotext, value)
+                yield params[value], f"{infotext} {value} (State changed by rule)"
             else:
-                yield default_state, "%s %s" % (infotext, value)
+                yield default_state, f"{infotext} {value}"
         else:
             warn, crit = params.get(info) or (None, None)
             yield check_levels(
@@ -180,7 +180,7 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
             state = 0
             if value != "False":
                 state = 1
-            yield state, "%s: %s" % (infotext, value)
+            yield state, f"{infotext}: {value}"
         else:
             value = int(value)
             warn, crit = params.get(task) or (None, None)

@@ -33,13 +33,13 @@ def check_informix_locks(item, params, parsed):
         locks = int(data["locks"])
         warn, crit = params["levels"]
         state = 0
-        infotext = "Type: %s, Locks: %s" % (data["type"], locks)
+        infotext = "Type: {}, Locks: {}".format(data["type"], locks)
         if locks >= crit:
             state = 2
         elif locks >= crit:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
         return state, infotext, [("locks", locks)]
     return None
 

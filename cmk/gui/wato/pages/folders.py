@@ -1153,8 +1153,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
             choices=choices,
             deflt="@",
             size=10,
-            onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;"
-            % (self._back_url, self._ident, self._what),
+            onchange=f"location.href='{self._back_url}&_ident={self._ident}&_move_{self._what}_to=' + this.value;",
         )
         return None
 

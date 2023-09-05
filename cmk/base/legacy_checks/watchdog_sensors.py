@@ -226,13 +226,13 @@ def check_watchdog_sensors_humidity(item, params, parsed):
     yield 0, "%.1f%%" % humidity, [("humidity", humidity, warn, crit)]
 
     if humidity >= crit:
-        yield 2, "warn/crit at %s/%s" % (warn, crit)
+        yield 2, f"warn/crit at {warn}/{crit}"
     elif humidity <= crit_lower:
-        yield 2, "warn/crit at %s/%s" % (warn, crit)
+        yield 2, f"warn/crit at {warn}/{crit}"
     elif humidity >= warn:
-        yield 1, "warn/crit below %s/%s" % (warn, crit)
+        yield 1, f"warn/crit below {warn}/{crit}"
     elif humidity <= warn_lower:
-        yield 1, "warn/crit below %s/%s" % (warn, crit)
+        yield 1, f"warn/crit below {warn}/{crit}"
 
 
 check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(

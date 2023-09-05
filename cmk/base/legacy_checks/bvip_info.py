@@ -20,7 +20,7 @@ def check_bvip_info(_no_item, _no_params, info):
     unit_name, unit_id = info[0]
     if unit_name == unit_id:
         return 0, "Unit Name/ID: " + unit_name
-    return 0, "Unit Name: %s, Unit ID: %s" % (unit_name, unit_id)
+    return 0, f"Unit Name: {unit_name}, Unit ID: {unit_id}"
 
 
 check_info["bvip_info"] = LegacyCheckDefinition(

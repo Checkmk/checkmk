@@ -106,10 +106,10 @@ def _get_item_and_grouping(params: Mapping[str, Any]) -> ItemAndGrouping:
 
 def _prepare_item_name(entry: DfBlock | DfInode, behaviour: ItemBehaviour) -> str:
     if entry.device and behaviour == ItemBehaviour.volume_name:
-        return "%s %s" % (entry.device, entry.mountpoint)
+        return f"{entry.device} {entry.mountpoint}"
 
     if entry.uuid and behaviour == ItemBehaviour.uuid:
-        return "%s %s" % (entry.uuid, entry.mountpoint)
+        return f"{entry.uuid} {entry.mountpoint}"
 
     return entry.mountpoint
 

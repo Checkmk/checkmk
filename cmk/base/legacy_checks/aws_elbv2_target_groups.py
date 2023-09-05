@@ -72,7 +72,7 @@ def check_aws_elbv2_target_groups(item, params, target_groups):
             state = 2
         else:
             state = 3
-        yield state, "%s (%s)" % (state_readable, len(groups))
+        yield state, f"{state_readable} ({len(groups)})"
 
 
 def inventory_aws_application_elb_target_groups(parsed):

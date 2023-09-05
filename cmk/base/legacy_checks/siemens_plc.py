@@ -144,8 +144,7 @@ def check_siemens_plc_duration(item, params, info):
             if old_seconds is not None and old_seconds > seconds:
                 return (
                     2,
-                    "Reduced from %s to %s"
-                    % (get_age_human_readable(old_seconds), get_age_human_readable(seconds)),
+                    f"Reduced from {get_age_human_readable(old_seconds)} to {get_age_human_readable(seconds)}",
                     perfdata,
                 )
 
@@ -197,7 +196,7 @@ def check_siemens_plc_counter(item, params, info):
             key = "siemens_plc.counter.%s" % item
             old_value = value_store.get(key)
             if old_value is not None and old_value > value:
-                return 2, "Reduced from %s to %s" % (old_value, value), perfdata
+                return 2, f"Reduced from {old_value} to {value}", perfdata
             value_store[key] = value
 
             state = 0

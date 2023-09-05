@@ -54,7 +54,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
         if mo_index == "0":
             itemname = "Master %s" % mod_info.split(",")[0]
         else:
-            itemname = "Perip %s %s" % (mo_index, mod_info)
+            itemname = f"Perip {mo_index} {mod_info}"
 
         if co_index == "0":
             parsed["basic_components"].setdefault(
@@ -71,7 +71,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
         if remark == "":
             itemname = oidend
         else:
-            itemname = "%s %s" % (remark, oidend)
+            itemname = f"{remark} {oidend}"
 
         parsed.setdefault(table, {})
         parsed[table].setdefault(itemname, {"_location_": oidend})
@@ -200,7 +200,7 @@ def check_emka_modules(item, params, parsed):
     if item in parsed["basic_components"]:
         attrs = parsed["basic_components"][item]
         state, state_readable = map_activation_states[attrs["activation"]]
-        return state, "Activation status: %s, Type: %s" % (state_readable, attrs["type"])
+        return state, "Activation status: {}, Type: {}".format(state_readable, attrs["type"])
     return None
 
 

@@ -108,7 +108,7 @@ def check_storeonce_clusterinfo_cluster(section: Section) -> CheckResult:
     for component in ("Cluster Health", "Replication Health"):
         yield Result(
             state=storeonce.STATE_MAP[section["%s Level" % component]],
-            notice="%s: %s" % (component, section[component]),
+            notice=f"{component}: {section[component]}",
         )
 
 

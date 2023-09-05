@@ -137,7 +137,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         elif provisioning >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (
+            infotext += " (warn/crit at {}/{})".format(
                 render.percent(warn),
                 render.percent(crit),
             )

@@ -44,7 +44,7 @@ def parse_f5_bigip_fans(string_table):
                     int(fanentry[1]),
                 )
             else:
-                parsed[("%s %s" % (fantyp[fanchoice], fanentry[0]))] = (int(fanentry[1]), None)
+                parsed[(f"{fantyp[fanchoice]} {fanentry[0]}")] = (int(fanentry[1]), None)
         fanchoice += 1
 
     return parsed

@@ -99,7 +99,7 @@ def check_storeonce_servicesets(item: str, section: storeonce.SectionServiceSets
     ]:
         yield Result(
             state=storeonce.STATE_MAP[values["%s Level" % component]],
-            notice="%s: %s" % (component, values[component]),
+            notice=f"{component}: {values[component]}",
         )
 
 

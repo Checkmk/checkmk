@@ -22,7 +22,7 @@ def inventory_steelhead_peers(info):
 def check_steelhead_peers(item, _no_params, info):
     for host, version, client, client_type in info:
         if host == item:
-            return 0, "Version: %s, Client Address: %s (%s)" % (version, client, client_type)
+            return 0, f"Version: {version}, Client Address: {client} ({client_type})"
     return 2, "Peer not connected"
 
 

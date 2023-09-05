@@ -147,7 +147,7 @@ def parse_cmctc_output(string_table):
         if parsed["status"] == "not available":
             return None
 
-        name = "%s %s.%s" % (sensor_type, table_idx, index)
+        name = f"{sensor_type} {table_idx}.{index}"
 
         return name, parsed
 

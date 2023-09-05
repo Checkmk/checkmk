@@ -50,7 +50,7 @@ def parse_netapp_api_volumes(string_table: StringTable) -> Section:
 
         # Clustermode specific
         if "vserver_name" in volume:
-            name = "%s.%s" % (volume["vserver_name"], volume["name"])
+            name = "{}.{}".format(volume["vserver_name"], volume["name"])
 
         volumes[name] = volume
 
@@ -227,7 +227,7 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
         )
 
         for vol, state in volumes_not_online.items():
-            yield Result(state=State.WARN, summary="Volume %s is %s" % (vol, state))
+            yield Result(state=State.WARN, summary=f"Volume {vol} is {state}")
 
         if combined_volumes:
             yield from _check_single_netapp_api_volume(item, params, combined_volumes)

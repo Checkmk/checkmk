@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.utils.datapower import DETECT
 
 def inventory_datapower_ldrive(info):
     for controller, ldrive, _raid_level, _num_drives, _status in info:
-        item = "%s-%s" % (controller, ldrive)
+        item = f"{controller}-{ldrive}"
         yield item, None
 
 
@@ -36,10 +36,10 @@ def check_datapower_ldrive(item, _no_params, info):
         "9": "undefined",
     }
     for controller, ldrive, raid_level, num_drives, status in info:
-        if item == "%s-%s" % (controller, ldrive):
+        if item == f"{controller}-{ldrive}":
             state, state_txt = datapower_ldrive_status[status]
             raid_level = datapower_ldrive_raid[raid_level]
-            infotext = "Status: %s, RAID Level: %s, Number of Drives: %s" % (
+            infotext = "Status: {}, RAID Level: {}, Number of Drives: {}".format(
                 state_txt,
                 raid_level,
                 num_drives,

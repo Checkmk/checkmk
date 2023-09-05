@@ -22,11 +22,11 @@ class DiscoveryMode(enum.Enum):
     FALLBACK = 5  # not sure why this could happen
 
     @classmethod
-    def _missing_(cls, value: object) -> "DiscoveryMode":
+    def _missing_(cls, value: object) -> DiscoveryMode:
         return cls.FALLBACK
 
     @classmethod
-    def from_str(cls, value: str) -> "DiscoveryMode":
+    def from_str(cls, value: str) -> DiscoveryMode:
         # NOTE: 'only-host-labels' is sent by an automation call, so we need to deal with that.
         return cls[value.upper().replace("-", "_")]
 
@@ -71,7 +71,7 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         self.present: Final = self.old + self.new
 
     @classmethod
-    def empty(cls) -> "QualifiedDiscovery":
+    def empty(cls) -> QualifiedDiscovery:
         """create an empty instance"""
         return cls(preexisting=(), current=())
 

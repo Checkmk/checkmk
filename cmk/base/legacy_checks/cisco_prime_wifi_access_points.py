@@ -44,7 +44,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
         infoname="Percent Critical",
     )
     for k, v in counts.items():
-        yield 0, "%s: %r" % (k.title(), v), [("ap_devices_%s" % k.lower(), v)]
+        yield 0, f"{k.title()}: {v!r}", [("ap_devices_%s" % k.lower(), v)]
 
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(

@@ -120,7 +120,7 @@ def check_emcvnx_hwstatus(item, _no_params, info):
             nagstate = 0
         else:
             nagstate = 2
-        return nagstate, "Enclosure %s is %s" % (item, devstate)
+        return nagstate, f"Enclosure {item} is {devstate}"
 
     except KeyError:
         return 3, "Enclosure %s not found in agent output" % item

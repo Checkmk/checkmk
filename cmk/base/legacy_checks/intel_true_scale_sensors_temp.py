@@ -100,7 +100,7 @@ def parse_intel_true_scale_sensors(string_table):
         sensor_ty = map_sensor_types[ty]
         parsed[slot_name].setdefault(sensor_ty, [])
         parsed[slot_name][sensor_ty].append(
-            ("%s %s" % (sensor_id, sensor_name), float(reading_str) * factor, kwargs)
+            (f"{sensor_id} {sensor_name}", float(reading_str) * factor, kwargs)
         )
 
     return parsed

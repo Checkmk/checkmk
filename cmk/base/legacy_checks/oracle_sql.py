@@ -70,7 +70,7 @@ def parse_oracle_sql(string_table):
         infotext = ":".join(line[1:]).strip()
         if key.endswith("ERROR") or key.startswith("ERROR at line") or "|FAILURE|" in key:
             instance["parsing_error"].setdefault(("instance", "PL/SQL failure", 2), []).append(
-                "%s: %s" % (key.split("|")[-1], infotext)
+                "{}: {}".format(key.split("|")[-1], infotext)
             )
 
         elif key in ["details", "long"]:
@@ -110,7 +110,7 @@ def check_oracle_sql(item, params, parsed):
     data = parsed[item]
     for (error_key, error_title, error_state), error_lines in data["parsing_error"].items():
         error_state = params.get("%s_error_state" % error_key, error_state)
-        yield error_state, "%s: %s" % (error_title, " ".join(error_lines))
+        yield error_state, "{}: {}".format(error_title, " ".join(error_lines))
 
     perfdata = data["perfdata"]
     elapsed_time = data["elapsed"]

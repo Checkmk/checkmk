@@ -53,7 +53,7 @@ def check_fortigate_signatures(_no_item, params, parsed):
     for key, title, version, age in parsed:
         if age is None:
             continue
-        infotext = "[%s] %s age: %s" % (version, title, get_age_human_readable(age))
+        infotext = f"[{version}] {title} age: {get_age_human_readable(age)}"
         state = 0
         levels = params.get(key)
         if levels is not None:
@@ -63,7 +63,7 @@ def check_fortigate_signatures(_no_item, params, parsed):
             elif warn is not None and age >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_age_human_readable(warn),
                     get_age_human_readable(crit),
                 )

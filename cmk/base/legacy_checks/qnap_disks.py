@@ -26,14 +26,14 @@ def check_qnap_disks(item, _no_params, info):
     for desc, temp, status, model, size, cond in info:
         if desc == item:
             state, state_readable = map_states.get(status, (3, "unknown"))
-            yield state, "Status: %s (%s)" % (state_readable, cond)
+            yield state, f"Status: {state_readable} ({cond})"
 
             if "--" in cond:
                 yield 1, "SMART Information missing"
             elif cond != "GOOD":
                 yield 1, "SMART Warnings"
 
-            yield 0, "Model: %s, Temperature: %s, Size: %s" % (model, temp, size)
+            yield 0, f"Model: {model}, Temperature: {temp}, Size: {size}"
 
 
 check_info["qnap_disks"] = LegacyCheckDefinition(

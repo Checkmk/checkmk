@@ -104,7 +104,7 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
     warn_lower, crit_lower, warn, crit = params
 
     perfdata = [("voltage", volt, warn, crit, warn_lower, crit_lower)]
-    levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % (
+    levelstext = " (warn/crit below {:.1f}/{:.1f} V and at or above {:.1f}/{:.1f} V)".format(
         warn_lower,
         crit_lower,
         warn,
@@ -168,7 +168,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
             warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
 
     infotext = "%.1f V" % voltage
-    levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % (
+    levelstext = " (warn/crit below {:.1f}/{:.1f} V and at or above {:.1f}/{:.1f} V)".format(
         warn_lower,
         crit_lower,
         warn,

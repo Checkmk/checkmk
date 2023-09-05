@@ -51,7 +51,7 @@ def check_printer_supply_ricoh(item, params, parsed):
             state = 0
 
         if state > 0:
-            infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+            infotext += f" (warn/crit at {warn:.0f}%/{crit:.0f}%)"
         return state, infotext, supply_level
 
     def handle_negative(code):

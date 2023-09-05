@@ -91,8 +91,9 @@ def _ap_info(node: Optional[str], wlc_status: str) -> Result:
     status, state_readable = map_states.get(wlc_status, (State.UNKNOWN, "unknown[%s]" % wlc_status))
     return Result(
         state=status,
-        summary="Accesspoint: %s%s"
-        % (state_readable, (" (connected to %s)" % node) if node else ""),
+        summary="Accesspoint: {}{}".format(
+            state_readable, (" (connected to %s)" % node) if node else ""
+        ),
     )
 
 

@@ -101,7 +101,7 @@ class Service(
         item: str | None = None,
         parameters: ParametersTypeAlias | None = None,
         labels: Sequence[ServiceLabel] | None = None,
-    ) -> "Service":
+    ) -> Service:
         return super().__new__(
             cls,
             item=cls._parse_item(item),
@@ -160,7 +160,7 @@ class State(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union["State", int]) -> "State":
+    def best(cls, *args: Union[State, int]) -> State:
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -196,7 +196,7 @@ class State(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union["State", int]) -> "State":
+    def worst(cls, *args: Union[State, int]) -> State:
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -256,7 +256,7 @@ class Metric(
         *,
         levels: _OptionalPair = None,
         boundaries: _OptionalPair = None,
-    ) -> "Metric":
+    ) -> Metric:
         cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -379,7 +379,7 @@ class Result(ResultTuple):
         state: State,
         summary: str,
         details: str | None = None,
-    ) -> "Result":
+    ) -> Result:
         pass
 
     @overload
@@ -389,13 +389,13 @@ class Result(ResultTuple):
         state: State,
         notice: str,
         details: str | None = None,
-    ) -> "Result":
+    ) -> Result:
         pass
 
     def __new__(  # type: ignore[no-untyped-def]
         cls,
         **kwargs,
-    ) -> "Result":
+    ) -> Result:
         state, summary, details = _create_result_fields(**kwargs)
         return super().__new__(
             cls,

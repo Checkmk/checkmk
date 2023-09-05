@@ -70,7 +70,7 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
         rc = 0
     else:
         rc = 2
-    return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
+    return rc, f"nodeHealth for {nodename} reports status {statusmap[status]}"
 
 
 check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
@@ -94,7 +94,7 @@ def check_emc_isilon_nodes(item, _no_params, info):
         rc = 0
     else:
         rc = 2
-    return rc, "Configured Nodes: %s / Online Nodes: %s" % (configured_nodes, online_nodes)
+    return rc, f"Configured Nodes: {configured_nodes} / Online Nodes: {online_nodes}"
 
 
 check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
@@ -113,7 +113,7 @@ def inventory_emc_isilon_names(info):
 
 
 def check_emc_isilon_names(item, _no_params, info):
-    return 0, "Cluster Name is %s, Node Name is %s" % (info[0][0][0], info[1][0][0])
+    return 0, f"Cluster Name is {info[0][0][0]}, Node Name is {info[1][0][0]}"
 
 
 check_info["emc_isilon.names"] = LegacyCheckDefinition(

@@ -44,10 +44,10 @@ def check_dell_om_sensors(item, params, info):
 
             temp = int(reading) / 10.0
 
-            dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = [
+            dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = (
                 float(v) / 10 if v else None
                 for v in [dev_warn, dev_crit, dev_warn_lower, dev_crit_lower]
-            ]
+            )
             if not dev_warn_lower:
                 dev_warn_lower = dev_crit_lower
             if not dev_warn:

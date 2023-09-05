@@ -84,10 +84,10 @@ def check_f5_bigip_pool(item, params, parsed):
         state = 0
     elif pool_act_members < crit:
         state = 2
-        message += " (warn/crit: %s/%s)" % (warn, crit)
+        message += f" (warn/crit: {warn}/{crit})"
     elif pool_act_members < warn:
         state = 1
-        message += " (warn/crit: %s/%s)" % (warn, crit)
+        message += f" (warn/crit: {warn}/{crit})"
 
     if pool_act_members < pool_def_members:
         downs = f5_bigip_pool_get_down_members(pool_info["down_info"])

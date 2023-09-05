@@ -219,9 +219,7 @@ def check_printer_io(
     if tray.capacity_max in (-2, -1, 0):
         if tray.capacity_unit != " unknown":
             # -2: unknown, -1: no restriction, 0: due to saveint
-            yield Result(
-                state=State.OK, summary="Capacity: %s%s" % (tray.level, tray.capacity_unit)
-            )
+            yield Result(state=State.OK, summary=f"Capacity: {tray.level}{tray.capacity_unit}")
         return
 
     if tray.capacity_unit != " unknown":

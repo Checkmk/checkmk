@@ -112,7 +112,7 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
         else:
             value = "not available"
 
-        yield 0, "Swap %s: %s" % (key, value)
+        yield 0, f"Swap {key}: {value}"
 
 
 check_info["esx_vsphere_counters.swap"] = LegacyCheckDefinition(

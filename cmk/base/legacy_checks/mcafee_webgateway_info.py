@@ -18,7 +18,7 @@ def inventory_mcafee_webgateway_info(info):
 
 def check_mcafee_webgateway_info(_no_item, _no_params, info):
     version, revision = info[0]
-    return 0, "Product version: %s, Revision: %s" % (version, revision)
+    return 0, f"Product version: {version}, Revision: {revision}"
 
 
 check_info["mcafee_webgateway_info"] = LegacyCheckDefinition(

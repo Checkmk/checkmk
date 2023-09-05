@@ -48,7 +48,7 @@ def inventory_docker_container_network_ports(section: Section) -> InventoryResul
 
         if host_ports:
             host_addresses = ", ".join(
-                ["%s:%s" % (hp["HostIp"], hp["HostPort"]) for hp in host_ports]
+                ["{}:{}".format(hp["HostIp"], hp["HostPort"]) for hp in host_ports]
             )
         else:
             host_addresses = ""

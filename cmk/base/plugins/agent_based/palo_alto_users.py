@@ -104,10 +104,10 @@ def cluster_check(
         params,
         Section(
             num_users=sum(
-                (node_section.num_users if node_section else 0 for node_section in section.values())
+                node_section.num_users if node_section else 0 for node_section in section.values()
             ),
             max_users=sum(
-                (node_section.max_users if node_section else 0 for node_section in section.values())
+                node_section.max_users if node_section else 0 for node_section in section.values()
             ),
         ),
     )

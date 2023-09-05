@@ -29,7 +29,7 @@ def parse_sentry_pdu_outlets(string_table: StringTable) -> Section:
     parsed = {}
     for outlet_id, outlet_name, outlet_state_str in string_table:
         outlet_name = outlet_name.replace("Outlet", "")
-        outlet_id_name = "%s %s" % (outlet_id, outlet_name)
+        outlet_id_name = f"{outlet_id} {outlet_name}"
         parsed[outlet_id_name] = int(outlet_state_str)
     return parsed
 

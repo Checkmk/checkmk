@@ -63,7 +63,7 @@ def check_brocade_tm(item, params, info):
                 else:
                     state = 0
                     sym = ""
-                infotext += "%s: %.1f%s, " % (name, rate, sym)
+                infotext += f"{name}: {rate:.1f}{sym}, "
                 perfdata.append((name, rate, warn, crit))
                 overall_state = max(overall_state, state)
 

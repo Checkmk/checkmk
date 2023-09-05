@@ -76,7 +76,7 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
             infotext = "Network: %s" % network_name
 
             for if_name, attribute, ip_adr in parsed[item][network_name]:
-                infotext += ", interface: %s, attribute: %s, IP: %s" % (if_name, attribute, ip_adr)
+                infotext += f", interface: {if_name}, attribute: {attribute}, IP: {ip_adr}"
 
             return 0, infotext
     return None

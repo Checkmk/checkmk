@@ -195,7 +195,7 @@ def check_storeonce4x_appliances_summaries(item: str, section: Section) -> Check
                 continue
             yield Result(
                 state=state,
-                summary="%s %s (%s of %s)" % (summary_descr, descr, numbers, total),
+                summary=f"{summary_descr} {descr} ({numbers} of {total})",
             )
 
 

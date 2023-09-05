@@ -26,13 +26,13 @@ def check_aws_ec2_summary(item, params, parsed):
         instance_id = instance["InstanceId"]
         instance_state = instance["State"]["Name"]
         instances_by_state.setdefault(instance_state, []).append(instance_id)
-        long_output.append("[%s] %s: %s" % (instance_id, instance_private_dns_name, instance_state))
+        long_output.append(f"[{instance_id}] {instance_private_dns_name}: {instance_state}")
 
     yield 0, "Instances: %s" % sum(
         len(v) for v in instances_by_state.values()  # type: ignore[misc]  # expected bool?!
     )
     for instance_state, instances in instances_by_state.items():
-        yield 0, "%s: %s" % (instance_state, len(instances))
+        yield 0, f"{instance_state}: {len(instances)}"
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

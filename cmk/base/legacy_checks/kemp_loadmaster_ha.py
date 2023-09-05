@@ -26,7 +26,7 @@ def check_kemp_loadmaster_ha(_no_item, _no_params, info):
         "3": "passive",
     }
 
-    return 0, "Device is: %s (Firmware: %s)" % (map_states[info[0][0]], info[0][1])
+    return 0, f"Device is: {map_states[info[0][0]]} (Firmware: {info[0][1]})"
 
 
 check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(

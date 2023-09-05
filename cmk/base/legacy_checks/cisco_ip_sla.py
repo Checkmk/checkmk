@@ -139,9 +139,9 @@ def check_cisco_ip_sla(item, params, parsed):
 
         state = 0
         if unit:
-            infotext = "%s: %s %s" % (description, value, unit)
+            infotext = f"{description}: {value} {unit}"
         else:
-            infotext = "%s: %s" % (description, value)
+            infotext = f"{description}: {value}"
         perfdata = []
 
         param = params.get(description.lower().replace(" ", "_"))
@@ -158,7 +158,7 @@ def check_cisco_ip_sla(item, params, parsed):
                 state = 1
 
             if state:
-                infotext += " (warn/crit at %s/%s)" % (warn, crit)
+                infotext += f" (warn/crit at {warn}/{crit})"
             factor = 1e3 if unit == "ms" else 1e6
             perfdata = [
                 ("rtt", value / factor, warn / factor, crit / factor)

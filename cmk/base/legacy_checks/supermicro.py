@@ -139,9 +139,9 @@ def check_supermicro_sensors(item, _no_params, info):
                 perfvar = "temp"
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
-                    reading, warn_upper, crit_upper = [
+                    reading, warn_upper, crit_upper = (
                         x / 1000.0 for x in (reading, warn_upper, crit_upper)
-                    ]
+                    )
                     unit = "V"
                 perfvar = "voltage"
             elif sensor_type == Type.Status:
@@ -150,7 +150,7 @@ def check_supermicro_sensors(item, _no_params, info):
 
             return (
                 worst_status(status_high, status_low, dev_status),
-                "%s%s" % (reading, unit),
+                f"{reading}{unit}",
                 [(perfvar, reading, warn_upper, crit_upper)] if perfvar else [],
             )
 
@@ -194,7 +194,7 @@ def check_supermicro_smart(item, _no_params, info):
     status_map = {"0": "Healthy", "1": "Warning", "2": "Critical", "3": "Unknown"}
     for serial, name, status in info:
         if format_item_supermicro_smart(name) == item:
-            return int(status), "(S/N %s) %s" % (serial, status_map[status])
+            return int(status), f"(S/N {serial}) {status_map[status]}"
     return None
 
 

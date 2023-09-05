@@ -105,7 +105,7 @@ class WMITable:
 
         headers = [name for name, index in sorted(iter(self.__headers.items()), key=lambda x: x[1])]
 
-        return "%s(%r, %r, %r, %r, %r, %r)" % (
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.__name,
             headers,

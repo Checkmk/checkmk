@@ -51,7 +51,7 @@ def check_mongodb_replication_info(item, params, info_dict):
     :param status_dict:
     :return:
     """
-    oplog_size = "Oplog size: %s of %s used" % (
+    oplog_size = "Oplog size: {} of {} used".format(
         _bytes_human_readable(info_dict, "usedBytes"),
         _bytes_human_readable(info_dict, "logSizeBytes"),
     )

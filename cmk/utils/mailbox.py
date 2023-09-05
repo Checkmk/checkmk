@@ -158,8 +158,8 @@ def _mutf_7_decode(string: bytes) -> str:
             res.append(
                 "&"
                 if len(b64_buffer) == 1
-                else (b"+" + b64_buffer[1:].replace(b",", b"/") + b"-").decode("utf-7")  #
-            )
+                else (b"+" + b64_buffer[1:].replace(b",", b"/") + b"-").decode("utf-7")
+            )  #
             b64_buffer = bytearray()
         elif b64_buffer:
             b64_buffer.append(char)
@@ -178,10 +178,10 @@ def _mutf_7_encode(string: str) -> bytes:
 
     def encode_b64_buffer() -> bytes:
         return (
-            binascii.b2a_base64("".join(b64_buffer).encode("utf-16be"))  #
+            binascii.b2a_base64("".join(b64_buffer).encode("utf-16be"))
             .rstrip(b"\n=")
             .replace(b"/", b",")
-        )
+        )  #
 
     def consume_b64_buffer() -> None:
         if b64_buffer:
@@ -207,11 +207,11 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
     pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
     mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]
     return [
-        match.group(3).strip('"')  #
-        for mb in mb_list  #
-        for match in (pattern.search(mb),)  #
+        match.group(3).strip('"')
+        for mb in mb_list
+        for match in (pattern.search(mb),)
         if match is not None
-    ]
+    ]  #  #  #
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
@@ -385,8 +385,7 @@ class Mailbox:
                 #       we jump out of the for loop
                 except Exception as exc:
                     raise Exception(
-                        "Failed to fetch mail %s (%r). Available messages: %r"
-                        % (num, exc, messages)
+                        f"Failed to fetch mail {num} ({exc!r}). Available messages: {messages!r}"
                     ) from exc
             return mails
 
@@ -487,13 +486,13 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                if isinstance(mail_id, str)  # caused by verified_result() typing horror
+                if isinstance(mail_id, str)
                 for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]
             if ids and ids[0]
             else []
-        )
+        )  # caused by verified_result() typing horror
 
     def delete_mails(self, mails: Iterable[int]) -> None:
         assert self._connection is not None
@@ -660,8 +659,8 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         if args.fetch_protocol == "POP3"
         else (993 if args.fetch_tls else 143)
         if args.fetch_protocol == "IMAP"
-        else (443 if args.fetch_tls else 80)  # HTTP / REST (e.g. EWS)
-    )
+        else (443 if args.fetch_tls else 80)
+    )  # HTTP / REST (e.g. EWS)
     return args
 
 

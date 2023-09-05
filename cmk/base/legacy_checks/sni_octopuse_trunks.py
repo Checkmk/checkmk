@@ -26,7 +26,7 @@ def inventory_octopus_trunks(info):
     for line in info[0]:
         if len(line) == 4:
             portindex, cardindex, porttype, portstate = line
-            portdesc = "%s/%s" % (cardindex, portindex)
+            portdesc = f"{cardindex}/{portindex}"
             if porttype in trunkports and portstate == "2":
                 inventory.append((portdesc, None))
     return inventory
@@ -35,7 +35,7 @@ def inventory_octopus_trunks(info):
 def check_octopus_trunks(item, _no_params, info):
     for line in info[0]:
         portindex, cardindex, porttype, portstate = line
-        portdesc = "%s/%s" % (cardindex, portindex)
+        portdesc = f"{cardindex}/{portindex}"
         if item == portdesc:
             # There are two relevant card states, we use the one from
             # octoPortTable

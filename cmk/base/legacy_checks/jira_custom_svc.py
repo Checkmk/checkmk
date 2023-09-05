@@ -76,7 +76,7 @@ def check_jira_custom_svc(item, params, parsed):
             avg_total = item_data.get("avg_total")
             avg_sum = item_data.get("avg_sum")
             if avg_total is not None and avg_sum is not None:
-                yield 0, "(Summed up values: %s / Total search results: %s)" % (avg_sum, avg_total)
+                yield 0, f"(Summed up values: {avg_sum} / Total search results: {avg_total})"
 
         else:
             diff_key = "%s_diff" % computation

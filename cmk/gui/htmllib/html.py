@@ -86,8 +86,7 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus(self, varname: str) -> None:
         self.final_javascript(
-            "cmk.utils.set_focus_by_name(%s, %s)"
-            % (json.dumps(self.form_name), json.dumps(varname))
+            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)})"
         )
 
     def set_focus_by_id(self, dom_id: str) -> None:
@@ -1320,8 +1319,7 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(
             HTMLGenerator.render_element_dragger(
                 dragging_tag,
-                drop_handler="function(new_index){return %s(%s, new_index);})"
-                % (drop_handler, json.dumps(handler_args)),
+                drop_handler=f"function(new_index){{return {drop_handler}({json.dumps(handler_args)}, new_index);}})",
             )
         )
 
@@ -1333,8 +1331,7 @@ class HTMLGenerator(HTMLWriter):
             HTMLGenerator.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],
-            onmousedown="cmk.element_dragging.start(event, this, %s, %s"
-            % (json.dumps(dragging_tag.upper()), drop_handler),
+            onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )
 
 

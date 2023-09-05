@@ -28,7 +28,7 @@ def check_dell_compellent_controller(item, _no_params, info):
         if number == item:
             state, state_readable = dell_compellent.dev_state_map(status)
             yield state, "Status: %s" % state_readable
-            yield 0, "Model: %s, Name: %s, Address: %s" % (model, name, addr)
+            yield 0, f"Model: {model}, Name: {name}, Address: {addr}"
 
 
 check_info["dell_compellent_controller"] = LegacyCheckDefinition(

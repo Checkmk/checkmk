@@ -50,7 +50,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
         message = "too high"
 
     perf = [("flow", flow, warn, crit)]
-    return state, "Current: %.0f l/s %s" % (flow, message), perf
+    return state, f"Current: {flow:.0f} l/s {message}", perf
 
 
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(

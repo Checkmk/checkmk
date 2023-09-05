@@ -194,8 +194,9 @@ class ABCFoldableTreeRenderer(abc.ABC):
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
             icon="assume_%s" % current_state,
-            onclick="cmk.bi.toggle_assumption(this, '%s', '%s', '%s');"
-            % (site, host, service.replace("\\", "\\\\") if service else ""),
+            onclick="cmk.bi.toggle_assumption(this, '{}', '{}', '{}');".format(
+                site, host, service.replace("\\", "\\\\") if service else ""
+            ),
             cssclass="assumption",
         )
 

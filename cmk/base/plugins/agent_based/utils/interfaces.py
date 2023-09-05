@@ -1589,9 +1589,9 @@ def _interface_name(  # pylint: disable=too-many-branches
         ):  # description trivial
             info_interface = ""
         elif (
-            item == "%s %s" % (attributes.alias, attributes.index) and attributes.descr != ""
+            item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
         ):  # non-unique Alias
-            info_interface = "[%s/%s]" % (attributes.alias, attributes.descr)
+            info_interface = f"[{attributes.alias}/{attributes.descr}]"
         elif attributes.alias not in (item, ""):  # alias useful
             info_interface = "[%s]" % attributes.alias
         elif attributes.descr not in (item, ""):  # description useful
@@ -1601,7 +1601,7 @@ def _interface_name(  # pylint: disable=too-many-branches
 
     if attributes.node is not None:
         if info_interface:
-            info_interface = "%s on %s" % (
+            info_interface = "{} on {}".format(
                 info_interface,
                 attributes.node,
             )
@@ -1745,7 +1745,7 @@ def _output_group_members(
         nodeinfo = ""
         if group_node is not None and len(group_members) > 1:
             nodeinfo = " on node %s" % group_node
-        infos_group.append("[%s%s]" % (", ".join(member_info), nodeinfo))
+        infos_group.append("[{}{}]".format(", ".join(member_info), nodeinfo))
 
     yield Result(
         state=State.OK,
@@ -1858,7 +1858,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
 
         yield Result(
             state=result.state,
-            summary="%s (%s)" % (result.summary, perc_info),
+            summary=f"{result.summary} ({perc_info})",
         )
     else:
         yield result

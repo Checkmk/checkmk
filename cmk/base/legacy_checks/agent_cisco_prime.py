@@ -31,7 +31,7 @@ def agent_cisco_prime_arguments(
         str(elem)  # non-str get ignored silently - so turn all elements into `str`
         for chunk in (
             ("--hostname", host),
-            ("-u", "%s:%s" % (basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
+            ("-u", "{}:{}".format(basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
             if basic_auth
             else (),
             ("--port", params["port"]) if "port" in params else (),  #

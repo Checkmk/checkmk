@@ -151,8 +151,7 @@ def init_auth(pw: str) -> requests.auth.AuthBase | None:
         if kinit_completed.returncode or kinit_completed.stderr:
             sys.stderr.write("Error getting Kerberos Ticket:\n")
             sys.stderr.write(
-                "stdout: %s\nstderr: %s\nrc: %s"
-                % (kinit_completed.stdout, kinit_completed.stderr, kinit_completed.returncode)
+                f"stdout: {kinit_completed.stdout}\nstderr: {kinit_completed.stderr}\nrc: {kinit_completed.returncode}"
             )
             sys.exit(1)
         return HTTPKerberosAuth(principal=username)
@@ -190,8 +189,7 @@ except requests.URLRequired as e:
     sys.exit(3)
 except Exception as e:
     sys.stdout.write(
-        "ERROR: Exception while opening URL: %s - %s\n%s"
-        % (endpoint_url, e, traceback.format_exc())
+        f"ERROR: Exception while opening URL: {endpoint_url} - {e}\n{traceback.format_exc()}"
     )
     sys.exit(3)
 

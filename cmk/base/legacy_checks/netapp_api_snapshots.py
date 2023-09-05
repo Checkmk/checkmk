@@ -59,13 +59,13 @@ def check_netapp_api_snapshots(item, params, parsed):
 
     extra_info = ("(Levels at %d%%/%d%%)" % (warn, crit)) if state else ""
 
-    yield state, "Reserve used: %.1f%% (%s)%s" % (
+    yield state, "Reserve used: {:.1f}% ({}){}".format(
         used_percent,
         get_bytes_human_readable(snapshot_total),
         extra_info,
     )
 
-    yield 0, "Total Reserve: %s%% (%s) of %s" % (
+    yield 0, "Total Reserve: {}% ({}) of {}".format(
         data[0]["snapshot-percent-reserved"],
         get_bytes_human_readable(reserved_bytes),
         get_bytes_human_readable(volume_total),

@@ -38,7 +38,7 @@ def check_mongodb_asserts(_no_item, params, info):
             elif what_rate >= warn:
                 state = 1
 
-        yield state, "%.2f %s Asserts/sec" % (what_rate, what.title()), [
+        yield state, f"{what_rate:.2f} {what.title()} Asserts/sec", [
             ("assert_%s" % what, what_rate)
         ]
 

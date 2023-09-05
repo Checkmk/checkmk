@@ -54,7 +54,7 @@ def inventory_cisco_power(info):
             yield name, None
         else:
             for entry in entries:
-                yield ("%s %s" % (name, entry)), None
+                yield (f"{name} {entry}"), None
 
 
 def check_cisco_power(item, _no_params, info):
@@ -66,7 +66,7 @@ def check_cisco_power(item, _no_params, info):
         ):
             state = int(state)
             source = int(source)
-            output = "Status: %s, Source: %s" % (
+            output = "Status: {}, Source: {}".format(
                 cisco_power_states[state],
                 cisco_power_sources[source],
             )

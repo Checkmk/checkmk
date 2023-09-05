@@ -155,9 +155,9 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     ]:
         value = float(status[key])
         if key in ("host_checks_rate", "service_checks_rate"):
-            yield Result(state=State.OK, summary="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, summary=f"{title}: {value:.1f}/s")
         else:
-            yield Result(state=State.OK, notice="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, notice=f"{title}: {value:.1f}/s")
 
         yield Metric(name=metric_name, value=value, boundaries=(0, None))
 
@@ -270,7 +270,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
-    pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
+    pem_path = f"/omd/sites/{item}/etc/ssl/sites/{item}.pem"
     valid_until_str = (
         None
         if section_livestatus_ssl_certs is None

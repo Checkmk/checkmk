@@ -34,8 +34,9 @@ class CMKWebSession:
         if expected_target:
             if response.headers["Location"] != expected_target:
                 raise AssertionError(
-                    "REDIRECT FAILED: '%s' != '%s'"
-                    % (response.headers["Location"], expected_target)
+                    "REDIRECT FAILED: '{}' != '{}'".format(
+                        response.headers["Location"], expected_target
+                    )
                 )
             assert response.headers["Location"] == expected_target
 

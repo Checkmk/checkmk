@@ -972,8 +972,7 @@ class MultiSiteConnection(Helpers):
             if status_host:
                 if not isinstance(status_host, tuple) or len(status_host) != 2:
                     raise MKLivestatusConfigError(
-                        "Status host of site %s is %r, but must be pair of site and host"
-                        % (sitename, status_host)
+                        f"Status host of site {sitename} is {status_host!r}, but must be pair of site and host"
                     )
                 s, h = status_host
                 status_hosts[s] = status_hosts.get(s, []) + [h]
@@ -1116,9 +1115,7 @@ class MultiSiteConnection(Helpers):
                 return True
         return False
 
-    def set_output_format(  # type: ignore[no-untyped-def]
-        self, output_format: LivestatusOutputFormat
-    ):
+    def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
         for connected_site in self.connections:
             connected_site.connection.set_output_format(output_format)
 
@@ -1268,8 +1265,7 @@ class MultiSiteConnection(Helpers):
     def command(self, command: str, sitename: SiteId | None = SiteId("local")) -> None:
         if sitename in self.deadsites:
             raise MKLivestatusSocketError(
-                "Connection to site %s is dead: %s"
-                % (sitename, self.deadsites[sitename]["exception"])
+                f"Connection to site {sitename} is dead: {self.deadsites[sitename]['exception']}"
             )
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:

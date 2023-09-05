@@ -55,7 +55,7 @@ def check_salesforce_instances(item, params, parsed):
             ("releaseVersion", "Release Version"),
         ]:
             if data.get(key):
-                yield 0, "%s: %s" % (title, data[key])
+                yield 0, f"{title}: {data[key]}"
 
 
 check_info["salesforce_instances"] = LegacyCheckDefinition(

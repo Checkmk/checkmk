@@ -84,7 +84,7 @@ def parse_solaris_prtdiag(  # pylint: disable=too-many-branches
     for line in string_table:
         if line[0].startswith("OBP"):
             bios_info = line[0].split()
-            bios["version"] = "%s %s" % (bios_info[0], bios_info[1])
+            bios["version"] = f"{bios_info[0]} {bios_info[1]}"
             formated_date = bios_info[2] + bios_info[3]
             bios["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
             bios["vendor"] = "Oracle"

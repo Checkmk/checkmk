@@ -24,7 +24,7 @@ def check_cmctc_state(_no_item, _no_params, info):
     status = status_map.get(status_code, "unknown[%s]" % status_code)
 
     state = 0 if status == "ok" else 2
-    infotext = "Status: %s, Units connected: %s" % (status, units)
+    infotext = f"Status: {status}, Units connected: {units}"
     return state, infotext
 
 

@@ -23,7 +23,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
             prefix = "[%s] " % descr
         else:
             prefix = ""
-        infotext = "%s%s: %s" % (prefix, group["GroupName"], group["GroupId"])
+        infotext = "{}{}: {}".format(prefix, group["GroupName"], group["GroupId"])
         if group["GroupId"] not in params:
             infotext += " (has changed)"
             state = 2

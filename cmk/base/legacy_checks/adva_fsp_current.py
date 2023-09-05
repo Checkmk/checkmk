@@ -28,7 +28,7 @@ def check_adva_fsp_current(item, _no_params, info):
             current = float(current_str) / 1000.0
             upper_threshold = float(upper_threshold_str) / 1000
 
-            infotext = "[%s] %.3f A (crit at %.3f A)" % (unit_name, current, upper_threshold)
+            infotext = f"[{unit_name}] {current:.3f} A (crit at {upper_threshold:.3f} A)"
             perfdata = [
                 (
                     "current",

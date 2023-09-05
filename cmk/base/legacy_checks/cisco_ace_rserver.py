@@ -74,10 +74,7 @@ def check_cisco_ace_rserver(item, _no_params, info):
             state, state_txt = oper_stati[oper_status]
             if admin_status == "2" and state == 2:
                 state = 1  # max state is WARN if real server out of service
-            infotext = (
-                "Operational State: %s, Administrative State: %s, Current Connections: %s"
-                % (state_txt, admin_state, conns)
-            )
+            infotext = f"Operational State: {state_txt}, Administrative State: {admin_state}, Current Connections: {conns}"
             perfdata = [("connections", int(conns))]
 
             return state, infotext, perfdata

@@ -67,7 +67,7 @@ def check_cisco_ucs_mem(item, _no_params, info):
             yield state, "Status: %s" % state_readable
             yield presence_state, "Presence: %s" % presence_readable
             yield memtype_state, "Type: %s" % memtype_readable
-            yield 0, "Size: %s MB, SN: %s" % (capacity, serial)
+            yield 0, f"Size: {capacity} MB, SN: {serial}"
 
 
 check_info["cisco_ucs_mem"] = LegacyCheckDefinition(

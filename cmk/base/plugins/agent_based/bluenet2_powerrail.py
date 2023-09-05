@@ -213,16 +213,16 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
             phase_ty, phase_txt, what = map_phase_types[ty]
             for inlet_id, inlet_info in pre_parsed.items():
                 if identifier in inlet_info[phase_ty].keys():
-                    phase_name = get_item_name("%s %s" % (inlet_id, phase_txt), oid_info[3])
+                    phase_name = get_item_name(f"{inlet_id} {phase_txt}", oid_info[3])
                     parsed[phase_ty].setdefault(phase_name, inlet_info[phase_ty][identifier])
                     parsed[phase_ty][phase_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["sockets"].keys():
-                    socket_name = "%s %s" % (inlet_id, inlet_info["sockets"][identifier]["id"])
+                    socket_name = "{} {}".format(inlet_id, inlet_info["sockets"][identifier]["id"])
                     parsed["sockets"].setdefault(socket_name, inlet_info["sockets"][identifier])
                     parsed["sockets"][socket_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["fuses"].keys():
                     phase_id = identifier.split(".")[3]
-                    fuse_name = "%s.%s %s" % (
+                    fuse_name = "{}.{} {}".format(
                         inlet_id,
                         phase_id,
                         inlet_info["fuses"][identifier]["id"],
@@ -244,7 +244,7 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
             #           1.2-1.5 GPIO in 1-4
             #           1.6-1.9 GPIO out 1-4
             # * becomes part of the item in order to make it unique
-            sensor_name = "Sensor %s %s/%s" % (get_pdu_name(oid_info[0]), oid_info[3], oid_info[4])
+            sensor_name = f"Sensor {get_pdu_name(oid_info[0])} {oid_info[3]}/{oid_info[4]}"
             inst = parsed["sensors"].setdefault(map_sensor_types[ty], {})
             inst.setdefault(sensor_name, (reading, status_info))
 

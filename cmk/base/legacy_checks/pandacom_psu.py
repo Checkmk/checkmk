@@ -67,7 +67,7 @@ def inventory_pandacom_psu(parsed):
 def check_pandacom_psu(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        return state, "[%s] Operational status: %s" % (parsed[item]["type"], state_readable)
+        return state, "[{}] Operational status: {}".format(parsed[item]["type"], state_readable)
     return None
 
 

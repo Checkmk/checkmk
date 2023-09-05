@@ -41,7 +41,7 @@ def parse_esx_vsphere_objects(string_table):
         if len(line) < 4:
             line += [""] * (4 - len(line))
         obj_type = vsphere_object_names.get(line[0], "Unknown Object")
-        name = "%s %s" % (obj_type, line[1])
+        name = f"{obj_type} {line[1]}"
         obj = Obj(name, line[2], line[3])
         parsed[obj.name] = obj
 
@@ -126,7 +126,7 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
     for distribution in params.get("distribution", []):
         ruled_vms = distribution.get("vm_names", [])
-        hosts = sorted(set(vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms))
+        hosts = sorted({vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms})
         count = len(hosts)
         if count < distribution["hosts_count"]:
             yield distribution.get("state", 2), (

@@ -221,8 +221,9 @@ def handle_health(value):
         for feature, status in state["features"].items():
             feature_name = f"{feature[0].upper()}{feature[1:].lower()}"
             sys.stdout.write(
-                "%s %s %s\n"
-                % (func_name.replace(" ", "_"), feature_name.replace(" ", "_"), status["health"])
+                "{} {} {}\n".format(
+                    func_name.replace(" ", "_"), feature_name.replace(" ", "_"), status["health"]
+                )
             )
 
 

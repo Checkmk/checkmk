@@ -90,7 +90,7 @@ def check_scaleio_sds_status(item, _no_params, parsed):
         return
 
     name, pd_id = data["NAME"][0], data["PROTECTION_DOMAIN_ID"][0]
-    yield 0, "Name: %s, PD: %s" % (name, pd_id)
+    yield 0, f"Name: {name}, PD: {pd_id}"
 
     status = data["STATE"][0]
     if "normal" not in status.lower():

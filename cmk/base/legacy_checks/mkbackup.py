@@ -151,7 +151,7 @@ check_info["mkbackup"] = LegacyCheckDefinition(
 def inventory_mkbackup_site(parsed):
     for site_id, jobs in parsed.get("site", {}).items():
         for job_id in jobs:
-            yield "%s backup %s" % (site_id, job_id), {}
+            yield f"{site_id} backup {job_id}", {}
 
 
 def check_mkbackup_site(item, _no_params, parsed):

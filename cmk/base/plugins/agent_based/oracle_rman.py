@@ -36,18 +36,16 @@ from .utils import oracle
 # This will be removed in a later version of Checkmk. Don't use it for new installations!
 inventory_oracle_rman_incremental_details = True
 
-SectionSidOracleRman = TypedDict(
-    "SectionSidOracleRman",
-    {
-        "sid": str,
-        "backuptype": str,
-        "backuplevel": str,
-        "backupage": Optional[int],
-        "status": str,
-        "backupscn": int,
-        "used_incr_0": bool,
-    },
-)
+
+class SectionSidOracleRman(TypedDict):
+    sid: str
+    backuptype: str
+    backuplevel: str
+    backupage: Optional[int]
+    status: str
+    backupscn: int
+    used_incr_0: bool
+
 
 SectionOracleRman = Dict[str, SectionSidOracleRman]
 
@@ -76,7 +74,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
 
         if len(line) == 6:
             sid, status, _start, _end, backuptype, backupage_str = line
-            item = "%s.%s" % (sid, backuptype)
+            item = f"{sid}.{backuptype}"
 
             backupscn = int(-1)
             backuplevel = "-1"
@@ -99,12 +97,12 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
 
             if backuptype == "DB_INCR":
                 if inventory_oracle_rman_incremental_details:
-                    item = "%s.%s_%s" % (sid, backuptype, backuplevel)
+                    item = f"{sid}.{backuptype}_{backuplevel}"
                 else:
                     # This is for really old plugins without an information for the backuplevel
-                    item = "%s.%s" % (sid, backuptype)
+                    item = f"{sid}.{backuptype}"
             else:
-                item = "%s.%s" % (sid, backuptype)
+                item = f"{sid}.{backuptype}"
 
         else:
             continue
@@ -170,9 +168,9 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
 
         if backuptype in ("ARCHIVELOG", "DB_FULL", "DB_INCR", "CONTROLFILE"):
             if inventory_oracle_rman_incremental_details and backuptype == "DB_INCR":
-                yield Service(item="%s.%s_%s" % (sid, backuptype, backuplevel))
+                yield Service(item=f"{sid}.{backuptype}_{backuplevel}")
                 continue
-            yield Service(item="%s.%s" % (sid, backuptype))
+            yield Service(item=f"{sid}.{backuptype}")
 
 
 def check_oracle_rman(

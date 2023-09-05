@@ -27,7 +27,7 @@ def check_vms_system_ios(_no_item, _no_params, info):
     direct_ios, buffered_ios = map(float, info[0][:2])
     return (
         0,
-        "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (direct_ios, buffered_ios),
+        f"Direct IOs: {direct_ios:.2f}/sec, Buffered IOs: {buffered_ios:.2f}/sec",
         [("direct", direct_ios), ("buffered", buffered_ios)],
     )
 

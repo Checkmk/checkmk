@@ -33,7 +33,7 @@ def check_emc_datadomain_power(item, _no_params, info):
             dev_state = line[3]
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            infotext = "%s Status %s" % (dev_descr, dev_state_str)
+            infotext = f"{dev_descr} Status {dev_state_str}"
             return dev_state_rc, infotext
     return None
 

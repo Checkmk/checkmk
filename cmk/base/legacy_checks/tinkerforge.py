@@ -30,7 +30,7 @@ def parse_tinkerforge(string_table):
         if parent == "0":
             res = ""
         else:
-            res = "%s%s" % (gen_pos(*master_index[parent]), pos)
+            res = f"{gen_pos(*master_index[parent])}{pos}"
         return res
 
     # first, go through all readings and group them by brick(let) type.
@@ -63,7 +63,7 @@ def parse_tinkerforge(string_table):
         ):
             name = str(counter)
             if brick[2]:
-                name = "%s %s" % (brick[2], counter)
+                name = f"{brick[2]} {counter}"
             res.setdefault(brick_type, {})[name] = brick[3]
             counter += 1
 

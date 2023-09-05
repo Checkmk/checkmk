@@ -404,8 +404,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
         if not service.description:
             config_warnings.warn(
-                "Skipping invalid service with empty description (plugin: %s) on host %s"
-                % (service.check_plugin_name, hostname)
+                f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
             )
             continue
 

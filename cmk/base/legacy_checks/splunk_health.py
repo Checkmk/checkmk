@@ -57,11 +57,11 @@ def check_splunk_health(_no_item, params, parsed):
         except KeyError:
             continue
 
-        yield params[health], "%s: %s" % (key, health)
+        yield params[health], f"{key}: {health}"
 
         for name in sorted(parsed[key]["feature"]):
             if name != "Overall state":
-                long_output += "%s - State: %s\n" % (
+                long_output += "{} - State: {}\n".format(
                     name.replace("_", " "),
                     parsed[key]["feature"][name],
                 )

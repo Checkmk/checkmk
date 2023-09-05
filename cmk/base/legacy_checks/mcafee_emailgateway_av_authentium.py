@@ -24,7 +24,7 @@ def check_mcafee_emailgateway_av_authentium(item, params, info):
 
     activated, engine_version, dat_version = info[0]
     state, state_readable = map_states.get(activated, (3, "unknown[%s]" % activated))
-    return state, "Status: %s, Engine version: %s, DAT version: %s" % (
+    return state, "Status: {}, Engine version: {}, DAT version: {}".format(
         state_readable,
         engine_version,
         dat_version,

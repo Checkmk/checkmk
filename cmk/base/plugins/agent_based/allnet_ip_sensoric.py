@@ -13,7 +13,7 @@ Section = Mapping[str, Mapping[str, str]]
 
 
 # No idea why we need this. Devices respond with '10 Â°C'.
-_FIXUP_ENCODING = (("°".encode("utf-8").decode("latin-1"), "°"),)
+_FIXUP_ENCODING = (("°".encode().decode("latin-1"), "°"),)
 
 
 def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:

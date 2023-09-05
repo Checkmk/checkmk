@@ -112,7 +112,7 @@ def check_lgp_pdu_aux(item, params, info):
             perfdata = []
 
             if pdu["UserLabel"] != "":
-                output.append("Label: %s (%s)" % (pdu["UserLabel"], pdu["SystemLabel"]))
+                output.append("Label: {} ({})".format(pdu["UserLabel"], pdu["SystemLabel"]))
             else:
                 output.append("Label: " + pdu["SystemLabel"])
 
@@ -121,8 +121,8 @@ def check_lgp_pdu_aux(item, params, info):
                 perfdata = (
                     ty.lower(),
                     pdu[ty],
-                    "%0.2f:%0.2f" % (pdu[ty + "LowWarn"], pdu[ty + "HighWarn"]),
-                    "%0.2f:%0.2f" % (pdu[ty + "LowCrit"], pdu[ty + "HighCrit"]),
+                    "{:0.2f}:{:0.2f}".format(pdu[ty + "LowWarn"], pdu[ty + "HighWarn"]),
+                    "{:0.2f}:{:0.2f}".format(pdu[ty + "LowCrit"], pdu[ty + "HighCrit"]),
                 )
                 s_out = ""
                 if pdu[ty] >= pdu[ty + "HighCrit"]:
@@ -138,7 +138,7 @@ def check_lgp_pdu_aux(item, params, info):
                     state = 1
                     s_out = " <= %0.2f (!)" % pdu[ty + "LowWarn"]
 
-                return state, "%s: %0.2f%s%s" % (label, pdu[ty], uom, s_out), perfdata
+                return state, f"{label}: {pdu[ty]:0.2f}{uom}{s_out}", perfdata
 
             if pdu["Type"] == "TEMP":
                 state, out, perf = handle_type("Temp", "Temperature", "C")

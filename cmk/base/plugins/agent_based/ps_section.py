@@ -106,7 +106,7 @@ def _merge_wmic(  # type: ignore[no-untyped-def]
     ps_result, wmic_info, wmic_headers
 ) -> Tuple[int, List]:
     info = []
-    seen_pids = set([])  # Remove duplicate entries
+    seen_pids = set()  # Remove duplicate entries
     cpu_cores = 1
     for line in ps_result:
         psinfos = wmic_info.get(line[0], [])
@@ -263,7 +263,7 @@ def _parse_ps_lnx(now: int, string_table: StringTable) -> Optional[ps.Section]:
             user=ps_raw["user"],
             virtual=int(ps_raw["vsz"]),
             physical=int(ps_raw["rss"]),
-            cputime="%s/%s" % (ps_raw["time"], ps_raw["elapsed"]),
+            cputime="{}/{}".format(ps_raw["time"], ps_raw["elapsed"]),
             process_id=ps_raw["pid"],
             cgroup=ps_raw.get("cgroup"),
         )

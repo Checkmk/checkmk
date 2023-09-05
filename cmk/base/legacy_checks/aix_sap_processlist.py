@@ -52,17 +52,17 @@ def parse_aix_sap_processlist(string_table):
             instance = None
 
         elif instance and len(line) == 7 and line[-1] != " pid":
-            description, status, textstatus, start = [re.sub("^ ", "", x) for x in line[1:5]]
+            description, status, textstatus, start = (re.sub("^ ", "", x) for x in line[1:5])
 
         elif instance and len(line) == 9:
-            description, status, textstatus = [re.sub("^ ", "", x) for x in line[1:4]]
+            description, status, textstatus = (re.sub("^ ", "", x) for x in line[1:4])
             start = re.sub("^ ", "", line[6])
 
         else:
             continue
 
         if instance is not None and description is not None:
-            itemname = "%s on Instance %s" % (description, instance)
+            itemname = f"{description} on Instance {instance}"
             parsed.setdefault(itemname, {"status": status, "textstatus": textstatus})
             try:
                 parsed[itemname]["start_time"] = time.strptime(start, "%Y %m %d %H:%M:%S")
@@ -91,7 +91,7 @@ def check_aix_sap_processlist(item, _no_params, parsed):
             elapsed = time.time() - time.mktime(start_time)
             perfdata = [("runtime", elapsed)]
             infotexts.append(
-                "Start Time: %s, Elapsed Time: %s" % (start, get_age_human_readable(elapsed))
+                f"Start Time: {start}, Elapsed Time: {get_age_human_readable(elapsed)}"
             )
 
         if status == "GREEN":

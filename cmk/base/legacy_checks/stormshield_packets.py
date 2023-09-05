@@ -35,7 +35,7 @@ def check_stormshield_packets(item, _no_params, info):
             rate_pkticmp = get_rate(
                 get_value_store(), "icmp_%s" % item, now, int(pkticmp), raise_overflow=True
             )
-            infotext = "[%s], tcp: %s, udp: %s" % (name, tcp, udp)
+            infotext = f"[{name}], tcp: {tcp}, udp: {udp}"
             perfdata = [
                 ("tcp_active_sessions", tcp),
                 ("udp_active_sessions", udp),

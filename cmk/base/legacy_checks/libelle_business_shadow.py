@@ -353,7 +353,7 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
     status = 0
     if "process" in parsed:
-        message = "Active Process is: %s, Status: %s" % (
+        message = "Active Process is: {}, Status: {}".format(
             parsed["process"],
             parsed["process_status"],
         )

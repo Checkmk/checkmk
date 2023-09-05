@@ -39,7 +39,7 @@ db_get_tablespace_levels_in_bytes = (
 def inventory_db2_tablespaces(parsed):
     for instance, values in parsed[1].items():
         for table in values[1:]:
-            yield "%s.%s" % (instance, table[0]), {}
+            yield f"{instance}.{table[0]}", {}
 
 
 def check_db2_tablespaces(item, params, parsed):
@@ -73,7 +73,7 @@ def check_db2_tablespaces(item, params, parsed):
 
     warn, crit, levels_text, as_perc = db_get_tablespace_levels_in_bytes(usable, params)
 
-    infotext = "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
+    infotext = f"{get_bytes_human_readable(used)} of {get_bytes_human_readable(usable)} used"
     perfdata = [
         ("tablespace_size", usable, max(0, total - (warn or 0)), max(0, total - (crit or 0))),
         ("tablespace_used", used),
@@ -95,7 +95,7 @@ def check_db2_tablespaces(item, params, parsed):
             value_str = render.percent(perc_free)
         else:
             value_str = get_bytes_human_readable(abs_free)
-        infotext = "only %s left %s" % (value_str, levels_text)
+        infotext = f"only {value_str} left {levels_text}"
     yield state, infotext
 
     yield tbsp_state.lower() != "normal" and 1 or 0, "State: %s" % tbsp_state

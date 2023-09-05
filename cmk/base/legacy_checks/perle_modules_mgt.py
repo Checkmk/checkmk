@@ -37,7 +37,7 @@ def check_perle_modules_mgt(item, _no_params, info):
                 ("Power LED", power_led, "power_led"),
             ]:
                 state, state_readable = mappings[key][value]
-                yield state, "%s: %s" % (title, state_readable)
+                yield state, f"{title}: {state_readable}"
 
 
 check_info["perle_modules_mgt"] = LegacyCheckDefinition(

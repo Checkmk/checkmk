@@ -59,9 +59,9 @@ def cluster_check_ps(
         for (ps_info, cmd_line) in (node_section[1])
     ]
 
-    core_counts = set(
+    core_counts = {
         node_section[0] for node_section in section_ps.values() if node_section is not None
-    )
+    }
     if len(core_counts) == 1:
         cpu_cores = core_counts.pop()
     else:

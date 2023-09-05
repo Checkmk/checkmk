@@ -19,7 +19,7 @@ def check_steelhead_status(item, params, info):
     health, status = info[0]
     if health == "Healthy" and status == "running":
         return (0, "Healthy and running")
-    return (2, "Status is %s and %s" % (health, status))
+    return (2, f"Status is {health} and {status}")
 
 
 check_info["steelhead_status"] = LegacyCheckDefinition(

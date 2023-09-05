@@ -59,7 +59,7 @@ def _check_for_invalid_result(metric_details, promql_expression):
     else:
         status = 2
         infotext = ERROR_DETAILS[metric_details["invalid_info"]]
-    return status, "PromQL expression (%s) %s" % (promql_expression, infotext), []
+    return status, f"PromQL expression ({promql_expression}) {infotext}", []
 
 
 def _metric_levels(

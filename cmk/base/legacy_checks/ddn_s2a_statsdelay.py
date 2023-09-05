@@ -71,7 +71,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         infotext = infotext_formatstring % value
         if levels:
             warn, crit = levels
-            levelstext = " (warn/crit at %.2f/%.2f s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} s)"
             perfdata = [(perfname, value, warn, crit)]
             if value >= crit:
                 status = 2

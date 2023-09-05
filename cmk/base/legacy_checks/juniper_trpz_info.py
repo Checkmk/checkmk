@@ -16,7 +16,7 @@ def inventory_juniper_trpz_info(info):
 
 def check_juniper_trpz_info(_no_item, _no_params, info):
     serial, version = info[0]
-    message = "S/N: %s, FW Version: %s" % (serial, version)
+    message = f"S/N: {serial}, FW Version: {version}"
     return 0, message
 
 

@@ -20,7 +20,7 @@ def check_viprinet_firmware(_no_item, _no_params, info):
     }
     fw_status = fw_status_map.get(info[0][1])
     if fw_status:
-        return (0, "%s, %s" % (info[0][0], fw_status))
+        return (0, f"{info[0][0]}, {fw_status}")
     return (3, "%s, no firmware status available")
 
 

@@ -59,7 +59,7 @@ def check_ibm_svc_node(item, _no_params, parsed):
 
     for row in data:
         node_status = row["status"]
-        messages.append("Node %s is %s" % (row["name"], node_status))
+        messages.append("Node {} is {}".format(row["name"], node_status))
         nodes_of_iogroup += 1
         if node_status == "online":
             online_nodes += 1

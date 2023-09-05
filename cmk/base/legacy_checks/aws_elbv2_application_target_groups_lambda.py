@@ -38,15 +38,14 @@ def check_aws_application_elb_target_groups_lambda(item, params, data):
     if lambda_error_rate is None:
         lambda_error_rate = 0  # CloudWatch only reports LambdaUserError if the value is nonzero
 
-    for result in check_aws_error_rate(
+    yield from check_aws_error_rate(
         lambda_error_rate,
         request_rate,
         "aws_lambda_users_errors_rate",
         "aws_lambda_users_errors_perc",
         params.get("levels_lambda", {}),
         "Lambda user errors",
-    ):
-        yield result
+    )
 
 
 check_info["aws_elbv2_application_target_groups_lambda"] = LegacyCheckDefinition(

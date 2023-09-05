@@ -634,8 +634,9 @@ class DiscoveryPageRenderer:
                 changed_host_labels.setdefault(
                     label_id,
                     {
-                        "value": "%s \u279c %s"
-                        % (discovery_result.changed_labels[label_id]["value"], label["value"]),
+                        "value": "{} \u279c {}".format(
+                            discovery_result.changed_labels[label_id]["value"], label["value"]
+                        ),
                         "plugin_name": label["plugin_name"],
                     },
                 )

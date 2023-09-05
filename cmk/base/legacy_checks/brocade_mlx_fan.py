@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 def brocade_mlx_fan_combine_item(id_, descr):
     if descr == "" or "(RPM " in descr:
         return id_
-    return "%s %s" % (id_, descr)
+    return f"{id_} {descr}"
 
 
 def inventory_brocade_mlx_fan(info):

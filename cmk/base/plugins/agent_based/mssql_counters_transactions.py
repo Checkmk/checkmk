@@ -48,7 +48,7 @@ def _check_common(
 
         rate = get_rate_or_none(
             value_store,
-            "mssql_counters.transactions.%s.%s.%s" % (node_name, item, counter_key),
+            f"mssql_counters.transactions.{node_name}.{item}.{counter_key}",
             now,
             counters[counter_key],
         )
@@ -60,7 +60,9 @@ def _check_common(
         yield from check_levels(
             rate,
             levels_upper=params.get(counter_key),
-            render_func=lambda v, n=node_name, t=title: "%s%s: %.1f/s" % (n and "[%s] " % n, t, v),
+            render_func=lambda v, n=node_name, t=title: "{}{}: {:.1f}/s".format(
+                n and "[%s] " % n, t, v
+            ),
             metric_name=counter_key.replace("/sec", "_per_second"),
             boundaries=(0, None),
         )

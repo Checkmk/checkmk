@@ -19,8 +19,7 @@ def check_perle_psmu_powersupplies(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["psustate"]
         yield state, "Status: %s" % state_readable
-        for res in check_elphase(item, params, parsed):
-            yield res
+        yield from check_elphase(item, params, parsed)
 
 
 check_info["perle_psmu"] = LegacyCheckDefinition(

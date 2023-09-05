@@ -41,7 +41,7 @@ def check_stormshield_disk(item, params, parsed):
     for disk in parsed:
         clusterindex, index, name, selftest, israid, raidstatus, position = disk
         if item == clusterindex:
-            infotext = "Device Index %s, Selftest: %s, Device Mount Point Name: %s" % (
+            infotext = "Device Index {}, Selftest: {}, Device Mount Point Name: {}".format(
                 index,
                 selftest,
                 name,
@@ -51,7 +51,7 @@ def check_stormshield_disk(item, params, parsed):
             else:
                 status = 0
             if israid != "0":
-                infotext = infotext + ", Raid active, Raid Status %s, Disk Position %s" % (
+                infotext = infotext + ", Raid active, Raid Status {}, Disk Position {}".format(
                     raidstatus,
                     position,
                 )

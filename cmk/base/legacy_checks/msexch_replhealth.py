@@ -39,7 +39,7 @@ def check_msexch_replhealth(item, _no_params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = [i.strip() for i in line]
+            key, val = (i.strip() for i in line)
             if key == "Check" and val == item:
                 getit = True
             elif key == "Result" and getit:

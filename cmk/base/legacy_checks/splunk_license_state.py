@@ -85,7 +85,7 @@ def check_splunk_license_state(item, params, parsed):
             state = 1
 
         if state != 0:
-            infotext += " (expires in %s - Warn/Crit at %s/%s)" % (
+            infotext += " (expires in {} - Warn/Crit at {}/{})".format(
                 get_age_human_readable(data.time_to_expiration),
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
@@ -93,7 +93,7 @@ def check_splunk_license_state(item, params, parsed):
 
         yield state, infotext
 
-    yield 0, "Max violations: %s within window period of %s Days, Quota: %s" % (
+    yield 0, "Max violations: {} within window period of {} Days, Quota: {}".format(
         data.max_violations,
         data.window_period,
         data.quota,

@@ -34,7 +34,7 @@ def check_uniserv_desc(params):
 
     if job == "version":
         return "Uniserv %s Version" % params["service"]
-    return "Uniserv %s Address %s " % (params["service"], params["job"][1]["city"])
+    return "Uniserv {} Address {} ".format(params["service"], params["job"][1]["city"])
 
 
 active_check_info["uniserv"] = {

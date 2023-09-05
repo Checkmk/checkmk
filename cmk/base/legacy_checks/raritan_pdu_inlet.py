@@ -34,8 +34,7 @@ def parse_raritan_pdu_inlet(string_table):
 def check_raritan_pdu_inlet(item, params, info):
     if not item.startswith("Phase"):
         item = "Phase %s" % item
-    for res in check_elphase(item, params, info):
-        yield res
+    yield from check_elphase(item, params, info)
 
 
 def discover_raritan_pdu_inlet(section):

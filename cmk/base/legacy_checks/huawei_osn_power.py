@@ -31,7 +31,7 @@ def check_huawei_osn_power(item, params, info):
                 state = 1
 
             if state:
-                yield state, "(warn/crit at %s/%s W)" % (warn, crit)
+                yield state, f"(warn/crit at {warn}/{crit} W)"
 
 
 check_info["huawei_osn_power"] = LegacyCheckDefinition(

@@ -52,14 +52,14 @@ def check_aix_hacmp_resources(item, params, parsed):
     infotext = []
     for node_name, resource_state in data:
         resource_states.append(resource_state)
-        infotext.append("%s on node %s" % (resource_state, node_name))
+        infotext.append(f"{resource_state} on node {node_name}")
 
     state = 0
     if expected_behaviour == "first":
         if resource_states[0] != "online":
             state = 2
     elif expected_behaviour == "any":
-        if not any((resource_state == "online" for resource_state in resource_states)):
+        if not any(resource_state == "online" for resource_state in resource_states):
             state = 2
 
     yield state, ", ".join(infotext)

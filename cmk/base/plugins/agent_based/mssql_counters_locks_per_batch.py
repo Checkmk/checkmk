@@ -37,12 +37,12 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResul
 
     yield from (
         Service(item=item_name)
-        for item_name in set(  #
+        for item_name in {  #
             db_name
             for db_name in db_names
             if "lock_requests/sec" in section.get(("%s:Locks" % db_name, "_Total"), {})
             if "batch_requests/sec" in section.get(("%s:SQL_Statistics" % db_name, "None"), {})
-        )
+        }
     )
 
 
@@ -66,13 +66,13 @@ def _check_common(
 
     lock_rate = get_rate_or_none(
         value_store,
-        "mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item),
+        f"mssql_counters_locks_per_batch.{node_name}.{item}.locks",
         now,
         lock_rate_base,
     )
     batch_rate = get_rate_or_none(
         value_store,
-        "mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item),
+        f"mssql_counters_locks_per_batch.{node_name}.{item}.batches",
         now,
         batch_rate_base,
     )
@@ -84,7 +84,7 @@ def _check_common(
         lock_rate / batch_rate if batch_rate else 0,
         levels_upper=params.get("locks_per_batch"),
         metric_name="locks_per_batch",
-        render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
+        render_func=lambda v: "{}{:.1f}".format(node_name and "[%s] " % node_name, v),
         boundaries=(0, None),
     )
 

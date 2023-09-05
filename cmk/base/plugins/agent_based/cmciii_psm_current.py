@@ -31,7 +31,7 @@ def check_cmciii_psm_current(
     min_current = entry["SetPtHighAlarm"]
     max_current = entry["SetPtLowAlarm"]
     state = State.OK if entry["Status"] == "OK" else State.CRIT
-    yield Result(state=state, summary="Current: %s (%s/%s), " % (current, min_current, max_current))
+    yield Result(state=state, summary=f"Current: {current} ({min_current}/{max_current}), ")
     yield Metric("current", current, levels=(min_current, max_current))
 
     yield Result(state=State.OK, summary="Type: %s" % entry["Unit Type"])

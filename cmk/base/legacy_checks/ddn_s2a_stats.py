@@ -104,7 +104,7 @@ def check_ddn_s2a_stats_io(item, params, parsed):
         else:
             warn, crit = levels
             perfdata = [(perfname, value, warn, crit)]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             if value >= crit:
                 status = 2
                 infotext += levelstext
@@ -168,9 +168,9 @@ def check_ddn_s2a_stats(item, params, parsed):
             status = 0
         else:
             warn, crit = levels
-            warn_mb, crit_mb = [x / (1024 * 1024.0) for x in levels]
+            warn_mb, crit_mb = (x / (1024 * 1024.0) for x in levels)
             perfdata = [(perfname, value, warn, crit)]
-            levelstext = " (warn/crit at %.2f/%.2f MB/s)" % (warn_mb, crit_mb)
+            levelstext = f" (warn/crit at {warn_mb:.2f}/{crit_mb:.2f} MB/s)"
             if value >= crit:
                 status = 2
                 infotext += levelstext

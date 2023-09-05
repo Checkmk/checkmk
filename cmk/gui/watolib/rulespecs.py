@@ -1006,8 +1006,7 @@ def register_check_parameters(
     """Legacy registration of check parameters"""
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException(
-            "Check parameter definition for %s has type Dictionary, but match_type %s"
-            % (checkgroup, match_type)
+            f"Check parameter definition for {checkgroup} has type Dictionary, but match_type {match_type}"
         )
 
     if not valuespec:

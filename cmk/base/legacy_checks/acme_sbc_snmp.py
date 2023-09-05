@@ -46,7 +46,7 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 3, "Unknown score: %s" % score
         return
     warn, crit = params.get("levels_lower", (None, None))
-    levels_msg = " (warn/crit at or below %s%%/%s%%)" % (warn, crit)
+    levels_msg = f" (warn/crit at or below {warn}%/{crit}%)"
     score_msg = "Score: %s%%" % score
     if crit is not None and score <= crit:
         yield 2, score_msg + levels_msg

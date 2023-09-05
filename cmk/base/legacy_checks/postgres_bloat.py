@@ -76,23 +76,23 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             if "%s_bloat_perc" % what in params:
                 warn, crit = params["%s_bloat_perc" % what]
                 if bloat >= crit:
-                    yield 2, "%s %s bloat: %s%% (too high)" % (line["tablename"], what, bloat)
+                    yield 2, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
                     show_levels = True
                 elif bloat >= warn:
-                    yield 1, "%s %s bloat: %s%% (too high)" % (line["tablename"], what, bloat)
+                    yield 1, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
                     show_levels = True
 
             if "%s_bloat_abs" % what in params:
                 warn, crit = params["%s_bloat_abs" % what]
                 if wasted >= crit:
-                    yield 2, "%s wasted %s bytes: %s (too high)" % (
+                    yield 2, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
                         get_bytes_human_readable(wasted),
                     )
                     show_levels = True
                 elif wasted >= warn:
-                    yield 1, "%s wasted %s bytes: %s (too high)" % (
+                    yield 1, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
                         get_bytes_human_readable(wasted),
@@ -123,12 +123,12 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             ("table", table_perc_max, table_abs_max),
             ("index", index_perc_max, index_abs_max),
         ]:
-            yield 0, "Maximum %s bloat at %s: %s" % (
+            yield 0, "Maximum {} bloat at {}: {}".format(
                 what,
                 perc_max["tablename"],
                 render.percent(float(perc_max["%sbloat" % what[0]])),
             )
-            yield 0, "Maximum wasted %sspace at %s: %s" % (
+            yield 0, "Maximum wasted {}space at {}: {}".format(
                 what,
                 abs_max["tablename"],
                 get_bytes_human_readable(

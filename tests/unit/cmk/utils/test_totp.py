@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.totp import TOTP, TotpVersion
 
-SECRET = "12345678901234567890".encode()
+SECRET = b"12345678901234567890"
 
 
 @pytest.mark.parametrize(

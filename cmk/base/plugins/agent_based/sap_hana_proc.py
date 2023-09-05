@@ -19,7 +19,7 @@ def parse_sap_hana_proc(string_table: StringTable) -> sap_hana.ParsedSection:
                 continue
 
             inst = section.setdefault(
-                "%s - %s" % (sid_instance, line[1]),
+                f"{sid_instance} - {line[1]}",
                 {
                     "port": line[0],
                     "pid": line[2],
@@ -53,12 +53,12 @@ def check_sap_hana_proc(
     if data is None:
         raise IgnoreResultsError("Login into database failed.")
 
-    yield Result(state=State.OK, summary="Port: %s, PID: %s" % (data["port"], data["pid"]))
+    yield Result(state=State.OK, summary="Port: {}, PID: {}".format(data["port"], data["pid"]))
 
     p_coordin = params["coordin"]
     coordin = data["coordin"]
     if p_coordin != coordin:
-        yield Result(state=State.WARN, summary="Role: changed from %s to %s" % (p_coordin, coordin))
+        yield Result(state=State.WARN, summary=f"Role: changed from {p_coordin} to {coordin}")
     elif coordin.lower() != "none":
         yield Result(state=State.OK, summary="Role: %s" % coordin)
 

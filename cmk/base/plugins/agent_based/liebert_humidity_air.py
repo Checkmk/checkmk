@@ -83,7 +83,7 @@ def check_liebert_humidity_air(
         metric_name="humidity",
         levels_upper=params["levels"],
         levels_lower=params["levels_lower"],
-        render_func=lambda retval: "%.2f %s" % (retval, unit),
+        render_func=lambda retval: f"{retval:.2f} {unit}",
         boundaries=(0, None),
     )
 

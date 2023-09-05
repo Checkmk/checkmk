@@ -40,7 +40,7 @@ def check_ups_in_freq(item, params, parsed):
     elif freq < warn:
         state = 1
     if state:
-        infotext += " (warn/crit below %s Hz/%s Hz)" % (warn, crit)
+        infotext += f" (warn/crit below {warn} Hz/{crit} Hz)"
     return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
 
 

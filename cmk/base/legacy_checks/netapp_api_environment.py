@@ -64,7 +64,7 @@ def check_netapp_api_environment_discrete(item, _no_params, parsed):
     else:
         state = 2
 
-    yield state, "Sensor state: %s, Sensor value: %s" % (sensor_state, sensor_value)
+    yield state, f"Sensor state: {sensor_state}, Sensor value: {sensor_value}"
 
 
 def check_netapp_api_environment_threshold(item, _no_params, parsed):
@@ -108,7 +108,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
         yield check_temperature(
             _scale(sensor_value, unit),
             _no_params,
-            _perf_key("netapp_environment_thermal_%s" % (sensor_name,)),
+            _perf_key(f"netapp_environment_thermal_{sensor_name}"),
             dev_unit=_scale_unit(unit),
             dev_levels=levels[:2],
             dev_levels_lower=levels[2:],

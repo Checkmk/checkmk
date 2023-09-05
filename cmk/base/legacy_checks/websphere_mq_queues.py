@@ -127,7 +127,7 @@ def check_websphere_mq_queues(item, params, parsed):
         params = params.get("messages_not_processed", {})
 
         if cur_depth and lgetdate and lgettime:
-            time_str = "%s %s" % (lgetdate, lgettime)
+            time_str = f"{lgetdate} {lgettime}"
             time_diff = data["time_on_client"] - time.mktime(
                 time.strptime(time_str, "%Y-%m-%d %H.%M.%S")
             )

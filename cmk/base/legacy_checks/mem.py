@@ -415,7 +415,7 @@ def check_mem_vmalloc(_item, params, section):
             c_mb = float(loop_crit)
 
         loop_state = 0
-        infotxt = "%s %.1f MB" % (what, loop_val)
+        infotxt = f"{what} {loop_val:.1f} MB"
         if (loop_val >= c_mb) != neg:
             loop_state = 2
             infotxt += " (critical at %.1f MB!!)" % c_mb

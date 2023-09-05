@@ -66,19 +66,15 @@ def fetch_rrd_data_for_graph(
     )
     by_service = _group_needed_rrd_data_by_service(
         (
-            (
-                entry.site_id,
-                entry.host_name,
-                entry.service_name,
-                entry.metric_name,
-                entry.consolidation_func_name,
-                entry.scale,
-            )
-            for entry in get_needed_sources(
-                graph_recipe.metrics, resolve_combined_single_metric_spec
-            )
-            if isinstance(entry, NeededElementForRRDDataKey)
+            entry.site_id,
+            entry.host_name,
+            entry.service_name,
+            entry.metric_name,
+            entry.consolidation_func_name,
+            entry.scale,
         )
+        for entry in get_needed_sources(graph_recipe.metrics, resolve_combined_single_metric_spec)
+        if isinstance(entry, NeededElementForRRDDataKey)
     )
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():

@@ -78,7 +78,7 @@ def check_netapp_api_snapvault(
 
     for key in ["source-system", "destination-system", "policy", "status", "state"]:
         if key in snapvault:
-            yield Result(state=State.OK, summary="%s: %s" % (key.title(), snapvault[key]))
+            yield Result(state=State.OK, summary=f"{key.title()}: {snapvault[key]}")
 
     if "lag-time" not in snapvault:
         return

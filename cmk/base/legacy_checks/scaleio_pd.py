@@ -65,7 +65,7 @@ def check_scaleio_pd_status(item, _no_params, parsed):
     state = 0 if status == "ACTIVE" else 2
     name = data["NAME"][0]
 
-    yield state, "Name: %s, State: %s" % (name, status)
+    yield state, f"Name: {name}, State: {status}"
 
 
 check_info["scaleio_pd.status"] = LegacyCheckDefinition(

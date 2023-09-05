@@ -41,7 +41,7 @@ def inventory_tsm_drives(info):
     for line in info:
         if len(line) == 6:
             inst, library, drive, _state, _online = line[:5]
-            item = "%s / %s" % (library, drive)
+            item = f"{library} / {drive}"
             if inst != "default":
                 item = inst + " / " + item
             inventory.append((item, None))
@@ -53,7 +53,7 @@ def check_tsm_drives(item, params, info):
     for line in info:
         if len(line) >= 5:
             inst, library, drive, state, online = line[:5]
-            libdev = "%s / %s" % (library, drive)
+            libdev = f"{library} / {drive}"
             if item in {libdev, inst + " / " + libdev}:
                 if len(line) >= 6:
                     serial = line[5]

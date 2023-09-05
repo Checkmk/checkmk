@@ -62,7 +62,7 @@ def parse_hp_proliant_psu(string_table: StringTable) -> Section:
     for chassis, bay, present, cond, used, capacity_maximum in string_table:
         if present != "3" or capacity_maximum == "0":
             continue
-        item = "%s/%s" % (chassis, bay)
+        item = f"{chassis}/{bay}"
         try:
             section[item] = Psu(chassis, bay, cond, int(used), int(capacity_maximum))
         except ValueError:

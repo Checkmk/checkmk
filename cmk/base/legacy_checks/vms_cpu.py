@@ -54,8 +54,7 @@ def check_vms_cpu(_no_item, params, parsed):
         infoname="Wait",
     )
 
-    for util_result in check_cpu_util(util, params):
-        yield util_result
+    yield from check_cpu_util(util, params)
 
     num_cpus = parsed["num_cpus"]
     unit = "CPU" if num_cpus == 1 else "CPUs"

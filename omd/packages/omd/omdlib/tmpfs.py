@@ -230,8 +230,7 @@ def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
             fstab.write("\n")
 
         fstab.write(
-            "tmpfs  %s tmpfs noauto,user,mode=751,uid=%s,gid=%s%s 0 0\n"
-            % (mountpoint, site.name, site.name, sizespec)
+            f"tmpfs  {mountpoint} tmpfs noauto,user,mode=751,uid={site.name},gid={site.name}{sizespec} 0 0\n"
         )
 
 

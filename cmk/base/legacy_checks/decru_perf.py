@@ -27,7 +27,7 @@ def inventory_decru_perf(info):
     for index, rate in info:
         def_name = "unknown %s" % index
         name = perf_names.get(int(index), def_name)
-        item = "%s: %s" % (index, name)
+        item = f"{index}: {name}"
         inventory.append((item, rate, None))
     return inventory
 

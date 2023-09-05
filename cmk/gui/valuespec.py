@@ -2133,8 +2133,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             html.jsbutton(
                 varprefix + "_sort",
                 _("Sort"),
-                "cmk.valuespecs.listof_sort(%s, %s, %s)"
-                % (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)),
+                f"cmk.valuespecs.listof_sort({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._sort_by)})",
             )
 
     def _show_reference_entry(self, varprefix: str, index: str, value: T) -> None:
@@ -3799,10 +3798,10 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         return [
-            key  #
+            key
             for nr, (key, _title) in enumerate(self._elements)
             if html.get_checkbox("%s_%d" % (varprefix, nr))
-        ]
+        ]  #
 
     def value_to_json(self, value: ListChoiceModel) -> JSONValue:
         return value
@@ -4002,11 +4001,11 @@ class DualListChoice(ListChoice):
 
     def _locked_choice_text(self, value: ListChoiceModel) -> ChoiceText | None:
         num_locked_choices = sum(1 for choice_id in value if choice_id in self._locked_choices)
-        return (  #
+        return (
             self._locked_choices_text_singular % num_locked_choices
-            if num_locked_choices == 1  #
+            if num_locked_choices == 1
             else self._locked_choices_text_plural % num_locked_choices
-            if num_locked_choices > 1  #
+            if num_locked_choices > 1
             else None
         )
 
@@ -5232,8 +5231,7 @@ class Optional(ValueSpec[None | T]):
             "%s_use" % varprefix,
             checked,
             label=self._get_label(),
-            onclick="cmk.valuespecs.toggle_option(this, %s, %r)"
-            % (json.dumps(div_id), 1 if self._negate else 0),
+            onclick=f"cmk.valuespecs.toggle_option(this, {json.dumps(div_id)}, {1 if self._negate else 0!r})",
         )
         if self._sameline:
             html.nbsp()
@@ -5591,9 +5589,7 @@ class Tuple(ValueSpec[TT]):
             yield idx, element, value[idx]
 
     def mask(self, value: TT) -> TT:
-        return tuple(
-            el.mask(val) for _, el, val in self._iter_value(value)
-        )  # type: ignore[return-value]
+        return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
         return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
@@ -5602,14 +5598,10 @@ class Tuple(ValueSpec[TT]):
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
     def value_from_json(self, json_value: JSONValue) -> TT:
-        return tuple(
-            el.value_from_json(val) for _, el, val in self._iter_value(json_value)
-        )  # type: ignore[return-value]
+        return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))  # type: ignore[return-value]
 
     def from_html_vars(self, varprefix: str) -> TT:
-        return tuple(
-            e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements)
-        )  # type: ignore[return-value]
+        return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))  # type: ignore[return-value]
 
     def _validate_value(self, value: TT, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
@@ -5631,9 +5623,7 @@ class Tuple(ValueSpec[TT]):
 
     def transform_value(self, value: TT) -> TT:
         assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
-        return tuple(
-            vs.transform_value(value[index]) for index, vs in enumerate(self._elements)
-        )  # type: ignore[return-value]
+        return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))  # type: ignore[return-value]
 
 
 DictionaryEntry = tuple[str, ValueSpec]
@@ -5999,8 +5989,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         assert isinstance(value, dict), f"Dictionary.transform_value() got a non-dict: {value!r}"
         return {
             **{
-                param: vs.transform_value(value[param])  #
-                for param, vs in self._get_elements()  #
+                param: vs.transform_value(value[param])
+                for param, vs in self._get_elements()
                 if param in value
             },
             **{param: value[param] for param in self._ignored_keys if param in value},  #
@@ -7424,8 +7414,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             html.open_li(class_="active" if active_category == category_name else None)
             html.a(
                 category_alias,
-                href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)"
-                % (json.dumps(varprefix), json.dumps(category_name)),
+                href=f"javascript:cmk.valuespecs.iconselector_toggle({json.dumps(varprefix)}, {json.dumps(category_name)})",
                 id_=f"{varprefix}_{category_name}_nav",
                 class_="%s_nav" % varprefix,
             )
@@ -7445,8 +7434,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick="cmk.valuespecs.iconselector_select(event, %s, %s)"
-                    % (json.dumps(varprefix), json.dumps(icon)),
+                    onclick=f"cmk.valuespecs.iconselector_select(event, {json.dumps(varprefix)}, {json.dumps(icon)})",
                     title=icon,
                 )
 
@@ -7800,9 +7788,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
     def _get_key_fingerprint(cls, value: SSHKeyPairValue) -> str:
         _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode("ascii"))
-        fp_plain = hashlib.md5(  # pylint: disable=unexpected-keyword-arg
-            key, usedforsecurity=False
-        ).hexdigest()
+        fp_plain = hashlib.md5(key, usedforsecurity=False).hexdigest()
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 

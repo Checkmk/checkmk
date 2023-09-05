@@ -27,7 +27,7 @@ def check_couchbase_nodes_status(item, params, parsed):
         ("version", "Version"),
         ("clusterCompatibility", "Cluster compatibility"),
     ):
-        yield 0, "%s: %s" % (label, data.get(key, "unknown"))
+        yield 0, "{}: {}".format(label, data.get(key, "unknown"))
 
     membership = data.get("clusterMembership")
     if membership is None:

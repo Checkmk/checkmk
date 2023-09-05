@@ -155,8 +155,7 @@ class EndpointRegistry:
         endpoint_entry = self._endpoints.setdefault(endpoint_key, {})
         if parameter_key in endpoint_entry:
             raise RuntimeError(
-                "The endpoint %r has already been set to %r"
-                % (endpoint_key, endpoint_entry[parameter_key])
+                f"The endpoint {endpoint_key!r} has already been set to {endpoint_entry[parameter_key]!r}"
             )
 
         endpoint_entry[parameter_key] = {

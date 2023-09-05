@@ -18,13 +18,13 @@ def inventory_ibm_imm_voltage(info):
 def check_ibm_imm_voltage(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            volt, crit, warn, crit_low, warn_low = [float(v) / 1000 for v in line[1:]]
+            volt, crit, warn, crit_low, warn_low = (float(v) / 1000 for v in line[1:])
             infotext = "%.2f Volt" % volt
 
             perfdata = [
                 ("volt", volt, str(warn_low) + ":" + str(warn), str(crit_low) + ":" + str(crit))
             ]
-            levelstext = " (levels warn/crit lower: %.1f/%.1f upper: %.1f/%.1f)" % (
+            levelstext = " (levels warn/crit lower: {:.1f}/{:.1f} upper: {:.1f}/{:.1f})".format(
                 warn_low,
                 crit_low,
                 warn,

@@ -62,7 +62,7 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
 
             for what, what_key in [(disk_state, "Disk"), (component_state, "Component")]:
                 state, state_readable = map_states[what_key.lower()][what]
-                yield state, "%s status: %s" % (what_key, state_readable)
+                yield state, f"{what_key} status: {state_readable}"
 
             yield 0, "Remaining redundancy: %s physical disk(s)" % redundancy
 

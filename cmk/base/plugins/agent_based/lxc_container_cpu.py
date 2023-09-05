@@ -22,7 +22,7 @@ def parse_docker_container_cpu_cgroupv1(
         value = int(line[1])
         parsed[key] = value
 
-    if not set(parsed.keys()).issuperset(set(["user", "system", "system_ticks", "num_cpus"])):
+    if not set(parsed.keys()).issuperset({"user", "system", "system_ticks", "num_cpus"}):
         return None
 
     return SectionCpuUtilizationOs(

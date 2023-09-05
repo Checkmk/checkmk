@@ -32,8 +32,7 @@ def check_bintec_cpu(_no_item, params, info):
     yield 0, "system: %.1f%%" % system
     yield 0, "streams: %.1f%%" % streams, [("streams", streams)]
 
-    for res in check_cpu_util(util, params):
-        yield res
+    yield from check_cpu_util(util, params)
 
 
 # Migration NOTE: Create a separate section, but a common check plugin for

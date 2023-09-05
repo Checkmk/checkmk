@@ -35,7 +35,7 @@ def parse_splunk_jobs(string_table):
             if iszombie == "True":
                 zombie_count += 1
 
-            long_output += "%s - Author: %s, Application: %s, State: %s, Zombie: %s\n" % (
+            long_output += "{} - Author: {}, Application: {}, State: {}, Zombie: {}\n".format(
                 published,
                 author,
                 app,

@@ -264,10 +264,7 @@ def _get_html_from_livestatus(
     report_column: Literal["robotmk_last_log", "robotmk_last_error_log"] = (
         "robotmk_last_log" if report_type == "robotmk" else "robotmk_last_error_log"
     )
-    query = (
-        "GET services\nColumns: %s\nFilter: host_name = %s\nFilter: service_description = %s\n"
-        % (report_column, lqencode(host_name), lqencode(service_description))
-    )
+    query = f"GET services\nColumns: {report_column}\nFilter: host_name = {lqencode(host_name)}\nFilter: service_description = {lqencode(service_description)}\n"
 
     with only_sites(site_id):
         row = live().query_row(query)

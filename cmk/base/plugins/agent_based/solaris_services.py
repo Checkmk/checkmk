@@ -96,7 +96,7 @@ def _state_match(rule_state: str | None, state: str) -> bool:
 
 
 def _get_svc_name(svc_attrs: SolarisService) -> str:
-    return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
+    return "{}/{}:{}".format(svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
 
 def discover_solaris_services(
@@ -146,7 +146,7 @@ def check_solaris_services(item: str, params: Mapping[str, Any], section: Sectio
                     break
             yield Result(
                 state=State(check_state),
-                summary="Status: %s, %s" % (svc_state, info_stime),
+                summary=f"Status: {svc_state}, {info_stime}",
             )
             return
 

@@ -33,7 +33,7 @@ def check_jolokia_info(item, _no_params, parsed):
     product = line[0]
     jolokia_version = line[-1]
     version = " ".join(line[1:-1])
-    yield 0, "%s %s (Jolokia version %s)" % (product.title(), version, jolokia_version)
+    yield 0, f"{product.title()} {version} (Jolokia version {jolokia_version})"
 
 
 def discover_jolokia_info(section):

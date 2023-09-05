@@ -22,7 +22,7 @@ def check_domino_users(_no_item, params, info):
         users = int(info[0][0])
         warn, crit = params
         infotext = "%d Domino Users on Server" % users
-        levels = " (Warn/Crit at %s/%s)" % (warn, crit)
+        levels = f" (Warn/Crit at {warn}/{crit})"
         perfdata = [("users", users, warn, crit)]
         state = 0
         if users >= crit:

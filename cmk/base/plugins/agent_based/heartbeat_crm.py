@@ -333,7 +333,7 @@ def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckRes
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
-    dt = calendar.timegm((time.strptime(last_updated, "%a %b %d %H:%M:%S %Y")))
+    dt = calendar.timegm(time.strptime(last_updated, "%a %b %d %H:%M:%S %Y"))
     now = time.time()
     delta = now - dt
     if delta > params["max_age"]:
@@ -438,14 +438,14 @@ def check_heartbeat_crm_resources(
         yield Result(state=State.OK, summary=" ".join(resource))
 
         if len(resource) == 3 and resource[2] != "Started":
-            yield Result(state=State.CRIT, summary='Resource is in state "%s"' % (resource[2],))
+            yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
         elif (
             (target_node := params["expected_node"])
             and target_node != resource[3]
             and resource[1] != "Slave"
             and resource[1] != "Clone"
         ):
-            yield Result(state=State.CRIT, summary="Expected node: %s" % (target_node,))
+            yield Result(state=State.CRIT, summary=f"Expected node: {target_node}")
 
 
 register.check_plugin(

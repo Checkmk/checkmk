@@ -50,7 +50,7 @@ def parse_infoblox_temp(string_table):
         r_val, unit = val_str.split()
         val = float(r_val)
 
-        what_name = "%s %s" % (name, index)
+        what_name = f"{name} {index}"
         parsed.setdefault(
             what_name.strip(),
             {

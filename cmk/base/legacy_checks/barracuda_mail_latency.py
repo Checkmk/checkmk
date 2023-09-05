@@ -31,7 +31,7 @@ def check_barracuda_mail_latency(_no_item, params, info):
     elif avg_mail_latency >= warn:
         state = 1
     if state:
-        infotext += " (warn/crit at %s/%s)" % (
+        infotext += " (warn/crit at {}/{})".format(
             get_age_human_readable(warn),
             get_age_human_readable(crit),
         )

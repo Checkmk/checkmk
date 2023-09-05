@@ -111,7 +111,7 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
     ]:
         value = elastic_data.get(key)
         if value is not None:
-            yield state, "%s: %s" % (infotext, value.title())
+            yield state, f"{infotext}: {value.title()}"
 
     status_data = elastic_data.get("status")
     if status_data:

@@ -122,8 +122,7 @@ def send_push_notification(
 
     if response.status_code != 200:
         sys.stdout.write(
-            "Failed to send notification. Status: %s, Response: %s\n"
-            % (response.status_code, response.text)
+            f"Failed to send notification. Status: {response.status_code}, Response: {response.text}\n"
         )
         return 1
 

@@ -61,9 +61,7 @@ def check_f5_bigip_snat(item, params, parsed):
             if what not in snat:
                 continue
             for idx, entry in enumerate(snat[what]):
-                rate = get_rate(
-                    get_value_store(), "%s.%s" % (what, idx), now, entry, raise_overflow=True
-                )
+                rate = get_rate(get_value_store(), f"{what}.{idx}", now, entry, raise_overflow=True)
                 summed_values[what] += rate
 
         # Calculate sum value

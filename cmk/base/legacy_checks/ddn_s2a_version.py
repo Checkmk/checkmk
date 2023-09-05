@@ -19,7 +19,7 @@ def inventory_ddn_s2a_version(parsed):
 
 def check_ddn_s2a_version(_no_item, _no_params, parsed):
     yield 0, "Platform: %s" % parsed["platform"]
-    yield 0, "Firmware Version: %s (%s)" % (parsed["fw_version"], parsed["fw_date"])
+    yield 0, "Firmware Version: {} ({})".format(parsed["fw_version"], parsed["fw_date"])
     yield 0, "Bootrom Version: %s" % parsed["bootrom_version"]
 
 

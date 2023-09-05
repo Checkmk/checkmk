@@ -104,7 +104,7 @@ def check_adva_fsp_if(
     opertxt, operstate = _MAP_OPER_STATUS[interface["oper_status"]]
     yield Result(
         state=State.worst(adminstate, operstate),
-        summary="Admin/Operational State: %s/%s" % (admintxt, opertxt),
+        summary=f"Admin/Operational State: {admintxt}/{opertxt}",
     )
 
     for power_type in ["output", "input"]:
@@ -128,7 +128,7 @@ def check_adva_fsp_if(
 
         yield Result(
             state=mon_state,
-            summary="%s power: %.1f dBm" % (power_type.title(), power),
+            summary=f"{power_type.title()} power: {power:.1f} dBm",
         )
         yield Metric(
             "%s_power" % power_type,

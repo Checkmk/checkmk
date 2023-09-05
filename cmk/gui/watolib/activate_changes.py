@@ -164,8 +164,8 @@ def get_free_message(format_html: bool = False) -> str:
     )
     contact_link = "<a href='https://checkmk.com/contact'>https://checkmk.com/contact</a>"
     if format_html:
-        return "<b>%s</b><br>%s%s" % (subject, body, contact_link)
-    return "%s\n%s%s" % (subject, body, "https://checkmk.com/contact")
+        return f"<b>{subject}</b><br>{body}{contact_link}"
+    return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
 # TODO: find a way to make this more obvious/transparent in code

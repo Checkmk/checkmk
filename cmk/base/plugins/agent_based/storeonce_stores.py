@@ -64,7 +64,7 @@ Section = Mapping[str, Mapping[str, str]]
 
 def parse_storeonce_stores(string_table: StringTable) -> Section:
     return {
-        "ServiceSet %s Store %s" % (data["ServiceSet ID"], data["Name"]): data
+        "ServiceSet {} Store {}".format(data["ServiceSet ID"], data["Name"]): data
         for data in storeonce.parse_storeonce_servicesets(string_table).values()
     }
 

@@ -24,7 +24,7 @@ def check_dell_compellent_enclosure(item, _no_params, info):
         if number == item:
             state, state_readable = dell_compellent.dev_state_map(status)
             yield state, "Status: %s" % state_readable
-            yield 0, "Model: %s, Type: %s, Service-Tag: %s" % (model, enc_type, serial)
+            yield 0, f"Model: {model}, Type: {enc_type}, Service-Tag: {serial}"
 
             if status_message:
                 yield state, "State Message: %s" % status_message

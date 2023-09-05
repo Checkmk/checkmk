@@ -67,7 +67,7 @@ def check_alcatel_power_aos7(item, _no_params, parsed):
         status = 0
     else:
         status = 2
-    yield status, "[%s] Status: %s" % (device.power_supply_type, device.status_readable)
+    yield status, f"[{device.power_supply_type}] Status: {device.status_readable}"
 
 
 check_info["alcatel_power_aos7"] = LegacyCheckDefinition(

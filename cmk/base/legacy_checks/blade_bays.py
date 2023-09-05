@@ -26,7 +26,7 @@ def parse_blade_bays(string_table):
         for oid, name, state, ty, identifier, power_str, power_max_str in block:
             itemname = "PD%d %s" % (power_domain, name)
             if itemname in parsed:
-                itemname = "%s %s" % (itemname, oid)
+                itemname = f"{itemname} {oid}"
 
             try:
                 power = int(power_str.rstrip("W"))
@@ -63,11 +63,12 @@ def check_blade_bays(item, params, parsed):
     state, state_readable = data["device_state"]
     yield state, "Status: %s" % state_readable
 
-    for res in check_elphase(item, params, parsed):
-        yield res
+    yield from check_elphase(item, params, parsed)
 
     data = parsed[item]
-    yield 0, "Max. power: %s W, Type: %s, ID: %s" % (data["power_max"], data["type"], data["id"])
+    yield 0, "Max. power: {} W, Type: {}, ID: {}".format(
+        data["power_max"], data["type"], data["id"]
+    )
 
 
 check_info["blade_bays"] = LegacyCheckDefinition(

@@ -134,7 +134,7 @@ def check_huawei_wlc_aps_status(item, params, parsed):
         # Radio state
         radio_state = data[metric]["radio_cmk_state"]
         radio_readable = data[metric]["radio_readable_state"]
-        yield radio_state, "Radio state [%s]: %s" % (band, radio_readable)
+        yield radio_state, f"Radio state [{band}]: {radio_readable}"
 
         # Channel usage
         ch_usage = data[metric]["ch_usage"]

@@ -20,7 +20,7 @@ def check_checkpoint_voltage(item, params, info):
     for name, value, unit, dev_status in info:
         if name == item:
             state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
-            return state, "Status: %s, %s %s" % (state_readable, value, unit)
+            return state, f"Status: {state_readable}, {value} {unit}"
     return None
 
 

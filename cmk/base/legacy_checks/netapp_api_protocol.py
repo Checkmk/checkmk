@@ -36,9 +36,7 @@ def check_netapp_api_protocol(item, _no_params, parsed):
         for what in ["read", "write"]:
             if key.endswith("%s_ops" % what):
                 per_sec = get_rate(value_store, key, now, int(value), raise_overflow=True)
-                yield 0, "%s OPs: %s" % (what.title(), per_sec), [
-                    ("%s_%s_ios" % (item, what), per_sec)
-                ]
+                yield 0, f"{what.title()} OPs: {per_sec}", [(f"{item}_{what}_ios", per_sec)]
 
 
 check_info["netapp_api_protocol"] = LegacyCheckDefinition(

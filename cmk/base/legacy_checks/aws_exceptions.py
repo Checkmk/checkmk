@@ -30,9 +30,9 @@ def check_aws_exceptions(item, params, parsed):
     for title, messages in parsed.items():
         errors = [message for message in messages if message != AWSNoExceptionsText]
         if errors:
-            yield 2, "%s %s" % (title, ", ".join(errors))
+            yield 2, "{} {}".format(title, ", ".join(errors))
         else:
-            yield 0, "%s %s" % (title, AWSNoExceptionsText)
+            yield 0, f"{title} {AWSNoExceptionsText}"
 
 
 check_info["aws_exceptions"] = LegacyCheckDefinition(

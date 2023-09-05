@@ -69,7 +69,7 @@ def inventory_eltek_fans(info):
 def check_eltek_fans(item, params, info):
     for index, fan1, fan2 in info:
         for fan_id, reading in [("1", float(fan1)), ("2", float(fan2))]:
-            if "%s/%s" % (fan_id, index) == item:
+            if f"{fan_id}/{index}" == item:
                 state = 0
                 infotext = "%.1f%% of max RPM" % reading
                 levelstext = "at"
@@ -88,7 +88,7 @@ def check_eltek_fans(item, params, info):
                         levelstext = "below"
 
                 if state > 0:
-                    infotext += " (warn/crit %s %.1f%%/%.1f%%)" % (levelstext, warn, crit)
+                    infotext += f" (warn/crit {levelstext} {warn:.1f}%/{crit:.1f}%)"
 
                 return state, infotext
     return None

@@ -68,7 +68,7 @@ def _parse_sap_hana_backup(string_table: StringTable, timezone_info: Optional[tz
                 continue
 
             parsed.setdefault(
-                "%s - %s" % (sid_instance, line[0]),
+                f"{sid_instance} - {line[0]}",
                 Backup(
                     end_time=_backup_timestamp(line[1].rsplit(".", 1)[0], timezone_info),
                     state_name=line[2],

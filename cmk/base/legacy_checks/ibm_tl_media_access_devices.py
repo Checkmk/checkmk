@@ -70,9 +70,8 @@ def check_ibm_tl_media_access_devices(item, params, parsed):
     if item in parsed:
         data = parsed[item]
         if data.get("ctrl_avail") and data.get("ctrl_status"):
-            for res in ibm_tape_library_get_device_state(data["ctrl_avail"], data["ctrl_status"]):
-                yield res
-        yield 0, "Type: %s, Needs cleaning: %s" % (data["type"], data["clean"])
+            yield from ibm_tape_library_get_device_state(data["ctrl_avail"], data["ctrl_status"])
+        yield 0, "Type: {}, Needs cleaning: {}".format(data["type"], data["clean"])
 
 
 check_info["ibm_tl_media_access_devices"] = LegacyCheckDefinition(

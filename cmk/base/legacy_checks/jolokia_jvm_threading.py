@@ -80,7 +80,7 @@ def discover_jolokia_jvm_threading_pool(parsed):
     for instance in parsed:
         threadpool_data = parsed[instance].get("ThreadPool", {})
         for name in threadpool_data:
-            yield "%s ThreadPool %s" % (instance, name), {}
+            yield f"{instance} ThreadPool {name}", {}
 
 
 def check_jolokia_jvm_threading_pool(item, params, parsed):

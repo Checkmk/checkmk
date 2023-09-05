@@ -36,7 +36,7 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
     except (ValueError, TypeError):
-        yield 3, "Invalid data: last_ms: %s, average_ms: %s, flushed:%s" % (
+        yield 3, "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
             info_dict["last_ms"],
             info_dict["average_ms"],
             info_dict["flushed"],

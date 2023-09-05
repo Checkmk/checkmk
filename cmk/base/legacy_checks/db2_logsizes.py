@@ -36,7 +36,7 @@ def parse_db2_logsizes(string_table):
 
         if "node" in instance_info:
             for node in instance_info["node"]:
-                parsed["%s DPF %s" % (key, node)] = instance_info
+                parsed[f"{key} DPF {node}"] = instance_info
         else:
             parsed[key] = instance_info
 

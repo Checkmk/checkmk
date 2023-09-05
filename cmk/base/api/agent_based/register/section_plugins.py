@@ -82,8 +82,7 @@ def _validate_parse_function(
         arg.annotation is not arg.empty and arg.annotation != expected_annotation[0]
     ):  # why is inspect._empty trueish?
         raise TypeError(
-            "expected parse function argument annotation %r, got %r"
-            % (expected_annotation[1], arg.annotation)
+            f"expected parse function argument annotation {expected_annotation[1]!r}, got {arg.annotation!r}"
         )
 
 

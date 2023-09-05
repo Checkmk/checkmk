@@ -70,7 +70,7 @@ def parse_checkpoint_vsx(string_table):
         bytes_rejected,
         logged,
     ) in vsid_info:
-        item = "%s %s" % (vs_name, vs_id)
+        item = f"{vs_name} {vs_id}"
         parsed.setdefault(
             item,
             {
@@ -136,7 +136,7 @@ def check_checkpoint_vsx(item, _no_params, parsed):
         if value is None:
             continue
 
-        yield 0, "%s: %s" % (infotext, value)
+        yield 0, f"{infotext}: {value}"
 
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(

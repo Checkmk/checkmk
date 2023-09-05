@@ -42,7 +42,7 @@ def check_keepalived(item, params, info):
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is %s. IP Address: %s" % (
+            infotext = "This node is {}. IP Address: {}".format(
                 map_state[str(entry[1])],
                 hex2ip(hexaddr),
             )

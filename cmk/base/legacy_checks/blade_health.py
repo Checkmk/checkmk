@@ -34,7 +34,7 @@ def check_blade_health(_no_item, _no_params, info):
         return (1, "State is degraded (system level)" + descr)
     if state == "0":
         return (2, "State is critical!" + descr)
-    return (3, "Undefined state code %s%s" % (state, descr))
+    return (3, f"Undefined state code {state}{descr}")
 
 
 check_info["blade_health"] = LegacyCheckDefinition(

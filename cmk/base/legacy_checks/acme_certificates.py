@@ -37,7 +37,7 @@ def check_acme_certificates(item, params, info):
             else:
                 age_info = "%s to go" % get_age_human_readable(time_diff)
 
-            infotext = "Expire: %s (%s)" % (expire, age_info)
+            infotext = f"Expire: {expire} ({age_info})"
 
             if time_diff >= 0:
                 if time_diff < crit:
@@ -45,7 +45,7 @@ def check_acme_certificates(item, params, info):
                 elif time_diff < warn:
                     state = 1
                 if state:
-                    infotext += " (warn/crit below %s/%s)" % (
+                    infotext += " (warn/crit below {}/{})".format(
                         get_age_human_readable(warn),
                         get_age_human_readable(crit),
                     )
@@ -54,7 +54,7 @@ def check_acme_certificates(item, params, info):
                 infotext += " (expire date in the past)"
 
             yield state, infotext
-            yield 0, "Start: %s, Issuer: %s" % (start, issuer)
+            yield 0, f"Start: {start}, Issuer: {issuer}"
 
 
 check_info["acme_certificates"] = LegacyCheckDefinition(

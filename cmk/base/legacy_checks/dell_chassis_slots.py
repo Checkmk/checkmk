@@ -34,7 +34,7 @@ def check_dell_chassis_slots(item, _no_params, info):
                 "4": ("off", 1),
             }
             state_txt, state = state_table.get(status, ("unknown state, ", 3))
-            infotext = "Status: %s, Name: %s, ServiceTag: %s" % (state_txt, name, service_tag)
+            infotext = f"Status: {state_txt}, Name: {name}, ServiceTag: {service_tag}"
 
             return state, infotext
 

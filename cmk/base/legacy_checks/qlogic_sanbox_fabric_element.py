@@ -27,7 +27,7 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
                 return 1, "Fabric Element %s is testing" % fe_id
             if fe_status == "4":
                 return 2, "Fabric Element %s is faulty" % fe_id
-            return 3, "Fabric Element %s is in unidentified status %s" % (fe_id, fe_status)
+            return 3, f"Fabric Element {fe_id} is in unidentified status {fe_status}"
 
     return 3, "No Fabric Element %s found" % item
 

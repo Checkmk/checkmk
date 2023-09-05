@@ -60,7 +60,7 @@ def parse_stulz_temp(string_table):
         temp_ty = oids[0]
         index = oids[2]
         if temp_ty in map_types and reading_str != "999":
-            itemname = "%s-%s" % (map_types[temp_ty], index)
+            itemname = f"{map_types[temp_ty]}-{index}"
             parsed.setdefault(itemname, float(reading_str) / 10)
 
     return parsed

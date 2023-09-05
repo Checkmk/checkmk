@@ -58,7 +58,7 @@ def check_dell_om_processors(item, _no_params, info):
             else:
                 cpu_reading_readable = "unknown[%s]" % reading
                 state = 3
-            return state, "[%s] CPU status: %s, CPU reading: %s" % (
+            return state, "[{}] CPU status: {}, CPU reading: {}".format(
                 manuf,
                 cpu_state_readable,
                 cpu_reading_readable,

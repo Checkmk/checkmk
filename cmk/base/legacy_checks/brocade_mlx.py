@@ -50,7 +50,7 @@ def brocade_mlx_combine_item(id_, descr):
     if descr == "":
         return id_
     descr = re.sub(" *Module", "", descr)
-    return "%s %s" % (id_, descr)
+    return f"{id_} {descr}"
 
 
 #   .--Overall Status------------------------------------------------------.
@@ -249,8 +249,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
             return (
                 status,
-                "CPU utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec"
-                % (cpu_util1, cpu_util5, cpu_util60, errorstring, cpu_util300),
+                f"CPU utilization was {cpu_util1}/{cpu_util5}/{cpu_util60}{errorstring}/{cpu_util300}% for the last 1/5/60/300 sec",
                 perfdata,
             )
 

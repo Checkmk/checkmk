@@ -69,7 +69,7 @@ def _check_netapp_api_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary="read-only is %s (expected: %s)" % (lun.get("read-only"), expected),
+            summary="read-only is {} (expected: {})".format(lun.get("read-only"), expected),
         )
 
     size_total_bytes = int(lun["size"])

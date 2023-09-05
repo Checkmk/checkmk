@@ -272,8 +272,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.close_div()
         filters_applied = request.get_ascii_input("filled_in") == "filter"
         html.javascript(
-            "cmk.valuespecs.listofmultiple_init(%s, %s);"
-            % (json.dumps(varprefix), json.dumps(filters_applied))
+            f"cmk.valuespecs.listofmultiple_init({json.dumps(varprefix)}, {json.dumps(filters_applied)});"
         )
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 

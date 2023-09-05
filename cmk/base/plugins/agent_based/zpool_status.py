@@ -128,7 +128,7 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
 
     for pool, msg in section.pool_messages.items():
         state = State.WARN
-        messages.append("%s: %s" % (pool, " ".join(msg)))
+        messages.append("{}: {}".format(pool, " ".join(msg)))
 
     for pool, msg in section.warning_pools.items():
         state = State.WARN
@@ -136,7 +136,7 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
 
     for pool, msg in section.error_pools.items():
         state = State.CRIT
-        messages.append("%s state: %s" % (pool, msg[0]))
+        messages.append(f"{pool} state: {msg[0]}")
 
     if len(messages) == 0:
         messages.append("No critical errors")

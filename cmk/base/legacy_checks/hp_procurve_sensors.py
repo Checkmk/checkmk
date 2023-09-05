@@ -88,8 +88,7 @@ def check_hp_procurve_sensors(item, _not_used, info):
 
             return (
                 status,
-                'Condition of %s "%s" is %s'
-                % (get_hp_procurve_sensor_type(line[1]), line[3], procurve_status),
+                f'Condition of {get_hp_procurve_sensor_type(line[1])} "{line[3]}" is {procurve_status}',
             )
     return (3, "item not found in snmp data")
 

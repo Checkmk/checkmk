@@ -53,10 +53,10 @@ def check_hivemanager_ng_devices(item, params, parsed):
     warn, crit = params["max_clients"]
     if clients >= crit:
         status = 2
-        infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        infotext += f" (warn/crit at {warn}/{crit})"
     elif clients >= warn:
         status = 1
-        infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        infotext += f" (warn/crit at {warn}/{crit})"
     perfdata = [("connections", clients, warn, crit)]
     yield status, infotext, perfdata
 
@@ -67,7 +67,7 @@ def check_hivemanager_ng_devices(item, params, parsed):
         ("lastUpdated", "last updated"),
     ]
     for key, text in informational:
-        yield 0, "%s: %s" % (text, device[key])
+        yield 0, f"{text}: {device[key]}"
 
 
 check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(

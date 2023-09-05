@@ -106,7 +106,7 @@ def check_msexch_database(item, params, parsed):
             status = 2
         elif warn is not None and value >= warn:
             status = 1
-        yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit, None, None)]
+        yield status, f"{value:.1f}ms {name}", [(perfvar, value, warn, crit, None, None)]
 
 
 check_info["msexch_database"] = LegacyCheckDefinition(

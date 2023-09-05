@@ -59,7 +59,7 @@ def check_quantum_libsmall_status(_no_item, _no_params, parsed):
             state, state_readable = OPNEED_STATUS_MAP.get(dev_state, (3, "unknown[%s]" % dev_state))
         else:
             state, state_readable = RAS_STATUS_MAP.get(dev_state, (3, "unknown[%s]" % dev_state))
-        yield state, "%s: %s" % (dev_type, state_readable)
+        yield state, f"{dev_type}: {state_readable}"
 
 
 check_info["quantum_libsmall_status"] = LegacyCheckDefinition(

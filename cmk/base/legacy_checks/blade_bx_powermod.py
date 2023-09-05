@@ -31,7 +31,7 @@ def check_blade_bx_powermod(item, _no_param, info):
         if not index == item:
             continue
         state_readable, state = power_status[status]
-    return state, "%s Status is %s" % (product_name, state_readable)
+    return state, f"{product_name} Status is {state_readable}"
 
 
 check_info["blade_bx_powermod"] = LegacyCheckDefinition(

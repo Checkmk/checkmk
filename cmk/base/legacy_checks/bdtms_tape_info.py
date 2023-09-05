@@ -15,7 +15,7 @@ def inventory_bdtms_tape_info(info):
 
 def check_bdtms_tape_info(_no_item, _no_params, info):
     for name, value in zip(["Vendor", "Product ID", "Serial Number", "Software Revision"], info[0]):
-        yield 0, "%s: %s" % (name, value)
+        yield 0, f"{name}: {value}"
 
 
 check_info["bdtms_tape_info"] = LegacyCheckDefinition(

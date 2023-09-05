@@ -15,7 +15,7 @@ def inventory_ibm_storage_ts(info):
 
 def check_ibm_storage_ts(_no_item, _no_params, info):
     product, vendor, version = info[0][0]
-    return 0, "%s %s, Version %s" % (vendor, product, version)
+    return 0, f"{vendor} {product}, Version {version}"
 
 
 check_info["ibm_storage_ts"] = LegacyCheckDefinition(
@@ -101,13 +101,13 @@ def check_ibm_storage_ts_library(item, _no_params, info):
             fault_status = ibm_storage_ts_fault_nagios_map[severity]
             # I have the suspicion that these status are dependent in the device anyway
             # but who knows?
-            infotext = "Device %s, Status: %s, Drives: %s" % (
+            infotext = "Device {}, Status: {}, Drives: {}".format(
                 serial,
                 ibm_storage_ts_status_name_map[status],
                 count,
             )
             if fault != "0":
-                infotext += ", Fault: %s (%s)" % (descr, fault)
+                infotext += f", Fault: {descr} ({fault})"
             return worst_status(dev_status, fault_status), infotext
 
 

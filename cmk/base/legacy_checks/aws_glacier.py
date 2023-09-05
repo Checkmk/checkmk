@@ -61,7 +61,7 @@ def check_aws_glacier_archives(item, params, parsed):
 
     tag_infos = []
     for key, value in list(data.get("Tagging", {}).items()):
-        tag_infos.append("%s: %s" % (key, value))
+        tag_infos.append(f"{key}: {value}")
     if tag_infos:
         yield 0, "[Tags]: %s" % ", ".join(tag_infos)
 
@@ -113,7 +113,7 @@ def check_aws_glacier_summary(item, params, parsed):
     )
 
     if largest_vault:
-        yield 0, "Largest vault: %s (%s)" % (
+        yield 0, "Largest vault: {} ({})".format(
             largest_vault,
             get_bytes_human_readable(largest_vault_size),
         ), [("aws_glacier_largest_vault_size", largest_vault_size)]

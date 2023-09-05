@@ -60,7 +60,7 @@ def check_elphase(  # pylint: disable=too-many-branches
             state = device_state
         yield Result(
             state=State(state),
-            summary="Device status: %s(%s)" % (device_state_readable, device_state),
+            summary=f"Device status: {device_state_readable}({device_state})",
         )
 
     for quantity, title, render_func, bound, factor in [

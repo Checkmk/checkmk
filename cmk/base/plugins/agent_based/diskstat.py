@@ -252,7 +252,7 @@ def diskstat_extract_name_info(
                 major = int(line[0], 16)
                 minor = int(line[1], 16)
                 group, disk = line[2].split("/")[-2:]
-                name = "VxVM %s-%s" % (group, disk)
+                name = f"VxVM {group}-{disk}"
                 name_info[major, minor] = name
     return timestamp, info_plain, name_info
 

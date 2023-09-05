@@ -105,7 +105,7 @@ def check_aix_hacmp_services(item, _no_params, parsed):
             state = 0
         else:
             state = 2
-        yield state, "Subsystem: %s, Status: %s" % (subsytem_name, status)
+        yield state, f"Subsystem: {subsytem_name}, Status: {status}"
 
 
 def discover_aix_hacmp_services(section):

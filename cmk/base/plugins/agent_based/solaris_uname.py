@@ -28,7 +28,7 @@ def inventory_solaris_uname(section: Section) -> InventoryResult:
             "vendor": "Oracle",
             "type": section["System"],
             "version": section["Release"],
-            "name": "%s %s" % (section["System"], section["Release"]),
+            "name": "{} {}".format(section["System"], section["Release"]),
             "kernel_version": section["KernelID"],
             "hostname": section["Node"],
         },

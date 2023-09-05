@@ -157,7 +157,7 @@ def check_infoblox_services(item: str, section: Section) -> CheckResult:
     status, description = section[item]
     yield Result(
         state=STATE[status],
-        summary="Status: %s%s" % (status, description and " (%s)" % description),
+        summary="Status: {}{}".format(status, description and " (%s)" % description),
     )
 
 

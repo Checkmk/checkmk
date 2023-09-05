@@ -125,9 +125,7 @@ def get_aggregated_values(vserver):
     # Calculate counters
     for what in aggregation:
         for idx, entry in enumerate(vserver[what]):
-            rate = get_rate(
-                get_value_store(), "%s.%s" % (what, idx), now, entry, raise_overflow=True
-            )
+            rate = get_rate(get_value_store(), f"{what}.{idx}", now, entry, raise_overflow=True)
             aggregation[what] += rate
 
     # Calucate min/max/sum/mean values
@@ -171,7 +169,7 @@ def check_f5_bigip_vserver(item, params, parsed):
 
     enabled_state = int(data["enabled"] not in MAP_ENABLED)
     enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
-    yield enabled_state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled_txt)
+    yield enabled_state, "Virtual Server with IP {} is {}".format(data["ip_address"], enabled_txt)
 
     state_map = params.get("state", {})
     state, state_readable = MAP_SERVER_STATUS.get(
@@ -185,7 +183,7 @@ def check_f5_bigip_vserver(item, params, parsed):
     if data["status"] == "3" and detail.lower() == "the children pool member(s) are down":
         state = state_map.get("children_pool_members_down_if_not_available", 0)
 
-    yield state, "State %s, Detail: %s" % (state_readable, detail)
+    yield state, f"State {state_readable}, Detail: {detail}"
 
     aggregation = get_aggregated_values(data)
 
@@ -203,8 +201,8 @@ def check_f5_bigip_vserver(item, params, parsed):
         yield 0, "Connections rate: %.2f/sec" % aggregation["connections_rate"]
 
     for direction, unit, boundary, hr_function in iter_counter_params():
-        key = "if_%s_%s" % (direction, unit)
-        levels = params.get("%s%s" % (key, boundary))
+        key = f"if_{direction}_{unit}"
+        levels = params.get(f"{key}{boundary}")
         if levels is None or key not in aggregation:
             continue
         if boundary == "_lower" and isinstance(levels, tuple):

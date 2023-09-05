@@ -49,17 +49,17 @@ def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-bra
                 return 2, "Status: %s" % blade_bx_status[status], perfdata
 
             state = 0
-            infotext = "Speed at %s RPM, %.1f%% of max" % (rpm, speed_perc)
+            infotext = f"Speed at {rpm} RPM, {speed_perc:.1f}% of max"
             levels_text = ""
             if speed_perc < crit_perc_lower:
                 state = 2
-                levels_text = " (warn/crit below %.1f%%/%.1f%%)" % (
+                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
                     warn_perc_lower,
                     crit_perc_lower,
                 )
             elif speed_perc < warn_perc_lower:
                 state = 1
-                levels_text = " (warn/crit below %.1f%%/%.1f%%)" % (
+                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
                     warn_perc_lower,
                     crit_perc_lower,
                 )
@@ -67,10 +67,10 @@ def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-bra
             if warn_perc:
                 if speed_perc >= crit_perc:
                     state = 2
-                    levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
+                    levels_text = f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
                 elif speed_perc >= warn_perc:
                     state = 1
-                    levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
+                    levels_text = f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
 
             if state > 0:
                 infotext += levels_text

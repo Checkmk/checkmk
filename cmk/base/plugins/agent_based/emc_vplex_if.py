@@ -21,7 +21,9 @@ def parse_emc_vplex_if(
             interfaces.Attributes(
                 index=str(idx + 1),
                 descr=frontend_info[0],
-                alias="%s %s" % (directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]),
+                alias="{} {}".format(
+                    directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]
+                ),
                 type="",
                 oper_status="1",
             ),

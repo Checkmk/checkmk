@@ -37,7 +37,7 @@ def check_domino_info(_no_item, _no_params, info):
     if len(domain) > 0:
         yield 0, "Domain: %s" % domain
 
-    yield 0, "Name: %s, %s" % (name, release)
+    yield 0, f"Name: {name}, {release}"
 
 
 check_info["domino_info"] = LegacyCheckDefinition(

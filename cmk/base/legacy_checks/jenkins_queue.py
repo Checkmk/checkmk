@@ -99,18 +99,18 @@ def check_jenkins_queue(_no_item, params, parsed):
             if task_pending:
                 pending_tasks += 1
             pending_state = params["pending"]
-            long_output_str += ", Pending: %s%s" % (
+            long_output_str += ", Pending: {}{}".format(
                 MAP_QUEUE_STATES[task_pending],
                 state_markers[pending_state],
             )
 
-        long_output_str += ", In queue since: %s (%s)" % (
+        long_output_str += ", In queue since: {} ({})".format(
             get_age_human_readable(since),
             get_timestamp_human_readable(timestamp_in_queue),
         )
 
         if len_state:
-            long_output_str += " (warn/crit at %s/%s)%s" % (
+            long_output_str += " (warn/crit at {}/{}){}".format(
                 get_age_human_readable(levels[0]),
                 get_age_human_readable(levels[1]),
                 state_markers[len_state],

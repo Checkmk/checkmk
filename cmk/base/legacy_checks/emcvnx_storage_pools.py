@@ -46,7 +46,7 @@ def parse_emcvnx_storage_pools(string_table):
                 tier_name = None
 
             elif tier_name is not None:
-                parsed[pool_name].setdefault("%s_%s" % (tier_name, line[0]), line[1])
+                parsed[pool_name].setdefault(f"{tier_name}_{line[0]}", line[1])
 
             else:
                 parsed[pool_name].setdefault(line[0], line[1])
@@ -113,7 +113,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
             elif percent_full >= perc_full_warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_bytes_human_readable(perc_full_warn),
                     get_bytes_human_readable(perc_full_crit),
                 )
@@ -189,7 +189,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
         return
     for key in ("FAST Cache", "Relocation Status", "Relocation Rate"):
         if key in data:
-            yield 0, "%s: %s" % (key.capitalize(), data[key])
+            yield 0, f"{key.capitalize()}: {data[key]}"
 
     for direction in ("Up", "Down", "Within Tiers"):
         value_raw = data.get("Data to Move %s (GBs)" % direction)
@@ -243,13 +243,13 @@ check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
 def inventory_emcvnx_storage_pools_tieringtypes(parsed):
     for pool_name, data in parsed.items():
         for tier_name in data.get("tier_names", []):
-            yield "%s %s" % (pool_name, tier_name), {}
+            yield f"{pool_name} {tier_name}", {}
 
 
 def _get_item_data_and_tier(item, parsed):
     for pool_name, data in parsed.items():
         for tier_name in data.get("tier_names", []):
-            if item == "%s %s" % (pool_name, tier_name):
+            if item == f"{pool_name} {tier_name}":
                 return data, tier_name
     return None, None
 
@@ -304,7 +304,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
         )
 
     for direction in ("for Higher", "for Lower", "Within"):
-        value_raw = data.get("%s_Data Targeted %s Tier (GBs)" % (tier_name, direction))
+        value_raw = data.get(f"{tier_name}_Data Targeted {direction} Tier (GBs)")
         if value_raw is not None:
             value = float(value_raw) * 1024**3
             short_dir = direction.split()[-1].lower()

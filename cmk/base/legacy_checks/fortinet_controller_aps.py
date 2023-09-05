@@ -89,7 +89,7 @@ def check_fortinet_controller_aps(item, params, parsed):
         state = 3
     elif oper_state in ["disabled", "no license", "power down"]:
         state = 1
-    yield state, "[%s] Operational: %s" % (data["descr"], oper_state)
+    yield state, "[{}] Operational: {}".format(data["descr"], oper_state)
 
     avail_state = data["availability"]
     state = 0
@@ -101,7 +101,7 @@ def check_fortinet_controller_aps(item, params, parsed):
 
     client_count_24 = data["clients_count_24"]
     client_count_5 = data["clients_count_5"]
-    yield 0, "Connected clients (2,4 ghz/5 ghz): %s/%s" % (client_count_24, client_count_5), [
+    yield 0, f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}", [
         ("5ghz_clients", client_count_5),
         ("24ghz_clients", client_count_24),
     ]

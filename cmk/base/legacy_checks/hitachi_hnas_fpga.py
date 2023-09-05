@@ -33,7 +33,7 @@ def check_hitachi_hnas_fpga(item, params, info):
             perfdata = [("fpga_util", str(util) + "%", warn, crit, 0, 100)]
             return (
                 rc,
-                "PNode %s FPGA %s %s utilization is %s%%" % (clusternode, id_, name, util),
+                f"PNode {clusternode} FPGA {id_} {name} utilization is {util}%",
                 perfdata,
             )
 

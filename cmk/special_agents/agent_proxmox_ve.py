@@ -141,12 +141,12 @@ class BackupTask:
         """
         # this has been true all the time and is left here for documentation
         # assert all((int(elem["n"]) - 1 == i) for i, elem in enumerate(lines_with_numbers))
-        return (  #
-            line  #
-            for elem in lines_with_numbers  #
-            for line in (elem["t"],)  #
+        return (
+            line
+            for elem in lines_with_numbers
+            for line in (elem["t"],)
             if isinstance(line, str) and line.strip()
-        )
+        )  #  #  #  #
 
     def __str__(self) -> str:
         return "BackupTask({!r}, t={!r}, vms={!r})".format(
@@ -256,8 +256,7 @@ class BackupTask:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
                             linenr,
-                            "Captured start of rocessing VM %r while VM %r is still active"
-                            % (start_vmid, current_vmid),
+                            f"Captured start of rocessing VM {start_vmid!r} while VM {current_vmid!r} is still active",
                         )
                     current_vmid = start_vmid
                     current_dataset = {}
@@ -270,8 +269,7 @@ class BackupTask:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
                             linenr,
-                            "Found end of VM %r while another VM %r was active"
-                            % (stop_vmid, current_vmid),
+                            f"Found end of VM {stop_vmid!r} while another VM {current_vmid!r} was active",
                         )
                     current_dataset["total_duration"] = duration_from_string(duration_str)
 
@@ -279,8 +277,7 @@ class BackupTask:
                     if all(r - set(current_dataset.keys()) for r in required_keys):
                         raise BackupTask.LogParseWarning(
                             linenr,
-                            "End of VM %r while still information is missing (we have: %r)"
-                            % (current_vmid, set(current_dataset.keys())),
+                            f"End of VM {current_vmid!r} while still information is missing (we have: {set(current_dataset.keys())!r})",
                         )
                     result[current_vmid] = current_dataset
                     current_vmid = ""
@@ -293,8 +290,7 @@ class BackupTask:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
                             linenr,
-                            "Error for VM %r while another VM %r was active"
-                            % (error_vmid, current_vmid),
+                            f"Error for VM {error_vmid!r} while another VM {current_vmid!r} was active",
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
                     result[error_vmid] = {**current_dataset, **{"error": error_msg}}
@@ -447,9 +443,9 @@ def fetch_backup_data(
             BackupTask(task, backup_log, strict=args.debug, dump_logs=args.dump_logs)
             for node in nodes
             for task in node["tasks"]
-            if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date)  #
+            if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date)
             for _timestamp, backup_log in (fetch_backup_log(task, node["node"]),)
-        )
+        )  #
 
 
 def agent_proxmox_ve_main(args: Args) -> int:
@@ -513,13 +509,13 @@ def agent_proxmox_ve_main(args: Args) -> int:
         "scheduled_vmids": sorted(
             list(
                 {
-                    vmid  #
+                    vmid
                     for backup in data["cluster"]["backup"]
                     if "vmid" in backup and backup["enabled"] == "1"
                     for vmid in backup["vmid"].split(",")
                 }
             )
-        ),
+        ),  #
         # add data of actually logged VMs
         "logged_vmids": logged_backup_data,
     }
@@ -667,8 +663,9 @@ class ProxmoxVeSession:
 
             if response is None:
                 raise CannotRecover(
-                    "Couldn't authenticate %r @ %r"
-                    % (credentials.get("username", "no-username"), ticket_url)
+                    "Couldn't authenticate {!r} @ {!r}".format(
+                        credentials.get("username", "no-username"), ticket_url
+                    )
                 )
 
             self.pve_auth_cookie = response["ticket"]
@@ -805,10 +802,10 @@ class ProxmoxVeAPI:
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree))  #
+                    else next(iter(request_tree))
                     if len(request_tree) > 0
-                    else {}  #
-                )
+                    else {}
+                )  #  #
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:
                 """Check if there is exactly one root element with a variable name,
@@ -860,10 +857,10 @@ class ProxmoxVeAPI:
                     if variable is None:
                         assert isinstance(subtree, Mapping)
                         return (
-                            {key: rec_get_tree(key, subtree[key], next_path) for key in subtree}  #
+                            {key: rec_get_tree(key, subtree[key], next_path) for key in subtree}
                             if isinstance(requested_structure, Mapping)
                             else response
-                        )
+                        )  #
 
                     assert isinstance(requested_structure, Sequence)
                     return [

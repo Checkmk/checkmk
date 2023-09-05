@@ -36,7 +36,7 @@ def inventory_mongodb_collections(databases_dict):
     db_coll_list = []
     for db_name in databases_dict:
         db_coll_list += [
-            ("%s.%s" % (db_name, coll_name), {})
+            (f"{db_name}.{coll_name}", {})
             for coll_name in databases_dict.get(db_name).get("collstats", [])
         ]
     return db_coll_list
@@ -167,7 +167,7 @@ def _mongodb_collections_long_output(data):
     for index in _mongodb_collections_get_indexes_as_list(data):
         timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
         long_output.append(
-            "-- Index '%s' used %s times since %s" % (index[0], index[1], timestamp_for_humans)
+            f"-- Index '{index[0]}' used {index[1]} times since {timestamp_for_humans}"
         )
 
     return "\n" + "\n".join(long_output)

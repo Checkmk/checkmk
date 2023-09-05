@@ -218,8 +218,9 @@ class GUIViewRenderer(ABCViewRenderer):
             for info in sites.live().dead_sites().values():
                 if isinstance(info["site"], dict):
                     html.show_error(
-                        "<b>%s - %s</b><br>%s"
-                        % (info["site"]["alias"], _("Livestatus error"), info["exception"])
+                        "<b>{} - {}</b><br>{}".format(
+                            info["site"]["alias"], _("Livestatus error"), info["exception"]
+                        )
                     )
 
         missing_single_infos = self.view.missing_single_infos
@@ -426,9 +427,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
-    def _page_menu_dropdowns_ntop(  # type: ignore[no-untyped-def]
-        self, host_address
-    ) -> PageMenuDropdown:
+    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:  # type: ignore[no-untyped-def]
         return get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:

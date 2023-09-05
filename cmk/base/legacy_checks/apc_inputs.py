@@ -41,7 +41,7 @@ def check_apc_inputs(item, params, info):
             if params["state"] != state:
                 check_state = max(check_state, 1)
                 messages.append(
-                    "Port state Change from %s to %s" % (states[params["state"]], states[state])
+                    "Port state Change from {} to {}".format(states[params["state"]], states[state])
                 )
 
             return check_state, ", ".join(messages)

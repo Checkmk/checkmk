@@ -1079,8 +1079,7 @@ class LDAPUserConnector(UserConnector):
             if filt_attr == "cn":
                 result = self._ldap_search(
                     self.get_group_dn(),
-                    "(&%s(cn=%s))"
-                    % (self._ldap_filter("groups"), ldap.filter.escape_filter_chars(filter_val)),
+                    f"(&{self._ldap_filter('groups')}(cn={ldap.filter.escape_filter_chars(filter_val)}))",
                     ["dn", "cn"],
                     self._config["group_scope"],
                 )
@@ -1351,8 +1350,7 @@ class LDAPUserConnector(UserConnector):
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(
-                    '  SKIP SYNC "%s" (Only create user of "%s" connector on login)'
-                    % (user_id, user_connection_id)
+                    f'  SKIP SYNC "{user_id}" (Only create user of "{user_connection_id}" connector on login)'
                 )
                 continue
 
@@ -1376,8 +1374,7 @@ class LDAPUserConnector(UserConnector):
                         continue  # added suffix, still name conflict
                 else:
                     self._logger.info(
-                        '  SKIP SYNC "%s" (name conflict with user from "%s" connector)'
-                        % (user_id, user_connection_id)
+                        f'  SKIP SYNC "{user_id}" (name conflict with user from "{user_connection_id}" connector)'
                     )
                     continue  # name conflict, different connector
 

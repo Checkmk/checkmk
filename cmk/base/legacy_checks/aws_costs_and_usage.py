@@ -68,7 +68,7 @@ def check_aws_costs_and_usage_summary(item, params, parsed):
             costs,
             "aws_costs_%s" % key,
             params.get("levels_%s" % key, (None, None)),
-            infoname="(%s) Total %s %s" % (timeperiod, title, unit),
+            infoname=f"({timeperiod}) Total {title} {unit}",
         )
 
 
@@ -112,7 +112,7 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
             costs,
             "aws_costs_%s" % key,
             params.get("levels_%s" % key, (None, None)),
-            infoname="(%s) %s %s" % (timeperiod, title, unit),
+            infoname=f"({timeperiod}) {title} {unit}",
         )
 
 

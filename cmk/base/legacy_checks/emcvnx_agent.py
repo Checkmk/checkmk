@@ -29,7 +29,7 @@ def check_emcvnx_agent(item, _no_params, parsed):
             yield 2, line
 
     for key, value in output:
-        yield 0, "%s: %s" % (key, value)
+        yield 0, f"{key}: {value}"
 
 
 check_info["emcvnx_agent"] = LegacyCheckDefinition(

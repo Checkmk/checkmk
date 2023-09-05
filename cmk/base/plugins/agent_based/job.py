@@ -225,7 +225,7 @@ def _process_job_stats(
             % (
                 count,
                 " is" if count == 1 else "s are",
-                ", ".join((render.datetime(t) for t in start_times)),
+                ", ".join(render.datetime(t) for t in start_times),
             ),
         )
     else:

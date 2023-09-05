@@ -95,7 +95,7 @@ def fc_port_getitem(num_ports, index, portname):
     fmt = "%%0%dd" % len(str(num_ports))  # number of digits for index
     itemname = fmt % (index - 1)  # leading zeros
     if portname.strip() and fc_port_inventory_use_portname:
-        return "%s %s" % (itemname, portname.strip())
+        return f"{itemname} {portname.strip()}"
     return itemname
 
 
@@ -200,13 +200,13 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
-        output.append("%s: %s" % (what, render.iobandwidth(value)))
+        output.append(f"{what}: {render.iobandwidth(value)}")
         perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
             value = get_average(
-                value_store, "fc_port.%s.%s.avg" % (what, item), this_time, value, average
+                value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
             )
             output.append("Avg(%dmin): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
@@ -236,7 +236,7 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         perfdata.append((what, value))
         if average:
             value = get_average(
-                value_store, "fc_port.%s.%s.avg" % (what, item), this_time, value, average
+                value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
             )
             perfdata.append(("%s_avg" % what, value))
 
@@ -271,7 +271,7 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     ]:
         per_sec = get_rate(
             get_value_store(),
-            "fc_port.%s.%s" % (counter, index),
+            f"fc_port.{counter}.{index}",
             this_time,
             value,
             raise_overflow=True,
@@ -282,7 +282,7 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                value_store, "fc_port.%s.%s.avg" % (counter, item), this_time, per_sec, average
+                value_store, f"fc_port.{counter}.{item}.avg", this_time, per_sec, average
             )
             perfdata.append(("%s_avg" % counter, per_sec_avg))
 
@@ -291,12 +291,12 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             rate = per_sec / (ref + per_sec)  # fixed: true-division
         else:
             rate = 0
-        text = "%s: %.2f%%" % (descr, rate * 100.0)
+        text = f"{descr}: {rate * 100.0:.2f}%"
 
         # Honor averaging of error rate
         if average:
             rate = get_average(
-                value_store, "fc_port.%s.%s.avgrate" % (counter, item), this_time, rate, average
+                value_store, f"fc_port.{counter}.{item}.avgrate", this_time, rate, average
             )
             text += ", Avg: %.2f%%" % (rate * 100.0)
 

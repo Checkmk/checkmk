@@ -82,7 +82,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
     else:
         name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
 
-        yield 0, "Name: %s, Nodes: %s" % (name, parsed["nodes"])
+        yield 0, "Name: {}, Nodes: {}".format(name, parsed["nodes"])
 
         if "activity blocked" in parsed["quorum"]:
             yield 2, "Quorum: %s" % parsed["quorum"]
@@ -90,7 +90,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
         if int(parsed["expected votes"]) == int(parsed["total votes"]):
             yield 0, "No faults"
         else:
-            yield 2, "Expected votes: %s, Total votes: %s" % (
+            yield 2, "Expected votes: {}, Total votes: {}".format(
                 parsed["expected votes"],
                 parsed["total votes"],
             )

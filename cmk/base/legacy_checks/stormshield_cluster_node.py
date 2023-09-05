@@ -60,12 +60,12 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Member is %s" % online_mapping[online]
             if statusforced == "1":
-                yield 1, "HA-State: %s (%s)" % (
+                yield 1, "HA-State: {} ({})".format(
                     active_mapping[active],
                     forced_mapping[statusforced],
                 )
             else:
-                yield 0, "HA-State: %s (%s)" % (
+                yield 0, "HA-State: {} ({})".format(
                     active_mapping[active],
                     forced_mapping[statusforced],
                 )
@@ -76,7 +76,7 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Quality: %s" % quality
 
-            infotext = "Model: %s, Version: %s, Role: %s, Priority: %s, Serial: %s" % (
+            infotext = "Model: {}, Version: {}, Role: {}, Priority: {}, Serial: {}".format(
                 model,
                 version,
                 license_,

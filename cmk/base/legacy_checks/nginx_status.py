@@ -29,7 +29,7 @@ def parse_nginx_status(string_table):
         address, port = line[:2]
         if len(line) < 3:
             continue  # Skip unexpected lines
-        item = "%s:%s" % (address, port)
+        item = f"{address}:{port}"
 
         if item not in data:
             # new server block start

@@ -43,7 +43,7 @@ def check_poseidon_inputs(item, params, parsed):
     alarm_setup = {0: "inactive", 1: "activeOff", 2: "activeOn", 3: "unkown"}
     input_values = {0: "off", 1: "on", 3: "unkown"}
     alarm_states = {0: "normal", 1: "alarm", 3: "unkown"}
-    txt = "%s: AlarmSetup: %s" % (item, alarm_setup[data.get("input_alarm_setup", 3)])
+    txt = "{}: AlarmSetup: {}".format(item, alarm_setup[data.get("input_alarm_setup", 3)])
     yield 0, txt
 
     state = data.get("input_alarm_state", 3)

@@ -46,7 +46,7 @@ def check_fsc_sc2_psu(item, _no_params, info):
         if designation == item:
             yield psu_status.get(status, (3, "Status is unknown"))
             if nominal and load:
-                infotext = "Nominal load: %s W, Actual load: %s W" % (nominal, load)
+                infotext = f"Nominal load: {nominal} W, Actual load: {load} W"
                 perfdata = [("power", int(load))]
             else:
                 infotext = "Did not receive load data"

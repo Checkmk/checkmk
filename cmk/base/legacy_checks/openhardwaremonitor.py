@@ -147,7 +147,7 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
 
         return (
             _openhardwaremonitor_worst_status(status_lower, status_upper),
-            "%.1f%s" % (data.reading, data.unit),
+            f"{data.reading:.1f}{data.unit}",
             perfdata,
         )
     return None
@@ -296,7 +296,7 @@ def inventory_openhardwaremonitor_smart(parsed):
 def check_openhardwaremonitor_smart(item, params, parsed):
     for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
-            reading_name = "%s %s" % (item, reading["name"])
+            reading_name = "{} {}".format(item, reading["name"])
 
             if not reading_name in parsed[sensor_type]:
                 # what smart values ohm reports is device dependent
@@ -313,7 +313,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 
             yield (
                 status,
-                "%s %.1f%s" % (reading["name"], data.reading, data.unit),
+                "{} {:.1f}{}".format(reading["name"], data.reading, data.unit),
                 [(reading["key"], data.reading)],
             )
 

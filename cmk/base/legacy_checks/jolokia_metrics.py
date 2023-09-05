@@ -102,7 +102,7 @@ def inventory_jolokia_metrics_serv(info):
         for app, val in vals.get("apps", {}).items():
             for serv, servinfo in val.get("servlets", {}).items():
                 if needed_key in servinfo:
-                    inv.append(("%s %s %s" % (inst, app, serv), levels))
+                    inv.append((f"{inst} {app} {serv}", levels))
     return inv
 
 
@@ -382,7 +382,7 @@ def inventory_jolokia_metrics_cache(metrics, info):
     for inst, vals in [x for x in parsed.items() if x[1] is not None]:
         for cache, cache_vars in vals.get("CacheStatistics", {}).items():
             if metrics_set.intersection(cache_vars) == metrics_set:
-                yield "%s %s" % (inst, cache), {}
+                yield f"{inst} {cache}", {}
 
 
 def check_jolokia_metrics_cache(metrics, totals, item, params, info):

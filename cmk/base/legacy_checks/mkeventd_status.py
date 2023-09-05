@@ -103,7 +103,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         value = rates["rule_hit"] / rates["rule_trie"] * 100
         hit_rate_txt = "%.2f%%" % value
         yield 0, "", [("average_rule_hit_ratio", value)]
-    yield 0, "%s: %s" % ("Rule hit ratio", hit_rate_txt)
+    yield 0, "{}: {}".format("Rule hit ratio", hit_rate_txt)
 
     # Time columns
     time_columns = [
@@ -120,7 +120,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
             if name == "sync":
                 continue  # skip if not available
             txt = "-"
-        yield 0, "%s: %s" % (title, txt)
+        yield 0, f"{title}: {txt}"
 
 
 check_info["mkeventd_status"] = LegacyCheckDefinition(

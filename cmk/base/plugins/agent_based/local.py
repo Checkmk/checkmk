@@ -294,7 +294,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:
             state = 3
-            text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
+            text = f"{state_msg}{perf_msg}Output is: {text}"
 
         parsed_data[item] = LocalResult(
             cache_info=CacheInfo.from_raw(raw_cached, now),
@@ -401,7 +401,7 @@ def discover_local(section: LocalSection) -> DiscoveryResult:
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
     if (local_error := section.errors.get(item)) is not None:
         raise ValueError(
-            (f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}')
+            f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}'
         )
 
     local_result = section.data.get(item)

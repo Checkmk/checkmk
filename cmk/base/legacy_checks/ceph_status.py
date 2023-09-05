@@ -148,7 +148,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
             # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
             yield state, title
 
-    yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
+    yield 0, "OSDs: {}, Remapped PGs: {}".format(num_osds, data["num_remapped_pgs"])
 
     for ds, title, param_key in [
         ("num_in_osds", "OSDs out", "num_out_osds"),
@@ -157,7 +157,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
         state = 0
         value = num_osds - data[ds]
         value_perc = 100 * float(value) / num_osds
-        infotext = "%s: %s, %s" % (title, value, render.percent(value_perc))
+        infotext = f"{title}: {value}, {render.percent(value_perc)}"
         if params.get(param_key):
             warn, crit = params[param_key]
             if value_perc >= crit:
@@ -165,7 +165,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
             elif value_perc >= warn:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     render.percent(warn),
                     render.percent(crit),
                 )
@@ -244,10 +244,10 @@ def check_ceph_status_pgs(_no_item, params, parsed):
         for status in pgs_by_state["state_name"].split("+"):
             state, state_readable = map_pg_states.get(status, (3, "UNKNOWN[%s]" % status))
             states.append(state)
-            statetexts.append("%s%s" % (state_readable, state_markers[state]))
-        infotexts.append("Status '%s': %s" % ("+".join(statetexts), pgs_by_state["count"]))
+            statetexts.append(f"{state_readable}{state_markers[state]}")
+        infotexts.append("Status '{}': {}".format("+".join(statetexts), pgs_by_state["count"]))
 
-    return max(states), "%s, %s" % (pgs_info, ", ".join(infotexts))
+    return max(states), "{}, {}".format(pgs_info, ", ".join(infotexts))
 
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(

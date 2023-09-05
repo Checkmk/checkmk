@@ -66,7 +66,7 @@ def parse_docsis_channels_upstream(string_table):
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():
         unique_name = (
-            cid if len(freq_info) == len({x[1] for x in freq_info}) else ("%s.%s" % (endoid, cid))
+            cid if len(freq_info) == len({x[1] for x in freq_info}) else (f"{endoid}.{cid}")
         )
 
         data = []
@@ -104,7 +104,7 @@ def check_docsis_channels_upstream(item, params, parsed):
             state = 1
 
         if state:
-            infotext += " (warn/crit below %.1f/%.1f dB)" % (warn, crit)
+            infotext += f" (warn/crit below {warn:.1f}/{crit:.1f} dB)"
 
         yield state, infotext, [("signal_noise", noise_db, warn, crit)]
 
@@ -154,7 +154,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                 ratio = rates[what] / total_rate  # fixed: true-division
                 perc = 100.0 * ratio
                 warn, crit = params[what]
-                infotext = "%s %s" % (render.percent(perc), title)
+                infotext = f"{render.percent(perc)} {title}"
 
                 if perc >= crit:
                     state = 2
@@ -162,7 +162,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                     state = 1
 
                 if state:
-                    infotext += " (warn/crit at %.1f/%.1f%%)" % (warn, crit)
+                    infotext += f" (warn/crit at {warn:.1f}/{crit:.1f}%)"
 
                 yield state, infotext, [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)]
 

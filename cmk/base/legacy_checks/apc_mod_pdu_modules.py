@@ -25,7 +25,7 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
             status = saveint(status)
             # As per the device's MIB, the values are measured in tenths of KW
             current_power = savefloat(current_power) / 10
-            message = "Status %s, current: %.2fkw " % (apc_states.get(status, 6), current_power)
+            message = f"Status {apc_states.get(status, 6)}, current: {current_power:.2f}kw "
 
             perf = [("current_power", current_power)]
             if status == 2:

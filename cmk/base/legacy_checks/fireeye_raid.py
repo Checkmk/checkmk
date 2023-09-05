@@ -50,7 +50,7 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
     for text, (state, state_readable) in check_fireeye_states(
         [(status, "Status"), (health, "Health")]
     ).items():
-        yield state, "%s: %s" % (text, state_readable)
+        yield state, f"{text}: {state_readable}"
 
 
 check_info["fireeye_raid"] = LegacyCheckDefinition(
@@ -88,7 +88,7 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
             for text, (state, state_readable) in check_fireeye_states(
                 [(diskstatus, "Disk status"), (diskhealth, "Health")]
             ).items():
-                yield state, "%s: %s" % (text, state_readable)
+                yield state, f"{text}: {state_readable}"
 
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(

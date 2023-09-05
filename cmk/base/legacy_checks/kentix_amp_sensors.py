@@ -150,7 +150,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
         infotext = "%.1f%%" % sensor_smoke
 
         if status > 0:
-            infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+            infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
         perfdata = [("smoke_perc", sensor_smoke, warn, crit, 0, 100)]
 

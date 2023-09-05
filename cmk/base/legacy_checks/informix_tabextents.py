@@ -44,8 +44,9 @@ def check_informix_tabextents(item, params, parsed):
             if extents >= max_extents:
                 max_extents = extents
             long_output.append(
-                "[%s/%s] Extents: %s, Rows: %s"
-                % (entry["db"], entry["tab"], entry["extents"], entry["nrows"])
+                "[{}/{}] Extents: {}, Rows: {}".format(
+                    entry["db"], entry["tab"], entry["extents"], entry["nrows"]
+                )
             )
 
         warn, crit = params["levels"]
@@ -56,8 +57,12 @@ def check_informix_tabextents(item, params, parsed):
         elif max_extents >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        return state, "%s\n%s" % (infotext, "\n".join(long_output)), [("max_extents", max_extents)]
+            infotext += f" (warn/crit at {warn}/{crit})"
+        return (
+            state,
+            "{}\n{}".format(infotext, "\n".join(long_output)),
+            [("max_extents", max_extents)],
+        )
     return None
 
 

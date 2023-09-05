@@ -60,7 +60,7 @@ def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     regexp_filepath = f"{os.path.dirname(__file__)}/regexp.yaml"
     if not os.path.exists(regexp_filepath):
         return
-    with open(regexp_filepath, mode="r", encoding="utf-8") as regexp_file:
+    with open(regexp_filepath, encoding="utf-8") as regexp_file:
         all_patterns = yaml.safe_load(regexp_file)
     # global regexps
     patterns = all_patterns.get("*", {})
@@ -130,7 +130,7 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
         for dump_file_name in [_ for _ in os.listdir(DUMP_DIR) if not _.startswith(".")]:
             try:
                 dump_file_path = f"{DUMP_DIR}/{dump_file_name}"
-                with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
+                with open(dump_file_path, encoding="utf-8") as dump_file:
                     if dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
                     else:
@@ -156,7 +156,7 @@ def get_host_names(site: Optional[Site] = None) -> list[str]:
 def read_disk_dump(host_name: str) -> str:
     """Return the content of an agent dump from the dumps folder."""
     dump_file_path = f"{DUMP_DIR}/{host_name}"
-    with open(dump_file_path, mode="r", encoding="utf-8") as dump_file:
+    with open(dump_file_path, encoding="utf-8") as dump_file:
         return dump_file.read()
 
 
@@ -262,7 +262,6 @@ def process_check_output(
     if os.path.exists(f"{RESPONSE_DIR}/{host_name}.json"):
         with open(
             f"{RESPONSE_DIR}/{host_name}.json",
-            mode="r",
             encoding="utf-8",
         ) as json_file:
             check_canons = json.load(json_file)

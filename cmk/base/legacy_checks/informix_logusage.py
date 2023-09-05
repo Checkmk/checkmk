@@ -52,7 +52,7 @@ def check_informix_logusage(item, params, parsed):
             size += int(entry["size"]) * pagesize
             used += int(entry["used"]) * pagesize
 
-        infotext = "Files: %s, Size: %s, Used: %s" % (
+        infotext = "Files: {}, Size: {}, Used: {}".format(
             logfiles,
             get_bytes_human_readable(size),
             get_bytes_human_readable(used),
@@ -65,7 +65,7 @@ def check_informix_logusage(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_bytes_human_readable(warn),
                     get_bytes_human_readable(crit),
                 )
@@ -86,7 +86,7 @@ def check_informix_logusage(item, params, parsed):
             elif used_perc >= warn_perc:
                 state = 1
             if state:
-                infotext += " (warn/crit at %.2f%%/%.2f%%)" % (warn_perc, crit_perc)
+                infotext += f" (warn/crit at {warn_perc:.2f}%/{crit_perc:.2f}%)"
 
             yield state, infotext
 

@@ -147,7 +147,7 @@ def check_sophos(item: str, _no_params: object, info: list[list[str]]) -> tuple[
         if item_name == item:
             state, state_readable = sophos_map_state[item_state]
             extra_info = item_info.get(item_state, "")
-            infotext = "Status: %s%s" % (state_readable, extra_info)
+            infotext = f"Status: {state_readable}{extra_info}"
             return state, infotext
     return None
 

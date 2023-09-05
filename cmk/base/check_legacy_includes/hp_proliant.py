@@ -105,8 +105,9 @@ def check_hp_proliant_da_cntlr(item, params, info):
                 output.append(f"{label}: {map_[val][1]}{state_txt}")
 
             output.append(
-                "(Role: %s, Model: %s, Slot: %s, Serial: %s)"
-                % (hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial)
+                "(Role: {}, Model: {}, Slot: {}, Serial: {})".format(
+                    hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial
+                )
             )
 
             return (sum_state, ", ".join(output))
@@ -213,8 +214,7 @@ def check_hp_proliant_fans(item, params, info):
 
             return (
                 status,
-                'FAN Sensor %s "%s", Speed is %s, State is %s%s'
-                % (index, label, hp_proliant_speed_map[int(speed)], snmp_status, detailOutput),
+                f'FAN Sensor {index} "{label}", Speed is {hp_proliant_speed_map[int(speed)]}, State is {snmp_status}{detailOutput}',
                 perfdata,
             )
     return (3, "item not found in snmp data")

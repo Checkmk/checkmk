@@ -194,7 +194,7 @@ def inventory_hp_msa_volume_df(parsed):
 def check_hp_msa_volume_df(item, params, parsed):
     parsed = _get_item_data(item, parsed)
     if item in parsed:
-        yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
+        yield 0, "{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
         size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
         alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2

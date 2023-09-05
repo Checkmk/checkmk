@@ -46,7 +46,7 @@ def check_enterasys_powersupply(item, params, info):
 
             redun_mapped = redundancy_types.get(redun, "unknown[%s]" % redun)
             if redun and int(redun) in params["redundancy_ok_states"]:
-                return 0, "Status: working and %s (%s)" % (
+                return 0, "Status: working and {} ({})".format(
                     redun_mapped,
                     supply_types.get(typ, "unknown[%s]" % typ),
                 )

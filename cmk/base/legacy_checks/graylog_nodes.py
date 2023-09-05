@@ -77,9 +77,9 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
                 if value is None:
                     continue
 
-                state = params.get("%s%s" % (levels, str(value).lower()), 1)
+                state = params.get(f"{levels}{str(value).lower()}", 1)
 
-                yield state, "%s: %s" % (
+                yield state, "{}: {}".format(
                     infotext,
                     str(value).replace("True", "yes").replace("False", "no"),
                 )

@@ -1185,8 +1185,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
             tag_key, tag_value = entry.split(":", 1)
             filter_lines.append(
-                "Filter: tags = %s %s"
-                % (livestatus.lqencode(tag_key), livestatus.lqencode(tag_value))
+                f"Filter: tags = {livestatus.lqencode(tag_key)} {livestatus.lqencode(tag_value)}"
             )
 
         if len(filter_lines) > 1:

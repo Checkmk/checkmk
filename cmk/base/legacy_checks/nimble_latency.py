@@ -80,7 +80,7 @@ def _check_nimble_latency(item, params, data, ty):
     running_total_percent = 0
     results = []
     for key, (title, value) in ty_data["ranges"].items():
-        metric_name = "nimble_%s_latency_%s" % (ty, key.replace(".", ""))
+        metric_name = "nimble_{}_latency_{}".format(ty, key.replace(".", ""))
         percent_value = value / total_value * 100
 
         if float(key) >= range_reference:

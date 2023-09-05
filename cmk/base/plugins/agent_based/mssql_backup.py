@@ -70,7 +70,7 @@ def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
     try:
         if b_time is None:
             return int(b_date)
-        return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
+        return time.mktime(time.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S"))
     except ValueError:
         return None
 
@@ -99,7 +99,7 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
 
         timestamp = _parse_date_and_time(b_date, b_time)
 
-        item = "%s %s" % (inst, tablespace)
+        item = f"{inst} {tablespace}"
         backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type) if b_type else None, b_state or "")
         parsed.setdefault(item, []).append(backup)
 
@@ -198,7 +198,7 @@ register.check_plugin(
 def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     if backup.type is None:
         return "%s UNKNOWN" % db_name
-    return "%s %s" % (db_name, backup.type.title())
+    return f"{db_name} {backup.type.title()}"
 
 
 def discover_mssql_backup_per_type(params: Mapping[str, Any], section: Section) -> DiscoveryResult:

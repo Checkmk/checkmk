@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEW
 
 def check_mcafee_emailgateway_av_mcafee(item, params, info):
     eng_version, dat_version, extra_dat_version = info[0]
-    return 0, "Engine version: %s, DAT version: %s (%s)" % (
+    return 0, "Engine version: {}, DAT version: {} ({})".format(
         eng_version,
         dat_version,
         extra_dat_version,

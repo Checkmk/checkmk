@@ -33,7 +33,7 @@ def check_heartbeat_nodes(item, params, info):
                 if state != "up":
                     status = 2
                     state_txt = " (!!)"
-                linkOutput += "%s: %s%s, " % (link, state, state_txt)
+                linkOutput += f"{link}: {state}{state_txt}, "
             linkOutput = linkOutput.rstrip(", ")
 
             if nodeStatus in ["active", "up", "ping"] and status <= 0:
@@ -42,11 +42,11 @@ def check_heartbeat_nodes(item, params, info):
                 status = 2
 
             if nodeStatus not in ["active", "up", "ping", "dead"]:
-                return (3, "Node %s has an unhandled state: %s" % (line[0], nodeStatus))
+                return (3, f"Node {line[0]} has an unhandled state: {nodeStatus}")
 
             return (
                 status,
-                'Node %s is in state "%s". Links: %s' % (line[0], nodeStatus, linkOutput),
+                f'Node {line[0]} is in state "{nodeStatus}". Links: {linkOutput}',
             )
 
     return (3, "Node is not present anymore")

@@ -299,8 +299,7 @@ def _show_graph_html_content(
 
     html.open_div(
         class_=["graph"] + (["preview"] if graph_render_options["preview"] else []),
-        style="font-size: %.1fpt;%s"
-        % (graph_render_options["font_size"], _graph_padding_styles(graph_render_options)),
+        style=f"font-size: {graph_render_options['font_size']:.1f}pt;{_graph_padding_styles(graph_render_options)}",
     )
 
     if graph_render_options["show_controls"]:

@@ -25,7 +25,7 @@ def check_apc_ats_status(_no_item, source, info):
     if source != selected_source:
         state = 2
         messages.append(
-            "Power source Changed from %s to %s(!!)" % (sources[source], sources[selected_source])
+            f"Power source Changed from {sources[source]} to {sources[selected_source]}(!!)"
         )
     else:
         messages.append("Power source %s selected" % sources[source])

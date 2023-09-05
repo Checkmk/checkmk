@@ -65,7 +65,7 @@ def check_postgres_sessions(item, params, parsed):
         ("total", total),
         ("running", running),
     ]:
-        infotext = "%s: %s" % (key.title(), val)
+        infotext = f"{key.title()}: {val}"
         warn, crit = params.get(key, (None, None))
         state = 0
         if crit is not None and val >= crit:
@@ -73,7 +73,7 @@ def check_postgres_sessions(item, params, parsed):
         elif warn is not None and val >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
         yield state, infotext, [(key, val, warn, crit)]
 
 

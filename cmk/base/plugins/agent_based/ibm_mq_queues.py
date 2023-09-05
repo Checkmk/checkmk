@@ -39,12 +39,14 @@ def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
                 "maxdepth": attrs["MAXDEPTH"],
                 "maxmsgl": attrs.get("MAXMSGL", "n/a"),
                 "created": (
-                    "%s %s"
-                    % (attrs.get("CRDATE", "n/a"), attrs.get("CRTIME", "").replace(".", ":"))
+                    "{} {}".format(
+                        attrs.get("CRDATE", "n/a"), attrs.get("CRTIME", "").replace(".", ":")
+                    )
                 ).strip(),
                 "altered": (
-                    "%s %s"
-                    % (attrs.get("ALTDATE", "n/a"), attrs.get("ALTTIME", "").replace(".", ":"))
+                    "{} {}".format(
+                        attrs.get("ALTDATE", "n/a"), attrs.get("ALTTIME", "").replace(".", ":")
+                    )
                 ).strip(),
                 "monq": attrs.get("MONQ", "n/a"),
             },

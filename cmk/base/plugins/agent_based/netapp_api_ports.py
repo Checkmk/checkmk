@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.utils import netapp_api
 
 def port_name(name: str, values: Mapping[str, str]) -> str:
     try:
-        return "%s port %s" % (values["port-type"].capitalize(), name)
+        return "{} port {}".format(values["port-type"].capitalize(), name)
     except KeyError:
         return name
 

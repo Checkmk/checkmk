@@ -30,7 +30,7 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
     def record_group(qmname, attributes, parsed):
         obj = attributes.get(group_by_object)
         if obj is not None and not obj.startswith(("SYSTEM", "AMQ.MQEXPLORER")):
-            obj = "%s:%s" % (qmname, obj)
+            obj = f"{qmname}:{obj}"
             parsed.setdefault(obj, {})
             parsed[obj].update(attributes)
 

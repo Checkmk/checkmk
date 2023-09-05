@@ -40,9 +40,9 @@ def _parse_status_txt(status_txt: str) -> Status:
 def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
     section: ipmi_utils.Section = {}
     for line in string_table:
-        _sid, sensorname, *reading_levels_and_more, status_txt = [
+        _sid, sensorname, *reading_levels_and_more, status_txt = (
             x.strip(" \n\t\x00") for x in line
-        ]
+        )
         status_from_text = _parse_status_txt(status_txt)
         sensorname = sensorname.replace(" ", "_")
 

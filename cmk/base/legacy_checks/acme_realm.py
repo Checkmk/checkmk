@@ -27,8 +27,7 @@ def check_acme_realm(item, params, info):
             dev_state, dev_state_readable = map_states[state]
             return (
                 dev_state,
-                "Status: %s, Inbound: %s/%s, Outbound: %s/%s"
-                % (dev_state_readable, inbound, total_inbound, outbound, total_outbound),
+                f"Status: {dev_state_readable}, Inbound: {inbound}/{total_inbound}, Outbound: {outbound}/{total_outbound}",
                 [
                     ("inbound", int(inbound), None, None, 0, int(total_inbound)),
                     ("outbound", int(outbound), None, None, 0, int(total_outbound)),

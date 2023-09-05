@@ -56,7 +56,7 @@ def check_sap_hana_events(item: str, section: sap_hana.ParsedSection) -> CheckRe
         state = State.OK
         if event_count > 0:
             state = event_state
-        yield Result(state=state, summary="%s: %s" % (event_state_readable, event_count))
+        yield Result(state=state, summary=f"{event_state_readable}: {event_count}")
         yield Metric("num_%s" % event_key, event_count)
 
 

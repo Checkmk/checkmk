@@ -27,7 +27,7 @@ def check_mongodb_counters(item, _no_params, parsed):
     now = time.time()
     for what, value in data.items():
         what_rate = get_rate(get_value_store(), what, now, value, raise_overflow=True)
-        yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
+        yield 0, f"{what.title()}: {what_rate:.2f}/s", [("%s_ops" % what, what_rate)]
 
 
 check_info["mongodb_counters"] = LegacyCheckDefinition(

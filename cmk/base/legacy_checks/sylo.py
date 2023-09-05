@@ -79,7 +79,7 @@ def check_sylo(item, params, info):
         value_store = get_value_store()
         in_rate = get_rate(value_store, "sylo.in", mtime, inOffset, raise_overflow=True)
         out_rate = get_rate(value_store, "sylo.out", mtime, outOffset, raise_overflow=True)
-        msg += "Silo is filled %.1fMB (%.1f%%), in %.1f B/s, out %.1f B/s" % (
+        msg += "Silo is filled {:.1f}MB ({:.1f}%), in {:.1f} B/s, out {:.1f} B/s".format(
             bytesUsed / (1024 * 1024.0),
             percUsed,
             in_rate,

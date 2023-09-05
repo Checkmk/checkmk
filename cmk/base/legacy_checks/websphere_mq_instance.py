@@ -121,7 +121,7 @@ def check_websphere_mq_instance(item, params, parsed):
         data = parsed["instances"][item]
         mode = data["MODE"]
         qm_name = data["QMNAME"]
-        return get_websphere_mq_status("instance", mode, params), "Status: %s, Manager: %s" % (
+        return get_websphere_mq_status("instance", mode, params), "Status: {}, Manager: {}".format(
             mode.lower(),
             qm_name,
         )
@@ -198,7 +198,7 @@ def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-man
             (installation_version, "Version"),
         ]:
             if what:
-                yield 0, "%s: %s" % (title, what)
+                yield 0, f"{title}: {what}"
 
 
 check_info["websphere_mq_instance.manager"] = LegacyCheckDefinition(

@@ -136,7 +136,7 @@ def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branc
                 else:
                     continue
             if state > 0:
-                msgtxt = msgtxt + "Sensor %s %s" % (sensor, val) + state * "!" + " "
+                msgtxt = msgtxt + f"Sensor {sensor} {val}" + state * "!" + " "
 
     if state == 0:
         msgtxt = "All sensors OK"

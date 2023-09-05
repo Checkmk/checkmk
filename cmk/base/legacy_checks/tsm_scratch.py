@@ -27,7 +27,7 @@ def parse_tsm_scratch(string_table):
             continue
 
         if inst != "default":
-            item = "%s / %s" % (inst, library)
+            item = f"{inst} / {library}"
         else:
             item = library
 

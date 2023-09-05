@@ -38,7 +38,7 @@ def inv_lnx_parse_os(line: _Line) -> _KVPairs:
     for entry in line:
         if entry.count("=") == 0:
             continue
-        k, v = [x.replace('"', "") for x in entry.split("=", 1)]
+        k, v = (x.replace('"', "") for x in entry.split("=", 1))
         if k == "VERSION_ID":
             yield "version", v
         elif k == "PRETTY_NAME":
@@ -67,11 +67,11 @@ def inv_lnx_parse_suse(line: _Line) -> _KVPairs:
     else:
         patchlevel = "0"
 
-    version = "%s.%s" % (major, patchlevel)
+    version = f"{major}.{patchlevel}"
 
     yield "vendor", "SuSE"
     yield "version", version
-    yield "name", "%s.%s" % (line[0].split("(")[0].strip(), patchlevel)
+    yield "name", "{}.{}".format(line[0].split("(")[0].strip(), patchlevel)
 
     if (code_name := _SUSE_CODE_NAMES.get(version)) is not None:
         yield "code_name", code_name

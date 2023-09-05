@@ -35,7 +35,7 @@ def check_ibm_rsa_health(_no_item, _no_params, info):
         text = info[num_alerts * 2 + 1 + i][0]
         if infotext != "":
             infotext += ", "
-        infotext += "%s(%s)" % (text, state)
+        infotext += f"{text}({state})"
 
     state = info[0][0]
     if state == "255":

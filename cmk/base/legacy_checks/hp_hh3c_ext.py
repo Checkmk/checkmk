@@ -32,7 +32,7 @@ def parse_hp_hh3c_ext(string_table):
         mem_used = 0.01 * int(mem_usage) * mem_total
 
         parsed.setdefault(
-            "%s %s" % (name, index),
+            f"{name} {index}",
             {
                 "temp": int(temperature),
                 "cpu": int(cpu),
@@ -141,7 +141,7 @@ def check_hp_hh3c_ext_states(item, params, parsed):
         params_state_type = params.get(state_type, {})
         if params_key in params_state_type:
             state = params_state_type[params_key]
-        yield state, "%s: %s" % (title, state_readable)
+        yield state, f"{title}: {state_readable}"
 
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(

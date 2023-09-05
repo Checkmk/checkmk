@@ -163,7 +163,7 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
     # Check levels
     state = memory.compute_state(comp_mb, warn_mb, crit_mb)
     if state != State.OK and levels_text:
-        infotext = "%s (%s)" % (infotext, levels_text)
+        infotext = f"{infotext} ({levels_text})"
 
     yield Result(state=state, summary=infotext)
     yield from metrics
@@ -192,7 +192,7 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
             ("Shmem", "Shared", "mem_lnx_shmem"),
         ):
             value = MemBytes(meminfo.get(key, 0))
-            yield Result(state=State.OK, summary="%s: %s" % (label, value.render()))
+            yield Result(state=State.OK, summary=f"{label}: {value.render()}")
             yield Metric(metric, value.bytes)
 
 

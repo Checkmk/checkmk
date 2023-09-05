@@ -122,7 +122,7 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
         ("erlang_version"),
     ]:
         info_value = info_data.get(info_key)
-        yield 0, "%s: %s" % (info_key.replace("_", " ").capitalize(), info_value)
+        yield 0, "{}: {}".format(info_key.replace("_", " ").capitalize(), info_value)
 
 
 check_info["rabbitmq_cluster"] = LegacyCheckDefinition(

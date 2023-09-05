@@ -30,7 +30,7 @@ def check_fireeye_temp(item, params, info):
         [(status, "Status"), (health, "Health")]
     ).items():
         dev_status = max(dev_status, state)
-        dev_status_name += "%s: %s" % (text, state_readable)
+        dev_status_name += f"{text}: {state_readable}"
 
     yield check_temperature(
         float(reading_str),

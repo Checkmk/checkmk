@@ -74,7 +74,7 @@ def check_dell_eql_storage(item, _no_params, info):
                 ("fs_size", total_bytes),
                 ("fs_free", total_bytes - used_bytes),
             ]
-            yield 0, "Used: %s/%s (Snapshots: %s, Replication: %s)" % (
+            yield 0, "Used: {}/{} (Snapshots: {}, Replication: {})".format(
                 get_bytes_human_readable(used_bytes),
                 get_bytes_human_readable(total_bytes),
                 get_bytes_human_readable(snap_bytes),

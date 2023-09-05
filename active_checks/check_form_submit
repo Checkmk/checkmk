@@ -272,8 +272,7 @@ def parse_form(content: str, form_name: str):  # type: ignore[no-untyped-def]
     elif num_forms == 1 and form_name is not None and form_name in forms:
         new_state(
             2,
-            'Found one form with name "%s" but expected name "%s"'
-            % (list(forms.keys())[0], form_name),
+            f'Found one form with name "{list(forms.keys())[0]}" but expected name "{form_name}"',
         )
 
     elif num_forms == 1:
@@ -290,8 +289,9 @@ def parse_form(content: str, form_name: str):  # type: ignore[no-untyped-def]
         if form is None:
             new_state(
                 2,
-                'Found no form with name "%s" (Available: %s)'
-                % (form_name, ", ".join(forms.keys())),
+                'Found no form with name "{}" (Available: {})'.format(
+                    form_name, ", ".join(forms.keys())
+                ),
             )
 
     return form

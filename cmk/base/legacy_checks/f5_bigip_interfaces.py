@@ -39,8 +39,9 @@ def check_f5_bigip_interfaces(item, params, info):
         if int(ifstate) != 0:
             return (
                 2,
-                "State of %s is %s"
-                % (f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port),
+                "State of {} is {}".format(
+                    f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port
+                ),
             )
 
         this_time = int(time.time())
@@ -65,7 +66,7 @@ def check_f5_bigip_interfaces(item, params, info):
             ("bytes_in", in_per_sec),
             ("bytes_out", out_per_sec),
         ]
-        return (0, "in bytes: %s, out bytes: %s" % (inbytes_h, outbytes_h), perf)
+        return (0, f"in bytes: {inbytes_h}, out bytes: {outbytes_h}", perf)
     return 3, "Interface not found in SNMP data"
 
 

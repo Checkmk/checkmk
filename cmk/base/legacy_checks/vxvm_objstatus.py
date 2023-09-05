@@ -44,11 +44,11 @@ def check_vxvm_objstatus(item, params, info):
             error = False
             if admin_state not in {"CLEAN", "ACTIVE"}:
                 state = 2
-                text.append("%s: Admin state is %s(!!)" % (volume, admin_state))
+                text.append(f"{volume}: Admin state is {admin_state}(!!)")
                 error = True
             if kernel_state not in {"ENABLED", "DISABLED"}:
                 state = 2
-                text.append("%s: Kernel state is %s(!!)" % (volume, kernel_state))
+                text.append(f"{volume}: Kernel state is {kernel_state}(!!)")
                 error = True
             if error is False:
                 text = ["%s: OK" % volume]

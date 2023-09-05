@@ -96,7 +96,7 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written() -> None
         ),
         "node",
     )
-    assert set(s.section_name for s in sections) == api_nodes_api_sections()
+    assert {s.section_name for s in sections} == api_nodes_api_sections()
 
 
 def test_conditions_returns_all_native_conditions() -> None:

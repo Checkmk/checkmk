@@ -33,7 +33,7 @@ def check_lparstat(_no_item, _no_params, section: Section):
 
     utilization = section.get("util", {})
     for name, (value, uom) in utilization.items():
-        yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
+        yield 0, f"{name.title()}: {value}{uom}", [(name, value)]
 
 
 check_info["lparstat_aix"] = LegacyCheckDefinition(
@@ -67,8 +67,7 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 
     values = CPUInfo("", user, 0, system, cpu.get("idle", 0), wait)
 
-    for util_result in check_cpu_util_unix(values, params, values_counter=False):
-        yield util_result
+    yield from check_cpu_util_unix(values, params, values_counter=False)
 
     try:
         cpu_entitlement = float(section["system_config"]["ent"])

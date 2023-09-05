@@ -219,7 +219,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             "3": " (calibration in progress)",
         }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
 
-        yield state, "Output status: %s%s%s" % (
+        yield state, "Output status: {}{}{}".format(
             state_readable,
             calib_text,
             " (self-test running)" if self_test_in_progress else "",
@@ -237,10 +237,10 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
         else:
             if battery_capacity < crit_cap:
                 state = 2
-                levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
+                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
             elif battery_capacity < warn_cap:
                 state = 1
-                levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
+                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
             ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)
@@ -270,12 +270,12 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             perfdata = [("runtime", battery_time_remain / 60.0)]
 
         if state:
-            levelstxt = " (warn/crit below %s/%s)" % (
+            levelstxt = " (warn/crit below {}/{})".format(
                 get_age_human_readable(battery_time_warn),
                 get_age_human_readable(battery_time_crit),
             )
 
-        yield state, "Time remaining: %s%s" % (battery_time_remain_readable, levelstxt), perfdata
+        yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
 
 
 check_info["apc_symmetra"] = LegacyCheckDefinition(

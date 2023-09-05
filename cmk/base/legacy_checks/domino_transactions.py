@@ -22,7 +22,7 @@ def check_domino_transactions(_no_item, params, info):
         reading = int(info[0][0])
         warn, crit = params
         infotext = "Transactions per minute (avg): %s" % reading
-        levels = " (Warn/Crit at %s/%s)" % (warn, crit)
+        levels = f" (Warn/Crit at {warn}/{crit})"
         perfdata = [("transactions", reading, warn, crit)]
         state = 0
         if reading >= crit:

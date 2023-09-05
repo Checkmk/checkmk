@@ -575,8 +575,9 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     FixedValue(
                         value=customer,
                         title=_("Customer"),
-                        totext="%s (%s)"
-                        % (managed.get_customer_name_by_id(customer), _("Set by rule pack")),
+                        totext="{} ({})".format(
+                            managed.get_customer_name_by_id(customer), _("Set by rule pack")
+                        ),
                     ),
                 ),
             ]
@@ -2433,8 +2434,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text(
-                            "%s (%s)"
-                            % (managed.get_customer_name(self._rule_pack), _("Set by rule pack"))
+                            "{} ({})".format(
+                                managed.get_customer_name(self._rule_pack), _("Set by rule pack")
+                            )
                         )
                     else:
                         html.write_text(managed.get_customer_name(rule))

@@ -41,7 +41,7 @@ def check_dell_om_vdisks(item, params, parsed):
         if parsed[item]["State"] != "Ready":
             status = 2
 
-        return status, "Device: %s, Status: %s, State: %s, Layout: %s" % (
+        return status, "Device: {}, Status: {}, State: {}, Layout: {}".format(
             parsed[item]["Device Name"],
             parsed[item]["Status"],
             parsed[item]["State"],

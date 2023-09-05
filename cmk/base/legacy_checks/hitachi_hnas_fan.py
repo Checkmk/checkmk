@@ -37,7 +37,7 @@ def check_hitachi_hnas_fan(item, _no_params, info):
             fitted_status = int(fitted_status)
             speed_status = int(speed_status)
             speed = int(speed)
-            infotext = "PNode %s fan %s" % (clusternode, fan_id)
+            infotext = f"PNode {clusternode} fan {fan_id}"
 
             worststate = 0
 

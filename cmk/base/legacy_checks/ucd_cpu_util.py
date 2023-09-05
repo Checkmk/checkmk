@@ -74,8 +74,7 @@ def check_ucd_cpu_util(item, params, parsed):
         yield 1, "Error: %s" % error
 
     cpu_ticks = parsed["cpu_ticks"]
-    for result in check_cpu_util_unix(cpu_ticks, params):
-        yield result
+    yield from check_cpu_util_unix(cpu_ticks, params)
 
     try:
         raw_io_received = int(parsed["raw_io_received"])

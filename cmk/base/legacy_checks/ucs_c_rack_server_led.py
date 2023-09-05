@@ -22,7 +22,7 @@ def check_ucs_c_rack_server_led(
             state = params.get(v, 3)
         else:
             state = 0
-        yield state, "%s: %s" % (k, v)
+        yield state, f"{k}: {v}"
 
 
 def discover_ucs_c_rack_server_led(section):

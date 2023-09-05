@@ -38,7 +38,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         health_summary,
     ) in info:
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
-        txt = "%s: %s (%s)" % (name, health_label, health_summary)
+        txt = f"{name}: {health_label} ({health_summary})"
 
         for entry in params:
             if name.startswith(entry.get("name", "")):

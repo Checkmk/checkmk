@@ -32,7 +32,7 @@ def parse_jira_workflow(string_table):
                     continue
 
                 try:
-                    parsed.setdefault("%s/%s" % (project.title(), workflow.title()), {}).update(
+                    parsed.setdefault(f"{project.title()}/{workflow.title()}", {}).update(
                         {workflow: issue_count}
                     )
                 except KeyError:

@@ -74,7 +74,7 @@ def check_hpux_snmp_cpu(item, _no_params, info):
         part = rate / total_rate  # fixed: true-division
         perc = part * 100
         perfdata.append((what, perc, None, None, 0, 100))
-        infos.append("%s: %.0f%%" % (what, perc))
+        infos.append(f"{what}: {perc:.0f}%")
 
     return (0, ", ".join(infos), perfdata)
 

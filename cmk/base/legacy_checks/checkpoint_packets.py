@@ -51,14 +51,14 @@ def check_checkpoint_packets(_no_item, params, parsed):
             warn, crit = params[key]
 
         rate = get_rate(get_value_store(), key, this_time, value, raise_overflow=True)
-        infotext = "%s: %.1f pkts/s" % (name, rate)
+        infotext = f"{name}: {rate:.1f} pkts/s"
         state = 0
         if crit is not None and rate >= crit:
             state = 2
         elif warn is not None and rate >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s pkts/s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit} pkts/s)"
 
         yield state, infotext, [(key, rate, warn, crit, 0)]
 

@@ -94,8 +94,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             #    raise OurCustomException("Nice message") [from exc]
             # as soon as we have proper exception handling
             raise RuntimeError(
-                "Server dit not return valid JSON (%s). Reply with %r"
-                % (exc.msg, response.text[:30])
+                f"Server dit not return valid JSON ({exc.msg}). Reply with {response.text[:30]!r}"
             )
 
     args = parse_arguments(argv)

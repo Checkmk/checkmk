@@ -86,7 +86,7 @@ def check_acme_sbc_settings(_no_item, params, parsed):
     yield 0, "Checking %d settings" % len(saved_settings)
     for setting, value in saved_settings.items():
         if current_settings[setting] != value:
-            yield 2, "%s changed from %s to %s" % (setting, value, current_settings[setting])
+            yield 2, f"{setting} changed from {value} to {current_settings[setting]}"
 
 
 check_info["acme_sbc.settings"] = LegacyCheckDefinition(

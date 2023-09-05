@@ -36,7 +36,7 @@ def check_bintec_brrp_status(item, _no_params, info):
                 message = "Status for %s is master" % brrp_id
                 status = 0
             else:
-                message = "Status for %s is at unknown value %s" % (brrp_id, brrp_status)
+                message = f"Status for {brrp_id} is at unknown value {brrp_status}"
                 status = 3
 
             return status, message

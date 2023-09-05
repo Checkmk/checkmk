@@ -94,7 +94,7 @@ def render_temp(n: float, output_unit: str, relative: bool = False, *, sign: boo
 
     """
     value = from_celsius(n, output_unit, relative)
-    template = "%%%s%s" % ("+" if sign else "", "d" if isinstance(n, int) else ".1f")
+    template = "%{}{}".format("+" if sign else "", "d" if isinstance(n, int) else ".1f")
     return template % value
 
 

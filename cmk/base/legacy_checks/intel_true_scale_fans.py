@@ -73,7 +73,7 @@ def check_intel_true_scale_fans(item, _no_params, info):
                 (speedstate, "Speed", "speed"),
             ]:
                 state, state_readable = map_states[what_mapping][what]
-                yield state, "%s status: %s" % (what_descr, state_readable)
+                yield state, f"{what_descr} status: {state_readable}"
 
 
 check_info["intel_true_scale_fans"] = LegacyCheckDefinition(

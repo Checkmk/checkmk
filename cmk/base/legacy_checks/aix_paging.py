@@ -46,7 +46,7 @@ def parse_aix_paging(string_table):
             continue
         paging_type = map_type.get(line[7], "unknown[%s]" % line[7])
         parsed.setdefault(
-            "%s/%s" % (line[0], line[1]),
+            f"{line[0]}/{line[1]}",
             AIXPaging(line[2], size, usage, line[5], line[6], paging_type),
         )
     return parsed
@@ -57,7 +57,7 @@ def check_aix_paging(item, params, parsed):
         return
     avail_mb = data.size_mb * (1 - data.usage_perc / 100.0)
     yield df_check_filesystem_single(item, data.size_mb, avail_mb, 0, None, None, params)
-    yield 0, "Active: %s, Auto: %s, Type: %s" % (data.active, data.auto, data.type)
+    yield 0, f"Active: {data.active}, Auto: {data.auto}, Type: {data.type}"
 
 
 def discover_aix_paging(section):

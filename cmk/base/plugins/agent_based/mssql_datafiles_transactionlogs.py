@@ -105,10 +105,10 @@ def _format_item_mssql_datafiles(
     file_name: Optional[str],
 ) -> str:
     if inst is None:
-        return "%s.%s" % (database, file_name)
+        return f"{database}.{file_name}"
     if file_name is None:
-        return "%s.%s" % (inst, database)
-    return "%s.%s.%s" % (inst, database, file_name)
+        return f"{inst}.{database}"
+    return f"{inst}.{database}.{file_name}"
 
 
 def _mssql_datafiles_process_sizes(

@@ -35,7 +35,7 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
     if installed == "0":
         yield 2, "Not installed"
     else:
-        yield 0, "Installed: v%s.%s" % (major, minor)
+        yield 0, f"Installed: v{major}.{minor}"
 
         for val, infotext, ok_vals, warn_vals in [
             (started, "Started", ["yes"], None),
@@ -49,7 +49,7 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
             else:
                 status = 2
 
-            yield status, "%s: %s" % (infotext, val)
+            yield status, f"{infotext}: {val}"
 
         if stat_code != "0":
             yield 2, "Problem: %s" % stat_long

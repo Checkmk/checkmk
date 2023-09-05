@@ -96,8 +96,7 @@ class ModeIcons(WatoMode):
             icon_name = request.var("_delete")
             if icon_name in self._load_custom_icons():
                 os.remove(
-                    "%s/local/share/check_mk/web/htdocs/images/icons/%s.png"
-                    % (cmk.utils.paths.omd_root, icon_name)
+                    f"{cmk.utils.paths.omd_root}/local/share/check_mk/web/htdocs/images/icons/{icon_name}.png"
                 )
 
         elif request.has_var("_save"):

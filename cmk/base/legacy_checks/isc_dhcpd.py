@@ -63,7 +63,7 @@ def parse_isc_dhcpd(string_table):
             if "bootp" in line[0]:
                 line = line[1:]
             start, end = line[0], line[1]
-            item = "%s-%s" % (start, end)
+            item = f"{start}-{end}"
             parsed["pools"][item] = (ip_to_number(start), ip_to_number(end))
 
         elif mode == "leases":
@@ -95,10 +95,7 @@ def check_isc_dhcpd(item, params, parsed):
         if range_from <= lease_dec <= range_to:
             num_used += 1
 
-    for check_result in check_dhcp_pools_levels(
-        num_leases - num_used, num_used, None, num_leases, params
-    ):
-        yield check_result
+    yield from check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases, params)
 
 
 check_info["isc_dhcpd"] = LegacyCheckDefinition(

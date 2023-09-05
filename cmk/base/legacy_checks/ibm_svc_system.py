@@ -89,7 +89,7 @@ def check_ibm_svc_system(item, _no_params, info):
         if line[0] in ("name", "location", "code_level", "email_contact_location"):
             if message != "":
                 message += ", "
-            message += "%s: %s" % (line[0], line[1])
+            message += f"{line[0]}: {line[1]}"
     return 0, message
 
 

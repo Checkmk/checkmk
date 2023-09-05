@@ -55,7 +55,7 @@ def check_tsm_storagepools(item, _no_params, parsed):
     size = int(float(data["size"]) * 1024**2)
     return (
         0,
-        "Used size: %s, Type: %s" % (get_bytes_human_readable(size), stype),
+        f"Used size: {get_bytes_human_readable(size)}, Type: {stype}",
         [("used_space", size)],
     )
 

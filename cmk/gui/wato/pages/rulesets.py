@@ -2868,8 +2868,7 @@ class ModeExportRule(ABCEditRuleMode):
             url=None,
             title=_("Copy rule value representation to clipboard"),
             icon="clone",
-            onclick="cmk.utils.copy_to_clipboard(%s, %s)"
-            % (json.dumps(content_id), json.dumps(success_msg_id)),
+            onclick=f"cmk.utils.copy_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg_id)})",
         )
         html.close_form()
 

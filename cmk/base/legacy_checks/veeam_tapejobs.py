@@ -66,7 +66,7 @@ def check_veeam_tapejobs(item, params, parsed):
         value_store[f"{job_id}.running_since" % job_id] = now
     running_time = now - running_since
 
-    yield 0, "Backup in progress since %s (currently %s)" % (
+    yield 0, "Backup in progress since {} (currently {})".format(
         get_timestamp_human_readable(running_since),
         last_state.lower(),
     )

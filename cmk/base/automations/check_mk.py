@@ -1486,7 +1486,7 @@ class AutomationRestart(Automation):
 
     def execute(self, args: list[str]) -> RestartResult:
         if args:
-            nodes = set(HostName(hn) for hn in args)
+            nodes = {HostName(hn) for hn in args}
         else:
             nodes = None
         return _execute_silently(self._mode(), nodes)

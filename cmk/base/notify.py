@@ -1052,9 +1052,8 @@ def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> st
         r = regex(rule["match_notification_comment"])
         notification_comment = context.get("NOTIFICATIONCOMMENT", "")
         if not r.match(notification_comment):
-            return (
-                "The beginning of the notification comment '%s' is not matched by the regex '%s'"
-                % (notification_comment, rule["match_notification_comment"])
+            return "The beginning of the notification comment '{}' is not matched by the regex '{}'".format(
+                notification_comment, rule["match_notification_comment"]
             )
     return None
 

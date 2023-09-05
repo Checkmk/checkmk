@@ -27,7 +27,7 @@ def check_barracuda_mailqueues(_no_item, params, info):
         ("Deferred", int(deferred_queue_str)),
     ]:
         state = 0
-        infotext = "%s: %s" % (queue_type, queue)
+        infotext = f"{queue_type}: {queue}"
         warn, crit = params[queue_type.lower()]
 
         if queue >= crit:

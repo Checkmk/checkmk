@@ -137,7 +137,7 @@ def check_emcvnx_info(item, _no_params, parsed):
         status = 0
         if key == "System Fault LED" and value != "OFF":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info"] = LegacyCheckDefinition(
@@ -160,7 +160,7 @@ check_info["emcvnx_info"] = LegacyCheckDefinition(
 def check_emcvnx_storage(item, params, parsed):
     output, _ = parsed
     for key, value in output["storage"]:
-        yield 0, "%s: %s" % (key, value)
+        yield 0, f"{key}: {value}"
 
 
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
@@ -186,7 +186,7 @@ def check_emcvnx_link(item, params, parsed):
         status = 0
         if key == "Link Status" and value != "Link-Up":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
@@ -209,7 +209,7 @@ check_info["emcvnx_info.link"] = LegacyCheckDefinition(
 def check_emcvnx_config(item, params, parsed):
     output, _ = parsed
     for key, value in output["config"]:
-        yield 0, "%s: %s" % (key, value)
+        yield 0, f"{key}: {value}"
 
 
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
@@ -235,7 +235,7 @@ def check_emcvnx_io(item, params, parsed):
         status = 0
         if key == "Hard errors" and value != "N/A":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(

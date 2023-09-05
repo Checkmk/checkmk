@@ -79,7 +79,7 @@ def check_ibm_svc_disks(_no_item, params, parsed):
         capacity = data["capacity"]
 
         disk: dict[str, str | float] = {}
-        disk["identifier"] = "Enclosure: %s, Slot: %s, Type: %s" % (
+        disk["identifier"] = "Enclosure: {}, Slot: {}, Type: {}".format(
             data["enclosure_id"],
             data["slot_id"],
             data["tech_type"],

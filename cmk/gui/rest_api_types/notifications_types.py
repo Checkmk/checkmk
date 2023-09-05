@@ -418,7 +418,7 @@ class CiscoWebexPlugin:
 
         return cls(
             option=incoming["option"],
-            webhook_url=WebhookURLOption.from_api_request((params["webhook_url"])),
+            webhook_url=WebhookURLOption.from_api_request(params["webhook_url"]),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
@@ -1249,7 +1249,7 @@ class SlackPlugin:
 
         return cls(
             option=incoming["option"],
-            webhook_url=WebhookURLOption.from_api_request((params["webhook_url"])),
+            webhook_url=WebhookURLOption.from_api_request(params["webhook_url"]),
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
@@ -1507,7 +1507,7 @@ class VictoropsPlugin:
                 params["url_prefix_for_links_to_checkmk"]
             ),
             splunk_on_call_rest_endpoint=WebhookURLOption.from_api_request(
-                (params["splunk_on_call_rest_endpoint"])
+                params["splunk_on_call_rest_endpoint"]
             ),
         )
 
@@ -1614,7 +1614,7 @@ class MsTeamsPlugin:
 
         return cls(
             option=incoming["option"],
-            webhook_url=WebhookURLOption.from_api_request((params["webhook_url"])),
+            webhook_url=WebhookURLOption.from_api_request(params["webhook_url"]),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
             host_title=CheckboxWithStrValue.from_api_request(params["host_title"]),
             service_title=CheckboxWithStrValue.from_api_request(params["service_title"]),

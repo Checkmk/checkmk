@@ -62,7 +62,7 @@ def inventory_ad_replication(info):
             source_dc = line[4]
         else:
             break  # unhandled data
-        entry = ("%s/%s" % (source_site, source_dc), ad_replication_default_params)
+        entry = (f"{source_site}/{source_dc}", ad_replication_default_params)
         if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
     return inv
@@ -171,7 +171,7 @@ def check_ad_replication(item, params, info):
         return
 
     yield status, (
-        "Replications with failures: %s, Total failures: %s" % (count_failed_repl, count_failures)
+        f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"
     )
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

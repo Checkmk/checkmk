@@ -97,7 +97,7 @@ def _failure_results(failures: Collection[Failure]) -> CheckResult:
     if not details:
         return
 
-    index_count = len(set(failure.index for failure in failures if failure.index is not None))
+    index_count = len({failure.index for failure in failures if failure.index is not None})
     yield Result(
         state=State.OK,
         summary=f"Affected indices: {index_count}, see service details for further information",

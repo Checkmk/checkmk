@@ -78,7 +78,7 @@ def check_dell_idrac_disks(item, _no_params, info):
         display_name,
     ) in info:
         if disk_name == item:
-            yield 0, "[%s] Size: %s" % (
+            yield 0, "[{}] Size: {}".format(
                 display_name,
                 get_bytes_human_readable(int(capacity_MB) * 1024 * 1024),
             )
@@ -88,7 +88,7 @@ def check_dell_idrac_disks(item, _no_params, info):
                 (component_state, "component_states", "Component state"),
             ]:
                 state, state_readable = map_states[what_key][what]
-                yield state, "%s: %s" % (what_text, state_readable)
+                yield state, f"{what_text}: {state_readable}"
 
             if smart_alert != "0":
                 yield 2, "Smart alert on disk"

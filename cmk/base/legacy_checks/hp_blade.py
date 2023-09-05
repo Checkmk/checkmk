@@ -40,7 +40,7 @@ def check_hp_blade_general(item, params, info):
     status = hp_blade_status2nagios_map[snmp_state]
     return (
         status,
-        "General Status is %s (Firmware: %s, S/N: %s)" % (snmp_state, info[0][0], info[0][2]),
+        f"General Status is {snmp_state} (Firmware: {info[0][0]}, S/N: {info[0][2]})",
     )
 
 

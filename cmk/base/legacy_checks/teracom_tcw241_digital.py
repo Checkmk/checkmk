@@ -53,7 +53,7 @@ def check_tcw241_digital(item, params, parsed):
     """
     if not (info_dict := parsed.get(item)):
         return
-    yield 0 if info_dict.get("state") == "open" else 2, "[%s] is %s" % (
+    yield 0 if info_dict.get("state") == "open" else 2, "[{}] is {}".format(
         info_dict.get("description"),
         info_dict.get("state"),
     )

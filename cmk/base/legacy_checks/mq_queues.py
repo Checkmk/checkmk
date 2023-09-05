@@ -47,7 +47,7 @@ def check_mq_queues(item, params, info):
                 label = "(!)"
             if state > 0:
                 msg = "%s consuming connections " % consumerCount
-                msg += "(Levels Warn/Crit below %s/%s)%s, " % (warn, crit, label)
+                msg += f"(Levels Warn/Crit below {warn}/{crit}){label}, "
 
             label = ""
             warn, crit = params["size"]
@@ -59,8 +59,8 @@ def check_mq_queues(item, params, info):
                 label = "(!)"
             msg += "Queue Size: %s" % size
             if label != "":
-                msg += "(Levels Warn/Crit at %s/%s)%s" % (warn, crit, label)
-            msg += ", Enqueue Count: %s, Dequeue Count: %s" % (enqueueCount, dequeueCount)
+                msg += f"(Levels Warn/Crit at {warn}/{crit}){label}"
+            msg += f", Enqueue Count: {enqueueCount}, Dequeue Count: {dequeueCount}"
 
             perf = [("queue", size, warn, crit), ("enque", enqueueCount), ("deque", dequeueCount)]
             return state, msg, perf

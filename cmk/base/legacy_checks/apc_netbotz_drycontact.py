@@ -75,7 +75,7 @@ def check_apc_netbotz_drycontact(item, params, parsed):
         loc_info = "[%s] " % loc
     else:
         loc_info = ""
-    yield state, "%sState: %s" % (loc_info, state_readable)
+    yield state, f"{loc_info}State: {state_readable}"
 
 
 def discover_apc_netbotz_drycontact(section):

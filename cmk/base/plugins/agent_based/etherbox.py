@@ -152,8 +152,7 @@ def check_etherbox_temp(
     if isinstance(result, Result):
         yield Result(state=State(result.state), summary=f"[{data.name}] {result.summary}")
     yield metric
-    for el in other:
-        yield el
+    yield from other
 
 
 def discovery_temp(section: Section) -> DiscoveryResult:

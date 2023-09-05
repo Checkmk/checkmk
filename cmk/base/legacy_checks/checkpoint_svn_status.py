@@ -19,7 +19,7 @@ def inventory_checkpoint_svn_status(info):
 def check_checkpoint_svn_status(item, params, info):
     if info:
         major, minor, code, description = info[0]
-        ver = "v%s.%s" % (major, minor)
+        ver = f"v{major}.{minor}"
         if int(code) != 0:
             return 2, description
         return 0, "OK (%s)" % ver

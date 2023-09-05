@@ -29,7 +29,7 @@ def parse_jolokia_generic(string_table: StringTable) -> Section:
                 value = float(value)
         except ValueError:
             continue
-        item = "%s MBean %s" % (instance, mbean)
+        item = f"{instance} MBean {mbean}"
         parsed[item] = {"value": value, "type": type_}
 
     return parsed
@@ -63,7 +63,7 @@ def check_jolokia_generic_string(item, params, parsed):
     search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
         if search_string in value:
-            yield status, "%s: %s matches" % (value, search_string)
+            yield status, f"{value}: {search_string} matches"
             return
 
     yield params.get("default_status", 0), value

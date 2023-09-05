@@ -519,8 +519,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
     # existing - possibly user modified - file.
 
     result = os.system(  # nosec B605 # BNS:2b5952
-        "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s"
-        % (old_orig_path, new_orig_path, new_site.dir, dst)
+        f"diff -u {old_orig_path} {new_orig_path} | {new_site.dir}/bin/patch --force --backup --forward --silent {dst}"
     )
 
     try_chown(dst, new_site.name)
@@ -707,8 +706,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
             )  # nosec B605 # BNS:2b5952
         elif choice == "new":
             os.system(  # nosec B605 # BNS:2b5952
-                "diff -u %s-%s %s-%s%s"
-                % (user_path, old_version, user_path, new_version, pipe_pager())
+                f"diff -u {user_path}-{old_version} {user_path}-{new_version}{pipe_pager()}"
             )
         elif choice == "missing":
             if reject_file.exists():
@@ -742,8 +740,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
                 pass
             if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
                 sys.stdout.write(
-                    "Successfully merged changes from %s -> %s into %s\n"
-                    % (old_version, new_version, fn)
+                    f"Successfully merged changes from {old_version} -> {new_version} into {fn}\n"
                 )
                 return
             sys.stdout.write(" Merge failed again.\n")
@@ -811,8 +808,7 @@ def _try_merge(
 
     # First try to merge the changes in the version into the users' file
     f = os.popen(  # nosec B605 # BNS:2b5952
-        "%s/bin/patch --force --backup --forward --silent --merge %s >/dev/null"
-        % (site.dir, user_path),
+        f"{site.dir}/bin/patch --force --backup --forward --silent --merge {user_path} >/dev/null",
         "w",
     )
     f.write(version_patch)
@@ -1253,8 +1249,7 @@ def update_file(  # pylint: disable=too-many-branches
         except Exception as e:
             sys.stdout.write(
                 StateMarkers.error
-                + " Permission:    cannot change %04o -> %04o %s: %s\n"
-                % (user_perm, new_perm, fn, e)
+                + f" Permission:    cannot change {user_perm:04o} -> {new_perm:04o} {fn}: {e}\n"
             )
 
 
@@ -1909,7 +1904,7 @@ def _call_script(  # pylint: disable=too-many-branches
 
                 sys.stdout.write(f"-| {line}")
                 sys.stdout.flush()
-        except IOError:
+        except OSError:
             pass
         finally:
             if not pty:
@@ -2214,17 +2209,14 @@ def welcome_message(site: SiteContext, admin_password: Password) -> None:
         f"  The site can be started with {tty.bold}omd start {site.name}{tty.normal}.\n"
     )
     sys.stdout.write(
-        "  The default web UI is available at %shttp://%s/%s/%s\n"
-        % (tty.bold, hostname(), site.name, tty.normal)
+        f"  The default web UI is available at {tty.bold}http://{hostname()}/{site.name}/{tty.normal}\n"
     )
     sys.stdout.write("\n")
     sys.stdout.write(
-        "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n"
-        % (tty.bold, tty.normal, tty.bold, admin_password.raw, tty.normal)
+        f"  The admin user for the web applications is {tty.bold}cmkadmin{tty.normal} with password: {tty.bold}{admin_password.raw}{tty.normal}\n"
     )
     sys.stdout.write(
-        "  For command line administration of the site, log in with %s'omd su %s'%s.\n"
-        % (tty.bold, site.name, tty.normal)
+        f"  For command line administration of the site, log in with {tty.bold}'omd su {site.name}'{tty.normal}.\n"
     )
     sys.stdout.write(
         "  After logging in, you can change the password for cmkadmin with "
@@ -2895,8 +2887,7 @@ def main_update(  # pylint: disable=too-many-branches
         from_edition != to_edition
         and not global_opts.force
         and not dialog_yesno(
-            text="You are updating from %s Edition to %s Edition. Is this intended?"
-            % (from_edition.title(), to_edition.title()),
+            text=f"You are updating from {from_edition.title()} Edition to {to_edition.title()} Edition. Is this intended?",
             default_no=True,
         )
     ):
@@ -2939,8 +2930,7 @@ def main_update(  # pylint: disable=too-many-branches
     start_logging(site.dir + "/var/log/update.log")
 
     sys.stdout.write(
-        "%s - Updating site '%s' from version %s to %s...\n\n"
-        % (time.strftime("%Y-%m-%d %H:%M:%S"), site.name, from_version, to_version)
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Updating site '{site.name}' from version {from_version} to {to_version}...\n\n"
     )
 
     # etc/icinga/icinga.d/pnp4nagios.cfg was created by the PNP4NAGIOS OMD hook in previous
@@ -3818,7 +3808,7 @@ def main_cleanup(
             )
             continue
 
-        target_package_name = "%s-%s" % (
+        target_package_name = "{}-{}".format(
             _get_edition(version),
             _get_raw_version(version),
         )

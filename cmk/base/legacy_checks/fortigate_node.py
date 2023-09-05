@@ -92,7 +92,7 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
 
     if "cluster_info" in parsed:
         system_mode, group_name = parsed["cluster_info"]
-        return 0, "System mode: %s, Group: %s" % (map_mode[system_mode], group_name)
+        return 0, f"System mode: {map_mode[system_mode]}, Group: {group_name}"
     return None
 
 

@@ -74,7 +74,7 @@ def check_cmciii_lcp_waterflow(item, params, section: Section):
         state = 1
         sym = "(!)"
 
-    info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
+    info_text = "{} Status: {} Flow: {:.1f}{}, MinFlow: {:.1f}, MaxFLow: {:.1f}".format(
         section.name,
         section.status,
         section.flow,

@@ -111,22 +111,19 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
             human_readable_func=render.percent,
         )
 
-    for result in _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check):
-        yield result
+    yield from _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check)
 
 
 def check_aws_dynamodb_read_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(
+    yield from _check_aws_dynamodb_capacity(
         params.get("levels_read", {}), parsed, "ReadCapacityUnits"
-    ):
-        yield result
+    )
 
 
 def check_aws_dynamodb_write_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(
+    yield from _check_aws_dynamodb_capacity(
         params.get("levels_write", {}), parsed, "WriteCapacityUnits"
-    ):
-        yield result
+    )
 
 
 def inventory_aws_dynamodb_latency(parsed):
@@ -146,8 +143,8 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
     for operation in ["Query", "GetItem", "PutItem"]:
         for statistic in ["Average", "Maximum"]:
-            metric_name = "aws_dynamodb_%s_%s_latency" % (operation.lower(), statistic.lower())
-            metric_id = "%s_%s_SuccessfulRequestLatency" % (operation, statistic)
+            metric_name = f"aws_dynamodb_{operation.lower()}_{statistic.lower()}_latency"
+            metric_id = f"{operation}_{statistic}_SuccessfulRequestLatency"
             metric_val = parsed.get(metric_id)
 
             if metric_val is not None:
@@ -155,7 +152,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
                 # SuccessfulRequestLatency and levels come in ms
                 metric_val *= 1e-3
-                levels = params.get("levels_seconds_%s_%s" % (operation.lower(), statistic.lower()))
+                levels = params.get(f"levels_seconds_{operation.lower()}_{statistic.lower()}")
                 if levels is not None:
                     levels = tuple(level * 1e-3 for level in levels)
 
@@ -163,7 +160,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
                     metric_val,
                     metric_name,
                     levels,
-                    infoname="%s latency %s" % (statistic, operation),
+                    infoname=f"{statistic} latency {operation}",
                     human_readable_func=get_age_human_readable,
                 )
 

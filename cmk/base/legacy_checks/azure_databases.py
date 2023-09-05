@@ -79,8 +79,7 @@ def check_azure_databases_cpu(_item, params, resource):
     if cpu_percent is not None:
         if "cpu_percent_levels" in params:
             util_params["levels"] = params["cpu_percent_levels"]
-        for y in check_cpu_util(cpu_percent.value, util_params):
-            yield y
+        yield from check_cpu_util(cpu_percent.value, util_params)
 
 
 check_info["azure_databases.cpu"] = LegacyCheckDefinition(
@@ -160,7 +159,7 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
 @get_data_or_go_stale
 def check_azure_databases(_item, _no_params, resource):
     for k, v in iter_resource_attributes(resource):
-        yield 0, "%s: %s" % (k, v)
+        yield 0, f"{k}: {v}"
 
 
 def discover_azure_databases(section):

@@ -383,8 +383,7 @@ class SidebarRenderer:
         )
         html.open_body(
             class_=body_classes,
-            onload="cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks(%s, %s); "
-            % (json.dumps(interval), json.dumps(bool(may_acknowledge()))),
+            onload=f"cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks({json.dumps(interval)}, {json.dumps(bool(may_acknowledge()))}); ",
             data_theme=theme.get(),
         )
 
@@ -565,8 +564,7 @@ class SidebarRenderer:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
                 html.javascript(
-                    'cmk.ajax.get_url("%s", cmk.utils.update_contents, "snapin_%s")'
-                    % (refresh_url, name)
+                    f'cmk.ajax.get_url("{refresh_url}", cmk.utils.update_contents, "snapin_{name}")'
                 )
         except Exception as e:
             logger.exception("error rendering snapin %s", name)

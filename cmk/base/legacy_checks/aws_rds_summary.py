@@ -48,7 +48,7 @@ def check_aws_rds_summary(item, params, parsed):
 
     class_infos = []
     for instance_class, instances in instances_by_classes.items():
-        class_infos.append("%s: %s" % (instance_class, len(instances)))
+        class_infos.append(f"{instance_class}: {len(instances)}")
     yield 0, ", ".join(class_infos)
 
 
@@ -77,7 +77,7 @@ def check_aws_rds_summary_db(item, params, parsed):
     pre_info = ""
     if db_name is not None:
         pre_info = "[%s] " % db_name
-    yield 0, "%sStatus: %s" % (pre_info, data["DBInstanceStatus"])
+    yield 0, "{}Status: {}".format(pre_info, data["DBInstanceStatus"])
 
     multi_az = data.get("MultiAZ")
     if multi_az is not None:
@@ -91,7 +91,7 @@ def check_aws_rds_summary_db(item, params, parsed):
     if zone is not None:
         region = zone[:-1]
         zone_info = zone[-1]
-        yield 0, "Availability zone: %s (%s)" % (AWSRegions[region], zone_info)
+        yield 0, f"Availability zone: {AWSRegions[region]} ({zone_info})"
 
 
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(

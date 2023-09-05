@@ -30,7 +30,7 @@ def discover_mcafee_gateway(section: Section) -> v1.type_defs.DiscoveryResult:
 def parse_mcaffee_webgateway(string_table: v1.type_defs.StringTable) -> Section | None:
     if not string_table:
         return None
-    infections, connections_blocked = [int(x) if x.isdigit() else None for x in string_table[0]]
+    infections, connections_blocked = (int(x) if x.isdigit() else None for x in string_table[0])
     return Section(infections=infections, connections_blocked=connections_blocked)
 
 

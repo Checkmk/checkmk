@@ -28,7 +28,7 @@ qlogic_fcport_inventory_admstates = ["1", "3"]
 def qlogic_fcport_generate_port_id(port_id):
     major, minor = port_id.split(".", 1)
     minor = int(minor) - 1
-    port_id = "%s.%s" % (major, minor)
+    port_id = f"{major}.{minor}"
     return port_id
 
 
@@ -230,7 +230,7 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
                 value = int(value)
                 per_sec = get_rate(
                     get_value_store(),
-                    "qlogic_fcport.%s.%s" % (counter, port_id),
+                    f"qlogic_fcport.{counter}.{port_id}",
                     this_time,
                     value,
                     raise_overflow=True,
@@ -239,7 +239,7 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
                 error_sum += per_sec
 
                 if per_sec > 0:
-                    message += ", %s: %s/s" % (descr, per_sec)
+                    message += f", {descr}: {per_sec}/s"
             if error_sum == 0:
                 message += ", no protocol errors"
 

@@ -38,7 +38,7 @@ def check_perle_chassis_slots(item, _no_params, info):
     ) in info:
         if item == index:
             state, state_readable = map_diagstates[diagstate]
-            yield state, "[%s] Diagnostic result: %s" % (name, state_readable)
+            yield state, f"[{name}] Diagnostic result: {state_readable}"
             yield perle_check_alarms(alarms_str)
 
 

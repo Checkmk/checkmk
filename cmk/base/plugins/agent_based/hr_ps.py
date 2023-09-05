@@ -111,10 +111,10 @@ def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> Check
     for (state_key, state_short, state_long), processes in processes_by_state.items():
         state = process_state_map.get(state_key, 0)
         if state_long:
-            state_info = "%s (%s)" % (state_short, state_long)
+            state_info = f"{state_short} ({state_long})"
         else:
             state_info = state_short
-        yield Result(state=State(state), summary="%s %s" % (len(processes), state_info))
+        yield Result(state=State(state), summary=f"{len(processes)} {state_info}")
 
 
 def _match_hr_process(

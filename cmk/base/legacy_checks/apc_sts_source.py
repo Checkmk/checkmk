@@ -25,7 +25,7 @@ def check_apc_sts_source(_not_item, params, info):
     sources["source1"], sources["source2"] = info[0]
     for name, what in [("Source 1", "source1"), ("Source 2", "source2")]:
         state = 0
-        infotext = "%s: %s" % (name, states[sources[what]])
+        infotext = f"{name}: {states[sources[what]]}"
         if params[what] != sources[what]:
             state = 1
             infotext += " (State has changed)"

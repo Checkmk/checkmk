@@ -31,7 +31,7 @@ def check_hp_webmgmt_status(item, _no_params, info):
             status, status_msg = status_map[health]
             infotext = "Device status: %s" % status_msg
             if device_model and serial_number:
-                infotext += " [Model: %s, Serial Number: %s]" % (device_model, serial_number)
+                infotext += f" [Model: {device_model}, Serial Number: {serial_number}]"
             return status, infotext
     return None
 

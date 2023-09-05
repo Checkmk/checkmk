@@ -85,7 +85,7 @@ def check_dell_powerconnect_psu(item, _not_used, info):
             dell_powerconnect_status = dell_powerconnect_psu_status_map[state]
             status = dell_powerconnect_psu_status2nagios_map[dell_powerconnect_status]
 
-            return status, "Condition is %s, with source %s" % (
+            return status, "Condition is {}, with source {}".format(
                 dell_powerconnect_status,
                 dell_powerconnect_psu_supply_map[supply],
             )

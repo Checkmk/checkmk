@@ -14,7 +14,7 @@ def inventory_vnx_version(info):
 
 def check_vnx_version(item, params, info):
     for line in info:
-        yield 0, "%s: %s" % (line[0], line[1])
+        yield 0, f"{line[0]}: {line[1]}"
 
 
 check_info["vnx_version"] = LegacyCheckDefinition(

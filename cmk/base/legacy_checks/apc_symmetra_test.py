@@ -95,7 +95,7 @@ def check_apc_test(item, params, info):
         state = max(state, 1)
         time_label = "(!)"
 
-    return state, "Result of self test: %s%s, Date of last test: %s%s" % (
+    return state, "Result of self test: {}{}, Date of last test: {}{}".format(
         diagnostic_status_text.get(last_result, "-"),
         diag_label,
         last_date,

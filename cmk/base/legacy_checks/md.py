@@ -195,13 +195,13 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
     spare_disks = data["spare_disks"]
     failed_disks = data["failed_disks"]
     active_disks = data["active_disks"]
-    yield 0, "Spare: %s, Failed: %s, Active: %s" % (spare_disks, failed_disks, active_disks)
+    yield 0, f"Spare: {spare_disks}, Failed: {failed_disks}, Active: {active_disks}"
 
     num_disks = data.get("num_disks")
     expected_disks = data.get("expected_disks")
     working_disks = data.get("working_disks")
     if num_disks is not None and expected_disks is not None and working_disks is not None:
-        infotext = "Status: %s/%s, %s" % (num_disks, expected_disks, working_disks)
+        infotext = f"Status: {num_disks}/{expected_disks}, {working_disks}"
         if num_disks == expected_disks and active_disks == working_disks.count("U"):
             yield 0, infotext
         else:
@@ -230,10 +230,10 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
     if "check_values" in data:
         header = "[Check]"
         infotexts.append("Status: %s" % data["check_values"])
-        yield 0, "%s %s" % (header, ", ".join(infotexts))
+        yield 0, "{} {}".format(header, ", ".join(infotexts))
 
     elif infotexts:
-        yield 1, "%s %s" % (header, ", ".join(infotexts))
+        yield 1, "{} {}".format(header, ", ".join(infotexts))
 
 
 check_info["md"] = LegacyCheckDefinition(

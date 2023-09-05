@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.utils.datapower import DETECT
 def inventory_datapower_pdrive(info):
     for controller, device, _ldrive, _position, status, _progress, _vendor, _product, _fail in info:
         if status != "12":
-            item = "%s-%s" % (controller, device)
+            item = f"{controller}-{device}"
             yield item, None
 
 
@@ -44,15 +44,15 @@ def check_datapower_pdrive(item, _no_params, info):
         "5": "undefined",
     }
     for controller, device, ldrive, position, status, progress, vendor, product, fail in info:
-        if item == "%s-%s" % (controller, device):
-            member_of_ldrive = "%s-%s" % (controller, ldrive)
+        if item == f"{controller}-{device}":
+            member_of_ldrive = f"{controller}-{ldrive}"
             state, state_txt = datapower_pdrive_status[status]
             position_txt = datapower_pdrive_position[position]
             if int(progress) != 0:
                 progress_txt = " - Progress: %s%%" % progress
             else:
                 progress_txt = ""
-            infotext = "%s%s, Position: %s, Logical Drive: %s, Product: %s %s" % (
+            infotext = "{}{}, Position: {}, Logical Drive: {}, Product: {} {}".format(
                 state_txt,
                 progress_txt,
                 position_txt,

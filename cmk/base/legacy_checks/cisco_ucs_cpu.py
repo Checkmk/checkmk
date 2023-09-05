@@ -35,7 +35,7 @@ def check_cisco_ucs_cpu(item, _no_params, info):
             )
             yield state, "Status: %s" % state_readable
             yield presence_state, "Presence: %s" % presence_readable
-            yield 0, "Model: %s, SN: %s" % (model, serial)
+            yield 0, f"Model: {model}, SN: {serial}"
 
 
 check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(

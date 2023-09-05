@@ -218,8 +218,9 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
         if time_period_name in tp.get("exclude", []):
             used_in.append(
                 (
-                    "%s: %s (%s)"
-                    % (_("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")),
+                    "{}: {} ({})".format(
+                        _("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")
+                    ),
                     folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                 )
             )

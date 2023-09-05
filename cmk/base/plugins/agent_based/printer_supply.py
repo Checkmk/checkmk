@@ -94,7 +94,7 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
             elif color == "" and colors:
                 color = colors[index - len(colors)]
             if color:
-                name = "%s %s" % (color.title(), name)
+                name = f"{color.title()} {name}"
 
         # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")

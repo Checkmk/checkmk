@@ -31,7 +31,7 @@ def check_cmciii_access(item: str, params: CheckParams, section: Section) -> typ
     else:
         state = State.CRIT
 
-    yield Result(state=state, summary="%s: %s" % (entry["DescName"], state_readable))
+    yield Result(state=state, summary="{}: {}".format(entry["DescName"], state_readable))
     yield Result(state=State.OK, summary="Delay: %s" % entry["Delay"])
     yield Result(state=State.OK, summary="Sensitivity: %s" % entry["Sensitivity"])
 

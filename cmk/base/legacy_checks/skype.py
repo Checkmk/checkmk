@@ -156,7 +156,7 @@ def check_skype_mcu(_no_item, _no_params, parsed):
             "3": (2, "Unavailable"),
         }.get(value, (2, "unknown (%s)" % value))
 
-        return state[0], "%s: %s" % (label, state[1])
+        return state[0], f"{label}: {state[1]}"
 
     yield health(
         parsed["LS:DATAMCU - MCU Health And Performance"].get(0, "DATAMCU - MCU Health State"),
@@ -676,9 +676,7 @@ def check_skype_mobile(_no_item, params, parsed):
             value = int(ucwa_table.get(instance, "UCWA - Active Session Count"))
         except KeyError:
             continue
-        yield 0, "%s: %s active" % (name, value), [
-            ("ucwa_active_sessions_%s" % name.lower(), value)
-        ]
+        yield 0, f"{name}: {value} active", [("ucwa_active_sessions_%s" % name.lower(), value)]
 
     yield from wmi_yield_raw_counter(
         parsed.get("LS:WEB - Throttling and Authentication"),

@@ -304,13 +304,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
-                "Failed to create trusted CA file '%s': %s"
-                % (self.trusted_cas_file, traceback.format_exc())
+                f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
 
-    def _update_trusted_cas(  # type: ignore[no-untyped-def]
-        self, current_config
-    ) -> ConfigurationWarnings:
+    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:  # type: ignore[no-untyped-def]
         trusted_cas: list[str] = []
         errors: ConfigurationWarnings = []
 

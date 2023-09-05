@@ -158,7 +158,7 @@ def check_rabbitmq_nodes(item, params, parsed):
         if alarm_value:
             alarm_state = params.get(alarm_key)
 
-            yield alarm_state, "%s: %s" % (
+            yield alarm_state, "{}: {}".format(
                 alarm_infotext,
                 str(alarm_value).replace("True", "yes").replace("False", "no"),
             )
@@ -382,7 +382,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         value_check = perc_value
         warn_abs: int | None = int((warn / 100.0) * total)
         crit_abs: int | None = int((crit / 100.0) * total)
-        level_msg = " (warn/crit at %s/%s)" % (
+        level_msg = " (warn/crit at {}/{})".format(
             render.percent(warn),
             render.percent(crit),
         )
@@ -390,7 +390,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         value_check = value
         warn_abs = warn
         crit_abs = crit
-        level_msg = " (warn/crit at %s/%s)" % (warn, crit)
+        level_msg = f" (warn/crit at {warn}/{crit})"
 
     state, _info, _perf = check_levels(
         value_check,
@@ -398,7 +398,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         (warn, crit),
     )
 
-    infotext = "%s: %s of %s, %s" % (
+    infotext = "{}: {} of {}, {}".format(
         info_text,
         value,
         total,

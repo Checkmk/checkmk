@@ -91,7 +91,7 @@ def check_silverpeak(_item, _params, parsed):
     cnt_crit = len([alarm for alarm in alarms if alarm["state"] == 2])
     cnt_unkn = len([alarm for alarm in alarms if alarm["state"] == 3])
 
-    yield 0, "%s active alarms. OK: %s, WARN: %s, CRIT: %s, UNKNOWN: %s" % (
+    yield 0, "{} active alarms. OK: {}, WARN: {}, CRIT: {}, UNKNOWN: {}".format(
         alarm_cnt,
         cnt_ok,
         cnt_warn,
@@ -100,7 +100,7 @@ def check_silverpeak(_item, _params, parsed):
     )
 
     for elem in alarms:
-        yield elem["state"], "\nAlarm: %s, Alarm-Source: %s, Severity: %s" % (
+        yield elem["state"], "\nAlarm: {}, Alarm-Source: {}, Severity: {}".format(
             elem["descr"],
             elem["source"],
             elem["severity_as_text"],

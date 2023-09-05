@@ -33,7 +33,7 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
     }
     firmware = info[0][0]
     state = saveint(info[0][1])
-    message = "State: %s, Firmware: %s" % (states[state], firmware)
+    message = f"State: {states[state]}, Firmware: {firmware}"
     if state == 1:
         return 0, message
     if state in [2, 4]:

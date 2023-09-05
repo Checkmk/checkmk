@@ -121,8 +121,8 @@ def check_filestats_extremes(files, params, show_files=False):
 
         files_with_metric.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
-            levels = params.get("max%s_%s" % (key, label), (None, None)) + params.get(
-                "min%s_%s" % (key, label), (None, None)
+            levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
+                f"min{key}_{label}", (None, None)
             )
             yield check_levels(
                 efile[key],
@@ -135,8 +135,8 @@ def check_filestats_extremes(files, params, show_files=False):
         if not show_files:
             continue
 
-        min_label_levels = params.get("max%s_%s" % (key, minlabel), (None, None)) + params.get(
-            "min%s_%s" % (key, minlabel), (None, None)
+        min_label_levels = params.get(f"max{key}_{minlabel}", (None, None)) + params.get(
+            f"min{key}_{minlabel}", (None, None)
         )
         for efile in files_with_metric:
             state, _text, _no_perf = check_levels(
@@ -147,15 +147,15 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: %s, Size: %s%s" % (
+                text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
                     get_bytes_human_readable(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
 
-        max_label_levels = params.get("max%s_%s" % (key, maxlabel), (None, None)) + params.get(
-            "min%s_%s" % (key, maxlabel), (None, None)
+        max_label_levels = params.get(f"max{key}_{maxlabel}", (None, None)) + params.get(
+            f"min{key}_{maxlabel}", (None, None)
         )
         for efile in reversed(files_with_metric):
             state, _text, _no_perf = check_levels(
@@ -166,7 +166,7 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: %s, Size: %s%s" % (
+                text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
                     get_bytes_human_readable(efile["size"]),
                     state_markers[state],

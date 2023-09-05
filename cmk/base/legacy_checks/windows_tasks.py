@@ -191,7 +191,7 @@ def check_windows_tasks(item, params, parsed):
         ("Next Run Time", "Next run time"),
     ]:
         if key in data:
-            additional_infos.append("%s: %s" % (title, data[key]))
+            additional_infos.append(f"{title}: {data[key]}")
 
     if additional_infos:
         yield 0, ", ".join(additional_infos)

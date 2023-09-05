@@ -79,7 +79,7 @@ def check_bluecat_operational_state(
         leases = section["leases"]
         yield Result(
             state=State.OK,
-            summary="%s lease%s per second" % (leases, "" if leases == 1 else "s"),
+            summary="{} lease{} per second".format(leases, "" if leases == 1 else "s"),
         )
         yield Metric(
             "leases",
@@ -138,7 +138,7 @@ def cluster_check_bluecat_operational_state(
             if isinstance(result, Result):
                 result = Result(
                     state=result.state,
-                    summary="%s on %s" % (result.summary, ok_node_results.name),
+                    summary=f"{result.summary} on {ok_node_results.name}",
                 )
             yield result
     else:

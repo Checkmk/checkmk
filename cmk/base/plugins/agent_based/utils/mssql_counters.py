@@ -27,7 +27,7 @@ def discovery_mssql_counters_generic(
     dflt: Optional[Dict[str, str]] = None,
 ) -> DiscoveryResult:
     yield from (
-        Service(item="%s %s" % (obj, instance), parameters=dflt)
+        Service(item=f"{obj} {instance}", parameters=dflt)
         for (obj, instance), counters in section.items()
         if want_counters.intersection(counters)
     )
@@ -56,7 +56,7 @@ def get_int(mapping: Counters, key: str) -> int:
     result = mapping.get(key)
     if isinstance(result, int):
         return result
-    raise ValueError("Cannot handle %r=%r" % (key, result))
+    raise ValueError(f"Cannot handle {key!r}={result!r}")
 
 
 def get_item(item: str, section: Section) -> Tuple[Counters, str]:

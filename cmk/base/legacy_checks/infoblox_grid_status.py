@@ -24,7 +24,7 @@ def check_infoblox_grid_status(_no_item, _no_params, info):
     else:
         state = 2
 
-    return state, "Status: %s, Master virtual IP: %s" % (status_readable, master_vip)
+    return state, f"Status: {status_readable}, Master virtual IP: {master_vip}"
 
 
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(

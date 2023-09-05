@@ -37,7 +37,7 @@ def discover_cmciii_sensors(
 
 def get_item(id_: str, params: DiscoveryParams, sensor: Sensor) -> str:
     if params.get("use_sensor_description", False):
-        return "%s-%s %s" % (sensor["_location_"], sensor["_index_"], sensor["DescName"])
+        return "{}-{} {}".format(sensor["_location_"], sensor["_index_"], sensor["DescName"])
     return id_
 
 

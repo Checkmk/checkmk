@@ -31,7 +31,7 @@ def parse_raritan_emx(string_table):
         if rack_type_readable != "":
             extra_name += " " + rack_type_readable
 
-        rack_name = ("Rack %s%s %s" % (rack_id, extra_name, rack_name)).replace("DC", "").strip()
+        rack_name = (f"Rack {rack_id}{extra_name} {rack_name}").replace("DC", "").strip()
 
         if rack_type in ["binary", ""]:
             rack_value = None

@@ -42,10 +42,10 @@ def inventory_oracle_jobs(info):
             continue
         # old format < RDBMS 12.1
         if 3 <= len(line) <= 10:
-            yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
+            yield f"{line[0]}.{line[1]}.{line[2]}", {}
         else:
             # new format: sid.pdb_name.job_owner.job_name
-            yield "%s.%s.%s.%s" % (line[0], line[1], line[2], line[3]), {}
+            yield f"{line[0]}.{line[1]}.{line[2]}.{line[3]}", {}
 
 
 def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches

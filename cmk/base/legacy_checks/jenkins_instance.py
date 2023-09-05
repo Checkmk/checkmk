@@ -56,7 +56,7 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
         elif parsed_data is None:
             state = 3
 
-        yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])
+        yield state, f"{infotext}: {MAP_INSTANCE_STATE[parsed_data]}"
 
 
 check_info["jenkins_instance"] = LegacyCheckDefinition(

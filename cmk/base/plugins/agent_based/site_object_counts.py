@@ -60,11 +60,11 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
             for counted_obj, count in counts.items():
                 global_cmds_or_tags_counts.setdefault(counted_obj, 0)
                 global_cmds_or_tags_counts[counted_obj] += count
-                site_counts.append("%s %s" % (count, counted_obj))
-            site_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(site_counts)))
+                site_counts.append(f"{count} {counted_obj}")
+            site_info.append("{}: {}".format(cmds_or_tags.title(), ", ".join(site_counts)))
         yield Result(
             state=State.OK,
-            notice="[%s] %s" % (site, ", ".join(site_info)),
+            notice="[{}] {}".format(site, ", ".join(site_info)),
         )
 
     global_info = []
@@ -72,11 +72,11 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
         cmds_or_tags_info = []
         for counted_obj, count in counts.items():
             yield Metric(
-                ("%s %s" % (cmds_or_tags, counted_obj)).lower().replace(" ", "_").replace(".", "_"),
+                (f"{cmds_or_tags} {counted_obj}").lower().replace(" ", "_").replace(".", "_"),
                 count,
             )
-            cmds_or_tags_info.append("%s %s" % (count, counted_obj))
-        global_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(cmds_or_tags_info)))
+            cmds_or_tags_info.append(f"{count} {counted_obj}")
+        global_info.append("{}: {}".format(cmds_or_tags.title(), ", ".join(cmds_or_tags_info)))
 
     yield Result(
         state=State.OK,
@@ -89,7 +89,7 @@ def cluster_check_site_object_counts(
 ) -> type_defs.CheckResult:
     yield from check_site_object_counts(
         {
-            "%s/%s" % (site_name, node_name): site_counts
+            f"{site_name}/{node_name}": site_counts
             for node_name, node_section in section.items()
             for site_name, site_counts in (node_section.items() if node_section is not None else ())
         }

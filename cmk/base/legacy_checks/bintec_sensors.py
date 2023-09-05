@@ -114,7 +114,7 @@ def check_bintec_sensors_voltage(item, _no_params, info):
         if sensor_descr == item:
             sensor_value = int(sensor_value) / 1000.0
 
-            message = "%s is at %s V" % (sensor_descr, sensor_value)
+            message = f"{sensor_descr} is at {sensor_value} V"
             perfdata = [("voltage", str(sensor_value) + "V")]
 
             return 0, message, perfdata

@@ -6,7 +6,7 @@
 import dataclasses
 import enum
 from collections.abc import Mapping, Sequence
-from typing import Any, List
+from typing import Any, List, Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -86,22 +86,29 @@ def _filter_thresholds_for_relation(
     return {thresh.severity: thresh for thresh in thresholds if thresh.relation == filter_comp_op}
 
 
-def _parse_temperature_thresholds(
-    filtered_thresholds: Mapping[EntSensorThresholdSeverity, EntSensorThreshold],
+def _parse_specified_thresholds(
+    thresholds: Sequence[EntSensorThreshold],
+    specified_relation: Literal[
+        EntSensorThresholdRelation.GREATER_OR_EQUAL, EntSensorThresholdRelation.LESS_THAN
+    ],
     factor: float,
 ) -> _Levels:
-    filtered_thresholds = dict(filtered_thresholds)
-    # thresholds can be (minor, major, critical, shutdown), but not all have to be defined
-    # WARN <- minor, CRIT <- min(major, critical, shutdown)
-    warn_threshold = filtered_thresholds.pop(EntSensorThresholdSeverity.MINOR, None)
-    crit_threshold_val = min(
-        (thresh.value * factor for thresh in filtered_thresholds.values()), default=None
+    filtered_thresholds = _filter_thresholds_for_relation(thresholds, specified_relation)
+    # thresholds can be (minor, major, critical), but not all have to be defined
+    # WARN <- minor, CRIT <- min(major, critical)
+    warn_threshold = filtered_thresholds.get(EntSensorThresholdSeverity.MINOR)
+    crit_threshold = filtered_thresholds.get(
+        EntSensorThresholdSeverity.MAJOR,
+        filtered_thresholds.get(EntSensorThresholdSeverity.CRITICAL),
     )
-    if crit_threshold_val is None:
-        return None
-    if warn_threshold is None:
-        return crit_threshold_val, crit_threshold_val
-    return warn_threshold.value * factor, crit_threshold_val
+
+    match (warn_threshold, crit_threshold):
+        case (EntSensorThreshold(value=warn), EntSensorThreshold(value=crit)):
+            return warn * factor, crit * factor
+        case (None, EntSensorThreshold(value=crit)):
+            return crit * factor, crit * factor
+        case _:
+            return None
 
 
 def _parse_unspecified_thresholds(
@@ -114,10 +121,12 @@ def _parse_unspecified_thresholds(
     # However, we interpreted the levels (without even considering the severity at all) as
     # a 4-tuple before, so we should continue doing so to avoid breaking existing installations.
     match sorted([t.value * factor for t in thresholds]):
+        # coerce into our levels representation if there are 4 or 2 thresholds.
         case [crit_lower, warn_lower, warn_upper, crit_upper]:
             return (warn_upper, crit_upper), (warn_lower, crit_lower)
         case [warn_upper, crit_upper]:
             return (warn_upper, crit_upper), None
+        # No further guessing otherwise
         case _:
             return None, None
 
@@ -293,17 +302,17 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
                     # sensor values can be compared to the thresholds using different operators
                     # (<, <=, >, >=, =, !=))
                     # use the threshold only if the comp operator is the same as check_levels uses
-                    greater_equal_thresholds = _filter_thresholds_for_relation(
-                        specified_thresholds, EntSensorThresholdRelation.GREATER_OR_EQUAL
+                    dev_levels_upper = _parse_specified_thresholds(
+                        thresholds[sensor_id],
+                        EntSensorThresholdRelation.GREATER_OR_EQUAL,
+                        factor,
                     )
-                    dev_levels_upper = _parse_temperature_thresholds(
-                        greater_equal_thresholds, factor
+                    dev_levels_lower = _parse_specified_thresholds(
+                        thresholds[sensor_id],
+                        EntSensorThresholdRelation.LESS_THAN,
+                        factor,
                     )
 
-                    lower_thresholds = _filter_thresholds_for_relation(
-                        specified_thresholds, EntSensorThresholdRelation.LESS_THAN
-                    )
-                    dev_levels_lower = _parse_temperature_thresholds(lower_thresholds, factor)
                 elif unspecified_thresholds:
                     dev_levels_upper, dev_levels_lower = _parse_unspecified_thresholds(
                         unspecified_thresholds, factor

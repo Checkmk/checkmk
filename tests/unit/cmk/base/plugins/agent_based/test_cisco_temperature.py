@@ -115,6 +115,89 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             },
             id="EnvMon threshold fallback",
         ),
+        pytest.param(
+            [
+                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "8", "9", "0", "49", "1"]],
+                [
+                    # thresholds with severity = "other":
+                    # coercion of thresholds to levels, provided relations are ignored.
+                    ["1010.1", "1", "1", "76"],
+                    ["1010.2", "1", "1", "66"],
+                    ["1010.3", "1", "4", "-5"],
+                    ["1010.4", "1", "4", "-15"],
+                ],
+                [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
+                [["description", "1"]],
+            ],
+            {
+                "8": {
+                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
+                    "Switch 1 - Inlet Temp Sensor": {
+                        "dev_levels_lower": (-5.0, -15.0),
+                        "dev_levels_upper": (66.0, 76.0),
+                        "dev_state": (1, "warning"),
+                        "raw_env_mon_state": "2",
+                        "reading": 49,
+                    },
+                }
+            },
+            id="coercion_for_severity_other_4_thresholds",
+        ),
+        pytest.param(
+            [
+                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "8", "9", "0", "49", "1"]],
+                [
+                    # thresholds with severity = "other":
+                    # coercion of thresholds to levels, provided relations are ignored.
+                    ["1010.1", "1", "1", "76"],
+                    ["1010.2", "1", "1", "66"],
+                ],
+                [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
+                [["description", "1"]],
+            ],
+            {
+                "8": {
+                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
+                    "Switch 1 - Inlet Temp Sensor": {
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": (66.0, 76.0),
+                        "dev_state": (1, "warning"),
+                        "raw_env_mon_state": "2",
+                        "reading": 49,
+                    },
+                }
+            },
+            id="coercion_for_severity_other_2_thresholds",
+        ),
+        pytest.param(
+            [
+                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "8", "9", "0", "49", "1"]],
+                [
+                    # No coercion, 3 thresholds are not applicable to our 4 levels.
+                    ["1010.1", "1", "1", "76"],
+                    ["1010.2", "1", "1", "66"],
+                    ["1010.3", "1", "4", "-5"],
+                ],
+                [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
+                [["description", "1"]],
+            ],
+            {
+                "8": {
+                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
+                    "Switch 1 - Inlet Temp Sensor": {
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": (56.0, 56.0),
+                        "dev_state": (1, "warning"),
+                        "raw_env_mon_state": "2",
+                        "reading": 49,
+                    },
+                }
+            },
+            id="fallback_no_coercion_for_severity_other",
+        ),
     ],
 )
 def test_parse_cisco_temperature_thresholds(

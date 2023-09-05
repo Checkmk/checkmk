@@ -8,7 +8,7 @@ import random
 import string
 import typing
 import urllib
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import pytest
 import webtest  # type: ignore[import]
@@ -30,6 +30,27 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.watolib.check_mk_automations
 import cmk.gui.watolib.rulespecs
 
+DEFAULT_VALUE_RAW = """{
+    "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+    "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+}"""
+
+DEFAULT_CONDITIONS: RuleConditions = {
+    "host_tags": [
+        {
+            "key": "criticality",
+            "operator": "is",
+            "value": "prod",
+        },
+        {
+            "key": "networking",
+            "operator": "is_not",
+            "value": "wan",
+        },
+    ],
+    "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+}
+
 
 @pytest.fixture(scope="function", name="new_rule")
 def new_rule_fixture(rule_client: RulesTestClient) -> tuple[webtest.TestResponse, dict[str, Any]]:
@@ -50,34 +71,19 @@ def _create_rule(
     documentation_url: str = "",
     disabled: bool = False,
     ruleset: str = "inventory_df_rules",
-    value_raw: str = """{
-        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-    }""",
+    value: Union[dict[str, Any], list[Any], tuple, str, None] = None,
+    value_raw: str = DEFAULT_VALUE_RAW,
 ) -> tuple[webtest.TestResponse, dict[str, Any]]:
     properties: RuleProperties = {
         "description": description,
         "comment": comment,
         "disabled": disabled,
     }
+
     if documentation_url:
         properties["documentation_url"] = documentation_url
 
-    conditions: RuleConditions = {
-        "host_tags": [
-            {
-                "key": "criticality",
-                "operator": "is",
-                "value": "prod",
-            },
-            {
-                "key": "networking",
-                "operator": "is_not",
-                "value": "wan",
-            },
-        ],
-        "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
-    }
+    conditions: RuleConditions = DEFAULT_CONDITIONS
 
     values = {
         "ruleset": ruleset,
@@ -617,3 +623,60 @@ def test_openapi_cannot_move_rule_before_or_after_itself(rule_client: RulesTestC
     rule_client.move(
         rule_id, {"before_specific_rule": rule_id}, expect_ok=False
     ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("new_rule")
+def test_openapi_edit_nonexistent_rule(rule_client: RulesTestClient) -> None:
+    properties: RuleProperties = {
+        "description": "new description",
+        "comment": "new comment",
+        "disabled": False,
+    }
+
+    res = rule_client.edit(
+        rule_id="i-do-not-exist",
+        value_raw=DEFAULT_VALUE_RAW,
+        conditions=DEFAULT_CONDITIONS,
+        properties=properties,
+        expect_ok=False,
+    ).assert_status_code(404)
+
+    assert res.json["title"] == "Unknown rule."
+    assert res.json["detail"] == "Rule with UUID 'i-do-not-exist' was not found."
+
+
+def test_openapi_edit_rule(rule_client: RulesTestClient) -> None:
+    ruleset = "inventory_df_rules"
+    original_raw_value = "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}"
+    new_raw_value = "{'ignore_fs_types': ['iso9660'], 'never_ignore_mountpoints': ['/mnt/data']}"
+
+    creation_response, _ = _create_rule(
+        rule_client=rule_client,
+        folder="/",
+        comment="I will update this rule and will keep the same index, folder, and ruleset. Only the value will be changed.",
+        ruleset=ruleset,
+        value=original_raw_value,
+    )
+
+    created_rule = creation_response.json
+    rule_id = created_rule["id"]
+    properties = created_rule["extensions"]["properties"]
+    conditions = created_rule["extensions"]["conditions"]
+
+    _create_rule(
+        rule_client=rule_client,
+        folder="/",
+        comment="I am a placeholder rule",
+        ruleset=ruleset,
+    )
+
+    edit_response = rule_client.edit(
+        rule_id=rule_id, value_raw=new_raw_value, conditions=conditions, properties=properties
+    )
+    updated_rule = edit_response.json
+
+    assert updated_rule["id"] == rule_id
+    assert updated_rule["extensions"]["ruleset"] == created_rule["extensions"]["ruleset"]
+    assert updated_rule["extensions"]["folder"] == created_rule["extensions"]["folder"]
+    assert updated_rule["extensions"]["folder_index"] == created_rule["extensions"]["folder_index"]
+    assert updated_rule["extensions"]["value_raw"] == new_raw_value

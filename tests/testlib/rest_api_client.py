@@ -893,6 +893,29 @@ class RulesTestClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def edit(
+        self,
+        rule_id: str,
+        value_raw: str | None = None,
+        conditions: RuleConditions | None = None,
+        properties: RuleProperties | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = _only_set_keys(
+            {
+                "properties": properties if properties is not None else {},
+                "value_raw": value_raw,
+                "conditions": conditions,
+            }
+        )
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
 
 # === Rulesets Endpoint Client ===
 

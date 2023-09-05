@@ -1,0 +1,15 @@
+Title: rule: update a rule preserving its index, folder, and ruleset
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1694014829
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p35
+
+This werk enables the user to update a rule using the REST API. Updating a rule preserves its index, folder, and ruleset.
+
+
+

@@ -12,7 +12,6 @@ from cmk.utils.licensing.registry import register_cre_licensing_handler
 from cmk.utils.version import edition, Edition
 
 import cmk.gui.help
-import cmk.gui.pages
 from cmk.gui import (
     autocompleters,
     crash_reporting,
@@ -45,6 +44,7 @@ from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -89,22 +89,22 @@ def register_sites_options() -> None:
 
 def register() -> None:
     register_cre_licensing_handler()
-    visuals.register(cmk.gui.pages.page_registry, visual_info_registry, filter_registry)
+    visuals.register(page_registry, visual_info_registry, filter_registry)
     views_registration.register(
         permission_section_registry,
-        cmk.gui.pages.page_registry,
+        page_registry,
         visual_type_registry,
         register_post_config_load_hook,
     )
-    inventory.register(cmk.gui.pages.page_registry, visual_info_registry, filter_registry)
+    inventory.register(page_registry, visual_info_registry, filter_registry)
     dashboard.register(
         permission_section_registry,
-        cmk.gui.pages.page_registry,
+        page_registry,
         visual_type_registry,
         dashlet_registry,
     )
     crash_reporting.register(
-        cmk.gui.pages.page_registry,
+        page_registry,
         data_source_registry,
         painter_registry,
         sorter_registry,
@@ -113,7 +113,7 @@ def register() -> None:
 
     if edition() is not Edition.CSE:  # disabled in CSE
         backup_register(
-            cmk.gui.pages.page_registry,
+            page_registry,
             mode_registry,
             main_module_registry,
         )
@@ -144,14 +144,14 @@ def register() -> None:
         )
     mobile.register(layout_registry)
     userdb_registration.register(
-        cmk.gui.pages.page_registry,
+        page_registry,
         user_attribute_registry,
         user_connector_registry,
         job_registry,
     )
     watolib.register()
     wato_registration.register(
-        cmk.gui.pages.page_registry,
+        page_registry,
         painter_registry,
         sorter_registry,
         icon_and_action_registry,
@@ -171,35 +171,33 @@ def register() -> None:
         painter_option_registry,
         permission_section_registry,
         permission_registry,
-        cmk.gui.pages.page_registry,
+        page_registry,
         filter_registry,
         rename_host_hook_registry,
         main_module_topic_registry,
         main_module_registry,
         mode_registry,
     )
-    robotmk.register(cmk.gui.pages.page_registry)
-    cron.register(cmk.gui.pages.page_registry)
-    node_visualization.register(cmk.gui.pages.page_registry, filter_registry)
-    notifications.register(cmk.gui.pages.page_registry)
-    user_message.register(cmk.gui.pages.page_registry)
-    valuespec.register(cmk.gui.pages.page_registry)
-    autocompleters.register(cmk.gui.pages.page_registry)
-    werks.register(cmk.gui.pages.page_registry)
-    login.register(cmk.gui.pages.page_registry)
-    sidebar.register(cmk.gui.pages.page_registry)
-    message.register(cmk.gui.pages.page_registry)
-    cmk.gui.help.register(cmk.gui.pages.page_registry)
-    main.register(cmk.gui.pages.page_registry)
-    logwatch.register(cmk.gui.pages.page_registry)
-    prediction.register(cmk.gui.pages.page_registry)
+    robotmk.register(page_registry)
+    cron.register(page_registry)
+    node_visualization.register(page_registry, filter_registry)
+    notifications.register(page_registry)
+    user_message.register(page_registry)
+    valuespec.register(page_registry)
+    autocompleters.register(page_registry)
+    werks.register(page_registry)
+    login.register(page_registry)
+    sidebar.register(page_registry)
+    message.register(page_registry)
+    cmk.gui.help.register(page_registry)
+    main.register(page_registry)
+    logwatch.register(page_registry)
+    prediction.register(page_registry)
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
-    background_job_registration.register(
-        cmk.gui.pages.page_registry, mode_registry, main_module_registry
-    )
-    graphing.register(cmk.gui.pages.page_registry)
+    background_job_registration.register(page_registry, mode_registry, main_module_registry)
+    graphing.register(page_registry)
 
 
 register()

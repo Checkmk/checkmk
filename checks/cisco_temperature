@@ -7,7 +7,7 @@
 import dataclasses
 import enum
 from collections.abc import Mapping, Sequence
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
@@ -31,6 +31,8 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #
 # See: SUP-4746
 #
+
+_Levels = Optional[Tuple[float, float]]
 
 # OID: ifAdminStatus
 cisco_temperature_admin_state_map = {
@@ -70,22 +72,50 @@ def _filter_thresholds_for_relation(
     return {thresh.severity: thresh for thresh in thresholds if thresh.relation == filter_comp_op}
 
 
-def _parse_temperature_thresholds(
-    filtered_thresholds: Mapping[EntSensorThresholdSeverity, EntSensorThreshold],
+def _parse_specified_thresholds(
+    thresholds: Sequence[EntSensorThreshold],
+    specified_relation: Literal[
+        EntSensorThresholdRelation.GREATER_OR_EQUAL, EntSensorThresholdRelation.LESS_THAN
+    ],
     factor: float,
-) -> Optional[Tuple[float, float]]:
-    filtered_thresholds = dict(filtered_thresholds)
-    # thresholds can be (minor, major, critical, shutdown), but not all have to be defined
-    # WARN <- minor, CRIT <- min(major, critical, shutdown)
-    warn_threshold = filtered_thresholds.pop(EntSensorThresholdSeverity.MINOR, None)
-    crit_threshold_val = min(
-        (thresh.value * factor for thresh in filtered_thresholds.values()), default=None
+) -> _Levels:
+    filtered_thresholds = _filter_thresholds_for_relation(thresholds, specified_relation)
+    # thresholds can be (minor, major, critical), but not all have to be defined
+    # WARN <- minor, CRIT <- min(major, critical)
+    warn_threshold = filtered_thresholds.get(EntSensorThresholdSeverity.MINOR)
+    crit_threshold = filtered_thresholds.get(
+        EntSensorThresholdSeverity.MAJOR,
+        filtered_thresholds.get(EntSensorThresholdSeverity.CRITICAL),
     )
-    if crit_threshold_val is None:
+
+    if crit_threshold is None:
         return None
+
     if warn_threshold is None:
-        return crit_threshold_val, crit_threshold_val
-    return warn_threshold.value * factor, crit_threshold_val
+        return crit_threshold.value * factor, crit_threshold.value * factor
+
+    return warn_threshold.value * factor, crit_threshold.value * factor
+
+
+def _parse_unspecified_thresholds(
+    thresholds: Sequence[EntSensorThreshold], factor: int
+) -> tuple[_Levels, _Levels]:
+    # Re-introduced (for temp levels, while being active for dBm levels all the time)
+    # in the scope of SUP-15518
+    # This is essentially guessing. With provided threshold severity "other", we can't know safely
+    # what to do with the provided threshold values.
+    # However, we interpreted the levels (without even considering the severity at all) as
+    # a 4-tuple before, so we should continue doing so to avoid breaking existing installations.
+    levels = sorted([t.value * factor for t in thresholds])
+
+    # coerce into our levels representation if there are 4 or 2 thresholds.
+    if len(levels) == 4:
+        return (levels[2], levels[3]), (levels[1], levels[0])
+    if len(levels) == 2:
+        return (levels[0], levels[1]), None
+
+    # No further guessing otherwise
+    return None, None
 
 
 def parse_cisco_temperature(info):
@@ -194,7 +224,6 @@ def parse_cisco_temperature(info):
         thresholds.setdefault(sensor_id, [])
 
     for endoid, severity, relation, thresh_value in levels_info:
-
         # endoid is e.g. 21549.9 or 21459.10
         sensor_id, _subid = endoid.split(".")
         thresholds.setdefault(sensor_id, []).append(
@@ -235,42 +264,45 @@ def parse_cisco_temperature(info):
         if sensorstate == "1":
             factor = 10.0 ** (float(cisco_entity_exponents[scalecode]) - float(magnitude))
             sensor_attrs["reading"] = float(value) * factor
-            # All sensors have 4 threshold values.
-            # Map thresholds [crit_upper, warn_upper, crit_lower, warn_lower] to
-            # dev_levels (warn_upper, crit_upper, warn_lower, crit_lower) conform
-            # with check_levels() signature.
-            # e.g. [u'75000', u'70000', u'-5000', u'0'] -> (70000, 75000, 0, -5000)
-            # For temperature sensors only the upper levels are considered.
-            # e.g. [u'75000', u'70000, u'-5000', u'0'] -> (70000, 75000)
-            # In case devices do no validation when thresholds are set this could result
-            # in threshold values in a wrong order. To keep the behaviour consistent
-            # to temperature sensors the device levels are ordered accoringly.
-            if sensortype == "dBm" and len(thresholds[sensor_id]) == 4:
-                unsorted_thresholds = thresholds[sensor_id][0:4]
-                converted_thresholds = [t.value * factor for t in unsorted_thresholds]
-                sorted_thresholds = sorted(converted_thresholds, key=float)
-                opt_crit_upper, opt_warn_upper, opt_crit_lower, opt_warn_lower = (
-                    sorted_thresholds[3],
-                    sorted_thresholds[2],
-                    sorted_thresholds[0],
-                    sorted_thresholds[1],
+
+            if sensortype == "dBm":
+                # Don't rely on provided severities and relations at all for dBm.
+                # We observed misleading information here.
+                dev_levels_upper, dev_levels_lower = _parse_unspecified_thresholds(
+                    thresholds[sensor_id], factor
                 )
-                dev_levels_lower = opt_warn_lower, opt_crit_lower
-                dev_levels_upper = opt_warn_upper, opt_crit_upper
 
             elif sensortype == "celsius":
-                # sensor values can be compared to the thresholds using different operators
-                # (<, <=, >, >=, =, !=))
-                # use the threshold only if the comp operator is the same as check_levels uses
-                greater_equal_thresholds = _filter_thresholds_for_relation(
-                    thresholds[sensor_id], EntSensorThresholdRelation.GREATER_OR_EQUAL
-                )
-                dev_levels_upper = _parse_temperature_thresholds(greater_equal_thresholds, factor)
+                unspecified_thresholds = [
+                    thres
+                    for thres in thresholds[sensor_id]
+                    if thres.severity is EntSensorThresholdSeverity.OTHER
+                ]
+                specified_thresholds = [
+                    thres
+                    for thres in thresholds[sensor_id]
+                    if thres.severity is not EntSensorThresholdSeverity.OTHER
+                ]
 
-                lower_thresholds = _filter_thresholds_for_relation(
-                    thresholds[sensor_id], EntSensorThresholdRelation.LESS_THAN
-                )
-                dev_levels_lower = _parse_temperature_thresholds(lower_thresholds, factor)
+                if specified_thresholds:
+                    # sensor values can be compared to the thresholds using different operators
+                    # (<, <=, >, >=, =, !=))
+                    # use the threshold only if the comp operator is the same as check_levels uses
+                    dev_levels_upper = _parse_specified_thresholds(
+                        thresholds[sensor_id],
+                        EntSensorThresholdRelation.GREATER_OR_EQUAL,
+                        factor,
+                    )
+                    dev_levels_lower = _parse_specified_thresholds(
+                        thresholds[sensor_id],
+                        EntSensorThresholdRelation.LESS_THAN,
+                        factor,
+                    )
+
+                elif unspecified_thresholds:
+                    dev_levels_upper, dev_levels_lower = _parse_unspecified_thresholds(
+                        unspecified_thresholds, factor
+                    )
 
             sensor_attrs["dev_levels_lower"] = dev_levels_lower
             sensor_attrs["dev_levels_upper"] = dev_levels_upper

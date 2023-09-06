@@ -30,9 +30,9 @@ def page_menu_dropdown_user_related(
 def _page_menu_entries_related(
     page_name: str, show_shortcuts: bool = True
 ) -> Iterator[PageMenuEntry]:
-    if page_name != "user_change_pw" and not (
-        is_cse_edition := cmk_version.edition() == cmk_version.Edition.CSE
-    ):
+    is_cse_edition = cmk_version.edition() == cmk_version.Edition.CSE
+
+    if page_name != "user_change_pw" and not is_cse_edition:
         yield PageMenuEntry(
             title=_("Change password"),
             icon_name="topic_change_password",

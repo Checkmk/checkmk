@@ -33,7 +33,7 @@ class IconRenderResult(NamedTuple):
         #         Hostname
         #         IP address
         #         Alias
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -49,10 +49,11 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Hostname, IP address, Alias",
         ),
         # Host specification:
         #     Specify host explicitly
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -68,11 +69,12 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Specify host explicitly",
         ),
         # Host specification:
         #   Specify host explicitly
         # Application (regular expression)
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -88,6 +90,7 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host heute',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Specify host explicitly and application by regular expression",
         ),
         # Host specification:
         #     Match host with
@@ -95,7 +98,7 @@ class IconRenderResult(NamedTuple):
         #         IP address
         #         Alias
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -111,13 +114,14 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Hostname, IP address, Alias and ignore Acknowledged events",
         ),
         # Host specification:
         #     Match host with
         #         Alias
         # Application (regular expression)
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -133,13 +137,14 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host my_alias',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Alias, application by regular expression ignore ack events",
         ),
         # Host specification:
         #        Match host with
         #            IP address
         # Application (regular expression)
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -156,6 +161,26 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host 127.0.0.1',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with IP address, application by regular expression ignore ack events",
+        ),
+        # Check how the parser handles the -L parameter in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!-L '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="-L parameter handling",
         ),
     ],
 )

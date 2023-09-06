@@ -46,8 +46,8 @@ from cmk.gui.type_defs import (
     PerfometerSpec,
     RGBColor,
     Row,
+    ScalarBounds,
     TranslatedMetric,
-    TranslatedMetricOpScalar,
     TranslatedMetrics,
     UnitInfo,
     VisualContext,
@@ -209,7 +209,7 @@ class MetricInfoExtended(TypedDict, total=False):
 class NormalizedPerfData(TypedDict):
     orig_name: list[str]
     value: float
-    scalar: dict[str, float]
+    scalar: ScalarBounds
     scale: list[float]
     auto_graph: bool
 
@@ -560,12 +560,12 @@ def find_matching_translation(
     return {}
 
 
-def _scalar_bounds(perf_data: PerfDataTuple, scale: float) -> dict[str, float]:
+def _scalar_bounds(perf_data: PerfDataTuple, scale: float) -> ScalarBounds:
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
     """
-    scalars = {}
+    scalars: ScalarBounds = {}
     if perf_data.warn is not None:
         scalars["warn"] = float(perf_data.warn) * scale
     if perf_data.crit is not None:
@@ -619,16 +619,16 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
 
 
 def _translated_metric_scalar(
-    unit_conversion: Callable[[float], float], normalized_scalar: dict[str, float]
-) -> TranslatedMetricOpScalar:
-    scalar: TranslatedMetricOpScalar = {}
-    if (warning := normalized_scalar.get("warn")) is not None:
+    unit_conversion: Callable[[float], float], scalar_bounds: ScalarBounds
+) -> ScalarBounds:
+    scalar: ScalarBounds = {}
+    if (warning := scalar_bounds.get("warn")) is not None:
         scalar["warn"] = unit_conversion(warning)
-    if (critical := normalized_scalar.get("crit")) is not None:
+    if (critical := scalar_bounds.get("crit")) is not None:
         scalar["crit"] = unit_conversion(critical)
-    if (minimum := normalized_scalar.get("min")) is not None:
+    if (minimum := scalar_bounds.get("min")) is not None:
         scalar["min"] = unit_conversion(minimum)
-    if (maximum := normalized_scalar.get("max")) is not None:
+    if (maximum := scalar_bounds.get("max")) is not None:
         scalar["max"] = unit_conversion(maximum)
     return scalar
 
@@ -936,7 +936,7 @@ def _evaluate_literal(
     if percent:
         var_name = var_name[:-3]
 
-    def _from_scalar(scalar_name: str, scalar: TranslatedMetricOpScalar) -> float | None:
+    def _from_scalar(scalar_name: str, scalar: ScalarBounds) -> float | None:
         match scalar_name:
             case "warn":
                 return scalar.get("warn")

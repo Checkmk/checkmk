@@ -68,7 +68,6 @@ from ._graph_specification import (
     MetricExpression,
     MetricOperation,
     MetricOpRRDChoice,
-    RPNExpression,
 )
 
 LegacyPerfometer = tuple[str, Any]
@@ -732,6 +731,13 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
 # TODO: Refactor evaluate and all helpers into single class
+
+
+@dataclass(frozen=True)
+class RPNExpression:
+    value: float
+    unit_info: UnitInfo
+    color: str
 
 
 def split_expression(expression: MetricExpression) -> tuple[str, str | None, str | None]:

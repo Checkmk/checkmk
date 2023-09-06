@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import SingleInfos, UnitInfo, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -31,13 +31,6 @@ class MetricDefinition:
     expression: MetricExpression
     line_type: LineType
     title: str = ""
-
-
-@dataclass(frozen=True)
-class RPNExpression:
-    value: float
-    unit_info: UnitInfo
-    color: str
 
 
 @dataclass(frozen=True)

@@ -15,11 +15,12 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.graphing._utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_specification import HorizontalRule, RPNExpression
+from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._utils import (
     _hex_color_to_rgb_color,
     AutomaticDict,
     NormalizedPerfData,
+    RPNExpression,
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata

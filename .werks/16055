@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p9
+Version: 2.2.0p10
 
 This Werk enables the use of html tags in custom host and service notes. Previously, such tags were escaped and therefore it was not possible to use html content in the notes.
 

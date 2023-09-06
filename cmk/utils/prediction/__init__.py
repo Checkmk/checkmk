@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from ._paths import PREDICTION_DIR
 from ._plugin_interface import estimate_levels, EstimatedLevels, get_predictive_levels
 from ._prediction import (
     DataStat,
@@ -36,6 +37,7 @@ __all__ = [
     "PredictionData",
     "PredictionInfo",
     "PredictionStore",
+    "PREDICTION_DIR",
     "PredictionParameters",
     "rrd_timestamps",
     "Seconds",

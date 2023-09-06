@@ -10,6 +10,7 @@ from typing import assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 
+from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
     ConsolidationFunctionName,
@@ -76,7 +77,12 @@ def get_predictive_levels(
         now, period_info
     )
 
-    prediction_store = PredictionStore(hostname, service_description, dsname)
+    prediction_store = PredictionStore(
+        PREDICTION_DIR,
+        hostname,
+        service_description,
+        dsname,
+    )
 
     if (
         data_for_pred := _get_prediction(

@@ -344,16 +344,16 @@ def get_rrd_data(
 class PredictionStore:
     def __init__(
         self,
+        basedir: Path,
         host_name: str,
         service_description: str,
         dsname: str,
     ) -> None:
-        self._dir = Path(
-            cmk.utils.paths.var_dir,
-            "prediction",
-            host_name,
-            cmk.utils.pnp_cleanup(service_description),
-            cmk.utils.pnp_cleanup(dsname),
+        self._dir = (
+            basedir
+            / host_name
+            / cmk.utils.pnp_cleanup(service_description)
+            / cmk.utils.pnp_cleanup(dsname)
         )
 
     def available_predictions(self) -> Iterable[PredictionInfo]:

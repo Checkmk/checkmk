@@ -45,6 +45,10 @@ public:
         return paths_.logwatch_directory;
     }
 
+    [[nodiscard]] std::filesystem::path prediction_directory() const override {
+        return paths_.prediction_directory;
+    }
+
     [[nodiscard]] std::filesystem::path event_console_status_socket()
         const override {
         return paths_.event_console_status_socket;

@@ -83,7 +83,9 @@ def page_graph() -> None:
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host_name, service, dsname)
 
-    prediction_store = _prediction.PredictionStore(host_name, service, dsname)
+    prediction_store = _prediction.PredictionStore(
+        _prediction.PREDICTION_DIR, host_name, service, dsname
+    )
 
     timegroup, choices = _load_prediction_information(
         tg_name=request.var("timegroup"),

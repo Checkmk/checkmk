@@ -439,6 +439,8 @@ public:
     [[nodiscard]] virtual std::filesystem::path robotmk_html_log_directory()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path logwatch_directory() const = 0;
+    [[nodiscard]] virtual std::filesystem::path prediction_directory()
+        const = 0;
     [[nodiscard]] virtual std::filesystem::path event_console_status_socket()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path livestatus_socket() const = 0;

@@ -1007,6 +1007,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
             } else if (left == "mk_logwatch_path") {
                 fl_paths.logwatch_directory =
                     check_path("logwatch directory", right);
+            } else if (left == "prediction_path") {
+                fl_paths.prediction_directory =
+                    check_path("prediction directory", right);
             } else if (left == "mkeventd_socket") {
                 fl_paths.event_console_status_socket = right;
             } else if (left == "state_file_created_file") {

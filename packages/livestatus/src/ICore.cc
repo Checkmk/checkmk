@@ -23,6 +23,7 @@ void ICore::dumpPaths(Logger *logger) const {
     Notice(logger) << "Robotmk HTML log directory = "
                    << p->robotmk_html_log_directory();
     Notice(logger) << "logwatch directory = " << p->logwatch_directory();
+    Notice(logger) << "prediction directory = " << p->prediction_directory();
     Notice(logger) << "event console status socket = "
                    << p->event_console_status_socket();
     Notice(logger) << "Livestatus socket = " << p->livestatus_socket();

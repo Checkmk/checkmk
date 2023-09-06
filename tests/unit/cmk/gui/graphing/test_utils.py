@@ -717,38 +717,65 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
     assert utils.split_expression(text) == out
 
 
-def test_evaluate() -> None:
-    perfdata: Perfdata = [(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]]
-    translated_metrics = utils.translate_metrics(perfdata, "check_mk-openvpn_clients")
-    assert utils.evaluate("if_in_octets,8,*@bits/s", translated_metrics) == RPNExpression(
-        16.0,
-        utils.unit_info["bits/s"],
-        "#00e060",
-    )
-    perfdata = [(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]]
-    translated_metrics = utils.translate_metrics(perfdata, "check_mk-df")
-    assert utils.evaluate("fs_size,fs_used,-#e3fff9", translated_metrics) == RPNExpression(
-        6291456,
-        utils.unit_info["bytes"],
-        "#e3fff9",
-    )
-
-    # This is a terrible metric from Nagios plugins. Test is for survival instead of correctness
-    # The unit "percent" is lost on the way. Fixing this would imply also figuring out how to represent
-    # graphs for active-icmp check when host has multiple addresses.
-    assert utils.evaluate(
-        "127.0.0.1pl",
-        utils.translate_metrics(
-            utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0], "check_mk_active-icmp"
+@pytest.mark.parametrize(
+    "perf_data, check_command, raw_expression, value, unit_name, color",
+    [
+        pytest.param(
+            [(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
+            "check_mk-openvpn_clients",
+            "if_in_octets,8,*@bits/s",
+            16.0,
+            "bits/s",
+            "#00e060",
+            id="warn, crit, min, max",
         ),
-    ) == RPNExpression(5, utils.unit_info[""], "#cc00ff")
-
-    # Here the user has a metrics that represent subnets, but the values look like floats
-    # Test that evaluation recognizes the metric from the perf data
+        pytest.param(
+            [(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
+            "check_mk-df",
+            "fs_size,fs_used,-#e3fff9",
+            6291456,
+            "bytes",
+            "#e3fff9",
+            id="None None None None",
+        ),
+        # This is a terrible metric from Nagios plugins. Test is for survival instead of
+        # correctness The unit "percent" is lost on the way. Fixing this would imply also
+        # figuring out how to represent graphs for active-icmp check when host has multiple
+        # addresses.
+        pytest.param(
+            utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0],
+            "check_mk_active-icmp",
+            "127.0.0.1pl",
+            5,
+            "",
+            "#cc00ff",
+            id="warn crit None None",
+        ),
+        # Here the user has a metrics that represent subnets, but the values look like floats
+        # Test that evaluation recognizes the metric from the perf data
+        pytest.param(
+            utils.parse_perf_data("10.172=6")[0],
+            "check_mk-local",
+            "10.172",
+            6,
+            "",
+            "#cc00ff",
+            id="None None None None",
+        ),
+    ],
+)
+def test_evaluate(
+    perf_data: Perfdata,
+    check_command: str,
+    raw_expression: str,
+    value: float,
+    unit_name: str,
+    color: str,
+) -> None:
     assert utils.evaluate(
-        "10.172",
-        utils.translate_metrics(utils.parse_perf_data("10.172=6")[0], "check_mk-local"),
-    ) == RPNExpression(6, utils.unit_info[""], "#cc00ff")
+        raw_expression,
+        utils.translate_metrics(perf_data, check_command),
+    ) == RPNExpression(value, utils.unit_info[unit_name], color)
 
 
 @pytest.mark.parametrize(

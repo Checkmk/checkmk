@@ -263,11 +263,12 @@ class FixRegister:
         config._initialize_data_structures()
         assert not config.check_info
 
-        config.load_all_agent_based_plugins(
+        errors = config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
             checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )
+        assert not errors
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)

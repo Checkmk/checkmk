@@ -16,7 +16,7 @@ PACKAGE_LIBGSF_DESTDIR := $(LIBGSF_INSTALL_DIR)
 PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
 PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
 
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp4),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp5),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	cd $(LIBGSF_BUILD_DIR) && ./configure --prefix=""
 	$(MAKE) -C $(LIBGSF_BUILD_DIR)

@@ -48,8 +48,14 @@ def _create_parse_annotation(
     # this is dumb, but other approaches are not understood by mypy
     if is_list:
         if needs_bytes:
-            return {(List[StringByteTable], "List[StringByteTable]")}
-        return {(List[StringTable], "List[StringTable]")}
+            return {
+                (List[StringByteTable], "List[StringByteTable]"),
+                (list[StringByteTable], "list[StringByteTable]"),
+            }
+        return {
+            (List[StringTable], "List[StringTable]"),
+            (list[StringTable], "list[StringTable]"),
+        }
     if needs_bytes:
         return {(StringByteTable, "StringByteTable")}
     return {(StringTable, "StringTable")}

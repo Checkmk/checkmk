@@ -141,7 +141,7 @@ def parse_if_brocade(
 
 
 def parse_if_lancom(
-    string_table: List[StringByteTable],
+    string_table: list[StringByteTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
     return parse_if_brocade_lancom(

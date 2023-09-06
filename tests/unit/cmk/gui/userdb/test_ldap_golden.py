@@ -6,9 +6,8 @@
 # Golden Tests for the LDAP connector
 # trying to capture the current behavior of the connector to facilitate refactoring
 
-import contextlib
 import datetime
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 from unittest.mock import ANY, MagicMock
 
@@ -105,38 +104,32 @@ def test_connect(mock_ldap: MagicMock) -> None:
     assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]
 
 
-@contextlib.contextmanager
 def _mock_result3(
     mocker: MockerFixture, connector: LDAPUserConnector, ldap_result: Sequence
-) -> Iterator[None]:
+) -> None:
     """Make 'connector._ldap_object' return 'ldap_result' (plus some values that aren't used)."""
-    with mocker.patch.object(
+    mocker.patch.object(
         connector._ldap_obj,
         "result3",
         return_value=(0, ldap_result, 0, [ldap.controls.SimplePagedResultsControl()]),
-    ):
-        yield
+    )
 
 
-@contextlib.contextmanager
-def _mock_needed_attributes(mocker: MockerFixture, connector: LDAPUserConnector) -> Iterator[None]:
+def _mock_needed_attributes(mocker: MockerFixture, connector: LDAPUserConnector) -> None:
     # LDAPUserConnector._needed_attributes uses a set to collect the attributes so we could not
     # rely on the order in our assertion. Fix one.
-    with mocker.patch.object(connector, "_needed_attributes", return_value=["mail", "cn"]):
-        yield
+    mocker.patch.object(connector, "_needed_attributes", return_value=["mail", "cn"])
 
 
-@contextlib.contextmanager
-def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> Iterator[None]:
-    with mocker.patch.object(
+def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> None:
+    mocker.patch.object(
         connector._ldap_obj,
         "simple_bind_s",
         side_effect=[
             ldap.INVALID_CREDENTIALS({"desc": "Invalid credentials"}),
             None,  # don't fail on the second call, which comes from _default_bind()
         ],
-    ):
-        yield
+    )
 
 
 def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
@@ -154,17 +147,31 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector.connect()
     assert connector._ldap_obj
 
-    with _mock_needed_attributes(mocker, connector), _mock_result3(mocker, connector, ldap_result):
-        result = connector.get_users(add_filter=add_filter)
+    _mock_needed_attributes(mocker, connector)
+    _mock_result3(mocker, connector, ldap_result)
+    result = connector.get_users(add_filter=add_filter)
 
     assert expected_result == result
     connector._ldap_obj.search_ext.assert_called_once_with(
         cfg["user_dn"],
         ldap.SCOPE_SUBTREE,
         expected_filter,
-        ["uid", "mail", "cn"],
+        AnyOrderMatcher(["uid", "mail", "cn"]),
         serverctrls=ANY,
     )
+
+
+class AnyOrderMatcher:
+    def __init__(self, args: Sequence):
+        self.args = args
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, list):
+            raise ValueError(f"Invalid value: {other!r}")
+        return set(other) == set(self.args)
+
+    def __repr__(self) -> str:
+        return f"AnyOrderMatcher({self.args})"
 
 
 def test_do_sync(mocker: MockerFixture) -> None:
@@ -183,13 +190,13 @@ def test_do_sync(mocker: MockerFixture) -> None:
         assert UserId("carol") in users_to_save
         assert users_to_save[UserId("carol")]["connector"] == connector.id
 
-    with mocker.patch.object(connector, "get_users", return_value=ldap_users):
-        connector.do_sync(
-            add_to_changelog=True,
-            only_username=None,
-            load_users_func=lambda _: loaded_users,
-            save_users_func=assert_expected_users,
-        )
+    mocker.patch.object(connector, "get_users", return_value=ldap_users)
+    connector.do_sync(
+        add_to_changelog=True,
+        only_username=None,
+        load_users_func=lambda _: loaded_users,
+        save_users_func=assert_expected_users,
+    )
 
 
 def test_check_credentials_valid(mocker: MockerFixture) -> None:
@@ -197,8 +204,8 @@ def test_check_credentials_valid(mocker: MockerFixture) -> None:
     connector.connect()
     assert connector._ldap_obj
 
-    with _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})]):
-        result = connector.check_credentials(UserId("carol"), Password("hunter2"))
+    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    result = connector.check_credentials(UserId("carol"), Password("hunter2"))
 
     connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
     assert result == UserId("carol_id@LDAP_SUFFIX")
@@ -209,10 +216,9 @@ def test_check_credentials_invalid(mocker: MockerFixture) -> None:
     connector.connect()
     assert connector._ldap_obj
 
-    with _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})]), _mock_simple_bind_s(
-        mocker, connector
-    ):
-        assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
+    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    _mock_simple_bind_s(mocker, connector)
+    assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
 
 
 def test_check_credentials_not_found(mocker: MockerFixture) -> None:
@@ -220,5 +226,5 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     connector.connect()
     assert connector._ldap_obj
 
-    with mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd"):
-        assert connector.check_credentials(UserId("alice"), Password("hunter2")) is None
+    mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
+    assert connector.check_credentials(UserId("alice"), Password("hunter2")) is None

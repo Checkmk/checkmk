@@ -49,11 +49,9 @@ def main() {
             /// attempts to use a trap in the .venv Makefile-target were also not succesful - SIGKILL is not trap-able...
             /// So at the end, we need to use a groovy try/catch to ensure a rebuild in the next job in case something failed
             try {
-                docker_image_from_alias("IMAGE_TESTING").inside() {
-                    withEnv(["PIPENV_VERBOSE=1"]) {
-                        sh("make .venv");
-                    }
-                }
+                sh("""scripts/run-in-docker.sh \
+                    make .venv
+                """);
             } catch (e) {
                 sh("rm -rf .venv");
                 throw e;

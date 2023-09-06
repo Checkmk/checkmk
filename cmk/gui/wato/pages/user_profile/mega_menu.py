@@ -6,6 +6,8 @@
 """The user profile mega menu and related AJAX endpoints"""
 
 
+import cmk.utils.version as cmk_version
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -78,20 +80,29 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             sort_index=10,
             icon="topic_profile",
         ),
-        TopicMenuItem(
-            name="change_password",
-            title=_("Change password"),
-            url="user_change_pw.py",
-            sort_index=30,
-            icon="topic_change_password",
-        ),
-        TopicMenuItem(
-            name="two_factor",
-            title=_("Two-factor authentication"),
-            url="user_two_factor_overview.py",
-            sort_index=30,
-            icon="topic_two_factor",
-        ),
+    ]
+
+    if cmk_version.edition() != cmk_version.Edition.CSE:
+        items.extend(
+            [
+                TopicMenuItem(
+                    name="change_password",
+                    title=_("Change password"),
+                    url="user_change_pw.py",
+                    sort_index=30,
+                    icon="topic_change_password",
+                ),
+                TopicMenuItem(
+                    name="two_factor",
+                    title=_("Two-factor authentication"),
+                    url="user_two_factor_overview.py",
+                    sort_index=30,
+                    icon="topic_two_factor",
+                ),
+            ]
+        )
+
+    items.append(
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
@@ -99,8 +110,8 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             sort_index=40,
             icon="sidebar_logout",
             target="_self",
-        ),
-    ]
+        )
+    )
 
     if user.may("general.edit_notifications"):
         items.insert(

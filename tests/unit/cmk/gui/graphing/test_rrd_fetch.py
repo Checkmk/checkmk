@@ -37,8 +37,15 @@ def test_needed_elements_of_expression() -> None:
     assert set(
         _needed_elements_of_expression(
             MetricOpTransformation(
-                ("percentile", 95.0),
-                [MetricOpRRDChoice(HostName("heute"), "CPU utilization", "util", "max")],
+                parameters=("percentile", 95.0),
+                operands=[
+                    MetricOpRRDChoice(
+                        host_name=HostName("heute"),
+                        service_name="CPU utilization",
+                        metric_name="util",
+                        consolidation_func_name="max",
+                    )
+                ],
             ),
             lambda *args: (),
         )
@@ -78,12 +85,12 @@ _GRAPH_RECIPE = GraphRecipe(
             title="Temperature",
             line_type="area",
             expression=MetricOpRRDSource(
-                SiteId("NO_SITE"),
-                HostName("my-host"),
-                "Temperature Zone 6",
-                "temp",
-                "max",
-                1,
+                site_id=SiteId("NO_SITE"),
+                host_name=HostName("my-host"),
+                service_name="Temperature Zone 6",
+                metric_name="temp",
+                consolidation_func_name="max",
+                scale=1,
             ),
             color="#ffa000",
             unit="c",

@@ -245,38 +245,27 @@ def metric_expression_to_graph_recipe_expression(
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    """Convert 'user,util,+,2,*' into this:
-
-        ('operator',
-            '*',
-            [('operator',
-            '+',
-            [('rrd',
-                'heute',
-                u'heute',
-                u'CPU utilization',
-    ...."""
     site_id = lq_row["site"]
     host_name = lq_row["host_name"]
     service_name = lq_row.get("service_description", "_HOST_")
 
     def _parse_operator(part: str) -> MetricOpOperator:
         if part == "+":
-            return MetricOpOperator("+")
+            return MetricOpOperator(operator_name="+")
         if part == "*":
-            return MetricOpOperator("*")
+            return MetricOpOperator(operator_name="*")
         if part == "-":
-            return MetricOpOperator("-")
+            return MetricOpOperator(operator_name="-")
         if part == "/":
-            return MetricOpOperator("/")
+            return MetricOpOperator(operator_name="/")
         if part == "MAX":
-            return MetricOpOperator("MAX")
+            return MetricOpOperator(operator_name="MAX")
         if part == "MIN":
-            return MetricOpOperator("MIN")
+            return MetricOpOperator(operator_name="MIN")
         if part == "AVERAGE":
-            return MetricOpOperator("AVERAGE")
+            return MetricOpOperator(operator_name="AVERAGE")
         if part == "MERGE":
-            return MetricOpOperator("MERGE")
+            return MetricOpOperator(operator_name="MERGE")
         raise ValueError(part)
 
     expression = split_expression(expression)[0]
@@ -296,20 +285,20 @@ def metric_expression_to_graph_recipe_expression(
             for metric_name, scale in zip(metric_names, tme["scale"]):
                 atoms.append(
                     MetricOpRRDSource(
-                        site_id,
-                        host_name,
-                        service_name,
-                        pnp_cleanup(metric_name),
-                        cf,
-                        scale,
+                        site_id=site_id,
+                        host_name=host_name,
+                        service_name=service_name,
+                        metric_name=pnp_cleanup(metric_name),
+                        consolidation_func_name=cf,
+                        scale=scale,
                     )
                 )
             if len(metric_names) > 1:
-                atoms.append(MetricOpOperator("MERGE"))
+                atoms.append(MetricOpOperator(operator_name="MERGE"))
 
         else:
             try:
-                atoms.append(MetricOpConstant(float(part)))
+                atoms.append(MetricOpConstant(value=float(part)))
             except ValueError:
                 atoms.append(_parse_operator(part))
 
@@ -320,7 +309,7 @@ def metric_expression_to_graph_recipe_expression(
     ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
         if not isinstance(expression, MetricOpOperator):
             raise TypeError(expression)
-        expression.add_operands([left, right])
+        expression.operands.extend([left, right])
         return expression
 
     return stack_resolver(

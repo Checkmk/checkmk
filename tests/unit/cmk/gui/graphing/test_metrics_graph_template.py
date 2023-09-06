@@ -60,28 +60,47 @@ def test_rpn_consolidation_exception(
         (
             "fs_size,fs_used,-",
             MetricOpOperator(
-                "-",
-                [
-                    MetricOpRRDSource(SiteId(""), HostName(""), "", "fs_size", None, 1048576),
-                    MetricOpRRDSource(SiteId(""), HostName(""), "", "_", None, 1048576),
+                operator_name="-",
+                operands=[
+                    MetricOpRRDSource(
+                        site_id=SiteId(""),
+                        host_name=HostName(""),
+                        service_name="",
+                        metric_name="fs_size",
+                        consolidation_func_name=None,
+                        scale=1048576,
+                    ),
+                    MetricOpRRDSource(
+                        site_id=SiteId(""),
+                        host_name=HostName(""),
+                        service_name="",
+                        metric_name="_",
+                        consolidation_func_name=None,
+                        scale=1048576,
+                    ),
                 ],
             ),
         ),
         (
             "fs_growth.min,0,MIN,-1,*",
             MetricOpOperator(
-                "*",
-                [
+                operator_name="*",
+                operands=[
                     MetricOpOperator(
-                        "MIN",
-                        [
+                        operator_name="MIN",
+                        operands=[
                             MetricOpRRDSource(
-                                SiteId(""), HostName(""), "", "growth", "min", 12.136296296296296
+                                site_id=SiteId(""),
+                                host_name=HostName(""),
+                                service_name="",
+                                metric_name="growth",
+                                consolidation_func_name="min",
+                                scale=12.136296296296296,
                             ),
-                            MetricOpConstant(0.0),
+                            MetricOpConstant(value=0.0),
                         ],
                     ),
-                    MetricOpConstant(-1.0),
+                    MetricOpConstant(value=-1.0),
                 ],
             ),
         ),
@@ -138,7 +157,14 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#00ffc6",
                 title="Used space",
                 line_type="area",
-                expression=MetricOpRRDSource(SiteId(""), HostName(""), "", "_", "max", 1048576),
+                expression=MetricOpRRDSource(
+                    site_id=SiteId(""),
+                    host_name=HostName(""),
+                    service_name="",
+                    metric_name="_",
+                    consolidation_func_name="max",
+                    scale=1048576,
+                ),
                 visible=True,
             ),
             GraphMetric(
@@ -147,10 +173,24 @@ def test_create_graph_recipe_from_template() -> None:
                 title="Free space",
                 line_type="stack",
                 expression=MetricOpOperator(
-                    "-",
-                    [
-                        MetricOpRRDSource(SiteId(""), HostName(""), "", "fs_size", "max", 1048576),
-                        MetricOpRRDSource(SiteId(""), HostName(""), "", "_", "max", 1048576),
+                    operator_name="-",
+                    operands=[
+                        MetricOpRRDSource(
+                            site_id=SiteId(""),
+                            host_name=HostName(""),
+                            service_name="",
+                            metric_name="fs_size",
+                            consolidation_func_name="max",
+                            scale=1048576,
+                        ),
+                        MetricOpRRDSource(
+                            site_id=SiteId(""),
+                            host_name=HostName(""),
+                            service_name="",
+                            metric_name="_",
+                            consolidation_func_name="max",
+                            scale=1048576,
+                        ),
                     ],
                 ),
                 visible=True,
@@ -161,7 +201,12 @@ def test_create_graph_recipe_from_template() -> None:
                 title="Total size",
                 line_type="line",
                 expression=MetricOpRRDSource(
-                    SiteId(""), HostName(""), "", "fs_size", "max", 1048576
+                    site_id=SiteId(""),
+                    host_name=HostName(""),
+                    service_name="",
+                    metric_name="fs_size",
+                    consolidation_func_name="max",
+                    scale=1048576,
                 ),
                 visible=True,
             ),

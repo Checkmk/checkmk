@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Annotated, Literal, TypedDict
 
 from pydantic import BaseModel, Field, parse_obj_as
@@ -33,8 +33,7 @@ class MetricDefinition:
     title: str = ""
 
 
-@dataclass(frozen=True)
-class MetricOpConstant:
+class MetricOpConstant(BaseModel, frozen=True):
     value: float
 
     @property
@@ -42,8 +41,7 @@ class MetricOpConstant:
         return "constant"
 
 
-@dataclass(frozen=True)
-class MetricOpScalar:
+class MetricOpScalar(BaseModel, frozen=True):
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
@@ -54,53 +52,18 @@ class MetricOpScalar:
         return "scalar"
 
 
-@dataclass(frozen=True)
-class MetricOpOperator:
+class MetricOpOperator(BaseModel, frozen=True):
     operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
-    # TODO pydantic throws a warning: attributes starting with "_"
-    _operands: list[MetricOperation] = field(default_factory=list)
+    # TODO Should be a sequence
+    operands: list[MetricOperation] = []
 
     @property
     def ident(self) -> Literal["operator"]:
         return "operator"
 
-    @property
-    def operands(self) -> Sequence[MetricOperation]:
-        return self._operands
-
-    def add_operands(self, operands: Sequence[MetricOperation]) -> None:
-        self._operands.extend(operands)
-
-
-@dataclass(frozen=True)
-class MetricOpRRDChoice:
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None
-
-    @property
-    def ident(self) -> Literal["rrd_choice"]:
-        return "rrd_choice"
-
-
-@dataclass(frozen=True)
-class MetricOpRRDSource:
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None
-    scale: float
-
-    @property
-    def ident(self) -> Literal["rrd"]:
-        return "rrd"
-
 
 # TODO transformation is not part of cre but we first have to fix all types
-@dataclass(frozen=True)
-class MetricOpTransformation:
+class MetricOpTransformation(BaseModel, frozen=True):
     # "percentile", {"percentile": INT}
     # "forecast", {
     #     "past": ...,
@@ -115,8 +78,7 @@ class MetricOpTransformation:
     parameters: tuple[Literal["percentile"], float] | tuple[
         Literal["forecast"], Mapping[str, object]
     ]
-    # TODO pydantic throws a warning: attributes starting with "_"
-    _operands: list[MetricOperation] = field(default_factory=list)
+    operands: Sequence[MetricOperation]
 
     @property
     def ident(self) -> Literal["transformation"]:
@@ -125,10 +87,6 @@ class MetricOpTransformation:
     @property
     def mode(self) -> Literal["percentile", "forecast"]:
         return self.parameters[0]
-
-    @property
-    def operands(self) -> Sequence[MetricOperation]:
-        return self._operands
 
 
 # TODO Check: Similar to CombinedSingleMetricSpec
@@ -142,8 +100,7 @@ class SingleMetricSpec(TypedDict):
 
 
 # TODO combined is not part of cre but we first have to fix all types
-@dataclass(frozen=True)
-class MetricOpCombined:
+class MetricOpCombined(BaseModel, frozen=True):
     single_metric_spec: SingleMetricSpec
 
     @property
@@ -151,15 +108,48 @@ class MetricOpCombined:
         return "combined"
 
 
+class MetricOpRRDSource(BaseModel, frozen=True):
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    consolidation_func_name: GraphConsoldiationFunction | None
+    scale: float
+
+    @property
+    def ident(self) -> Literal["rrd"]:
+        return "rrd"
+
+
+class MetricOpRRDChoice(BaseModel, frozen=True):
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    consolidation_func_name: GraphConsoldiationFunction | None
+
+    @property
+    def ident(self) -> Literal["rrd_choice"]:
+        return "rrd_choice"
+
+
 MetricOperation = (
     MetricOpConstant
-    | MetricOpScalar
     | MetricOpOperator
-    | MetricOpRRDChoice
-    | MetricOpRRDSource
     | MetricOpTransformation
     | MetricOpCombined
+    # -----------------------------------------------------------------------------------------
+    # The order of RRDSource and RRDChoice is very important for pydantic deserialization!!!
+    # RRDChoice has a subset of attributes of RRDSource and is - more or less - an intermediate
+    # step. pydantic uses the first matching object.
+    | MetricOpRRDSource
+    | MetricOpRRDChoice
+    | MetricOpScalar
+    # -----------------------------------------------------------------------------------------
 )
+
+
+MetricOpOperator.update_forward_refs()
+MetricOpTransformation.update_forward_refs()
 
 
 class GraphMetric(BaseModel, frozen=True):

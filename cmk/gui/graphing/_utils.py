@@ -1284,10 +1284,10 @@ def metric_recipe_and_unit(
         RenderableRecipe(
             title=metric_title(metric_name),
             expression=MetricOpRRDChoice(
-                HostName(host_name),
-                service_description,
-                metric_name,
-                _parse_consolidation_func_name(consolidation_function),
+                host_name=HostName(host_name),
+                service_name=service_description,
+                metric_name=metric_name,
+                consolidation_func_name=_parse_consolidation_func_name(consolidation_function),
             ),
             color=parse_color_into_hexrgb(mi.get("color", _get_next_random_palette_color())),
             line_type=line_type,

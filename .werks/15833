@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0p9
+Version: 2.2.0p10
 
 Previously it was possible to override any Checkmk agent plugin using
 Custom files rule in Setup. In the case of the agent updater it may 

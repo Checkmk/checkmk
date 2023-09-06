@@ -46,8 +46,8 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleHostCustomAttributes)
     main_module_registry.register(MainModuleServiceGroups)
     main_module_registry.register(MainModuleUsers)
-    main_module_registry.register(MainModuleRoles)
     if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
+        main_module_registry.register(MainModuleRoles)
         main_module_registry.register(MainModuleLDAP)
     main_module_registry.register(MainModuleUserCustomAttributes)
     main_module_registry.register(MainModuleContactGroups)

@@ -69,8 +69,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
-    if edition() is not Edition.CSE:  # disabled in CSE
-        ldap.register(mode_registry)
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)
     object_parameters.register(mode_registry)
@@ -80,7 +78,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     predefined_conditions.register(mode_registry)
     random_hosts.register(mode_registry)
     read_only.register(mode_registry)
-    roles.register(mode_registry)
     rulesets.register(mode_registry)
     search.register(mode_registry)
     services.register(page_registry, mode_registry)
@@ -90,3 +87,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     user_migrate.register(mode_registry)
     user_profile.register(page_registry)
     users.register(mode_registry)
+
+    if edition() is not Edition.CSE:  # disabled in CSE
+        ldap.register(mode_registry)
+        roles.register(mode_registry)

@@ -44,21 +44,21 @@ def _create_parse_annotation(
     *,
     needs_bytes: bool = False,
     is_list: bool = False,
-) -> tuple[type, str]:
+) -> set[tuple[type, str]]:
     # this is dumb, but other approaches are not understood by mypy
     if is_list:
         if needs_bytes:
-            return List[StringByteTable], "List[StringByteTable]"
-        return List[StringTable], "List[StringTable]"
+            return {(List[StringByteTable], "List[StringByteTable]")}
+        return {(List[StringTable], "List[StringTable]")}
     if needs_bytes:
-        return StringByteTable, "StringByteTable"
-    return StringTable, "StringTable"
+        return {(StringByteTable, "StringByteTable")}
+    return {(StringTable, "StringTable")}
 
 
 def _validate_parse_function(
     parse_function: AgentParseFunction | SimpleSNMPParseFunction | SNMPParseFunction,
     *,
-    expected_annotation: tuple[type, str],
+    expected_annotations: set[tuple[type, str]],
 ) -> None:
     """Validate the parse functions signature and type"""
 
@@ -80,10 +80,11 @@ def _validate_parse_function(
     arg = parameters["string_table"]
     if (
         arg.annotation is not arg.empty  # arg.empty is a class, so it's trueish
-        and arg.annotation != expected_annotation[0]
+        and arg.annotation not in {t for t, _ in expected_annotations}
     ):
+        expected = " or ".join(repr(s) for _, s in expected_annotations)
         raise TypeError(
-            f"expected parse function argument annotation {expected_annotation[1]!r}, got {arg.annotation!r}"
+            f"expected parse function argument annotation {expected}, got {arg.annotation!r}"
         )
 
 
@@ -254,7 +255,7 @@ def create_agent_section_plugin(
         if parse_function is not None:
             _validate_parse_function(
                 parse_function,
-                expected_annotation=_create_parse_annotation(),
+                expected_annotations=_create_parse_annotation(),
             )
 
         if host_label_function is not None:
@@ -315,7 +316,7 @@ def create_snmp_section_plugin(
             needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
-                expected_annotation=_create_parse_annotation(
+                expected_annotations=_create_parse_annotation(
                     needs_bytes=needs_bytes,
                     is_list=isinstance(fetch, list),
                 ),

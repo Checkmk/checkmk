@@ -46,12 +46,12 @@ def test_create_agent_parse_function() -> None:
         # raises b/c of wrong signature!
         section_plugins._validate_parse_function(
             old_school_parse_function,
-            expected_annotation=(str, "str"),  # irrelevant in test
+            expected_annotations={(str, "str")},  # irrelevant in test
         )
 
     section_plugins._validate_parse_function(
         compliant_parse_function,
-        expected_annotation=(StringTable, "StringTable"),
+        expected_annotations={(StringTable, "StringTable")},
     )
 
     assert old_school_parse_function([]) == compliant_parse_function([])
@@ -67,12 +67,12 @@ def test_create_snmp_parse_function() -> None:
         # raises b/c of wrong signature!
         section_plugins._validate_parse_function(
             old_school_parse_function,
-            expected_annotation=(str, "str"),  # irrelevant in test
+            expected_annotations={(str, "str")},  # irrelevant in test
         )
 
     section_plugins._validate_parse_function(
         compliant_parse_function,
-        expected_annotation=(str, "str"),  # irrel. in test, SNMP parse function is not annotated
+        expected_annotations={(str, "str")},  # irrel. in test, SNMP parse function is not annotated
     )
 
     arbitrary_non_empty_input = [[["moo"]]]

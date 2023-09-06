@@ -92,7 +92,7 @@ botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync wi
 boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
 pexpect = "*" # used for update testing
 dill = "*"
-jsonschema = "==4.17.3"
+jsonschema = "*"
 polyfactory = "*" # used for generating mock data for unit tests
 
 [packages]

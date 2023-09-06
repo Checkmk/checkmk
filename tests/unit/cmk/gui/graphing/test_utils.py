@@ -23,7 +23,7 @@ from cmk.gui.graphing._utils import (
     RPNExpression,
     TranslationInfo,
 )
-from cmk.gui.type_defs import Perfdata
+from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
@@ -44,16 +44,16 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
     "perf_str, check_command, result",
     [
         ("", None, ([], "")),
-        ("hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),
+        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
         ("hi=l6 [ihe]", "ter", ([], "ihe")),
-        ("hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),
+        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
         (
             "hi=5 no=6",
             "test",
             (
                 [
-                    ("hi", 5, "", None, None, None, None),
-                    ("no", 6, "", None, None, None, None),
+                    PerfDataTuple("hi", 5, "", None, None, None, None),
+                    PerfDataTuple("no", 6, "", None, None, None, None),
                 ],
                 "test",
             ),
@@ -63,8 +63,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    ("hi", 5, "", 6, 7, 8, 9),
-                    ("not_here", 6, "", 5.6, None, None, None),
+                    PerfDataTuple("hi", 5, "", 6, 7, 8, 9),
+                    PerfDataTuple("not_here", 6, "", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -74,8 +74,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    ("hi", 5, "G", None, None, None, None),
-                    ("not_here", 6, "M", 5.6, None, None, None),
+                    PerfDataTuple("hi", 5, "G", None, None, None, None),
+                    PerfDataTuple("not_here", 6, "M", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -83,7 +83,7 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
         (
             "11.26=6;;;;",
             "check_mk-local",
-            ([("11.26", 6, "", None, None, None, None)], "check_mk-local"),
+            ([PerfDataTuple("11.26", 6, "", None, None, None, None)], "check_mk-local"),
         ),
     ],
 )
@@ -158,7 +158,7 @@ def test_find_matching_translation(
     "perf_data, check_command, result",
     [
         (
-            ("in", 496876.200933, "", None, None, 0, 125000000),
+            PerfDataTuple("in", 496876.200933, "", None, None, 0, 125000000),
             "check_mk-lnx_if",
             (
                 "if_in_bps",
@@ -172,7 +172,7 @@ def test_find_matching_translation(
             ),
         ),
         (
-            ("fast", 5, "", 4, 9, 0, 10),
+            PerfDataTuple("fast", 5, "", 4, 9, 0, 10),
             "check_mk-imaginary",
             (
                 "fast",
@@ -188,7 +188,7 @@ def test_find_matching_translation(
     ],
 )
 def test__normalize_perf_data(
-    perf_data: Perfdata, check_command: str, result: tuple[str, NormalizedPerfData]
+    perf_data: PerfDataTuple, check_command: str, result: tuple[str, NormalizedPerfData]
 ) -> None:
     assert utils._normalize_perf_data(perf_data, check_command) == result
 
@@ -341,7 +341,7 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
 def test_get_graph_templates(
     metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
 ) -> None:
-    perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
@@ -690,13 +690,13 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
-    perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, "check_command")
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
 
 def test_replace_expression() -> None:
-    perfdata: Perfdata = [(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
+    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
     translated_metrics = utils.translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         utils.replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
@@ -721,7 +721,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
     "perf_data, check_command, raw_expression, value, unit_name, color",
     [
         pytest.param(
-            [(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
+            [PerfDataTuple(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
             16.0,
@@ -730,7 +730,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="warn, crit, min, max",
         ),
         pytest.param(
-            [(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
+            [PerfDataTuple(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
             "check_mk-df",
             "fs_size,fs_used,-#e3fff9",
             6291456,
@@ -817,7 +817,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="constant color",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name(%)",
             20.0,
@@ -826,7 +826,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="percentage",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
             20.0,
@@ -835,7 +835,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="warn",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn(%)",
             40.0,
@@ -844,7 +844,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="warn percentage",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
             30.0,
@@ -853,7 +853,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="crit",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit(%)",
             60.0,
@@ -862,7 +862,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="crit percentage",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
             0.0,
@@ -871,7 +871,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="min",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min(%)",
             0.0,
@@ -880,7 +880,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="min percentage",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
             50.0,
@@ -889,7 +889,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             id="max",
         ),
         pytest.param(
-            [(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max(%)",
             100.0,
@@ -1165,7 +1165,7 @@ def test_translate_metrics(
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
     translated_metric = utils.translate_metrics(
-        [("temp", 59.05, "", 85.05, 85.05, None, None)],
+        [PerfDataTuple("temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
     )["temp"]
     assert translated_metric["value"] == expected_value

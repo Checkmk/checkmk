@@ -630,8 +630,19 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
 TranslatedMetrics = dict[str, TranslatedMetric]
 
 PerfometerSpec = dict[str, Any]
-PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
-Perfdata = list[PerfdataTuple]
+
+
+class PerfDataTuple(NamedTuple):
+    metric_name: MetricName
+    value: float | int
+    unit_name: str
+    warn: float | None
+    crit: float | None
+    min: float | None
+    max: float | None
+
+
+Perfdata = list[PerfDataTuple]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 

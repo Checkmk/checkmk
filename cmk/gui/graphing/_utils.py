@@ -42,6 +42,7 @@ from cmk.gui.type_defs import (
     Choices,
     GraphRenderOptions,
     Perfdata,
+    PerfDataTuple,
     PerfometerSpec,
     RGBColor,
     Row,
@@ -472,7 +473,7 @@ def parse_perf_data(
                 continue  # ignore useless empty variable
 
             perf_data.append(
-                (
+                PerfDataTuple(
                     varname,
                     value,
                     unit_name,
@@ -559,28 +560,32 @@ def find_matching_translation(
     return {}
 
 
-def _scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
+def _scalar_bounds(perf_data: PerfDataTuple, scale: float) -> dict[str, float]:
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
     """
-
     scalars = {}
-    for name, value in zip(("warn", "crit", "min", "max"), perfvar_bounds):
-        if value is not None:
-            scalars[name] = float(value) * scale
+    if perf_data.warn is not None:
+        scalars["warn"] = float(perf_data.warn) * scale
+    if perf_data.crit is not None:
+        scalars["crit"] = float(perf_data.crit) * scale
+    if perf_data.min is not None:
+        scalars["min"] = float(perf_data.min) * scale
+    if perf_data.max is not None:
+        scalars["max"] = float(perf_data.max) * scale
     return scalars
 
 
-def _normalize_perf_data(  # type: ignore[no-untyped-def]
-    perf_data, check_command
+def _normalize_perf_data(
+    perf_data: PerfDataTuple, check_command: str
 ) -> tuple[str, NormalizedPerfData]:
-    translation_entry = perfvar_translation(perf_data[0], check_command)
+    translation_entry = perfvar_translation(perf_data.metric_name, check_command)
 
     new_entry: NormalizedPerfData = {
-        "orig_name": [perf_data[0]],
-        "value": perf_data[1] * translation_entry["scale"],
-        "scalar": _scalar_bounds(perf_data[3:], translation_entry["scale"]),
+        "orig_name": [perf_data.metric_name],
+        "value": perf_data.value * translation_entry["scale"],
+        "scalar": _scalar_bounds(perf_data, translation_entry["scale"]),
         "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
@@ -693,7 +698,6 @@ def available_metrics_translated(
         return {}
 
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
-
     rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
     rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
     if not rrd_perf_data + perf_data:
@@ -703,10 +707,10 @@ def available_metrics_translated(
         perf_data = rrd_perf_data
 
     else:
-        current_variables = [x[0] for x in perf_data]
-        for entry in rrd_perf_data:
-            if entry[0] not in current_variables:
-                perf_data.append(entry)
+        current_variables = [p.metric_name for p in perf_data]
+        for p in rrd_perf_data:
+            if p.metric_name not in current_variables:
+                perf_data.append(p)
 
     return translate_metrics(perf_data, check_command)
 
@@ -1632,10 +1636,10 @@ def metrics_of_query(
 
     row = {}
     for row in livestatus_query_bare("service", context, columns):
-        parsed_perf_data, check_command = parse_perf_data(
+        perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"]
         )
-        known_metrics = set([perf[0] for perf in parsed_perf_data] + row["service_metrics"])
+        known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
 
     if row.get("host_check_command"):

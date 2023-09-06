@@ -962,6 +962,7 @@ ColumnDefinitions services_columns() {
         {"robotmk_last_error_log_gz", ColumnType::blob},
         {"robotmk_last_log", ColumnType::blob},
         {"robotmk_last_log_gz", ColumnType::blob},
+        {"prediction_files", ColumnType::list},
     };
 }
 }  // namespace

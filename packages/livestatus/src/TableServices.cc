@@ -23,6 +23,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicFileColumn.h"
 #include "livestatus/DynamicRRDColumn.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
@@ -30,6 +31,7 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MapUtils.h"
+#include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
 #include "livestatus/StringColumn.h"
@@ -563,6 +565,30 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "pending_flex_downtime",
         "Number of pending flexible downtimes", offsets,
         [](const IService &r) { return r.pending_flex_downtime(); }));
+    table->addDynamicColumn(std::make_unique<DynamicFileColumn<IService>>(
+        prefix + "prediction_file", "Fetch prediction data", offsets,
+        [mc]() { return mc->paths()->prediction_directory(); },
+        [](const IService &r, const std::string &args) {
+            return std::filesystem::path{} / pnp_cleanup(r.host_name()) /
+                   pnp_cleanup(r.description()) / pnp_cleanup(args);
+        }));
+    table->addColumn(std::make_unique<ListColumn<IService>>(
+        prefix + "prediction_files", "List currently available predictions",
+        offsets, [mc](const IService &r, const Column & /* col */) {
+            auto out = std::vector<std::string>{};
+            const auto path = mc->paths()->prediction_directory() /
+                              pnp_cleanup(r.host_name()) /
+                              pnp_cleanup(r.description());
+            if (!std::filesystem::directory_entry{path}.is_directory()) {
+                return out;
+            }
+            for (const auto &entry :
+                 std::filesystem::recursive_directory_iterator{path}) {
+                out.emplace_back(
+                    std::filesystem::relative(entry, path).string());
+            }
+            return out;
+        }));
     table->addColumn(std::make_unique<BoolColumn<IService>>(
         prefix + "check_flapping_recovery_notification",
         "Whether to check to send a recovery notification when flapping stops (0/1)",

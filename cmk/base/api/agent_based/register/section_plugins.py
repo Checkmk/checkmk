@@ -7,7 +7,6 @@
 import functools
 import inspect
 import itertools
-import types
 from collections.abc import Generator
 from typing import Any, List
 
@@ -63,7 +62,8 @@ def _validate_parse_function(
 ) -> None:
     """Validate the parse functions signature and type"""
 
-    if not isinstance(parse_function, types.FunctionType):
+    # TODO: Should we use callable() here? This is what we *actually* want to test.
+    if not inspect.isfunction(parse_function):
         raise TypeError(f"parse function must be a function: {parse_function!r}")
 
     if inspect.isgeneratorfunction(parse_function):
@@ -79,8 +79,9 @@ def _validate_parse_function(
 
     arg = parameters["string_table"]
     if (
-        arg.annotation is not arg.empty and arg.annotation != expected_annotation[0]
-    ):  # why is inspect._empty trueish?
+        arg.annotation is not arg.empty  # arg.empty is a class, so it's trueish
+        and arg.annotation != expected_annotation[0]
+    ):
         raise TypeError(
             f"expected parse function argument annotation {expected_annotation[1]!r}, got {arg.annotation!r}"
         )

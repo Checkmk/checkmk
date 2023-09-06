@@ -57,6 +57,7 @@ class MetricOpScalar:
 @dataclass(frozen=True)
 class MetricOpOperator:
     operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+    # TODO pydantic throws a warning: attributes starting with "_"
     _operands: list[MetricOperation] = field(default_factory=list)
 
     @property
@@ -114,6 +115,7 @@ class MetricOpTransformation:
     parameters: tuple[Literal["percentile"], float] | tuple[
         Literal["forecast"], Mapping[str, object]
     ]
+    # TODO pydantic throws a warning: attributes starting with "_"
     _operands: list[MetricOperation] = field(default_factory=list)
 
     @property

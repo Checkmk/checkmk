@@ -2,23 +2,6 @@
 
 /// file: compile-all-werks.groovy
 
-def provide_clone(repo_name, credentials_id) {
-    dir("${WORKSPACE}/${repo_name}") {
-        checkout([$class: "GitSCM",
-            userRemoteConfigs: [[
-                credentialsId: credentials_id,
-                url: "ssh://jenkins@review.lan.tribe29.com:29418/${repo_name}",
-            ]],
-            branches: [new hudson.plugins.git.BranchSpec("FETCH_HEAD")],
-            extensions: [
-                [$class: 'CloneOption',
-                    // reference: "${reference_clone}",
-                    timeout: 20,
-            ]],
-        ]);
-    }
-}
-
 def main() {
     def docker_args = "${mount_reference_repo_dir}";
 
@@ -66,4 +49,3 @@ def main() {
     }
 }
 return this;
-

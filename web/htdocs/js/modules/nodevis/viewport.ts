@@ -426,6 +426,8 @@ export class LayeredViewport {
         const treemap_root = d3.hierarchy(partition_hierarchy);
         treemap_root.sum(d => d.count);
 
+        // @ts-ignore treemap_root is of type HierarchyNode<hierarchy_overview_type>...
+        // Could be that we define our own HierarchyNode in type_defs?
         d3.treemap().size([this.width, this.height])(treemap_root);
         for (const idx in treemap_root.children) {
             const index = +idx;

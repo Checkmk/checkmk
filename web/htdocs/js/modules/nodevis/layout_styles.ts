@@ -331,6 +331,8 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 this.style_config.options.node_size,
                 this.style_config.options.layer_height,
             ];
+            // @ts-ignore  this.style_root_node is of type NodevisNode aka HierarchyNode<NodeData>...
+            // Could be that we define our own HierarchyNode in type_defs?
         })(this.style_root_node);
 
         this._style_root_node_offsets = [];
@@ -645,6 +647,8 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
             this._style_root_node_offsets.push([this.style_root_node, 0, 0]);
             this._text_rotations.push(0);
         } else {
+            // @ts-ignore  this.style_root_node is of type NodevisNode aka HierarchyNode<NodeData>...
+            // Could be that we define our own HierarchyNode in type_defs?
             tree(this.style_root_node);
             for (const idx in this.filtered_descendants) {
                 const node = this.filtered_descendants[idx];

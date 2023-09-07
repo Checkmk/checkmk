@@ -227,6 +227,9 @@ function enable_label_input_fields(
         tagify.on("input", function (e) {
             $("div.label_error").remove(); // Remove all previous errors
 
+            //e.detail is InputEventDataNormal
+            if (!("value" in e.detail)) return;
+
             const value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 

@@ -301,7 +301,7 @@ class ModePatternEditor(WatoMode):
                                 else:
                                     # subsequent match
                                     match_class = "match"
-                                    match_img = "rule_ineffective_match"
+                                    match_img = "checkmark_orange"
                                     match_title = _(
                                         "This logfile pattern matches but another matched first."
                                     )

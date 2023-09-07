@@ -1262,7 +1262,7 @@ class ModeEditRuleset(WatoMode):
             if not new_keys:
                 return (
                     _("This rule matches, but does not define any parameters."),
-                    "rule_ineffective_match",
+                    "checkmark_orange",
                 )
             if not already_existing:
                 return _("This rule matches and defines new parameters."), "checkmark"
@@ -1271,7 +1271,7 @@ class ModeEditRuleset(WatoMode):
                     _(
                         "This rule matches, but all of its parameters are overridden by previous rules."
                     ),
-                    "rule_ineffective_match",
+                    "checkmark_orange",
                 )
             return (
                 _(
@@ -1282,7 +1282,7 @@ class ModeEditRuleset(WatoMode):
         if match_state["matched"] and ruleset.match_type() != "all":
             return (
                 _("This rule matches, but is overridden by a previous rule."),
-                "rule_ineffective_match",
+                "checkmark_orange",
             )
         match_state["matched"] = True
         return (_("This rule matches for the host '%s'") % self._hostname) + (

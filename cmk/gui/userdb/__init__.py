@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
@@ -33,12 +32,10 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.pages import PageRegistry
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
@@ -88,6 +85,14 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 
+from ._check_credentials import check_credentials as check_credentials
+from ._check_credentials import create_non_existing_user as create_non_existing_user
+from ._check_credentials import (
+    is_customer_user_allowed_to_login as is_customer_user_allowed_to_login,
+)
+from ._check_credentials import user_exists as user_exists
+from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
+from ._check_credentials import user_locked as user_locked
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
 
 __all__ = [
@@ -159,71 +164,6 @@ def _get_attributes(
 ) -> Sequence[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
-
-
-def create_non_existing_user(connection_id: str, username: UserId, now: datetime) -> None:
-    # Since user_exists also looks into the htpasswd and treats all users that can be found there as
-    # "existing users", we don't care about partially known users here and don't create them ad-hoc.
-    # The load_users() method will handle this kind of users (TODO: Consolidate this!).
-    # Which makes this function basically relevant for users that authenticate using an LDAP
-    # connection and do not exist yet.
-    if user_exists(username):
-        return  # User exists. Nothing to do...
-
-    users = load_users(lock=True)
-    users[username] = new_user_template(connection_id)
-    save_users(users, now)
-
-    # Call the sync function for this new user
-    connection = get_connection(connection_id)
-    try:
-        if connection is None:
-            raise MKUserError(None, _("Invalid user connection: %s") % connection_id)
-
-        connection.do_sync(
-            add_to_changelog=False,
-            only_username=username,
-            load_users_func=load_users,
-            save_users_func=save_users,
-        )
-    except MKLDAPException as e:
-        show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)
-    except Exception as e:
-        show_exception(connection_id, _("Error during sync"), e)
-
-
-def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
-    if cmk_version.edition() is not cmk_version.Edition.CME:
-        return True
-
-    try:
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    except ImportError:
-        return True
-
-    user = LoggedInUser(user_id)
-    if managed.is_global(user.customer_id):
-        return True
-
-    return managed.is_current_customer(user.customer_id)
-
-
-# This function is called very often during regular page loads so it has to be efficient
-# even when having a lot of users.
-#
-# When using the multisite authentication with just by Setup created users it would be
-# easy, but we also need to deal with users which are only existant in the htpasswd
-# file and don't have a profile directory yet.
-def user_exists(username: UserId) -> bool:
-    if _user_exists_according_to_profile(username):
-        return True
-
-    return Htpasswd(Path(cmk.utils.paths.htpasswd_file)).exists(username)
-
-
-def _user_exists_according_to_profile(username: UserId) -> bool:
-    base_path = cmk.utils.paths.profile_dir / username
-    return base_path.joinpath("transids.mk").exists() or base_path.joinpath("serial.mk").exists()
 
 
 def _check_login_timeout(username: UserId, session_duration: float, idle_time: float) -> None:
@@ -354,10 +294,6 @@ def _is_local_user(user: UserSpec) -> bool:
 
 def is_automation_user(user: UserSpec) -> bool:
     return "automation_secret" in user
-
-
-def user_locked(user_id: UserId) -> bool:
-    return bool(load_user(user_id).get("locked"))
 
 
 class _UserSelection(DropdownChoice[UserId]):
@@ -602,71 +538,3 @@ def _clear_config_based_user_attributes() -> None:
     for _name, attr in get_user_attributes():
         if attr.from_config():
             user_attribute_registry.unregister(attr.name())
-
-
-# .
-#   .-Hooks----------------------------------------------------------------.
-#   |                     _   _             _                              |
-#   |                    | | | | ___   ___ | | _____                       |
-#   |                    | |_| |/ _ \ / _ \| |/ / __|                      |
-#   |                    |  _  | (_) | (_) |   <\__ \                      |
-#   |                    |_| |_|\___/ \___/|_|\_\___/                      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
-def check_credentials(
-    username: UserId, password: Password, now: datetime
-) -> UserId | Literal[False]:
-    """Verify the credentials given by a user using all auth connections"""
-    for connection_id, connection in active_connections():
-        # None        -> User unknown, means continue with other connectors
-        # '<user_id>' -> success
-        # False       -> failed
-        result = connection.check_credentials(username, password)
-
-        if result is False:
-            return False
-
-        if result is None:
-            continue
-
-        user_id: UserId = result
-        if not isinstance(user_id, str):
-            raise MKInternalError(
-                _("The username returned by the %s connector is not of type string (%r).")
-                % (connection_id, user_id)
-            )
-
-        # Check whether or not the user exists (and maybe create it)
-        #
-        # We have the cases where users exist "partially"
-        # a) The htpasswd file of the site may have a username:pwhash data set
-        #    and Checkmk does not have a user entry yet
-        # b) LDAP authenticates a user and Checkmk does not have a user entry yet
-        #
-        # In these situations a user account with the "default profile" should be created
-        create_non_existing_user(connection_id, user_id, now)
-
-        if not is_customer_user_allowed_to_login(user_id):
-            # A CME not assigned with the current sites customer
-            # is not allowed to login
-            auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
-            return False
-
-        # Now, after successfull login (and optional user account creation), check whether or
-        # not the user is locked.
-        if user_locked(user_id):
-            auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
-            return False  # The account is locked
-
-        return user_id
-
-    return False
-
-
-def show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
-    html.show_error(
-        "<b>" + connection_id + " - " + title + "</b>"
-        "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
-    )

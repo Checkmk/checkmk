@@ -583,7 +583,7 @@ def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
 def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     user_id = UserId("someuser")
     assert not userdb.user_exists(user_id)
-    assert not userdb._user_exists_according_to_profile(user_id)
+    assert not userdb.user_exists_according_to_profile(user_id)
     assert user_id not in _load_users_uncached(lock=False)
 
     Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
@@ -592,14 +592,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
     assert userdb.user_exists(user_id)
-    assert not userdb._user_exists_according_to_profile(user_id)
+    assert not userdb.user_exists_according_to_profile(user_id)
     assert user_id in _load_users_uncached(lock=False)
 
     assert userdb.check_credentials(user_id, Password("cmk"), datetime.now()) == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
-    assert not userdb._user_exists_according_to_profile(user_id)
+    assert not userdb.user_exists_according_to_profile(user_id)
     assert user_id in _load_users_uncached(lock=False)
 
 

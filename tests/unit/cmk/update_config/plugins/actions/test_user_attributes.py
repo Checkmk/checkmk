@@ -8,7 +8,7 @@ from datetime import datetime
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.test_userdb import _load_users_uncached
+from tests.unit.cmk.gui.userdb.test_userdb import _load_users_uncached
 
 from cmk.utils.user import UserId
 

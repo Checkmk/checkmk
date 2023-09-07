@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly CLANG_VERSION=16
+readonly CLANG_VERSION=${CLANG_VERSION:-16}
 COMPILED_SOURCES=()
 
 failure() {
@@ -255,7 +255,7 @@ run_iwyu() {
 run_clang_tidy() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    python3 "$(command -v run-clang-tidy-${CLANG_VERSION}.py)" \
+    python3 "$(command -v "run-clang-tidy-${CLANG_VERSION}.py")" \
         -j "${JOBS}" \
         -p=build \
         -quiet \

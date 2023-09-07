@@ -2095,7 +2095,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 msg += _(
                                     ", but it is overruled by a match in a previous rule pack."
                                 )
-                                icon = "rule_partly_match"
+                                icon = "checkmark_plus"
                             else:
                                 icon = "checkmark"
                                 have_match = True
@@ -2404,7 +2404,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         cancelling, groups = result.match_groups, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
-                            icon = "rule_partly_match"
+                            icon = "checkmark_plus"
                         else:
                             if cancelling:
                                 msg = _("This rule does a cancelling match.")

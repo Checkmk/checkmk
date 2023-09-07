@@ -13,8 +13,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.plugins.userdb.utils import user_attribute_registry
-from cmk.gui.userdb import register_custom_user_attributes
+from cmk.gui.userdb import register_custom_user_attributes, user_attribute_registry
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 

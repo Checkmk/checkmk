@@ -8,36 +8,11 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     ConnectorType,
     get_connection,
-    get_user_attributes,
     new_user_template,
-    user_attribute_registry,
     user_sync_config,
-    UserAttribute,
-    UserAttributeRegistry,
     UserConnector,
 )
 from cmk.gui.type_defs import Users, UserSpec
-from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
-from cmk.gui.userdb.store import (
-    contactgroups_of_user,
-    convert_idle_timeout,
-    create_cmk_automation_user,
-    custom_attr_path,
-    general_userdb_job,
-    get_last_activity,
-    get_online_user_ids,
-    load_contacts,
-    load_custom_attr,
-    load_multisite_users,
-    load_user,
-    load_users,
-    remove_custom_attr,
-    rewrite_users,
-    save_custom_attr,
-    save_two_factor_credentials,
-    save_users,
-    write_contacts_and_users_file,
-)
 
 from ._check_credentials import check_credentials as check_credentials
 from ._check_credentials import create_non_existing_user as create_non_existing_user
@@ -59,12 +34,38 @@ from ._two_factor import is_two_factor_backup_code_valid as is_two_factor_backup
 from ._two_factor import is_two_factor_login_enabled as is_two_factor_login_enabled
 from ._two_factor import load_two_factor_credentials as load_two_factor_credentials
 from ._two_factor import make_two_factor_backup_codes as make_two_factor_backup_codes
+from ._user_attribute import get_user_attributes as get_user_attributes
+from ._user_attribute import get_user_attributes_by_topic as get_user_attributes_by_topic
 from ._user_attribute import register_custom_user_attributes as register_custom_user_attributes
 from ._user_attribute import (
     update_config_based_user_attributes as update_config_based_user_attributes,
 )
+from ._user_attribute import user_attribute_registry as user_attribute_registry
+from ._user_attribute import UserAttribute as UserAttribute
+from ._user_attribute import UserAttributeRegistry as UserAttributeRegistry
 from ._user_selection import UserSelection as UserSelection
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
+from .session import is_valid_user_session, load_session_infos
+from .store import (
+    contactgroups_of_user,
+    convert_idle_timeout,
+    create_cmk_automation_user,
+    custom_attr_path,
+    general_userdb_job,
+    get_last_activity,
+    get_online_user_ids,
+    load_contacts,
+    load_custom_attr,
+    load_multisite_users,
+    load_user,
+    load_users,
+    remove_custom_attr,
+    rewrite_users,
+    save_custom_attr,
+    save_two_factor_credentials,
+    save_users,
+    write_contacts_and_users_file,
+)
 
 __all__ = [
     "contactgroups_of_user",

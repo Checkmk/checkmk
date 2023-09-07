@@ -43,16 +43,11 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    get_connection,
-    get_user_attributes,
-    new_user_template,
-    UserAttribute,
-)
+from cmk.gui.plugins.userdb.utils import active_connections, get_connection, new_user_template
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -948,7 +943,7 @@ class ModeEditUser(WatoMode):
             html.write_text(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
-        custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
+        custom_user_attr_topics = get_user_attributes_by_topic()
 
         self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
 

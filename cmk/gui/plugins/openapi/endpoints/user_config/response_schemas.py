@@ -18,7 +18,7 @@ from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
     DomainObject,
     DomainObjectCollection,
 )
-from cmk.gui.plugins.userdb.utils import get_user_attributes
+from cmk.gui.userdb import get_user_attributes
 
 from cmk import fields
 from cmk.fields import base

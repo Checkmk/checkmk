@@ -45,7 +45,6 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     add_internal_attributes,
     get_connection,
-    get_user_attributes,
     load_cached_profile,
     release_users_lock,
     save_cached_profile,
@@ -53,6 +52,8 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.roles import roles_of_user
+
+from ._user_attribute import get_user_attributes
 
 T = TypeVar("T")
 

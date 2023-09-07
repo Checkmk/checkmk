@@ -6,10 +6,11 @@
 from typing import Any
 
 from cmk.gui.config import active_config
-from cmk.gui.plugins.userdb.utils import get_user_attributes, user_attribute_registry, UserAttribute
 from cmk.gui.valuespec import TextInput, ValueSpec
 
 from .. import ldap_connector
+from ._base import UserAttribute
+from ._registry import get_user_attributes, user_attribute_registry
 
 
 class GenericUserAttribute(UserAttribute):

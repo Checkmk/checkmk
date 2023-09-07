@@ -48,9 +48,10 @@ from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.plugins.userdb.utils import user_attribute_registry, user_connector_registry
+from cmk.gui.plugins.userdb.utils import user_connector_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.userdb import registration as userdb_registration
+from cmk.gui.userdb import user_attribute_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import command_registry

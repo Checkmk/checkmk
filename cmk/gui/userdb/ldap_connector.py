@@ -70,7 +70,6 @@ from cmk.gui.plugins.userdb.utils import (
     connections_by_type,
     ConnectorType,
     get_connection,
-    get_user_attributes,
     load_cached_profile,
     load_roles,
     new_user_template,
@@ -95,6 +94,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+
+from ._user_attribute import get_user_attributes
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module

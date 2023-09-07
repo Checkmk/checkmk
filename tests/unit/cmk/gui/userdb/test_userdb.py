@@ -23,11 +23,10 @@ from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.plugins.userdb.utils as utils
-import cmk.gui.userdb as userdb
 import cmk.gui.userdb._user_attribute._custom_attributes
+import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
-from cmk.gui import http
+from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.session import session
@@ -39,6 +38,7 @@ from cmk.gui.type_defs import (
     WebAuthnCredential,
 )
 from cmk.gui.userdb import ldap_connector as ldap
+from cmk.gui.userdb import UserAttributeRegistry
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
@@ -514,11 +514,19 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
-    monkeypatch.setattr(utils, "user_attribute_registry", utils.UserAttributeRegistry())
+    monkeypatch.setattr(userdb, "user_attribute_registry", UserAttributeRegistry())
+    monkeypatch.setattr(
+        cmk.gui.userdb._user_attribute._registry, "user_attribute_registry", UserAttributeRegistry()
+    )
+    monkeypatch.setattr(
+        userdb._user_attribute._registry,
+        "user_attribute_registry",
+        userdb.user_attribute_registry,
+    )
     monkeypatch.setattr(
         cmk.gui.userdb._user_attribute._custom_attributes,
         "user_attribute_registry",
-        utils.user_attribute_registry,
+        userdb.user_attribute_registry,
     )
     monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
     with monkeypatch.context() as m:
@@ -539,12 +547,12 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
             ],
         )
 
-        assert "vip" not in utils.user_attribute_registry
+        assert "vip" not in userdb.user_attribute_registry
         assert "vip" not in ldap.ldap_attribute_plugin_registry
 
         userdb.update_config_based_user_attributes()
 
-        assert "vip" in utils.user_attribute_registry
+        assert "vip" in userdb.user_attribute_registry
         assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
@@ -575,7 +583,7 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         with set_config(wato_user_attrs=[]):
             userdb.update_config_based_user_attributes()
 
-        assert "vip" not in utils.user_attribute_registry
+        assert "vip" not in userdb.user_attribute_registry
         assert "vip" not in ldap.ldap_attribute_plugin_registry
 
 

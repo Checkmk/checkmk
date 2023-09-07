@@ -7,12 +7,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    show_mode_choices,
-    UserAttribute,
-    UserAttributeRegistry,
-    validate_start_url,
-)
+from cmk.gui.plugins.userdb.utils import show_mode_choices, validate_start_url
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -28,6 +23,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from ._user_attribute import UserAttribute, UserAttributeRegistry
 
 
 def register(user_attribute_registry: UserAttributeRegistry) -> None:

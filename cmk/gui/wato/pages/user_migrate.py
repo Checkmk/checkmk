@@ -25,13 +25,9 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import (
-    connections_by_type,
-    ConnectorType,
-    get_connection,
-    get_user_attributes,
-)
+from cmk.gui.plugins.userdb.utils import connections_by_type, ConnectorType, get_connection
 from cmk.gui.type_defs import ActionResult, PermissionName, Users
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless

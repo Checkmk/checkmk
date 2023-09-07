@@ -27,7 +27,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
-from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -418,56 +417,6 @@ class UserConnector(abc.ABC):
 
 
 # .
-#   .--UserAttribute-------------------------------------------------------.
-#   |     _   _                _   _   _        _ _           _            |
-#   |    | | | |___  ___ _ __ / \ | |_| |_ _ __(_) |__  _   _| |_ ___      |
-#   |    | | | / __|/ _ \ '__/ _ \| __| __| '__| | '_ \| | | | __/ _ \     |
-#   |    | |_| \__ \  __/ | / ___ \ |_| |_| |  | | |_) | |_| | ||  __/     |
-#   |     \___/|___/\___|_|/_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___|     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Base class for user attributes                                       |
-#   '----------------------------------------------------------------------'
-
-
-class UserAttribute(abc.ABC):
-    @classmethod
-    @abc.abstractmethod
-    def name(cls) -> str:
-        raise NotImplementedError()
-
-    @classmethod
-    def is_custom(cls) -> bool:
-        return False
-
-    @abc.abstractmethod
-    def topic(self) -> str:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def valuespec(self) -> ValueSpec:
-        raise NotImplementedError()
-
-    def from_config(self) -> bool:
-        return False
-
-    def user_editable(self) -> bool:
-        return True
-
-    def permission(self) -> None | str:
-        return None
-
-    def show_in_table(self) -> bool:
-        return False
-
-    def add_custom_macro(self) -> bool:
-        return False
-
-    def domain(self) -> str:
-        return "multisite"
-
-
-# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -488,27 +437,3 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[type[UserConnecto
 
 
 user_connector_registry = UserConnectorRegistry()
-
-
-class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[type[UserAttribute]]):
-    """The management object for all available user attributes.
-    Have a look at the base class for details."""
-
-    def plugin_name(self, instance):
-        return instance.name()
-
-
-user_attribute_registry = UserAttributeRegistry()
-
-
-def get_user_attributes() -> list[tuple[str, UserAttribute]]:
-    return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
-
-
-def get_user_attributes_by_topic() -> dict[str, list[tuple[str, UserAttribute]]]:
-    topics: dict[str, list[tuple[str, UserAttribute]]] = {}
-    for name, attr_class in user_attribute_registry.items():
-        topic = attr_class().topic()
-        topics.setdefault(topic, []).append((name, attr_class()))
-
-    return topics

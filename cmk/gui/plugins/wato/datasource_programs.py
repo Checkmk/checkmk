@@ -3579,6 +3579,10 @@ def _valuespec_special_agents_azure():
                 ),
             ),
             (
+                "proxy",
+                HTTPProxyReference(),
+            ),
+            (
                 "monitor_costs",
                 Checkbox(
                     title=_("Usage details"),
@@ -3649,7 +3653,7 @@ def _valuespec_special_agents_azure():
                 ),
             ),
         ],
-        optional_keys=["subscription", "piggyback_vms", "sequential", "monitor_costs"],
+        optional_keys=["subscription", "proxy", "piggyback_vms", "sequential", "monitor_costs"],
     )
 
 

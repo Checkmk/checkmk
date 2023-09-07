@@ -32,6 +32,9 @@ def agent_azure_arguments(
         else:
             args += [option, value]
 
+    if proxy_settings := params.get("proxy"):
+        args += ["--proxy", get_http_proxy(proxy_settings).serialize()]
+
     config = params["config"]
     if "fetchall" in config:
         return args

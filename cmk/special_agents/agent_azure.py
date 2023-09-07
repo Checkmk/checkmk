@@ -23,6 +23,7 @@ import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
 import cmk.utils.password_store
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, vcrtrace
@@ -120,10 +121,20 @@ def parse_arguments(argv):
         help="Azure subscription IDs",
     )
 
-    # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", help="Azure authentication secret")
+    parser.add_argument(
+        "--proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Azure API. If not set, the environment settings "
+            "will be used."
+        ),
+    )
+
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
         "--require-tag",
@@ -226,10 +237,11 @@ class ApiErrorFactory:
 class BaseApiClient(abc.ABC):
     AUTHORITY = "https://login.microsoftonline.com"
 
-    def __init__(self, base_url):
+    def __init__(self, base_url, http_proxy_config: HTTPProxyConfig):
         self._ratelimit = float("Inf")
-        self._headers = {}
+        self._headers: dict[str, str] = {}
         self._base_url = base_url
+        self._http_proxy_config = http_proxy_config
 
     @property
     @abc.abstractmethod
@@ -237,7 +249,10 @@ class BaseApiClient(abc.ABC):
         pass
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext("%s/%s" % (self.AUTHORITY, tenant))
+        context = adal.AuthenticationContext(
+            "%s/%s" % (self.AUTHORITY, tenant),
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
         token = context.acquire_token_with_client_credentials(self.resource, client, secret)
         self._headers.update(
             {
@@ -317,7 +332,14 @@ class BaseApiClient(abc.ABC):
         return data
 
     def _request_json_from_url(self, method, url, *, body=None, params=None):
-        response = requests.request(method, url, json=body, params=params, headers=self._headers)
+        response = requests.request(
+            method,
+            url,
+            json=body,
+            params=params,
+            headers=self._headers,
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
         self._update_ratelimit(response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
@@ -333,9 +355,9 @@ class BaseApiClient(abc.ABC):
 
 
 class GraphApiClient(BaseApiClient):
-    def __init__(self):
+    def __init__(self, http_proxy_config: HTTPProxyConfig):
         base_url = "%s/v1.0/" % self.resource
-        super().__init__(base_url)
+        super().__init__(base_url, http_proxy_config)
 
     @property
     def resource(self):
@@ -366,9 +388,9 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription):
+    def __init__(self, subscription, http_proxy_config: HTTPProxyConfig):
         base_url = "%s/subscriptions/%s/" % (self.resource, subscription)
-        super().__init__(base_url)
+        super().__init__(base_url, http_proxy_config)
 
     @staticmethod
     def _get_available_metrics_from_exception(
@@ -953,7 +975,7 @@ def get_mapper(debug, sequential, timeout):
 
 
 def main_graph_client(args, secret):
-    graph_client = GraphApiClient()
+    graph_client = GraphApiClient(deserialize_http_proxy_config(args.proxy))
     try:
         graph_client.login(args.tenant, args.client, secret)
         write_section_ad(graph_client)
@@ -1034,7 +1056,7 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
 
 
 def main_subscription(args, secret, selector, subscription):
-    mgmt_client = MgmtApiClient(subscription)
+    mgmt_client = MgmtApiClient(subscription, deserialize_http_proxy_config(args.proxy))
 
     try:
         mgmt_client.login(args.tenant, args.client, secret)

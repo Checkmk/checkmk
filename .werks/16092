@@ -1,0 +1,12 @@
+Title: Azure special agent: Add option to configure HTTP proxy
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1694100615
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p34
+
+The rule for configuring the Azure special agent now offers the option to configure a HTTP proxy
+used for issuing requests to the Azure API.

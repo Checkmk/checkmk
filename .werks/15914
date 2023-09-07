@@ -1,0 +1,19 @@
+Title: active_checks_mailbox: Fix rule transform when updating from 2.1.0p25 or lower
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1694088513
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p34
+
+If the rule for any mailbox related active check was configured without defining the 'server' option and an update to a higher version was attempted, it caused a rule transform error.
+This caused the update to fail.
+The error looks similar to this:
+C+:
+client_id, client_secret, tenant_id = auth_data
+ValueError: not enough values to unpack (expected 3, got 2)
+C-:
+
+This has now been fixed and the transformation of the rule will not cause any problems while updating.

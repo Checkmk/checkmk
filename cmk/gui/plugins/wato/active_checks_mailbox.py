@@ -217,7 +217,6 @@ def update_fetch(old_fetch):
     and contains a type now, which is being inserted by `update_auth()`
     """
     return {
-        "server": old_fetch.get("server"),
         "connection": {
             **{
                 k: (not v) if isinstance(v, bool) else v
@@ -227,6 +226,7 @@ def update_fetch(old_fetch):
             **old_fetch.get("connection", {}),
         },
         "auth": update_auth(old_fetch["auth"]),
+        **({"server": old_fetch.get("server")} if old_fetch.get("server") else {}),
     }
 
 

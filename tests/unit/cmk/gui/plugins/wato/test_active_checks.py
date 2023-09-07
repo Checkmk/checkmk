@@ -9,7 +9,10 @@ from typing import Mapping
 import pytest
 
 from cmk.gui.plugins.wato import active_checks
-from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop_params
+from cmk.gui.plugins.wato.active_checks_mailbox import (
+    transform_check_mail_loop_params,
+    transform_check_mailbox_params,
+)
 
 
 @pytest.mark.parametrize(
@@ -202,14 +205,45 @@ def test_transform_form_submit(
                     {
                         "auth": ("basic", ("foobar", ("password", "password"))),
                         "connection": {},
-                        "server": None,
                     },
                 ),
             },
-            id="v2.1.0 rule with already migrated fetch/connection dict but still "
-            "old basic auth only format",
+            id="v2.1.0 rule with already migrated fetch/connection dict and without server "
+            "but still old basic auth only format",
         ),
     ],
 )
 def test_transform_check_mail_loop_params(old_rule, expected):
     assert transform_check_mail_loop_params(old_rule) == expected
+
+
+@pytest.mark.parametrize(
+    "old_rule,expected",
+    [
+        pytest.param(
+            {
+                "service_description": "Mailboxes",
+                "fetch": (
+                    "IMAP",
+                    {
+                        "connection": {"disable_tls": False},
+                        "auth": ("usr_imap", ("password", "pw_imap")),
+                    },
+                ),
+            },
+            {
+                "fetch": (
+                    "IMAP",
+                    {
+                        "auth": ("basic", ("usr_imap", ("password", "pw_imap"))),
+                        "connection": {"disable_tls": False},
+                    },
+                ),
+                "service_description": "Mailboxes",
+            },
+            id="v2.1.0p25 rule with basic auth only and no server.",
+        ),
+    ],
+)
+def test_transform_check_mailbox_params(old_rule, expected):
+    assert transform_check_mailbox_params(old_rule) == expected

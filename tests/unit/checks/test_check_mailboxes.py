@@ -74,6 +74,24 @@ pytestmark = pytest.mark.checks
                 "--fetch-tenant-id=tenant_id",
             ],
         ),
+        (
+            {
+                "fetch": (
+                    "IMAP",
+                    {
+                        "connection": {},
+                        "auth": ("basic", ("hans", "wurst")),
+                    },
+                )
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-tls",
+                "--fetch-username=hans",
+                "--fetch-password=wurst",
+            ],
+        ),
     ],
 )
 def test_check_mailboxes_argument_parsing(params, expected_args):

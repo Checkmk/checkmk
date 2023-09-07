@@ -3,89 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-import xml.etree.ElementTree as etree
-from typing import Any, Literal
+from typing import NamedTuple
 
+import lxml.html
 import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import ValidationError
 
-from cmk.utils.version import Version
-
-from .werk import Class, Compatibility, Edition, Level, RawWerk, Werk, WerkError, WerkTranslator
+from .werk import Werk, WerkError
 
 
-class RawWerkV2(BaseModel, RawWerk):
-    # ATTENTION! If you change this model, you have to inform
-    # the website team first! They rely on those fields.
-    werk_version: Literal["2"] = Field(default="2", alias="__version__")
-    id: int
-    class_: Class = Field(alias="class")
-    component: str
-    level: Level
-    date: datetime.datetime
-    version: str
-    compatible: Compatibility
-    edition: Edition = Field(json_encoders=lambda x: x.short)
+class WerkV2ParseResult(NamedTuple):
+    metadata: dict[str, str]
     description: str
-    title: str
-
-    @field_validator("version")
-    def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        Version.from_str(v)
-        return v
-
-    @field_validator("level", mode="before")
-    def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
-        try:
-            return Level(int(v))
-        except ValueError:
-            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead")
-
-    @field_validator("component")
-    def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        components = {k for k, _ in WerkTranslator().components()}
-        if v not in components:
-            raise WerkError(f"Component {v} not know. Choose from: {components}")
-        return v
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "RawWerkV2":
-        return cls.model_validate(data)
-
-    def to_json_dict(self) -> dict[str, object]:
-        return {
-            "__version__": self.werk_version,
-            "id": self.id,
-            "class": self.class_.value,
-            "compatible": self.compatible.value,
-            "component": self.component,
-            "date": self.date.isoformat(),
-            "edition": self.edition.value,
-            "level": self.level.value,
-            "title": self.title,
-            "version": self.version,
-            "description": str(self.description),
-        }
-
-    def to_werk(self) -> "Werk":
-        return Werk(
-            compatible=self.compatible,
-            version=self.version,
-            title=self.title,
-            id=self.id,
-            date=self.date,
-            description=self.description,
-            level=self.level,
-            class_=self.class_,
-            component=self.component,
-            edition=self.edition,
-        )
 
 
-def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
+def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
+    """
+    parse werk v2 but do not validate
+    """
     # no need to parse the werk version here. markdown version and werk version
     # could potentially be different: a markdown version 3 could be parsed to a
     # werk version 2. let's hope we will keep v2 for a long time :-)
@@ -104,20 +41,7 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
                     "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
                 )
 
-            # the treeprocessor runs before the inline processor, so no inline
-            # markdown (links, bold, italic,..) has been replaced. this is
-            # basically okay, because we don't want any formatting in the
-            # headline. but we want to give some hint to the user that no
-            # formatting is allowed.
-            title = headline.text
-            try:
-                _raise_if_contains_markdown_formatting(title)
-            except WerkError as e:
-                raise WerkError(
-                    "Markdown formatting in title detected, this is not allowed."
-                ) from e
-
-            self._werk["title"] = title
+            self._werk["title"] = headline.text
             root.remove(headline)
 
             # we removed the headline so we can access element 0 again with a
@@ -139,38 +63,67 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         def extendMarkdown(self, md):
             md.treeprocessors.register(WerkExtractor(self._werk), "werk", 100)
 
-    werk: dict[str, object] = {
-        "__version__": "2",
+    metadata: dict[str, str] = {
         "id": werk_id,
     }
-    result = markdown.markdown(
+    description = markdown.markdown(
         content,
-        extensions=["tables", "fenced_code", WerkExtractorExtension(werk)],
+        extensions=["tables", "fenced_code", WerkExtractorExtension(metadata)],
         output_format="html",
     )
-
-    _raise_if_contains_unkown_tags(result)
-
-    # werk was passed by reference into WerkExtractorExtension which got passed
+    # metadata was passed by reference into WerkExtractorExtension which got passed
     # to WerkExtractor which wrote all the fields.
-    werk["description"] = result
+
+    return WerkV2ParseResult(metadata, description)
+
+
+def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
+    werk = parsed.metadata
+    werk["__version__"] = "2"
+
+    # see CMK-14546
+    # try:
+    #     # the treeprocessor that extracted the title runs before the inline processor, so no inline
+    #     # markdown (links, bold, italic,..) has been replaced. this is
+    #     # basically okay, because we don't want any formatting in the
+    #     # headline. but we want to give some hint to the user that no
+    #     # formatting is allowed.
+    #     _raise_if_contains_markdown_formatting(werk["title"])
+    # except WerkError as e:
+    #     raise WerkError(
+    #         "Markdown formatting in title detected, this is not allowed."
+    #     ) from e
+
+    raise_if_contains_unknown_tags(parsed.description)
+
+    werk["description"] = parsed.description
 
     try:
-        return RawWerkV2.model_validate(werk)
+        return Werk.model_validate(werk)
     except ValidationError as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
 
 
-def _raise_if_contains_markdown_formatting(string: str) -> None:
-    markdown_converted = markdown.markdown(string)
-    # if markdown_converted contains any html tags, then string contained markdown formatting
-    if len(etree.fromstring(markdown_converted)):
-        raise WerkError(
-            f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
-        )
+# see CMK-14546
+# def _raise_if_contains_markdown_formatting(string: str) -> None:
+#     markdown_converted = markdown.markdown(string)
+#     # if markdown_converted contains any html tags, then string contained markdown formatting
+#     try:
+#         number_of_tags = len(etree.fromstring(markdown_converted))
+#     except Exception as e:
+#         if '<<<' in string and '>>>' in string:
+#             # this is a hack, ignore if someone describes an agent section
+#             # title needs to be rendered without html interpretation anyway, we just want to give a
+#             # hint to the developer writing the werk, if they use formatting in the title.
+#             return
+#         raise WerkError(f"Can not parse title '{string}' to check if it contains html") from e
+#     if number_of_tags:
+#         raise WerkError(
+#             f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
+#         )
 
 
-def _raise_if_contains_unkown_tags(string: str) -> None:
+def raise_if_contains_unknown_tags(string: str) -> None:
     tags_allowed = {
         "code",
         "em",
@@ -189,10 +142,18 @@ def _raise_if_contains_unkown_tags(string: str) -> None:
         "thead",
         "tr",
         "ul",
+        "a",
+        "b",
+        "blockquote",
+        "br",
+        "i",
+        "th",
+        "tt",
+        "hr",
     }
-    # string contains multiple tags, but etree expects only single root element.
-    # we wrap it in <p> which results in invalid html, but we don't care in this case.
-    tags_found = {e.tag for e in etree.fromstring(f"<p>{string}</p>").iter()}
+    parser = lxml.html.HTMLParser(recover=False)
+    tree = lxml.html.fromstring(f"<html><body>{string}</body></html>", parser=parser)
+    tags_found = {e.tag for e in tree.xpath("./body//*")}
     tags_unknown = tags_found.difference(tags_allowed)
     if tags_unknown:
         tag_list = ", ".join(f"<{tag}>" for tag in tags_unknown)

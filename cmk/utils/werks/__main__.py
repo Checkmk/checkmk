@@ -13,8 +13,6 @@ from .announce import main as main_announce
 from .collect import main as collect
 from .mail import main as mail
 from .werk import Edition, Werk
-from .werkv1 import RawWerkV1
-from .werkv2 import RawWerkV2
 
 
 def main_changelog(args: argparse.Namespace) -> None:
@@ -34,8 +32,7 @@ def main_precompile(args: argparse.Namespace) -> None:
     )
     current_version = Version.from_str(__version__)
 
-    def _filter(raw_werk: RawWerkV1 | RawWerkV2) -> bool:
-        werk = raw_werk.to_werk()
+    def _filter(werk: Werk) -> bool:
         if filter_by_edition is not None and werk.edition != filter_by_edition:
             return False
         # only include werks of this major version:

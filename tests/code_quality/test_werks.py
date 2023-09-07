@@ -17,15 +17,6 @@ import tests.testlib as testlib
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
 
-
-def _render_description(description: str | cmk.utils.werks.werk.NoWiki) -> str:
-    # reimplementation of cmk.gui.werks.render_description
-    # can be removed as soon as all werks are converted to markdown
-    if isinstance(description, cmk.utils.werks.werk.NoWiki):
-        return "\n".join(description.value)
-    return description
-
-
 CVSS_REGEX = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
 )
@@ -42,11 +33,11 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cre_werks = {w.id: w for w in all_werks if w.edition == "cre"}
-    cee_werks = {w.id: w for w in all_werks if w.edition == "cee"}
-    cme_werks = {w.id: w for w in all_werks if w.edition == "cme"}
-    cce_werks = {w.id: w for w in all_werks if w.edition == "cce"}
-    cse_werks = {w.id: w for w in all_werks if w.edition == "cse"}
+    cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
+    cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
+    cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
+    cce_werks = {w.id: w for w in all_werks if w.edition.value == "cce"}
+    cse_werks = {w.id: w for w in all_werks if w.edition.value == "cse"}
     assert len(all_werks) == sum(
         [len(cre_werks), len(cee_werks), len(cme_werks), len(cce_werks), len(cse_werks)]
     )
@@ -81,7 +72,7 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     for werk_id, werk in werks_loaded.items():
         raw_werk = merged_werks[werk_id]
         assert werk.title == raw_werk.title
-        assert _render_description(werk.description) == "\n".join(raw_werk.description)
+        assert werk.description == raw_werk.description
 
 
 def test_werk_versions(precompiled_werks: None) -> None:
@@ -104,7 +95,7 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
         if werk.class_.value != "security":
             continue
         assert (
-            CVSS_REGEX.search(_render_description(werk.description)) is not None
+            CVSS_REGEX.search(werk.description) is not None
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 

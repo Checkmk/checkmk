@@ -1187,7 +1187,7 @@ class ModeEditRuleset(WatoMode):
         if analyse_rule_matching:
             table.cell(_("Match"))
             title, img = self._match(match_state, rule, service_labels=service_labels)
-            html.icon("rule_%s" % img, title)
+            html.icon(img, title)
 
         table.cell("#", css=["narrow nowrap"])
         html.write_text(rulenr)
@@ -1253,7 +1253,7 @@ class ModeEditRuleset(WatoMode):
             )
         )
         if reasons:
-            return _("This rule does not match: %s") % " ".join(reasons), "no_match"
+            return _("This rule does not match: %s") % " ".join(reasons), "hyphen"
         ruleset = rule.ruleset
         if ruleset.match_type() == "dict":
             new_keys = set(rule.value.keys())
@@ -1262,34 +1262,34 @@ class ModeEditRuleset(WatoMode):
             if not new_keys:
                 return (
                     _("This rule matches, but does not define any parameters."),
-                    "ineffective_match",
+                    "rule_ineffective_match",
                 )
             if not already_existing:
-                return _("This rule matches and defines new parameters."), "match"
+                return _("This rule matches and defines new parameters."), "rule_match"
             if already_existing == new_keys:
                 return (
                     _(
                         "This rule matches, but all of its parameters are overridden by previous rules."
                     ),
-                    "ineffective_match",
+                    "rule_ineffective_match",
                 )
             return (
                 _(
                     "This rule matches, but some of its parameters are overridden by previous rules."
                 ),
-                "partly_match",
+                "rule_partly_match",
             )
         if match_state["matched"] and ruleset.match_type() != "all":
             return (
                 _("This rule matches, but is overridden by a previous rule."),
-                "ineffective_match",
+                "rule_ineffective_match",
             )
         match_state["matched"] = True
         return (_("This rule matches for the host '%s'") % self._hostname) + (
             _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
             if ruleset.item_type()
             else "."
-        ), "match"
+        ), "rule_match"
 
     def _get_host_labels_from_remote_site(self) -> None:
         """To be able to execute the match simulation we need the discovered host labels to be

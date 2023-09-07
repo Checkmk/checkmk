@@ -292,7 +292,7 @@ class ModePatternEditor(WatoMode):
                                 if not already_matched:
                                     # First match
                                     match_class = "match first"
-                                    match_img = "match"
+                                    match_img = "rule_match"
                                     match_title = _(
                                         "This logfile pattern matches first and will be used for "
                                         "defining the state of the given line."
@@ -301,25 +301,25 @@ class ModePatternEditor(WatoMode):
                                 else:
                                     # subsequent match
                                     match_class = "match"
-                                    match_img = "ineffective_match"
+                                    match_img = "rule_ineffective_match"
                                     match_title = _(
                                         "This logfile pattern matches but another matched first."
                                     )
                             else:
-                                match_img = "no_match"
+                                match_img = "hyphen"
                                 match_title = _(
                                     "This logfile pattern does not match the given string."
                                 )
                         else:
                             # rule does not match
-                            match_img = "no_match"
+                            match_img = "hyphen"
                             match_title = _("The rule conditions do not match.")
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
                         html.write_text(rulenr)
                         table.cell(_("Match"))
-                        html.icon("rule_%s" % match_img, match_title)
+                        html.icon(match_img, match_title)
 
                         cls = (
                             ["state%d" % logwatch.level_state(state), "fillbackground"]

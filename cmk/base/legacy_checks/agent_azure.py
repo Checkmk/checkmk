@@ -6,11 +6,11 @@
 
 from typing import Any, Mapping, Optional, Sequence
 
-from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
-def agent_azure_arguments(
+def agent_azure_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     hostname: str,
     ipaddress: Optional[str],
@@ -34,6 +34,9 @@ def agent_azure_arguments(
                 args.append(option)
         else:
             args += [option, value]
+
+    if proxy_settings := params.get("proxy"):
+        args += ["--proxy", get_http_proxy(proxy_settings).serialize()]
 
     if "services" in params:
         args += ["--services", *params["services"]]

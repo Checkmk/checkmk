@@ -26,6 +26,7 @@ import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
 from cmk.utils import password_store
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, vcrtrace
@@ -219,6 +220,18 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
+
+    parser.add_argument(
+        "--proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Azure API. If not set, the environment settings "
+            "will be used."
+        ),
+    )
+
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
         "--require-tag",
@@ -368,15 +381,23 @@ def _get_mgmt_authority_urls(
 
 
 class BaseApiClient(abc.ABC):
-    def __init__(self, authority_urls: _AuthorityURLs) -> None:
+    def __init__(
+        self,
+        authority_urls: _AuthorityURLs,
+        http_proxy_config: HTTPProxyConfig,
+    ) -> None:
         self._ratelimit = float("Inf")
         self._headers: dict = {}
         self._login_url = authority_urls.login
         self._resource_url = authority_urls.resource
         self._base_url = authority_urls.base
+        self._http_proxy_config = http_proxy_config
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(f"{self._login_url}/{tenant}")
+        context = adal.AuthenticationContext(
+            f"{self._login_url}/{tenant}",
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
         token = context.acquire_token_with_client_credentials(self._resource_url, client, secret)
         self._headers.update(
             {
@@ -456,7 +477,14 @@ class BaseApiClient(abc.ABC):
         return data
 
     def _request_json_from_url(self, method, url, *, body=None, params=None):
-        response = requests.request(method, url, json=body, params=params, headers=self._headers)
+        response = requests.request(
+            method,
+            url,
+            json=body,
+            params=params,
+            headers=self._headers,
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
         self._update_ratelimit(response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
@@ -1441,7 +1469,10 @@ def get_mapper(debug, sequential, timeout):
 
 
 def main_graph_client(args: Args) -> None:
-    graph_client = GraphApiClient(_get_graph_authority_urls(args.authority))
+    graph_client = GraphApiClient(
+        _get_graph_authority_urls(args.authority),
+        deserialize_http_proxy_config(args.proxy),
+    )
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
@@ -1580,7 +1611,10 @@ def process_resource_health(
 
 
 def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
-    mgmt_client = MgmtApiClient(_get_mgmt_authority_urls(args.authority, subscription))
+    mgmt_client = MgmtApiClient(
+        _get_mgmt_authority_urls(args.authority, subscription),
+        deserialize_http_proxy_config(args.proxy),
+    )
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)

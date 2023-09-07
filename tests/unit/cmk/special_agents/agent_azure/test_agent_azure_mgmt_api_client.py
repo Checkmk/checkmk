@@ -5,6 +5,8 @@
 
 import pytest
 
+from cmk.utils.http_proxy_config import EnvironmentProxyConfig, ExplicitProxyConfig
+
 from cmk.special_agents.agent_azure import _AuthorityURLs, ApiError, MgmtApiClient
 
 RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Network/virtualNetworkGateways/vnet_gateway"
@@ -42,7 +44,10 @@ RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Netwo
 def test_get_available_metrics_from_exception(
     desired_names: str, api_error: ApiError, expected_result: str
 ) -> None:
-    client = MgmtApiClient(_AuthorityURLs("login-url", "resource-url", "base-url"))
+    client = MgmtApiClient(
+        _AuthorityURLs("login-url", "resource-url", "base-url"),
+        EnvironmentProxyConfig(),
+    )
 
     result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
     assert result == expected_result
@@ -70,7 +75,10 @@ def test_get_available_metrics_from_exception(
 def test_get_available_metrics_from_exception_error(
     desired_names: str, api_error: ApiError, expected_error: str
 ) -> None:
-    client = MgmtApiClient(_AuthorityURLs("login-url", "resource-url", "base-url"))
+    client = MgmtApiClient(
+        _AuthorityURLs("login-url", "resource-url", "base-url"),
+        ExplicitProxyConfig("http://my-proxy:1234"),
+    )
 
     with pytest.raises(ApiError, match=expected_error):
         client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)

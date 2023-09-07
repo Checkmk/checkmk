@@ -25,6 +25,7 @@ from cmk.utils.user import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
+import cmk.gui.userdb._user_attribute._custom_attributes
 import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
 from cmk.gui import http
 from cmk.gui.config import active_config
@@ -514,7 +515,11 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
     monkeypatch.setattr(utils, "user_attribute_registry", utils.UserAttributeRegistry())
-    monkeypatch.setattr(userdb, "user_attribute_registry", utils.user_attribute_registry)
+    monkeypatch.setattr(
+        cmk.gui.userdb._user_attribute._custom_attributes,
+        "user_attribute_registry",
+        utils.user_attribute_registry,
+    )
     monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
     with monkeypatch.context() as m:
         m.setattr(

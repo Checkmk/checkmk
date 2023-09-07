@@ -93,6 +93,10 @@ from ._check_credentials import (
 from ._check_credentials import user_exists as user_exists
 from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
 from ._check_credentials import user_locked as user_locked
+from ._user_attribute import register_custom_user_attributes as register_custom_user_attributes
+from ._user_attribute import (
+    update_config_based_user_attributes as update_config_based_user_attributes,
+)
 from ._user_selection import UserSelection as UserSelection
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
 
@@ -352,120 +356,3 @@ def on_access(username: UserId, session_id: str, now: datetime) -> None:
         now.timestamp() - session_info.started_at,
         now.timestamp() - session_info.last_activity,
     )
-
-
-# .
-#   .-Users----------------------------------------------------------------.
-#   |                       _   _                                          |
-#   |                      | | | |___  ___ _ __ ___                        |
-#   |                      | | | / __|/ _ \ '__/ __|                       |
-#   |                      | |_| \__ \  __/ |  \__ \                       |
-#   |                       \___/|___/\___|_|  |___/                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
-class GenericUserAttribute(UserAttribute):
-    def __init__(
-        self,
-        user_editable: bool,
-        show_in_table: bool,
-        add_custom_macro: bool,
-        domain: str,
-        permission: str | None,
-        from_config: bool,
-    ) -> None:
-        super().__init__()
-        self._user_editable = user_editable
-        self._show_in_table = show_in_table
-        self._add_custom_macro = add_custom_macro
-        self._domain = domain
-        self._permission = permission
-        self._from_config = from_config
-
-    def from_config(self) -> bool:
-        return self._from_config
-
-    def user_editable(self) -> bool:
-        return self._user_editable
-
-    def permission(self) -> None | str:
-        return self._permission
-
-    def show_in_table(self) -> bool:
-        return self._show_in_table
-
-    def add_custom_macro(self) -> bool:
-        return self._add_custom_macro
-
-    def domain(self) -> str:
-        return self._domain
-
-    @classmethod
-    def is_custom(cls) -> bool:
-        return False
-
-
-# .
-#   .-Custom-Attrs.--------------------------------------------------------.
-#   |   ____          _                          _   _   _                 |
-#   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
-#   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
-#   | | |__| |_| \__ \ || (_) | | | | | |_____/ ___ \ |_| |_| |  \__ \_    |
-#   |  \____\__,_|___/\__\___/|_| |_| |_|    /_/   \_\__|\__|_|  |___(_)   |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Mange custom attributes of users (in future hosts etc.)              |
-#   '----------------------------------------------------------------------'
-def register_custom_user_attributes(attributes: list[dict[str, Any]]) -> None:
-    for attr in attributes:
-        if attr["type"] != "TextAscii":
-            raise NotImplementedError()
-
-        @user_attribute_registry.register
-        class _LegacyUserAttribute(GenericUserAttribute):
-            # Play safe: Grab all necessary data at class construction time,
-            # it's highly unclear if the attr dict is mutated later or not.
-            _name = attr["name"]
-            _valuespec = TextInput(title=attr["title"], help=attr["help"])
-            _topic = attr.get("topic", "personal")
-            _user_editable = attr["user_editable"]
-            _show_in_table = attr.get("show_in_table", False)
-            _add_custom_macro = attr.get("add_custom_macro", False)
-
-            @classmethod
-            def name(cls) -> str:
-                return cls._name
-
-            def valuespec(self) -> ValueSpec:
-                return self._valuespec
-
-            def topic(self) -> str:
-                return self._topic
-
-            def __init__(self) -> None:
-                super().__init__(
-                    user_editable=self._user_editable,
-                    show_in_table=self._show_in_table,
-                    add_custom_macro=self._add_custom_macro,
-                    domain="multisite",
-                    permission=None,
-                    from_config=True,
-                )
-
-            @classmethod
-            def is_custom(cls) -> bool:
-                return True
-
-    cmk.gui.userdb.ldap_connector.register_user_attribute_sync_plugins()
-
-
-def update_config_based_user_attributes() -> None:
-    _clear_config_based_user_attributes()
-    register_custom_user_attributes(active_config.wato_user_attrs)
-
-
-def _clear_config_based_user_attributes() -> None:
-    for _name, attr in get_user_attributes():
-        if attr.from_config():
-            user_attribute_registry.unregister(attr.name())

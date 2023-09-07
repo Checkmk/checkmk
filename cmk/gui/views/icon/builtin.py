@@ -914,7 +914,7 @@ class ActiveChecksIcon(Icon):
                     "disabled",
                     _("Active checks have been manually disabled for this %s!") % what,
                 )
-            return "enabled", _("Active checks have been manually enabled for this %s!") % what
+            return "checkmark", _("Active checks have been manually enabled for this %s!") % what
         return None
 
 

@@ -2292,7 +2292,7 @@ class BIModeAggregations(ABCBIMode):
                 if bi_aggregation.computation_options.disabled:
                     html.icon("disabled", _("This aggregation is currently disabled."))
                 else:
-                    html.icon("enabled", _("This aggregation is currently enabled."))
+                    html.icon("checkmark", _("This aggregation is currently enabled."))
 
                 if bi_aggregation.computation_options.use_hard_states:
                     html.icon("hard_states", _("Base state computation on hard states"))

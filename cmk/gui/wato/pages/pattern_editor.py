@@ -292,7 +292,7 @@ class ModePatternEditor(WatoMode):
                                 if not already_matched:
                                     # First match
                                     match_class = "match first"
-                                    match_img = "rule_match"
+                                    match_img = "checkmark"
                                     match_title = _(
                                         "This logfile pattern matches first and will be used for "
                                         "defining the state of the given line."

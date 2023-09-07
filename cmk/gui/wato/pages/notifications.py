@@ -313,7 +313,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     table.cell(css=["buttons"])
                     what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
-                        html.icon("rule_match", _("This rule matches"))
+                        html.icon("checkmark", _("This rule matches"))
                     elif what == "miss":
                         html.icon("hyphen", _("This rule does not match: %s") % reason)
 
@@ -781,7 +781,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
 
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
-                    html.icon("rule_match", _("You are analysing this notification"))
+                    html.icon("checkmark", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), str(nr + 1), css=["number"])
                 if "MICROTIME" in context:

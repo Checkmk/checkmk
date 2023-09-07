@@ -1265,7 +1265,7 @@ class ModeEditRuleset(WatoMode):
                     "rule_ineffective_match",
                 )
             if not already_existing:
-                return _("This rule matches and defines new parameters."), "rule_match"
+                return _("This rule matches and defines new parameters."), "checkmark"
             if already_existing == new_keys:
                 return (
                     _(
@@ -1289,7 +1289,7 @@ class ModeEditRuleset(WatoMode):
             _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
             if ruleset.item_type()
             else "."
-        ), "rule_match"
+        ), "checkmark"
 
     def _get_host_labels_from_remote_site(self) -> None:
         """To be able to execute the match simulation we need the discovered host labels to be

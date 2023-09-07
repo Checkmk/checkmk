@@ -926,14 +926,19 @@ def _evaluate_literal(
     if isinstance(expression, float):
         return RPNExpression(expression, unit_info[""], "#000000")
 
-    if val := _float_or_int(expression):
-        if expression not in translated_metrics:
-            return RPNExpression(float(val), unit_info[""], "#000000")
+    if expression not in translated_metrics:
+        try:
+            return RPNExpression(float(int(expression)), unit_info["count"], "#000000")
+        except ValueError:
+            pass
+
+        try:
+            return RPNExpression(float(expression), unit_info[""], "#000000")
+        except ValueError:
+            pass
 
     var_name = _drop_metric_consolidation_advice(expression)
-
-    percent = var_name.endswith("(%)")
-    if percent:
+    if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 
     def _from_scalar(scalar_name: str, scalar: ScalarBounds) -> float | None:
@@ -961,15 +966,13 @@ def _evaluate_literal(
 
     if percent:
         maxvalue = translated_metrics[var_name]["scalar"]["max"]
-        if maxvalue != 0:
-            value = 100.0 * float(value) / maxvalue
-        else:
-            value = 0.0
-        unit = unit_info["%"]
-    else:
-        unit = translated_metrics[var_name]["unit"]
+        return RPNExpression(
+            0.0 if maxvalue == 0 else 100.0 * float(value) / maxvalue,
+            unit_info["%"],
+            color,
+        )
 
-    return RPNExpression(value, unit, color)
+    return RPNExpression(value, translated_metrics[var_name]["unit"], color)
 
 
 @dataclass(frozen=True)

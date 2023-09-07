@@ -767,7 +767,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             "check_mk-foo",
             "97",
             97.0,
-            "",  # TODO Should be "count" as for other ints?
+            "count",
             "#000000",
             id="constant str -> int",
         ),
@@ -1064,7 +1064,7 @@ def test_graph_titles() -> None:
             [
                 (7.0, "7.00", "#ffd000", "Warning"),
                 (10.0, "10.0 W", "#ff3232", "Critical power"),
-                (-2.0, "-2.00", "#ffd000", "Warning output"),
+                (-2.0, "-2 ", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",
         ),

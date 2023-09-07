@@ -131,6 +131,7 @@ class FolderField(base.String):
 
     def __init__(
         self,
+        pattern=FOLDER_PATTERN,
         **kwargs,
     ):
         if "description" not in kwargs:
@@ -140,7 +141,7 @@ class FolderField(base.String):
             "\n\nPath delimiters can be either `~`, `/` or `\\`. Please use the one most "
             "appropriate for your quoting/escaping needs. A good default choice is `~`."
         )
-        super().__init__(pattern=FOLDER_PATTERN, **kwargs)
+        super().__init__(pattern=pattern, **kwargs)
 
     @classmethod
     def _normalize_folder(cls, folder_id):

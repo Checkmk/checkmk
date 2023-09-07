@@ -45,6 +45,7 @@ from cmk.gui.plugins.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
     DeleteModeField,
+    EXISTING_FOLDER_PATTERN,
     MoveFolder,
     UpdateFolder,
 )
@@ -70,6 +71,7 @@ PATH_FOLDER_FIELD = {
         ),
         example="~my~fine~folder",
         required=True,
+        pattern=EXISTING_FOLDER_PATTERN,
     )
 }
 

@@ -14,9 +14,12 @@ from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
 
+EXISTING_FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-\w]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
+
 EXISTING_FOLDER = gui_fields.FolderField(
     example="/",
     required=True,
+    pattern=EXISTING_FOLDER_PATTERN,
 )
 
 
@@ -58,6 +61,7 @@ class CreateFolder(BaseSchema):
             "specified by '/'."
         ),
         example="/",
+        pattern=EXISTING_FOLDER_PATTERN,
     )
     attributes = gui_fields.host_attributes_field(
         "folder",

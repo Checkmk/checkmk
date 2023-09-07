@@ -93,6 +93,7 @@ from ._check_credentials import (
 from ._check_credentials import user_exists as user_exists
 from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
 from ._check_credentials import user_locked as user_locked
+from ._user_selection import UserSelection as UserSelection
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
 
 __all__ = [
@@ -294,76 +295,6 @@ def _is_local_user(user: UserSpec) -> bool:
 
 def is_automation_user(user: UserSpec) -> bool:
     return "automation_secret" in user
-
-
-class _UserSelection(DropdownChoice[UserId]):
-    """Dropdown for choosing a multisite user"""
-
-    def __init__(  # pylint: disable=redefined-builtin
-        self,
-        only_contacts: bool = False,
-        only_automation: bool = False,
-        none: str | None = None,
-        # ValueSpec
-        title: str | None = None,
-        help: ValueSpecHelp | None = None,
-        default_value: ValueSpecDefault[UserId] = DEF_VALUE,
-    ) -> None:
-        super().__init__(
-            choices=self._generate_wato_users_elements_function(
-                none, only_contacts=only_contacts, only_automation=only_automation
-            ),
-            invalid_choice="complain",
-            title=title,
-            help=help,
-            default_value=default_value,
-        )
-
-    def _generate_wato_users_elements_function(
-        self,
-        none_value: str | None,
-        only_contacts: bool = False,
-        only_automation: bool = False,
-    ) -> Callable[[], list[tuple[UserId | None, str]]]:
-        def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
-            users = load_users()
-            elements: list[tuple[UserId | None, str]] = sorted(
-                (name, "{} - {}".format(name, us.get("alias", name)))
-                for (name, us) in users.items()
-                if (not only_contacts or us.get("contactgroups"))
-                and (not only_automation or us.get("automation_secret"))
-            )
-            if nv is not None:
-                elements.insert(0, (None, nv))
-            return elements
-
-        return lambda: get_wato_users(none_value)
-
-    def value_to_html(self, value: Any) -> ValueSpecText:
-        return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
-
-
-def UserSelection(  # pylint: disable=redefined-builtin
-    only_contacts: bool = False,
-    only_automation: bool = False,
-    none: str | None = None,
-    # ValueSpec
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    default_value: ValueSpecDefault[UserId] = DEF_VALUE,
-) -> Transform[UserId | None]:
-    return Transform(
-        valuespec=_UserSelection(
-            only_contacts=only_contacts,
-            only_automation=only_automation,
-            none=none,
-            title=title,
-            help=help,
-            default_value=default_value,
-        ),
-        to_valuespec=lambda raw_str: None if raw_str is None else UserId(raw_str),
-        from_valuespec=lambda uid: None if uid is None else str(uid),
-    )
 
 
 def on_failed_login(username: UserId, now: datetime) -> None:

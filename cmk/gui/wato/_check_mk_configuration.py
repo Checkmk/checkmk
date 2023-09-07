@@ -203,6 +203,86 @@ def register(
     config_variable_registry.register(ConfigVariableInventoryCheckInterval)
     config_variable_registry.register(ConfigVariableInventoryCheckSeverity)
     config_variable_registry.register(ConfigVariableInventoryCheckAutotrigger)
+    rulespec_registry.register(HostGroupsRulespec)
+    rulespec_registry.register(ServiceGroupsRulespec)
+    rulespec_registry.register(HostContactGroupsRulespec)
+    rulespec_registry.register(ServiceContactgroups)
+    rulespec_registry.register(ExtraServiceConfMaxCheckAttempts)
+    rulespec_registry.register(ExtraServiceConfCheckInterval)
+    rulespec_registry.register(ExtraServiceConfRetryInterval)
+    rulespec_registry.register(ExtraServiceConfCheckPeriod)
+    rulespec_registry.register(CheckPeriods)
+    rulespec_registry.register(ExtraServiceConfProcessPerfData)
+    rulespec_registry.register(ExtraServiceConfPassiveChecksEnabled)
+    rulespec_registry.register(ExtraServiceConfActiveChecksEnabled)
+    rulespec_registry.register(ExtraHostConfMaxCheckAttempts)
+    rulespec_registry.register(ExtraHostConfCheckInterval)
+    rulespec_registry.register(ExtraHostConfRetryInterval)
+    rulespec_registry.register(ExtraHostConfCheckPeriod)
+    rulespec_registry.register(HostCheckCommands)
+    rulespec_registry.register(ExtraHostConfNotificationsEnabled)
+    rulespec_registry.register(ExtraServiceConfNotificationsEnabled)
+    rulespec_registry.register(ExtraHostConfNotificationOptions)
+    rulespec_registry.register(ExtraServiceConfNotificationOptions)
+    rulespec_registry.register(ExtraHostConfNotificationPeriod)
+    rulespec_registry.register(ExtraServiceConfNotificationPeriod)
+    rulespec_registry.register(ExtraHostConfFirstNotificationDelay)
+    rulespec_registry.register(ExtraServiceConfFirstNotificationDelay)
+    rulespec_registry.register(ExtraHostConfNotificationInterval)
+    rulespec_registry.register(ExtraServiceConfNotificationInterval)
+    rulespec_registry.register(ExtraHostConfFlapDetectionEnabled)
+    rulespec_registry.register(ExtraServiceConfFlapDetectionEnabled)
+    rulespec_registry.register(OnlyHosts)
+    rulespec_registry.register(IgnoredServices)
+    rulespec_registry.register(IgnoredChecks)
+    rulespec_registry.register(PeriodicDiscovery)
+    rulespec_registry.register(CustomServiceAttributes)
+    rulespec_registry.register(ClusteredServices)
+    rulespec_registry.register(ClusteredServicesConfiguration)
+    rulespec_registry.register(ClusteredServicesMapping)
+    rulespec_registry.register(ServiceLabelRules)
+    rulespec_registry.register(ServiceTagRules)
+    rulespec_registry.register(ExtraHostConfServicePeriod)
+    rulespec_registry.register(HostLabelRules)
+    rulespec_registry.register(ExtraHostConfNotesUrl)
+    rulespec_registry.register(ExtraServiceConfServicePeriod)
+    rulespec_registry.register(ExtraServiceConfDisplayName)
+    rulespec_registry.register(ExtraServiceConfNotesUrl)
+    rulespec_registry.register(AutomaticHostRemoval)
+    rulespec_registry.register(ExtraHostConfIconImage)
+    rulespec_registry.register(ExtraServiceConfIconImage)
+    rulespec_registry.register(HostIconsAndActions)
+    rulespec_registry.register(ServiceIconsAndActions)
+    rulespec_registry.register(ExtraHostConfEscapePluginOutput)
+    rulespec_registry.register(ExtraServiceConfEscapePluginOutput)
+    rulespec_registry.register(DyndnsHosts)
+    rulespec_registry.register(PrimaryAddressFamily)
+    rulespec_registry.register(SnmpCommunities)
+    rulespec_registry.register(ManagementBoardConfig)
+    rulespec_registry.register(SnmpCharacterEncodings)
+    rulespec_registry.register(BulkwalkHosts)
+    rulespec_registry.register(ManagementBulkwalkHosts)
+    rulespec_registry.register(SnmpBulkSize)
+    rulespec_registry.register(SnmpWithoutSysDescr)
+    rulespec_registry.register(Snmpv2CHosts)
+    rulespec_registry.register(SnmpTiming)
+    rulespec_registry.register(NonInlineSnmpHosts)
+    rulespec_registry.register(SnmpBackendHosts)
+    rulespec_registry.register(UsewalkHosts)
+    rulespec_registry.register(SnmpPorts)
+    rulespec_registry.register(AgentPorts)
+    rulespec_registry.register(TcpConnectTimeouts)
+    rulespec_registry.register(EncryptionHandling)
+    rulespec_registry.register(AgentEncryption)
+    rulespec_registry.register(CheckMkExitStatus)
+    rulespec_registry.register(CheckMkAgentTargetVersions)
+    rulespec_registry.register(AgentConfigOnlyFrom)
+    rulespec_registry.register(PiggybackTranslation)
+    rulespec_registry.register(ServiceDescriptionTranslationRulespec)
+    rulespec_registry.register(SnmpCheckInterval)
+    rulespec_registry.register(SnmpExcludeSections)
+    rulespec_registry.register(Snmpv3Contexts)
+    rulespec_registry.register(PiggybackedHostFiles)
 
 
 #   .--Global Settings-----------------------------------------------------.
@@ -3238,13 +3318,11 @@ def _valuespec_host_groups():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        match_type="all",
-        name="host_groups",
-        valuespec=_valuespec_host_groups,
-    )
+HostGroupsRulespec = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    match_type="all",
+    name="host_groups",
+    valuespec=_valuespec_host_groups,
 )
 
 
@@ -3254,14 +3332,12 @@ def _valuespec_service_groups():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="all",
-        name="service_groups",
-        valuespec=_valuespec_service_groups,
-    )
+ServiceGroupsRulespec = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="all",
+    name="service_groups",
+    valuespec=_valuespec_service_groups,
 )
 
 
@@ -3271,13 +3347,11 @@ def _valuespec_host_contactgroups():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        match_type="all",
-        name="host_contactgroups",
-        valuespec=_valuespec_host_contactgroups,
-    )
+HostContactGroupsRulespec = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    match_type="all",
+    name="host_contactgroups",
+    valuespec=_valuespec_host_contactgroups,
 )
 
 
@@ -3287,14 +3361,12 @@ def _valuespec_service_contactgroups():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="all",
-        name="service_contactgroups",
-        valuespec=_valuespec_service_contactgroups,
-    )
+ServiceContactgroups = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="all",
+    name="service_contactgroups",
+    valuespec=_valuespec_service_contactgroups,
 )
 
 
@@ -3309,13 +3381,11 @@ def _valuespec_extra_service_conf_max_check_attempts():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("max_check_attempts"),
-        valuespec=_valuespec_extra_service_conf_max_check_attempts,
-    )
+ExtraServiceConfMaxCheckAttempts = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("max_check_attempts"),
+    valuespec=_valuespec_extra_service_conf_max_check_attempts,
 )
 
 
@@ -3336,13 +3406,11 @@ def _valuespec_extra_service_conf_check_interval():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("check_interval"),
-        valuespec=_valuespec_extra_service_conf_check_interval,
-    )
+ExtraServiceConfCheckInterval = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("check_interval"),
+    valuespec=_valuespec_extra_service_conf_check_interval,
 )
 
 
@@ -3363,13 +3431,11 @@ def _valuespec_extra_service_conf_retry_interval():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("retry_interval"),
-        valuespec=_valuespec_extra_service_conf_retry_interval,
-    )
+ExtraServiceConfRetryInterval = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("retry_interval"),
+    valuespec=_valuespec_extra_service_conf_retry_interval,
 )
 
 
@@ -3385,13 +3451,11 @@ def _valuespec_extra_service_conf_check_period():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("check_period"),
-        valuespec=_valuespec_extra_service_conf_check_period,
-    )
+ExtraServiceConfCheckPeriod = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("check_period"),
+    valuespec=_valuespec_extra_service_conf_check_period,
 )
 
 
@@ -3405,13 +3469,11 @@ def _valuespec_check_periods():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name="check_periods",
-        valuespec=_valuespec_check_periods,
-    )
+CheckPeriods = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name="check_periods",
+    valuespec=_valuespec_check_periods,
 )
 
 
@@ -3429,13 +3491,11 @@ def _valuespec_extra_service_conf_process_perf_data():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("process_perf_data"),
-        valuespec=_valuespec_extra_service_conf_process_perf_data,
-    )
+ExtraServiceConfProcessPerfData = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("process_perf_data"),
+    valuespec=_valuespec_extra_service_conf_process_perf_data,
 )
 
 
@@ -3453,13 +3513,11 @@ def _valuespec_extra_service_conf_passive_checks_enabled():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("passive_checks_enabled"),
-        valuespec=_valuespec_extra_service_conf_passive_checks_enabled,
-    )
+ExtraServiceConfPassiveChecksEnabled = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("passive_checks_enabled"),
+    valuespec=_valuespec_extra_service_conf_passive_checks_enabled,
 )
 
 
@@ -3471,13 +3529,11 @@ def _valuespec_extra_service_conf_active_checks_enabled():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("active_checks_enabled"),
-        valuespec=_valuespec_extra_service_conf_active_checks_enabled,
-    )
+ExtraServiceConfActiveChecksEnabled = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationServiceChecks,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("active_checks_enabled"),
+    valuespec=_valuespec_extra_service_conf_active_checks_enabled,
 )
 
 
@@ -3492,12 +3548,10 @@ def _valuespec_extra_host_conf_max_check_attempts():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name=RuleGroup.ExtraHostConf("max_check_attempts"),
-        valuespec=_valuespec_extra_host_conf_max_check_attempts,
-    )
+ExtraHostConfMaxCheckAttempts = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    name=RuleGroup.ExtraHostConf("max_check_attempts"),
+    valuespec=_valuespec_extra_host_conf_max_check_attempts,
 )
 
 
@@ -3520,12 +3574,10 @@ def _valuespec_extra_host_conf_check_interval():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name=RuleGroup.ExtraHostConf("check_interval"),
-        valuespec=_valuespec_extra_host_conf_check_interval,
-    )
+ExtraHostConfCheckInterval = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    name=RuleGroup.ExtraHostConf("check_interval"),
+    valuespec=_valuespec_extra_host_conf_check_interval,
 )
 
 
@@ -3545,12 +3597,10 @@ def _valuespec_extra_host_conf_retry_interval():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name=RuleGroup.ExtraHostConf("retry_interval"),
-        valuespec=_valuespec_extra_host_conf_retry_interval,
-    )
+ExtraHostConfRetryInterval = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    name=RuleGroup.ExtraHostConf("retry_interval"),
+    valuespec=_valuespec_extra_host_conf_retry_interval,
 )
 
 
@@ -3565,12 +3615,10 @@ def _valuespec_extra_host_conf_check_period():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name=RuleGroup.ExtraHostConf("check_period"),
-        valuespec=_valuespec_extra_host_conf_check_period,
-    )
+ExtraHostConfCheckPeriod = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    name=RuleGroup.ExtraHostConf("check_period"),
+    valuespec=_valuespec_extra_host_conf_check_period,
 )
 
 
@@ -3625,12 +3673,10 @@ def _valuespec_host_check_commands():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        name="host_check_commands",
-        valuespec=_valuespec_host_check_commands,
-    )
+HostCheckCommands = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    name="host_check_commands",
+    valuespec=_valuespec_host_check_commands,
 )
 
 
@@ -3651,12 +3697,10 @@ def _valuespec_extra_host_conf_notifications_enabled():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("notifications_enabled"),
-        valuespec=_valuespec_extra_host_conf_notifications_enabled,
-    )
+ExtraHostConfNotificationsEnabled = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("notifications_enabled"),
+    valuespec=_valuespec_extra_host_conf_notifications_enabled,
 )
 
 
@@ -3674,13 +3718,11 @@ def _valuespec_extra_service_conf_notifications_enabled():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("notifications_enabled"),
-        valuespec=_valuespec_extra_service_conf_notifications_enabled,
-    )
+ExtraServiceConfNotificationsEnabled = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("notifications_enabled"),
+    valuespec=_valuespec_extra_service_conf_notifications_enabled,
 )
 
 
@@ -3714,12 +3756,10 @@ def _valuespec_extra_host_conf_notification_options():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("notification_options"),
-        valuespec=_valuespec_extra_host_conf_notification_options,
-    )
+ExtraHostConfNotificationOptions = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("notification_options"),
+    valuespec=_valuespec_extra_host_conf_notification_options,
 )
 
 
@@ -3748,13 +3788,11 @@ def _valuespec_extra_service_conf_notification_options():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("notification_options"),
-        valuespec=_valuespec_extra_service_conf_notification_options,
-    )
+ExtraServiceConfNotificationOptions = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("notification_options"),
+    valuespec=_valuespec_extra_service_conf_notification_options,
 )
 
 
@@ -3772,12 +3810,10 @@ def _valuespec_extra_host_conf_notification_period():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("notification_period"),
-        valuespec=_valuespec_extra_host_conf_notification_period,
-    )
+ExtraHostConfNotificationPeriod = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("notification_period"),
+    valuespec=_valuespec_extra_host_conf_notification_period,
 )
 
 
@@ -3795,13 +3831,11 @@ def _valuespec_extra_service_conf_notification_period():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("notification_period"),
-        valuespec=_valuespec_extra_service_conf_notification_period,
-    )
+ExtraServiceConfNotificationPeriod = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("notification_period"),
+    valuespec=_valuespec_extra_service_conf_notification_period,
 )
 
 
@@ -3831,13 +3865,11 @@ def _valuespec_extra_host_conf_first_notification_delay():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=0.0,
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("first_notification_delay"),
-        valuespec=_valuespec_extra_host_conf_first_notification_delay,
-    )
+ExtraHostConfFirstNotificationDelay = HostRulespec(
+    factory_default=0.0,
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("first_notification_delay"),
+    valuespec=_valuespec_extra_host_conf_first_notification_delay,
 )
 
 
@@ -3859,14 +3891,12 @@ def _valuespec_extra_service_conf_first_notification_delay():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        factory_default=0.0,
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("first_notification_delay"),
-        valuespec=_valuespec_extra_service_conf_first_notification_delay,
-    )
+ExtraServiceConfFirstNotificationDelay = ServiceRulespec(
+    factory_default=0.0,
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("first_notification_delay"),
+    valuespec=_valuespec_extra_service_conf_first_notification_delay,
 )
 
 
@@ -3894,12 +3924,10 @@ def _valuespec_extra_host_conf_notification_interval():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("notification_interval"),
-        valuespec=_valuespec_extra_host_conf_notification_interval,
-    )
+ExtraHostConfNotificationInterval = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("notification_interval"),
+    valuespec=_valuespec_extra_host_conf_notification_interval,
 )
 
 
@@ -3927,13 +3955,11 @@ def _valuespec_extra_service_conf_notification_interval():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("notification_interval"),
-        valuespec=_valuespec_extra_service_conf_notification_interval,
-    )
+ExtraServiceConfNotificationInterval = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("notification_interval"),
+    valuespec=_valuespec_extra_service_conf_notification_interval,
 )
 
 
@@ -3948,12 +3974,10 @@ def _valuespec_extra_host_conf_flap_detection_enabled():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name=RuleGroup.ExtraHostConf("flap_detection_enabled"),
-        valuespec=_valuespec_extra_host_conf_flap_detection_enabled,
-    )
+ExtraHostConfFlapDetectionEnabled = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesNotifications,
+    name=RuleGroup.ExtraHostConf("flap_detection_enabled"),
+    valuespec=_valuespec_extra_host_conf_flap_detection_enabled,
 )
 
 
@@ -3970,13 +3994,11 @@ def _valuespec_extra_service_conf_flap_detection_enabled():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("flap_detection_enabled"),
-        valuespec=_valuespec_extra_service_conf_flap_detection_enabled,
-    )
+ExtraServiceConfFlapDetectionEnabled = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationNotifications,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("flap_detection_enabled"),
+    valuespec=_valuespec_extra_service_conf_flap_detection_enabled,
 )
 
 
@@ -4004,14 +4026,12 @@ def _help_only_hosts():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        help_func=_help_only_hosts,
-        is_optional=True,
-        name="only_hosts",
-        title=lambda: _("Hosts to be monitored"),
-    )
+OnlyHosts = BinaryHostRulespec(
+    group=RulespecGroupHostsMonitoringRulesHostChecks,
+    help_func=_help_only_hosts,
+    is_optional=True,
+    name="only_hosts",
+    title=lambda: _("Hosts to be monitored"),
 )
 
 
@@ -4024,14 +4044,12 @@ def _help_ignored_services():
     )
 
 
-rulespec_registry.register(
-    BinaryServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
-        help_func=_help_ignored_services,
-        item_type="service",
-        name="ignored_services",
-        title=lambda: _("Disabled services"),
-    )
+IgnoredServices = BinaryServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
+    help_func=_help_ignored_services,
+    item_type="service",
+    name="ignored_services",
+    title=lambda: _("Disabled services"),
 )
 
 
@@ -4047,12 +4065,10 @@ def _valuespec_ignored_checks():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
-        name="ignored_checks",
-        valuespec=_valuespec_ignored_checks,
-    )
+IgnoredChecks = HostRulespec(
+    group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
+    name="ignored_checks",
+    valuespec=_valuespec_ignored_checks,
 )
 
 
@@ -4319,12 +4335,10 @@ def _get_periodic_discovery_dflt_service_filter_lists() -> list[tuple[str, Value
     ]
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
-        name="periodic_discovery",
-        valuespec=_valuespec_periodic_discovery,
-    )
+PeriodicDiscovery = HostRulespec(
+    group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
+    name="periodic_discovery",
+    valuespec=_valuespec_periodic_discovery,
 )
 
 
@@ -4345,14 +4359,12 @@ def _valuespec_custom_service_attributes():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="all",
-        name="custom_service_attributes",
-        valuespec=_valuespec_custom_service_attributes,
-    )
+CustomServiceAttributes = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="all",
+    name="custom_service_attributes",
+    valuespec=_valuespec_custom_service_attributes,
 )
 
 
@@ -4366,14 +4378,12 @@ def _help_clustered_services():
     )
 
 
-rulespec_registry.register(
-    BinaryServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        help_func=_help_clustered_services,
-        item_type="service",
-        name="clustered_services",
-        title=lambda: _("Clustered services"),
-    )
+ClusteredServices = BinaryServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    help_func=_help_clustered_services,
+    item_type="service",
+    name="clustered_services",
+    title=lambda: _("Clustered services"),
 )
 
 
@@ -4486,13 +4496,11 @@ def _valuespec_clustered_services_config():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name="clustered_services_configuration",
-        valuespec=_valuespec_clustered_services_config,
-    )
+ClusteredServicesConfiguration = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name="clustered_services_configuration",
+    valuespec=_valuespec_clustered_services_config,
 )
 
 
@@ -4511,13 +4519,11 @@ def _valuespec_clustered_services_mapping():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name="clustered_services_mapping",
-        valuespec=_valuespec_clustered_services_mapping,
-    )
+ClusteredServicesMapping = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name="clustered_services_mapping",
+    valuespec=_valuespec_clustered_services_mapping,
 )
 
 
@@ -4530,14 +4536,12 @@ def _valuespec_service_label_rules():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="dict",
-        name="service_label_rules",
-        valuespec=_valuespec_service_label_rules,
-    )
+ServiceLabelRules = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="dict",
+    name="service_label_rules",
+    valuespec=_valuespec_service_label_rules,
 )
 
 
@@ -4555,14 +4559,12 @@ def _valuespec_service_tag_rules():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="all",
-        name="service_tag_rules",
-        valuespec=_valuespec_service_tag_rules,
-    )
+ServiceTagRules = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="all",
+    name="service_tag_rules",
+    valuespec=_valuespec_service_tag_rules,
 )
 
 
@@ -4583,12 +4585,10 @@ def _valuespec_extra_host_conf_service_period():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name=RuleGroup.ExtraHostConf("service_period"),
-        valuespec=_valuespec_extra_host_conf_service_period,
-    )
+ExtraHostConfServicePeriod = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name=RuleGroup.ExtraHostConf("service_period"),
+    valuespec=_valuespec_extra_host_conf_service_period,
 )
 
 
@@ -4601,13 +4601,11 @@ def _valuespec_host_label_rules():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        match_type="dict",
-        name="host_label_rules",
-        valuespec=_valuespec_host_label_rules,
-    )
+HostLabelRules = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    match_type="dict",
+    name="host_label_rules",
+    valuespec=_valuespec_host_label_rules,
 )
 
 
@@ -4648,21 +4646,17 @@ def _valuespec_extra_host_conf_notes_url():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name=RuleGroup.ExtraHostConf("notes_url"),
-        valuespec=_valuespec_extra_host_conf_notes_url,
-    )
+ExtraHostConfNotesUrl = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name=RuleGroup.ExtraHostConf("notes_url"),
+    valuespec=_valuespec_extra_host_conf_notes_url,
 )
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("service_period"),
-        valuespec=_valuespec_extra_service_conf_service_period,
-    )
+ExtraServiceConfServicePeriod = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("service_period"),
+    valuespec=_valuespec_extra_service_conf_service_period,
 )
 
 
@@ -4684,13 +4678,11 @@ def _valuespec_extra_service_conf_display_name():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("display_name"),
-        valuespec=_valuespec_extra_service_conf_display_name,
-    )
+ExtraServiceConfDisplayName = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("display_name"),
+    valuespec=_valuespec_extra_service_conf_display_name,
 )
 
 
@@ -4717,13 +4709,11 @@ def _valuespec_extra_service_conf_notes_url():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("notes_url"),
-        valuespec=_valuespec_extra_service_conf_notes_url,
-    )
+ExtraServiceConfNotesUrl = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("notes_url"),
+    valuespec=_valuespec_extra_service_conf_notes_url,
 )
 
 
@@ -4781,12 +4771,10 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name="automatic_host_removal",
-        valuespec=_valuespec_automatic_host_removal,
-    )
+AutomaticHostRemoval = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name="automatic_host_removal",
+    valuespec=_valuespec_automatic_host_removal,
 )
 
 # .
@@ -4814,12 +4802,10 @@ def _valuespec_extra_host_conf_icon_image() -> IconSelector:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name=RuleGroup.ExtraHostConf("icon_image"),
-        valuespec=_valuespec_extra_host_conf_icon_image,
-    )
+ExtraHostConfIconImage = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name=RuleGroup.ExtraHostConf("icon_image"),
+    valuespec=_valuespec_extra_host_conf_icon_image,
 )
 
 
@@ -4835,13 +4821,11 @@ def _valuespec_extra_service_conf_icon_image() -> IconSelector:
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("icon_image"),
-        valuespec=_valuespec_extra_service_conf_icon_image,
-    )
+ExtraServiceConfIconImage = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("icon_image"),
+    valuespec=_valuespec_extra_service_conf_icon_image,
 )
 
 
@@ -4852,13 +4836,11 @@ def _valuespec_host_icons_and_actions():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        match_type="all",
-        name="host_icons_and_actions",
-        valuespec=_valuespec_host_icons_and_actions,
-    )
+HostIconsAndActions = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    match_type="all",
+    name="host_icons_and_actions",
+    valuespec=_valuespec_host_icons_and_actions,
 )
 
 
@@ -4869,14 +4851,12 @@ def _valuespec_service_icons_and_actions():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        match_type="all",
-        name="service_icons_and_actions",
-        valuespec=_valuespec_service_icons_and_actions,
-    )
+ServiceIconsAndActions = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    match_type="all",
+    name="service_icons_and_actions",
+    valuespec=_valuespec_service_icons_and_actions,
 )
 
 
@@ -4902,12 +4882,10 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name=RuleGroup.ExtraHostConf("_ESCAPE_PLUGIN_OUTPUT"),
-        valuespec=_valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT,
-    )
+ExtraHostConfEscapePluginOutput = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name=RuleGroup.ExtraHostConf("_ESCAPE_PLUGIN_OUTPUT"),
+    valuespec=_valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT,
 )
 
 
@@ -4933,13 +4911,11 @@ def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name=RuleGroup.ExtraServiceConf("_ESCAPE_PLUGIN_OUTPUT"),
-        valuespec=_valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT,
-    )
+ExtraServiceConfEscapePluginOutput = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name=RuleGroup.ExtraServiceConf("_ESCAPE_PLUGIN_OUTPUT"),
+    valuespec=_valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT,
 )
 
 
@@ -4982,13 +4958,11 @@ def _help_dyndns_hosts():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentGeneralSettings,
-        help_func=_help_dyndns_hosts,
-        name="dyndns_hosts",
-        title=lambda: _("Hosts with dynamic DNS lookup"),
-    )
+DyndnsHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentGeneralSettings,
+    help_func=_help_dyndns_hosts,
+    name="dyndns_hosts",
+    title=lambda: _("Hosts with dynamic DNS lookup"),
 )
 
 
@@ -5008,12 +4982,10 @@ def _valuespec_primary_address_family():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentGeneralSettings,
-        name="primary_address_family",
-        valuespec=_valuespec_primary_address_family,
-    )
+PrimaryAddressFamily = HostRulespec(
+    group=RulespecGroupAgentGeneralSettings,
+    name="primary_address_family",
+    valuespec=_valuespec_primary_address_family,
 )
 
 
@@ -5027,12 +4999,10 @@ def _valuespec_snmp_communities():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_communities",
-        valuespec=_valuespec_snmp_communities,
-    )
+SnmpCommunities = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_communities",
+    valuespec=_valuespec_snmp_communities,
 )
 
 
@@ -5046,12 +5016,10 @@ def _valuespec_management_board_config():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="management_board_config",
-        valuespec=_valuespec_management_board_config,
-    )
+ManagementBoardConfig = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="management_board_config",
+    valuespec=_valuespec_management_board_config,
 )
 
 
@@ -5071,12 +5039,10 @@ def _valuespec_snmp_character_encodings():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_character_encodings",
-        valuespec=_valuespec_snmp_character_encodings,
-    )
+SnmpCharacterEncodings = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_character_encodings",
+    valuespec=_valuespec_snmp_character_encodings,
 )
 
 
@@ -5093,23 +5059,19 @@ def _help_enable_snmpv2c():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_enable_snmpv2c,
-        name="bulkwalk_hosts",
-        title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
-    )
+BulkwalkHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_enable_snmpv2c,
+    name="bulkwalk_hosts",
+    title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
 )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_enable_snmpv2c,
-        name="management_bulkwalk_hosts",
-        title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
-    )
+ManagementBulkwalkHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_enable_snmpv2c,
+    name="management_bulkwalk_hosts",
+    title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
 )
 
 
@@ -5131,12 +5093,10 @@ def _valuespec_snmp_bulk_size():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_bulk_size",
-        valuespec=_valuespec_snmp_bulk_size,
-    )
+SnmpBulkSize = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_bulk_size",
+    valuespec=_valuespec_snmp_bulk_size,
 )
 
 
@@ -5148,13 +5108,11 @@ def _help_snmp_without_sys_descr():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_snmp_without_sys_descr,
-        name="snmp_without_sys_descr",
-        title=lambda: _("Hosts without system description OID"),
-    )
+SnmpWithoutSysDescr = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_snmp_without_sys_descr,
+    name="snmp_without_sys_descr",
+    title=lambda: _("Hosts without system description OID"),
 )
 
 
@@ -5168,13 +5126,11 @@ def _help_snmpv2c_without_bulkwalk():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_snmpv2c_without_bulkwalk,
-        name="snmpv2c_hosts",
-        title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
-    )
+Snmpv2CHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_snmpv2c_without_bulkwalk,
+    name="snmpv2c_hosts",
+    title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
 )
 
 
@@ -5221,14 +5177,12 @@ def _valuespec_snmp_timing():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        factory_default={"retries": 5, "timeout": 1},
-        group=RulespecGroupAgentSNMP,
-        match_type="dict",
-        name="snmp_timing",
-        valuespec=_valuespec_snmp_timing,
-    )
+SnmpTiming = HostRulespec(
+    factory_default={"retries": 5, "timeout": 1},
+    group=RulespecGroupAgentSNMP,
+    match_type="dict",
+    name="snmp_timing",
+    valuespec=_valuespec_snmp_timing,
 )
 
 
@@ -5243,14 +5197,12 @@ def _help_non_inline_snmp_hosts():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_non_inline_snmp_hosts,
-        name="non_inline_snmp_hosts",
-        title=lambda: _("Hosts not using Inline-SNMP"),
-        is_deprecated=True,
-    )
+NonInlineSnmpHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_non_inline_snmp_hosts,
+    name="non_inline_snmp_hosts",
+    title=lambda: _("Hosts not using Inline-SNMP"),
+    is_deprecated=True,
 )
 
 
@@ -5290,16 +5242,14 @@ def _valuespec_snmp_backend():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        valuespec=_valuespec_snmp_backend,
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_snmp_backend,
-        name="snmp_backend_hosts",
-        title=lambda: cmk_version.mark_edition_only(
-            _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
-        ),
-    )
+SnmpBackendHosts = HostRulespec(
+    valuespec=_valuespec_snmp_backend,
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_snmp_backend,
+    name="snmp_backend_hosts",
+    title=lambda: cmk_version.mark_edition_only(
+        _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
+    ),
 )
 
 
@@ -5312,13 +5262,11 @@ def _help_usewalk_hosts():
     )
 
 
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupAgentSNMP,
-        help_func=_help_usewalk_hosts,
-        name="usewalk_hosts",
-        title=lambda: _("Simulating SNMP by using a stored SNMP walk"),
-    )
+UsewalkHosts = BinaryHostRulespec(
+    group=RulespecGroupAgentSNMP,
+    help_func=_help_usewalk_hosts,
+    name="usewalk_hosts",
+    title=lambda: _("Simulating SNMP by using a stored SNMP walk"),
 )
 
 
@@ -5335,12 +5283,10 @@ def _valuespec_snmp_ports():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_ports",
-        valuespec=_valuespec_snmp_ports,
-    )
+SnmpPorts = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_ports",
+    valuespec=_valuespec_snmp_ports,
 )
 
 
@@ -5372,12 +5318,10 @@ def _valuespec_agent_ports():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentCMKAgent,
-        name="agent_ports",
-        valuespec=_valuespec_agent_ports,
-    )
+AgentPorts = HostRulespec(
+    group=RulespecGroupAgentCMKAgent,
+    name="agent_ports",
+    valuespec=_valuespec_agent_ports,
 )
 
 
@@ -5397,12 +5341,10 @@ def _valuespec_tcp_connect_timeouts():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentCMKAgent,
-        name="tcp_connect_timeouts",
-        valuespec=_valuespec_tcp_connect_timeouts,
-    )
+TcpConnectTimeouts = HostRulespec(
+    group=RulespecGroupAgentCMKAgent,
+    name="tcp_connect_timeouts",
+    valuespec=_valuespec_tcp_connect_timeouts,
 )
 
 
@@ -5436,12 +5378,10 @@ def _valuespec_encryption_handling() -> Dictionary:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name="encryption_handling",
-        valuespec=_valuespec_encryption_handling,
-    )
+EncryptionHandling = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name="encryption_handling",
+    valuespec=_valuespec_encryption_handling,
 )
 
 
@@ -5489,12 +5429,10 @@ def _valuespec_agent_encryption() -> Migrate:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentCMKAgent,
-        name="agent_encryption",
-        valuespec=_valuespec_agent_encryption,
-    )
+AgentEncryption = HostRulespec(
+    group=RulespecGroupAgentCMKAgent,
+    name="agent_encryption",
+    valuespec=_valuespec_agent_encryption,
 )
 
 
@@ -5632,14 +5570,12 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_check_mk_exit_status(),
-        group=RulespecGroupAgentCMKAgent,
-        match_type="dict",
-        name="check_mk_exit_status",
-        valuespec=_valuespec_check_mk_exit_status,
-    )
+CheckMkExitStatus = HostRulespec(
+    factory_default=_factory_default_check_mk_exit_status(),
+    group=RulespecGroupAgentCMKAgent,
+    match_type="dict",
+    name="check_mk_exit_status",
+    valuespec=_valuespec_check_mk_exit_status,
 )
 
 
@@ -5685,13 +5621,11 @@ def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentCMKAgent,
-        name="check_mk_agent_target_versions",
-        valuespec=_valuespec_check_mk_agent_target_versions,
-        is_deprecated=True,
-    )
+CheckMkAgentTargetVersions = HostRulespec(
+    group=RulespecGroupAgentCMKAgent,
+    name="check_mk_agent_target_versions",
+    valuespec=_valuespec_check_mk_agent_target_versions,
+    is_deprecated=True,
 )
 
 
@@ -5724,12 +5658,10 @@ def _valuespec_agent_config_only_from():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsGenericOptions,
-        name=RuleGroup.AgentConfig("only_from"),
-        valuespec=_valuespec_agent_config_only_from,
-    )
+AgentConfigOnlyFrom = HostRulespec(
+    group=RulespecGroupMonitoringAgentsGenericOptions,
+    name=RuleGroup.AgentConfig("only_from"),
+    valuespec=_valuespec_agent_config_only_from,
 )
 
 
@@ -5748,13 +5680,11 @@ def _valuespec_piggyback_translation():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentGeneralSettings,
-        match_type="dict",
-        name="piggyback_translation",
-        valuespec=_valuespec_piggyback_translation,
-    )
+PiggybackTranslation = HostRulespec(
+    group=RulespecGroupAgentGeneralSettings,
+    match_type="dict",
+    name="piggyback_translation",
+    valuespec=_valuespec_piggyback_translation,
 )
 
 
@@ -5780,12 +5710,10 @@ def _valuespec_service_description_translation():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentGeneralSettings,
-        name="service_description_translation",
-        valuespec=_valuespec_service_description_translation,
-    )
+ServiceDescriptionTranslationRulespec = HostRulespec(
+    group=RulespecGroupAgentGeneralSettings,
+    name="service_description_translation",
+    valuespec=_valuespec_service_description_translation,
 )
 
 
@@ -5830,12 +5758,10 @@ def _valuespec_snmp_fetch_interval():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_check_interval",  # legacy name, kept for compatibility
-        valuespec=_valuespec_snmp_fetch_interval,
-    )
+SnmpCheckInterval = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_check_interval",  # legacy name, kept for compatibility
+    valuespec=_valuespec_snmp_fetch_interval,
 )
 
 
@@ -5894,12 +5820,10 @@ def _validate_snmp_config_agent_sections(value, varprefix):
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmp_exclude_sections",
-        valuespec=_valuespec_snmp_config_agent_sections,
-    )
+SnmpExcludeSections = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmp_exclude_sections",
+    valuespec=_valuespec_snmp_config_agent_sections,
 )
 
 
@@ -5925,12 +5849,10 @@ def _valuespec_snmpv3_contexts():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentSNMP,
-        name="snmpv3_contexts",
-        valuespec=_valuespec_snmpv3_contexts,
-    )
+Snmpv3Contexts = HostRulespec(
+    group=RulespecGroupAgentSNMP,
+    name="snmpv3_contexts",
+    valuespec=_valuespec_snmpv3_contexts,
 )
 
 
@@ -6064,10 +5986,8 @@ def _vs_validity():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentGeneralSettings,
-        name="piggybacked_host_files",
-        valuespec=_valuespec_piggybacked_host_files,
-    )
+PiggybackedHostFiles = HostRulespec(
+    group=RulespecGroupAgentGeneralSettings,
+    name="piggybacked_host_files",
+    valuespec=_valuespec_piggybacked_host_files,
 )

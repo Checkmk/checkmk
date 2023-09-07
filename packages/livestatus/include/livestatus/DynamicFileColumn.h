@@ -64,14 +64,6 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
                                  "': missing file name");
     }
     const std::filesystem::path f{mk::unescape_filename(arguments)};
-    if (!mk::path_contains(basepath(), basepath() / f)) {
-        // Prevent malicious attempts to read files as root with
-        // "/etc/shadow" (abs paths are not stacked) or
-        // "../../../../etc/shadow".
-        throw std::runtime_error("invalid arguments for column '" + _name +
-                                 "': '" + f.string() + "' not in '" +
-                                 basepath().string() + "'");
-    }
     return std::make_unique<BlobColumn<T>>(
         name, _description, _offsets,
         BlobFileReader<T>{_basepath,

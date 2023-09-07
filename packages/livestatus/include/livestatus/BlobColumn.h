@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "livestatus/Column.h"
+#include "livestatus/FileSystemHelper.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Renderer.h"
@@ -79,18 +80,23 @@ public:
         , _logger{"cmk.livestatus"} {}
 
     std::vector<char> operator()(const T &data) const {
-        auto path = _basepath();
-        if (!std::filesystem::exists(path)) {
+        const auto basepath = _basepath();
+        if (!std::filesystem::exists(basepath)) {
             // The basepath is not configured.
             return {};
         }
         auto filepath = _filepath(data);
-        if (!filepath.empty()) {
-            path /= filepath;
-        }
+        auto path = filepath.empty() ? basepath : basepath / filepath;
         if (!std::filesystem::is_regular_file(path)) {
             Debug(logger()) << path << " is not a regular file";
             return {};
+        }
+        if (!mk::path_contains(basepath, path)) {
+            // Prevent malicious attempts to read files as root with
+            // "/etc/shadow" (abs paths are not stacked) or
+            // "../../../../etc/shadow".
+            throw std::runtime_error("invalid arguments: '" + path.string() +
+                                     "' not in '" + basepath.string() + "'");
         }
         auto file_size = std::filesystem::file_size(path);
         std::ifstream ifs;

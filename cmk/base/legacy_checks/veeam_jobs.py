@@ -35,7 +35,7 @@ def check_veeam_jobs(item, _no_params, info):
         if job_name != item:
             continue  # Skip not matching lines
 
-        if job_last_state in ["Working", "Postprocessing"]:
+        if job_last_state in ["Starting", "Working", "Postprocessing"]:
             return 0, "Running since {} (current state is: {})".format(
                 job_creation_time,
                 job_last_state,

@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 import pytest
 from mock import patch
 
+from cmk.utils.http_proxy_config import NoProxyConfig
+
 from cmk.special_agents.agent_azure import (
     ApiError,
     Args,
@@ -52,7 +54,7 @@ class MockMgmtApiClient(MgmtApiClient):
         self.resource_health = resource_health
         self.resource_health_exception = resource_health_exception
 
-        super().__init__("1234")
+        super().__init__("1234", NoProxyConfig())
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups

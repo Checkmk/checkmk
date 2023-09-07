@@ -11,6 +11,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    HTTPProxyReference,
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
@@ -164,6 +165,10 @@ def _valuespec_special_agents_azure():
                         size=45,
                     ),
                 ),
+                (
+                    "proxy",
+                    HTTPProxyReference(),
+                ),
                 get_services_vs(),
                 (
                     "config",
@@ -222,7 +227,7 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
             ],
-            optional_keys=["subscription", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
         ),
         migrate=_migrate_services,
     )

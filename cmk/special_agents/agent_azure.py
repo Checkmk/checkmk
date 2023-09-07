@@ -356,13 +356,13 @@ def _get_mgmt_authority_urls(
         return _AuthorityURLs(
             "https://login.microsoftonline.com",
             "https://management.azure.com",
-            f"https://management.azure.com/subscriptions/{subscription}",
+            f"https://management.azure.com/subscriptions/{subscription}/",
         )
     if authority == "china":
         return _AuthorityURLs(
             "https://login.partner.microsoftonline.cn",
             "https://management.chinacloudapi.cn",
-            f"https://management.chinacloudapi.cn/subscriptions/{subscription}",
+            f"https://management.chinacloudapi.cn/subscriptions/{subscription}/",
         )
     raise ValueError("Unknown authority %r" % authority)
 

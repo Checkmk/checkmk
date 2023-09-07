@@ -1,0 +1,19 @@
+[package]
+name = "sql_check"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.32.0", features = [
+    "full",
+    "rt",
+    "rt-multi-thread",
+    "macros",
+] }
+tiberius = "0.12.2" # MS SQL
+# tokio-rustls = "0.24.1"
+tokio-util = { version = "0.7.8", features = ["compat"] }
+anyhow = "1.0.75"
+# tokio-macros = "2.1.0"

@@ -56,6 +56,8 @@ rules_pkg_dependencies()
 #   '----------------------------------------------------------------------'
 load(
     "//:package_versions.bzl",
+    "CRYPT_SSL_SHA256",
+    "CRYPT_SSL_VERSION",
     "FREETDS_SHA256",
     "FREETDS_VERSION",
     "HEIRLOOMMAILX_SHA256",
@@ -78,6 +80,8 @@ load(
     "NRPE_VERSION",
     "OPENSSL_SHA256",
     "OPENSSL_VERSION",
+    "PNP4NAGIOS_SHA256",
+    "PNP4NAGIOS_VERSION",
     "PATCH_SHA256",
     "PATCH_VERSION",
     "PYTHON_SHA256",
@@ -199,9 +203,10 @@ http_archive(
     ],
     strip_prefix = "Crypt-SSLeay-0.72",
     urls = [
-        "https://www.cpan.org/modules/by-module/Net/NANIS/Crypt-SSLeay-0.72.tar.gz",
-        UPSTREAM_MIRROR_URL + "Crypt-SSLeay-0.72.tar.gz",
+        "https://www.cpan.org/modules/by-module/Net/NANIS/Crypt-SSLeay-" + CRYPT_SSL_VERSION + ".tar.gz",
+        UPSTREAM_MIRROR_URL + "Crypt-SSLeay-" + CRYPT_SSL_VERSION + ".tar.gz",
     ],
+    sha256=CRYPT_SSL_SHA256,
 )
 
 load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
@@ -221,8 +226,8 @@ python(
 load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
 
 pnp4nagios(
-    sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
-    version_str = "0.6.26",
+    sha256 = PNP4NAGIOS_SHA256,
+    version_str = PNP4NAGIOS_VERSION,
 )
 
 load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")

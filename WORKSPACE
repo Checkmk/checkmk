@@ -193,20 +193,11 @@ load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 # TODO: Centralize perl modules versions
 perl_modules()
 
-http_archive(
-    name = "Crypt-SSLeay",
-    build_file = "//omd/packages/perl-modules:BUILD.Crypt-SSLeay.bazel",
-    patch_args = ["-p1"],
-    patch_tool = "patch",
-    patches = [
-        "//omd/packages/perl-modules/patches:Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.dif",
-    ],
-    strip_prefix = "Crypt-SSLeay-0.72",
-    urls = [
-        "https://www.cpan.org/modules/by-module/Net/NANIS/Crypt-SSLeay-" + CRYPT_SSL_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "Crypt-SSLeay-" + CRYPT_SSL_VERSION + ".tar.gz",
-    ],
+load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay")
+
+crypt_ssleay(
     sha256=CRYPT_SSL_SHA256,
+    version_str=CRYPT_SSL_VERSION,
 )
 
 load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")

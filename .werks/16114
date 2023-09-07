@@ -1,0 +1,12 @@
+Title: folder_config: Extend GET and DELETE endpoints folder name pattern to match the CREATE enpoint one
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1696846527
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the folder name pattern for GET and DELETE endpoints were stricter than the CREATE, provoking that a new folder could not be retrieved nor deleted. This fix widens the folder name pattern on GET and DELETE endpoints to align with the CREATE one.
+

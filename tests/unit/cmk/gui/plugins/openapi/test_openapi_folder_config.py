@@ -5,6 +5,7 @@
 
 import json
 import re
+import urllib.parse
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
@@ -909,3 +910,36 @@ def test_create_folder_name_with_newline(
         resp.json["fields"]["name"][0]
         == f"{folder_name!r} does not match pattern '^[-\\\\w]*\\\\Z'."
     )
+
+
+def test_openapi_folder_name_with_extended_characters(clients: ClientRegistry) -> None:
+    extended_characters = "û亿Ï8Ĺ"
+    encoded_extended_characters = urllib.parse.quote(extended_characters)
+
+    res_create = clients.Folder.create(parent="/", title="test123", folder_name=extended_characters)
+    created_folder = res_create.json
+
+    res_get = clients.Folder.get(folder_name=f"~{encoded_extended_characters}")
+    fetched_folder = res_get.json
+
+    clients.Folder.delete(folder_name=f"~{encoded_extended_characters}").assert_status_code(204)
+
+    clients.Folder.get(
+        folder_name=f"~{encoded_extended_characters}", expect_ok=False
+    ).assert_status_code(404)
+
+    assert created_folder["id"] == fetched_folder["id"]
+    assert created_folder["extensions"]["path"] == fetched_folder["extensions"]["path"]
+
+
+def test_openapi_folder_with_extended_characters_parent(clients: ClientRegistry) -> None:
+    extended_characters = "û亿Ï8Ĺ"
+
+    clients.Folder.create(parent="/", title="First level", folder_name=extended_characters)
+
+    res = clients.Folder.create(
+        parent=f"/{extended_characters}", title="Second level", folder_name="second_level_folder"
+    )
+
+    assert res.json["id"] == f"~{extended_characters}~second_level_folder"
+    assert res.json["extensions"]["path"] == f"/{extended_characters}/second_level_folder"

@@ -770,8 +770,11 @@ def evaluate(
     expression: MetricExpression | int | float,
     translated_metrics: TranslatedMetrics,
 ) -> RPNExpression:
-    if isinstance(expression, (float, int)):
-        return _evaluate_literal(expression, translated_metrics)
+    if isinstance(expression, int):
+        return RPNExpression(float(expression), unit_info["count"], "#000000")
+
+    if isinstance(expression, float):
+        return RPNExpression(expression, unit_info[""], "#000000")
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
     rpn_expr_metric = stack_resolver(
@@ -917,15 +920,7 @@ def _operator_minmax(
     return RPNExpression(v, unit, winner.color or loser.color)
 
 
-def _evaluate_literal(
-    expression: int | float | str, translated_metrics: TranslatedMetrics
-) -> RPNExpression:
-    if isinstance(expression, int):
-        return RPNExpression(float(expression), unit_info["count"], "#000000")
-
-    if isinstance(expression, float):
-        return RPNExpression(expression, unit_info[""], "#000000")
-
+def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) -> RPNExpression:
     if expression not in translated_metrics:
         try:
             return RPNExpression(float(int(expression)), unit_info["count"], "#000000")

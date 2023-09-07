@@ -83,7 +83,8 @@ def compute_graph_curves(
 
             color = ts.metadata.color or metric.color
             if i % 2 == 1 and not (
-                isinstance(expression, MetricOpTransformation) and expression.mode == "forecast"
+                isinstance(expression, MetricOpTransformation)
+                and expression.parameters[0] == "forecast"
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 

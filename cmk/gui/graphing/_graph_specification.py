@@ -68,13 +68,9 @@ class MetricOpTransformation(BaseModel, frozen=True):
     # TODO Check params
     ident: Literal["transformation"] = "transformation"
     parameters: tuple[Literal["percentile"], float] | tuple[
-        Literal["forecast"], Mapping[str, object]
+        Literal["forecast", "filter_top", "value_sort"], Mapping[str, object]
     ]
     operands: Sequence[MetricOperation]
-
-    @property
-    def mode(self) -> Literal["percentile", "forecast"]:
-        return self.parameters[0]
 
 
 # TODO Check: Similar to CombinedSingleMetricSpec

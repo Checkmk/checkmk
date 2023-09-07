@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 import cmk.gui.utils as utils
 from cmk.gui.background_job import (
@@ -84,6 +83,8 @@ from ._check_credentials import (
 from ._check_credentials import user_exists as user_exists
 from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
 from ._check_credentials import user_locked as user_locked
+from ._need_to_change_pw import is_automation_user as is_automation_user
+from ._need_to_change_pw import need_to_change_pw as need_to_change_pw
 from ._on_access import on_access as on_access
 from ._on_failed_login import on_failed_login as on_failed_login
 from ._two_factor import disable_two_factor_authentication as disable_two_factor_authentication
@@ -137,14 +138,6 @@ def _fix_user_connections() -> None:
         cfg.setdefault("type", "ldap")
 
 
-# When at least one LDAP connection is defined and active a sync is possible
-def sync_possible() -> bool:
-    return any(
-        connection.type() == ConnectorType.LDAP
-        for _connection_id, connection in active_connections()
-    )
-
-
 def locked_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
@@ -165,44 +158,3 @@ def _get_attributes(
 ) -> Sequence[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
-
-
-# userdb.need_to_change_pw returns either None or the reason description why the
-# password needs to be changed
-def need_to_change_pw(username: UserId, now: datetime) -> str | None:
-    # Don't require password change for users from other connections, their passwords are not
-    # managed here.
-    user = load_user(username)
-    if not _is_local_user(user):
-        return None
-
-    # Ignore the enforce_pw_change flag for automation users, they cannot change their passwords
-    # themselves. (Password age is checked for them below though.)
-    if (
-        not is_automation_user(user)
-        and load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1
-    ):
-        return "enforced"
-
-    last_pw_change = load_custom_attr(user_id=username, key="last_pw_change", parser=utils.saveint)
-    max_pw_age = active_config.password_policy.get("max_age")
-    if not max_pw_age:
-        return None
-    if not last_pw_change:
-        # The age of the password is unknown. Assume the user has just set
-        # the password to have the first access after enabling password aging
-        # as starting point for the password period. This bewares all users
-        # from needing to set a new password after enabling aging.
-        save_custom_attr(username, "last_pw_change", str(int(now.timestamp())))
-        return None
-    if now.timestamp() - last_pw_change > max_pw_age:
-        return "expired"
-    return None
-
-
-def _is_local_user(user: UserSpec) -> bool:
-    return user.get("connector", "htpasswd") == "htpasswd"
-
-
-def is_automation_user(user: UserSpec) -> bool:
-    return "automation_secret" in user

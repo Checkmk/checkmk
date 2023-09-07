@@ -199,7 +199,7 @@ class ModeUsers(WatoMode):
             )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
-        if userdb.sync_possible():
+        if _sync_possible():
             if not self._job_snapshot.is_active:
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
@@ -1304,3 +1304,11 @@ def select_language(user_spec: UserSpec) -> None:
 
 def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
     return bool(user_spec.get("two_factor_credentials", {}).get("webauthn_credentials"))
+
+
+def _sync_possible() -> bool:
+    """When at least one LDAP connection is defined and active a sync is possible"""
+    return any(
+        connection.type() == userdb_utils.ConnectorType.LDAP
+        for _connection_id, connection in active_connections()
+    )

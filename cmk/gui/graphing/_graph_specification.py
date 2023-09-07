@@ -34,32 +34,23 @@ class MetricDefinition:
 
 
 class MetricOpConstant(BaseModel, frozen=True):
+    ident: Literal["constant"] = "constant"
     value: float
-
-    @property
-    def ident(self) -> Literal["constant"]:
-        return "constant"
 
 
 class MetricOpScalar(BaseModel, frozen=True):
+    ident: Literal["scalar"] = "scalar"
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
     scalar_name: Literal["warn", "crit", "min", "max"] | None
 
-    @property
-    def ident(self) -> Literal["scalar"]:
-        return "scalar"
-
 
 class MetricOpOperator(BaseModel, frozen=True):
+    ident: Literal["operator"] = "operator"
     operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
     # TODO Should be a sequence
     operands: list[MetricOperation] = []
-
-    @property
-    def ident(self) -> Literal["operator"]:
-        return "operator"
 
 
 # TODO transformation is not part of cre but we first have to fix all types
@@ -75,14 +66,11 @@ class MetricOpTransformation(BaseModel, frozen=True):
     #     "display_model_parametrization": CHECKBOX,  # TODO
     # }
     # TODO Check params
+    ident: Literal["transformation"] = "transformation"
     parameters: tuple[Literal["percentile"], float] | tuple[
         Literal["forecast"], Mapping[str, object]
     ]
     operands: Sequence[MetricOperation]
-
-    @property
-    def ident(self) -> Literal["transformation"]:
-        return "transformation"
 
     @property
     def mode(self) -> Literal["percentile", "forecast"]:
@@ -101,14 +89,12 @@ class SingleMetricSpec(TypedDict):
 
 # TODO combined is not part of cre but we first have to fix all types
 class MetricOpCombined(BaseModel, frozen=True):
+    ident: Literal["combined"] = "combined"
     single_metric_spec: SingleMetricSpec
-
-    @property
-    def ident(self) -> Literal["combined"]:
-        return "combined"
 
 
 class MetricOpRRDSource(BaseModel, frozen=True):
+    ident: Literal["rrd"] = "rrd"
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -116,20 +102,13 @@ class MetricOpRRDSource(BaseModel, frozen=True):
     consolidation_func_name: GraphConsoldiationFunction | None
     scale: float
 
-    @property
-    def ident(self) -> Literal["rrd"]:
-        return "rrd"
-
 
 class MetricOpRRDChoice(BaseModel, frozen=True):
+    ident: Literal["rrd_choice"] = "rrd_choice"
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None
-
-    @property
-    def ident(self) -> Literal["rrd_choice"]:
-        return "rrd_choice"
 
 
 MetricOperation = (
@@ -137,14 +116,9 @@ MetricOperation = (
     | MetricOpOperator
     | MetricOpTransformation
     | MetricOpCombined
-    # -----------------------------------------------------------------------------------------
-    # The order of RRDSource and RRDChoice is very important for pydantic deserialization!!!
-    # RRDChoice has a subset of attributes of RRDSource and is - more or less - an intermediate
-    # step. pydantic uses the first matching object.
     | MetricOpRRDSource
     | MetricOpRRDChoice
     | MetricOpScalar
-    # -----------------------------------------------------------------------------------------
 )
 
 

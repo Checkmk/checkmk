@@ -12,7 +12,7 @@ import textwrap
 import traceback
 from collections.abc import Sequence
 from enum import Enum
-from typing import Any
+from typing import Any, cast, Self
 
 from livestatus import SiteId
 
@@ -771,6 +771,14 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
 
 
 class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
+    @classmethod
+    def deserialize(cls, page_dict: object) -> Self:
+        # TODO Remove 'cast' and do real parsing
+        return cls(cast(CustomSpaninsSpec, page_dict))
+
+    def serialize(self) -> CustomSpaninsSpec:
+        return self._
+
     @classmethod
     def type_name(cls) -> str:
         return "custom_snapin"

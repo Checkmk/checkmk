@@ -189,7 +189,21 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
         # and saved to files using repr().
         self._ = d
 
+    @classmethod
+    @abc.abstractmethod
+    def deserialize(cls, page_dict: object) -> Self:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> object:
+        raise NotImplementedError()
+
     def internal_representation(self) -> _T_BaseSpec:
+        # TODO What's the purpose of this method?
+        # Is it meant to return
+        # - an internal deserialized object or
+        # - a serialized object (which is stored to FS) or
+        # - ...?
         return self._
 
     # You always must override the following method. Not all phrases
@@ -827,7 +841,7 @@ class Overridable(Base[_T_OverridableSpec]):
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name
-                        instances.add_instance((user_id, name), cls(page_dict))
+                        instances.add_instance((user_id, name), cls.deserialize(page_dict))
 
                 except SyntaxError as e:
                     raise MKGeneralException(
@@ -854,7 +868,7 @@ class Overridable(Base[_T_OverridableSpec]):
         save_dict = {}
         for page in instances.instances():
             if page.owner() == owner:
-                save_dict[page.name()] = page.internal_representation()
+                save_dict[page.name()] = page.serialize()
 
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
 
@@ -1919,6 +1933,14 @@ def page_menu_add_to_topics(added_type: str) -> list[PageMenuTopic]:
 
 
 class PagetypeTopics(Overridable[PagetypeTopicSpec]):
+    @classmethod
+    def deserialize(cls, page_dict: object) -> Self:
+        # TODO Remove 'cast' and do real parsing
+        return cls(cast(PagetypeTopicSpec, page_dict))
+
+    def serialize(self) -> PagetypeTopicSpec:
+        return self._
+
     @classmethod
     def type_name(cls) -> str:
         return "pagetype_topic"

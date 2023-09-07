@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast, Self
 
 from typing_extensions import TypedDict
 
@@ -55,6 +55,14 @@ class BookmarkListSpec(pagetypes.OverridableSpec):
 
 
 class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
+    @classmethod
+    def deserialize(cls, page_dict: object) -> Self:
+        # TODO Remove 'cast' and do real parsing
+        return cls(cast(BookmarkListSpec, page_dict))
+
+    def serialize(self) -> BookmarkListSpec:
+        return self._
+
     @classmethod
     def type_name(cls) -> str:
         return "bookmark_list"

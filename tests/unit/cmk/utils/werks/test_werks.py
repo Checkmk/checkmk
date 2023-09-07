@@ -10,20 +10,32 @@ from typing import Any
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.werks.werk import WerkError
-from cmk.utils.werks.werkv1 import load_werk_v1
-from cmk.utils.werks.werkv2 import load_werk_v2, RawWerkV2
+from cmk.utils.werks import load_werk
+from cmk.utils.werks.werk import Werk, WerkError
+from cmk.utils.werks.werkv2 import load_werk_v2, parse_werk_v2
 
-WERK = {
+WERK_V1 = {
     "class": "fix",
     "component": "core",
     "date": 0,
     "level": 1,
     "title": "Some Title",
-    "version": "v42.0.0p7",
-    "compatible": "comp",
+    "version": "42.0.0p7",
+    "compatible": "compat",
     "edition": "cre",
     "description": [],
+}
+
+WERK_V2 = {
+    "class": "fix",
+    "component": "core",
+    "date": "1970-01-01T00:00:00Z",
+    "level": 1,
+    "title": "Some Title",
+    "version": "42.0.0p7",
+    "compatible": "yes",
+    "edition": "cre",
+    "description": "",
 }
 
 
@@ -52,31 +64,31 @@ def get_werk_v1(werk_dict: Mapping[str, Any]) -> str:
 
 
 def test_werk_loading(tmp_path: Path) -> None:
-    loaded_data = load_werk_v1(get_werk_v1(WERK), 1).to_json_dict()
-    # loaded_data contains id, and other default values, WERK does not have
-    for key, value in WERK.items():
+    loaded_data = load_werk(file_content=get_werk_v1(WERK_V1), file_name="1").to_json_dict()
+    # loaded_data contains id, and other default values, WERK_V1 does not have
+    for key, value in WERK_V2.items():
         assert loaded_data[key] == value
 
 
 def test_werk_loading_missing_field(tmp_path: Path) -> None:
-    bad_werk = dict(WERK)
+    bad_werk = dict(WERK_V1)
     bad_werk.pop("class")
     with pytest.raises(MKGeneralException, match="class\n  Field required"):
-        load_werk_v1(get_werk_v1(bad_werk), 1)
+        load_werk(file_content=get_werk_v1(bad_werk), file_name="1")
 
 
 def test_werk_loading_unknown_field(tmp_path: Path) -> None:
-    bad_werk = dict(WERK)
+    bad_werk = dict(WERK_V1)
     bad_werk["foo"] = "bar"
     with pytest.raises(
         MKGeneralException,
-        match="validation error for RawWerkV1\nfoo\n  Extra inputs are not permitted",
+        match="validation error for Werk\nfoo\n  Extra inputs are not permitted",
     ):
-        load_werk_v1(get_werk_v1(bad_werk), 1)
+        load_werk(file_content=get_werk_v1(bad_werk), file_name="1")
 
 
-def _markdown_string_to_werk(md: str) -> RawWerkV2:
-    return load_werk_v2(md, werk_id="1234")
+def _markdown_string_to_werk(md: str) -> Werk:
+    return load_werk_v2(parse_werk_v2(md, werk_id="1234"))
 
 
 def test_loading_md_werk_missing_header() -> None:
@@ -178,33 +190,34 @@ edition | cre
 
 this is the `description` with some *formatting.*
 """
-    with pytest.raises(WerkError, match="Component smth not know. Choose from:"):
+    with pytest.raises(TypeError, match="Component smth not know. Choose from:"):
         _markdown_string_to_werk(md)
 
 
-def test_loading_md_werk_formatting_in_title() -> None:
-    md = """[//]: # (werk v2)
-# test `werk` ***test*** [a](#href) asd
-
-key | value
---- | ---
-class | fix
-component | core
-date | 2022-12-12T11:08:08+00:00
-level | 1
-version | 2.0.0p7
-compatible | yes
-edition | cre
-
-this is the `description` with some *formatting.*
-
-# test `werk` ***test*** [a](#href)
-
-"""
-    with pytest.raises(
-        WerkError, match="Markdown formatting in title detected, this is not allowed"
-    ):
-        _markdown_string_to_werk(md)
+# wait for CMK-14546
+# def test_loading_md_werk_formatting_in_title() -> None:
+#     md = """[//]: # (werk v2)
+# # test `werk` ***test*** [a](#href) asd
+#
+# key | value
+# --- | ---
+# class | fix
+# component | core
+# date | 2022-12-12T11:08:08+00:00
+# level | 1
+# version | 2.0.0p7
+# compatible | yes
+# edition | cre
+#
+# this is the `description` with some *formatting.*
+#
+# # test `werk` ***test*** [a](#href)
+#
+# """
+#     with pytest.raises(
+#         WerkError, match="Markdown formatting in title detected, this is not allowed"
+#     ):
+#         _markdown_string_to_werk(md)
 
 
 def test_loading_md_werk_tags_not_in_whitelist() -> None:
@@ -221,11 +234,34 @@ version | 2.0.0p7
 compatible | yes
 edition | cre
 
-this is <blink>forbidden</blink>
+this is <script>forbidden</script>
 
 """
     with pytest.raises(
-        WerkError, match="Found tag <blink> which is not in the list of allowed tags"
+        WerkError, match="Found tag <script> which is not in the list of allowed tags"
+    ):
+        _markdown_string_to_werk(md)
+
+
+def test_loading_md_werk_tags_not_in_whitelist_nested() -> None:
+    md = """[//]: # (werk v2)
+# test werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+
+## this is <script>forbidden</script>
+
+"""
+    with pytest.raises(
+        WerkError, match="Found tag <script> which is not in the list of allowed tags"
     ):
         _markdown_string_to_werk(md)
 
@@ -253,7 +289,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
         "class": "fix",
         "compatible": "yes",
         "component": "core",
-        "date": "2022-12-12T11:08:08+00:00",
+        "date": "2022-12-12T11:08:08Z",
         "edition": "cre",
         "level": 1,
         "title": "test < werk",
@@ -265,4 +301,4 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
-        assert load_werk_v1(WERK_V1_MISSING_CLASS, werk_id=1234)
+        assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")

@@ -10,11 +10,12 @@ markdown. The files written by the developers (in `.werks` folder in this repo)
 contain markdown if the filenames ends with `.md`, otherwise nowiki syntax.
 
 In order to speed up the loading of the werk files they are precompiled and
-packaged as json during release. Pydantic models RawWerkV1 (for nowiki) and
-RawWerkV2 (for markdown) are used to handle the serializing and deserializing.
+packaged as json during release. Pydantic model Werk is used to handle the
+serializing and deserializing.
 
 But all this should be implementation details, because downstream tools should
-only handle the Werk NamedTuple, which unifies both formats.
+only handle the WerkV2 model. Old style werks are converted to markdown Werks,
+so both can be handled with a common interface.
 """
 import itertools
 from pathlib import Path
@@ -23,21 +24,12 @@ from typing import IO, Protocol, TypeVar
 from pydantic import RootModel, TypeAdapter
 
 import cmk.utils.paths
-from cmk.utils.i18n import _
 
-from .werk import (
-    Class,
-    Compatibility,
-    NoWiki,
-    sort_by_version_and_component,
-    Werk,
-    WerkError,
-    WerkTranslator,
-)
-from .werkv1 import load_werk_v1, RawWerkV1
-from .werkv2 import load_werk_v2, RawWerkV2
+from .convert import werkv1_to_werkv2
+from .werk import Class, Compatibility, sort_by_version_and_component, Werk, WerkTranslator
+from .werkv2 import load_werk_v2, parse_werk_v2, WerkV2ParseResult
 
-Werks = RootModel[dict[int, RawWerkV1 | RawWerkV2]]
+Werks = RootModel[dict[int, Werk]]
 
 
 class GuiWerkProtocol(Protocol):
@@ -64,31 +56,21 @@ def load(base_dir: Path | None = None) -> dict[int, Werk]:
 
 def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     # ? what is the content of these files, to which the path shows
-    adapter = TypeAdapter(dict[int, RawWerkV1 | RawWerkV2])
+    adapter = TypeAdapter(dict[int, Werk])
     with path.open("r", encoding="utf-8") as f:
-        return {
-            werk_id: _werk.to_werk() for werk_id, _werk in adapter.validate_json(f.read()).items()
-        }
+        return adapter.validate_json(f.read())
 
 
-def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
+def load_raw_files(werks_dir: Path) -> list[Werk]:
     if werks_dir is None:
         werks_dir = _compiled_werks_dir()
-    werks: list[RawWerkV1 | RawWerkV2] = []
+    werks: list[Werk] = []
     for file_name in werks_dir.glob("[0-9]*"):
-        if file_name.name.endswith(".md"):
-            werk2 = load_werk_v2(file_name.read_text(), werk_id=file_name.name.removesuffix(".md"))
-            werks.append(werk2)
-        else:
-            werk_id = int(file_name.name)
-            try:
-                werks.append(load_werk_v1(file_name.read_text(), werk_id))
-            except Exception as e:
-                raise WerkError(_('Failed to load werk "%s": %s') % (werk_id, e)) from e
+        werks.append(load_werk(file_content=file_name.read_text(), file_name=file_name.name))
     return werks
 
 
-def write_precompiled_werks(path: Path, werks: dict[int, RawWerkV1 | RawWerkV2]) -> None:
+def write_precompiled_werks(path: Path, werks: dict[int, Werk]) -> None:
     with path.open("w", encoding="utf-8") as fp:
         fp.write(Werks.model_validate(werks).model_dump_json(by_alias=True))
 
@@ -117,9 +99,7 @@ def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True
         f.write("\n")
 
 
-def has_content(description: NoWiki | str) -> bool:
-    if isinstance(description, NoWiki):
-        return bool(("".join(description.value)).strip())
+def has_content(description: str) -> bool:
     return bool(description.strip())
 
 
@@ -151,7 +131,13 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
         f.write("            NOTE: Please refer to the migration notes!\n")
 
 
-def load_werk(file_name: str, file_content: str) -> Werk:
+def load_werk(*, file_content: str, file_name: str) -> Werk:
+    parsed = parse_werk(file_content, file_name)
+    return load_werk_v2(parsed)
+
+
+def parse_werk(file_content: str, file_name: str) -> WerkV2ParseResult:
     if file_name.endswith(".md"):
-        return load_werk_v2(file_content, file_name.removesuffix(".md")).to_werk()
-    return load_werk_v1(file_content, int(file_name)).to_werk()
+        return parse_werk_v2(file_content, file_name.removesuffix(".md"))
+    file_content, werk_id = werkv1_to_werkv2(file_content, int(file_name))
+    return parse_werk_v2(file_content, str(werk_id))  # TODO: str does not make sense!

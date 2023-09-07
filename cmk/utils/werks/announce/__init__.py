@@ -73,8 +73,7 @@ def get_werks_by_edition(werks: list[Werk], edition: Edition) -> WerksByEdition:
 
 
 def main(args: argparse.Namespace) -> None:
-    werks_list = [werk.to_werk() for werk in load_raw_files(args.werk_dir)]
-
+    werks_list = load_raw_files(args.werk_dir)
     version_werks = [werk for werk in werks_list if werk.version == args.version]
 
     werks = {}

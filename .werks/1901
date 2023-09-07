@@ -11,12 +11,11 @@ mk_oracle is not able to monitor such environments. This problem has been fixed
 with this change.
 
 H2: Important Note
-When <tr>IGNORE_DB_NAME=1</tr> is configured in <tr>mk_oracle.cfg</tr> the name
-of discovered checks will change from <tr>ORA <Database-Name> <Check></tr> to
-<tr>ORA <Instance-Name> <Check></tr>.
+When <tt>IGNORE_DB_NAME=1</tt> is configured in <tt>mk_oracle.cfg</tt> the name
+of discovered checks will change from `ORA <Database-Name> <Check>` to
+`ORA <Instance-Name> <Check>`.
 
 The monitoring of Real Application Clusters or Standby Environments is not possible
 with this parameter, because the checks don't use name which could be configured as
 a clustered service.
-
 

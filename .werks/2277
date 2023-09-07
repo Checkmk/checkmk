@@ -8,5 +8,4 @@ Class: feature
 
 The config file <i>mk_oracle_cfg.ps1</i> is now located in the agents
 subdirectory <i>config</i>. You need to manually move the configuration from
-the agents base dir into the <i>config<i> dir.
-
+the agents base dir into the <i>config</i> dir.

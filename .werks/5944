@@ -11,7 +11,7 @@ This was broken since ~1.5.0i3. When a user which has not been created
 in Check_MK before is being authenticated using the optional HTTP header
 authentication and logged in using the "default user profile", some
 host- and service views were not working as expected. They were showing
-some exception like "KeyError: u'<USER>'".
+some exception like `KeyError: u'<USER>'`.
 
 A workaround in the affected versions is to create the user accounts
 before the user try to access the GUI.

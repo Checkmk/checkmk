@@ -3,19 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import xml.etree.ElementTree as ET
 
-from .werk import Compatibility, NoWiki
-from .werkv1 import load_werk_v1
-from .werkv2 import load_werk_v2
+from .werk import Compatibility
+from .werkv1 import parse_werk_v1
+from .werkv2 import load_werk_v2, parse_werk_v2
 
 
-def nowiki_to_markdown(description: NoWiki) -> str:
+def nowiki_to_markdown(description: list[str]) -> str:
     # "inspired" by render_nowiki_werk_description
+    # why don't we generate html at this stage?
+    # because we can use this function to actually convert werkv1 to werkv2 in
+    # the .werks folder.
     def generator():
-        for line in description.value:
+        for line in description:
             if line.startswith("LI:"):
                 yield "* " + line.removeprefix("LI:")
+            elif line.startswith("NL:"):
+                yield "1. " + line.removeprefix("NL:")
             elif line.startswith("H2:"):
                 yield "## " + line.removeprefix("H2:")
             elif line.startswith("C+:"):
@@ -77,33 +83,67 @@ def _table_entry(key: str, value: str) -> str:
     return f"{key} | {value}"
 
 
+# CMK-14546
+# def _escape_markdown(text: str) -> str:
+#     """
+#     >>> _escape_markdown("- one")
+#     '\\\\- one'
+#     >>> _escape_markdown("some_thing")
+#     'some\\\\_thing'
+#     >>> _escape_markdown("some[thing")
+#     'some\\\\[thing'
+#     """
+#     return re.sub(r"([\`*_{}\[\]()#+-.!])", r"\\\1", text)
+
+
 def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
-    werk = load_werk_v1(werkv1_content, werk_id).to_werk()
+    # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
+    parsed = parse_werk_v1(werkv1_content, werk_id)
+    metadata = parsed.metadata
+    metadata.pop("id", None)  # is the filename
+    metadata.pop("knowledge", None)  # removed field
+    metadata.pop("state", None)  # removed field
+    metadata.pop("targetversion", None)  # removed field
 
     def generator():
         yield "[//]: # (werk v2)"
-        yield f"# {werk.title}"
+        if (title := metadata.pop("title", None)) is not None:
+            # TODO: wait for CMK-14546: we might need to markdown escape the title
+            # yield f"# {_escape_markdown(title)}"
+            yield f"# {title}"
         yield ""
         yield _table_entry("key", "value")
         yield _table_entry("---", "---")
-        yield _table_entry("compatible", werk.compatible.value)
-        yield _table_entry("version", werk.version)
-        yield _table_entry("date", werk.date.isoformat())
-        yield _table_entry("level", str(werk.level.value))
-        yield _table_entry("class", werk.class_.value)
-        yield _table_entry("component", werk.component)
-        yield _table_entry("edition", werk.edition.value)
+        if (compatible := metadata.pop("compatible", None)) is not None:
+            compatible = "yes" if compatible == "compat" else "no"
+            yield _table_entry("compatible", compatible)
+        if (version := metadata.pop("version", None)) is not None:
+            yield _table_entry("version", version)
+        if (date := metadata.pop("date", None)) is not None:
+            date = datetime.datetime.fromtimestamp(
+                float(date), tz=datetime.timezone.utc
+            ).isoformat()
+            yield _table_entry("date", date)
+        if (level := metadata.pop("level", None)) is not None:
+            yield _table_entry("level", level)
+        if (class_ := metadata.pop("class", None)) is not None:
+            yield _table_entry("class", class_)
+        if (component := metadata.pop("component", None)) is not None:
+            yield _table_entry("component", component)
+        if (edition := metadata.pop("edition", None)) is not None:
+            yield _table_entry("edition", edition)
+        for key, value in metadata.items():
+            # this should never happen, but will give us a nice error message
+            # when this is parsed as werkv2
+            yield _table_entry(key, value)
         yield ""
-        if not isinstance(werk.description, NoWiki):
-            raise Exception("expected nowiki werk description")
-        yield nowiki_to_markdown(werk.description)
+        yield nowiki_to_markdown(parsed.description)
 
     return "\n".join(generator()), werk_id
 
 
 def werkv2_to_werkv1(werkv2_content: str, werk_id: int) -> tuple[str, int]:
-    werkv2 = load_werk_v2(werkv2_content, str(werk_id))
-    werk = werkv2.to_werk()
+    werk = load_werk_v2(parse_werk_v2(werkv2_content, str(werk_id)))
 
     def generator():
         yield f"Title: {werk.title}"

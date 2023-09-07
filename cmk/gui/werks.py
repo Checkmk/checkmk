@@ -24,7 +24,7 @@ from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_
 from cmk.utils.werks.acknowledgement import load_werk_entries
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
 from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
-from cmk.utils.werks.werk import Compatibility, NoWiki, Werk, WerkTranslator
+from cmk.utils.werks.werk import Compatibility, Werk, WerkTranslator
 
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -81,9 +81,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("werk", page_werk)
 
 
-def render_description(description: str | NoWiki) -> HTML:
-    if isinstance(description, NoWiki):
-        return render_nowiki_werk_description(description.value)
+def render_description(description: str) -> HTML:
     return HTML(description)
 
 

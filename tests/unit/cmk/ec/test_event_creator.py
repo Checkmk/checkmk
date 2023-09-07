@@ -392,6 +392,68 @@ def test_create_event_from_line(line: str, expected: Mapping[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
+    "line, expected",
+    [
+        pytest.param(
+            "May 26 13:45:01 Klapprechner CRON[8046]:  message",
+            {
+                "priority": 5,
+                "facility": 1,
+                "text": "message",
+                "pid": 8046,
+                "core_host": None,
+                "host_in_downtime": False,
+                "application": "CRON",
+                "host": "Klapprechner",
+                "time": 1685101501.0,  # Fri May 26 2023 13:45:01 GMT+0200
+                "ipaddress": "127.0.0.1",
+            },
+        ),
+    ],
+)
+def test_create_event_from_line_with_DST(line: str, expected: Mapping[str, Any]) -> None:
+    address = ("127.0.0.1", 1234)
+    logger = logging.getLogger("cmk.mkeventd")
+
+    with on_time(1675748161, "CET"):  # february when there is no DST
+        assert create_event_from_line(line, address, logger, verbose=True) == expected
+
+    with on_time(1688704561, "CET"):  # July when there is DST
+        assert create_event_from_line(line, address, logger, verbose=True) == expected
+
+
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        pytest.param(
+            "Feb 08 13:15:01 Klapprechner CRON[8046]:  message",
+            {
+                "priority": 5,
+                "facility": 1,
+                "text": "message",
+                "pid": 8046,
+                "core_host": None,
+                "host_in_downtime": False,
+                "application": "CRON",
+                "host": "Klapprechner",
+                "time": 1675858501.0,  # Wed Feb 08 2023 13:15:13 GMT+0100
+                "ipaddress": "127.0.0.1",
+            },
+        ),
+    ],
+)
+def test_create_event_from_line_without_DST(line: str, expected: Mapping[str, Any]) -> None:
+    address = ("127.0.0.1", 1234)
+    logger = logging.getLogger("cmk.mkeventd")
+
+    with on_time(1675748161, "CET"):  # february when there is no DST
+        assert create_event_from_line(line, address, logger, verbose=True) == expected
+
+    with on_time(1688704561, "CET"):  # July when there is DST
+        assert create_event_from_line(line, address, logger, verbose=True) == expected
+
+
+@pytest.mark.parametrize(
     "line, expected_result",
     [
         pytest.param(

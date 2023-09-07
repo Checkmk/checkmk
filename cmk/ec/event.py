@@ -251,8 +251,10 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
             hours, minutes, seconds = map(int, timeofday.split(":"))
 
-            # A further problem here: we do not now whether the message is in DST or not
-            event["time"] = mktime((year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
+            # With the -1 the mktime will correctly set the DST value
+            # see: https://stackoverflow.com/questions/13464009/calculate-tm-isdst-from-date-and-timezone
+            # see: https://docs.python.org/3/library/time.html#time.mktime
+            event["time"] = mktime((year, month, iday, hours, minutes, seconds, 0, 0, -1))
 
     # The event simulator ships the simulated original IP address in the
     # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"

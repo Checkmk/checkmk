@@ -18,9 +18,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 import cmk.utils.paths
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.utils as utils
@@ -32,11 +29,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.log import logger as gui_logger
-from cmk.gui.pages import PageRegistry
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
     ConnectorType,
@@ -49,9 +42,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserAttributeRegistry,
     UserConnector,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
-from cmk.gui.userdb.ldap_connector import MKLDAPException
+from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import (
     contactgroups_of_user,
@@ -94,6 +85,7 @@ from ._check_credentials import user_exists as user_exists
 from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
 from ._check_credentials import user_locked as user_locked
 from ._on_access import on_access as on_access
+from ._on_failed_login import on_failed_login as on_failed_login
 from ._two_factor import disable_two_factor_authentication as disable_two_factor_authentication
 from ._two_factor import is_two_factor_backup_code_valid as is_two_factor_backup_code_valid
 from ._two_factor import is_two_factor_login_enabled as is_two_factor_login_enabled
@@ -126,8 +118,6 @@ __all__ = [
     "write_contacts_and_users_file",
     "UserSyncBackgroundJob",
 ]
-
-auth_logger = gui_logger.getChild("auth")
 
 
 def load_plugins() -> None:
@@ -216,38 +206,3 @@ def _is_local_user(user: UserSpec) -> bool:
 
 def is_automation_user(user: UserSpec) -> bool:
     return "automation_secret" in user
-
-
-def on_failed_login(username: UserId, now: datetime) -> None:
-    users = load_users(lock=True)
-    if user := users.get(username):
-        user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
-        if active_config.lock_on_logon_failures:
-            if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
-                user["locked"] = True
-        save_users(users, now)
-
-    if active_config.log_logon_failures:
-        if user:
-            existing = "Yes"
-            log_msg_until_locked = str(
-                bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
-            )
-            if not user.get("locked"):
-                log_msg_locked = "No"
-            elif log_msg_until_locked == "0":
-                log_msg_locked = "Yes (now)"
-            else:
-                log_msg_locked = "Yes"
-        else:
-            existing = "No"
-            log_msg_until_locked = "N/A"
-            log_msg_locked = "N/A"
-        auth_logger.warning(
-            "Login failed for username: %s (existing: %s, locked: %s, failed logins until locked: %s), client: %s",
-            username,
-            existing,
-            log_msg_locked,
-            log_msg_until_locked,
-            request.remote_ip,
-        )

@@ -72,8 +72,8 @@ call %cur_dir%\scripts\clean_artifacts.cmd
 call scripts\unpack_packs.cmd
 
 powershell Write-Host "Looking for MSVC 2022..." -Foreground White
-set msbuild="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
+set msbuild=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
+if not exist "%msbuild%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
 
 powershell Write-Host "[+] Found MSVC 2022" -Foreground Green
 powershell Write-Host "Building MSI..." -Foreground White
@@ -81,8 +81,13 @@ powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red & call :halt 7
 
 :: Ensure target win32 is build
-%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 11
+call build_ohm.cmd
+if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red & call :halt 71
+
+copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y
+copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y
 
 :: Unit Tests Phase
 powershell Write-Host "starting unit tests" -Foreground Cyan
@@ -100,13 +105,14 @@ powershell Write-Host "Signing Executables" -Foreground White
 call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe
+@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll
 @call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe
 :skip_signing
 
-
 :: if signing, then MSI must be rebuild
 if not "%2" == "" del %build_dir%\install\Release\check_mk_service.msi
-%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 
 :: Patch Version Phase: Patch version value direct in the msi file
@@ -121,14 +127,13 @@ cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_s
 :: check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red & call :halt 34
 
-copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y
-copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y
-
 :: Deploy Phase: post processing/build special modules using make
 powershell Write-Host "Deployment..." -Foreground Green
 copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || ( powershell Write-Host "Failed to copy msi" -Foreground Red & call :halt 33 )
 copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || ( powershell Write-Host "Failed to create 64 bit agent" -Foreground Red & call :halt 35 )
 copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || ( powershell Write-Host "Failed to create 32 bit agent" -Foreground Red & call :halt 34 )
+copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || ( powershell Write-Host "Failed to copy OHM exe" -Foreground Red & call :halt 36 )
+copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || ( powershell Write-Host "Failed to copy OHM dll" -Foreground Red & call :halt 37 )
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green

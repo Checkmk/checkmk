@@ -7,7 +7,7 @@ import inspect
 import pathlib
 import sys
 from collections.abc import Callable, Mapping, Sequence
-from typing import Final, get_args, Literal, NoReturn
+from typing import Final, get_args, Literal, NoReturn, Union
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.paths import agent_based_plugins_dir
@@ -23,8 +23,6 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
-
-_NONE_TYPE: Final = type(None)
 
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
@@ -132,6 +130,25 @@ def _raise_appropriate_type_error(
     )
 
 
+# Note: The concrete union type parameters below don't matter, we are just interested in the type
+# constructors of the new & old-skool unions.
+_UNION_TYPES: Final = (type(int | str), type(Union[int, str]))
+_NONE_TYPE: Final = type(None)
+
+
+# Poor man's pattern matching on generic types: We check if the given parameter is either untyped or
+# has a type of the form 'Mapping[str, T | None]' for any T. Implementation note: We see Optional as
+# a union at runtime, so no special handling is needed for it.
+def _is_valid_section_parameter(p: inspect.Parameter) -> bool:
+    return p.annotation == p.empty or (
+        any(map(str(p.annotation).startswith, ("collections.abc.Mapping[", "typing.Mapping[")))
+        and (len(args := get_args(p.annotation)) == 2)
+        and issubclass(args[0], str)
+        and issubclass(type(args[1]), _UNION_TYPES)
+        and _NONE_TYPE in get_args(args[1])
+    )
+
+
 def _validate_optional_section_annotation(
     *,
     parameters: Mapping[str, inspect.Parameter],
@@ -149,13 +166,9 @@ def _validate_optional_section_annotation(
         return  # no typing used in plugin
 
     if type_label == "cluster_check":
-        if not all(
-            str(p.annotation).startswith("typing.Mapping[str, ")
-            and _NONE_TYPE in get_args(get_args(p.annotation)[1])
-            for p in section_args
-        ):
+        if not all(_is_valid_section_parameter(p) for p in section_args):
             raise TypeError(
-                "Wrong type annotation: cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
+                "Wrong type annotation: cluster sections must be of type `Mapping[str, <NodeSection> | None]`"
             )
         return
 

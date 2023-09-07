@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, Optional
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import CheckResult
@@ -13,7 +14,7 @@ from .utils import cpu, memory, ps
 def check_ps(
     item: str,
     params: Mapping[str, Any],
-    section_ps: Optional[ps.Section],
+    section_ps: ps.Section | None,
     section_mem: Optional[memory.SectionMem],
     section_mem_used: Optional[memory.SectionMem],
     section_cpu: Optional[cpu.Section],

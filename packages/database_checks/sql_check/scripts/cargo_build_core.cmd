@@ -22,6 +22,8 @@ set RUST_BACKTRACE=1
 if "%worker_arte%" == "" powershell Write-Host "worker_arte is not defined" -Foreground Red && exit /b 79
 if "%worker_cur_dir%" == "" powershell Write-Host "worker_cur_dir is not defined" -Foreground Red && exit /b 79
 if "%worker_root_dir%" == "" powershell Write-Host "worker_root_dir is not defined" -Foreground Red && exit /b 79
+if "%worker_exe_name%" == "" powershell Write-Host "worker_exe_name is not defined" -Foreground Red && exit /b 79
+if "%worker_rustup_version%" == "" powershell Write-Host "worker_rustup_version is not defined" -Foreground Red && exit /b 79
 
 
 :: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
@@ -32,12 +34,11 @@ if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install 
 ::set target=x86_64-pc-windows-mscvc
 :: 32-bit
 set target=i686-pc-windows-msvc
-set exe_name=cmk-agent-ctl.exe
-set exe=target\%target%\release\%exe_name%
+set exe=target\%target%\release\%worker_exe_name%
 rustup toolchain list
-rustup default 1.72.0
+rustup default %worker_rustup_version%
 rustup target add %target%
-rustup update 1.72.0
+rustup update %worker_rustup_version%
 @echo RUST versions:
 cd
 cargo -V
@@ -87,8 +88,8 @@ if "%worker_arg_build%" == "1" (
     rem On windows we want to kill exe before starting rebuild.
     rem Use case CI starts testing, for some reasoms process hangs up longer as expected thus
     rem rebuild/retest will be not possible: we get strange/inconsistent results.
-    call scripts\kill_processes_in_targets.cmd %target%\release || echo: ok...
-    del /Q %worker_arte%\%exe_name% 2> nul
+    call %worker_root_dir%\scripts\windows\kill_processes_in_targets.cmd %target%\release || echo: ok...
+    del /Q %worker_arte%\%worker_exe_name% 2> nul
 
     powershell Write-Host "Building Rust executables" -Foreground White
     cargo build --release --target %target% 2>&1
@@ -123,7 +124,7 @@ rem Validate elevation, because full testing is possible only in elevated mode!
 :: [optional] Signing
 if "%worker_arg_sign%" == "1" (
     powershell Write-Host "Signing Rust executables" -Foreground White
-    @call ..\wnx\sign_windows_exe c:\common\store\%worker_arg_sign_file% %worker_arg_sign_secret% %exe%
+    @call %worker_root_dir%\agents\wnx\sign_windows_exe c:\common\store\%worker_arg_sign_file% %worker_arg_sign_secret% %exe%
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed signing %exe%" -Foreground Red
         exit /b 20
@@ -135,7 +136,7 @@ if "%worker_arg_sign%" == "1" (
 :: 5. Storing artifacts
 if "%worker_arg_build%" == "1" (
     powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
-    copy %exe% %worker_arte%\%exe_name%
+    copy %exe% %worker_arte%\%worker_exe_name%
     powershell Write-Host "Done." -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust upload" -Foreground Yellow

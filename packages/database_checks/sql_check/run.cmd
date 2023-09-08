@@ -8,7 +8,9 @@
 ::
 
 SETLOCAL EnableDelayedExpansion
-set worker_name=sql_check
+call setup_config.cmd
+if ERRORLEVEL 1 powershell Write-Host "Failed to configure" -Foreground Red &&  exit /b 99
+
 
 if "%*" == "" (
 echo: Run default...
@@ -48,13 +50,12 @@ if "%~1"=="--sign"          (set worker_arg_sign_file=%1) & (set worker_arg_sign
 if "%worker_arg_all%"=="1" (set worker_arg_clippy=1) & (set worker_arg_build=1) & (set worker_arg_test=1) & (set worker_arg_check_format=1)
 
 set worker_cur_dir=%cd%
-set worker_root_dir=%worker_cur_dir%\..\..\..
 set worker_arte=%worker_root_dir%\artefacts
 
 set ci_root_dir=workdir\workspace
 set ci_junction_to_root_dir=x
 set script_to_run=.\scripts\cargo_build_core.cmd
-powershell -ExecutionPolicy ByPass -File scripts/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
+powershell -ExecutionPolicy ByPass -File %worker_root_dir%/scripts/windows/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
 GOTO :EOF
 
 

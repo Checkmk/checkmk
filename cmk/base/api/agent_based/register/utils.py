@@ -133,19 +133,21 @@ def _raise_appropriate_type_error(
 # Note: The concrete union type parameters below don't matter, we are just interested in the type
 # constructors of the new & old-skool unions.
 _UNION_TYPES: Final = (type(int | str), type(Union[int, str]))
-_NONE_TYPE: Final = type(None)
 
 
-# Poor man's pattern matching on generic types: We check if the given parameter is either untyped or
-# has a type of the form 'Mapping[str, T | None]' for any T. Implementation note: We see Optional as
-# a union at runtime, so no special handling is needed for it.
-def _is_valid_section_parameter(p: inspect.Parameter) -> bool:
-    return p.annotation == p.empty or (
+# Poor man's pattern matching on generic types ahead! Note that we see Optional as a union at
+# runtime, so no special handling is needed for it.
+def _is_optional(annotation: object) -> bool:
+    return issubclass(type(annotation), _UNION_TYPES) and type(None) in get_args(annotation)
+
+
+# Check if the given parameter has a type of the form 'Mapping[str, T | None]' for any T.
+def _is_valid_cluster_section_parameter(p: inspect.Parameter) -> bool:
+    return (
         any(map(str(p.annotation).startswith, ("collections.abc.Mapping[", "typing.Mapping[")))
         and (len(args := get_args(p.annotation)) == 2)
         and issubclass(args[0], str)
-        and issubclass(type(args[1]), _UNION_TYPES)
-        and _NONE_TYPE in get_args(args[1])
+        and _is_optional(args[1])
     )
 
 
@@ -154,31 +156,22 @@ def _validate_optional_section_annotation(
     parameters: Mapping[str, inspect.Parameter],
     type_label: TypeLabel,
 ) -> None:
-    """Validate that the section annotation is correct, if present.
+    section_parameters = [p for n, p in parameters.items() if n.startswith("section")]
 
-    We know almost nothing about the type of the section argument(s). Check the few things we know:
-
-        * If we have more than one section, all of them must be `Optional`.
-
-    """
-    section_args = [p for n, p in parameters.items() if n.startswith("section")]
-    if all(p.annotation == p.empty for p in section_args):
-        return  # no typing used in plugin
+    def validate_with(pred: Callable[[inspect.Parameter], bool], msg: str) -> None:
+        if not all(p.annotation == p.empty or pred(p) for p in section_parameters):
+            raise TypeError(f"Wrong type annotation: {msg}")
 
     if type_label == "cluster_check":
-        if not all(_is_valid_section_parameter(p) for p in section_args):
-            raise TypeError(
-                "Wrong type annotation: cluster sections must be of type `Mapping[str, <NodeSection> | None]`"
-            )
-        return
-
-    if len(section_args) <= 1:
-        return  # we know nothing in this case
-
-    if any(_NONE_TYPE not in get_args(p.annotation) for p in section_args):
-        raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
-
-    return
+        validate_with(
+            _is_valid_cluster_section_parameter,
+            "cluster sections must be of type `Mapping[str, <NodeSection> | None]`",
+        )
+    elif len(section_parameters) > 1:
+        validate_with(
+            lambda p: _is_optional(p.annotation),
+            "multiple sections must be of type `<NodeSection> | None`",
+        )
 
 
 def _value_type(annotation: inspect.Parameter) -> bytes:

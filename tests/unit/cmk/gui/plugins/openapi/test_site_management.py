@@ -456,14 +456,15 @@ def test_update_site_connection_user_sync_with_ldap_connections_200(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
+    connection_choices = [
+        ("LDAP_1", "LDAP_1 (ldap)"),
+        ("LDAP_2", "LDAP_2 (ldap)"),
+        ("LDAP_3", "LDAP_3 (ldap)"),
+    ]
     monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.utils.connection_choices",
-        lambda: [
-            ("LDAP_1", "LDAP_1 (ldap)"),
-            ("LDAP_2", "LDAP_2 (ldap)"),
-            ("LDAP_3", "LDAP_3 (ldap)"),
-        ],
+        "cmk.gui.fields.custom_fields.connection_choices", lambda: connection_choices
     )
+    monkeypatch.setattr("cmk.gui.watolib.sites.connection_choices", lambda: connection_choices)
 
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)

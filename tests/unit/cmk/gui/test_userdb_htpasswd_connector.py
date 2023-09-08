@@ -13,8 +13,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.userdb.utils import CheckCredentialsResult
-from cmk.gui.userdb import htpasswd
+from cmk.gui.userdb import CheckCredentialsResult, htpasswd
 
 
 @pytest.fixture(name="htpasswd_file", autouse=True)

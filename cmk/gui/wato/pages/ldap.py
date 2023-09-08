@@ -22,13 +22,10 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuEntry,
 )
-from cmk.gui.plugins.userdb.utils import (
-    get_connection,
-    load_connection_config,
-    save_connection_config,
-)
+from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.userdb import get_connection
 from cmk.gui.userdb.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,

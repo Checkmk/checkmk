@@ -4,12 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    ConnectorType,
-    get_connection,
-    UserConnector,
-)
 from cmk.gui.type_defs import Users, UserSpec
 
 from ._check_credentials import check_credentials as check_credentials
@@ -20,9 +14,20 @@ from ._check_credentials import (
 from ._check_credentials import user_exists as user_exists
 from ._check_credentials import user_exists_according_to_profile as user_exists_according_to_profile
 from ._check_credentials import user_locked as user_locked
+from ._connections import active_connections as active_connections
+from ._connections import active_connections_by_type as active_connections_by_type
+from ._connections import clear_user_connection_cache as clear_user_connection_cache
+from ._connections import connection_choices as connection_choices
+from ._connections import connections_by_type as connections_by_type
+from ._connections import get_connection as get_connection
 from ._connections import locked_attributes as locked_attributes
 from ._connections import multisite_attributes as multisite_attributes
 from ._connections import non_contact_attributes as non_contact_attributes
+from ._connector import CheckCredentialsResult as CheckCredentialsResult
+from ._connector import ConnectorType as ConnectorType
+from ._connector import user_connector_registry as user_connector_registry
+from ._connector import UserConnector as UserConnector
+from ._connector import UserConnectorRegistry as UserConnectorRegistry
 from ._need_to_change_pw import is_automation_user as is_automation_user
 from ._need_to_change_pw import need_to_change_pw as need_to_change_pw
 from ._on_access import on_access as on_access

@@ -11,7 +11,7 @@ from marshmallow import validate, ValidationError
 from cmk.utils.tags import BuiltinTagConfig, TagID
 
 from cmk.gui.groups import load_contact_group_information
-from cmk.gui.plugins.userdb import utils
+from cmk.gui.userdb import connection_choices
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
@@ -176,7 +176,7 @@ class LDAPConnectionID(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        ldap_connection_ids = [cnx_id for cnx_id, _ in utils.connection_choices()]
+        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
 
         if self.presence == "should_exist":
             if value not in ldap_connection_ids:

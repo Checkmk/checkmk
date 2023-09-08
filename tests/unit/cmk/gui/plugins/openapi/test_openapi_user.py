@@ -31,8 +31,8 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
-from cmk.gui.plugins.userdb.utils import ConnectorType
 from cmk.gui.type_defs import UserObject, UserRole
+from cmk.gui.userdb import ConnectorType
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users

@@ -43,10 +43,11 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.plugins.userdb.utils import active_connections, get_connection, UserConnector
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.roles import roles_of_user
 
+from ._connections import active_connections, get_connection
+from ._connector import UserConnector
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes
 

@@ -63,15 +63,6 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    CheckCredentialsResult,
-    connections_by_type,
-    ConnectorType,
-    get_connection,
-    UserConnector,
-    UserConnectorRegistry,
-)
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.valuespec import (
@@ -89,6 +80,8 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
+from ._connections import active_connections, connections_by_type, get_connection
+from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template

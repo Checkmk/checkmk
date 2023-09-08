@@ -4,10 +4,74 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Callable
+from typing import Any, Callable
 
 from cmk.gui.config import active_config
-from cmk.gui.plugins.userdb.utils import get_connection, UserConnector
+from cmk.gui.hooks import request_memoize
+
+from ._connector import ConnectorType, user_connector_registry, UserConnector
+
+
+@request_memoize(maxsize=None)
+def get_connection(connection_id: str | None) -> UserConnector | None:
+    """Returns the connection object of the requested connection id
+
+    This function maintains a cache that for a single connection_id only one object per request is
+    created."""
+    connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+    return connections_with_id[0] if connections_with_id else None
+
+
+def active_connections_by_type(connection_type: str) -> list[dict[str, Any]]:
+    return [c for c in connections_by_type(connection_type) if not c["disabled"]]
+
+
+def connections_by_type(connection_type: str) -> list[dict[str, Any]]:
+    return [c for c in _get_connection_configs() if c["type"] == connection_type]
+
+
+def clear_user_connection_cache() -> None:
+    get_connection.cache_clear()  # type: ignore[attr-defined]
+
+
+def active_connections() -> list[tuple[str, UserConnector]]:
+    enabled_configs = [cfg for cfg in _get_connection_configs() if not cfg["disabled"]]  #
+    return [
+        (connection_id, connection)  #
+        for connection_id, connection in _get_connections_for(enabled_configs)
+        if connection.is_enabled()
+    ]
+
+
+def connection_choices() -> list[tuple[str, str]]:
+    return sorted(
+        [
+            (connection_id, f"{connection_id} ({connection.type()})")
+            for connection_id, connection in _all_connections()
+            if connection.type() == ConnectorType.LDAP
+        ],
+        key=lambda id_and_description: id_and_description[1],
+    )
+
+
+def _all_connections() -> list[tuple[str, UserConnector]]:
+    return _get_connections_for(_get_connection_configs())
+
+
+def _get_connections_for(configs: list[dict[str, Any]]) -> list[tuple[str, UserConnector]]:
+    return [(cfg["id"], user_connector_registry[cfg["type"]](cfg)) for cfg in configs]
+
+
+def _get_connection_configs() -> list[dict[str, Any]]:
+    # The htpasswd connector is enabled by default and always executed first.
+    return [_HTPASSWD_CONNECTION] + active_config.user_connections
+
+
+_HTPASSWD_CONNECTION = {
+    "type": "htpasswd",
+    "id": "htpasswd",
+    "disabled": False,
+}
 
 
 # The saved configuration for user connections is a bit inconsistent, let's fix

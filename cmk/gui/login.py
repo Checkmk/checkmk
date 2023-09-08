@@ -35,8 +35,8 @@ from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.session import session, UserContext
+from cmk.gui.userdb import active_connections_by_type
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML

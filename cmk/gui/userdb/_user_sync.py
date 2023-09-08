@@ -22,11 +22,12 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.plugins.userdb.utils import active_connections
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users
-from cmk.gui.userdb.store import general_userdb_job, load_users, save_users
 from cmk.gui.utils.urls import makeuri_contextless
+
+from ._connections import active_connections
+from .store import general_userdb_job, load_users, save_users
 
 UserSyncConfig = Literal["all", "master"] | tuple[Literal["list"], list[str]] | None
 

@@ -18,7 +18,6 @@ from cmk.utils.version import edition, Edition
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
@@ -43,11 +42,13 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import active_connections, get_connection
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
+    active_connections,
+    ConnectorType,
+    get_connection,
     get_user_attributes,
     get_user_attributes_by_topic,
     load_roles,
@@ -477,7 +478,7 @@ class ModeUsers(WatoMode):
                     auth_method = _("Password")
                     if _is_two_factor_enabled(user_spec):
                         auth_method += " (+2FA)"
-                    elif connection and connection.type() == userdb_utils.ConnectorType.SAML2:
+                    elif connection and connection.type() == ConnectorType.SAML2:
                         auth_method = connection.short_title()
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))
@@ -1310,6 +1311,6 @@ def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
 def _sync_possible() -> bool:
     """When at least one LDAP connection is defined and active a sync is possible"""
     return any(
-        connection.type() == userdb_utils.ConnectorType.LDAP
+        connection.type() == ConnectorType.LDAP
         for _connection_id, connection in active_connections()
     )

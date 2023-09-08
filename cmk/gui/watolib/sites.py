@@ -15,7 +15,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
-import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
@@ -30,6 +29,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
@@ -205,7 +205,7 @@ class SiteManagement:
                     "list",
                     _("Sync with the following LDAP connections"),
                     ListChoice(
-                        choices=userdb_utils.connection_choices,
+                        choices=connection_choices,
                         allow_empty=False,
                     ),
                 ),

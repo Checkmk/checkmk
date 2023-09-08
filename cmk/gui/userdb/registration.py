@@ -7,10 +7,10 @@ from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import register_job
 from cmk.gui.pages import PageRegistry
-from cmk.gui.plugins.userdb.utils import UserConnectorRegistry
 
 from . import ldap_connector, user_attributes
 from ._connections import fix_user_connections
+from ._connector import UserConnectorRegistry
 from ._user_attribute import update_config_based_user_attributes, UserAttributeRegistry
 from ._user_profile_cleanup import execute_user_profile_cleanup_job, UserProfileCleanupBackgroundJob
 from ._user_sync import ajax_sync, execute_userdb_job, UserSyncBackgroundJob

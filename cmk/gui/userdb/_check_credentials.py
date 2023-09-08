@@ -20,8 +20,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.plugins.userdb.utils import active_connections, get_connection
 
+from ._connections import active_connections, get_connection
 from ._user_spec import new_user_template
 from .ldap_connector import MKLDAPException
 from .store import load_user, load_users, save_users

@@ -28,7 +28,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import htpasswd
+from cmk.gui.userdb import ConnectorType, htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
 
@@ -337,8 +337,8 @@ def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
     result: APIAuthOption = {}
 
     # TODO: the default ConnectorType.HTPASSWD is currently a bug #CMK-12723 but not wrong
-    connector = internal_attributes.get("connector", userdb_utils.ConnectorType.HTPASSWD)
-    if connector == userdb_utils.ConnectorType.HTPASSWD:
+    connector = internal_attributes.get("connector", ConnectorType.HTPASSWD)
+    if connector == ConnectorType.HTPASSWD:
         if "automation_secret" in internal_attributes:
             result["auth_type"] = "automation"
         elif "password" in internal_attributes:
@@ -435,7 +435,7 @@ def _update_auth_options(
     """
     if not auth_options:
         if new_user:
-            internal_attrs["connector"] = userdb_utils.ConnectorType.HTPASSWD
+            internal_attrs["connector"] = ConnectorType.HTPASSWD
         return internal_attrs
 
     if auth_options.get("auth_type") == "remove":
@@ -462,7 +462,7 @@ def _update_auth_options(
             if "password" in auth_options or "secret" in auth_options:
                 internal_attrs["serial"] = 1
 
-        internal_attrs["connector"] = userdb_utils.ConnectorType.HTPASSWD
+        internal_attrs["connector"] = ConnectorType.HTPASSWD
     return internal_attrs
 
 

@@ -28,7 +28,6 @@ import cmk.gui.utils
 from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import active_connections as active_connections_
 from cmk.gui.site_config import (
     get_site_config,
     has_wato_slave_sites,
@@ -36,6 +35,7 @@ from cmk.gui.site_config import (
     sitenames,
     wato_slave_sites,
 )
+from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (

@@ -35,6 +35,9 @@ VARIABLES:
     - NAME: CHANGED_AGENT_CONTROLLER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
+    - NAME: CHANGED_SQL_CHECK_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/database_checks/sql_check/' || true"
+
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' - || true"
 
@@ -366,3 +369,10 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/agent-controller.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller.txt"
+
+    - NAME: 'SQL Check'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SQL_CHECK_FILES
+      DIR: 'packages/database_checks/sql_check'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/sql_check.txt"
+      TEXT_ON_SKIP: 'No SQL check files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/sql_check.txt"

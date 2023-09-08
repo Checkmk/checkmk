@@ -748,13 +748,6 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 # TODO: Refactor evaluate and all helpers into single class
 
 
-@dataclass(frozen=True)
-class RPNExpression:
-    value: float
-    unit_info: UnitInfo
-    color: str
-
-
 def split_expression(expression: MetricExpression) -> tuple[str, str | None, str | None]:
     explicit_color = None
     if "#" in expression:
@@ -767,7 +760,54 @@ def split_expression(expression: MetricExpression) -> tuple[str, str | None, str
     return expression, explicit_unit_name, explicit_color
 
 
+@dataclass(frozen=True)
+class RPNExpression:
+    value: float
+    unit_info: UnitInfo
+    color: str
+
+
 RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
+
+
+# TODO: real unit computation!
+def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
+    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
+
+
+_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+
+
+def _choose_operator_color(a: str, b: str) -> str:
+    if a == "#000000":
+        return b
+    if b == "#000000":
+        return a
+    return render_color(_mix_colors(parse_color(a), parse_color(b)))
+
+
+def _operator_minmax(
+    a: RPNExpression, b: RPNExpression, func: Callable[[float, float], float]
+) -> RPNExpression:
+    v = func(a.value, b.value)
+    # Use unit and color of the winner. If the winner
+    # has none (e.g. it is a scalar like 0), then take
+    # unit and color of the loser.
+    if v == a.value:
+        winner = a
+        loser = b
+    else:
+        winner = b
+        loser = a
+
+    if winner.unit_info != unit_info[""]:
+        unit = winner.unit_info
+    else:
+        unit = loser.unit_info
+
+    return RPNExpression(v, unit, winner.color or loser.color)
 
 
 def _apply_operator(
@@ -831,6 +871,56 @@ def _apply_operator(
         case "MAX":
             return _operator_minmax(left_rpn_expr, right_rpn_expr, max)
     assert_never(operator)
+
+
+def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    if expression not in translated_metrics:
+        try:
+            return RPNExpression(float(int(expression)), unit_info["count"], "#000000")
+        except ValueError:
+            pass
+
+        try:
+            return RPNExpression(float(expression), unit_info[""], "#000000")
+        except ValueError:
+            pass
+
+    var_name = _drop_metric_consolidation_advice(expression)
+    if percent := var_name.endswith("(%)"):
+        var_name = var_name[:-3]
+
+    def _from_scalar(scalar_name: str, scalar: ScalarBounds) -> float | None:
+        match scalar_name:
+            case "warn":
+                return scalar.get("warn")
+            case "crit":
+                return scalar.get("crit")
+            case "min":
+                return scalar.get("min")
+            case "max":
+                return scalar.get("max")
+        return None
+
+    if ":" in var_name:
+        var_name, scalar_name = var_name.split(":")
+        value = _from_scalar(scalar_name, translated_metrics[var_name]["scalar"])
+        color = scalar_colors.get(scalar_name, "#808080")
+    else:
+        value = translated_metrics[var_name]["value"]
+        color = translated_metrics[var_name]["color"]
+
+    if value is None:
+        raise ValueError(value)
+
+    if percent:
+        maxvalue = translated_metrics[var_name]["scalar"]["max"]
+        return RPNExpression(
+            0.0 if maxvalue == 0 else 100.0 * float(value) / maxvalue,
+            unit_info["%"],
+            color,
+        )
+
+    return RPNExpression(value, translated_metrics[var_name]["unit"], color)
 
 
 # Evaluates an expression, returns a triple of value, unit and color.
@@ -944,96 +1034,6 @@ def stack_resolver(
         )
 
     return stack[0]
-
-
-# TODO: real unit computation!
-def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
-    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
-
-
-_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-
-
-def _choose_operator_color(a: str, b: str) -> str:
-    if a == "#000000":
-        return b
-    if b == "#000000":
-        return a
-    return render_color(_mix_colors(parse_color(a), parse_color(b)))
-
-
-def _operator_minmax(
-    a: RPNExpression, b: RPNExpression, func: Callable[[float, float], float]
-) -> RPNExpression:
-    v = func(a.value, b.value)
-    # Use unit and color of the winner. If the winner
-    # has none (e.g. it is a scalar like 0), then take
-    # unit and color of the loser.
-    if v == a.value:
-        winner = a
-        loser = b
-    else:
-        winner = b
-        loser = a
-
-    if winner.unit_info != unit_info[""]:
-        unit = winner.unit_info
-    else:
-        unit = loser.unit_info
-
-    return RPNExpression(v, unit, winner.color or loser.color)
-
-
-def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) -> RPNExpression:
-    if expression not in translated_metrics:
-        try:
-            return RPNExpression(float(int(expression)), unit_info["count"], "#000000")
-        except ValueError:
-            pass
-
-        try:
-            return RPNExpression(float(expression), unit_info[""], "#000000")
-        except ValueError:
-            pass
-
-    var_name = _drop_metric_consolidation_advice(expression)
-    if percent := var_name.endswith("(%)"):
-        var_name = var_name[:-3]
-
-    def _from_scalar(scalar_name: str, scalar: ScalarBounds) -> float | None:
-        match scalar_name:
-            case "warn":
-                return scalar.get("warn")
-            case "crit":
-                return scalar.get("crit")
-            case "min":
-                return scalar.get("min")
-            case "max":
-                return scalar.get("max")
-        return None
-
-    if ":" in var_name:
-        var_name, scalar_name = var_name.split(":")
-        value = _from_scalar(scalar_name, translated_metrics[var_name]["scalar"])
-        color = scalar_colors.get(scalar_name, "#808080")
-    else:
-        value = translated_metrics[var_name]["value"]
-        color = translated_metrics[var_name]["color"]
-
-    if value is None:
-        raise ValueError(value)
-
-    if percent:
-        maxvalue = translated_metrics[var_name]["scalar"]["max"]
-        return RPNExpression(
-            0.0 if maxvalue == 0 else 100.0 * float(value) / maxvalue,
-            unit_info["%"],
-            color,
-        )
-
-    return RPNExpression(value, translated_metrics[var_name]["unit"], color)
 
 
 @dataclass(frozen=True)

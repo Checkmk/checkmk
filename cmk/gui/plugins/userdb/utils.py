@@ -14,11 +14,9 @@ from typing import Any, Literal
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
 from cmk.utils.crypto.password import Password
-from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config, builtin_role_ids
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Users, UserSpec
@@ -60,25 +58,6 @@ def _transform_userdb_automatic_sync(val):
         return "all"
 
     return val
-
-
-def show_mode_choices() -> list[tuple[str | None, str]]:
-    return [
-        ("default_show_less", _("Default to show less")),
-        ("default_show_more", _("Default to show more")),
-        ("enforce_show_more", _("Enforce show more")),
-    ]
-
-
-def validate_start_url(value: str, varprefix: str) -> None:
-    if not is_allowed_url(value):
-        raise MKUserError(
-            varprefix,
-            _(
-                "The given value is not allowed. You may only configure "
-                "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."
-            ),
-        )
 
 
 #   .--Connections---------------------------------------------------------.

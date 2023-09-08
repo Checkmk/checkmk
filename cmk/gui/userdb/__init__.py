@@ -72,6 +72,8 @@ from .store import (
     save_users,
     write_contacts_and_users_file,
 )
+from .user_attributes import show_mode_choices as show_mode_choices
+from .user_attributes import validate_start_url as validate_start_url
 
 __all__ = [
     "contactgroups_of_user",

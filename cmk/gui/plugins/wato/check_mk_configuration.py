@@ -49,6 +49,7 @@ from cmk.gui.plugins.wato.utils import (
     ServiceRulespec,
     UserIconOrAction,
 )
+from cmk.gui.userdb import show_mode_choices, validate_start_url
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -213,7 +214,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
                 "show more, so that the round button with the three dots is not "
                 "shown at all."
             ),
-            choices=userdb_utils.show_mode_choices(),
+            choices=show_mode_choices(),
         )
 
 
@@ -696,7 +697,7 @@ class ConfigVariableStartURL(ConfigVariable):
             ),
             size=80,
             allow_empty=False,
-            validate=userdb_utils.validate_start_url,
+            validate=validate_start_url,
         )
 
 

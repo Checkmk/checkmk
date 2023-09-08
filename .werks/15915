@@ -1,0 +1,21 @@
+Title: oracle_instances: Fixed parsing of section with failure and additional information
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1694187291
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Sometimes when an oracle instance has a failure it deliveres some additional information. This information caused the failure of the section parsing.
+The section in the agent output looks something like this:
+C+:
+<<<oracle_instance:sep(124)>>>
++ASM|FAILURE|ERROR: ORA-12541: ...
+
+NAME DATABASE_ROLE OPEN_MODE DB_UNIQUE_NAME FLASHBACK_ON FORCE_LOGGING SWITCHOVER_STATUS
+C-:
+This has now been fixed and the additional information should not cause any problems.
+

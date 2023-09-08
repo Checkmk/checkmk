@@ -60,6 +60,29 @@ def test_parse_oracle_instance_db_without_host_12() -> None:
     }
 
 
+def test_parse_oracle_instance_db_with_additional_error_info() -> None:
+    assert parse_oracle_instance(
+        [
+            [
+                "+ASM",
+                "FAILURE",
+                "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+            ],
+            [
+                "NAME DATABASE_ROLE OPEN_MODE DB_UNIQUE_NAME FLASHBACK_ON FORCE_LOGGING SWITCHOVER_STATUS"
+            ],  # This should be ignored because the length is 1
+            [
+                "SEUSAZQ1 PRIMARY READ WRITE SEUSAZQ1 YES YES TO STANDBY"
+            ],  # This should be ignored because length is 1
+        ]
+    ) == {
+        "+ASM": GeneralError(
+            sid="+ASM",
+            error="ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+        )
+    }
+
+
 def test_parse_oracle_instance_db_with_host_13() -> None:
     assert parse_oracle_instance(
         [

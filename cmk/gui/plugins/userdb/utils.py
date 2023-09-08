@@ -9,14 +9,11 @@ import abc
 import os
 from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Any, Literal, Union
-
-from livestatus import SiteId
+from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
 from cmk.utils.crypto.password import Password
-from cmk.utils.site import omd_site
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
@@ -25,13 +22,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
-UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
 CheckCredentialsResult = UserId | None | Literal[False]
 
 
@@ -53,30 +48,6 @@ def _root_dir() -> str:
 
 def release_users_lock() -> None:
     store.release_lock(_root_dir() + "contacts.mk")
-
-
-def user_sync_config() -> UserSyncConfig:
-    # use global option as default for reading legacy options and on remote site
-    # for reading the value set by the Setup master site
-    default_cfg = user_sync_default_config(omd_site())
-    return get_site_config(omd_site()).get("user_sync", default_cfg)
-
-
-# Legacy option config.userdb_automatic_sync defaulted to "master".
-# Can be: None: (no sync), "all": all sites sync, "master": only master site sync
-# Take that option into account for compatibility reasons.
-# For remote sites in distributed setups, the default is to do no sync.
-def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
-    global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
-    if global_user_sync == "master":
-        if site_is_local(site_name) and not is_wato_slave_site():
-            user_sync_default: UserSyncConfig = "all"
-        else:
-            user_sync_default = None
-    else:
-        user_sync_default = global_user_sync
-
-    return user_sync_default
 
 
 # Old vs:

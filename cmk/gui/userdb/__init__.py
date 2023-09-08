@@ -8,7 +8,6 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     ConnectorType,
     get_connection,
-    user_sync_config,
     UserConnector,
 )
 from cmk.gui.type_defs import Users, UserSpec
@@ -46,6 +45,8 @@ from ._user_selection import UserSelection as UserSelection
 from ._user_spec import add_internal_attributes as add_internal_attributes
 from ._user_spec import new_user_template as new_user_template
 from ._user_spec import USER_SCHEME_SERIAL as USER_SCHEME_SERIAL
+from ._user_sync import user_sync_config as user_sync_config
+from ._user_sync import user_sync_default_config as user_sync_default_config
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
 from .session import is_valid_user_session, load_session_infos
 from .store import (

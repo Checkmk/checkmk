@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.userdb.utils import user_sync_default_config
+from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 
 Command = list[str]

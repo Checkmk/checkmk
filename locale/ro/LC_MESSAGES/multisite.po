@@ -3205,12 +3205,6 @@ msgstr "Activate Check (dezactivat: ignoră starea nodului)"
 msgid "Activate Check (off: ignore subscription status)"
 msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
 
-msgid "Activate Configuration"
-msgstr "Activați configurația"
-
-msgid "Activate Foreign Changes"
-msgstr "Activarea modificărilor străine"
-
 msgid ""
 "Activate HTTP header authentication (Warning: Only activate in trusted "
 "environments, see help for details)"
@@ -3245,6 +3239,10 @@ msgstr "Activați modificările pentru consola de evenimente"
 
 msgid "Activate changes of other users"
 msgstr "Activați modificările altor utilizatori"
+
+#, fuzzy
+msgid "Activate configuration"
+msgstr "Activați configurația"
 
 msgid "Activate foreign changes"
 msgstr "Activați modificările străine"
@@ -16733,6 +16731,14 @@ msgstr ""
 "Dezactivarea parolei va împiedica un utilizator să se conecteze, păstrând în "
 "același timp parola originală. Notificările nu sunt afectate de această "
 "setare."
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "Nici o schimbare"
+
+#, fuzzy
+msgid "Discard foreign changes"
+msgstr "Activare Schimbări!"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -59068,6 +59074,12 @@ msgstr ""
 "evenimente."
 
 msgid ""
+"This permission allows to discard pending changes. Beware that this holds "
+"only for the user's own pending changes, not for those of other users "
+"(foreign changes)."
+msgstr ""
+
+msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
 "Această permisiune permite utilizatorilor să migreze alți utilizatori către "
@@ -67552,11 +67564,24 @@ msgstr ""
 "brokerul MQTT. Dacă nu este setată, agentul special va utiliza adresa "
 "principală a gazdei pentru a se conecta la brokerul MQTT."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
-"of different users might pile up before changes are activate. Only with this "
-"permission a user will be allowed to activate the current configuration if "
-"this situation appears."
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to activate the current configuration "
+"if this situation appears."
+msgstr ""
+"Atunci când mai mulți utilizatori lucrează în paralel cu Setup, atunci mai "
+"multe modificări în așteptare ale diferiților utilizatori se pot acumula "
+"înainte ca modificările să fie activate. Numai cu această permisiune, un "
+"utilizator va putea activa configurația curentă dacă apare această situație."
+
+#, fuzzy
+msgid ""
+"When several users work in parallel with Setup then several pending changes "
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to discard all pending changes, "
+"including foreign ones."
 msgstr ""
 "Atunci când mai mulți utilizatori lucrează în paralel cu Setup, atunci mai "
 "multe modificări în așteptare ale diferiților utilizatori se pot acumula "
@@ -72959,6 +72984,9 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#~ msgid "Activate Foreign Changes"
+#~ msgstr "Activarea modificărilor străine"
+
 #~ msgid "Assume a different IAM role"
 #~ msgstr "Asumați-vă un rol IAM diferit"
 
@@ -75004,10 +75032,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
-#~ msgid "Discard Changes!"
-#~ msgstr "Nici o schimbare"
-
-#, fuzzy
 #~ msgid "Discovery mode for Disk IO check"
 #~ msgstr "Inventariere in masa"
 
@@ -75848,10 +75872,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Choose this icon"
 #~ msgstr " Ignoră această opțiune"
-
-#, fuzzy
-#~ msgid "Confirm discarding foreign changes"
-#~ msgstr "Activare Schimbări!"
 
 #, fuzzy
 #~ msgid "Confirm restore snapshot"

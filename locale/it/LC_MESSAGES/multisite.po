@@ -3185,12 +3185,6 @@ msgstr "Attivare il controllo (off: ignora lo stato del nodo)"
 msgid "Activate Check (off: ignore subscription status)"
 msgstr "Attivare il controllo (off: ignora lo stato dell'abbonamento)"
 
-msgid "Activate Configuration"
-msgstr "Attivare la configurazione"
-
-msgid "Activate Foreign Changes"
-msgstr "Attivare i cambiamenti stranieri"
-
 msgid ""
 "Activate HTTP header authentication (Warning: Only activate in trusted "
 "environments, see help for details)"
@@ -3225,6 +3219,10 @@ msgstr "Attivare le modifiche per la console eventi"
 
 msgid "Activate changes of other users"
 msgstr "Attivare i cambiamenti di altri utenti"
+
+#, fuzzy
+msgid "Activate configuration"
+msgstr "Attivare la configurazione"
 
 msgid "Activate foreign changes"
 msgstr "Attivare i cambiamenti stranieri"
@@ -16643,6 +16641,14 @@ msgstr ""
 "Disabilitando la password si impedisce a un utente di accedere, mantenendo "
 "la password originale. Le notifiche non sono interessate da questa "
 "impostazione."
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d modifiche"
+
+#, fuzzy
+msgid "Discard foreign changes"
+msgstr "Attivare i cambiamenti stranieri"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -58719,6 +58725,12 @@ msgstr ""
 "console eventi."
 
 msgid ""
+"This permission allows to discard pending changes. Beware that this holds "
+"only for the user's own pending changes, not for those of other users "
+"(foreign changes)."
+msgstr ""
+
+msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
 "Questa autorizzazione consente agli utenti di migrare altri utenti a "
@@ -67147,11 +67159,24 @@ msgstr ""
 "MQTT. Se non è impostato, l'agente speciale utilizzerà l'indirizzo primario "
 "dell'host per connettersi al broker MQTT."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
-"of different users might pile up before changes are activate. Only with this "
-"permission a user will be allowed to activate the current configuration if "
-"this situation appears."
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to activate the current configuration "
+"if this situation appears."
+msgstr ""
+"Quando più utenti lavorano in parallelo con Setup, le modifiche in sospeso "
+"di diversi utenti potrebbero accumularsi prima che le modifiche vengano "
+"attivate. Solo con questa autorizzazione un utente potrà attivare la "
+"configurazione corrente se si verifica questa situazione."
+
+#, fuzzy
+msgid ""
+"When several users work in parallel with Setup then several pending changes "
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to discard all pending changes, "
+"including foreign ones."
 msgstr ""
 "Quando più utenti lavorano in parallelo con Setup, le modifiche in sospeso "
 "di diversi utenti potrebbero accumularsi prima che le modifiche vengano "
@@ -72516,6 +72541,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Activate Foreign Changes"
+#~ msgstr "Attivare i cambiamenti stranieri"
 
 #~ msgid "Assume a different IAM role"
 #~ msgstr "Assumere un ruolo IAM diverso"

@@ -3186,12 +3186,6 @@ msgstr "Activeer Controle (uit: knooppuntstatus negeren)"
 msgid "Activate Check (off: ignore subscription status)"
 msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
 
-msgid "Activate Configuration"
-msgstr "Configuratie activeren"
-
-msgid "Activate Foreign Changes"
-msgstr "Buitenlandse wijzigingen activeren"
-
 msgid ""
 "Activate HTTP header authentication (Warning: Only activate in trusted "
 "environments, see help for details)"
@@ -3226,6 +3220,10 @@ msgstr "Activeer wijzigingen voor gebeurtenissenconsole"
 
 msgid "Activate changes of other users"
 msgstr "Activeer wijzigingen van andere gebruikers"
+
+#, fuzzy
+msgid "Activate configuration"
+msgstr "Configuratie activeren"
 
 msgid "Activate foreign changes"
 msgstr "Buitenlandse wijzigingen activeren"
@@ -16595,6 +16593,14 @@ msgstr ""
 "Het uitschakelen van het wachtwoord zal voorkomen dat een gebruiker inlogt "
 "terwijl het oorspronkelijke wachtwoord behouden blijft. Meldingen worden "
 "niet beïnvloed door deze instelling."
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d aanpassingen"
+
+#, fuzzy
+msgid "Discard foreign changes"
+msgstr "Buitenlandse wijzigingen activeren"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -58506,6 +58512,12 @@ msgstr ""
 "gebeurtenisconsole worden geconfigureerd."
 
 msgid ""
+"This permission allows to discard pending changes. Beware that this holds "
+"only for the user's own pending changes, not for those of other users "
+"(foreign changes)."
+msgstr ""
+
+msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
 "Met deze toestemming kunnen gebruikers andere gebruikers naar een andere "
@@ -66896,11 +66908,24 @@ msgstr ""
 "MQTT-broker. Indien niet ingesteld, zal de special agent het primaire adres "
 "van de host gebruiken om verbinding te maken met de MQTT-broker."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
-"of different users might pile up before changes are activate. Only with this "
-"permission a user will be allowed to activate the current configuration if "
-"this situation appears."
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to activate the current configuration "
+"if this situation appears."
+msgstr ""
+"Wanneer meerdere gebruikers parallel met Setup werken, kan het gebeuren dat "
+"meerdere wijzigingen van verschillende gebruikers zich opstapelen voordat de "
+"wijzigingen worden geactiveerd. Alleen met deze toestemming kan een "
+"gebruiker de huidige configuratie activeren als deze situatie zich voordoet."
+
+#, fuzzy
+msgid ""
+"When several users work in parallel with Setup then several pending changes "
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to discard all pending changes, "
+"including foreign ones."
 msgstr ""
 "Wanneer meerdere gebruikers parallel met Setup werken, kan het gebeuren dat "
 "meerdere wijzigingen van verschillende gebruikers zich opstapelen voordat de "
@@ -72270,6 +72295,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Activate Foreign Changes"
+#~ msgstr "Buitenlandse wijzigingen activeren"
 
 #~ msgid "Assume a different IAM role"
 #~ msgstr "Neem een andere IAM rol aan"

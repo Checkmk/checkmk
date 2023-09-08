@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-09-05 17:59+0000\n"
+"PO-Revision-Date: 2023-09-07 06:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -3204,12 +3204,6 @@ msgstr "Check aktivieren (aus: Status der Knoten ignorieren)"
 msgid "Activate Check (off: ignore subscription status)"
 msgstr "Check aktivieren (aus: Subskriptionsstatus ignorieren)"
 
-msgid "Activate Configuration"
-msgstr "Aktiviere Konfiguration"
-
-msgid "Activate Foreign Changes"
-msgstr "Aktiviere fremde Änderungen"
-
 msgid ""
 "Activate HTTP header authentication (Warning: Only activate in trusted "
 "environments, see help for details)"
@@ -3244,6 +3238,10 @@ msgstr "Aktiviere Änderungen für Event Console"
 
 msgid "Activate changes of other users"
 msgstr "Änderungen anderer Nutzer aktivieren"
+
+#, fuzzy
+msgid "Activate configuration"
+msgstr "Aktiviere Konfiguration"
 
 msgid "Activate foreign changes"
 msgstr "Aktiviere fremde Änderungen"
@@ -14034,7 +14032,7 @@ msgid "Custom graph"
 msgstr "Benutzergraph"
 
 msgid "Custom graph timeranges"
-msgstr ""
+msgstr "Benutzerdefinierte Zeiträume für Graphen"
 
 msgid "Custom graphs"
 msgstr "Benutzergraphen"
@@ -14122,7 +14120,7 @@ msgid "Custom states"
 msgstr "Individuelle Zustände"
 
 msgid "Custom time range"
-msgstr ""
+msgstr "BenutzerdefinierterZeitraum"
 
 msgid "Custom time span"
 msgstr "Benutzerdefinierte Zeitspanne"
@@ -16627,6 +16625,14 @@ msgstr ""
 "Deaktivieren des Passworts verhindert, dass sich ein Benutzer während der "
 "Wiederherstellung des Passwortes anmelden kann. Alarme sind von dieser "
 "Einstellung nicht betroffen."
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "Änderung. verwerfen!"
+
+#, fuzzy
+msgid "Discard foreign changes"
+msgstr "Löschen von fremden Änderungen bestätigen"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -24173,6 +24179,9 @@ msgid ""
 "YYYY-MM-DD which are used to define more specific definitions to override "
 "the times configured for the matching weekday."
 msgstr ""
+"Hier können Sie Ausnahme-Zeiträume für bestimmte Daten in der Form JJJJ-MM-"
+"TT angeben, die genutzt werden, um spezifischere Definitionen zu erstellen, "
+"um die für den entsprechenden Wochentag konfigurierten Zeiten zu ersetzen."
 
 msgid ""
 "Here you can specify explicit piggybacked host names or regex patterns to "
@@ -40745,7 +40754,7 @@ msgid "Please enter a valid number"
 msgstr "Bitte geben Sie eine gülige Zahl ein"
 
 msgid "Please enter a valid time of day range"
-msgstr ""
+msgstr "Bitte geben Sie einen gültigen Zeitraum für den Tag ein"
 
 #, python-format
 msgid "Please enter an alias name or description for the site %s."
@@ -58612,6 +58621,12 @@ msgstr ""
 "für die Event Console."
 
 msgid ""
+"This permission allows to discard pending changes. Beware that this holds "
+"only for the user's own pending changes, not for those of other users "
+"(foreign changes)."
+msgstr ""
+
+msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
 "Mit dieser Berechtigung können Benutzer andere Benutzer zu einer anderen "
@@ -67034,11 +67049,24 @@ msgstr ""
 "Broker verwendet. Wenn sie nicht gesetzt ist, verwendet der Spezialagent die "
 "primäre Adresse des Hosts für die Verbindung mit dem MQTT-Broker."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
-"of different users might pile up before changes are activate. Only with this "
-"permission a user will be allowed to activate the current configuration if "
-"this situation appears."
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to activate the current configuration "
+"if this situation appears."
+msgstr ""
+"Wenn mehrere Benutzer parallel mit Setup arbeiten, können sich mehrere "
+"ausstehende Änderungen verschiedener Benutzer anhäufen, bevor die Änderungen "
+"aktiviert werden. Nur mit dieser Berechtigung kann ein Benutzer in diesem "
+"Fall die aktuelle Konfiguration aktivieren."
+
+#, fuzzy
+msgid ""
+"When several users work in parallel with Setup then several pending changes "
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to discard all pending changes, "
+"including foreign ones."
 msgstr ""
 "Wenn mehrere Benutzer parallel mit Setup arbeiten, können sich mehrere "
 "ausstehende Änderungen verschiedener Benutzer anhäufen, bevor die Änderungen "
@@ -72411,6 +72439,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Activate Foreign Changes"
+#~ msgstr "Aktiviere fremde Änderungen"
 
 #~ msgid "Assume a different IAM role"
 #~ msgstr "Vermutlich eine andere IAM Rolle"
@@ -78586,9 +78617,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #~ msgid "Direct access to WATO - the web administration GUI of Check_MK"
 #~ msgstr "Zugriff auf WATO (= Web Administration Tool of Check_MK)"
 
-#~ msgid "Discard Changes!"
-#~ msgstr "Änderung. verwerfen!"
-
 #~ msgid "Discovery mode for Disk IO check"
 #~ msgstr "Erkennungsmodus für Platten I/O-Checks"
 
@@ -82532,9 +82560,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Confirm deletion of snapshot"
 #~ msgstr "Bestätigen Sie das Löschen der Sicherung"
-
-#~ msgid "Confirm discarding foreign changes"
-#~ msgstr "Löschen von fremden Änderungen bestätigen"
 
 #~ msgid "Confirm restore snapshot"
 #~ msgstr "Bestätigen Sie das Wiederherstellen der Sicherung"

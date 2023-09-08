@@ -3117,14 +3117,6 @@ msgid "Activate Check (off: ignore subscription status)"
 msgstr ""
 "チェックをアクティブにします(オフ: サブスクリプションステータスを無視します)"
 
-#, fuzzy
-msgid "Activate Configuration"
-msgstr "状態構成を追加する"
-
-#, fuzzy
-msgid "Activate Foreign Changes"
-msgstr "外国の変更を有効にする"
-
 msgid ""
 "Activate HTTP header authentication (Warning: Only activate in trusted "
 "environments, see help for details)"
@@ -3160,6 +3152,10 @@ msgstr "イベントコンソール構成のアクティブ化された変更"
 
 msgid "Activate changes of other users"
 msgstr "他のユーザーの変更をアクティブ化する"
+
+#, fuzzy
+msgid "Activate configuration"
+msgstr "状態構成を追加する"
 
 msgid "Activate foreign changes"
 msgstr "外国の変更を有効にする"
@@ -16349,6 +16345,14 @@ msgid ""
 msgstr ""
 "パスワードを無効にすると、ユーザーは元のパスワードを保持したままログインでき"
 "なくなります。通知はこの設定の影響を受けません。"
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d の変更"
+
+#, fuzzy
+msgid "Discard foreign changes"
+msgstr "外国の変更を有効にする"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -57546,6 +57550,12 @@ msgstr ""
 "このオプションを使用すると、Checkmkエージェントの特定のセクションをスキップで"
 "きます。"
 
+msgid ""
+"This permission allows to discard pending changes. Beware that this holds "
+"only for the user's own pending changes, not for those of other users "
+"(foreign changes)."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This permission allows users to migrate other users to another connection"
@@ -65687,9 +65697,16 @@ msgstr ""
 
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
-"of different users might pile up before changes are activate. Only with this "
-"permission a user will be allowed to activate the current configuration if "
-"this situation appears."
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to activate the current configuration "
+"if this situation appears."
+msgstr ""
+
+msgid ""
+"When several users work in parallel with Setup then several pending changes "
+"of different users might pile up before changes are activated. Only with "
+"this permission a user will be allowed to discard all pending changes, "
+"including foreign ones."
 msgstr ""
 
 msgid ""
@@ -70870,6 +70887,11 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Activate foreign changes"
+#~ msgid "Activate Foreign Changes"
+#~ msgstr "外国の変更を有効にする"
 
 #~ msgid "Assume a different IAM role"
 #~ msgstr "別のIAMの役割を引き受ける"

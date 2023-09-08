@@ -391,11 +391,11 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role.permissions.get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name: str | None = "perm_yes_default"
+                                icon_name: str | None = "checkmark_bg_white"
                             else:
                                 icon_name = None
                         else:
-                            icon_name = "perm_%s" % (pvalue and "yes" or "no")
+                            icon_name = "checkmark" if pvalue else "cross_bg_white"
 
                         table.cell(role.name, css=["center"])
                         if icon_name:

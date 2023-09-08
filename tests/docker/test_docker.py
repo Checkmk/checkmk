@@ -406,13 +406,23 @@ def test_build_using_local_deb(
     version: CMKVersion,
     caplog: LogCaptureFixture,
 ) -> None:
-    package_path = Path(build_path, _package_name(version))
-    package_path.write_bytes(b"")
-    with pytest.raises(docker.errors.BuildError):
-        caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
-        _build(request, client, version, prepare_package=False)
-    os.unlink(str(package_path))
-    _prepare_package(version)
+    pkg_name = _package_name(version)
+    pkg_path = Path(build_path, pkg_name)
+    pkg_path_sav = Path(build_path, f"{pkg_name}.sav")
+    try:
+        os.rename(pkg_path, pkg_path_sav)
+        pkg_path.write_bytes(b"")
+        with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
+            _build(request, client, version, prepare_package=False)
+        os.unlink(pkg_path)
+        _prepare_package(version)
+    finally:
+        try:
+            os.unlink(pkg_path)
+        except FileNotFoundError:
+            pass
+        os.rename(pkg_path_sav, pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
@@ -422,20 +432,18 @@ def test_build_using_local_gpg_pubkey(
     version: CMKVersion,
     caplog: LogCaptureFixture,
 ) -> None:
-    pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
-    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
+    key_name = "Check_MK-pubkey.gpg"
+    key_path = Path(build_path, key_name)
+    key_path_sav = Path(build_path, f"{key_name}.sav")
     try:
-        os.rename(pkg_path, pkg_path_sav)
-
-        with open(pkg_path, "w") as f:
-            f.write("")
-
+        os.rename(key_path, key_path_sav)
+        key_path.write_text("")
         with pytest.raises(docker.errors.BuildError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             _build(request, client, version)
     finally:
-        os.unlink(pkg_path)
-        os.rename(pkg_path_sav, pkg_path)
+        os.unlink(key_path)
+        os.rename(key_path_sav, key_path)
 
 
 def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:

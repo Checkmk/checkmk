@@ -75,7 +75,7 @@ GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PA
 # * update test_03_pip_interpreter_version
 # * update omd/Licenses.csv, too.
 # * you may need to regenerate the Pipfile.lock with "make --what-if Pipfile Pipfile.lock"
-PYTHON_VERSION  := 3.11.5
+PYTHON_VERSION  := 3.11.2
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))

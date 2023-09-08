@@ -73,19 +73,19 @@ private:
 template <class T>
 class BlobFileReader {
 public:
-    BlobFileReader(std::function<std::filesystem::path()> basepath,
-                   std::function<std::filesystem::path(const T &)> filepath)
+    BlobFileReader(std::function<std::filesystem::path(const T &)> basepath,
+                   std::function<std::filesystem::path()> filepath)
         : _basepath{std::move(basepath)}
         , _filepath{std::move(filepath)}
         , _logger{"cmk.livestatus"} {}
 
     std::vector<char> operator()(const T &data) const {
-        const auto basepath = _basepath();
+        const auto basepath = _basepath(data);
         if (!std::filesystem::exists(basepath)) {
             // The basepath is not configured.
             return {};
         }
-        auto filepath = _filepath(data);
+        auto filepath = _filepath();
         auto path = filepath.empty() ? basepath : basepath / filepath;
         if (!std::filesystem::is_regular_file(path)) {
             Debug(logger()) << path << " is not a regular file";
@@ -119,8 +119,8 @@ public:
     Logger *logger() const { return &_logger; }
 
 private:
-    const std::function<std::filesystem::path()> _basepath;
-    const std::function<std::filesystem::path(const T &)> _filepath;
+    const std::function<std::filesystem::path(const T &)> _basepath;
+    const std::function<std::filesystem::path()> _filepath;
     mutable ThreadNameLogger _logger;
 };
 

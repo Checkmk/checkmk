@@ -628,24 +628,28 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
-        BlobFileReader<IHost>{
-            [mc]() { return mc->paths()->inventory_directory(); },
-            [](const IHost &r) { return std::filesystem::path{r.name()}; }}));
+        BlobFileReader<IHost>{[mc](const IHost &r) {
+                                  return mc->paths()->inventory_directory() /
+                                         r.name();
+                              },
+                              []() { return std::filesystem::path{}; }}));
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
-        BlobFileReader<IHost>{
-            [mc]() { return mc->paths()->inventory_directory(); },
-            [](const IHost &r) {
-                return std::filesystem::path{r.name() + ".gz"};
-            }}));
+        BlobFileReader<IHost>{[mc](const IHost &r) {
+                                  return mc->paths()->inventory_directory() /
+                                         (r.name() + ".gz");
+                              },
+                              []() { return std::filesystem::path{}; }}));
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets,
         BlobFileReader<IHost>{
-            [mc]() { return mc->paths()->structured_status_directory(); },
-            [](const IHost &r) { return std::filesystem::path{r.name()}; }}));
+            [mc](const IHost &r) {
+                return mc->paths()->structured_status_directory() / r.name();
+            },
+            []() { return std::filesystem::path{}; }}));
     table->addColumn(std::make_unique<ListColumn<IHost>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
@@ -660,10 +664,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<IHost>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
-        [mc]() { return mc->paths()->logwatch_directory(); },
-        [](const IHost & /*r*/, const std::string &args) {
-            return std::filesystem::path{args};
-        }));
+        [mc](const IHost & /*r*/) { return mc->paths()->logwatch_directory(); },
+        [](const std::string &args) { return std::filesystem::path{args}; }));
 
     table->addColumn(std::make_unique<DoubleColumn<IHost>>(
         prefix + "staleness", "The staleness of this object", offsets,

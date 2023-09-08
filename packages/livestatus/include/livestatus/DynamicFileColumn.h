@@ -24,17 +24,15 @@ public:
     DynamicFileColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets,
-        std::function<std::filesystem::path()> basepath,
-        std::function<std::filesystem::path(const T &, const std::string &args)>
-            filepath);
+        std::function<std::filesystem::path(const T &)> basepath,
+        std::function<std::filesystem::path(const std::string &args)> filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
-    [[nodiscard]] std::filesystem::path basepath() const;
+    [[nodiscard]] std::filesystem::path basepath(const T &) const;
 
 private:
-    const std::function<std::filesystem::path()> _basepath;
-    const std::function<std::filesystem::path(const T &,
-                                              const std::string &args)>
+    const std::function<std::filesystem::path(const T &)> _basepath;
+    const std::function<std::filesystem::path(const std::string &args)>
         _filepath;
 };
 
@@ -42,17 +40,17 @@ template <class T>
 DynamicFileColumn<T>::DynamicFileColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets,
-    std::function<std::filesystem::path()> basepath,
-    std::function<std::filesystem::path(const T &, const std::string &)>
-        filepath)
+    std::function<std::filesystem::path(const T &)> basepath,
+    std::function<std::filesystem::path(const std::string &)> filepath)
     : DynamicColumn(name, description, offsets)
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 
 template <class T>
-[[nodiscard]] std::filesystem::path DynamicFileColumn<T>::basepath() const {
+[[nodiscard]] std::filesystem::path DynamicFileColumn<T>::basepath(
+    const T &data) const {
     // This delays the call to mc to after it is constructed.
-    return _basepath();
+    return _basepath(data);
 }
 
 template <class T>
@@ -66,8 +64,7 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
     const std::filesystem::path f{mk::unescape_filename(arguments)};
     return std::make_unique<BlobColumn<T>>(
         name, _description, _offsets,
-        BlobFileReader<T>{_basepath,
-                          [this, f](const T &r) { return _filepath(r, f); }});
+        BlobFileReader<T>{_basepath, [this, f]() { return _filepath(f); }});
 }
 
 #endif  // DynamicFileColumn_h

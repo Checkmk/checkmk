@@ -137,6 +137,7 @@ module = [
     "cmk.notification_plugins.*",
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
+    "cmk.utils.livestatus_helpers.*",
     "tests.gui_e2e.*",
     "tests.testlib.*",
     "tests.unit.cmk.ec.*",

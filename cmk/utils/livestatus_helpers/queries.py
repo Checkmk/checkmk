@@ -5,7 +5,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, NoReturn
 
 from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites, SiteId
 
@@ -18,7 +18,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     Or,
     QueryExpression,
 )
-from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, Table
+from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, ExpressionDict, Table
 
 # TODO: Support Stats headers in Query() class
 
@@ -83,10 +83,10 @@ class ResultRow(dict):
         except KeyError as exc:
             raise AttributeError(str(exc))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: object, value: object) -> NoReturn:
         raise KeyError(f"{key}: Setting of keys not allowed.")
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: object, value: object) -> NoReturn:
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
@@ -115,13 +115,14 @@ def _get_column(table_class: type[Table], col: str) -> Column:
         A column instance
 
     """
-    if hasattr(table_class, col):
-        return getattr(table_class, col)
-
-    prefix = table_class.__tablename__.rstrip("s") + "_"
-    while col.startswith(prefix):
-        col = col[len(prefix) :]
-    return getattr(table_class, col)
+    if not hasattr(table_class, col):
+        prefix = table_class.__tablename__.rstrip("s") + "_"
+        while col.startswith(prefix):
+            col = col[len(prefix) :]
+    value = getattr(table_class, col)
+    if not isinstance(value, Column):
+        raise ValueError(f"{table_class}.{col} is not a Column")
+    return value
 
 
 class Query:
@@ -525,7 +526,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ]
         )
 
-    def dict_repr(self):
+    def dict_repr(self) -> ExpressionDict | None:
         return expr_to_tree(self.table, self.filter_expr)
 
     @classmethod
@@ -758,7 +759,9 @@ def _parse_line(
 
 # TODO: Better rename to site_aware_connection or similar more meaningful
 @contextmanager
-def detailed_connection(connection):
+def detailed_connection(
+    connection: MultiSiteConnection,
+) -> Generator[MultiSiteConnection, None, None]:
     prev = connection.prepend_site
     connection.set_prepend_site(True)
     try:

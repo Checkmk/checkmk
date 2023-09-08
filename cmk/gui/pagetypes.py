@@ -812,15 +812,12 @@ class Overridable(Base[_T_OverridableSpec]):
         return {}
 
     @classmethod
-    def load(cls) -> OverridableInstances[Self]:
-        instances = OverridableInstances[Self]()
+    def load_raw(cls) -> Mapping[InstanceId, dict[str, object]]:
+        # For (config) updates we need the raw data.
+        # We use 'dict' for the (inner) page_dict in order to allow in-place modifications
+        # for simplicity.
+        page_dicts_by_instance_id: dict[InstanceId, dict[str, object]] = {}
 
-        # First load builtin pages. Set username to ''
-        for name, page_dict in cls.builtin_pages().items():
-            new_page = cls(page_dict)
-            instances.add_instance((page_dict["owner"], name), new_page)
-
-        # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
             for profile_path in cmk.utils.paths.profile_dir.iterdir():
                 try:
@@ -841,12 +838,27 @@ class Overridable(Base[_T_OverridableSpec]):
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name
-                        instances.add_instance((user_id, name), cls.deserialize(page_dict))
+                        page_dicts_by_instance_id[(user_id, name)] = page_dict
 
                 except SyntaxError as e:
                     raise MKGeneralException(
                         _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
                     )
+
+        return page_dicts_by_instance_id
+
+    @classmethod
+    def load(cls) -> OverridableInstances[Self]:
+        instances = OverridableInstances[Self]()
+
+        # First load builtin pages. Set username to ''
+        for name, page_dict in cls.builtin_pages().items():
+            new_page = cls(page_dict)
+            instances.add_instance((page_dict["owner"], name), new_page)
+
+        # Now scan users subdirs for files "user_$type_name.mk"
+        for (user_id, name), raw_page_dict in cls.load_raw().items():
+            instances.add_instance((user_id, name), cls.deserialize(raw_page_dict))
 
         cls._declare_instance_permissions(instances)
         return instances

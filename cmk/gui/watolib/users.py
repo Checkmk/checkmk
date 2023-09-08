@@ -16,9 +16,8 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.userdb.utils import add_internal_attributes
 from cmk.gui.type_defs import UserObject, Users, UserSpec
-from cmk.gui.userdb import get_user_attributes
+from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change

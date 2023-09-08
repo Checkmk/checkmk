@@ -28,11 +28,6 @@ from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
 
-# count this up, if new user attributes are used or old are marked as
-# incompatible
-# 0 -> 1 _remove_flexible_notifications() in 2.2
-USER_SCHEME_SERIAL = 1
-
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
@@ -111,21 +106,6 @@ def _transform_userdb_automatic_sync(val):
         return "all"
 
     return val
-
-
-def new_user_template(connection_id: str) -> UserSpec:
-    new_user = UserSpec(
-        serial=0,
-        connector=connection_id,
-    )
-
-    # Apply the default user profile
-    new_user.update(active_config.default_user_profile)
-    return new_user
-
-
-def add_internal_attributes(usr: UserSpec) -> int:
-    return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
 def show_mode_choices() -> list[tuple[str | None, str]]:

@@ -65,14 +65,12 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
-    add_internal_attributes,
     CheckCredentialsResult,
     connections_by_type,
     ConnectorType,
     get_connection,
     load_cached_profile,
     load_roles,
-    new_user_template,
     release_users_lock,
     user_sync_config,
     UserConnector,
@@ -96,6 +94,7 @@ from cmk.gui.valuespec import (
 )
 
 from ._user_attribute import get_user_attributes
+from ._user_spec import add_internal_attributes, new_user_template
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module

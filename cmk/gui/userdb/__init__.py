@@ -8,7 +8,6 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     ConnectorType,
     get_connection,
-    new_user_template,
     user_sync_config,
     UserConnector,
 )
@@ -44,6 +43,9 @@ from ._user_attribute import user_attribute_registry as user_attribute_registry
 from ._user_attribute import UserAttribute as UserAttribute
 from ._user_attribute import UserAttributeRegistry as UserAttributeRegistry
 from ._user_selection import UserSelection as UserSelection
+from ._user_spec import add_internal_attributes as add_internal_attributes
+from ._user_spec import new_user_template as new_user_template
+from ._user_spec import USER_SCHEME_SERIAL as USER_SCHEME_SERIAL
 from ._user_sync import UserSyncBackgroundJob as UserSyncBackgroundJob
 from .session import is_valid_user_session, load_session_infos
 from .store import (

@@ -43,7 +43,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
-    add_internal_attributes,
     get_connection,
     load_cached_profile,
     release_users_lock,
@@ -54,6 +53,7 @@ from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.roles import roles_of_user
 
 from ._user_attribute import get_user_attributes
+from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
 

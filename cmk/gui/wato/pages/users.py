@@ -43,11 +43,16 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import active_connections, get_connection, new_user_template
+from cmk.gui.plugins.userdb.utils import active_connections, get_connection
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
-from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
+from cmk.gui.userdb import (
+    get_user_attributes,
+    get_user_attributes_by_topic,
+    new_user_template,
+    UserAttribute,
+)
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML

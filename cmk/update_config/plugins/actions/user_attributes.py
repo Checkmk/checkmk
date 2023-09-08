@@ -6,9 +6,8 @@
 from datetime import datetime
 from logging import Logger
 
-from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_users, save_users, Users, UserSpec
+from cmk.gui.userdb import load_users, save_users, USER_SCHEME_SERIAL, Users, UserSpec
 from cmk.gui.watolib.global_settings import load_configuration_settings
 
 from cmk.update_config.registry import update_action_registry, UpdateAction

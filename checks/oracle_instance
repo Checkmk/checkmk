@@ -97,7 +97,7 @@ def parse_oracle_instance(info):
     parsed = {}
 
     for line in info:
-        if not line:
+        if not line or len(line) == 1:
             continue
 
         # Skip ORA- error messages from broken old oracle agent

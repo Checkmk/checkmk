@@ -434,10 +434,10 @@ class ModeUsers(WatoMode):
                     last_seen = userdb.get_last_activity(user_spec)
                     if last_seen >= online_threshold:
                         title = _("Online")
-                        img_txt = "online"
+                        img_txt = "checkmark"
                     elif last_seen != 0:
                         title = _("Offline")
-                        img_txt = "offline"
+                        img_txt = "hyphen"
                     elif last_seen == 0:
                         title = _("Never logged in")
                         img_txt = "inactive"

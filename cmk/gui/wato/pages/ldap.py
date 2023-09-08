@@ -874,9 +874,9 @@ class ModeEditLDAPConnection(WatoMode):
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
-                            img = html.render_icon("success", _("Success"))
+                            img = html.render_icon("checkmark", _("Success"))
                         else:
-                            img = html.render_icon("failed", _("Failed"))
+                            img = html.render_icon("cross", _("Failed"))
 
                         table.cell(_("Test"), title)
                         table.cell(_("State"), img)

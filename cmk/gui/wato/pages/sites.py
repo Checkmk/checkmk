@@ -946,7 +946,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         status = replication_status[site_id]
         if status.success:
             assert not isinstance(status.response, Exception)
-            icon = "success"
+            icon = "checkmark"
             msg = _("Online (%s)") % make_site_version_info(
                 status.response.version,
                 status.response.edition,
@@ -954,7 +954,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             )
         else:
             assert isinstance(status.response, Exception)
-            icon = "failed"
+            icon = "cross"
             msg = "%s" % status.response
 
         return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
@@ -973,7 +973,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         else:
             message = status_msg.title()
 
-        icon = "success" if status == "online" else "failed"
+        icon = "checkmark" if status == "online" else "cross"
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )

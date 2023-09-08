@@ -62,11 +62,11 @@ class MkeventdIcon(Icon):
         if not args:
             return
 
-        # Handle -a and -H options. Sorry for the hack. We currently
+        # Handle -a, -H and -L options. Sorry for the hack. We currently
         # have no better idea
         if len(args) >= 2 and args[0] == '-H':
             args = args[2:]  # skip two arguments
-        if len(args) >= 1 and args[0] == '-a':
+        if len(args) >= 1 and args[0] in ["-a", "-L", "-l"]:
             args = args[1:]
 
         if len(args) >= 1:

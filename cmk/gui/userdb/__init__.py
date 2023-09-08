@@ -62,6 +62,9 @@ from .store import (
     load_multisite_users,
     load_user,
     load_users,
+)
+from .store import release_users_lock as release_users_lock
+from .store import (
     remove_custom_attr,
     rewrite_users,
     save_custom_attr,

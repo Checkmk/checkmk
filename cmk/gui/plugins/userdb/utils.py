@@ -21,7 +21,6 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import Users, UserSpec
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
@@ -30,24 +29,8 @@ UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
 CheckCredentialsResult = UserId | None | Literal[False]
 
 
-def load_cached_profile(user_id: UserId) -> UserSpec | None:
-    return LoggedInUser(user_id).load_file("cached_profile", None)
-
-
-def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
-    save_user_file("cached_profile", cached_profile, user_id=user_id)
-
-
 def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
-
-
-def _root_dir() -> str:
-    return cmk.utils.paths.check_mk_config_dir + "/wato/"
-
-
-def release_users_lock() -> None:
-    store.release_lock(_root_dir() + "contacts.mk")
 
 
 # Old vs:

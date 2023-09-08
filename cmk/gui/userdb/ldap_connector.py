@@ -69,9 +69,7 @@ from cmk.gui.plugins.userdb.utils import (
     connections_by_type,
     ConnectorType,
     get_connection,
-    load_cached_profile,
     load_roles,
-    release_users_lock,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -95,6 +93,7 @@ from cmk.gui.valuespec import (
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
 from ._user_sync import user_sync_config
+from .store import load_cached_profile, release_users_lock
 
 if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module

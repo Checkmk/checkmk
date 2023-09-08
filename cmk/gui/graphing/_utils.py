@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
+import abc
 import colorsys
 import http
 import random
@@ -767,6 +768,28 @@ class RPNExpression:
     color: str
 
 
+class ABCMetricOperation(abc.ABC):
+    @abc.abstractmethod
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        raise NotImplementedError()
+
+
+@dataclass(frozen=True)
+class ConstantInt(ABCMetricOperation):
+    value: int
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(float(self.value), unit_info["count"], "#000000")
+
+
+@dataclass(frozen=True)
+class ConstantFloat(ABCMetricOperation):
+    value: float
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(self.value, unit_info[""], "#000000")
+
+
 RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
 
 
@@ -876,12 +899,12 @@ def _apply_operator(
 def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) -> RPNExpression:
     if expression not in translated_metrics:
         try:
-            return RPNExpression(float(int(expression)), unit_info["count"], "#000000")
+            return ConstantInt(int(expression)).evaluate(translated_metrics)
         except ValueError:
             pass
 
         try:
-            return RPNExpression(float(expression), unit_info[""], "#000000")
+            return ConstantFloat(float(expression)).evaluate(translated_metrics)
         except ValueError:
             pass
 
@@ -938,10 +961,10 @@ def evaluate(
     translated_metrics: TranslatedMetrics,
 ) -> RPNExpression:
     if isinstance(expression, int):
-        return RPNExpression(float(expression), unit_info["count"], "#000000")
+        return ConstantInt(expression).evaluate(translated_metrics)
 
     if isinstance(expression, float):
-        return RPNExpression(expression, unit_info[""], "#000000")
+        return ConstantFloat(expression).evaluate(translated_metrics)
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
 

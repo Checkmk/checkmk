@@ -7,8 +7,7 @@ import re
 from copy import copy
 from logging import Logger
 
-from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
-from cmk.gui.userdb import load_users, save_users
+from cmk.gui.userdb import load_connection_config, load_users, save_connection_config, save_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState

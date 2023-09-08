@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from collections.abc import Sequence
 from typing import Any, Callable
+
+import cmk.utils.plugin_registry
+import cmk.utils.store as store
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 
 from ._connector import ConnectorType, user_connector_registry, UserConnector
+
+UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
 
 
 @request_memoize(maxsize=None)
@@ -106,3 +112,42 @@ def _get_attributes(
 ) -> Sequence[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
+
+
+def _multisite_dir() -> str:
+    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+
+
+def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
+    """Load the configured connections for the Setup
+
+    Note:
+        This function should only be used in the Setup context, when configuring
+        the connections. During UI rendering, `active_config.user_connections` must
+        be used.
+    """
+    filename = os.path.join(_multisite_dir(), "user_connections.mk")
+    return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+
+
+def save_connection_config(
+    connections: list[UserConnectionSpec], base_dir: str | None = None
+) -> None:
+    """Save the connections for the Setup
+
+    Note:
+        This function should only be used in the Setup context, when configuring
+        the connections. During UI rendering, `active_config.user_connections` must
+        be used.
+    """
+    if not base_dir:
+        base_dir = _multisite_dir()
+    store.mkdir(base_dir)
+    store.save_to_mk_file(
+        os.path.join(base_dir, "user_connections.mk"), "user_connections", connections
+    )
+
+    for connector_class in user_connector_registry.values():
+        connector_class.config_changed()
+
+    clear_user_connection_cache()

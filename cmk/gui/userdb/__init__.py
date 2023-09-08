@@ -20,9 +20,12 @@ from ._connections import clear_user_connection_cache as clear_user_connection_c
 from ._connections import connection_choices as connection_choices
 from ._connections import connections_by_type as connections_by_type
 from ._connections import get_connection as get_connection
+from ._connections import load_connection_config as load_connection_config
 from ._connections import locked_attributes as locked_attributes
 from ._connections import multisite_attributes as multisite_attributes
 from ._connections import non_contact_attributes as non_contact_attributes
+from ._connections import save_connection_config as save_connection_config
+from ._connections import UserConnectionSpec as UserConnectionSpec
 from ._connector import CheckCredentialsResult as CheckCredentialsResult
 from ._connector import ConnectorType as ConnectorType
 from ._connector import user_connector_registry as user_connector_registry

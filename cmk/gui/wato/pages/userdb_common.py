@@ -27,14 +27,10 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import (
-    load_connection_config,
-    save_connection_config,
-    UserConnectionSpec,
-)
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage

@@ -13,8 +13,6 @@ from typing_extensions import TypedDict
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
-import cmk.gui.plugins.userdb.utils as userdb_utils
-from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
@@ -28,7 +26,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import ConnectorType, htpasswd
+from cmk.gui.userdb import ConnectorType, htpasswd, load_connection_config, load_users
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
 
@@ -97,7 +95,7 @@ def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
     users = []
-    for user_id, attrs in userdb.load_users(False).items():
+    for user_id, attrs in load_users(False).items():
         user_attributes = _internal_to_api_format(attrs)
         users.append(serialize_user(user_id, complement_customer(user_attributes)))
 
@@ -351,7 +349,7 @@ def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
                 result["enforce_password_change"] = enforce_password_change
         return result
 
-    for connection in userdb_utils.load_connection_config():
+    for connection in load_connection_config():
         if connection["id"] == connector:
             result["auth_type"] = connection["type"]
 
@@ -641,7 +639,7 @@ def _load_user(username: UserId) -> UserSpec:
     CAUTION: the UserSpec contains sensitive data like password hashes"""
 
     # TODO: verify additional edge cases
-    return userdb.load_users(lock=False)[username]
+    return load_users(lock=False)[username]
 
 
 class TimeRange(TypedDict):

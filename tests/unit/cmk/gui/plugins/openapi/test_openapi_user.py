@@ -1102,7 +1102,7 @@ def fixture_mock_user_connections_config(mocker: MockerFixture) -> MagicMock:
 
     """
     return mocker.patch(
-        "cmk.gui.plugins.userdb.utils.load_connection_config",
+        "cmk.gui.plugins.openapi.endpoints.user_config.load_connection_config",
         # not reflective of actual SAML connector
         return_value=[{"id": MOCK_SAML_CONNECTOR_NAME, "name": "bla", "type": "saml2"}],
     )

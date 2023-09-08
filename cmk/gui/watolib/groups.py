@@ -18,8 +18,6 @@ from cmk.utils.timeperiod import timeperiod_spec_alias
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
-import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
     AllGroupSpecs,
@@ -36,6 +34,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.userdb import load_roles, load_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
@@ -246,7 +245,7 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
 def _find_usages_of_contact_group_in_users(name: GroupName) -> list[tuple[str, str]]:
     """Is the contactgroup assigned to a user?"""
     used_in = []
-    users = userdb.load_users()
+    users = load_users()
     for userid, user_spec in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
         cgs = user_spec.get("contactgroups", [])
         if name in cgs:
@@ -435,7 +434,7 @@ def is_alias_used(
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
-    roles = userdb_utils.load_roles()
+    roles = load_roles()
     for key, value in roles.items():
         if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key

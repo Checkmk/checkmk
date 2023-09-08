@@ -16,13 +16,10 @@ import cmk.utils.store as store
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.i18n import _
 from cmk.gui.type_defs import Users, UserSpec
 
-RoleSpec = dict[str, Any]  # TODO: Improve this type
-Roles = dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
 CheckCredentialsResult = UserId | None | Literal[False]
 
@@ -167,61 +164,6 @@ def save_connection_config(
         connector_class.config_changed()
 
     clear_user_connection_cache()
-
-
-# .
-#   .-Roles----------------------------------------------------------------.
-#   |                       ____       _                                   |
-#   |                      |  _ \ ___ | | ___  ___                         |
-#   |                      | |_) / _ \| |/ _ \/ __|                        |
-#   |                      |  _ < (_) | |  __/\__ \                        |
-#   |                      |_| \_\___/|_|\___||___/                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
-def load_roles() -> Roles:
-    roles = store.load_from_mk_file(
-        os.path.join(_multisite_dir(), "roles.mk"),
-        "roles",
-        default=_get_builtin_roles(),
-    )
-
-    # Make sure that "general." is prefixed to the general permissions
-    # (due to a code change that converted "use" into "general.use", etc.
-    # TODO: Can't we drop this? This seems to be from very early days of the GUI
-    for role in roles.values():
-        for pname, pvalue in role["permissions"].items():
-            if "." not in pname:
-                del role["permissions"][pname]
-                role["permissions"]["general." + pname] = pvalue
-
-    # Reflect the data in the roles dict kept in the config module needed
-    # for instant changes in current page while saving modified roles.
-    # Otherwise the hooks would work with old data when using helper
-    # functions from the config module
-    # TODO: load_roles() should not update global structures
-    active_config.roles.update(roles)
-
-    return roles
-
-
-def _get_builtin_roles() -> Roles:
-    """Returns a role dictionary containing the bultin default roles"""
-    builtin_role_names = {
-        "admin": _("Administrator"),
-        "user": _("Normal monitoring user"),
-        "guest": _("Guest user"),
-        "agent_registration": _("Agent registration user"),
-    }
-    return {
-        rid: {
-            "alias": builtin_role_names.get(rid, rid),
-            "permissions": {},  # use default everywhere
-            "builtin": True,
-        }
-        for rid in builtin_role_ids
-    }
 
 
 # .

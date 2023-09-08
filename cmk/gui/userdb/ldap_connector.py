@@ -69,7 +69,6 @@ from cmk.gui.plugins.userdb.utils import (
     connections_by_type,
     ConnectorType,
     get_connection,
-    load_roles,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -90,6 +89,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
+from ._roles import load_roles
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
 from ._user_sync import user_sync_config

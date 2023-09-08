@@ -10,17 +10,15 @@ from typing import NewType
 
 from marshmallow import ValidationError
 
-import cmk.utils.store as store
+from cmk.utils import store
 
-import cmk.gui.hooks as hooks
-import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.userdb as userdb
-import cmk.gui.userdb.store as userdb_store
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import UserRole, Users
+from cmk.gui.userdb import load_roles, load_users, save_users
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -58,7 +56,7 @@ def clone_role(
 
 
 def get_all_roles() -> dict[RoleID, UserRole]:
-    stored_roles: dict[str, dict] = userdb_utils.load_roles()
+    stored_roles: dict[str, dict] = load_roles()
     return {
         RoleID(roleid): UserRole(name=roleid, **params) for roleid, params in stored_roles.items()
     }
@@ -85,7 +83,7 @@ def delete_role(role_id: RoleID) -> None:
         raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
     # Check if currently being used by a user
-    users: Users = userdb.load_users()
+    users: Users = load_users()
     for user in users.values():
         if role_id in user["roles"]:
             raise MKUserError(
@@ -115,13 +113,13 @@ def save_all_roles(all_roles: dict[RoleID, UserRole]) -> None:
 
 
 def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
-    users = userdb.load_users(lock=True)
+    users = load_users(lock=True)
     for user in users.values():
         if role_id in user["roles"]:
             user["roles"].remove(role_id)
             if new_role_id:
                 user["roles"].append(new_role_id)
-    userdb_store.save_users(users, datetime.now())
+    save_users(users, datetime.now())
 
 
 def validate_new_alias(old_alias: str, new_alias: str) -> None:

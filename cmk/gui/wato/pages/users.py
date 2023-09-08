@@ -50,6 +50,7 @@ from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     get_user_attributes,
     get_user_attributes_by_topic,
+    load_roles,
     new_user_template,
     UserAttribute,
 )
@@ -371,7 +372,7 @@ class ModeUsers(WatoMode):
 
         html.begin_form("bulk_delete_form", method="POST")
 
-        roles = userdb_utils.load_roles()
+        roles = load_roles()
         contact_groups = load_contact_group_information()
 
         html.div("", id_="row_info")
@@ -617,7 +618,7 @@ class ModeEditUser(WatoMode):
         # boxes and to check for validity.
         self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
-        self._roles = userdb_utils.load_roles()
+        self._roles = load_roles()
         self._user_id: UserId | None
 
         if edition() is Edition.CME:

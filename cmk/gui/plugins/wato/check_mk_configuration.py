@@ -16,7 +16,6 @@ from cmk.utils.version import edition, Edition
 
 from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import load_contact_group_information
@@ -49,7 +48,7 @@ from cmk.gui.plugins.wato.utils import (
     ServiceRulespec,
     UserIconOrAction,
 )
-from cmk.gui.userdb import show_mode_choices, validate_start_url
+from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -2529,7 +2528,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         )
 
     def _list_roles(self):
-        roles = userdb_utils.load_roles()
+        roles = load_roles()
         return [(i, r["alias"]) for i, r in roles.items()]
 
     def _list_contactgroups(self):

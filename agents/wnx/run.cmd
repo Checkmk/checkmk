@@ -57,6 +57,9 @@ if "%~1"=="--msi"           (set arg_msi=1)          & shift & goto CheckOpts
 if "%~1"=="-O"              (set arg_ohm=1)          & shift & goto CheckOpts
 if "%~1"=="--ohm"           (set arg_ohm=1)          & shift & goto CheckOpts
 
+if "%~1"=="-S"              (set arg_sql_check=1)   & shift & goto CheckOpts
+if "%~1"=="--sql-check"     (set arg_sql_check=1)   & shift & goto CheckOpts
+
 if "%~1"=="-E"              (set arg_ext=1)          & shift & goto CheckOpts
 if "%~1"=="--extensions"    (set arg_ext=1)          & shift & goto CheckOpts
 
@@ -70,7 +73,7 @@ if "%~1"=="--detach"        (set arg_detach=1)       & shift & goto CheckOpts
 
 if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
-if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_ext=1) & (set arg_msi=1)
+if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_sql_check=1) & (set arg_ext=1) & (set arg_msi=1)
 
 
 
@@ -110,6 +113,9 @@ call :unit_test
 
 :: arg_ctl
 call :build_agent_controller
+
+:: arg_sql_check
+call :build_sql_check
 
 :: arg_ohm
 call :build_ohm
@@ -230,7 +236,16 @@ if not "%arg_ctl%" == "1" powershell Write-Host "Skipped Controller Build" -Fore
 powershell Write-Host "run:Building Agent Controller..." -Foreground White
 pushd ..\..\packages\cmk-agent-ctl
 call run.cmd --all
-if not %errorlevel% == 0 powershell Write-Host "Failed Cargo Build" -Foreground Red && popd & call :halt 72
+if not %errorlevel% == 0 powershell Write-Host "Failed Controller Build" -Foreground Red && popd & call :halt 72
+popd
+goto :eof
+
+:build_sql_check
+if not "%arg_sql_check%" == "1" powershell Write-Host "Skipped Sql Check Build" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building Agent Controller..." -Foreground White
+pushd ..\..\packages\database_checks\sql_check
+call run.cmd --build
+if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
 popd
 goto :eof
 

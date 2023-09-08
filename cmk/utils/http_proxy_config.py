@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from typing import Protocol
 
 
 class HTTPProxyConfig(Protocol):
-    def to_requests_proxies(self) -> Mapping[str, str] | None:
+    def to_requests_proxies(self) -> MutableMapping[str, str] | None:
         ...
 
     def serialize(self) -> str:
@@ -36,7 +35,7 @@ class EnvironmentProxyConfig:
 class NoProxyConfig:
     SERIALIZED = "NO_PROXY"
 
-    def to_requests_proxies(self) -> Mapping[str, str]:
+    def to_requests_proxies(self) -> dict[str, str]:
         return {
             "http": "",
             "https": "",
@@ -53,7 +52,7 @@ class ExplicitProxyConfig:
     def __init__(self, url: str) -> None:
         self._url = url
 
-    def to_requests_proxies(self) -> Mapping[str, str]:
+    def to_requests_proxies(self) -> dict[str, str]:
         return {
             "http": self._url,
             "https": self._url,

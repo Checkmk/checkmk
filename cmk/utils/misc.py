@@ -10,7 +10,7 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from collections.abc import Callable, Iterator, Mapping, MutableMapping
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -94,9 +94,3 @@ def cachefile_age(path: Path | str) -> float:
         path = Path(path)
 
     return time.time() - path.stat().st_mtime
-
-
-def typeshed_issue_7724(x: Mapping[str, str] | None) -> MutableMapping[str, str] | None:
-    """Temporary workaround for https://github.com/python/typeshed/issues/7724
-    TODO: Remove this when the issue a above is fixed!"""
-    return None if x is None else dict(x)

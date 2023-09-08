@@ -27,7 +27,6 @@ from dateutil import parser as dateutil_parser
 
 from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
@@ -253,7 +252,7 @@ class ImplDatadogAPI:
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
-            proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
+            proxies=self._proxy.to_requests_proxies(),
         )
 
     def post_request(
@@ -266,7 +265,7 @@ class ImplDatadogAPI:
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             json=body,
-            proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
+            proxies=self._proxy.to_requests_proxies(),
         )
 
 

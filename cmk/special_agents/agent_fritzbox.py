@@ -37,8 +37,6 @@ from typing import Final
 
 import requests
 
-from cmk.utils.misc import typeshed_issue_7724
-
 from cmk.special_agents.utils import vcrtrace
 
 UPNPInfo = tuple[Mapping[str, str], str, str]
@@ -131,7 +129,7 @@ class FritzConnection:
         return self._session.post(
             f"{self._urls[self._urlidx]}{url}",
             data=data,
-            headers=typeshed_issue_7724(headers),
+            headers=headers,
             timeout=self._timeout,
         )
 

@@ -5,7 +5,7 @@
 
 import io
 import stat
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 from pathlib import Path
 from uuid import uuid4
 from zlib import compress
@@ -23,8 +23,6 @@ from pydantic import UUID4
 from pytest_mock import MockerFixture
 
 from tests.testlib.certs import generate_csr_pair
-
-from cmk.utils.misc import typeshed_issue_7724
 
 
 @pytest.fixture(name="symlink_push_host")
@@ -556,7 +554,7 @@ def test_register_new_ongoing_success(
 
 
 @pytest.fixture(name="agent_data_headers")
-def fixture_agent_data_headers(uuid: UUID4) -> Mapping[str, str]:
+def fixture_agent_data_headers(uuid: UUID4) -> dict[str, str]:
     return {
         "compression": "zlib",
         "verified-uuid": str(uuid),
@@ -571,12 +569,12 @@ def fixture_compressed_agent_data() -> io.BytesIO:
 def test_agent_data_uuid_mismatch(
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     response = client.post(
         "/agent_data/123",
-        headers=typeshed_issue_7724(agent_data_headers),
+        headers=dict(agent_data_headers),
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
     assert response.status_code == 400
@@ -588,12 +586,12 @@ def test_agent_data_uuid_mismatch(
 def test_agent_data_no_host(
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
     assert response.status_code == 403
@@ -604,7 +602,7 @@ def test_agent_data_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
@@ -612,7 +610,7 @@ def test_agent_data_pull_host(
 
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
+        headers=agent_data_headers,
         files={
             "monitoring_data": (
                 "filename",
@@ -628,7 +626,7 @@ def test_agent_data_pull_host(
 def test_agent_data_invalid_compression(
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
@@ -646,11 +644,11 @@ def test_agent_data_invalid_compression(
 def test_agent_data_invalid_data(
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
     )
     assert response.status_code == 400
@@ -662,12 +660,12 @@ def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
+    agent_data_headers: MutableMapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
@@ -678,7 +676,7 @@ def test_agent_data_success(
 
 
 @pytest.fixture(name="registration_status_headers")
-def fixture_registration_status_headers(uuid: UUID4) -> Mapping[str, str]:
+def fixture_registration_status_headers(uuid: UUID4) -> dict[str, str]:
     return {
         "verified-uuid": str(uuid),
     }
@@ -687,11 +685,11 @@ def fixture_registration_status_headers(uuid: UUID4) -> Mapping[str, str]:
 def test_registration_status_uuid_mismtach(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.get(
         "/registration_status/123",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 400
@@ -703,7 +701,7 @@ def test_registration_status_uuid_mismtach(
 def test_registration_status_declined(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     R4R(
         status=R4RStatus.DECLINED,
@@ -722,7 +720,7 @@ def test_registration_status_declined(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -738,11 +736,11 @@ def test_registration_status_declined(
 def test_registration_status_host_not_registered(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.get(
         f"/registration_status/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 404
@@ -753,7 +751,7 @@ def test_registration_status_host_not_registered(
 def test_registration_status_push_host(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     R4R(
         status=R4RStatus.DISCOVERABLE,
@@ -767,7 +765,7 @@ def test_registration_status_push_host(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -784,7 +782,7 @@ def test_registration_status_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
@@ -792,7 +790,7 @@ def test_registration_status_pull_host(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -808,11 +806,11 @@ def test_registration_status_pull_host(
 def test_registration_status_v2_uuid_mismtach(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.get(
         "/registration_status_v2/123",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 400
@@ -824,11 +822,11 @@ def test_registration_status_v2_uuid_mismtach(
 def test_registration_status_v2_host_not_registered(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.get(
         f"/registration_status_v2/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -839,11 +837,11 @@ def test_registration_status_v2_host_not_registered(
 def test_registration_status_v2_push_host(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.get(
         f"/registration_status_v2/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -858,7 +856,7 @@ def test_registration_status_v2_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
@@ -866,7 +864,7 @@ def test_registration_status_v2_pull_host(
 
     response = client.get(
         f"/registration_status_v2/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -880,12 +878,12 @@ def test_registration_status_v2_pull_host(
 def test_renew_certificate_uuid_csr_mismatch(
     client: TestClient,
     uuid: UUID4,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     _key, wrong_csr = generate_csr_pair(str(uuid4()), 512)
     response = client.post(
         f"/renew_certificate/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
         json={"csr": serialize_to_pem(wrong_csr)},
     )
 
@@ -897,11 +895,11 @@ def test_renew_certificate_not_registered(
     client: TestClient,
     uuid: UUID4,
     serialized_csr: str,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     response = client.post(
         f"/renew_certificate/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
         json={"csr": serialized_csr},
     )
 
@@ -914,7 +912,7 @@ def test_renew_certificate_ok(
     client: TestClient,
     uuid: UUID4,
     serialized_csr: str,
-    registration_status_headers: Mapping[str, str],
+    registration_status_headers: MutableMapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
@@ -922,7 +920,7 @@ def test_renew_certificate_ok(
 
     response = client.post(
         f"/renew_certificate/{uuid}",
-        headers=typeshed_issue_7724(registration_status_headers),
+        headers=registration_status_headers,
         json={"csr": serialized_csr},
     )
 

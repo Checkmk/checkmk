@@ -63,8 +63,26 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
     }
     const std::filesystem::path f{mk::unescape_filename(arguments)};
     return std::make_unique<BlobColumn<T>>(
-        name, _description, _offsets,
-        BlobFileReader<T>{_basepath, [this, f]() { return _filepath(f); }});
+        name, _description, _offsets, BlobFileReader<T>{[this, f](const T &r) {
+            const auto basepath = this->basepath(r);
+            const auto filepath = _filepath(f);
+            const auto path = filepath.empty() ? basepath : basepath / filepath;
+            if (!std::filesystem::exists(basepath) ||
+                !std::filesystem::exists(path)) {
+                return std::filesystem::path{};
+            }
+            if (!mk::path_contains(basepath, path)) {
+                // Prevent malicious attempts to read files as
+                // root with
+                // "/etc/shadow" (abs paths are not stacked)
+                // or
+                // "../../../../etc/shadow".
+                throw std::runtime_error("invalid arguments: '" +
+                                         path.string() + "' not in '" +
+                                         basepath.string() + "'");
+            }
+            return path;
+        }});
 }
 
 #endif  // DynamicFileColumn_h

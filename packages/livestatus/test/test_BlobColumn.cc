@@ -54,8 +54,7 @@ TEST_F(FileFixture, BlobColumnReadFile) {
         "description",
         {},
         BlobFileReader<DummyRow>{
-            [](const DummyRow & /*row*/) { return basepath(); },
-            []() { return filename; },
+            [](const DummyRow & /*row*/) { return basepath() / filename; },
         }};
 
     ASSERT_NE(nullptr, col.getValue(row));

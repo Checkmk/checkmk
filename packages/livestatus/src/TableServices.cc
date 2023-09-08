@@ -74,42 +74,33 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const IService &r) { return r.check_command_expanded(); }));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
-        offsets,
-        BlobFileReader<IService>{
-            [mc](const IService &r) {
-                return mc->paths()->robotmk_html_log_directory() /
-                       r.robotmk_dir() / "suite_last_log.html";
-            },
-            []() { return std::filesystem::path{}; }}));
+        offsets, BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_log.html";
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
-        BlobFileReader<IService>{
-            [mc](const IService &r) {
-                return mc->paths()->robotmk_html_log_directory() /
-                       r.robotmk_dir() / "suite_last_log.html.gz";
-                ;
-            },
-            []() { return std::filesystem::path{}; }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_log.html.gz";
+            ;
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{
-            [mc](const IService &r) {
-                return mc->paths()->robotmk_html_log_directory() /
-                       r.robotmk_dir() / "suite_last_error_log.html";
-            },
-            []() { return std::filesystem::path{}; }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_error_log.html";
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{
-            [mc](const IService &r) {
-                return mc->paths()->robotmk_html_log_directory() /
-                       r.robotmk_dir() / "suite_last_error_log.html.gz";
-                ;
-            },
-            []() { return std::filesystem::path{}; }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_error_log.html.gz";
+            ;
+        }}));
 
     table->addColumn(std::make_unique<StringColumn<IService>>(
         prefix + "event_handler", "Command used as event handler", offsets,

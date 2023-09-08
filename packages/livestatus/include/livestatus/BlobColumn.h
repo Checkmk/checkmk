@@ -73,30 +73,19 @@ private:
 template <class T>
 class BlobFileReader {
 public:
-    BlobFileReader(std::function<std::filesystem::path(const T &)> basepath,
-                   std::function<std::filesystem::path()> filepath)
-        : _basepath{std::move(basepath)}
-        , _filepath{std::move(filepath)}
-        , _logger{"cmk.livestatus"} {}
+    explicit BlobFileReader(
+        std::function<std::filesystem::path(const T &)> path)
+        : _path{std::move(path)}, _logger{"cmk.livestatus"} {}
 
     std::vector<char> operator()(const T &data) const {
-        const auto basepath = _basepath(data);
-        if (!std::filesystem::exists(basepath)) {
-            // The basepath is not configured.
+        const auto path = _path(data);
+        if (!std::filesystem::exists(path)) {
+            // The path is not configured.
             return {};
         }
-        auto filepath = _filepath();
-        auto path = filepath.empty() ? basepath : basepath / filepath;
         if (!std::filesystem::is_regular_file(path)) {
             Debug(logger()) << path << " is not a regular file";
             return {};
-        }
-        if (!mk::path_contains(basepath, path)) {
-            // Prevent malicious attempts to read files as root with
-            // "/etc/shadow" (abs paths are not stacked) or
-            // "../../../../etc/shadow".
-            throw std::runtime_error("invalid arguments: '" + path.string() +
-                                     "' not in '" + basepath.string() + "'");
         }
         auto file_size = std::filesystem::file_size(path);
         std::ifstream ifs;
@@ -119,8 +108,7 @@ public:
     Logger *logger() const { return &_logger; }
 
 private:
-    const std::function<std::filesystem::path(const T &)> _basepath;
-    const std::function<std::filesystem::path()> _filepath;
+    const std::function<std::filesystem::path(const T &)> _path;
     mutable ThreadNameLogger _logger;
 };
 

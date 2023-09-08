@@ -296,11 +296,9 @@ TableStatus::TableStatus(ICore *mc) : Table(mc) {
         }));
     addColumn(std::make_unique<BlobColumn<ICore>>(
         "license_usage_history", "Historic license usage information", offsets,
-        BlobFileReader<ICore>{
-            [mc](const ICore & /*r*/) {
-                return mc->paths()->license_usage_history_file();
-            },
-            []() { return std::filesystem::path{}; }}));
+        BlobFileReader<ICore>{[mc](const ICore & /*r*/) {
+            return mc->paths()->license_usage_history_file();
+        }}));
     addColumn(std::make_unique<DoubleColumn<ICore>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",

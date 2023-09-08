@@ -47,6 +47,7 @@ PACKAGES := \
     nrpe \
     nsca \
     omd \
+    openhardwaremonitor \
     navicli \
     pnp4nagios \
     maintenance \

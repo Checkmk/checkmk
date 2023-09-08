@@ -119,7 +119,7 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
     parsed = {}
 
     for line in string_table:
-        if not line:
+        if not line or len(line) == 1:
             continue
 
         # Skip ORA- error messages from broken old oracle agent

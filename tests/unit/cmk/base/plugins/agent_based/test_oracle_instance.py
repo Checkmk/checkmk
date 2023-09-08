@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -10,105 +11,144 @@ from tests.unit.conftest import FixRegister
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, InventoryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.oracle_instance import (
     GeneralError,
     Instance,
     InvalidData,
     inventory_oracle_instance,
     parse_oracle_instance,
+    Section,
 )
 
 from .utils_inventory import sort_inventory_result
 
 
-def test_parse_oracle_instance() -> None:
-    assert parse_oracle_instance(
-        [
+@pytest.mark.parametrize(
+    "string_table, expected_parse_output",
+    [
+        pytest.param(
             [
-                "XE",
-                "11.2.0.2.0",
-                "OPEN",
-                "ALLOWED",
-                "STOPPED",
-                "1212537",
-                "2858521146",
-                "NOARCHIVELOG",
-                "PRIMARY",
-                "NO",
-                "XE",
-                "290520181207",
+                [
+                    "XE",
+                    "11.2.0.2.0",
+                    "OPEN",
+                    "ALLOWED",
+                    "STOPPED",
+                    "1212537",
+                    "2858521146",
+                    "NOARCHIVELOG",
+                    "PRIMARY",
+                    "NO",
+                    "XE",
+                    "290520181207",
+                ],
+                [
+                    "IC731",
+                    "12.1.0.2.0",
+                    "OPEN",
+                    "ALLOWED",
+                    "STARTED",
+                    "2144847",
+                    "3190399742",
+                    "ARCHIVELOG",
+                    "PRIMARY",
+                    "YES",
+                    "IC73",
+                    "130920150251",
+                ],
+                ["I442", "FAILURE"],
+                [
+                    "+ASM",
+                    "FAILURE",
+                    "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+                ],
             ],
+            {
+                "+ASM": GeneralError(
+                    "+ASM",
+                    "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+                ),
+                "I442": InvalidData("I442"),
+                "IC731": Instance(
+                    archiver="STARTED",
+                    database_role="PRIMARY",
+                    db_creation_time="130920150251",
+                    force_logging="YES",
+                    log_mode="ARCHIVELOG",
+                    logins="ALLOWED",
+                    name="IC73",
+                    old_agent=False,
+                    openmode="OPEN",
+                    pdb=False,
+                    pluggable="FALSE",
+                    pname=None,
+                    popenmode=None,
+                    prestricted=None,
+                    ptotal_size=None,
+                    pup_seconds=None,
+                    sid="IC731",
+                    up_seconds="2144847",
+                    version="12.1.0.2.0",
+                ),
+                "XE": Instance(
+                    archiver="STOPPED",
+                    database_role="PRIMARY",
+                    db_creation_time="290520181207",
+                    force_logging="NO",
+                    log_mode="NOARCHIVELOG",
+                    logins="ALLOWED",
+                    name="XE",
+                    old_agent=False,
+                    openmode="OPEN",
+                    pdb=False,
+                    pluggable="FALSE",
+                    pname=None,
+                    popenmode=None,
+                    prestricted=None,
+                    ptotal_size=None,
+                    pup_seconds=None,
+                    sid="XE",
+                    up_seconds="1212537",
+                    version="11.2.0.2.0",
+                ),
+            },
+            id="One error, one invalid data and two instances in the string table.",
+        ),
+        pytest.param(
             [
-                "IC731",
-                "12.1.0.2.0",
-                "OPEN",
-                "ALLOWED",
-                "STARTED",
-                "2144847",
-                "3190399742",
-                "ARCHIVELOG",
-                "PRIMARY",
-                "YES",
-                "IC73",
-                "130920150251",
+                [
+                    "+ASM",
+                    "FAILURE",
+                    "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+                ],
+                [
+                    "NAME DATABASE_ROLE OPEN_MODE DB_UNIQUE_NAME FLASHBACK_ON FORCE_LOGGING SWITCHOVER_STATUS"
+                ],  # This should be ignored because the length is 1
+                [
+                    "SEUSAZQ1 PRIMARY READ WRITE SEUSAZQ1 YES YES TO STANDBY"
+                ],  # This should be ignored because length is 1
             ],
-            ["I442", "FAILURE"],
-            [
-                "+ASM",
-                "FAILURE",
-                "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
-            ],
-        ]
-    ) == {
-        "+ASM": GeneralError(
-            "+ASM",
-            "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+            {
+                "+ASM": GeneralError(
+                    sid="+ASM",
+                    err="ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+                )
+            },
+            id="There are some cases where, when an error occurred, there is some unnecessary data in the string table. "
+            "Cases like that should be ignored and only the error should be parsed.",
         ),
-        "I442": InvalidData("I442"),
-        "IC731": Instance(
-            archiver="STARTED",
-            database_role="PRIMARY",
-            db_creation_time="130920150251",
-            force_logging="YES",
-            log_mode="ARCHIVELOG",
-            logins="ALLOWED",
-            name="IC73",
-            old_agent=False,
-            openmode="OPEN",
-            pdb=False,
-            pluggable="FALSE",
-            pname=None,
-            popenmode=None,
-            prestricted=None,
-            ptotal_size=None,
-            pup_seconds=None,
-            sid="IC731",
-            up_seconds="2144847",
-            version="12.1.0.2.0",
-        ),
-        "XE": Instance(
-            archiver="STOPPED",
-            database_role="PRIMARY",
-            db_creation_time="290520181207",
-            force_logging="NO",
-            log_mode="NOARCHIVELOG",
-            logins="ALLOWED",
-            name="XE",
-            old_agent=False,
-            openmode="OPEN",
-            pdb=False,
-            pluggable="FALSE",
-            pname=None,
-            popenmode=None,
-            prestricted=None,
-            ptotal_size=None,
-            pup_seconds=None,
-            sid="XE",
-            up_seconds="1212537",
-            version="11.2.0.2.0",
-        ),
-    }
+    ],
+)
+def test_parse_oracle_instance(
+    string_table: StringTable,
+    expected_parse_output: Section,
+) -> None:
+    assert parse_oracle_instance(string_table=string_table) == expected_parse_output
 
 
 def test_discover_oracle_instance(fix_register: FixRegister) -> None:

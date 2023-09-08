@@ -231,8 +231,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/cfg_examples \
 		windows/check_mk_agent.msi \
 		windows/check_mk_agent_unsigned.msi \
-		windows/OpenHardwareMonitorCLI.exe \
-		windows/OpenHardwareMonitorLib.dll \
+		windows/ohm/OpenHardwareMonitorCLI.exe \
+		windows/ohm/OpenHardwareMonitorLib.dll \
 		windows/python-3.cab \
 		windows/python-3.4.cab \
 		windows/check_mk.user.yml \

@@ -438,10 +438,10 @@ class ModeUsers(WatoMode):
                         img_txt = "checkmark"
                     elif last_seen != 0:
                         title = _("Offline")
-                        img_txt = "hyphen"
+                        img_txt = "cross_grey"
                     elif last_seen == 0:
                         title = _("Never logged in")
-                        img_txt = "inactive"
+                        img_txt = "hyphen"
 
                     title += f" ({render.date(last_seen)} {render.time_of_day(last_seen)})"
                     table.cell(_("Act."))

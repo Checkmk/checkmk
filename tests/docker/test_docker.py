@@ -8,7 +8,6 @@
 import logging
 import os
 import subprocess
-import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -289,6 +288,12 @@ def _exec_run(
 ) -> tuple[int, str]:
     exit_code, output = c.exec_run(cmd, user=user, workdir=workdir)
     return exit_code, output.decode("utf-8")
+
+
+def _get_docker_ip(container_name: str) -> str:
+    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}}' {container_name}"
+    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip() or "127.0.0.1"
+    return output
 
 
 def test_start_simple(
@@ -623,28 +628,22 @@ def test_http_access_login_screen(
     )
 
 
-def get_docker_ip(container_name: str) -> str:
-    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.Gateway}}}}{{{{end}}}}' {container_name}"
-    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
-    if output == "":
-        output = "127.0.0.1"
-    return output
-
-
 @pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
 def test_http_access_login_screen_saas(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
     c = _start(request, client)
 
-    while c.status != "running":
-        time.sleep(1)
+    ip = _get_docker_ip(c.name)
 
-    ip = get_docker_ip(c.name)
-    resp = requests.get(f"http://{ip}:5000/cmk/check_mk", allow_redirects=False, timeout=10)
+    resp = requests.get(
+        f"http://{ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
+        allow_redirects=False,
+        timeout=10,
+    )
     # saas login redirects to external service
     assert resp.status_code == 302
-    assert "/check_mk/login.py?_origtarget=index.py" in resp.headers["location"]
+    assert "cognito_sso.py" in resp.headers["location"]
 
 
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:

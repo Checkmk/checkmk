@@ -177,9 +177,13 @@ export function frexpb(x, base) {
     return [mantissa, exp];
 }
 
-export function approx_age(secs) {
-    if (secs < 0) return approx_age(-1 * secs);
+export function approx_age(secs: number, negative = false): string {
+    if (secs < 0) return approx_age(-1 * secs, true);
+    if (negative) return "-" + calculate_approx_age_value(secs);
+    return calculate_approx_age_value(secs);
+}
 
+function calculate_approx_age_value(secs: number): string {
     if (0 < secs && secs < 1) return physical_precision(secs, 3, "s");
 
     if (secs < 10) return secs.toFixed(2) + " s";

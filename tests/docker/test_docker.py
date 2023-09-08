@@ -479,23 +479,19 @@ def test_http_access_base_redirects_work(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
     c = _start(request, client)
+    ip = _get_docker_ip(c.name)
 
-    assert (
-        "Location: http://127.0.0.1:5000/cmk/\r\n"
-        in _exec_run(c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000"])[-1]
-    )
-    assert (
-        "Location: http://127.0.0.1:5000/cmk/\r\n"
-        in _exec_run(c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/"])[-1]
-    )
-    assert (
-        "Location: http://127.0.0.1:5000/cmk/check_mk/\r\n"
-        in _exec_run(c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
-    )
-    assert (
-        "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n"
-        in _exec_run(c, ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
-    )
+    for url, expectedLocation in {
+        f"http://{ip}:5000": f"http://{ip}:5000/cmk/",
+        f"http://{ip}:5000/cmk": f"http://{ip}:5000/cmk/check_mk/",
+    }.items():
+        for checkUrl in (f"{url}", f"{url}/"):
+            response = requests.get(
+                checkUrl,
+                allow_redirects=False,
+                timeout=10,
+            )
+            assert response.headers["Location"] == expectedLocation
 
 
 # Would like to test this from the outside of the container, but this is not possible
@@ -611,21 +607,16 @@ def test_http_access_login_screen(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
     c = _start(request, client)
+    ip = _get_docker_ip(c.name)
 
-    assert (
-        "Location: \r\n"
-        not in _exec_run(
-            c,
-            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-        )[-1]
+    response = requests.get(
+        f"http://{ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
+        allow_redirects=False,
+        timeout=10,
     )
-    assert (
-        'name="_login"'
-        in _exec_run(
-            c,
-            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-        )[-1]
-    )
+
+    assert response.status_code == 200, "Invalid HTTP status code!"
+    assert 'name="_login"' in response.text, "Login field not found!"
 
 
 @pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
@@ -633,17 +624,16 @@ def test_http_access_login_screen_saas(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
     c = _start(request, client)
-
     ip = _get_docker_ip(c.name)
 
-    resp = requests.get(
+    response = requests.get(
         f"http://{ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
         allow_redirects=False,
         timeout=10,
     )
     # saas login redirects to external service
-    assert resp.status_code == 302
-    assert "cognito_sso.py" in resp.headers["location"]
+    assert response.status_code == 302
+    assert "cognito_sso.py" in response.headers["location"]
 
 
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:

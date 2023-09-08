@@ -582,7 +582,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     )
 
                 if can_activate_all and not need_action:
-                    html.icon("siteuptodate", _("This site is up-to-date."))
+                    html.icon("checkmark", _("This site is up-to-date."))
 
                 site_url = site.get("multisiteurl")
                 if site_url:

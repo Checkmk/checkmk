@@ -850,6 +850,71 @@ class MaximumOf(ABCMetricOperation):
         )
 
 
+@dataclass(frozen=True)
+class Product(ABCMetricOperation):
+    factors: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        if len(self.factors) == 0:
+            return RPNExpression(1.0, unit_info[""], "#000000")
+
+        evaluated_first = self.factors[0].evaluate(translated_metrics)
+        product = 1.0 * evaluated_first.value
+        unit_info_ = evaluated_first.unit_info
+        color = evaluated_first.color
+        for successor in self.factors[1:]:
+            evaluated_successor = successor.evaluate(translated_metrics)
+            product *= evaluated_successor.value
+            unit_info_ = _unit_mult(unit_info_, evaluated_successor.unit_info)
+            color = _choose_operator_color(color, evaluated_successor.color)
+
+        return RPNExpression(product, unit_info_, color)
+
+
+@dataclass(frozen=True, kw_only=True)
+class Fraction(ABCMetricOperation):
+    dividend: ABCMetricOperation
+    divisor: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        dividend_evaluated = self.dividend.evaluate(translated_metrics)
+        divisor_evaluated = self.divisor.evaluate(translated_metrics)
+
+        if (divisor_evaluated.value) == 0.0:
+            value = 0.0
+        else:
+            value = dividend_evaluated.value / divisor_evaluated.value
+
+        return RPNExpression(
+            value,
+            _unit_div(dividend_evaluated.unit_info, divisor_evaluated.unit_info),
+            _choose_operator_color(dividend_evaluated.color, divisor_evaluated.color),
+        )
+
+
+# Composed metric operations:
+
+
+@dataclass(frozen=True, kw_only=True)
+class Percent(ABCMetricOperation):
+    reference: ABCMetricOperation
+    metric: Metric
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(
+            (
+                Fraction(
+                    dividend=Product([ConstantFloat(100.0), self.reference]),
+                    divisor=MaximumOf(self.metric),
+                )
+                .evaluate(translated_metrics)
+                .value
+            ),
+            unit_info["%"],
+            self.reference.evaluate(translated_metrics).color,
+        )
+
+
 RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
 
 
@@ -990,22 +1055,16 @@ def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) ->
     operation: Metric | WarningOf | CriticalOf | MinimumOf | MaximumOf
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        operation = _from_scalar(scalar_name, Metric(var_name))
+        metric = Metric(var_name)
+        operation = _from_scalar(scalar_name, metric)
     else:
-        operation = Metric(var_name)
+        metric = operation = Metric(var_name)
 
-    if (evaluated := operation.evaluate(translated_metrics)).value is None:
-        raise ValueError(evaluated.value)
-
-    if percent:
-        maxvalue = translated_metrics[var_name]["scalar"]["max"]
-        return RPNExpression(
-            0.0 if maxvalue == 0 else 100.0 * float(evaluated.value) / maxvalue,
-            unit_info["%"],
-            evaluated.color,
-        )
-
-    return RPNExpression(evaluated.value, translated_metrics[var_name]["unit"], evaluated.color)
+    return (
+        Percent(reference=operation, metric=metric).evaluate(translated_metrics)
+        if percent
+        else operation.evaluate(translated_metrics)
+    )
 
 
 # Evaluates an expression, returns a triple of value, unit and color.

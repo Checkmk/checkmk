@@ -14,7 +14,18 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Final, Literal, NamedTuple, NewType, TypedDict, TypeVar, Union
+from typing import (
+    Any,
+    assert_never,
+    Final,
+    get_args,
+    Literal,
+    NamedTuple,
+    NewType,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 from pydantic import BaseModel
 
@@ -756,6 +767,72 @@ def split_expression(expression: MetricExpression) -> tuple[str, str | None, str
     return expression, explicit_unit_name, explicit_color
 
 
+RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
+
+
+def _apply_operator(
+    operator: RPNOperators,
+    left_rpn_expr: RPNExpression,
+    right_rpn_expr: RPNExpression,
+) -> RPNExpression:
+    # TODO: Do real unit computation, detect non-matching units
+    match operator:
+        case "+":
+            return RPNExpression(
+                left_rpn_expr.value + right_rpn_expr.value,
+                _unit_add(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
+                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
+            )
+        case "-":
+            return RPNExpression(
+                left_rpn_expr.value - right_rpn_expr.value,
+                _unit_sub(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
+                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
+            )
+        case "*":
+            return RPNExpression(
+                left_rpn_expr.value * right_rpn_expr.value,
+                _unit_mult(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
+                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
+            )
+        case "/":
+            return RPNExpression(
+                # # Handle zero division by always adding a tiny bit to the divisor
+                left_rpn_expr.value / (right_rpn_expr.value + 1e-16),
+                _unit_div(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
+                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
+            )
+        case ">":
+            return RPNExpression(
+                1.0 if left_rpn_expr.value > right_rpn_expr.value else 0.0,
+                unit_info[""],
+                "#000000",
+            )
+        case ">=":
+            return RPNExpression(
+                1.0 if left_rpn_expr.value >= right_rpn_expr.value else 0.0,
+                unit_info[""],
+                "#000000",
+            )
+        case "<":
+            return RPNExpression(
+                1.0 if left_rpn_expr.value < right_rpn_expr.value else 0.0,
+                unit_info[""],
+                "#000000",
+            )
+        case "<=":
+            return RPNExpression(
+                1.0 if left_rpn_expr.value <= right_rpn_expr.value else 0.0,
+                unit_info[""],
+                "#000000",
+            )
+        case "MIN":
+            return _operator_minmax(left_rpn_expr, right_rpn_expr, min)
+        case "MAX":
+            return _operator_minmax(left_rpn_expr, right_rpn_expr, max)
+    assert_never(operator)
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -777,17 +854,62 @@ def evaluate(
         return RPNExpression(expression, unit_info[""], "#000000")
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
-    rpn_expr_metric = stack_resolver(
-        expression.split(","),
-        lambda x: x in rpn_operators,
-        lambda op, a, b: rpn_operators[op](a, b),
-        lambda x: _evaluate_literal(x, translated_metrics),
+
+    if len(parts := expression.split(",")) == 1:
+        rpn_expr = _evaluate_literal(parts[0], translated_metrics)
+        return RPNExpression(
+            rpn_expr.value,
+            unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr.unit_info,
+            "#" + explicit_color if explicit_color else rpn_expr.color,
+        )
+
+    operators: list[RPNOperators] = []
+    operands = []
+    for p in parts:
+        match p:
+            case "+":
+                operators.append("+")
+            case "-":
+                operators.append("-")
+            case "*":
+                operators.append("*")
+            case "/":
+                operators.append("/")
+            case ">":
+                operators.append(">")
+            case ">=":
+                operators.append(">=")
+            case "<":
+                operators.append("<")
+            case "<=":
+                operators.append("<=")
+            case "MIN":
+                operators.append("MIN")
+            case "MAX":
+                operators.append("MAX")
+            case _:
+                operands.append(p)
+
+    if len(operators) != (len(operands) - 1):
+        # "a,b,+,c,-,..." -> operators = ["+", "-", ...], operands = ["a", "b", "c", ...]
+        raise ValueError("Too few or many operators %r for %r" % (operators, operands))
+
+    rpn_expr = _apply_operator(
+        operators.pop(0),
+        _evaluate_literal(operands.pop(0), translated_metrics),
+        _evaluate_literal(operands.pop(0), translated_metrics),
     )
+    while operands:
+        rpn_expr = _apply_operator(
+            operators.pop(0),
+            rpn_expr,
+            _evaluate_literal(operands.pop(0), translated_metrics),
+        )
 
     return RPNExpression(
-        rpn_expr_metric.value,
-        unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr_metric.unit_info,
-        "#" + explicit_color if explicit_color else rpn_expr_metric.color,
+        rpn_expr.value,
+        unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr.unit_info,
+        "#" + explicit_color if explicit_color else rpn_expr.color,
     )
 
 
@@ -822,62 +944,6 @@ def stack_resolver(
         )
 
     return stack[0]
-
-
-# TODO: Do real unit computation, detect non-matching units
-rpn_operators = {
-    "+": lambda a, b: (
-        RPNExpression(
-            a.value + b.value,
-            _unit_mult(a.unit_info, b.unit_info),
-            _choose_operator_color(a.color, b.color),
-        )
-    ),
-    "-": lambda a, b: (
-        RPNExpression(
-            a.value - b.value,
-            _unit_sub(a.unit_info, b.unit_info),
-            _choose_operator_color(a.color, b.color),
-        )
-    ),
-    "*": lambda a, b: (
-        RPNExpression(
-            a.value * b.value,
-            _unit_add(a.unit_info, b.unit_info),
-            _choose_operator_color(a.color, b.color),
-        )
-    ),
-    # Handle zero division by always adding a tiny bit to the divisor
-    "/": lambda a, b: (
-        RPNExpression(
-            a.value / (b.value + 1e-16),
-            _unit_div(a.unit_info, b.unit_info),
-            _choose_operator_color(a.color, b.color),
-        )
-    ),
-    ">": lambda a, b: RPNExpression(
-        a.value > b.value and 1.0 or 0.0,
-        unit_info[""],
-        "#000000",
-    ),
-    "<": lambda a, b: RPNExpression(
-        a.value < b.value and 1.0 or 0.0,
-        unit_info[""],
-        "#000000",
-    ),
-    ">=": lambda a, b: RPNExpression(
-        a.value >= b.value and 1.0 or 0.0,
-        unit_info[""],
-        "#000000",
-    ),
-    "<=": lambda a, b: RPNExpression(
-        a.value <= b.value and 1.0 or 0.0,
-        unit_info[""],
-        "#000000",
-    ),
-    "MIN": lambda a, b: _operator_minmax(a, b, min),
-    "MAX": lambda a, b: _operator_minmax(a, b, max),
-}
 
 
 # TODO: real unit computation!
@@ -1183,9 +1249,9 @@ def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
 
 def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
     for part in split_expression(metric_expression)[0].split(","):
-        metric_name = _drop_metric_consolidation_advice(part)
-        if metric_name not in rpn_operators:
-            yield metric_name
+        metric_or_operator = _drop_metric_consolidation_advice(part)
+        if metric_or_operator not in get_args(RPNOperators):
+            yield metric_or_operator
 
 
 def _drop_metric_consolidation_advice(expression: MetricExpression) -> str:

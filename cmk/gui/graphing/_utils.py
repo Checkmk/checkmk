@@ -859,7 +859,7 @@ class Product(ABCMetricOperation):
             return RPNExpression(1.0, unit_info[""], "#000000")
 
         evaluated_first = self.factors[0].evaluate(translated_metrics)
-        product = 1.0 * evaluated_first.value
+        product = evaluated_first.value
         unit_info_ = evaluated_first.unit_info
         color = evaluated_first.color
         for successor in self.factors[1:]:
@@ -1036,15 +1036,17 @@ def _from_scalar(
     raise ValueError(scalar_name)
 
 
-def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) -> RPNExpression:
+def _parse_single_expression(
+    expression: str, translated_metrics: TranslatedMetrics
+) -> ABCMetricOperation:
     if expression not in translated_metrics:
         try:
-            return ConstantInt(int(expression)).evaluate(translated_metrics)
+            return ConstantInt(int(expression))
         except ValueError:
             pass
 
         try:
-            return ConstantFloat(float(expression)).evaluate(translated_metrics)
+            return ConstantFloat(float(expression))
         except ValueError:
             pass
 
@@ -1060,11 +1062,7 @@ def _evaluate_literal(expression: str, translated_metrics: TranslatedMetrics) ->
     else:
         metric = operation = Metric(var_name)
 
-    return (
-        Percent(reference=operation, metric=metric).evaluate(translated_metrics)
-        if percent
-        else operation.evaluate(translated_metrics)
-    )
+    return Percent(reference=operation, metric=metric) if percent else operation
 
 
 # Evaluates an expression, returns a triple of value, unit and color.
@@ -1090,7 +1088,9 @@ def evaluate(
     expression, explicit_unit_name, explicit_color = split_expression(expression)
 
     if len(parts := expression.split(",")) == 1:
-        rpn_expr = _evaluate_literal(parts[0], translated_metrics)
+        rpn_expr = _parse_single_expression(parts[0], translated_metrics).evaluate(
+            translated_metrics
+        )
         return RPNExpression(
             rpn_expr.value,
             unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr.unit_info,
@@ -1130,14 +1130,16 @@ def evaluate(
 
     rpn_expr = _apply_operator(
         operators.pop(0),
-        _evaluate_literal(operands.pop(0), translated_metrics),
-        _evaluate_literal(operands.pop(0), translated_metrics),
+        _parse_single_expression(operands.pop(0), translated_metrics).evaluate(translated_metrics),
+        _parse_single_expression(operands.pop(0), translated_metrics).evaluate(translated_metrics),
     )
     while operands:
         rpn_expr = _apply_operator(
             operators.pop(0),
             rpn_expr,
-            _evaluate_literal(operands.pop(0), translated_metrics),
+            _parse_single_expression(operands.pop(0), translated_metrics).evaluate(
+                translated_metrics
+            ),
         )
 
     return RPNExpression(

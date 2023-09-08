@@ -851,6 +851,27 @@ class MaximumOf(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
+class Sum(ABCMetricOperation):
+    summands: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        if len(self.summands) == 0:
+            return RPNExpression(0.0, unit_info[""], "#000000")
+
+        evaluated_first = self.summands[0].evaluate(translated_metrics)
+        values = [evaluated_first.value]
+        unit_info_ = evaluated_first.unit_info
+        color = evaluated_first.color
+        for successor in self.summands[1:]:
+            evaluated_successor = successor.evaluate(translated_metrics)
+            values.append(evaluated_successor.value)
+            unit_info_ = _unit_add(unit_info_, evaluated_successor.unit_info)
+            color = _choose_operator_color(color, evaluated_successor.color)
+
+        return RPNExpression(sum(values), unit_info_, color)
+
+
+@dataclass(frozen=True)
 class Product(ABCMetricOperation):
     factors: Sequence[ABCMetricOperation]
 
@@ -872,6 +893,27 @@ class Product(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
+class Difference(ABCMetricOperation):
+    minuend: ABCMetricOperation
+    subtrahend: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        minuend_evaluated = self.minuend.evaluate(translated_metrics)
+        subtrahend_evaluated = self.subtrahend.evaluate(translated_metrics)
+
+        if (subtrahend_evaluated.value) == 0.0:
+            value = 0.0
+        else:
+            value = minuend_evaluated.value - subtrahend_evaluated.value
+
+        return RPNExpression(
+            value,
+            _unit_sub(minuend_evaluated.unit_info, subtrahend_evaluated.unit_info),
+            _choose_operator_color(minuend_evaluated.color, subtrahend_evaluated.color),
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class Fraction(ABCMetricOperation):
     dividend: ABCMetricOperation
     divisor: ABCMetricOperation
@@ -890,6 +932,112 @@ class Fraction(ABCMetricOperation):
             _unit_div(dividend_evaluated.unit_info, divisor_evaluated.unit_info),
             _choose_operator_color(dividend_evaluated.color, divisor_evaluated.color),
         )
+
+
+@dataclass(frozen=True, kw_only=True)
+class GreaterThan(ABCMetricOperation):
+    left: ABCMetricOperation
+    right: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(
+            (
+                1.0
+                if self.left.evaluate(translated_metrics).value
+                > self.right.evaluate(translated_metrics).value
+                else 0.0
+            ),
+            unit_info[""],
+            "#000000",
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class GreaterEqualThan(ABCMetricOperation):
+    left: ABCMetricOperation
+    right: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(
+            (
+                1.0
+                if self.left.evaluate(translated_metrics).value
+                >= self.right.evaluate(translated_metrics).value
+                else 0.0
+            ),
+            unit_info[""],
+            "#000000",
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LessThan(ABCMetricOperation):
+    left: ABCMetricOperation
+    right: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(
+            (
+                1.0
+                if self.left.evaluate(translated_metrics).value
+                < self.right.evaluate(translated_metrics).value
+                else 0.0
+            ),
+            unit_info[""],
+            "#000000",
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LessEqualThan(ABCMetricOperation):
+    left: ABCMetricOperation
+    right: ABCMetricOperation
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        return RPNExpression(
+            (
+                1.0
+                if self.left.evaluate(translated_metrics).value
+                <= self.right.evaluate(translated_metrics).value
+                else 0.0
+            ),
+            unit_info[""],
+            "#000000",
+        )
+
+
+@dataclass(frozen=True)
+class Minimum(ABCMetricOperation):
+    operands: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        if len(self.operands) == 0:
+            return RPNExpression(float("nan"), unit_info[""], "#000000")
+
+        minimum = self.operands[0].evaluate(translated_metrics)
+        for operand in self.operands[1:]:
+            evaluated_operand = operand.evaluate(translated_metrics)
+            if evaluated_operand.value < minimum.value:
+                minimum = evaluated_operand
+
+        return minimum
+
+
+@dataclass(frozen=True)
+class Maximum(ABCMetricOperation):
+    operands: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+        if len(self.operands) == 0:
+            return RPNExpression(float("nan"), unit_info[""], "#000000")
+
+        maximum = self.operands[0].evaluate(translated_metrics)
+        for operand in self.operands[1:]:
+            evaluated_operand = operand.evaluate(translated_metrics)
+            if evaluated_operand.value > maximum.value:
+                maximum = evaluated_operand
+
+        return maximum
 
 
 # Composed metric operations:
@@ -936,88 +1084,32 @@ def _choose_operator_color(a: str, b: str) -> str:
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
 
-def _operator_minmax(
-    a: RPNExpression, b: RPNExpression, func: Callable[[float, float], float]
-) -> RPNExpression:
-    v = func(a.value, b.value)
-    # Use unit and color of the winner. If the winner
-    # has none (e.g. it is a scalar like 0), then take
-    # unit and color of the loser.
-    if v == a.value:
-        winner = a
-        loser = b
-    else:
-        winner = b
-        loser = a
-
-    if winner.unit_info != unit_info[""]:
-        unit = winner.unit_info
-    else:
-        unit = loser.unit_info
-
-    return RPNExpression(v, unit, winner.color or loser.color)
-
-
 def _apply_operator(
-    operator: RPNOperators,
-    left_rpn_expr: RPNExpression,
-    right_rpn_expr: RPNExpression,
-) -> RPNExpression:
+    operator: RPNOperators, left: ABCMetricOperation, right: ABCMetricOperation
+) -> ABCMetricOperation:
     # TODO: Do real unit computation, detect non-matching units
     match operator:
         case "+":
-            return RPNExpression(
-                left_rpn_expr.value + right_rpn_expr.value,
-                _unit_add(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
-                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
-            )
+            return Sum([left, right])
         case "-":
-            return RPNExpression(
-                left_rpn_expr.value - right_rpn_expr.value,
-                _unit_sub(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
-                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
-            )
+            return Difference(minuend=left, subtrahend=right)
         case "*":
-            return RPNExpression(
-                left_rpn_expr.value * right_rpn_expr.value,
-                _unit_mult(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
-                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
-            )
+            return Product([left, right])
         case "/":
-            return RPNExpression(
-                # # Handle zero division by always adding a tiny bit to the divisor
-                left_rpn_expr.value / (right_rpn_expr.value + 1e-16),
-                _unit_div(left_rpn_expr.unit_info, right_rpn_expr.unit_info),
-                _choose_operator_color(left_rpn_expr.color, right_rpn_expr.color),
-            )
+            # Handle zero division by always adding a tiny bit to the divisor
+            return Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)]))
         case ">":
-            return RPNExpression(
-                1.0 if left_rpn_expr.value > right_rpn_expr.value else 0.0,
-                unit_info[""],
-                "#000000",
-            )
+            return GreaterThan(left=left, right=right)
         case ">=":
-            return RPNExpression(
-                1.0 if left_rpn_expr.value >= right_rpn_expr.value else 0.0,
-                unit_info[""],
-                "#000000",
-            )
+            return GreaterEqualThan(left=left, right=right)
         case "<":
-            return RPNExpression(
-                1.0 if left_rpn_expr.value < right_rpn_expr.value else 0.0,
-                unit_info[""],
-                "#000000",
-            )
+            return LessThan(left=left, right=right)
         case "<=":
-            return RPNExpression(
-                1.0 if left_rpn_expr.value <= right_rpn_expr.value else 0.0,
-                unit_info[""],
-                "#000000",
-            )
+            return LessEqualThan(left=left, right=right)
         case "MIN":
-            return _operator_minmax(left_rpn_expr, right_rpn_expr, min)
+            return Minimum([left, right])
         case "MAX":
-            return _operator_minmax(left_rpn_expr, right_rpn_expr, max)
+            return Maximum([left, right])
     assert_never(operator)
 
 
@@ -1128,24 +1220,23 @@ def evaluate(
         # "a,b,+,c,-,..." -> operators = ["+", "-", ...], operands = ["a", "b", "c", ...]
         raise ValueError("Too few or many operators {!r} for {!r}".format(operators, operands))
 
-    rpn_expr = _apply_operator(
+    operand = _apply_operator(
         operators.pop(0),
-        _parse_single_expression(operands.pop(0), translated_metrics).evaluate(translated_metrics),
-        _parse_single_expression(operands.pop(0), translated_metrics).evaluate(translated_metrics),
+        _parse_single_expression(operands.pop(0), translated_metrics),
+        _parse_single_expression(operands.pop(0), translated_metrics),
     )
     while operands:
-        rpn_expr = _apply_operator(
+        operand = _apply_operator(
             operators.pop(0),
-            rpn_expr,
-            _parse_single_expression(operands.pop(0), translated_metrics).evaluate(
-                translated_metrics
-            ),
+            operand,
+            _parse_single_expression(operands.pop(0), translated_metrics),
         )
 
+    evaluated_operand = operand.evaluate(translated_metrics)
     return RPNExpression(
-        rpn_expr.value,
-        unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr.unit_info,
-        "#" + explicit_color if explicit_color else rpn_expr.color,
+        evaluated_operand.value,
+        unit_info[explicit_unit_name] if explicit_unit_name else evaluated_operand.unit_info,
+        "#" + explicit_color if explicit_color else evaluated_operand.color,
     )
 
 

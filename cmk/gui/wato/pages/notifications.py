@@ -335,9 +335,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell("", css=["narrow"])
                 if rule.get("disabled"):
-                    html.icon(
-                        "disabled", _("This rule is currently disabled and will not be applied")
-                    )
+                    html.icon("cross", _("This rule is currently disabled and will not be applied"))
                 else:
                     html.empty_icon_button()
 
@@ -350,9 +348,9 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell(_("Type"), css=["narrow"])
                 if notify_method[1] is None:
-                    html.icon("notify_cancel", _("Cancel notifications for this plugin type"))
+                    html.icon("cross_bg_white", _("Cancel notifications for this plugin type"))
                 else:
-                    html.icon("notify_create", _("Create a notification"))
+                    html.icon("checkmark", _("Create a notification"))
 
                 table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
 

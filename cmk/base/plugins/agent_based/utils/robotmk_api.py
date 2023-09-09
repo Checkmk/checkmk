@@ -10,7 +10,11 @@ from base64 import b64decode
 from collections.abc import Sequence
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, parse_raw_as
+
+
+class JSON(BaseModel, frozen=True):
+    pass
 
 
 class Outcome(enum.Enum):
@@ -20,7 +24,7 @@ class Outcome(enum.Enum):
     NOT_RUN = "NOT RUN"
 
 
-class Test(BaseModel, frozen=True):
+class Test(JSON, frozen=True):
     name: str
     id_: str
     status: Outcome
@@ -28,7 +32,7 @@ class Test(BaseModel, frozen=True):
     endtime: datetime
 
 
-class Result(BaseModel, frozen=True):
+class Result(JSON, frozen=True):
     suite_name: str
     tests: list[Test]
     xml: str
@@ -38,8 +42,24 @@ class Result(BaseModel, frozen=True):
         return b64decode(self.html).decode("utf-8")
 
 
+class ConfigReadingError(JSON, frozen=True):
+    config_reading_error: str
+
+
+class ConfigFileContent(JSON, frozen=True):
+    config_file_content: str
+
+
 Section = list[Result]
+
+SubSection = Result | ConfigReadingError | ConfigFileContent
+
+
+def _parse_line(line: str) -> SubSection:
+    return parse_raw_as(SubSection, line)  # type: ignore[arg-type]
 
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
-    return [Result.parse_raw(file) for file in string_table[0]]
+    subsections = [_parse_line(line[0]) for line in string_table]
+    results = [s for s in subsections if isinstance(s, Result)]
+    return Section(results)

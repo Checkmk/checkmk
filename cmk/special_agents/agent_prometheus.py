@@ -633,9 +633,9 @@ class PrometheusAPI:
             return []
 
     def _perform_promql_query(self, promql: str) -> list[dict[str, Any]]:
-        api_query_expression = f"query?query={promql}"
-        result = self._process_json_request(api_query_expression)["data"]["result"]
-        return result
+        response = self.session.get("query", params={"query": promql})
+        response.raise_for_status()
+        return response.json()["data"]["result"]
 
     def _query_json_endpoint(self, endpoint: str) -> dict[str, Any]:
         """Query the given endpoint of the Prometheus API expecting a json response"""

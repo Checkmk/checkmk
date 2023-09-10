@@ -1,0 +1,15 @@
+Title: Open Hardware monitor is updated to the version 0.9.6
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1694373977
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p34
+
+Older versions of Open hardware monitor isn't compatible  
+with Windows 11 and have quite limited support for new 
+hardware.
+
+With this release the problem has been eliminated.

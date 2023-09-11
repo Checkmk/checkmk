@@ -6,8 +6,6 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from typing import Optional
-
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
@@ -27,7 +25,7 @@ def inventory_oracle_dataguard_stats(parsed):
         yield instance, {}
 
 
-def _get_seconds(timestamp: str) -> Optional[int]:
+def _get_seconds(timestamp: str) -> int | None:
     if not timestamp or timestamp[0] != "+":
         return None
 

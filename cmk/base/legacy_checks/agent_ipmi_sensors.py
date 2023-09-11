@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable
 from itertools import chain
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Sequence
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
@@ -21,7 +21,7 @@ _DEFAULT_OPTIONS = {
 
 
 def agent_ipmi_sensors_arguments(
-    params: tuple[str, Mapping[str, Any]], hostname: str, ipaddress: Optional[str]
+    params: tuple[str, Mapping[str, Any]], hostname: str, ipaddress: str | None
 ) -> Sequence[str | tuple[str, str, str]]:
     ipmi_command, options = params
     return [

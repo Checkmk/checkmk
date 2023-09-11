@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, Tuple
 
 import yaml
 
@@ -33,13 +33,13 @@ class CheckConfig:
         self,
         mode: CheckModes = CheckModes.DEFAULT,
         skip_masking: bool = False,
-        dump_types: Optional[str] = None,
-        data_dir: Optional[str] = None,
-        dump_dir: Optional[str] = None,
-        response_dir: Optional[str] = None,
-        diff_dir: Optional[str] = None,
-        host_names: Optional[str] = None,
-        check_names: Optional[str] = None,
+        dump_types: str | None = None,
+        data_dir: str | None = None,
+        dump_dir: str | None = None,
+        response_dir: str | None = None,
+        diff_dir: str | None = None,
+        host_names: str | None = None,
+        check_names: str | None = None,
     ) -> None:
         self.mode = mode
         self.skip_masking = skip_masking

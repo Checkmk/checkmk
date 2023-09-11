@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Sequence
 
 from cmk.base.config import special_agent_info
 
 
 def agent_azure_status_arguments(
-    params: Mapping[str, Any], _hostname: str, _ipaddress: Optional[str]
+    params: Mapping[str, Any], _hostname: str, _ipaddress: str | None
 ) -> Sequence[str]:
     return params["regions"]
 

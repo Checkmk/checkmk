@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Mapping, NamedTuple, Sequence
 
 from cmk.base.config import special_agent_info
 
@@ -17,11 +17,11 @@ from cmk.base.config import special_agent_info
 class SpecialAgentConfiguration(NamedTuple):
     args: Sequence[str]
     # None makes the stdin of subprocess /dev/null
-    stdin: Optional[str]
+    stdin: str | None
 
 
 def agent_alertmanager_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> SpecialAgentConfiguration:
     alertmanager_params = {**params, "host_address": ipaddress, "host_name": hostname}
     return SpecialAgentConfiguration([], repr(alertmanager_params))

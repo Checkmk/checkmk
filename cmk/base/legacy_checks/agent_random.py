@@ -11,13 +11,13 @@
 # }
 
 
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Sequence
 
 from cmk.base.config import special_agent_info
 
 
 def agent_random_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     return [hostname]
 

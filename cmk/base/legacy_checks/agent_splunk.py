@@ -11,15 +11,15 @@
 # }
 
 
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Sequence
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
 def agent_splunk_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
-) -> Sequence[Union[str, tuple[str, str, str]]]:
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+) -> Sequence[str | tuple[str, str, str]]:
     args = []
 
     args += ["-P", params["protocol"]]

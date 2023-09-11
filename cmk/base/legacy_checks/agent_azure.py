@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Sequence
 
 from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
@@ -13,7 +13,7 @@ from cmk.base.config import special_agent_info
 def agent_azure_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     hostname: str,
-    ipaddress: Optional[str],
+    ipaddress: str | None,
 ) -> Sequence[Any]:
     args = [
         "--tenant",

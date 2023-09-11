@@ -160,7 +160,7 @@ class State(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union[State, int]) -> State:
+    def best(cls, *args: State | int) -> State:
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -196,7 +196,7 @@ class State(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union[State, int]) -> State:
+    def worst(cls, *args: State | int) -> State:
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be

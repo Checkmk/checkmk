@@ -713,7 +713,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulk ID"), bulk_id)
                 table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
                 table.cell(_("Age (sec)"), str(age), css=["number"])
-                if interval and age >= float(interval):
+                if interval and interval != "n.a." and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Time Period"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css=["number"])

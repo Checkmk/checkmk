@@ -1,0 +1,14 @@
+Title: Fix error on showing open bulk notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1694415170
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p10
+
+If the option "Show bulks" was used on the notification configuration page, an
+error like "Internal error: could not convert string to float 'n.a.'" could
+occur.
+

@@ -7,9 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
+import cmk.base.command_config as command_config
 import cmk.base.config as base_config
 from cmk.base.command_config import (
     _get_host_address_config,
@@ -19,9 +19,11 @@ from cmk.base.command_config import (
     HostAddressConfiguration,
 )
 
+from cmk.commands.v1 import ActiveCheckCommand, ActiveService, Secret, SecretType
+
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, hostname, host_attrs, macros, expected_result",
+    "active_checks, active_check_info, active_check_command, hostname, host_attrs, macros, stored_passwords, expected_result",
     [
         pytest.param(
             [
@@ -34,6 +36,7 @@ from cmk.base.command_config import (
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -42,6 +45,7 @@ from cmk.base.command_config import (
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             {},
             [
                 ActiveServiceData(
@@ -54,7 +58,7 @@ from cmk.base.command_config import (
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
                 ),
             ],
-            id="one_active_service",
+            id="one_active_service_legacy_plugin",
         ),
         pytest.param(
             [
@@ -67,6 +71,7 @@ from cmk.base.command_config import (
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -75,6 +80,7 @@ from cmk.base.command_config import (
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             {},
             [
                 ActiveServiceData(
@@ -87,7 +93,7 @@ from cmk.base.command_config import (
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
                 ),
             ],
-            id="host_with_invalid_address",
+            id="host_with_invalid_address_legacy_plugin",
         ),
         pytest.param(
             [
@@ -100,6 +106,7 @@ from cmk.base.command_config import (
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -109,18 +116,19 @@ from cmk.base.command_config import (
                 "display_name": "my_host",
             },
             {"$HOSTALIAS$": "myalias"},
+            {},
             [
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="Active check of myhost",
                     command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$",
+                    command_display="check_mk_active-my_active_check!--arg1 arument1 --host_alias myalias",
                     command_line="echo --arg1 arument1 --host_alias myalias",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 arument1 --host_alias myalias",
                 ),
             ],
-            id="macros_replaced",
+            id="macros_replaced_legacy_plugin",
         ),
         pytest.param(
             [
@@ -133,6 +141,7 @@ from cmk.base.command_config import (
                     "service_description": lambda _: "Active check of $HOSTALIAS$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -141,6 +150,7 @@ from cmk.base.command_config import (
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             {},
             [
                 ActiveServiceData(
@@ -153,7 +163,7 @@ from cmk.base.command_config import (
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
                 ),
             ],
-            id="http_active_service",
+            id="http_active_service_legacy_plugin",
         ),
         pytest.param(
             [
@@ -170,6 +180,7 @@ from cmk.base.command_config import (
                     ),
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -178,6 +189,7 @@ from cmk.base.command_config import (
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             {},
             [
                 ActiveServiceData(
@@ -199,7 +211,7 @@ from cmk.base.command_config import (
                     expanded_args="--arg2 argument2",
                 ),
             ],
-            id="multiple_active_services",
+            id="multiple_active_services_legacy_plugin",
         ),
         pytest.param(
             [
@@ -216,6 +228,7 @@ from cmk.base.command_config import (
                     ),
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -224,6 +237,7 @@ from cmk.base.command_config import (
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             {},
             [
                 ActiveServiceData(
@@ -236,27 +250,183 @@ from cmk.base.command_config import (
                     expanded_args="--arg1 argument1",
                 ),
             ],
-            id="multiple_services_with_the_same_description",
+            id="multiple_services_with_the_same_description_legacy_plugin",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            ActiveCheckCommand(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                service_function=lambda *_: (
+                    [
+                        ActiveService("First service", ["--arg1", "argument1"]),
+                        ActiveService("Second service", ["--arg2", "argument2"]),
+                    ]
+                ),
+            ),
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            {},
+            {},
+            [
+                ActiveServiceData(
+                    plugin_name="my_active_check",
+                    description="First service",
+                    command="check_mk_active-my_active_check",
+                    command_display="check_mk_active-my_active_check!--arg1 argument1",
+                    command_line="check_my_active_check --arg1 argument1",
+                    params={"description": "My active check", "param1": "param1"},
+                    expanded_args="--arg1 argument1",
+                ),
+                ActiveServiceData(
+                    plugin_name="my_active_check",
+                    description="Second service",
+                    command="check_mk_active-my_active_check",
+                    command_display="check_mk_active-my_active_check!--arg2 argument2",
+                    command_line="check_my_active_check --arg2 argument2",
+                    params={"description": "My active check", "param1": "param1"},
+                    expanded_args="--arg2 argument2",
+                ),
+            ],
+            id="multiple_services",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            None,
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            {},
+            {},
+            [],
+            id="unimplemented_check_plugin",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            ActiveCheckCommand(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                service_function=lambda *_: (
+                    [
+                        ActiveService(
+                            "My service", ["--password", Secret(SecretType.PASSWORD, "mypassword")]
+                        ),
+                    ]
+                ),
+            ),
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            {},
+            {},
+            [
+                ActiveServiceData(
+                    plugin_name="my_active_check",
+                    description="My service",
+                    command="check_mk_active-my_active_check",
+                    command_display="check_mk_active-my_active_check!--password mypassword",
+                    command_line="check_my_active_check --password mypassword",
+                    params={"description": "My active check", "param1": "param1"},
+                    expanded_args="--password mypassword",
+                ),
+            ],
+            id="one_service_password",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            ActiveCheckCommand(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                service_function=lambda *_: (
+                    [
+                        ActiveService(
+                            "My service",
+                            ["--password", Secret(SecretType.STORE, "stored_password")],
+                        ),
+                    ]
+                ),
+            ),
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            {},
+            {"stored_password": "mypassword"},
+            [
+                ActiveServiceData(
+                    plugin_name="my_active_check",
+                    description="My service",
+                    command="check_mk_active-my_active_check",
+                    command_display="check_mk_active-my_active_check!--pwstore=2@0@stored_password --password '**********'",
+                    command_line="check_my_active_check --pwstore=2@0@stored_password --password '**********'",
+                    params={"description": "My active check", "param1": "param1"},
+                    expanded_args="--pwstore=2@0@stored_password --password '**********'",
+                ),
+            ],
+            id="one_service_password_store",
         ),
     ],
 )
 def test_get_active_service_data(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
+    active_check_command: ActiveCheckCommand,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     macros: Mapping[str, str],
+    stored_passwords: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
+    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     cache = base_config.get_config_cache()
     cache.initialize()
 
     active_check_config = ActiveCheckConfig(
-        hostname, host_attrs, macros, stored_passwords=password_store.load()
+        hostname, host_attrs, macros, stored_passwords=stored_passwords
     )
 
     services = list(
@@ -266,7 +436,7 @@ def test_get_active_service_data(
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, hostname, host_attrs, expected_result, expected_warning",
+    "active_checks, active_check_info, active_check_command, hostname, host_attrs, expected_result, expected_warning",
     [
         pytest.param(
             [
@@ -279,6 +449,7 @@ def test_get_active_service_data(
                     "service_description": lambda _: "",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -301,6 +472,7 @@ def test_get_active_service_data(
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -313,11 +485,56 @@ def test_get_active_service_data(
             "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plugin is missing an argument function or a service description\n",
             id="invalid_plugin_info",
         ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            ActiveCheckCommand(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                service_function=lambda *_: (
+                    [
+                        ActiveService(
+                            "My service",
+                            ["--password", Secret(SecretType.STORE, "stored_password")],
+                        ),
+                    ]
+                ),
+            ),
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            [
+                ActiveServiceData(
+                    plugin_name="my_active_check",
+                    description="My service",
+                    command="check_mk_active-my_active_check",
+                    command_display="check_mk_active-my_active_check!--pwstore=2@0@stored_password "
+                    "--password '***'",
+                    command_line="check_my_active_check "
+                    "--pwstore=2@0@stored_password --password "
+                    "'***'",
+                    params={"description": "My active check", "param1": "param1"},
+                    expanded_args="--pwstore=2@0@stored_password --password " "'***'",
+                ),
+            ],
+            '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist.\n',
+            id="stored_password_missing",
+        ),
     ],
 )
 def test_get_active_service_data_warnings(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
+    active_check_command: ActiveCheckCommand,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
@@ -326,14 +543,13 @@ def test_get_active_service_data_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
+    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     cache = base_config.get_config_cache()
     cache.initialize()
 
-    active_check_config = ActiveCheckConfig(
-        hostname, host_attrs, stored_passwords=password_store.load()
-    )
+    active_check_config = ActiveCheckConfig(hostname, host_attrs)
 
     services = list(
         active_check_config.get_active_service_data(cache.ruleset_matcher, active_checks)
@@ -345,7 +561,7 @@ def test_get_active_service_data_warnings(
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, hostname, host_attrs, expected_result",
+    "active_checks, active_check_info, active_check_command, hostname, host_attrs, expected_result",
     [
         pytest.param(
             [
@@ -358,6 +574,7 @@ def test_get_active_service_data_warnings(
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -373,7 +590,7 @@ def test_get_active_service_data_warnings(
                     params={"description": "My active check", "param1": "param1"},
                 ),
             ],
-            id="one_active_service",
+            id="one_service_legacy_plugin",
         ),
         pytest.param(
             [
@@ -390,6 +607,7 @@ def test_get_active_service_data_warnings(
                     ),
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -410,7 +628,7 @@ def test_get_active_service_data_warnings(
                     params={"description": "My active check", "param1": "param1"},
                 ),
             ],
-            id="multiple_active_services",
+            id="multiple_active_services_legacy_plugin",
         ),
         pytest.param(
             [
@@ -427,6 +645,7 @@ def test_get_active_service_data_warnings(
                     ),
                 }
             },
+            None,
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -447,19 +666,75 @@ def test_get_active_service_data_warnings(
                     params={"description": "My active check", "param1": "param1"},
                 ),
             ],
-            id="multiple_services_with_the_same_description",
+            id="multiple_services_with_the_same_description_legacy_plugin",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            ActiveCheckCommand(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                service_function=lambda *_: (
+                    [
+                        ActiveService(
+                            "My service", ["--password", Secret(SecretType.PASSWORD, "mypassword")]
+                        ),
+                    ]
+                ),
+            ),
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            [
+                ActiveServiceDescription(
+                    plugin_name="check_my_active_check",
+                    description="My service",
+                    params={"description": "My active check", "param1": "param1"},
+                ),
+            ],
+            id="one_service",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            None,
+            HostName("myhost"),
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.1",
+                "_ADDRESSES_6": "",
+                "display_name": "my_host",
+            },
+            [],
+            id="unimplemented_plugin",
         ),
     ],
 )
 def test_get_active_service_descriptions(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
+    active_check_command: ActiveCheckCommand,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
+    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     cache = base_config.get_config_cache()

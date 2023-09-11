@@ -72,6 +72,15 @@ def get_fullname_and_address(werk: Werk) -> tuple[str, str]:
     raise NotImplementedError()
 
 
+def build_mail_address(werk: Werk, args: Args) -> str:
+    fullname, mail_address = get_fullname_and_address(werk)
+
+    if args.mail:
+        mail_address = args.mail.replace("@", "+" + mail_address.replace("@", "%") + "@")
+
+    return f"{fullname} <{mail_address}>"
+
+
 class File(NamedTuple):
     name: str
     content: str
@@ -255,12 +264,7 @@ def send_mail(
 
     base_version = str(Version.from_str(werk.version).base)
 
-    fullname, mail_address = get_fullname_and_address(werk)
-
-    if args.mail:
-        mail_address = args.mail.replace("@", "+" + mail_address.replace("@", "%") + "@")
-
-    mail_address = f"{fullname} <{mail_address}>"
+    mail_address = build_mail_address(werk, args)
 
     subject = f"[{base_version}] Checkmk Werk {werk.id} {change.action}: {werk.title}"
     message = template.render(

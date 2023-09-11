@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from ..agent_based_api.v1 import State
 
-DEVICE_STATES_V4: Mapping[int, Tuple[State, str]] = {
+DEVICE_STATES_V4: Mapping[int, tuple[State, str]] = {
     0: (State.OK, "normal"),
     1: (State.CRIT, "disabled"),
     2: (State.CRIT, "purged"),

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping, Tuple
+from typing import List, Mapping
 
 from .agent_based_api.v1 import (
     any_of,
@@ -16,7 +16,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Tuple[int, int]
+Section = tuple[int, int]
 
 
 def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Section | None:

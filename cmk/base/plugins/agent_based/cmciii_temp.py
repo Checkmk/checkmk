@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State, type_defs
 from .utils.cmciii import (
@@ -26,7 +25,7 @@ def discover_cmciii_temp(params: DiscoveryParams, section: Section) -> type_defs
             yield Service(item=get_item(id_, params, entry), parameters={"_item_key": id_})
 
 
-def _device_levels(entry: Sensor, key_warn: str, key_crit: str) -> Tuple[float, float] | None:
+def _device_levels(entry: Sensor, key_warn: str, key_crit: str) -> tuple[float, float] | None:
     warn, crit = entry.get(key_warn), entry.get(key_crit)
     if warn and crit:
         return (warn, crit)

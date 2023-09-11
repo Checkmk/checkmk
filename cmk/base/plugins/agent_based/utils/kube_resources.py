@@ -4,18 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Iterable,
-    Literal,
-    Mapping,
-    MutableMapping,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Callable, cast, Iterable, Literal, Mapping, MutableMapping, TypedDict, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
@@ -103,7 +92,7 @@ def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource
     return AllocatableResource(**json.loads(string_table[0][0]))
 
 
-Param = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[float, float]]]
+Param = Union[Literal["no_levels"], tuple[Literal["levels"], tuple[float, float]]]
 
 
 class Params(TypedDict, total=False):
@@ -201,7 +190,7 @@ def check_with_utilization(
 
 def requirements_for_object(
     resources: Resources, allocatable_resource: AllocatableResource | None
-) -> Iterable[Tuple[RequirementType, AllocatableKubernetesObject | None, float]]:
+) -> Iterable[tuple[RequirementType, AllocatableKubernetesObject | None, float]]:
     yield "request", None, resources.request
     yield "limit", None, resources.limit
     if allocatable_resource is not None:

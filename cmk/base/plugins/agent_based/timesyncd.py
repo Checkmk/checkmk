@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, NotRequired, Sequence, Tuple
+from typing import Any, Iterable, Mapping, NotRequired, Sequence
 
 from dateutil import parser as date_parser
 from dateutil import tz
@@ -25,10 +25,10 @@ from .utils.timesync import tolerance_check
 
 class CheckParams(TypedDict):
     stratum_level: int
-    quality_levels: Tuple[float, float]
-    alert_delay: Tuple[int, int]
-    last_synchronized: NotRequired[Tuple[int, int]]
-    last_ntp_message: Tuple[int, int]
+    quality_levels: tuple[float, float]
+    alert_delay: tuple[int, int]
+    last_synchronized: NotRequired[tuple[int, int]]
+    last_ntp_message: tuple[int, int]
 
 
 default_check_parameters = CheckParams(
@@ -75,7 +75,7 @@ class NTPMessageSection:
     receivetimestamp: float
 
 
-def _strip_sign(time_string: str) -> Tuple[str, int]:
+def _strip_sign(time_string: str) -> tuple[str, int]:
     match time_string[0]:
         case "-":
             return time_string[1:], -1
@@ -167,7 +167,7 @@ def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection |
     return section
 
 
-def _get_levels_seconds(params: Mapping[str, Any]) -> Tuple[float, float]:
+def _get_levels_seconds(params: Mapping[str, Any]) -> tuple[float, float]:
     warn_milli, crit_milli = params["quality_levels"]
     return warn_milli / 1000.0, crit_milli / 1000.0
 

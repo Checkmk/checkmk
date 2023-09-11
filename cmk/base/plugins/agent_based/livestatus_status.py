@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Dict, Mapping, MutableMapping
+from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -75,7 +75,7 @@ register.agent_section(
 
 
 def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
-    parsed: Dict[str, Dict[str, str]] = {}
+    parsed: dict[str, dict[str, str]] = {}
     site = None
     for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
@@ -13,9 +13,9 @@ from .cpu import ProcessorType, Section
 
 
 class CPULoadParams(TypedDict):
-    levels1: None | Tuple[float, float] | Dict[str, Any]
-    levels5: None | Tuple[float, float] | Dict[str, Any]
-    levels15: None | Tuple[float, float] | Dict[str, Any]
+    levels1: None | tuple[float, float] | dict[str, Any]
+    levels5: None | tuple[float, float] | dict[str, Any]
+    levels15: None | tuple[float, float] | dict[str, Any]
 
 
 def _processor_type_info(proc_type: ProcessorType) -> str:

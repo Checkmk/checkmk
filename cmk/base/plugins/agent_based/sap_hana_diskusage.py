@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any, Dict, Mapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -41,9 +41,9 @@ register.agent_section(
 )
 
 
-def _extract_size_and_used_from_line(line: Sequence[str]) -> Dict[str, float]:
+def _extract_size_and_used_from_line(line: Sequence[str]) -> dict[str, float]:
     # Values are measured in GB. Are other factors possible? (Query)
-    inst_values: Dict[str, float] = {}
+    inst_values: dict[str, float] = {}
     splitted_line = line[-1].split()
     for key, index in [
         ("size", 1),

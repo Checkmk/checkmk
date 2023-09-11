@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 
 import cmk.base.plugins.agent_based.utils.docker as docker
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Dict[str, Dict]
+Section = dict[str, dict]
 
 
 def parse_docker_container_network(string_table: StringTable) -> Section:

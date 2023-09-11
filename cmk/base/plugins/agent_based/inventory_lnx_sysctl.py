@@ -24,16 +24,16 @@
 # dev.cdrom.info = Can select disk:
 
 import re
-from typing import Dict, Mapping, Sequence, Set
+from typing import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, Set[str]]
+Section = Mapping[str, set[str]]
 
 
 def parse_lnx_sysctl(string_table: StringTable) -> Section:
-    kernel_config: Dict[str, Set[str]] = {}
+    kernel_config: dict[str, set[str]] = {}
     for line in string_table:
         kernel_config.setdefault(line[0], set()).add(" ".join(line[2:]))
     return kernel_config

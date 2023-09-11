@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, List, Mapping, NamedTuple
+from typing import Any, Final, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -47,7 +47,7 @@ class PrinterSupply(NamedTuple):
     color: str
 
 
-Section = Dict[str, PrinterSupply]
+Section = dict[str, PrinterSupply]
 
 
 def _get_oid_end_last_index(oid_end: str) -> str:

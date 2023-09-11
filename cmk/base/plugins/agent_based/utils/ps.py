@@ -10,7 +10,6 @@ from html import escape
 from typing import (
     Any,
     Callable,
-    Dict,
     Generator,
     Iterable,
     Iterator,
@@ -20,7 +19,6 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
-    Tuple,
     Union,
 )
 
@@ -42,8 +40,8 @@ from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLab
 from . import cpu, memory
 
 # typing: nothing intentional, just adapt to sad reality
-_ProcessValue = Tuple[Union[str, float], str]
-_Process = List[Tuple[str, _ProcessValue]]
+_ProcessValue = tuple[Union[str, float], str]
+_Process = List[tuple[str, _ProcessValue]]
 
 
 @dataclass(frozen=True)
@@ -94,19 +92,19 @@ class PsInfo:
         )
 
 
-Section = Tuple[int, Sequence[Tuple[PsInfo, Sequence[str]]], int]
+Section = tuple[int, Sequence[tuple[PsInfo, Sequence[str]]], int]
 
-_InventorySpec = Tuple[
+_InventorySpec = tuple[
     str,
     Optional[str],
     Optional[Union[str, Literal[False]]],
-    Tuple[Optional[str], bool],
+    tuple[Optional[str], bool],
     Mapping[str, str],
     Mapping[str, Any],
 ]
 
 # process_lines: (Node, PsInfo, cmd_line, time)
-ProcessLine = Tuple[Optional[str], PsInfo, Sequence[str], int]
+ProcessLine = tuple[Optional[str], PsInfo, Sequence[str], int]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
@@ -512,7 +510,7 @@ def discover_ps(
     params: Sequence[Mapping[str, Any]],
     section_ps: Section | None,
     section_mem: memory.SectionMem | None,
-    section_mem_used: Dict[str, memory.SectionMem] | None,
+    section_mem_used: dict[str, memory.SectionMem] | None,
     section_cpu: cpu.Section | None,
 ) -> DiscoveryResult:
     if not section_ps:
@@ -561,7 +559,7 @@ def discover_ps(
 def unused_value_remover(
     value_store: MutableMapping[str, Any],
     key: str,
-) -> Generator[Dict[str, Tuple[float, float]], None, None]:
+) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
     This plugin uses the process IDs in the keys to persist values.

@@ -17,14 +17,12 @@ import re
 from typing import (
     Any,
     Counter,
-    Dict,
     Iterable,
     List,
     Mapping,
     MutableMapping,
     NamedTuple,
     Sequence,
-    Set,
     TypedDict,
 )
 
@@ -103,7 +101,7 @@ def select_forwarded(
     forward_settings: Sequence[Mapping[str, Any]],
     *,
     invert: bool = False,
-) -> Set[str]:
+) -> set[str]:
     # Is forwarding enabled in general?
     if not (forward_settings and forward_settings[0]):
         return set(items) if invert else set()
@@ -115,7 +113,7 @@ def select_forwarded(
 
 def reclassify(
     counts: Counter[int],
-    patterns: Dict[str, Any],  # all I know right now :-(
+    patterns: dict[str, Any],  # all I know right now :-(
     text: str,
     old_level: str,
 ) -> str:

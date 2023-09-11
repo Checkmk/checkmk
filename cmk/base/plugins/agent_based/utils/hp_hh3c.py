@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import Enum
-from typing import Dict, List
+from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -24,7 +24,7 @@ class DeviceStatus(Enum):
     UNSUPPORTED = 4
 
 
-Section = Dict[str, int]
+Section = dict[str, int]
 
 
 def parse_hp_hh3c_device(string_table: List[StringTable]) -> Section:

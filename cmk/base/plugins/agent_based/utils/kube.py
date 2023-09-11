@@ -5,17 +5,7 @@
 
 import enum
 import time
-from typing import (
-    assert_never,
-    Callable,
-    Literal,
-    Mapping,
-    NewType,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import assert_never, Callable, Literal, Mapping, NewType, Sequence, TypeVar, Union
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -440,10 +430,10 @@ class ClusterInfo(Section):
     version: GitVersion
 
 
-VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
+VSResultAge = Union[tuple[Literal["levels"], tuple[int, int]], Literal["no_levels"]]
 
 
-def get_age_levels_for(params: Mapping[str, VSResultAge], key: str) -> Tuple[int, int] | None:
+def get_age_levels_for(params: Mapping[str, VSResultAge], key: str) -> tuple[int, int] | None:
     """Get the levels for the given key from the params
 
     Examples:

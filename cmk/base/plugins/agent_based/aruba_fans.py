@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple
+from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import all_of, exists, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -51,7 +51,7 @@ class Fan(NamedTuple):
 
 Section = Mapping[str, Fan]
 
-TemperatureParams = Tuple[float, float]
+TemperatureParams = tuple[float, float]
 
 
 def parse_aruba_fans(string_table: StringTable) -> Section:

@@ -12,7 +12,7 @@
 
 import time
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Tuple
+from typing import Any, List, Mapping, MutableMapping
 
 from typing_extensions import TypedDict
 
@@ -35,8 +35,8 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 RadioCounters = List[float]
 
-RadioInfo = Dict[str, Tuple[RadioCounters, int, int]]
-RadioDict = Dict[str, RadioInfo]
+RadioInfo = dict[str, tuple[RadioCounters, int, int]]
+RadioDict = dict[str, RadioInfo]
 
 
 class ApInfo(TypedDict, total=False):
@@ -47,8 +47,8 @@ class ApInfo(TypedDict, total=False):
     active_node: str
 
 
-ApDict = Dict[str, ApInfo]
-Section = Tuple[ApDict, RadioDict]
+ApDict = dict[str, ApInfo]
+Section = tuple[ApDict, RadioDict]
 
 AP_STATES = {
     "1": (State.CRIT, "cleared"),

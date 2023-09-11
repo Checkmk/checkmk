@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from time import time
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from typing_extensions import TypedDict
 
@@ -105,7 +105,7 @@ Section = Mapping[str, VPNTunnel]
 
 
 def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type: ignore[no-untyped-def]
-    phase_2_data: Dict[str, Phase] = {}
+    phase_2_data: dict[str, Phase] = {}
     for index, state, phase_2_in, phase_2_out in table_phase_2:
         if state == "2":
             continue
@@ -123,7 +123,7 @@ def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type: ignore[no-unt
 def parse_cisco_vpn_tunnel(string_table: List[StringTable]) -> Section:
     phase_2_data = _parse_phase_2(string_table[1])
 
-    section: Dict[str, VPNTunnel] = {}
+    section: dict[str, VPNTunnel] = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in string_table[0]:
         if not remote_ip:
             continue
@@ -174,7 +174,7 @@ class CheckParameters(
     total=False,
 ):
     state: int
-    tunnels: Sequence[Tuple[str, str, int]]
+    tunnels: Sequence[tuple[str, str, int]]
 
 
 def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
@@ -184,7 +184,7 @@ def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
 def _state_missing_and_aliases(
     item: str,
     params: CheckParameters,
-) -> Tuple[State, str]:
+) -> tuple[State, str]:
     revelant_tunnel_settings = [
         (
             alias,

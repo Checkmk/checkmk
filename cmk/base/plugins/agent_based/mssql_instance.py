@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping
+from typing import Mapping
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -26,7 +26,7 @@ MSSQL_VERSION_MAPPING = {
 
 
 def parse_mssql_instance(string_table: StringTable) -> Section:
-    parsed: Dict[str, Dict[str, str]] = {}
+    parsed: dict[str, dict[str, str]] = {}
     for line in string_table:
         if (
             line[0].startswith("ERROR:")

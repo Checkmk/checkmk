@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Callable, Dict, Generator, List, Mapping, Tuple, Union
+from typing import Callable, Generator, List, Mapping, Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = List[Tuple[str, StringTable]]
+Section = List[tuple[str, StringTable]]
 
-Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
+Converter = Union[str, tuple[str, Callable[[str], Union[str, float, None]]]]
 
 
 def parse_dmidecode(string_table: StringTable) -> Section:
@@ -272,8 +272,8 @@ def _make_inventory_mem_device(
 def _make_dict(
     lines: List[List[str]],
     converter_map: Mapping[str, Converter],
-) -> Dict[str, float | str | None]:
-    dict_: Dict[str, float | str | None] = {}
+) -> dict[str, float | str | None]:
+    dict_: dict[str, float | str | None] = {}
     for name, raw_value, *_rest in lines:
         if name not in converter_map or raw_value == "Not Specified":
             continue

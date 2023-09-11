@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping, MutableMapping, MutableSequence, Sequence, Tuple, Type
+from typing import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
 from ..agent_based_api.v1 import regex
 from ..agent_based_api.v1.type_defs import StringTable
@@ -213,7 +213,7 @@ def parse_wmi_table(
     string_table: StringTable,
     key: str = "Name",
     # Needed in check_legacy_includes/wmi.py
-    table_type: Type[WMITable] = WMITable,
+    table_type: type[WMITable] = WMITable,
 ) -> WMISection:
     parsed: MutableMapping[str, WMITable] = {}
     info_iter = iter(string_table)
@@ -271,8 +271,8 @@ def _prepare_wmi_table(
     timestamp: int | None,
     frequency: int | None,
     # Needed in check_legacy_includes/wmi.py
-    table_type: Type[WMITable],
-) -> Tuple[bool, WMITable]:
+    table_type: type[WMITable],
+) -> tuple[bool, WMITable]:
     # Possibilities:
     # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
     # <<<SEC>>>

@@ -12,19 +12,19 @@
 """
 
 from contextlib import suppress
-from typing import Any, Dict, MutableMapping, Set, Tuple
+from typing import Any, MutableMapping
 
 from ..agent_based_api.v1 import get_rate, GetRateError, IgnoreResultsError, Service
 from ..agent_based_api.v1.type_defs import DiscoveryResult
 
-Counters = Dict[str, float]
-Section = Dict[Tuple[str, str], Counters]
+Counters = dict[str, float]
+Section = dict[tuple[str, str], Counters]
 
 
 def discovery_mssql_counters_generic(
     section: Section,
-    want_counters: Set[str],
-    dflt: Dict[str, str] | None = None,
+    want_counters: set[str],
+    dflt: dict[str, str] | None = None,
 ) -> DiscoveryResult:
     yield from (
         Service(item=f"{obj} {instance}", parameters=dflt)
@@ -59,7 +59,7 @@ def get_int(mapping: Counters, key: str) -> int:
     raise ValueError(f"Cannot handle {key!r}={result!r}")
 
 
-def get_item(item: str, section: Section) -> Tuple[Counters, str]:
+def get_item(item: str, section: Section) -> tuple[Counters, str]:
     obj, instance, *counter = item.split()
     if (obj, instance) not in section:
         raise IgnoreResultsError("Item not found in monitoring data")

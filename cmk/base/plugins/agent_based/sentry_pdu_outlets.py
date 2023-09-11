@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from .agent_based_api.v1 import equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -11,7 +11,7 @@ from .utils.sentry import DEVICE_STATES_V4
 
 Section = Mapping[str, int]
 
-OUTLET_STATES: Mapping[int, Tuple[State, str]] = {
+OUTLET_STATES: Mapping[int, tuple[State, str]] = {
     0: (State.OK, "off"),
     1: (State.OK, "on"),
     2: (State.WARN, "off wait"),
@@ -69,7 +69,7 @@ def discovery_sentry_pdu_outlets(section: Section) -> DiscoveryResult:
 
 
 def check_outlets(
-    item: str, section: Section, outlet_states: Mapping[int, Tuple[State, str]]
+    item: str, section: Section, outlet_states: Mapping[int, tuple[State, str]]
 ) -> CheckResult:
     outlet_state = section.get(item)
     if outlet_state is None:

@@ -5,7 +5,7 @@
 
 from enum import Enum
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -48,8 +48,8 @@ class Server(NamedTuple):
 
 
 class Section(NamedTuple):
-    frontends: Dict[str, Frontend]
-    servers: Dict[str, Server]
+    frontends: dict[str, Frontend]
+    servers: dict[str, Server]
 
 
 def parse_int(val):

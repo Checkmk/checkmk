@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, Literal, Mapping, Sequence, Tuple, TypedDict
+from typing import Any, Callable, Iterable, Literal, Mapping, Sequence, TypedDict
 
 from ..agent_based_api.v1 import check_levels, Metric, Result, Service, State, type_defs
 
@@ -52,7 +52,7 @@ class Sensor:
         }.get(dev_state.lower())
 
 
-Section = Dict[str, Sensor]
+Section = dict[str, Sensor]
 IgnoreParams = Mapping[str, Sequence[str]]
 StatusTxtMapping = Callable[[str], State]
 
@@ -65,7 +65,7 @@ class UserLevels:
 
 class DiscoveryParams(TypedDict):
     discovery_mode: (
-        Tuple[Literal["summarize"], IgnoreParams] | Tuple[Literal["single"], IgnoreParams]
+        tuple[Literal["summarize"], IgnoreParams] | tuple[Literal["single"], IgnoreParams]
     )
 
 
@@ -151,7 +151,7 @@ def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLeve
 def _sensor_levels_to_check_levels(
     sensor_warn: float | None,
     sensor_crit: float | None,
-) -> Tuple[float, float] | None:
+) -> tuple[float, float] | None:
     if sensor_crit is None:
         return None
     warn = sensor_warn if sensor_warn is not None else sensor_crit

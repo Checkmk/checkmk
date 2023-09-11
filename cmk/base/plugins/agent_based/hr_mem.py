@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import suppress
-from typing import Dict, List, Tuple
+from typing import List
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils import memory, ucd_hr_detection
 
-PreParsed = Dict[str, List[Tuple[str, int, int]]]
+PreParsed = dict[str, List[tuple[str, int, int]]]
 
 
 def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:

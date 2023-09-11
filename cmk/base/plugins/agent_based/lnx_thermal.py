@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Sequence, Tuple
+from typing import Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -73,7 +73,7 @@ def parse_lnx_thermal(string_table: StringTable) -> Section:
 
 def _get_thermal_info(
     line: Sequence[str],
-) -> Tuple[Mapping[str, str], int, Sequence[str]] | None:
+) -> tuple[Mapping[str, str], int, Sequence[str]] | None:
     for temp_idx, header in (
         (2, ["name", "type"]),
         (3, ["name", "mode", "type"]),
@@ -140,7 +140,7 @@ def check_lnx_thermal(item: str, params: TempParamType, section: Section) -> Che
     )
 
 
-def _get_levels(data: Thermal) -> Tuple[float, float] | None:
+def _get_levels(data: Thermal) -> tuple[float, float] | None:
     crit = _get_crit_level(data.hot, data.critical)
     warn = data.passive
 

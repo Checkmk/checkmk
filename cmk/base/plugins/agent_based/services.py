@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Sequence, Tuple
+from typing import Any, Generator, List, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,7 +32,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # <state> is the expected state to inventorize services of (running, stopped, ...)
 # <start_mode> is the expected state to inventorize services of (auto, manual, ...)
 
-WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: Dict[str, Any] = {}
+WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: dict[str, Any] = {}
 
 WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
     "states": [("running", None, 0)],
@@ -72,7 +72,7 @@ register.agent_section(
 
 def _extract_wato_compatible_rules(
     params: Sequence[Mapping[str, Any]],
-) -> Sequence[Tuple[str | None, str | None, str | None]]:
+) -> Sequence[tuple[str | None, str | None, str | None]]:
     return [
         (pattern, rule.get("state"), rule.get("start_mode"))
         # If no rule is set by user, *no* windows services should be discovered.

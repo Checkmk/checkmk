@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Tuple
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -62,7 +62,7 @@ ORACLE_TABLESPACES_DEFAULTS = {
 
 
 def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSpaces:
-    tablespaces: Dict[Tuple[str, str], oracle.TableSpaces] = {}
+    tablespaces: dict[tuple[str, str], oracle.TableSpaces] = {}
     error_sids: oracle.ErrorSids = {}
 
     for line in string_table:

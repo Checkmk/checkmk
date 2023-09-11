@@ -18,10 +18,10 @@ PredictiveLevels = dict[str, object] | tuple[float, float] | None
 
 
 class MiscParams(typing.TypedDict, total=True):
-    clients: typing.Tuple[int, int] | None
-    network_sockets: typing.Tuple[int, int] | None
-    time_to_resolve_dns: typing.Tuple[int, int] | None
-    time_consumed_by_rule_engine: typing.Tuple[int, int] | None
+    clients: tuple[int, int] | None
+    network_sockets: tuple[int, int] | None
+    time_to_resolve_dns: tuple[int, int] | None
+    time_consumed_by_rule_engine: tuple[int, int] | None
     client_requests_http: PredictiveLevels
     client_requests_httpv2: PredictiveLevels
     client_requests_https: PredictiveLevels

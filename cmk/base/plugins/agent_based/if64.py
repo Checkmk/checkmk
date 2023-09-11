@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
 from .agent_based_api.v1 import register, SNMPTree, type_defs
 from .utils import if64, interfaces
@@ -86,7 +86,7 @@ def cluster_check_if64(
     section_if64: Mapping[str, interfaces.Section[interfaces.TInterfaceType] | None],
     section_if64adm: Mapping[str, If64AdmSection | None],
 ) -> type_defs.CheckResult:
-    sections_w_admin_status: Dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
+    sections_w_admin_status: dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:
             _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
@@ -13,9 +13,9 @@ from .utils.interfaces import saveint
 class ZpoolStatus(NamedTuple):
     message: str = ""
     state_messages: List[str] = []
-    error_pools: Dict[str, Any] = {}
-    warning_pools: Dict[str, Any] = {}
-    pool_messages: Dict[str, Any] = {}
+    error_pools: dict[str, Any] = {}
+    warning_pools: dict[str, Any] = {}
+    pool_messages: dict[str, Any] = {}
 
 
 class StateDetails(NamedTuple):
@@ -50,9 +50,9 @@ def parse_zpool_status(  # pylint: disable=too-many-branches
     start_pool: bool = False
     multiline: bool = False
     last_pool: str = ""
-    error_pools: Dict[str, Any] = {}
-    warning_pools: Dict[str, Any] = {}
-    pool_messages: Dict[str, Any] = {}
+    error_pools: dict[str, Any] = {}
+    warning_pools: dict[str, Any] = {}
+    pool_messages: dict[str, Any] = {}
     state_messages: List[str] = []
 
     for line in string_table:

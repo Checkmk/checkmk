@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional
 
 from ..agent_based_api.v1 import check_levels, render, Result, State, type_defs
 
@@ -96,8 +96,8 @@ def check_elphase(  # pylint: disable=too-many-branches
             value = entry  # 12.0
             state_info = None
 
-        levels_upper: Tuple[float, float] | None = None
-        levels_lower: Tuple[float, float] | None = None
+        levels_upper: tuple[float, float] | None = None
+        levels_lower: tuple[float, float] | None = None
         if quantity in params:
             if bound == Bounds.Both:
                 levels = params[quantity]

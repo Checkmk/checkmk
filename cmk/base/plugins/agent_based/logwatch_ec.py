@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import (
     Any,
     Counter,
-    Dict,
     Generator,
     Iterable,
     List,
@@ -31,7 +30,6 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
-    Tuple,
 )
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -61,7 +59,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-ClusterSection = Dict[Optional[str], logwatch.Section]
+ClusterSection = dict[Optional[str], logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
 CHECK_DEFAULT_PARAMETERS = {
@@ -205,7 +203,7 @@ def logwatch_to_prio(level: str) -> int:
 
 def _logwatch_inventory_mode_rules(  # type: ignore[no-untyped-def]
     forward_settings,
-) -> Tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     merged_rules = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
@@ -390,7 +388,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     rclfd_total = 0
     rclfd_to_ignore = 0
 
-    logfile_reclassify_settings: Dict[str, Any] = {}
+    logfile_reclassify_settings: dict[str, Any] = {}
 
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
@@ -593,7 +591,7 @@ class MessageForwarder:
 
     def _forward_tcp(
         self,
-        method: Tuple,
+        method: tuple,
         syslog_messages: Sequence[SyslogMessage],
     ) -> LogwatchFordwardResult:
         # Transform old format: (proto, address, port)
@@ -638,7 +636,7 @@ class MessageForwarder:
     @staticmethod
     def _forward_send_tcp(
         method: tuple,
-        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, List[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         protocol, method_params = method
@@ -666,7 +664,7 @@ class MessageForwarder:
     # b) Write files for new chunk
     def _spool_messages(
         self,
-        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, List[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         self._spool_path.mkdir(parents=True, exist_ok=True)
@@ -693,9 +691,9 @@ class MessageForwarder:
 
     def _load_spooled_messages(
         self,
-        method: Tuple,
+        method: tuple,
         result: LogwatchFordwardResult,
-    ) -> List[Tuple[float, int, List[str]]]:
+    ) -> List[tuple[float, int, List[str]]]:
         spool_params = method[1]["spool"]
 
         try:

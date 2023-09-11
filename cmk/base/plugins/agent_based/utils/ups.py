@@ -5,7 +5,7 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final, Tuple
+from typing import Final
 
 from typing_extensions import TypedDict
 
@@ -43,8 +43,8 @@ DETECT_UPS_CPS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1")
 
 
 class UpsParameters(TypedDict, total=False):
-    battime: Tuple[int, int]
-    capacity: Tuple[int, int]
+    battime: tuple[int, int]
+    capacity: tuple[int, int]
 
 
 CHECK_DEFAULT_PARAMETERS: Final[UpsParameters] = {
@@ -145,7 +145,7 @@ def _is_on_battery(battery: Battery) -> bool:
 def _output_time_remaining(
     seconds_left: int | None,
     on_battery: bool,
-    levels: Tuple[int, int],
+    levels: tuple[int, int],
 ) -> type_defs.CheckResult:
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
@@ -167,7 +167,7 @@ def _output_time_remaining(
 def _output_percent_charged(
     percent_charged: int | None,
     on_battery: bool,
-    levels: Tuple[int, int],
+    levels: tuple[int, int],
 ) -> type_defs.CheckResult:
     if percent_charged is None:
         return

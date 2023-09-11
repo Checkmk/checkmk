@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping
+from typing import Mapping
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State, type_defs
 
-Section = Dict[str, Dict[str, Mapping[str, int]]]
+Section = dict[str, dict[str, Mapping[str, int]]]
 
 
 def parse_site_object_counts(string_table: type_defs.StringTable) -> Section:
@@ -51,7 +51,7 @@ def discover_site_object_counts(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_site_object_counts(section: Section) -> type_defs.CheckResult:
-    global_counts: Dict[str, Dict[str, int]] = {}
+    global_counts: dict[str, dict[str, int]] = {}
     for site, site_data in section.items():
         site_info = []
         for cmds_or_tags, counts in site_data.items():

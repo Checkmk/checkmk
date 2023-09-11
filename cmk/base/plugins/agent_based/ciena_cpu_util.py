@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Mapping, NamedTuple, Sequence, Tuple
+from typing import Mapping, NamedTuple, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -26,7 +26,7 @@ Section5142 = int
 
 class Section5171(NamedTuple):
     util: int
-    cores: Sequence[Tuple[str, int]]
+    cores: Sequence[tuple[str, int]]
 
 
 def parse_ciena_cpu_util_5142(string_table: StringTable) -> Section5142 | None:

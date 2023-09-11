@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
+from typing import Any, Mapping
 
 from typing_extensions import TypedDict
 
@@ -47,7 +47,7 @@ class SectionSidOracleRman(TypedDict):
     used_incr_0: bool
 
 
-SectionOracleRman = Dict[str, SectionSidOracleRman]
+SectionOracleRman = dict[str, SectionSidOracleRman]
 
 
 def parse_oracle_rman(  # pylint: disable=too-many-branches

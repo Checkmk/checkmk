@@ -26,7 +26,7 @@ False
 """
 
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping, MutableMapping, Sequence
 
 from .agent_based_api.v1 import (
     all_of,
@@ -42,7 +42,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 from .utils.cisco import DETECT_CISCO
 from .utils.cisco_mem import check_cisco_mem_sub
 
-Section = Dict[str, Sequence[str]]
+Section = dict[str, Sequence[str]]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 CISCO_ASA_PRE_V9_PATTERN = r"^[Cc]isco [Aa]daptive [Ss]ecurity.*Version [0-8]\..*"
 

@@ -14,7 +14,7 @@
 #########################################################################################
 
 import os
-from typing import Dict, Literal
+from typing import Literal
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -93,7 +93,7 @@ def parse_logwatch(string_table: StringTable) -> Section:
     """
 
     errors = []
-    logfiles: Dict[str, ItemData] = {}
+    logfiles: dict[str, ItemData] = {}
 
     item_data: ItemData | None = None
 

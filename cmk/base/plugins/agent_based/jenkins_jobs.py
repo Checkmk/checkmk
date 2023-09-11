@@ -14,7 +14,7 @@
 import json
 from collections import namedtuple
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -56,7 +56,7 @@ Section = Mapping[str, JenkinsJobInfo]
 
 
 def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
-    parsed: Dict[str, JenkinsJobInfo] = {}
+    parsed: dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:
         jenkins_data = json.loads(line[0])

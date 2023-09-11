@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Sequence
+from typing import Any, Final, List, Mapping, Sequence
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -19,7 +19,7 @@ Section = Mapping[str, Sequence[Mapping]]
 
 
 def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
-    parsed: Dict[str, List[Mapping]] = {}
+    parsed: dict[str, List[Mapping]] = {}
 
     for line in string_table:
         node_detail = json.loads(line[0])

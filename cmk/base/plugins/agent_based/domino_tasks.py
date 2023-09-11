@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, List, Mapping, Sequence
 
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -58,7 +58,7 @@ def check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
     section_domino_tasks: ps.Section | None,
-    section_mem: Dict[str, float] | None,
+    section_mem: dict[str, float] | None,
 ) -> CheckResult:
     if section_domino_tasks is None:
         # The driving force of this check is the section 'domino_tasks'. If

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, MutableMapping, Tuple
+from typing import Any, MutableMapping
 
 from ..agent_based_api.v1 import check_levels, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
@@ -19,7 +19,7 @@ def store_sync_time(
 def _check_time_difference(
     sync_time: float,
     now: float,
-    levels_upper: Tuple[float, float] | None,
+    levels_upper: tuple[float, float] | None,
     metric_name: str | None,
     label: str,
     notice_only: bool,
@@ -46,7 +46,7 @@ def _check_time_difference(
 def tolerance_check(
     *,
     sync_time: float | None,
-    levels_upper: Tuple[float, float] | None,
+    levels_upper: tuple[float, float] | None,
     value_store: MutableMapping[str, Any],
     metric_name: str | None,
     label: str,

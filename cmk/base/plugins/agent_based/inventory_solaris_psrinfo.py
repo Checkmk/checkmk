@@ -31,7 +31,7 @@
 # The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, regex, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -196,7 +196,7 @@ def inventory_solaris_cpus(
     section_solaris_psrinfo_verbose: ProcessorInfo | None,
     section_solaris_psrinfo_table: ParsedTable | None,
 ) -> InventoryResult:
-    inventory_attributes: Dict[str, int | str] = {}
+    inventory_attributes: dict[str, int | str] = {}
 
     # cpus and threads are also (partly) available in section_solaris_psrinfo
     # and section_solaris_psrinfo_table, but these are more reliable

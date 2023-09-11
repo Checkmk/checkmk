@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Any, Dict, List, Mapping, NamedTuple
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -73,7 +73,7 @@ class Tray(NamedTuple):
     level: int
 
 
-Section = Dict[str, Tray]
+Section = dict[str, Tray]
 
 STATES_MAP = {
     AvailabilityStatus.AVAILABLE_AND_IDLE: State.OK,

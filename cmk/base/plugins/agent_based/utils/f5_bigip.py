@@ -19,7 +19,7 @@ False
 True
 """
 
-from typing import Dict, Literal
+from typing import Literal
 
 from typing_extensions import TypedDict
 
@@ -57,4 +57,4 @@ class _F5BigipClusterStatusVSResultRequired(TypedDict, total=False):
 
 
 class F5BigipClusterStatusVSResult(_F5BigipClusterStatusVSResultRequired):
-    v11_2_states: Dict[AllStates, AllStates]
+    v11_2_states: dict[AllStates, AllStates]

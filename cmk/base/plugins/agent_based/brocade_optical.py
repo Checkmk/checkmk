@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
+from typing import Any, List, Mapping, Sequence, Union
 
 from typing_extensions import TypedDict
 
@@ -98,7 +98,7 @@ OPER_STATUS_MAP = {
     "9": "admin down",
 }
 
-ValueAndStatus = Union[Tuple[float, str], Tuple[None, None]]
+ValueAndStatus = Union[tuple[float, str], tuple[None, None]]
 Lane = Mapping[str, ValueAndStatus]
 
 
@@ -112,10 +112,10 @@ class Port(TypedDict, total=False):
     type: str
     part: str
     serial: str
-    lanes: Dict[int, Lane]
+    lanes: dict[int, Lane]
 
 
-Section = Dict[str, Port]
+Section = dict[str, Port]
 
 
 def _parse_value(value_string: str) -> ValueAndStatus:

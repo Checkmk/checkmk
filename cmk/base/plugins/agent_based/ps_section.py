@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -42,13 +42,13 @@ from .utils import ps
 # WINDOWSXP,16875000,lsass.exe,3964928,21,3906250,43462656,6647808^M
 # WINDOWSXP,8750000,VBoxService.exe,1056768,8,468750,26652672,3342336^M
 
-Section = Tuple[int, List]  # don't ask what kind of list.
+Section = tuple[int, List]  # don't ask what kind of list.
 
 
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
 # a windows output it will extract the number of cpu cores
-def _merge_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
+def _merge_wmic_info(info) -> tuple[int, List]:  # type: ignore[no-untyped-def]
     # Agent output version cmk>1.2.5
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
@@ -67,10 +67,10 @@ def _merge_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
     return _extract_wmic_info(info)
 
 
-def _extract_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
+def _extract_wmic_info(info) -> tuple[int, List]:  # type: ignore[no-untyped-def]
     ps_result = []
     lines = iter(info)
-    wmic_info: Dict[str, List] = {}
+    wmic_info: dict[str, List] = {}
     is_wmic = False
 
     while True:
@@ -104,7 +104,7 @@ def _extract_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def
 
 def _merge_wmic(  # type: ignore[no-untyped-def]
     ps_result, wmic_info, wmic_headers
-) -> Tuple[int, List]:
+) -> tuple[int, List]:
     info = []
     seen_pids = set()  # Remove duplicate entries
     cpu_cores = 1
@@ -137,7 +137,7 @@ def _merge_wmic(  # type: ignore[no-untyped-def]
 # This mainly formats the line[1] element which contains the process info (user,...)
 def parse_process_entries(  # type: ignore[no-untyped-def]
     pre_parsed,
-) -> List[Tuple[ps.PsInfo, List[str]]]:
+) -> List[tuple[ps.PsInfo, List[str]]]:
     parsed = []
     # line[0] = process_info OR (if no process info available) = process name
     for line in pre_parsed:

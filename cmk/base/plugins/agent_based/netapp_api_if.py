@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from typing_extensions import TypedDict
 
@@ -17,12 +17,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
 
-MACList = List[Tuple[str, Optional[str]]]
+MACList = List[tuple[str, Optional[str]]]
 
 
 class NICExtraInfo(TypedDict, total=False):
     grouped_if: MACList
-    speed_differs: Tuple[int, int]
+    speed_differs: tuple[int, int]
     home_port: str
     home_node: str | None
     is_home: bool
@@ -30,7 +30,7 @@ class NICExtraInfo(TypedDict, total=False):
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
-Section = Tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
+Section = tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
 
 
 def parse_netapp_api_if(  # pylint: disable=too-many-branches

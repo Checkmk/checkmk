@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import Dict, List, Tuple
+from typing import List
 
 from .agent_based_api.v1 import (
     any_of,
@@ -18,7 +18,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, Tuple[str, str]]
+Section = dict[str, tuple[str, str]]
 
 DETECT_INFOBLOX = any_of(
     contains(".1.3.6.1.2.1.1.1.0", "infoblox"),

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple
+from typing import Mapping, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -27,10 +27,10 @@ from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 
 class PSUWattageParams(TypedDict, total=False):
-    levels_abs_upper: Tuple[float, float]
-    levels_abs_lower: Tuple[float, float]
-    levels_perc_upper: Tuple[float, float]
-    levels_perc_lower: Tuple[float, float]
+    levels_abs_upper: tuple[float, float]
+    levels_abs_lower: tuple[float, float]
+    levels_perc_upper: tuple[float, float]
+    levels_perc_lower: tuple[float, float]
 
 
 default_psu_temperature_parameters = TempParamDict(

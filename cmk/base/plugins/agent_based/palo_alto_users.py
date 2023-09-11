@@ -5,7 +5,7 @@
 
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -20,7 +20,7 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.palo_alto import DETECT_PALO_ALTO
 
-LEVEL_TYPE = Optional[Tuple[float, float]]
+LEVEL_TYPE = Optional[tuple[float, float]]
 
 
 @dataclass(frozen=True)
@@ -55,7 +55,7 @@ def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def _abs_and_rel_levels(levels: Tuple[str, LEVEL_TYPE]) -> Tuple[LEVEL_TYPE, LEVEL_TYPE]:
+def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
     match levels:
         case "ignore":
             return None, None

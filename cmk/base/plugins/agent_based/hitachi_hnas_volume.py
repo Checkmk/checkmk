@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Tuple
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -23,8 +23,8 @@ STATE_MAP = {
 
 
 class Section(NamedTuple):
-    volumes: Dict[str, Tuple[str, float | None, float | None, str]]
-    virtual_volumes: Dict[str, Tuple[float | None, float | None]]
+    volumes: dict[str, tuple[str, float | None, float | None, str]]
+    virtual_volumes: dict[str, tuple[float | None, float | None]]
 
 
 def parse_hitachi_hnas_volume(string_table):

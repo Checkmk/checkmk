@@ -8,12 +8,11 @@
 # { 'KEY1' : PAGES VALUE1, 'KEY2' : PAGES VALUE2, ... }
 """
 
-from typing import Dict
 
 from ..agent_based_api.v1 import all_of, any_of, check_levels, contains, exists, Service, startswith
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-Section = Dict[str, int]
+Section = dict[str, int]
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 

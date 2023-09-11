@@ -5,7 +5,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Callable, Iterable, List, Mapping, Sequence
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -55,7 +55,7 @@ class AWSMetric:
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
-AWSLimitsByRegion = Dict[str, List]
+AWSLimitsByRegion = dict[str, List]
 
 
 def discover_lambda_functions(
@@ -150,10 +150,10 @@ def extract_aws_metrics_by_labels(  # type: ignore[no-untyped-def]
     section: GenericAWSSection,
     extra_keys: Iterable[str] | None = None,
     convert_sum_stats_to_rate=True,
-) -> Mapping[str, Dict[str, Any]]:
+) -> Mapping[str, dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
-    values_by_labels: Dict[str, Dict[str, Any]] = {}
+    values_by_labels: dict[str, dict[str, Any]] = {}
     for row in section:
         row_id = row["Id"].lower()
         row_label = row["Label"]

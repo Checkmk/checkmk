@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, List, Mapping, Sequence
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -122,8 +122,8 @@ _CTR_TO_IF_FIELDS = {
 
 
 def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.InterfaceWithRates]:
-    rates: Dict[str, Dict[str, int]] = {}
-    mac_addresses: Dict[str, str] = {}
+    rates: dict[str, dict[str, int]] = {}
+    mac_addresses: dict[str, str] = {}
 
     for name, instances in section.items():
         if name.startswith("net."):

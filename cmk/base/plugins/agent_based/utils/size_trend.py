@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Tuple
+from typing import Any, Mapping, MutableMapping
 
 from ..agent_based_api.v1 import check_levels, get_average, get_rate, Metric, render
 from ..agent_based_api.v1.type_defs import CheckResult
 
-Levels = Tuple[float, float]
+Levels = tuple[float, float]
 
 MB = 1024 * 1024
 SEC_PER_H = 60 * 60

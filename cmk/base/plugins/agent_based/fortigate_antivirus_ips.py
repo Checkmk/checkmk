@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from time import time
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -41,7 +41,7 @@ def discover_fortigate_antivirus_ips(section: Section) -> DiscoveryResult:
 
 def check_fortigate_antivirus_ips(
     item: str,
-    params: Mapping[str, Tuple[float, float]],
+    params: Mapping[str, tuple[float, float]],
     section: Section,
 ) -> CheckResult:
     if item not in section:

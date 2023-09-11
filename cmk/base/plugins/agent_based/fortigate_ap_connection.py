@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping, NamedTuple, Tuple
+from typing import List, Mapping, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -24,7 +24,7 @@ class AccessPoint(NamedTuple):
 Section = Mapping[str, AccessPoint]
 
 
-_CONN_STATE_TO_READABLE: Mapping[str, Tuple[str, str]] = {
+_CONN_STATE_TO_READABLE: Mapping[str, tuple[str, str]] = {
     "0": (
         "other",
         "The WTP connection state is unknown.",

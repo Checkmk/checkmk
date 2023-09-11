@@ -22,12 +22,11 @@
 # Application update state:                   No application updates available
 
 import time
-from typing import Dict
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, str]
+Section = dict[str, str]
 
 
 def parse_kaspersky_av_kesl_updates(string_table: StringTable) -> Section:

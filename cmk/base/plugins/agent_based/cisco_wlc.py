@@ -33,13 +33,13 @@ True
 False
 """
 
-from typing import Any, Dict, List, Mapping
+from typing import Any, List, Mapping
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_wlc import CISCO_WLC_OIDS
 
-Section = Dict[str, str]
+Section = dict[str, str]
 
 _OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 

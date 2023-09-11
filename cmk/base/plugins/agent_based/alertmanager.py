@@ -6,7 +6,7 @@
 
 import json
 from enum import Enum
-from typing import Dict, List, NamedTuple, Tuple
+from typing import List, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -44,10 +44,10 @@ class Rule(NamedTuple):
     message: str | None
 
 
-Group = Dict[str, Rule]
-Section = Dict[str, Group]
+Group = dict[str, Rule]
+Section = dict[str, Group]
 
-StateMapping = Dict[str, int]
+StateMapping = dict[str, int]
 
 
 class GroupServices(TypedDict, total=False):
@@ -59,7 +59,7 @@ class DiscoveryParams(TypedDict, total=False):
     # TODO: Remove total=False and mark summary_service as
     # not required when upgrading to Python 3.10:
     # https://www.python.org/dev/peps/pep-0655/
-    group_services: Tuple[bool, GroupServices]
+    group_services: tuple[bool, GroupServices]
     summary_service: bool
 
 

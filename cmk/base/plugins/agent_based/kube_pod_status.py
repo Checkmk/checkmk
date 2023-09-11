@@ -5,7 +5,7 @@
 
 import re
 import time
-from typing import Any, MutableMapping, Sequence, Tuple
+from typing import Any, MutableMapping, Sequence
 
 from typing_extensions import TypedDict
 
@@ -35,7 +35,7 @@ DESIRED_PHASE = [
     "Succeeded",
 ]
 
-Group = Tuple[VSResultAge, Sequence[str]]
+Group = tuple[VSResultAge, Sequence[str]]
 
 ValueStore = MutableMapping[str, Any]
 

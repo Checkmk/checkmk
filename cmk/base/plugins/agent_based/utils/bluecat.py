@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Mapping, NamedTuple, Optional, Sequence
 
 from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result, State, type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
@@ -96,7 +96,7 @@ def cluster_check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
-    results: Dict[str, Sequence[IgnoreResults | Metric | Result]] = {}
+    results: dict[str, Sequence[IgnoreResults | Metric | Result]] = {}
     ok_node_results = None
     overall_state = State.OK
 

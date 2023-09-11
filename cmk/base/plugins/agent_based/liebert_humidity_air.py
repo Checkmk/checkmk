@@ -11,7 +11,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, List, Mapping, Tuple
+from typing import Any, List, Mapping
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,7 +32,7 @@ def _item_from_key(key: str) -> str:
 def _get_item_data(
     item: str,
     section: ParsedSection,
-) -> Tuple:
+) -> tuple:
     for key, data in section.items():
         if _item_from_key(key) == item:
             return data

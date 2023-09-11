@@ -5,7 +5,7 @@
 
 import time
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple
+from typing import Mapping, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -39,7 +39,7 @@ Section = Mapping[str, CDPJob]
 
 
 class CheckParams(TypedDict):
-    age: Tuple[float, float]
+    age: tuple[float, float]
 
 
 def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:

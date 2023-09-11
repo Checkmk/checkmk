@@ -17,21 +17,7 @@ import fnmatch
 import hashlib
 import pathlib
 import time
-from typing import (
-    Any,
-    Counter,
-    Dict,
-    IO,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Match,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
+from typing import Any, Counter, IO, Iterable, List, Literal, Mapping, Match, Optional, Sequence
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -47,20 +33,20 @@ from .utils import eval_regex, logwatch
 
 AllParams = Sequence[Mapping[str, Any]]
 
-ClusterSection = Dict[Optional[str], logwatch.Section]
+ClusterSection = dict[Optional[str], logwatch.Section]
 
-GroupingPattern = Tuple[str, str]
+GroupingPattern = tuple[str, str]
 DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
 
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(params: AllParams) -> Sequence[List[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
-def _compile_params(item: str) -> Dict[str, Any]:
-    compiled_params: Dict[str, Any] = {"reclassify_patterns": []}
+def _compile_params(item: str) -> dict[str, Any]:
+    compiled_params: dict[str, Any] = {"reclassify_patterns": []}
 
     for rule in logwatch.service_extra_conf(item):
         if isinstance(rule, dict):
@@ -119,7 +105,7 @@ def discover_logwatch_groups(
         invert=True,
     )
     inventory_groups = _get_discovery_groups(params)
-    inventory: Dict[str, Set[GroupingPattern]] = {}
+    inventory: dict[str, set[GroupingPattern]] = {}
 
     for logfile in not_forwarded_logs:
         for group_patterns in inventory_groups:
@@ -203,7 +189,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> Tuple[str, str]:
+def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> tuple[str, str]:
     num_perc_s = group_name.count("%s")
     matches = [g or "" for g in match.groups()]
 
@@ -225,10 +211,10 @@ def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> Tuple
 
 
 def _groups_of_logfile(
-    group_patterns: List[Tuple[str, GroupingPattern]],
+    group_patterns: List[tuple[str, GroupingPattern]],
     filename: str,
-) -> Dict[str, Set[GroupingPattern]]:
-    found_these_groups: Dict[str, Set[GroupingPattern]] = {}
+) -> dict[str, set[GroupingPattern]]:
+    found_these_groups: dict[str, set[GroupingPattern]] = {}
     for group_name, (inclusion, exclusion) in group_patterns:
         inclusion_is_regex = inclusion.startswith("~")
         exclusion_is_regex = exclusion.startswith("~")

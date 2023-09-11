@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Iterable, List, NamedTuple
+from typing import Any, Iterable, List, NamedTuple
 
 from ..agent_based_api.v1.type_defs import StringTable
 from .memory import SectionMemUsed
@@ -25,13 +25,13 @@ class AgentOutputMalformatted(Exception):
 
 
 class DockerParseResult(NamedTuple):
-    data: Dict[str, Any]
-    version: Dict[str, Any]
+    data: dict[str, Any]
+    version: dict[str, Any]
 
 
 class DockerParseMultilineResult(NamedTuple):
-    data: Iterable[Dict[str, Any]]
-    version: Dict[str, Any]
+    data: Iterable[dict[str, Any]]
+    version: dict[str, Any]
 
 
 def cleanup_oci_error_message(string_table: StringTable) -> StringTable:
@@ -68,7 +68,7 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     version = ensure_valid_docker_header(string_table)
     string_table = cleanup_oci_error_message(string_table)
 
-    def generator() -> Iterable[Dict[str, Any]]:
+    def generator() -> Iterable[dict[str, Any]]:
         for line in string_table[1:]:
             if len(line) != 1:
                 raise ValueError(
@@ -106,7 +106,7 @@ def parse(  # type: ignore[no-untyped-def]
     return DockerParseResult(json.loads(string_table[1][0]), version)
 
 
-def ensure_valid_docker_header(string_table: StringTable) -> Dict:
+def ensure_valid_docker_header(string_table: StringTable) -> dict:
     """
     make sure string_table conforms to the @docker_version_info schema
     """
@@ -116,7 +116,7 @@ def ensure_valid_docker_header(string_table: StringTable) -> Dict:
     return version
 
 
-def get_version(string_table: StringTable) -> Dict | None:
+def get_version(string_table: StringTable) -> dict | None:
     try:
         if string_table[0][0] == "@docker_version_info":
             version_info = json.loads(string_table[0][1])
@@ -132,7 +132,7 @@ def get_short_id(string: str) -> str:
     return string.rsplit(":", 1)[-1][:12]
 
 
-def format_labels(labels: Dict[str, str]) -> str:
+def format_labels(labels: dict[str, str]) -> str:
     return ", ".join("%s: %s" % item for item in sorted(labels.items()))
 
 

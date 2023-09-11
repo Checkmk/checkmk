@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Tuple
+from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -117,7 +117,7 @@ def _get_cores(
     value_store: MutableMapping[str, Any],
     ticks: CoreTicks,
     this_time: float,
-) -> List[Tuple[str, float]]:
+) -> List[tuple[str, float]]:
     cores = []
     for idx in range(len(ticks.per_core)):
         try:

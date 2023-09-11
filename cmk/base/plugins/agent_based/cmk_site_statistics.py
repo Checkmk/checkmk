@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, fields
-from typing import Dict, Generator, Iterable, Mapping, Sequence, Tuple
+from typing import Generator, Iterable, Mapping, Sequence
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -29,10 +29,10 @@ class ServiceStatistics:
     critical: int
 
 
-CMKSiteStatisticsSection = Mapping[str, Tuple[HostStatistics, ServiceStatistics]]
+CMKSiteStatisticsSection = Mapping[str, tuple[HostStatistics, ServiceStatistics]]
 
 
-def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> Tuple[bool, int]:
+def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> tuple[bool, int]:
     for delta_position, line_stats in enumerate(
         lines_stats,
         start=1,
@@ -57,7 +57,7 @@ def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSec
                                  unknown=0,
                                  critical=1))}
     """
-    section: Dict[str, Tuple[HostStatistics, ServiceStatistics]] = {}
+    section: dict[str, tuple[HostStatistics, ServiceStatistics]] = {}
 
     current_position = 0
     while True:

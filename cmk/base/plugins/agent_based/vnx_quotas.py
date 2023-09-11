@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Sequence, Tuple
+from typing import Any, List, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,7 +19,7 @@ class Quota(NamedTuple):
 
 
 class Section(NamedTuple):
-    fs_sizes: Dict[str, int]
+    fs_sizes: dict[str, int]
     quotas: List[Quota]
 
 
@@ -77,7 +77,7 @@ register.agent_section(
 )
 
 
-def vnx_quotas_renaming(name: str, mappings: Sequence[Tuple[str, str]]) -> str:
+def vnx_quotas_renaming(name: str, mappings: Sequence[tuple[str, str]]) -> str:
     for match, substitution in mappings:
         if match.startswith("~"):
             num_perc_s = substitution.count("%s")

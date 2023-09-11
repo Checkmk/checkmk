@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from time import time
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from typing_extensions import TypedDict
 
@@ -39,7 +39,7 @@ register.snmp_section(
 
 
 class CheckParams(TypedDict):
-    levels: Tuple[float, float]
+    levels: tuple[float, float]
 
 
 def discover_juniper_cpu_util(section: Section) -> DiscoveryResult:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping, Tuple
+from typing import List, Mapping
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,7 +29,7 @@ def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:
 
 
 def check_fortiauthenticator_auth_fail(
-    params: Mapping[str, Tuple[int, int]],
+    params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
     """

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Dict, NamedTuple, Sequence
+from typing import Container, NamedTuple, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -54,7 +54,7 @@ class EntitySensor(NamedTuple):
     status_descr: str
 
 
-EntitySensorSection = Dict[str, Dict[str, EntitySensor]]
+EntitySensorSection = dict[str, dict[str, EntitySensor]]
 
 
 def _sensor_status_descr(status_nr: str) -> str:

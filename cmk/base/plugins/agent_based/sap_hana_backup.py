@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timezone, tzinfo
-from typing import Any, Dict, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -59,7 +59,7 @@ def _backup_timestamp(backup_time_readable: str, tz: tzinfo | None) -> datetime 
 
 
 def _parse_sap_hana_backup(string_table: StringTable, timezone_info: tzinfo | None) -> Section:
-    parsed: Dict[str, Backup] = {}
+    parsed: dict[str, Backup] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if len(lines) == 0:
             parsed[sid_instance] = Backup()

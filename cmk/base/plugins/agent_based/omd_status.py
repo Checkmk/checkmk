@@ -20,12 +20,12 @@ crontab 1
 OVERALL 2
 """
 
-from typing import Any, Dict, Mapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, Dict[str, Any]]
+Section = dict[str, dict[str, Any]]
 
 
 def parse_omd_status(string_table: StringTable) -> Section | None:
@@ -41,7 +41,7 @@ def parse_omd_status(string_table: StringTable) -> Section | None:
     stable {'stopped': [], 'existing': ['cmc', 'apache'], 'overall': 'running'}
     """
     result: Section = {}
-    current_item: Dict[str, Any] | None = None
+    current_item: dict[str, Any] | None = None
 
     for name, *states in string_table:
         if name.startswith("["):

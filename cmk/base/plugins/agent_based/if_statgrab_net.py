@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Sequence
+from typing import Sequence
 
 from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
@@ -12,7 +12,7 @@ Section = Sequence[interfaces.InterfaceWithCounters]
 
 
 def parse_statgrab_net(string_table: type_defs.StringTable) -> Section:
-    nics: Dict[str, Dict[str, str]] = {}
+    nics: dict[str, dict[str, str]] = {}
     for nic_varname, value in string_table:
         nic_id, varname = nic_varname.split(".")
         nics.setdefault(nic_id, {})[varname] = value

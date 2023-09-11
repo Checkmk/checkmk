@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import asdict
-from typing import Any, Collection, Iterator, Mapping, MutableMapping, NamedTuple, Sequence, Tuple
+from typing import Any, Collection, Iterator, Mapping, MutableMapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -46,7 +46,7 @@ class SectionCounters(NamedTuple):
 def _parse_timestamp_and_instance_names(
     line: Line,
     lines: Lines,
-) -> Tuple[float | None, Sequence[str]]:
+) -> tuple[float | None, Sequence[str]]:
     # The lines containing timestamp and nic names are consecutive:
     # [u'1418225545.73', u'510']
     # [u'8', u'instances:', 'NAME', ...]
@@ -111,7 +111,7 @@ def _parse_counters(
 
 def _filter_out_deprecated_plugin_lines(
     string_table: StringTable,
-) -> Tuple[StringTable, bool, bool]:
+) -> tuple[StringTable, bool, bool]:
     native_agent_data: StringTable = []
     found_windows_if = False
     found_mk_dhcp_enabled = False
@@ -246,7 +246,7 @@ SectionExtended = Collection[AdditionalIfData]
 # 5 dormant
 # 6 notPresent
 # 7 lowerLayerDown
-_NetConnectionStatus_TO_OPER_STATUS: Mapping[str, Tuple[str, str]] = {
+_NetConnectionStatus_TO_OPER_STATUS: Mapping[str, tuple[str, str]] = {
     "0": ("2", "Disconnected"),
     "1": ("2", "Connecting"),
     "2": ("1", "Connected"),

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.render import percent
@@ -26,7 +26,7 @@ def discover_fortimail_disk_usage(section: Section) -> DiscoveryResult:
 
 
 def check_fortimail_disk_usage(
-    params: Mapping[str, Tuple[float, float] | None],
+    params: Mapping[str, tuple[float, float] | None],
     section: Section,
 ) -> CheckResult:
     yield from check_levels(

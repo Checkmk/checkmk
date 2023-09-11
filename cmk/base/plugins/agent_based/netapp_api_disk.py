@@ -7,7 +7,7 @@
 # <<<netapp_api_disk:sep(9)>>>
 # disk 4E455441:50502020:56442D39:3030304D:422D465A:2D353230:38383633:32303037:00000000:00000000  used-space 9458679808   serial-number 88632007  raid-type pending vendor-id ..
 
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, List, Mapping, Sequence
 
 from .agent_based_api.v1 import register, render, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -16,11 +16,11 @@ Section = Sequence[Mapping[str, Any]]
 
 
 def parse_netapp_api_disk(string_table: StringTable) -> Section:
-    disks: List[Dict[str, Any]] = []
+    disks: List[dict[str, Any]] = []
     for line in string_table:
         raw_disk = _parse_line(line)
 
-        disk: Dict[str, Any] = {}
+        disk: dict[str, Any] = {}
 
         serial = raw_disk.get("serial-number")
 
@@ -63,7 +63,7 @@ def parse_netapp_api_disk(string_table: StringTable) -> Section:
 
 
 def _parse_line(line: Sequence[str]) -> Mapping[str, str]:
-    parsed_line: Dict[str, str] = {}
+    parsed_line: dict[str, str] = {}
     for word in line:
         try:
             key, value = word.split(" ", 1)

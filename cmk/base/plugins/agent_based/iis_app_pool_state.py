@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import IntEnum
-from typing import Dict
 
 from typing_extensions import TypedDict
 
@@ -22,11 +21,11 @@ class IisAppPoolState(IntEnum):
     DeletePending = 7
 
 
-Section = Dict[str, IisAppPoolState]
+Section = dict[str, IisAppPoolState]
 
 
 class IisAppPoolStateCheckParams(TypedDict):
-    state_mapping: Dict[str, int]
+    state_mapping: dict[str, int]
 
 
 DefaultCheckParameters: IisAppPoolStateCheckParams = {

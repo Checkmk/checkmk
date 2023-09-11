@@ -5,7 +5,7 @@
 
 import json
 from contextlib import suppress
-from typing import Callable, List, Mapping, Sequence, Set, Tuple
+from typing import Callable, List, Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -48,7 +48,7 @@ def _reformat_line(line: List[str]) -> List[str]:
 
 def _processed(
     line: List[str],
-    seen_btrfs_devices: Set[str],
+    seen_btrfs_devices: set[str],
     device_to_uuid: LsblkMap,
 ) -> DfBlock | None:
     device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
@@ -91,8 +91,8 @@ def _processed(
 
 def _parse_blocks_subsection(
     blocks_subsection: StringTable, device_to_uuid: LsblkMap
-) -> Tuple[BlocksSubsection, MpToDevice]:
-    seen_btrfs_devices: Set[str] = set()
+) -> tuple[BlocksSubsection, MpToDevice]:
+    seen_btrfs_devices: set[str] = set()
     df_blocks = tuple(
         item  #
         for line in blocks_subsection

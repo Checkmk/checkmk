@@ -4,24 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Union
+from typing import Any, Final, List, Mapping, Optional, Union
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 
-SectionDict = Dict[
+SectionDict = dict[
     str,
     Union[
-        List[Tuple[str, int]],  #
-        List[Tuple[str, List[str]]],  # TODO: .util.cpu_util.CPUInfo?
+        List[tuple[str, int]],  #
+        List[tuple[str, List[str]]],  # TODO: .util.cpu_util.CPUInfo?
     ],
 ]
 
-Section = Tuple[Optional[int], SectionDict]
+Section = tuple[Optional[int], SectionDict]
 
 
-KERNEL_COUNTER_NAMES: Final[Dict[str, str]] = {  # order determines the service output!
+KERNEL_COUNTER_NAMES: Final[dict[str, str]] = {  # order determines the service output!
     "processes": "Process Creations",
     "ctxt": "Context Switches",
     "pgmajfault": "Major Page Faults",
@@ -65,7 +65,7 @@ def parse_kernel(string_table: StringTable) -> Section:
     except (IndexError, ValueError):
         timestamp = None
 
-    parsed: Dict[str, List] = {}
+    parsed: dict[str, List] = {}
     for line in string_table[1:]:
         if line[0] in KERNEL_COUNTER_NAMES:
             try:

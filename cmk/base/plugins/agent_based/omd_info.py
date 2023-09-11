@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+from typing import List
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
-Section = Dict[str, Dict[str, Dict[str, str]]]
+Section = dict[str, dict[str, dict[str, str]]]
 
 
 def parse_omd_info(string_table: StringTable) -> Section:
@@ -36,7 +36,7 @@ def parse_omd_info(string_table: StringTable) -> Section:
                               'version': 'v2.full'}}}
     """
     section: Section = {}
-    current_subsection: Dict[str, Dict[str, str]] = {}
+    current_subsection: dict[str, dict[str, str]] = {}
     headers: List[str] = []
     for line in (l for l in string_table if l):
         if line[0][0] == "[" and line[0][-1] == "]":

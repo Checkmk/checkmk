@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Tuple
+from typing import List
 
 from .agent_based_api.v1 import (
     contains,
@@ -145,9 +145,9 @@ def sensor_value(
     return value
 
 
-def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devices, Sensors]:
-    devices: Dict[str, str] = {}
-    states: Dict[str, Dict[str, str]] = {}
+def parse_devices_and_states(device_table: type_defs.StringTable) -> tuple[Devices, Sensors]:
+    devices: dict[str, str] = {}
+    states: dict[str, dict[str, str]] = {}
     for num, (endoid, name, alias, status) in enumerate(device_table, start=1):
         # no blanks in names since we use blanks in items
         # later to split between unit_name and item_name

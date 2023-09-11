@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any, Dict, List, Mapping, NamedTuple, Tuple
+from typing import Any, List, Mapping, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -107,12 +107,12 @@ class TableSpaces(TypedDict):
     type: str
 
 
-ErrorSids = Dict[str, OraErrors]
+ErrorSids = dict[str, OraErrors]
 
 
 class SectionTableSpaces(TypedDict):
     error_sids: ErrorSids
-    tablespaces: Dict[Tuple[str, str], TableSpaces]
+    tablespaces: dict[tuple[str, str], TableSpaces]
 
 
 InstancePerformance = Mapping[str, Mapping[str, Any]]

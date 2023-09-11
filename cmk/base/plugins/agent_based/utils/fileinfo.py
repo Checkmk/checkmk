@@ -7,19 +7,7 @@ import fnmatch
 import re
 import time
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Match,
-    NamedTuple,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Iterable, List, Mapping, Match, NamedTuple, Union
 
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -39,7 +27,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .interfaces import saveint
 
-DiscoveryParams = Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]]
+DiscoveryParams = Iterable[Mapping[str, List[tuple[str, Union[str, tuple[str, str]]]]]]
 
 
 class FileinfoItem(NamedTuple):
@@ -52,7 +40,7 @@ class FileinfoItem(NamedTuple):
 
 class Fileinfo(NamedTuple):
     reftime: int | None = None
-    files: Dict[str, FileinfoItem] = {}
+    files: dict[str, FileinfoItem] = {}
 
 
 class FileStats(NamedTuple):
@@ -202,11 +190,11 @@ def fileinfo_process_date(pattern: str, reftime: int) -> str:
 
 
 def fileinfo_groups_get_group_name(
-    group_patterns: List[Tuple[str, str | Tuple[str, str]]],
+    group_patterns: List[tuple[str, str | tuple[str, str]]],
     filename: str,
     reftime: int,
-) -> Dict[str, List[str | Tuple[str, str]]]:
-    found_these_groups: Dict[str, Set] = {}
+) -> dict[str, List[str | tuple[str, str]]]:
+    found_these_groups: dict[str, set] = {}
 
     for group_name, pattern in group_patterns:
         if isinstance(pattern, str):  # support old format
@@ -241,7 +229,7 @@ def fileinfo_groups_get_group_name(
                     % (group_name, num_perc_s, inclusion, len(matches))
                 )
 
-        this_pattern: str | Tuple[str, str] = ""
+        this_pattern: str | tuple[str, str] = ""
         if matches:
             for nr, group in enumerate(matches):
                 inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
@@ -370,7 +358,7 @@ def _filename_matches(
     reftime: int,
     inclusion: str,
     exclusion: str,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     date_inclusion = ""
     inclusion_is_regex = False
     exclusion_is_regex = False
@@ -406,8 +394,8 @@ def _filename_matches(
 
 def _update_minmax(
     new_value: int,
-    current_minmax: Tuple[int, int] | None,
-) -> Tuple[int, int]:
+    current_minmax: tuple[int, int] | None,
+) -> tuple[int, int]:
     if not current_minmax:
         return new_value, new_value
 
@@ -469,7 +457,7 @@ def _check_individual_files(
 
 
 def _define_fileinfo_group_check(
-    files_matching: Dict[str, Any],
+    files_matching: dict[str, Any],
 ) -> List[MetricInfo]:
     size_smallest, size_largest = files_matching["size_minmax"] or (None, None)
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
@@ -518,7 +506,7 @@ def check_fileinfo_groups_data(
 ) -> CheckResult:
     date_inclusion = None
     files_stat_failed = set()
-    files_matching: Dict[str, Any] = {
+    files_matching: dict[str, Any] = {
         "count_all": 0,
         "size_all": 0,
         "size_minmax": None,

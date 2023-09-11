@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping
+from typing import Any, List, Mapping
 
 from ..agent_based_api.v1 import all_of, Service, startswith, type_defs
 
@@ -11,11 +11,11 @@ Variable = List[str]
 DiscoveryParams = Mapping[str, bool]
 CheckParams = Mapping[str, Any]
 
-Devices = Dict[str, str]
+Devices = dict[str, str]
 SensorType = str
-Sensor = Dict[str, Any]
-Sensors = Dict[str, Sensor]
-Section = Dict[SensorType, Sensors]
+Sensor = dict[str, Any]
+Sensors = dict[str, Sensor]
+Section = dict[SensorType, Sensors]
 
 
 DETECT_CMCIII_LCP = all_of(

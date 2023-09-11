@@ -5,7 +5,7 @@
 
 import json
 import time
-from typing import Any, Literal, Mapping, MutableMapping, Tuple, Union
+from typing import Any, Literal, Mapping, MutableMapping, Union
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -103,7 +103,7 @@ def _check_duration(
     ],
     now: float,
     value_store: MutableMapping[str, Any],
-    levels_upper: Tuple[int, int] | None,
+    levels_upper: tuple[int, int] | None,
     label: str,
 ) -> CheckResult:
     """Update/read value_store and check the duration of undesired replica states.
@@ -128,7 +128,7 @@ def _check_duration(
 def _levels(
     params: Mapping[str, VSResultAge],
     param_name: str,
-) -> Tuple[int, int] | None:
+) -> tuple[int, int] | None:
     if (levels_upper := params.get(param_name, "no_levels")) == "no_levels":
         return None
     return levels_upper[1]

@@ -20,7 +20,7 @@
 # hardware.cpuPkg.vendor.1 intel
 
 import time
-from typing import Callable, Dict, Final, List, Tuple
+from typing import Callable, Final, List
 
 from typing_extensions import TypedDict
 
@@ -34,11 +34,11 @@ JOIN_LIST: Final = " ".join
 
 class SUB_SECTION(TypedDict):
     path: List[str]
-    translation: Dict[str, Tuple[str, Callable]]
+    translation: dict[str, tuple[str, Callable]]
 
 
 # This giant dict describes how the section translates into the different nodes of the inventory
-SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
+SECTION_TO_INVENTORY: dict[str, SUB_SECTION] = {
     "hw": {
         "path": ["hardware", "cpu"],
         "translation": {
@@ -94,7 +94,7 @@ def _try_convert_to_epoch(release_date: str) -> str | None:
 
 def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
     for name, sub_section in SECTION_TO_INVENTORY.items():
-        data: Dict[str, None | str | float] = {}
+        data: dict[str, None | str | float] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
                 # Found after update to 2.9.0. Seems to be a false positive

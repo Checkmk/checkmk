@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Generator, MutableMapping, Optional, Tuple, Union
+from typing import Any, Generator, MutableMapping, Optional, Union
 
 from typing_extensions import TypedDict
 
@@ -16,8 +16,8 @@ StatusType = int
 TempUnitType = str
 LevelModes = str
 
-TwoLevelsType = Tuple[Optional[float], Optional[float]]
-FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
+TwoLevelsType = tuple[Optional[float], Optional[float]]
+FourLevelsType = tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
 LevelsType = Union[TwoLevelsType, FourLevelsType]
 
 
@@ -150,8 +150,8 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
 
 
 def _validate_levels(
-    levels: Tuple[float | None, float | None] | None = None,
-) -> Tuple[float, float] | None:
+    levels: tuple[float | None, float | None] | None = None,
+) -> tuple[float, float] | None:
     if levels is None:
         return None
 
@@ -251,8 +251,8 @@ def check_temperature(  # pylint: disable=too-many-branches
     unique_name: str | None = None,
     value_store: MutableMapping[str, Any] | None = None,
     dev_unit: str | None = "c",
-    dev_levels: Tuple[float, float] | None = None,
-    dev_levels_lower: Tuple[float, float] | None = None,
+    dev_levels: tuple[float, float] | None = None,
+    dev_levels_lower: tuple[float, float] | None = None,
     dev_status: StatusType | None = None,
     dev_status_name: str | None = None,
 ) -> CheckResult:

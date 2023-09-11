@@ -6,7 +6,7 @@
 import dataclasses
 import enum
 from collections.abc import Sequence
-from typing import Literal, Tuple, Union
+from typing import Literal, Union
 
 from typing_extensions import TypedDict
 
@@ -14,7 +14,7 @@ from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.kube import CountableNode, NodeCount
 
-OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
+OptionalLevels = Union[Literal["no_levels"], tuple[Literal["levels"], tuple[int, int]]]
 
 
 def _node_is_control_plane(control_plane_roles: Sequence[str], node: CountableNode) -> bool:

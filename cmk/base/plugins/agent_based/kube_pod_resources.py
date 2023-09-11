@@ -8,7 +8,7 @@ import json
 import math
 import time
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, Tuple, Union
+from typing import Literal, MutableMapping, NamedTuple, Union
 
 from typing_extensions import TypedDict
 
@@ -132,8 +132,8 @@ def _check_phase_duration_pods(
 
 
 VSResultPercent = Union[
-    Tuple[Literal["levels_abs"], Tuple[int, int]],
-    Tuple[Literal["levels_perc"], Tuple[float, float]],
+    tuple[Literal["levels_abs"], tuple[int, int]],
+    tuple[Literal["levels_perc"], tuple[float, float]],
     Literal["no_levels"],
 ]
 

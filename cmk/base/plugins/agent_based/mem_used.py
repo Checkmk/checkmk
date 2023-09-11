@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, Mapping, NamedTuple, Tuple
+from typing import List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     Attributes,
@@ -42,7 +42,7 @@ def _get_total_usage(
     ramused: MemBytes,
     swapused: MemBytes | None,
     pagetables: MemBytes | None,
-) -> Tuple[MemBytes, str]:
+) -> tuple[MemBytes, str]:
     """get total usage and a description how it was computed"""
     totalused_kb = ramused.kb
     details = ["RAM"]

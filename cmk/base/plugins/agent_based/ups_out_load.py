@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -24,7 +24,7 @@ class UpsPowerVoltage(NamedTuple):
     voltage: int
 
 
-Section = Dict[str, UpsPowerVoltage]
+Section = dict[str, UpsPowerVoltage]
 
 
 def int_or_zero(value: str) -> int:

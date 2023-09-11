@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, Mapping, Optional, Tuple
+from typing import Literal, Mapping, Optional
 
 from typing_extensions import TypedDict
 
@@ -11,7 +11,7 @@ from ..agent_based_api.v1 import Metric, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
-MemoryLevels = Tuple[_LevelsMode, Tuple[Optional[float], Optional[float]]]
+MemoryLevels = tuple[_LevelsMode, tuple[Optional[float], Optional[float]]]
 
 SectionMem = Mapping[str, int]
 
@@ -66,7 +66,7 @@ def normalize_levels(
     total: float,
     _perc_total: float | None = None,
     render_unit: int = 1,
-) -> Tuple[float, float, str] | Tuple[None, None, str]:
+) -> tuple[float, float, str] | tuple[None, None, str]:
     """get normalized levels and formatter
 
     Levels may be given either as

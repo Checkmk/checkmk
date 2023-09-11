@@ -15,7 +15,7 @@ import time
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -23,7 +23,7 @@ from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them
 LocalCheckResult = Iterable[Union[Metric, Result]]
-Levels = Optional[Tuple[float, float]]
+Levels = Optional[tuple[float, float]]
 
 
 class Perfdata(NamedTuple):
@@ -31,7 +31,7 @@ class Perfdata(NamedTuple):
     value: float
     levels_upper: Levels
     levels_lower: Levels
-    boundaries: Tuple[float | None, float | None] | None
+    boundaries: tuple[float | None, float | None] | None
 
 
 class LocalResult(NamedTuple):
@@ -70,8 +70,8 @@ def _try_convert_to_float(value: str) -> float | None:
         return None
 
 
-def _sanitize_state(raw_state: str) -> Tuple[int | str, str]:
-    state_mapping: Mapping[str, Tuple[int | str, str]] = {
+def _sanitize_state(raw_state: str) -> tuple[int | str, str]:
+    state_mapping: Mapping[str, tuple[int | str, str]] = {
         "0": (0, ""),
         "1": (1, ""),
         "2": (2, ""),
@@ -159,7 +159,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     )
 
 
-def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
+def _parse_perftxt(string: str) -> tuple[Iterable[Perfdata], str]:
     if string == "-":
         return [], ""
 
@@ -175,7 +175,7 @@ def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
     return perfdata, ""
 
 
-def _split_check_result(line: str) -> Tuple[str, str, str, str | None] | None:
+def _split_check_result(line: str) -> tuple[str, str, str, str | None] | None:
     """Parse the output of a local check and return the individual components
     Note: this regex does not check the validity of each component. E.g. the state component
           could be 'NOK' (which is not a valid state) but would be complained later

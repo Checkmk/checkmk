@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Dict, Final, List, Mapping, Tuple
+from typing import Any, Callable, Final, List, Mapping
 
 from typing_extensions import TypedDict
 
@@ -40,7 +40,7 @@ _METRIC_TRANSLATION: Final = {
     "sys": "system_time",
 }
 
-Metrics = Dict[str, float]
+Metrics = dict[str, float]
 
 
 class Job(TypedDict, total=False):
@@ -51,7 +51,7 @@ class Job(TypedDict, total=False):
     metrics: Metrics
 
 
-Section = Dict[str, Job]
+Section = dict[str, Job]
 
 
 def _job_parse_real_time(s: str) -> float:
@@ -64,7 +64,7 @@ def _job_parse_real_time(s: str) -> float:
     return float(parts[-1]) + min_sec + hour_sec
 
 
-def _job_parse_metrics(line: List[str]) -> Tuple[str, float]:
+def _job_parse_metrics(line: List[str]) -> tuple[str, float]:
     name, value = line
     name = _METRIC_TRANSLATION.get(name, name)
     value = value.replace(",", ".")
@@ -79,7 +79,7 @@ def _job_parse_metrics(line: List[str]) -> Tuple[str, float]:
 
 def _get_jobname_and_running_state(
     string_table: type_defs.StringTable,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """determine whether the job is running. some jobs are flagged as
     running jobs, but are in fact not (i.e. they are pseudo running), for
     example killed jobs.
@@ -170,7 +170,7 @@ def discover_job(section: Section) -> type_defs.DiscoveryResult:
             yield Service(item=jobname)
 
 
-_METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
+_METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
     "real_time": ("Real time", render.timespan),
     "user_time": ("User time", render.timespan),
     "system_time": ("System time", render.timespan),
@@ -199,8 +199,8 @@ def _check_job_levels(  # type: ignore[no-untyped-def]
 
 def _process_job_stats(
     job: Job,
-    age_levels: Tuple[int, int] | None,
-    exit_code_to_state_map: Dict[int, State],
+    age_levels: tuple[int, int] | None,
+    exit_code_to_state_map: dict[int, State],
     now: float,
 ) -> type_defs.CheckResult:
     yield Result(

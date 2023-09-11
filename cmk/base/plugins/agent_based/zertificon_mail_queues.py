@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Tuple
+from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -74,7 +74,7 @@ def discover_zertificon_mail_queues(section: Section) -> DiscoveryResult:
 
 
 def check_zertificon_mail_queues(
-    params: Mapping[str, Tuple[int, int]],
+    params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
     yield from check_levels(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Mapping
+from typing import List, Mapping
 
 import cmk.base.plugins.agent_based.utils.docker as docker
 
@@ -31,9 +31,9 @@ def parse_docker_node_images(string_table: StringTable) -> Section:
     return {"images": images, "containers": containers}
 
 
-def _split_subsections(string_table: StringTable) -> Dict[str, List[List[str]]]:
+def _split_subsections(string_table: StringTable) -> dict[str, List[List[str]]]:
     subname = ""
-    subsections: Dict[str, List[List[str]]] = {}
+    subsections: dict[str, List[List[str]]] = {}
     for row in string_table:
         if not row:
             continue

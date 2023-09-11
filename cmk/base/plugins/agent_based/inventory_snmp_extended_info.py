@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, NamedTuple, Sequence, Tuple
+from typing import List, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import Attributes, exists, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -48,7 +48,7 @@ Section = SNMPExtendedInfo
 
 
 def parse_snmp_extended_info(string_table: StringTable) -> Section:
-    parsed: Dict[str, Tuple[str, ...]] = {}
+    parsed: dict[str, tuple[str, ...]] = {}
     count_parents = 0
 
     for (
@@ -77,7 +77,7 @@ def parse_snmp_extended_info(string_table: StringTable) -> Section:
 
     parent_info_serial = None
     parent_info_model = None
-    children_info_by_type: Dict[str, List[SNMPExtendedInfoEntry]] = {}
+    children_info_by_type: dict[str, List[SNMPExtendedInfoEntry]] = {}
 
     for index, (
         parent,

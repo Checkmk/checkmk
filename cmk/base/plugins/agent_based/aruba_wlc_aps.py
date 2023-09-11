@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -20,7 +20,7 @@ class WLCAp(NamedTuple):
     sys_location: str
 
 
-Section = Dict[str, WLCAp]
+Section = dict[str, WLCAp]
 
 _MAP_AP_PRODUCTS = {
     "1": "a50",

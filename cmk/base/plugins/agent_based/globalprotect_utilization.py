@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Mapping, NamedTuple, Tuple
+from typing import Any, Callable, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -63,7 +63,7 @@ def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:
 def _check_levels(
     value: float,
     levels_upper: Any,
-    boundaries: Tuple[float, float],
+    boundaries: tuple[float, float],
     metric_name: str,
     label: str,
     render_func: Callable | None = None,

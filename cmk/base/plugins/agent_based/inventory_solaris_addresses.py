@@ -13,7 +13,7 @@
 # inet 10.8.57.39 netmask ffffff00 broadcast 10.8.57.255
 # ether 0:3:ba:29:fc:cc
 
-from typing import Dict, NamedTuple, Sequence, Tuple
+from typing import NamedTuple, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -34,11 +34,11 @@ class Address(NamedTuple):
     address_type: str | None
 
 
-Section = Tuple[Sequence[Interface], Sequence[Address]]
+Section = tuple[Sequence[Interface], Sequence[Address]]
 
 
 def parse_solaris_addresses(string_table: StringTable) -> Section:
-    parsed: Dict = {}
+    parsed: dict = {}
     dev_name = None
     for line in string_table:
         if line[0][-1] == ":":

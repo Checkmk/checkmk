@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Literal, MutableMapping, Tuple, Union
+from typing import Any, Literal, MutableMapping, Union
 
 from typing_extensions import TypedDict
 
@@ -25,7 +25,7 @@ def discovery(section: PodContainers) -> DiscoveryResult:
     yield Service()
 
 
-VSResultInteger = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
+VSResultInteger = Union[tuple[Literal["levels"], tuple[int, int]], Literal["no_levels"]]
 
 
 class Params(TypedDict):

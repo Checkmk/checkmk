@@ -114,7 +114,6 @@
     Hugepagesize: 2048 kB
 
 """
-from typing import Dict
 
 from .agent_based_api.v1 import register, type_defs
 from .utils.memory import SectionMemUsed
@@ -249,7 +248,7 @@ def parse_statgrab_mem(string_table: type_defs.StringTable) -> SectionMemUsed | 
      'SwapTotal': 8589934592}
 
     """
-    parsed: Dict[str, int] = {}
+    parsed: dict[str, int] = {}
     for var, value in string_table:
         try:
             parsed.setdefault(var, int(value))

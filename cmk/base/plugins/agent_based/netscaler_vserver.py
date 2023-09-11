@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Iterable, List, Mapping, Sequence
 
 from typing_extensions import TypedDict
 
@@ -73,7 +73,7 @@ netscaler_vserver_entitytypes = {
 
 
 class VServer(TypedDict, total=False):
-    service_state: Tuple[int, str]
+    service_state: tuple[int, str]
     entity_service_type: str
     protocol: str
     socket: str
@@ -87,7 +87,7 @@ class VServer(TypedDict, total=False):
 Section = Mapping[str, VServer]
 
 
-def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
+def _to_vserver(line: Iterable[str]) -> tuple[str, VServer]:
     """
     >>> import pprint
     >>> pprint.pprint(_to_vserver([

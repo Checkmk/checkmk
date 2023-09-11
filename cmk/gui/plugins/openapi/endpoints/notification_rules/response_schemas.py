@@ -19,6 +19,7 @@ from cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas import 
     CheckboxRestrictNotificationNumbers,
     CheckboxServiceEventType,
     CheckboxThrottlePeriodicNotifcations,
+    CheckboxWithFolderStr,
     CheckboxWithFromToServiceLevels,
     CheckboxWithListOfLabels,
     CheckboxWithListOfServiceGroupsRegex,
@@ -171,7 +172,7 @@ class ContactSelectionAttributes(BaseSchema):
 
 class ConditionsAttributes(BaseSchema):
     match_sites = fields.Nested(CheckboxWithListOfStr)
-    match_folder = fields.Nested(CheckboxWithStr)
+    match_folder = fields.Nested(CheckboxWithFolderStr)
     match_host_tags = fields.Nested(CheckboxMatchHostTags)
     match_host_labels = fields.Nested(CheckboxWithListOfLabels)
     match_host_groups = fields.Nested(CheckboxWithListOfStr)

@@ -27,7 +27,6 @@ from cmk.gui.fields.attributes import (
 from cmk.gui.fields.custom_fields import (
     AuxTagIDField,
     ContactGroupField,
-    FolderIDField,
     IPField,
     LDAPConnectionID,
     NetworkPortNumber,
@@ -45,6 +44,7 @@ from cmk.gui.fields.definitions import (
     ExprSchema,
     FOLDER_PATTERN,
     FolderField,
+    FolderIDField,
     GroupField,
     host_attributes_field,
     HostField,

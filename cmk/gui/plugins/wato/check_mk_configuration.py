@@ -3341,7 +3341,7 @@ def _valuespec_extra_service_conf_check_period():
     return TimeperiodSelection(
         title=_("Check period for active services"),
         help=_(
-            "If you specify a notification period for a service then active checks "
+            "If you specify a check period for a service then active checks "
             "of that service will only be done in that period. Please note, that the "
             "checks driven by Checkmk are passive checks and are not affected by this "
             "rule. You can use the rule for the active Checkmk check, however."
@@ -3363,7 +3363,7 @@ def _valuespec_check_periods():
     return TimeperiodSelection(
         title=_("Check period for passive Checkmk services"),
         help=_(
-            "If you specify a notification period for a 'Check_MK' service then "
+            "If you specify a check period for a 'Check_MK' service then "
             "results will be processed only within this period."
         ),
     )

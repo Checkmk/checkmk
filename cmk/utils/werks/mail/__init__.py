@@ -27,7 +27,7 @@ from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.version import Version
 
 from .. import load_werk
-from ..werk import Class, Level, WerkTranslator
+from ..werk import Class, Level, Werk, WerkTranslator
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,18 @@ class Args(NamedTuple):
             do_push_git_notes=args.do_push_git_notes,
             do_add_notes=args.do_add_notes,
         )
+
+
+def get_fullname_and_address(werk: Werk) -> tuple[str, str]:
+    if werk.class_ == Class.SECURITY:
+        return "Checkmk werks security", "checkmk-werks-sec@lists.checkmk.com"
+    if werk.level == Level.LEVEL_1:
+        return "Checkmk werks level 1", "checkmk-werks-lvl1@lists.checkmk.com"
+    if werk.level == Level.LEVEL_2:
+        return "Checkmk werks level 2", "checkmk-werks-lvl2@lists.checkmk.com"
+    if werk.level == Level.LEVEL_3:
+        return "Checkmk werks level 3", "checkmk-werks-lvl3@lists.checkmk.com"
+    raise NotImplementedError()
 
 
 class File(NamedTuple):
@@ -243,20 +255,12 @@ def send_mail(
 
     base_version = str(Version.from_str(werk.version).base)
 
-    if werk.class_ == Class.SECURITY:
-        mail_address = "checkmk-werks-sec@lists.checkmk.com"
-    else:
-        if werk.level == Level.LEVEL_1:
-            mail_address = "checkmk-werks-lvl1@lists.checkmk.com"
-        elif werk.level == Level.LEVEL_2:
-            mail_address = "checkmk-werks-lvl2@lists.checkmk.com"
-        elif werk.level == Level.LEVEL_3:
-            mail_address = "checkmk-werks-lvl3@lists.checkmk.com"
-        else:
-            raise NotImplementedError()
+    fullname, mail_address = get_fullname_and_address(werk)
 
     if args.mail:
         mail_address = args.mail.replace("@", "+" + mail_address.replace("@", "%") + "@")
+
+    mail_address = f"{fullname} <{mail_address}>"
 
     subject = f"[{base_version}] Checkmk Werk {werk.id} {change.action}: {werk.title}"
     message = template.render(

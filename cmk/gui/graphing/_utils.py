@@ -571,32 +571,32 @@ def find_matching_translation(
     return {}
 
 
-def _scalar_bounds(perf_data: PerfDataTuple, scale: float) -> ScalarBounds:
+def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds:
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
     """
     scalars: ScalarBounds = {}
-    if perf_data.warn is not None:
-        scalars["warn"] = float(perf_data.warn) * scale
-    if perf_data.crit is not None:
-        scalars["crit"] = float(perf_data.crit) * scale
-    if perf_data.min is not None:
-        scalars["min"] = float(perf_data.min) * scale
-    if perf_data.max is not None:
-        scalars["max"] = float(perf_data.max) * scale
+    if perf_data_tuple.warn is not None:
+        scalars["warn"] = float(perf_data_tuple.warn) * scale
+    if perf_data_tuple.crit is not None:
+        scalars["crit"] = float(perf_data_tuple.crit) * scale
+    if perf_data_tuple.min is not None:
+        scalars["min"] = float(perf_data_tuple.min) * scale
+    if perf_data_tuple.max is not None:
+        scalars["max"] = float(perf_data_tuple.max) * scale
     return scalars
 
 
 def _normalize_perf_data(
-    perf_data: PerfDataTuple, check_command: str
+    perf_data_tuple: PerfDataTuple, check_command: str
 ) -> tuple[str, NormalizedPerfData]:
-    translation_entry = perfvar_translation(perf_data.metric_name, check_command)
+    translation_entry = perfvar_translation(perf_data_tuple.metric_name, check_command)
 
     new_entry: NormalizedPerfData = {
-        "orig_name": [perf_data.metric_name],
-        "value": perf_data.value * translation_entry["scale"],
-        "scalar": _scalar_bounds(perf_data, translation_entry["scale"]),
+        "orig_name": [perf_data_tuple.metric_name],
+        "value": perf_data_tuple.value * translation_entry["scale"],
+        "scalar": _scalar_bounds(perf_data_tuple, translation_entry["scale"]),
         "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],

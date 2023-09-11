@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Mapping, Union
+from collections.abc import Iterable
+from typing import List, Mapping, Union
 
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable

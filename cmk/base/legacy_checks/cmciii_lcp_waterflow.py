@@ -6,7 +6,8 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Iterable, NamedTuple, Optional
+from collections.abc import Iterable
+from typing import NamedTuple, Optional
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info

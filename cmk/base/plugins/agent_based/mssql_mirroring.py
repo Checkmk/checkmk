@@ -33,7 +33,8 @@
 #                           NULL = No witness exists, the database is not online or the
 #                                  database is not mirrored.
 
-from typing import Mapping, NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import Mapping, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (

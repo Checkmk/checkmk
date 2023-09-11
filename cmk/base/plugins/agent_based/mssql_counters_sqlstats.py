@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, MutableMapping
+from collections.abc import MutableMapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

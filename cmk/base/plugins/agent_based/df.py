@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Iterator, Sequence
 from enum import auto, Enum
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

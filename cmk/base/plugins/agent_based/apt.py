@@ -28,7 +28,8 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import islice
-from typing import Any, ClassVar, NamedTuple, Optional, Pattern
+from re import Pattern
+from typing import Any, ClassVar, NamedTuple, Optional
 
 from .agent_based_api.v1 import Metric, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

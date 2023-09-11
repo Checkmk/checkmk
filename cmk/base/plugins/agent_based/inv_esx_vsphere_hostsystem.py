@@ -20,7 +20,8 @@
 # hardware.cpuPkg.vendor.1 intel
 
 import time
-from typing import Callable, Final, List
+from collections.abc import Callable
+from typing import Final, List
 
 from typing_extensions import TypedDict
 

@@ -25,8 +25,9 @@ True
 False
 """
 
+from collections.abc import MutableMapping, Sequence
 from contextlib import suppress
-from typing import Any, List, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping
 
 from .agent_based_api.v1 import (
     all_of,

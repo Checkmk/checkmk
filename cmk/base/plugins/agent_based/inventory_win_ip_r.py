@@ -29,7 +29,8 @@
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|vmxnet3 Ethernet Adapter
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|Microsoft Failover Cluster Virtual Adapter
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

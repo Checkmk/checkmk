@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, Literal, Mapping, Sequence, TypedDict
+from typing import Any, Literal, Mapping, TypedDict
 
 from ..agent_based_api.v1 import check_levels, Metric, Result, Service, State, type_defs
 

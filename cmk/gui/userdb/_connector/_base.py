@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Callable, Literal
+from typing import Literal
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId

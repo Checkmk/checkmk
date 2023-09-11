@@ -16,21 +16,11 @@
 import ast
 import socket
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
+from collections.abc import Generator, Iterable, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Counter,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Protocol,
-    Sequence,
-)
+from typing import Any, List, Mapping, Optional, Protocol
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation

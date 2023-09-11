@@ -7,8 +7,9 @@
 import json
 import math
 import time
+from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, Union
+from typing import Literal, NamedTuple, Union
 
 from typing_extensions import TypedDict
 

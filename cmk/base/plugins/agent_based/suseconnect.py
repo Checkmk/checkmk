@@ -47,7 +47,8 @@
 #   Registered
 ##.
 
-from typing import Final, Mapping, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Final, Mapping, TypeVar
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
-from typing import Final, Mapping, NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import Final, Mapping, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

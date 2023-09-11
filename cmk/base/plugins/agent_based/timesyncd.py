@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, NotRequired, Sequence
+from typing import Any, Mapping, NotRequired
 
 from dateutil import parser as date_parser
 from dateutil import tz

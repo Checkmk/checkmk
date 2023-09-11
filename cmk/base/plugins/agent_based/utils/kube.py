@@ -5,7 +5,8 @@
 
 import enum
 import time
-from typing import assert_never, Callable, Literal, Mapping, NewType, Sequence, TypeVar, Union
+from collections.abc import Callable, Sequence
+from typing import assert_never, Literal, Mapping, NewType, TypeVar, Union
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict

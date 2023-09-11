@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Generator, MutableMapping, Optional, Union
+from collections.abc import Generator, MutableMapping
+from typing import Any, Optional, Union
 
 from typing_extensions import TypedDict
 

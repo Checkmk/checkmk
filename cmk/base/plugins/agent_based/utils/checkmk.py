@@ -5,9 +5,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 from enum import StrEnum
-from typing import Mapping, NamedTuple, Optional, Sequence
+from typing import Mapping, NamedTuple, Optional
 
 from pyasn1.type.useful import GeneralizedTime
 from pydantic import BaseModel, validator

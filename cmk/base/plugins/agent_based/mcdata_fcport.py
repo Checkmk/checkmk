@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from .agent_based_api.v1 import OIDBytes, register, SNMPTree, startswith, type_defs
 from .utils import if64, interfaces

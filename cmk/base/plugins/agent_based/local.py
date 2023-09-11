@@ -5,6 +5,7 @@
 
 import re
 import time
+from collections.abc import Iterable, Sequence
 
 # Example output from agent:
 # 0 Service_FOO V=1 This Check is OK
@@ -15,7 +16,7 @@ import time
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Union
+from typing import Any, List, Mapping, NamedTuple, Optional, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable

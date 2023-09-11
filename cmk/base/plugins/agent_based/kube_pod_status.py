@@ -5,7 +5,8 @@
 
 import re
 import time
-from typing import Any, MutableMapping, Sequence
+from collections.abc import MutableMapping, Sequence
+from typing import Any
 
 from typing_extensions import TypedDict
 

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import Counter
+from collections.abc import Iterable
 from inspect import signature
-from typing import Iterable
 
 import pytest
 

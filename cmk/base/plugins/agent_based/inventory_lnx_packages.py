@@ -28,7 +28,8 @@
 # cpio-lang|2.9|i586|rpm|Languages for package cpio|
 # zlib|1.2.3|i586|rpm|Data Compression Library|
 
-from typing import Iterable, NamedTuple
+from collections.abc import Iterable
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

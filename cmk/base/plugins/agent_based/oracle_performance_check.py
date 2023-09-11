@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, MutableMapping, Sequence
+from typing import Any, Mapping
 
 import cmk.utils.oracle_constants as oracle_constants  # pylint: disable=cmk-module-layer-violation
 

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Final, Iterable, Literal, Mapping
+from collections.abc import Iterable
+from typing import Any, Final, Literal, Mapping
 
 from .agent_based_api.v1 import check_levels, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

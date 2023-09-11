@@ -5,7 +5,8 @@
 
 import json
 import time
-from typing import Any, Literal, Mapping, MutableMapping, Union
+from collections.abc import MutableMapping
+from typing import Any, Literal, Mapping, Union
 
 from .agent_based_api.v1 import (
     check_levels,

@@ -5,7 +5,8 @@
 
 import collections
 import time
-from typing import Any, Callable, Final, Mapping
+from collections.abc import Callable
+from typing import Any, Final, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

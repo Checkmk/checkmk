@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Container, Iterable
 from dataclasses import dataclass
-from typing import Container, Iterable
 
 from typing_extensions import TypedDict
 

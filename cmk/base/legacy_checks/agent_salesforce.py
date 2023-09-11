@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, Mapping
 
 from cmk.base.config import special_agent_info
 

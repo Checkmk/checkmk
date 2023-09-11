@@ -8,12 +8,14 @@
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
 
+from collections.abc import MutableMapping
+
 # generic data structure widely used in the FJDARY-Mibs:
 # <oid>
 # <oid>.1: Index
 # <oid>.3: Status
 # the latter can be one of the following:
-from typing import List, Mapping, MutableMapping, NamedTuple
+from typing import List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

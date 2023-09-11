@@ -51,7 +51,7 @@ import time
 
 #   Registered
 ##.
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info

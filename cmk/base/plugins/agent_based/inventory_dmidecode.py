@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Callable, Generator, List, Mapping, Union
+from collections.abc import Callable, Generator
+from typing import List, Mapping, Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

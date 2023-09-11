@@ -14,7 +14,8 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from typing import List, Mapping, MutableMapping, NamedTuple
+from collections.abc import MutableMapping
+from typing import List, Mapping, NamedTuple
 
 from ..agent_based_api.v1 import any_of, equals, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

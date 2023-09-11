@@ -7,7 +7,8 @@
 # <<<netapp_api_disk:sep(9)>>>
 # disk 4E455441:50502020:56442D39:3030304D:422D465A:2D353230:38383633:32303037:00000000:00000000  used-space 9458679808   serial-number 88632007  raid-type pending vendor-id ..
 
-from typing import Any, List, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, List, Mapping
 
 from .agent_based_api.v1 import register, render, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

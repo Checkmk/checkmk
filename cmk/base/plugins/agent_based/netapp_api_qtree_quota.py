@@ -10,7 +10,8 @@
 # quota fdo01   quota-type tree disk-limit 4294967296   volume vol_bronze1_fdo1 disk-used 3544121572
 # quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
 
-from typing import Any, Generator, Mapping, NamedTuple
+from collections.abc import Generator
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

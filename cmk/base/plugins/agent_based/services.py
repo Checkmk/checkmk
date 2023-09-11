@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Any, Generator, List, Mapping, NamedTuple, Sequence
+from collections.abc import Generator, Sequence
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Mapping, NamedTuple
+from collections.abc import Callable
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,

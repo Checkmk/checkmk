@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Sequence
+from collections.abc import MutableMapping, Sequence
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import (
     get_average,

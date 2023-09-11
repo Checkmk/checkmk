@@ -8,7 +8,8 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Final, Iterable, Mapping, NamedTuple
+from collections.abc import Iterable
+from typing import Final, Mapping, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability

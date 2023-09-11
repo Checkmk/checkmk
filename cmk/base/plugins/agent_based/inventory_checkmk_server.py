@@ -8,7 +8,8 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, Mapping
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 

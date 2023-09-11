@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import defaultdict
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

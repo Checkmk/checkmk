@@ -11,8 +11,9 @@
 #  - Rate counters (per second)
 """
 
+from collections.abc import MutableMapping
 from contextlib import suppress
-from typing import Any, MutableMapping
+from typing import Any
 
 from ..agent_based_api.v1 import get_rate, GetRateError, IgnoreResultsError, Service
 from ..agent_based_api.v1.type_defs import DiscoveryResult

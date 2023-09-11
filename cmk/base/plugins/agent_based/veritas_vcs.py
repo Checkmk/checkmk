@@ -4,17 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import (
-    Any,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-)
+from collections.abc import Generator, Iterable, MutableMapping, Sequence
+from typing import Any, List, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 

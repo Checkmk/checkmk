@@ -982,7 +982,7 @@ def evaluate(
 
     if len(operators) != (len(operands) - 1):
         # "a,b,+,c,-,..." -> operators = ["+", "-", ...], operands = ["a", "b", "c", ...]
-        raise ValueError("Too few or many operators %r for %r" % (operators, operands))
+        raise ValueError("Too few or many operators {!r} for {!r}".format(operators, operands))
 
     rpn_expr = _apply_operator(
         operators.pop(0),

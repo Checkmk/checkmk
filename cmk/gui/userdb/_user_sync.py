@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Literal
+from typing import Literal
 
 from livestatus import SiteId
 

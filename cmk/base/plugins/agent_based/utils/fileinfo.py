@@ -6,8 +6,10 @@
 import fnmatch
 import re
 import time
+from collections.abc import Callable, Iterable
 from enum import Enum
-from typing import Any, Callable, Iterable, List, Mapping, Match, NamedTuple, Union
+from re import Match
+from typing import Any, List, Mapping, NamedTuple, Union
 
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (

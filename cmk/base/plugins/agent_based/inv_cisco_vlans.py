@@ -31,7 +31,8 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

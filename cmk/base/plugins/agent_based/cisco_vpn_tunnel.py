@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import MutableMapping, Sequence
 from dataclasses import dataclass
 from time import time
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
+from typing import Any, List, Mapping, Optional
 
 from typing_extensions import TypedDict
 

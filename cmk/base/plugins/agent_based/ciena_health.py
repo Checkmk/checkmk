@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Counter, Generic, Iterable, List, Mapping, Sequence, TypeVar
+from collections import Counter
+from collections.abc import Iterable, Sequence
+from typing import Generic, List, Mapping, TypeVar
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable

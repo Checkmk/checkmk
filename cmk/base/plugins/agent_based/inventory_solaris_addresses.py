@@ -13,7 +13,8 @@
 # inet 10.8.57.39 netmask ffffff00 broadcast 10.8.57.255
 # ether 0:3:ba:29:fc:cc
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

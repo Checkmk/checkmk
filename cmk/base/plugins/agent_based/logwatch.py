@@ -17,7 +17,10 @@ import fnmatch
 import hashlib
 import pathlib
 import time
-from typing import Any, Counter, IO, Iterable, List, Literal, Mapping, Match, Optional, Sequence
+from collections import Counter
+from collections.abc import Iterable, Sequence
+from re import Match
+from typing import Any, IO, List, Literal, Mapping, Optional
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation

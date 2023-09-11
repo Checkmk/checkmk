@@ -17,7 +17,9 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-from typing import Any, Literal, Mapping, Match, NamedTuple, Sequence
+from collections.abc import Sequence
+from re import Match
+from typing import Any, Literal, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,

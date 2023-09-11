@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, List, Mapping, Sequence
+from typing import Any, List, Mapping
 
 from ..agent_based_api.v1 import (
     check_levels,

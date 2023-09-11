@@ -15,7 +15,8 @@
 # }
 
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, Mapping
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info

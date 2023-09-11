@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from collections.abc import MutableMapping, Sequence
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final, Mapping, MutableMapping, Sequence, Union
+from typing import Any, Final, Mapping, Union
 
 from .agent_based_api.v1 import (
     get_rate,

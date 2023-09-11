@@ -7,7 +7,8 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
-from typing import Any, MutableMapping
+from collections.abc import MutableMapping
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.config import check_info

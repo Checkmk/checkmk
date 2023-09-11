@@ -93,7 +93,8 @@ This is the data we can extract
 
 """
 
-from typing import List, Mapping, NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import List, Mapping, NamedTuple
 
 from typing_extensions import TypedDict
 

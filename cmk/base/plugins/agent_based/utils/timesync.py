@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, MutableMapping
+from collections.abc import MutableMapping
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult

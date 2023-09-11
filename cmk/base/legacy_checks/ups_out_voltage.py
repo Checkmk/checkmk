@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Final, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, Final, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

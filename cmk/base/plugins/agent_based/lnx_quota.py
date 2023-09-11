@@ -19,7 +19,8 @@ import dataclasses
 import enum
 import time
 from collections import defaultdict
-from typing import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Mapping
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

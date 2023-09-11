@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,no-untyped-def"
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo

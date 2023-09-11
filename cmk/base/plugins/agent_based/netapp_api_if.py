@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
+from collections.abc import MutableMapping, Sequence
+from typing import Any, List, Mapping, Optional
 
 from typing_extensions import TypedDict
 

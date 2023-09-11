@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Mapping
+from typing import Mapping
 
 from .agent_based_api.v1 import check_levels, equals, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

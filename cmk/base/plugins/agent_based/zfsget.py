@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Mapping, Sequence
+from collections.abc import Sequence
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

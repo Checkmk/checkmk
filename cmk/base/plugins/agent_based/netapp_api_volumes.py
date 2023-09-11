@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, MutableMapping, Sequence
+from typing import Any, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,

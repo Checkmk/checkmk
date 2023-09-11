@@ -5,7 +5,7 @@
 
 from typing import Any, get_args
 
-from marshmallow import post_dump, post_load, ValidationError
+from marshmallow import post_dump
 from marshmallow.schema import Schema
 from marshmallow_oneofschema import OneOfSchema
 
@@ -2673,88 +2673,3 @@ class EventConsoleAlertCheckbox(fields.Nested):
             CheckboxOneOfSchema(CheckboxEventConsoleAlerts),
             required=required,
         )
-
-
-class RuleProperties(BaseSchema):
-    description = RulePropertiesDescription(required=False)
-    comment = RulePropertiesComment(required=False)
-    documentation_url = RulePropertiesDocURL(required=False)
-    do_not_apply_this_rule = RulePropertiesDoNotApplyRule(required=False)
-    allow_users_to_deactivate = RulePropertiesAllowDeactivate(required=False)
-
-
-class RuleNotificationMethod(BaseSchema):
-    notify_plugin = NotificationPlugin(required=False)
-    notification_bulking = NotificationBulk(required=False)
-
-
-class ContactSelection(BaseSchema):
-    all_contacts_of_the_notified_object = AllContacts(required=False)
-    all_users = AllUsers(required=False)
-    all_users_with_an_email_address = AllUsersWithEmail(required=False)
-    the_following_users = TheFollowingUsers(required=False)
-    members_of_contact_groups = ListOfContactGroupsCheckbox(required=False)
-    explicit_email_addresses = ExplicitEmailAddressesCheckbox(required=False)
-    restrict_by_contact_groups = ListOfContactGroupsCheckbox(required=False)
-    restrict_by_custom_macros = CustomMacrosCheckbox(required=False)
-
-
-class RuleConditions(BaseSchema):
-    match_sites = MatchSitesCheckbox(required=False)
-    match_folder = MatchFolderCheckbox(required=False)
-    match_host_tags = MatchHostTagsCheckbox(required=False)
-    match_host_labels = MatchLabelsCheckbox(required=False)
-    match_host_groups = MatchHostGroupsCheckbox(required=False)
-    match_hosts = MatchHostsCheckbox(required=False)
-    match_exclude_hosts = MatchHostsCheckbox(required=False)
-    match_service_labels = MatchLabelsCheckbox(required=False)
-    match_service_groups = MatchServiceGroupsCheckbox(required=False)
-    match_exclude_service_groups = MatchServiceGroupsCheckbox(required=False)
-    match_service_groups_regex = MatchServiceGroupRegexCheckbox(required=False)
-    match_exclude_service_groups_regex = MatchServiceGroupRegexCheckbox(required=False)
-    match_services = MatchServicesCheckbox(required=False)
-    match_exclude_services = MatchServicesCheckbox(required=False)
-    match_check_types = MatchCheckTypesCheckbox(required=False)
-    match_plugin_output = StringCheckbox(required=False)
-    match_contact_groups = MatchContactGroupsCheckbox(required=False)
-    match_service_levels = MatchServiceLevelsCheckbox(required=False)
-    match_only_during_time_period = MatchTimePeriodCheckbox(required=False)
-    match_host_event_type = MatchHostEventTypeCheckbox(required=False)
-    match_service_event_type = MatchServiceEventTypeCheckbox(required=False)
-    restrict_to_notification_numbers = RestrictNotificationNumCheckbox(required=False)
-    throttle_periodic_notifications = ThorttlePeriodicNotificationsCheckbox(required=False)
-    match_notification_comment = StringCheckbox(required=False)
-    event_console_alerts = EventConsoleAlertCheckbox(required=False)
-
-
-class RuleNotificationUpdate(BaseSchema):
-    rule_properties = fields.Nested(
-        RuleProperties,
-        required=False,
-    )
-    notification_method = fields.Nested(
-        RuleNotificationMethod,
-        required=False,
-    )
-    contact_selection = fields.Nested(
-        ContactSelection,
-        required=False,
-    )
-    conditions = fields.Nested(
-        RuleConditions,
-        required=False,
-    )
-
-    @post_load
-    def verify_at_least_one(self, *args, **kwargs):
-        at_least_one_of = {
-            "rule_properties",
-            "notification_method",
-            "contact_selection",
-            "conditions",
-        }
-        if not at_least_one_of & set(args[0]):
-            raise ValidationError(
-                f"At least one of the following parameters should be provided: {at_least_one_of}"
-            )
-        return args[0]

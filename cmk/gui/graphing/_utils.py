@@ -1156,6 +1156,13 @@ def _parse_single_expression(
     return Percent(reference=metric, metric=metric) if percent else metric
 
 
+@dataclass(frozen=True)
+class RPNExpressionSpec:
+    operation: ABCMetricOperation
+    explicit_unit_name: str | None = None
+    explicit_color: str | None = None
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -1166,26 +1173,23 @@ def _parse_single_expression(
 # "fs_growth.max" is the same as fs_growth. The .max is just
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
-def evaluate(
+def _parse_expression(
     expression: MetricExpression | int | float,
     translated_metrics: TranslatedMetrics,
-) -> RPNExpression:
+) -> RPNExpressionSpec:
     if isinstance(expression, int):
-        return ConstantInt(expression).evaluate(translated_metrics)
+        return RPNExpressionSpec(ConstantInt(expression))
 
     if isinstance(expression, float):
-        return ConstantFloat(expression).evaluate(translated_metrics)
+        return RPNExpressionSpec(ConstantFloat(expression))
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
 
     if len(parts := expression.split(",")) == 1:
-        rpn_expr = _parse_single_expression(parts[0], translated_metrics).evaluate(
-            translated_metrics
-        )
-        return RPNExpression(
-            rpn_expr.value,
-            unit_info[explicit_unit_name] if explicit_unit_name else rpn_expr.unit_info,
-            "#" + explicit_color if explicit_color else rpn_expr.color,
+        return RPNExpressionSpec(
+            _parse_single_expression(parts[0], translated_metrics),
+            explicit_unit_name,
+            explicit_color,
         )
 
     operators: list[RPNOperators] = []
@@ -1231,11 +1235,27 @@ def evaluate(
             _parse_single_expression(operands.pop(0), translated_metrics),
         )
 
-    evaluated_operand = operand.evaluate(translated_metrics)
+    return RPNExpressionSpec(operand, explicit_unit_name, explicit_color)
+
+
+def evaluate(
+    expression: MetricExpression | int | float,
+    translated_metrics: TranslatedMetrics,
+) -> RPNExpression:
+    rpn_expr_spec = _parse_expression(expression, translated_metrics)
+    evaluated_operation = rpn_expr_spec.operation.evaluate(translated_metrics)
     return RPNExpression(
-        evaluated_operand.value,
-        unit_info[explicit_unit_name] if explicit_unit_name else evaluated_operand.unit_info,
-        "#" + explicit_color if explicit_color else evaluated_operand.color,
+        evaluated_operation.value,
+        (
+            unit_info[rpn_expr_spec.explicit_unit_name]
+            if rpn_expr_spec.explicit_unit_name
+            else evaluated_operation.unit_info
+        ),
+        (
+            "#" + rpn_expr_spec.explicit_color
+            if rpn_expr_spec.explicit_color
+            else evaluated_operation.color
+        ),
     )
 
 

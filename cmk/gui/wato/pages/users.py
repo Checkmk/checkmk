@@ -107,6 +107,7 @@ class ModeUsers(WatoMode):
         super().__init__()
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+        self._can_create_and_delete_users = edition() != Edition.CSE
 
     def title(self) -> str:
         return _("Users")
@@ -114,40 +115,46 @@ class ModeUsers(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
         del breadcrumb[-1]
+        topics = (
+            [
+                PageMenuTopic(
+                    title=_("Add user"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Add user"),
+                            icon_name="new",
+                            item=make_simple_link(folder_preserving_link([("mode", "edit_user")])),
+                            is_shortcut=True,
+                            is_suggested=True,
+                        ),
+                    ],
+                )
+            ]
+            if self._can_create_and_delete_users
+            else []
+        )
+
+        topics += [
+            PageMenuTopic(
+                title=_("On selected users"),
+                entries=list(self._page_menu_entries_on_selected_users()),
+            ),
+            PageMenuTopic(
+                title=_("Synchronized users"),
+                entries=list(self._page_menu_entries_synchronized_users()),
+            ),
+            PageMenuTopic(
+                title=_("User messages"),
+                entries=list(self._page_menu_entries_user_messages()),
+            ),
+            make_checkbox_selection_topic(self.name()),
+        ]
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="users",
                     title=_("Users"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Add user"),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Add user"),
-                                    icon_name="new",
-                                    item=make_simple_link(
-                                        folder_preserving_link([("mode", "edit_user")])
-                                    ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
-                                ),
-                            ],
-                        ),
-                        PageMenuTopic(
-                            title=_("On selected users"),
-                            entries=list(self._page_menu_entries_on_selected_users()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Synchronized users"),
-                            entries=list(self._page_menu_entries_synchronized_users()),
-                        ),
-                        PageMenuTopic(
-                            title=_("User messages"),
-                            entries=list(self._page_menu_entries_user_messages()),
-                        ),
-                        make_checkbox_selection_topic(self.name()),
-                    ],
+                    topics=topics,
                 ),
                 PageMenuDropdown(
                     name="related",
@@ -167,18 +174,19 @@ class ModeUsers(WatoMode):
         return menu
 
     def _page_menu_entries_on_selected_users(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Delete users"),
-            shortcut_title=_("Delete selected users"),
-            icon_name="delete",
-            item=make_confirmed_form_submit_link(
-                form_name="bulk_delete_form",
-                button_name="_bulk_delete_users",
-                title=_("Delete selected users"),
-            ),
-            is_shortcut=True,
-            is_suggested=True,
-        )
+        if self._can_create_and_delete_users:
+            yield PageMenuEntry(
+                title=_("Delete users"),
+                shortcut_title=_("Delete selected users"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="bulk_delete_form",
+                    button_name="_bulk_delete_users",
+                    title=_("Delete selected users"),
+                ),
+                is_shortcut=True,
+                is_suggested=True,
+            )
 
         if user.may("wato.user_migrate"):
             yield PageMenuEntry(
@@ -250,7 +258,9 @@ class ModeUsers(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if delete_user := request.get_validated_type_input(UserId, "_delete"):
+        if self._can_create_and_delete_users and (
+            delete_user := request.get_validated_type_input(UserId, "_delete")
+        ):
             delete_users([delete_user])
             return redirect(self.mode_url())
 
@@ -279,7 +289,7 @@ class ModeUsers(WatoMode):
                 raise MKUserError(None, traceback.format_exc().replace("\n", "<br>\n"))
             return redirect(self.mode_url())
 
-        if request.var("_bulk_delete_users"):
+        if self._can_create_and_delete_users and request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm()
             return redirect(self.mode_url())
 
@@ -408,16 +418,19 @@ class ModeUsers(WatoMode):
                     edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
                     html.icon_button(edit_url, _("Properties"), "edit")
 
-                    clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
-                    html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+                    if self._can_create_and_delete_users:
+                        clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
+                        html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-                delete_url = make_confirm_delete_link(
-                    url=make_action_link([("mode", "users"), ("_delete", uid)]),
-                    title=_("Delete user"),
-                    suffix=(user_alias := user_spec.get("alias", "")),
-                    message=_("ID: %s") % uid,
-                )
-                html.icon_button(delete_url, _("Delete"), "delete")
+                user_alias = user_spec.get("alias", "")
+                if self._can_create_and_delete_users:
+                    delete_url = make_confirm_delete_link(
+                        url=make_action_link([("mode", "users"), ("_delete", uid)]),
+                        title=_("Delete user"),
+                        suffix=user_alias,
+                        message=_("ID: %s") % uid,
+                    )
+                    html.icon_button(delete_url, _("Delete"), "delete")
 
                 notifications_url = folder_preserving_link(
                     [("mode", "user_notifications"), ("user", uid)]
@@ -624,6 +637,8 @@ class ModeEditUser(WatoMode):
 
         if edition() is Edition.CME:
             self._vs_customer = managed.vs_customer()
+
+        self._can_create_users = edition() != Edition.CSE
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?

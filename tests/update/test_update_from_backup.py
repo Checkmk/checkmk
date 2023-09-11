@@ -11,7 +11,6 @@ from tests.testlib.version import CMKVersion
 
 from cmk.utils.version import Edition
 
-from tests.plugins_integration.checks import get_host_names
 from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def test_update_from_backup() -> None:
 
     assert base_site.is_running()
 
-    hostnames = get_host_names(base_site)
+    hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
     # TODO: introduce agent installation and hosts registration
 

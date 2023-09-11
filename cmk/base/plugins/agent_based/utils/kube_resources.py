@@ -12,7 +12,6 @@ from typing import (
     Literal,
     Mapping,
     MutableMapping,
-    Optional,
     Tuple,
     TypedDict,
     Union,
@@ -51,8 +50,8 @@ class AllocatableResource(Section):
 class HardResourceRequirement(Section):
     """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
 
-    limit: Optional[float] = None
-    request: Optional[float] = None
+    limit: float | None = None
+    request: float | None = None
 
 
 def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
@@ -134,14 +133,14 @@ RESOURCE_QUOTA_DEFAULT_PARAMS = Params(
 )
 
 
-utilization_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str] = {
+utilization_title: Mapping[RequirementType | AllocatableKubernetesObject, str] = {
     "request": "Requests utilization",
     "limit": "Limits utilization",
     "node": "Node utilization",
     "cluster": "Cluster utilization",
 }
 
-absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str] = {
+absolute_title: Mapping[RequirementType | AllocatableKubernetesObject, str] = {
     "request": "Requests",
     "limit": "Limits",
     "allocatable": "Allocatable",
@@ -165,11 +164,11 @@ def check_with_utilization(
     usage: float,
     resource_type: ResourceType,
     requirement_type: RequirementType,
-    kubernetes_object: Optional[AllocatableKubernetesObject],
+    kubernetes_object: AllocatableKubernetesObject | None,
     requirement_value: float,
     params: Params,
     render_func: Callable[[float], str],
-) -> Iterable[Union[Metric, Result]]:
+) -> Iterable[Metric | Result]:
     utilization = usage * 100.0 / requirement_value
     if kubernetes_object is None:
         metric_name = f"kube_{resource_type}_{requirement_type}_utilization"
@@ -201,8 +200,8 @@ def check_with_utilization(
 
 
 def requirements_for_object(
-    resources: Resources, allocatable_resource: Optional[AllocatableResource]
-) -> Iterable[Tuple[RequirementType, Optional[AllocatableKubernetesObject], float]]:
+    resources: Resources, allocatable_resource: AllocatableResource | None
+) -> Iterable[Tuple[RequirementType, AllocatableKubernetesObject | None, float]]:
     yield "request", None, resources.request
     yield "limit", None, resources.limit
     if allocatable_resource is not None:
@@ -211,9 +210,9 @@ def requirements_for_object(
 
 def check_resource(
     params: Params,
-    resource_usage: Optional[PerformanceUsage],
+    resource_usage: PerformanceUsage | None,
     resources: Resources,
-    allocatable_resource: Optional[AllocatableResource],
+    allocatable_resource: AllocatableResource | None,
     resource_type: ResourceType,
     render_func: Callable[[float], str],
 ) -> CheckResult:
@@ -259,8 +258,8 @@ def check_resource(
 
 def check_resource_quota_resource(
     params: Params,
-    resource_usage: Optional[PerformanceUsage],
-    hard_requirement: Optional[HardResourceRequirement],
+    resource_usage: PerformanceUsage | None,
+    hard_requirement: HardResourceRequirement | None,
     resource_type: ResourceType,
     render_func: Callable[[float], str],
 ) -> CheckResult:
@@ -319,11 +318,11 @@ def check_resource_quota_resource(
 
 
 def performance_cpu(
-    section_kube_performance_cpu: Optional[PerformanceUsage],
+    section_kube_performance_cpu: PerformanceUsage | None,
     current_timestamp: float,
     host_value_store: MutableMapping[str, Any],
     value_store_key: Literal["cpu_usage", "resource_quota_cpu_usage"],
-) -> Optional[PerformanceUsage]:
+) -> PerformanceUsage | None:
     """Persists the performance usage and uses the stored value for a certain period of time if
     no new data is available.
     """

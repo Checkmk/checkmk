@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -34,7 +34,7 @@ class Chassis(NamedTuple):
     max_temp: float
     min_temp: float
     threshold_temp: float
-    avg_temp: Optional[float]
+    avg_temp: float | None
     dev_unit: str
 
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Mapping, MutableSequence, Optional, Union
+from typing import Mapping, MutableSequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -39,16 +39,16 @@ def parse_node_custom_conditions(string_table: StringTable) -> NodeCustomConditi
 
 
 def discovery(
-    section_kube_node_conditions: Optional[NodeConditions],
-    section_kube_node_custom_conditions: Optional[NodeCustomConditions],
+    section_kube_node_conditions: NodeConditions | None,
+    section_kube_node_custom_conditions: NodeCustomConditions | None,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check(
     params: Mapping[str, int],
-    section_kube_node_conditions: Optional[NodeConditions],
-    section_kube_node_custom_conditions: Optional[NodeCustomConditions],
+    section_kube_node_conditions: NodeConditions | None,
+    section_kube_node_custom_conditions: NodeCustomConditions | None,
 ) -> CheckResult:
     if not section_kube_node_conditions:
         raise IgnoreResultsError("No node conditions found")
@@ -78,7 +78,7 @@ def check(
 def _check_node_conditions(  # type: ignore[no-untyped-def]
     params: Mapping[str, int], section: NodeConditions
 ):
-    cond: Union[Optional[FalsyNodeCondition], FalsyNodeCondition, TruthyNodeCondition] = None
+    cond: FalsyNodeCondition | None | FalsyNodeCondition | TruthyNodeCondition = None
     for name, cond in section:
         if not cond:
             continue

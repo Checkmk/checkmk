@@ -5,7 +5,7 @@
 
 import json
 import time
-from typing import Mapping, Optional, Tuple
+from typing import Mapping, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -51,9 +51,7 @@ def discovery(section: DeploymentConditions) -> DiscoveryResult:
     yield Service()
 
 
-def condition_levels(
-    params: Mapping[str, VSResultAge], condition: str
-) -> Optional[Tuple[int, int]]:
+def condition_levels(params: Mapping[str, VSResultAge], condition: str) -> Tuple[int, int] | None:
     if (levels := params.get(condition, "no_levels")) == "no_levels":
         return None
     return levels[1]

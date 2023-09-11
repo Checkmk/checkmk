@@ -59,8 +59,8 @@ class ParsedLine:
     sec_regex: ClassVar[Pattern] = regex(r"Debian-Security:|Ubuntu[^/]*/[^/]*-\bsecurity\b")
     action: str
     package: str
-    old_version: Optional[str]
-    update_metadata: Optional[str]
+    old_version: str | None
+    update_metadata: str | None
 
     @classmethod
     def try_from_str(cls, line: str) -> Optional["ParsedLine"]:
@@ -163,7 +163,7 @@ def _data_is_valid(string_table: StringTable) -> bool:
     )
 
 
-def parse_apt(string_table: StringTable) -> Optional[Section]:
+def parse_apt(string_table: StringTable) -> Section | None:
     sanitized_string_table = _sanitize_string_table(string_table)
     if len(sanitized_string_table) == 0:
         return Section(updates=[], removals=[], sec_updates=[])

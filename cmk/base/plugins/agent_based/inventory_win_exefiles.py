@@ -5,7 +5,7 @@
 
 import re
 import time
-from typing import List, NamedTuple, Optional, Sequence
+from typing import List, NamedTuple, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -15,7 +15,7 @@ class Package(NamedTuple):
     name: str
     path: str
     package_type: str
-    install_date: Optional[int]
+    install_date: int | None
     size: int
     version: str
     summary: str
@@ -39,7 +39,7 @@ def parse_win_exefiles(string_table: StringTable) -> Section:
         # when none of the implemented parsers matches. We keep the existing parsers for
         # compatibility, all users with yet unhandled formats should update the agent to
         # solve the problems.
-        install_date: Optional[int] = None
+        install_date: int | None = None
         if re.match(r"^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%d.%m.%Y %H:%M:%S")))
         elif re.match(r"^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):

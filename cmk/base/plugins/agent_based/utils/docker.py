@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional
+from typing import Any, Dict, Iterable, List, NamedTuple
 
 from ..agent_based_api.v1.type_defs import StringTable
 from .memory import SectionMemUsed
@@ -116,7 +116,7 @@ def ensure_valid_docker_header(string_table: StringTable) -> Dict:
     return version
 
 
-def get_version(string_table: StringTable) -> Optional[Dict]:
+def get_version(string_table: StringTable) -> Dict | None:
     try:
         if string_table[0][0] == "@docker_version_info":
             version_info = json.loads(string_table[0][1])

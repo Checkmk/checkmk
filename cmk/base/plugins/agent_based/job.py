@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Dict, Final, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Final, List, Mapping, Tuple
 
 from typing_extensions import TypedDict
 
@@ -199,7 +199,7 @@ def _check_job_levels(  # type: ignore[no-untyped-def]
 
 def _process_job_stats(
     job: Job,
-    age_levels: Optional[Tuple[int, int]],
+    age_levels: Tuple[int, int] | None,
     exit_code_to_state_map: Dict[int, State],
     now: float,
 ) -> type_defs.CheckResult:

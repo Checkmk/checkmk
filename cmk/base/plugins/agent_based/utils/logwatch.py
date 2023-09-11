@@ -23,7 +23,6 @@ from typing import (
     Mapping,
     MutableMapping,
     NamedTuple,
-    Optional,
     Sequence,
     Set,
     TypedDict,
@@ -143,7 +142,7 @@ def reclassify(
     return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
 
 
-def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[Result]:
+def check_errors(cluster_section: Mapping[str | None, Section]) -> Iterable[Result]:
     """
     >>> cluster_section = {
     ...     None: Section(errors=["error w/o node info"], logfiles={}),
@@ -163,7 +162,7 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
 
 
 def get_unreadable_logfiles(
-    logfile: str, section: Mapping[Optional[str], Section]
+    logfile: str, section: Mapping[str | None, Section]
 ) -> Sequence[tuple[str, str | None]]:
     """
     >>> section = Section(errors=[], logfiles={"log1": ItemData(attr="cannotopen", lines={})})

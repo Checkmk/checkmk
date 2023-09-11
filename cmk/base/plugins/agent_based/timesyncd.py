@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, NotRequired, Optional, Sequence, Tuple
+from typing import Any, Iterable, Mapping, NotRequired, Sequence, Tuple
 
 from dateutil import parser as date_parser
 from dateutil import tz
@@ -173,8 +173,8 @@ def _get_levels_seconds(params: Mapping[str, Any]) -> Tuple[float, float]:
 
 
 def discover_timesyncd(
-    section_timesyncd: Optional[Section],
-    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+    section_timesyncd: Section | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,
 ) -> DiscoveryResult:
     if section_timesyncd:
         yield Service()
@@ -182,8 +182,8 @@ def discover_timesyncd(
 
 def check_timesyncd(
     params: Mapping[str, Any],
-    section_timesyncd: Optional[Section],
-    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+    section_timesyncd: Section | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,
 ) -> CheckResult:
     if section_timesyncd is None:
         return

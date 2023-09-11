@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -17,7 +17,7 @@ class Section(NamedTuple):
     serial: str
 
 
-def parse_quantum_storage_info(string_table: StringTable) -> Optional[Section]:
+def parse_quantum_storage_info(string_table: StringTable) -> Section | None:
     return Section(*string_table[0]) if string_table else None
 
 

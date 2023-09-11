@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,7 +19,7 @@ from .utils import sap_hana
 
 
 class SAP_HANA_MAYBE(NamedTuple):
-    bool: Optional[bool]
+    bool: bool | None
     value: Any
 
 
@@ -133,7 +133,7 @@ def _check_product_usage(size, limit, params):
 
 
 def cluster_check_sap_hana_license(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[sap_hana.ParsedSection]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, sap_hana.ParsedSection | None]
 ) -> CheckResult:
     yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():

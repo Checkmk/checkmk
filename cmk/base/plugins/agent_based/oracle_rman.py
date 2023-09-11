@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping
 
 from typing_extensions import TypedDict
 
@@ -41,7 +41,7 @@ class SectionSidOracleRman(TypedDict):
     sid: str
     backuptype: str
     backuplevel: str
-    backupage: Optional[int]
+    backupage: int | None
     status: str
     backupscn: int
     used_incr_0: bool
@@ -111,7 +111,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
             # sysdate can be old on slow databases with long running SQLs, therefore we can end up
             # with a negative number here if the Archivelog backup is running while the agent is
             # collecting data
-            backupage: Optional[int] = max(
+            backupage: int | None = max(
                 int(backupage_str),
                 0,
             )
@@ -233,9 +233,9 @@ def check_oracle_rman(
 
 
 def cluster_check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[SectionOracleRman]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, SectionOracleRman | None]
 ) -> CheckResult:
-    youngest_backup_age: Optional[int] = None
+    youngest_backup_age: int | None = None
     # take the most current backupage in clustered environments
     for node_data in section.values():
         if node_data is None:

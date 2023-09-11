@@ -172,7 +172,7 @@ def check_logwatch(
 
 
 def cluster_check_logwatch(
-    item: str, section: Mapping[str, Optional[logwatch.Section]]
+    item: str, section: Mapping[str, logwatch.Section | None]
 ) -> CheckResult:
     yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
 
@@ -315,7 +315,7 @@ def check_logwatch_groups(
 def cluster_check_logwatch_groups(
     item: str,
     params: DiscoveredGroupParams,
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     yield from check_logwatch_groups(
         item, params, {k: v for k, v in section.items() if v is not None}

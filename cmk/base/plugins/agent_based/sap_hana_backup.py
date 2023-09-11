@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timezone, tzinfo
-from typing import Any, Dict, Mapping, NamedTuple, Optional
+from typing import Any, Dict, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -24,10 +24,10 @@ LOCAL_TIMEZONE = datetime.now(tz=timezone.utc).astimezone().tzinfo
 
 
 class Backup(NamedTuple):
-    end_time: Optional[datetime] = None
-    state_name: Optional[str] = None
-    comment: Optional[str] = None
-    message: Optional[str] = None
+    end_time: datetime | None = None
+    state_name: str | None = None
+    comment: str | None = None
+    message: str | None = None
 
     def is_empty(self) -> bool:
         return all(value is None for value in self)  # pylint: disable=not-an-iterable
@@ -36,7 +36,7 @@ class Backup(NamedTuple):
 Section = Mapping[str, Backup]
 
 
-def _backup_timestamp(backup_time_readable: str, tz: Optional[tzinfo]) -> Optional[datetime]:
+def _backup_timestamp(backup_time_readable: str, tz: tzinfo | None) -> datetime | None:
     """
     >>> from datetime import datetime, timedelta, timezone
 
@@ -58,7 +58,7 @@ def _backup_timestamp(backup_time_readable: str, tz: Optional[tzinfo]) -> Option
         return None
 
 
-def _parse_sap_hana_backup(string_table: StringTable, timezone_info: Optional[tzinfo]) -> Section:
+def _parse_sap_hana_backup(string_table: StringTable, timezone_info: tzinfo | None) -> Section:
     parsed: Dict[str, Backup] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if len(lines) == 0:
@@ -149,7 +149,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
 def cluster_check_sap_hana_backup(  # type: ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.

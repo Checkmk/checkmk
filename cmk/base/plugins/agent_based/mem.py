@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from .agent_based_api.v1 import Attributes, register, type_defs
 from .utils import memory
 
 
-def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> Optional[memory.SectionMem]:
+def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> memory.SectionMem | None:
     """Parse /proc/meminfo into the canonical form: into bytes
 
     >>> import pprint

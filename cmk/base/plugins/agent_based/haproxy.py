@@ -5,7 +5,7 @@
 
 from enum import Enum
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple, Optional
+from typing import Any, Dict, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -36,15 +36,15 @@ class HAProxyServerStatus(Enum):
 
 class Frontend(NamedTuple):
     status: str
-    stot: Optional[int]
+    stot: int | None
 
 
 class Server(NamedTuple):
     status: str
     layer_check: str
-    uptime: Optional[int]
-    active: Optional[int]
-    backup: Optional[int]
+    uptime: int | None
+    active: int | None
+    backup: int | None
 
 
 class Section(NamedTuple):

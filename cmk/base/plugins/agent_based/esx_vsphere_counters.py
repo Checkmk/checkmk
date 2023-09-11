@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -237,7 +237,7 @@ def _sum_instance_counts(counts: SubSectionCounter) -> float:
     return summed_avgs
 
 
-def _max_latency(latencies: SubSectionCounter) -> Optional[int]:
+def _max_latency(latencies: SubSectionCounter) -> int | None:
     all_latencies: List[int] = []
     for data in latencies.values():
         multivalues, _unit = data[0]

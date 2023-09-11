@@ -16,7 +16,6 @@ from typing import (
     Mapping,
     Match,
     NamedTuple,
-    Optional,
     Set,
     Tuple,
     Union,
@@ -47,20 +46,20 @@ class FileinfoItem(NamedTuple):
     name: str
     missing: bool
     failed: bool
-    size: Optional[int]
-    time: Optional[int]
+    size: int | None
+    time: int | None
 
 
 class Fileinfo(NamedTuple):
-    reftime: Optional[int] = None
+    reftime: int | None = None
     files: Dict[str, FileinfoItem] = {}
 
 
 class FileStats(NamedTuple):
     name: str
     status: str
-    size: Optional[int] = None
-    time: Optional[int] = None
+    size: int | None = None
+    time: int | None = None
 
 
 class CheckType(Enum):
@@ -71,7 +70,7 @@ class CheckType(Enum):
 class MetricInfo(NamedTuple):
     title: str
     key: str
-    value: Optional[int]
+    value: int | None
     verbose_func: Callable
 
 
@@ -89,7 +88,7 @@ def _get_field(row: List[Any], index: int) -> Any:
         return None
 
 
-def _parse_single_legacy_row(row: List[str]) -> Optional[FileStats]:
+def _parse_single_legacy_row(row: List[str]) -> FileStats | None:
     name = _cast_value(row[0], str)
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
@@ -111,7 +110,7 @@ def _parse_single_legacy_row(row: List[str]) -> Optional[FileStats]:
     )
 
 
-def _parse_single_row(row: List[str], header: Iterable[str]) -> Optional[FileStats]:
+def _parse_single_row(row: List[str], header: Iterable[str]) -> FileStats | None:
     file_data = dict(zip(header, row))
 
     name = _cast_value(file_data.get("name"), str)
@@ -181,7 +180,7 @@ def parse_fileinfo(string_table: StringTable) -> Fileinfo:
     return Fileinfo(reftime=reftime, files=files)
 
 
-def _match(name: str, pattern: str) -> Union[bool, Match, None]:
+def _match(name: str, pattern: str) -> bool | Match | None:
     return (
         regex(pattern[1:]).match(name)
         if pattern.startswith("~")
@@ -203,10 +202,10 @@ def fileinfo_process_date(pattern: str, reftime: int) -> str:
 
 
 def fileinfo_groups_get_group_name(
-    group_patterns: List[Tuple[str, Union[str, Tuple[str, str]]]],
+    group_patterns: List[Tuple[str, str | Tuple[str, str]]],
     filename: str,
     reftime: int,
-) -> Dict[str, List[Union[str, Tuple[str, str]]]]:
+) -> Dict[str, List[str | Tuple[str, str]]]:
     found_these_groups: Dict[str, Set] = {}
 
     for group_name, pattern in group_patterns:
@@ -242,7 +241,7 @@ def fileinfo_groups_get_group_name(
                     % (group_name, num_perc_s, inclusion, len(matches))
                 )
 
-        this_pattern: Union[str, Tuple[str, str]] = ""
+        this_pattern: str | Tuple[str, str] = ""
         if matches:
             for nr, group in enumerate(matches):
                 inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
@@ -341,7 +340,7 @@ def _fileinfo_check_function(
 
 
 def check_fileinfo_data(
-    file_info: Optional[FileinfoItem],
+    file_info: FileinfoItem | None,
     reftime: int,
     params: Mapping[str, Any],
 ) -> CheckResult:
@@ -388,13 +387,13 @@ def _filename_matches(
         inclusion = inclusion_tmp
         date_inclusion = inclusion_tmp
 
-    incl_match: Union[bool, Match, None] = None
+    incl_match: bool | Match | None = None
     if inclusion_is_regex:
         incl_match = regex(inclusion).match(filename)
     else:
         incl_match = fnmatch.fnmatch(filename, inclusion)
 
-    excl_match: Union[bool, Match, None] = None
+    excl_match: bool | Match | None = None
     if exclusion_is_regex:
         excl_match = regex(exclusion).match(filename)
     else:
@@ -407,7 +406,7 @@ def _filename_matches(
 
 def _update_minmax(
     new_value: int,
-    current_minmax: Optional[Tuple[int, int]],
+    current_minmax: Tuple[int, int] | None,
 ) -> Tuple[int, int]:
     if not current_minmax:
         return new_value, new_value

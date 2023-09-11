@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -11,7 +10,7 @@ from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, VsResult, WlcC
 
 
 def discover_wlc_clients(
-    section: Union[WlcClientsSection[ClientsTotal], WlcClientsSection[ClientsPerInterface]],
+    section: WlcClientsSection[ClientsTotal] | WlcClientsSection[ClientsPerInterface],
 ) -> DiscoveryResult:
     if not section.clients_per_ssid:
         return
@@ -23,7 +22,7 @@ def discover_wlc_clients(
 def check_wlc_clients(
     item: str,
     params: VsResult,
-    section: Union[WlcClientsSection[ClientsTotal], WlcClientsSection[ClientsPerInterface]],
+    section: WlcClientsSection[ClientsTotal] | WlcClientsSection[ClientsPerInterface],
 ) -> CheckResult:
     description = ""
     if item == "Summary":

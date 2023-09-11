@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -18,7 +18,7 @@ class Section:
     cap: int
 
 
-def parse_fortisandbox_disk(string_table: StringTable) -> Optional[Section]:
+def parse_fortisandbox_disk(string_table: StringTable) -> Section | None:
     """
     >>> parse_fortisandbox_disk([["1000", "2000"]])
     Section(used=1000, cap=2000)

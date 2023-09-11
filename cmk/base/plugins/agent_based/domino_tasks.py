@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -48,8 +48,8 @@ register.snmp_section(
 
 def discover_domino_tasks(
     params: Sequence[Mapping[str, Any]],
-    section_domino_tasks: Optional[ps.Section],
-    section_mem: Optional[memory.SectionMem],
+    section_domino_tasks: ps.Section | None,
+    section_mem: memory.SectionMem | None,
 ) -> DiscoveryResult:
     yield from ps.discover_ps(params, section_domino_tasks, section_mem, None, None)
 
@@ -57,8 +57,8 @@ def discover_domino_tasks(
 def check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
-    section_domino_tasks: Optional[ps.Section],
-    section_mem: Optional[Dict[str, float]],
+    section_domino_tasks: ps.Section | None,
+    section_mem: Dict[str, float] | None,
 ) -> CheckResult:
     if section_domino_tasks is None:
         # The driving force of this check is the section 'domino_tasks'. If
@@ -83,8 +83,8 @@ def check_domino_tasks(
 def cluster_check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
-    section_domino_tasks: Mapping[str, Optional[ps.Section]],
-    section_mem: Mapping[str, Optional[memory.SectionMem]],
+    section_domino_tasks: Mapping[str, ps.Section | None],
+    section_mem: Mapping[str, memory.SectionMem | None],
 ) -> CheckResult:
     iter_non_trivial_sections = (
         (node_name, node_section)

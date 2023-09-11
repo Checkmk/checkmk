@@ -6,7 +6,7 @@
 
 import json
 from enum import Enum
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Tuple
 
 from typing_extensions import TypedDict
 
@@ -41,7 +41,7 @@ class Rule(NamedTuple):
     group_name: str
     status: RuleState
     severity: Severity
-    message: Optional[str]
+    message: str | None
 
 
 Group = Dict[str, Rule]
@@ -105,7 +105,7 @@ def _get_summary_count(section: Section) -> int:
     return sum(len(group) for group in section.values())
 
 
-def _get_mapping(rule: Rule, params: CheckParams) -> Optional[StateMapping]:
+def _get_mapping(rule: Rule, params: CheckParams) -> StateMapping | None:
     """Returns remapping for a specific rule if one exists"""
     for mapping in params.get("alert_remapping", []):
         if rule.rule_name in mapping["rule_names"]:

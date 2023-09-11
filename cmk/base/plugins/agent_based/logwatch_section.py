@@ -14,14 +14,14 @@
 #########################################################################################
 
 import os
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.logwatch import ItemData, Section
 
 
-def _extract_error_message(line: str) -> Optional[str]:
+def _extract_error_message(line: str) -> str | None:
     """Check line for error message
     Return None if no error message is found, error_message otherwise
     """
@@ -95,7 +95,7 @@ def parse_logwatch(string_table: StringTable) -> Section:
     errors = []
     logfiles: Dict[str, ItemData] = {}
 
-    item_data: Optional[ItemData] = None
+    item_data: ItemData | None = None
 
     for raw_line in string_table:
         line = " ".join(raw_line)

@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class Load(NamedTuple):
@@ -23,12 +23,12 @@ class ProcessorType(Enum):
 @dataclass(frozen=True)
 class Threads:
     count: int
-    max: Optional[int] = None
+    max: int | None = None
 
 
 @dataclass
 class Section:
     load: Load
     num_cpus: int
-    threads: Optional[Threads] = None
+    threads: Threads | None = None
     type: ProcessorType = ProcessorType.unspecified

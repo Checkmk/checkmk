@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal, Mapping, Optional
+from typing import Any, Literal, Mapping
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -251,8 +251,8 @@ register.agent_section(
 
 def discover_lnx_if(
     params: Sequence[Mapping[str, Any]],
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> type_defs.DiscoveryResult:
     if section_lnx_if is None:
         return
@@ -285,7 +285,7 @@ def _fix_bonded_mac(
 
 def _get_fixed_bonded_if_table(
     section_lnx_if: Section,
-    section_bonding: Optional[bonding.Section],
+    section_bonding: bonding.Section | None,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not section_bonding:
         return section_lnx_if[0]
@@ -296,8 +296,8 @@ def _get_fixed_bonded_if_table(
 def check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> type_defs.CheckResult:
     if section_lnx_if is None:
         return
@@ -312,8 +312,8 @@ def check_lnx_if(
 def cluster_check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section_lnx_if: Mapping[str, Optional[Section]],
-    section_bonding: Mapping[str, Optional[bonding.Section]],
+    section_lnx_if: Mapping[str, Section | None],
+    section_bonding: Mapping[str, bonding.Section | None],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
@@ -345,7 +345,7 @@ def _make_inventory_interface(
     interface: interfaces.InterfaceWithCounters,
     mac_map: Mapping[str, str],
     bond_map: Mapping[str, str],
-) -> Optional[InterfaceInv]:
+) -> InterfaceInv | None:
     # Always exclude dockers veth* interfaces on docker nodes.
     # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
     # Ignore useless half-empty tables (e.g. Viprinet-Router).
@@ -373,8 +373,8 @@ def _make_inventory_interface(
 
 
 def inventory_lnx_if(
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> InventoryResult:
     if section_lnx_if is None:
         return

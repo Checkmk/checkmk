@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
+from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -35,7 +35,7 @@ class Section(NamedTuple):
 WHAT_MAP: Final = {"-232": "util", "-96": "user", "-94": "privileged"}
 
 
-def parse_winperf_processor(string_table: StringTable) -> Optional[Section]:
+def parse_winperf_processor(string_table: StringTable) -> Section | None:
     section = Section(
         time=int(float(string_table[0][0])),
         ticks=[],
@@ -77,7 +77,7 @@ def _ticks_to_percent(
     value_store: MutableMapping[str, Any],
     ticks: CoreTicks,
     this_time: float,
-    index: Optional[int] = None,
+    index: int | None = None,
 ) -> float:
     """Convert ticks (100ns) to a number between 0 and 100"""
     value = ticks.total if index is None else ticks.per_core[index]

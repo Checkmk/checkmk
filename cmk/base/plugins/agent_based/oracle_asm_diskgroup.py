@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional
+from typing import Any, Dict, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -65,9 +65,9 @@ class Failgroup(NamedTuple):
 
 class Diskgroup(NamedTuple):
     dgstate: str
-    dgtype: Optional[str]
-    total_mb: Optional[int]
-    free_mb: Optional[int]
+    dgtype: str | None
+    total_mb: int | None
+    free_mb: int | None
     req_mir_free_mb: int
     offline_disks: int
     voting_files: str
@@ -89,7 +89,7 @@ def _is_deprecated_oracle_asm_plugin_from_1_2_6(repair_time: str, num_disks: str
     return not num_disks.isnumeric() or repair_time == "N"
 
 
-def _try_parse_int(value: Any) -> Optional[int]:
+def _try_parse_int(value: Any) -> int | None:
     try:
         return int(value)
     except ValueError:
@@ -467,7 +467,7 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
 
 
 def cluster_check_oracle_asm_diskgroup(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[Section]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Section | None]
 ) -> CheckResult:
     # only use data from 1. node in agent output
     # => later calculation of DG size is much easier

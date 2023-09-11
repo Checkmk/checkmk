@@ -5,7 +5,7 @@
 
 import calendar
 import time
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Iterable, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -39,10 +39,10 @@ KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
 
 class _Cluster(NamedTuple):
     last_updated: str
-    dc: Optional[str]
-    num_nodes: Optional[int]
-    num_resources: Optional[int]
-    error: Optional[str]
+    dc: str | None
+    num_nodes: int | None
+    num_resources: int | None
+    error: str | None
 
 
 class _Resources(NamedTuple):
@@ -55,7 +55,7 @@ class Section(NamedTuple):
     resources: _Resources
 
 
-def _parse_for_error(first_line: str) -> Optional[str]:
+def _parse_for_error(first_line: str) -> str | None:
     if (
         first_line.lower().startswith(("critical", "error:"))
         or "connection to cluster failed" in first_line.lower()
@@ -272,7 +272,7 @@ def _partition_string_table(iter_string_table, next_section_headers=None):
         yield _sanitise_line(line)
 
 
-def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
+def parse_heartbeat_crm(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
@@ -425,7 +425,7 @@ def discover_heartbeat_crm_resources(
 
 def check_heartbeat_crm_resources(
     item: str,
-    params: Mapping[str, Optional[str]],
+    params: Mapping[str, str | None],
     section: Section,
 ) -> CheckResult:
     if (resources := section.resources.resources.get(item)) is None:

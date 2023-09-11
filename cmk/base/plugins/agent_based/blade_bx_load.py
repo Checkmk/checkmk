@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from .agent_based_api.v1 import contains, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -11,7 +10,7 @@ from .utils.cpu import Load, Section
 from .utils.cpu_load import check_cpu_load
 
 
-def parse_blade_bx_load(string_table: StringTable) -> Optional[Section]:
+def parse_blade_bx_load(string_table: StringTable) -> Section | None:
     """
     >>> parse_blade_bx_load([])
     >>> parse_blade_bx_load([["0.210000"], ["0.190000"], ["0.280000"]])

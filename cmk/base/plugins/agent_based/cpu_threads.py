@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional, Tuple, Union
+from typing import Mapping, Tuple, Union
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -19,7 +19,7 @@ def discover_cpu_threads(section: Section) -> DiscoveryResult:
 
 def _get_levels(  # type: ignore[no-untyped-def]
     params: Params, level_name
-) -> Optional[Tuple[float, float]]:
+) -> Tuple[float, float] | None:
     """
     >>> _get_levels({"levels": "no_levels"}, "levels") is None
     True

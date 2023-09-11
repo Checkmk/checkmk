@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils import detection, uptime
 
 
-def parse_snmp_uptime(string_table: StringTable) -> Optional[uptime.Section]:
+def parse_snmp_uptime(string_table: StringTable) -> uptime.Section | None:
     """
     >>> parse_snmp_uptime([['2297331594', '']])
     Section(uptime_sec=22973315, message=None)

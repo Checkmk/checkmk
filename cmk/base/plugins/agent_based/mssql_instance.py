@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -118,7 +118,7 @@ def inventory_mssql_instance(section: Section) -> InventoryResult:
         )
 
 
-def _get_info(key: str, alt_key: str, attrs: Mapping[str, str]) -> Optional[str]:
+def _get_info(key: str, alt_key: str, attrs: Mapping[str, str]) -> str | None:
     return attrs.get(key, attrs.get(alt_key))
 
 

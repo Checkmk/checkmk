@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
@@ -32,7 +32,7 @@ class Section:
         return cls(model=row[0], serialnumber=row[1], os=row[2])
 
 
-def parse(string_table: StringTable) -> Optional[Section]:
+def parse(string_table: StringTable) -> Section | None:
     """
     >>> assert parse([]) is None
     >>> assert parse([["model", "SN7", "DSM"]]) == Section(model="model", serialnumber="SN7", os="DSM")

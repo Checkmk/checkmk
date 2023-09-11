@@ -11,7 +11,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, List, Mapping, Optional, Tuple
+from typing import Any, List, Mapping, Tuple
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -44,8 +44,8 @@ def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection
 
 
 def discover_liebert_humidity_air(
-    section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[liebert.SystemSection],
+    section_liebert_humidity_air: ParsedSection | None,
+    section_liebert_system: liebert.SystemSection | None,
 ) -> DiscoveryResult:
     if section_liebert_humidity_air is None:
         return
@@ -58,8 +58,8 @@ def discover_liebert_humidity_air(
 def check_liebert_humidity_air(
     item: str,
     params: Mapping[str, Any],
-    section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[liebert.SystemSection],
+    section_liebert_humidity_air: ParsedSection | None,
+    section_liebert_system: liebert.SystemSection | None,
 ) -> CheckResult:
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return

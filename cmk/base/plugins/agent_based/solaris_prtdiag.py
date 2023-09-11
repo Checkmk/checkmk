@@ -65,21 +65,21 @@
 #
 
 import time
-from typing import Mapping, NamedTuple, Union
+from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 class Section(NamedTuple):
-    bios: Mapping[str, Union[str, int]]
+    bios: Mapping[str, str | int]
     hardware: Mapping[str, str]
 
 
 def parse_solaris_prtdiag(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    bios: dict[str, Union[str, int]] = {}
+    bios: dict[str, str | int] = {}
     hardware = {}
     for line in string_table:
         if line[0].startswith("OBP"):

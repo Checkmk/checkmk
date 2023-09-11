@@ -5,7 +5,7 @@
 
 import json
 import time
-from typing import Any, Literal, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import Any, Literal, Mapping, MutableMapping, Tuple, Union
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -85,9 +85,9 @@ Replicas = Union[DeploymentReplicas, StatefulSetReplicas, DaemonSetReplicas]
 
 
 def discover_kube_replicas(
-    section_kube_replicas: Optional[Replicas],
-    section_kube_update_strategy: Optional[UpdateStrategy],
-    section_kube_controller_spec: Optional[ControllerSpec],
+    section_kube_replicas: Replicas | None,
+    section_kube_update_strategy: UpdateStrategy | None,
+    section_kube_controller_spec: ControllerSpec | None,
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()
@@ -103,7 +103,7 @@ def _check_duration(
     ],
     now: float,
     value_store: MutableMapping[str, Any],
-    levels_upper: Optional[Tuple[int, int]],
+    levels_upper: Tuple[int, int] | None,
     label: str,
 ) -> CheckResult:
     """Update/read value_store and check the duration of undesired replica states.
@@ -128,7 +128,7 @@ def _check_duration(
 def _levels(
     params: Mapping[str, VSResultAge],
     param_name: str,
-) -> Optional[Tuple[int, int]]:
+) -> Tuple[int, int] | None:
     if (levels_upper := params.get(param_name, "no_levels")) == "no_levels":
         return None
     return levels_upper[1]
@@ -136,9 +136,9 @@ def _levels(
 
 def check_kube_replicas(
     params: Mapping[str, VSResultAge],
-    section_kube_replicas: Optional[Replicas],
-    section_kube_update_strategy: Optional[UpdateStrategy],
-    section_kube_controller_spec: Optional[ControllerSpec],
+    section_kube_replicas: Replicas | None,
+    section_kube_update_strategy: UpdateStrategy | None,
+    section_kube_controller_spec: ControllerSpec | None,
 ) -> CheckResult:
     yield from _check_kube_replicas(
         params,
@@ -152,9 +152,9 @@ def check_kube_replicas(
 
 def _check_kube_replicas(
     params: Mapping[str, VSResultAge],
-    section_kube_replicas: Optional[Replicas],
-    section_kube_update_strategy: Optional[UpdateStrategy],
-    section_kube_controller_spec: Optional[ControllerSpec],
+    section_kube_replicas: Replicas | None,
+    section_kube_update_strategy: UpdateStrategy | None,
+    section_kube_controller_spec: ControllerSpec | None,
     *,
     now: float,
     value_store: MutableMapping[str, Any],

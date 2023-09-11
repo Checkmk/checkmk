@@ -5,7 +5,7 @@
 
 import time
 import urllib.parse
-from typing import Mapping, NamedTuple, Optional, Sequence
+from typing import Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -13,10 +13,10 @@ from .utils import cache_helper
 
 
 class PluginData(NamedTuple):
-    name: Optional[str]
+    name: str | None
     state: State
     info: Sequence[str]
-    cache_info: Optional[cache_helper.CacheInfo]
+    cache_info: cache_helper.CacheInfo | None
 
 
 MRPESection = Mapping[str, PluginData]
@@ -32,7 +32,7 @@ def parse_mrpe(string_table: StringTable) -> MRPESection:
         # New Linux agent sends (check_name) in first column. Stay
         # compatible with MRPE versions not providing this info
         if line[0].startswith("("):
-            name: Optional[str] = line[0].strip("()")
+            name: str | None = line[0].strip("()")
             line = line[1:]
         else:
             name = None
@@ -69,13 +69,13 @@ def discover_mrpe(section: MRPESection) -> DiscoveryResult:
 class LegacyMetricTuple(NamedTuple):
     name: str
     value: float
-    warn: Optional[float]
-    crit: Optional[float]
-    minn: Optional[float]
-    maxx: Optional[float]
+    warn: float | None
+    crit: float | None
+    minn: float | None
+    maxx: float | None
 
 
-def _opt_float(string: str) -> Optional[float]:
+def _opt_float(string: str) -> float | None:
     try:
         return float(string)
     except ValueError:

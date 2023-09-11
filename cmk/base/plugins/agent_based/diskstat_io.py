@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Optional
+from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
 from .utils import diskstat, hp_msa
@@ -53,7 +53,7 @@ def check_diskstat_io(
 def _cluster_check_diskstat_io(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[diskstat.Section]],
+    section: Mapping[str, diskstat.Section | None],
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> type_defs.CheckResult:
@@ -72,7 +72,7 @@ def _cluster_check_diskstat_io(
 def cluster_check_diskstat_io(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[diskstat.Section]],
+    section: Mapping[str, diskstat.Section | None],
 ) -> type_defs.CheckResult:
     yield from _cluster_check_diskstat_io(item, params, section, get_value_store(), time.time())
 

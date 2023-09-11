@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, List, Mapping, NamedTuple, Optional
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -22,7 +22,7 @@ class EsxVsphereHostsystemCpuSection(NamedTuple):
 
 def extract_esx_vsphere_hostsystem_cpu_usage(
     section: Section,
-) -> Optional[EsxVsphereHostsystemCpuSection]:
+) -> EsxVsphereHostsystemCpuSection | None:
     try:
         return EsxVsphereHostsystemCpuSection(
             num_sockets=int(section["hardware.cpuInfo.numCpuPackages"][0]),
@@ -36,8 +36,8 @@ def extract_esx_vsphere_hostsystem_cpu_usage(
 
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
-    section_esx_vsphere_hostsystem: Optional[Section],
-    section_winperf_processor: Optional[List],  # currently no parse function
+    section_esx_vsphere_hostsystem: Section | None,
+    section_winperf_processor: List | None,  # currently no parse function
 ) -> DiscoveryResult:
     if section_winperf_processor or not section_esx_vsphere_hostsystem:
         return
@@ -86,8 +86,8 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
 
 def check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Optional[Section],
-    section_winperf_processor: Optional[List],
+    section_esx_vsphere_hostsystem: Section | None,
+    section_winperf_processor: List | None,
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
@@ -116,8 +116,8 @@ def _applicable_thresholds(
 
 def cluster_check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Mapping[str, Optional[Section]],
-    section_winperf_processor: Mapping[str, Optional[List]],
+    section_esx_vsphere_hostsystem: Mapping[str, Section | None],
+    section_winperf_processor: Mapping[str, List | None],
 ) -> CheckResult:
     aggregated_section = None
     total_mhz = 0.0

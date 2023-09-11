@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
@@ -284,7 +284,7 @@ register.check_plugin(
 
 def discover_docker_container_status_uptime(
     section_docker_container_status: Section | None,
-    section_uptime: Optional[uptime.Section],
+    section_uptime: uptime.Section | None,
 ) -> DiscoveryResult:
     if section_uptime:
         for _service in uptime.discover(section_uptime):
@@ -306,7 +306,7 @@ def discover_docker_container_status_uptime(
 def check_docker_container_status_uptime(
     params: Mapping[str, Any],
     section_docker_container_status: Section | None,
-    section_uptime: Optional[uptime.Section],
+    section_uptime: uptime.Section | None,
 ) -> CheckResult:
     if not section_docker_container_status:
         return

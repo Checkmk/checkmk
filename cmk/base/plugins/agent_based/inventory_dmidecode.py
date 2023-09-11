@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Callable, Dict, Generator, List, Mapping, Optional, Tuple, Union
+from typing import Callable, Dict, Generator, List, Mapping, Tuple, Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -272,8 +272,8 @@ def _make_inventory_mem_device(
 def _make_dict(
     lines: List[List[str]],
     converter_map: Mapping[str, Converter],
-) -> Dict[str, Union[float, str, None]]:
-    dict_: Dict[str, Union[float, str, None]] = {}
+) -> Dict[str, float | str | None]:
+    dict_: Dict[str, float | str | None] = {}
     for name, raw_value, *_rest in lines:
         if name not in converter_map or raw_value == "Not Specified":
             continue
@@ -305,14 +305,14 @@ register.inventory_plugin(
 #
 
 
-def _parse_date(value: str) -> Optional[float]:
+def _parse_date(value: str) -> float | None:
     try:
         return time.mktime(time.strptime(value, "%m/%d/%Y"))
     except ValueError:
         return None
 
 
-def _parse_size(v: str) -> Optional[float]:  # into Bytes (int)
+def _parse_size(v: str) -> float | None:  # into Bytes (int)
     if not v or v == "Unknown":
         return None
 
@@ -328,7 +328,7 @@ def _parse_size(v: str) -> Optional[float]:  # into Bytes (int)
     return int(parts[0])
 
 
-def _parse_speed(v: str) -> Optional[float]:  # into Hz (float)
+def _parse_speed(v: str) -> float | None:  # into Hz (float)
     if not v or v == "Unknown":
         return None
 
@@ -344,7 +344,7 @@ def _parse_speed(v: str) -> Optional[float]:  # into Hz (float)
     return None
 
 
-def _parse_voltage(v: str) -> Optional[float]:
+def _parse_voltage(v: str) -> float | None:
     if not v or v == "Unknown":
         return None
 

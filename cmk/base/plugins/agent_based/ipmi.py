@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import register, Service, State, type_defs
 from .utils import ipmi
@@ -227,8 +227,8 @@ register.agent_section(
 
 
 def _merge_sections(
-    section_ipmi: Optional[ipmi.Section],
-    section_ipmi_discrete: Optional[ipmi.Section],
+    section_ipmi: ipmi.Section | None,
+    section_ipmi_discrete: ipmi.Section | None,
 ) -> ipmi.Section:
     return {
         **(section_ipmi_discrete or {}),
@@ -238,8 +238,8 @@ def _merge_sections(
 
 def discover_ipmi(
     params: ipmi.DiscoveryParams,
-    section_ipmi: Optional[ipmi.Section],
-    section_ipmi_discrete: Optional[ipmi.Section],
+    section_ipmi: ipmi.Section | None,
+    section_ipmi_discrete: ipmi.Section | None,
 ) -> type_defs.DiscoveryResult:
     mode, ignore_params = params["discovery_mode"]
 
@@ -277,8 +277,8 @@ def ipmi_status_txt_mapping(status_txt: str) -> State:
 def check_ipmi(
     item: str,
     params: Mapping[str, Any],
-    section_ipmi: Optional[ipmi.Section],
-    section_ipmi_discrete: Optional[ipmi.Section],
+    section_ipmi: ipmi.Section | None,
+    section_ipmi_discrete: ipmi.Section | None,
 ) -> type_defs.CheckResult:
     yield from ipmi.check_ipmi(
         item,

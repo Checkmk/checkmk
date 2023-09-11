@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -275,7 +275,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
 
         # Check autoextend status if parameter not set to None
         if autoext is not None and ts_status != "READONLY":
-            autoext_info: Optional[str]
+            autoext_info: str | None
             if autoext and stats.num_extensible == 0:
                 autoext_info = "NO AUTOEXTEND"
             elif not autoext and stats.num_extensible > 0:
@@ -332,7 +332,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
 
 
 def cluster_check_oracle_tablespaces(  # type: ignore[no-untyped-def]
-    item, params, section: Mapping[str, Optional[oracle.SectionTableSpaces]]
+    item, params, section: Mapping[str, oracle.SectionTableSpaces | None]
 ) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
 

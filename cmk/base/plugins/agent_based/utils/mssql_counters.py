@@ -12,7 +12,7 @@
 """
 
 from contextlib import suppress
-from typing import Any, Dict, MutableMapping, Optional, Set, Tuple
+from typing import Any, Dict, MutableMapping, Set, Tuple
 
 from ..agent_based_api.v1 import get_rate, GetRateError, IgnoreResultsError, Service
 from ..agent_based_api.v1.type_defs import DiscoveryResult
@@ -24,7 +24,7 @@ Section = Dict[Tuple[str, str], Counters]
 def discovery_mssql_counters_generic(
     section: Section,
     want_counters: Set[str],
-    dflt: Optional[Dict[str, str]] = None,
+    dflt: Dict[str, str] | None = None,
 ) -> DiscoveryResult:
     yield from (
         Service(item=f"{obj} {instance}", parameters=dflt)
@@ -38,7 +38,7 @@ def get_rate_or_none(
     key: str,
     point_in_time: float,
     value: float,
-) -> Optional[float]:
+) -> float | None:
     """This is a convienience function which handles exceptions and avoids structures like
     >> with suppress(GetRateError):
     >>    a = get_rate()

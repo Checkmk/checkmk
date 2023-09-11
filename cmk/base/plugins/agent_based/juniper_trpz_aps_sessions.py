@@ -12,7 +12,7 @@
 
 import time
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, MutableMapping, Tuple
 
 from typing_extensions import TypedDict
 
@@ -249,7 +249,7 @@ def check_juniper_trpz_aps_sessions(
 
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),

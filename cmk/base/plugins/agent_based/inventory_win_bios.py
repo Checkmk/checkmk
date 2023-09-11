@@ -5,14 +5,14 @@
 
 import time
 from contextlib import suppress
-from typing import Mapping, Union
+from typing import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
-def parse_win_bios(string_table: StringTable) -> Mapping[str, Union[int, str]]:
-    section: dict[str, Union[str, int]] = {}
+def parse_win_bios(string_table: StringTable) -> Mapping[str, int | str]:
+    section: dict[str, str | int] = {}
     for line in string_table:
         varname = line[0].strip()
         # Separator : seams not ideal. Some systems have : in the BIOS version
@@ -46,7 +46,7 @@ register.agent_section(
 )
 
 
-def inventory_win_bios(section: Mapping[str, Union[str, int]]):  # type: ignore[no-untyped-def]
+def inventory_win_bios(section: Mapping[str, str | int]):  # type: ignore[no-untyped-def]
     attr = {k: section[k] for k in ("date", "model", "vendor", "version") if k in section}
     with suppress(KeyError):
         attr[

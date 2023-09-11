@@ -5,7 +5,7 @@
 """Prometheus Build Check"""
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -13,7 +13,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 Section = Dict[str, Any]
 
 
-def parse_prometheus_build(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_prometheus_build(string_table: type_defs.StringTable) -> Section | None:
     section = {}
     try:
         prometheus_section = json.loads(string_table[0][0])

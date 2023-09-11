@@ -48,19 +48,19 @@ _Process = List[Tuple[str, _ProcessValue]]
 
 @dataclass(frozen=True)
 class PsInfo:
-    user: Optional[str] = None
-    virtual: Optional[int] = None
-    physical: Optional[int] = None
+    user: str | None = None
+    virtual: int | None = None
+    physical: int | None = None
     # TODO: not all of these should be strings, I guess.
-    cputime: Optional[str] = None
-    process_id: Optional[str] = None
-    pagefile: Optional[str] = None
-    usermode_time: Optional[str] = None
-    kernelmode_time: Optional[str] = None
-    handles: Optional[str] = None
-    threads: Optional[str] = None
-    uptime: Optional[str] = None
-    cgroup: Optional[str] = None
+    cputime: str | None = None
+    process_id: str | None = None
+    pagefile: str | None = None
+    usermode_time: str | None = None
+    kernelmode_time: str | None = None
+    handles: str | None = None
+    threads: str | None = None
+    uptime: str | None = None
+    cgroup: str | None = None
 
     _FIELDS = (
         "user",
@@ -338,8 +338,8 @@ class ProcessAggregator:
         self.resident_size = 0
         self.handle_count = 0
         self.percent_cpu = 0.0
-        self.max_elapsed: Optional[float] = None
-        self.min_elapsed: Optional[float] = None
+        self.max_elapsed: float | None = None
+        self.min_elapsed: float | None = None
         self.processes: List[_Process] = []
         self.running_on_nodes: set = set()
 
@@ -510,10 +510,10 @@ def process_capture(
 
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
-    section_ps: Optional[Section],
-    section_mem: Optional[memory.SectionMem],
-    section_mem_used: Optional[Dict[str, memory.SectionMem]],
-    section_cpu: Optional[cpu.Section],
+    section_ps: Section | None,
+    section_mem: memory.SectionMem | None,
+    section_mem_used: Dict[str, memory.SectionMem] | None,
+    section_cpu: cpu.Section | None,
 ) -> DiscoveryResult:
     if not section_ps:
         return
@@ -530,7 +530,7 @@ def discover_ps(
 
             # User capturing on rule
             if userspec is False:
-                i_userspec: Union[None, str] = process_info.user
+                i_userspec: None | str = process_info.user
             else:
                 i_userspec = userspec
 
@@ -708,7 +708,7 @@ def check_averageable_metric(
     metric_id: str,
     avg_metric_id: str,
     metric_name: str,
-    metric_value: Union[float, int],
+    metric_value: float | int,
     levels: tuple[float, float] | None,
     average_mins: int | None,
     render_fn: Callable,

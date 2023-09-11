@@ -25,9 +25,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 class MSSQLInstanceData(TypedDict):
     unlimited: bool
-    max_size: Optional[float]
-    allocated_size: Optional[float]
-    used_size: Optional[float]
+    max_size: float | None
+    allocated_size: float | None
+    used_size: float | None
     mountpoint: str
 
 
@@ -100,9 +100,9 @@ class DatafileUsage:
 
 
 def _format_item_mssql_datafiles(
-    inst: Optional[str],
+    inst: str | None,
     database: str,
-    file_name: Optional[str],
+    file_name: str | None,
 ) -> str:
     if inst is None:
         return f"{database}.{file_name}"
@@ -117,8 +117,8 @@ def _mssql_datafiles_process_sizes(
 ) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
-        reference_value: Optional[float],
-    ) -> Optional[Tuple[float, float]]:
+        reference_value: float | None,
+    ) -> Tuple[float, float] | None:
         if isinstance(levels[0], float):
             if reference_value:
                 return (
@@ -199,8 +199,8 @@ def discover_mssql_common(
 
 def discover_mssql_datafiles(
     params: List[Mapping[str, Any]],
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_datafiles: SectionDatafiles | None,
+    section_df: Tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:
     if not section_mssql_datafiles:
         return
@@ -209,8 +209,8 @@ def discover_mssql_datafiles(
 
 def discover_mssql_transactionlogs(
     params: List[Mapping[str, Any]],
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_transactionlogs: SectionDatafiles | None,
+    section_df: Tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:
     if not section_mssql_transactionlogs:
         return
@@ -255,7 +255,7 @@ def check_mssql_common(
     item: str,
     params: Mapping[str, Any],
     section: SectionDatafiles,
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_df: Tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     instances_for_item = (
         values
@@ -288,8 +288,8 @@ def check_mssql_common(
 def check_mssql_datafiles(
     item: str,
     params: Mapping[str, Any],
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_datafiles: SectionDatafiles | None,
+    section_df: Tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     if not section_mssql_datafiles:
         return
@@ -305,8 +305,8 @@ def check_mssql_datafiles(
 def check_mssql_transactionlogs(
     item: str,
     params: Mapping[str, Any],
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_transactionlogs: SectionDatafiles | None,
+    section_df: Tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     if not section_mssql_transactionlogs:
         return

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Mapping, NamedTuple, Optional, Tuple
+from typing import Any, Callable, Mapping, NamedTuple, Tuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -27,7 +27,7 @@ class Section(NamedTuple):
     active_tunnels: int
 
 
-def parse_globalprotect_utilization(string_table: StringTable) -> Optional[Section]:
+def parse_globalprotect_utilization(string_table: StringTable) -> Section | None:
     if not string_table or len(string_table[0]) < 3:
         return None
 
@@ -66,7 +66,7 @@ def _check_levels(
     boundaries: Tuple[float, float],
     metric_name: str,
     label: str,
-    render_func: Optional[Callable] = None,
+    render_func: Callable | None = None,
 ) -> CheckResult:
     if isinstance(levels_upper, dict):
         yield from check_levels_predictive(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Any, List, Mapping, NamedTuple, Optional
+from typing import Any, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -50,7 +50,7 @@ def discover_f5_bigip_config_sync(section: NodeState) -> DiscoveryResult:
         yield Service()
 
 
-def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optional[NodeState]:
+def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_pre_v11([[["0 - Synchronized"]]])
     NodeState(state='0', description='Synchronized')
@@ -110,7 +110,7 @@ register.check_plugin(
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Optional[NodeState]:
+def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_v11_plus([[['3', 'In Sync']]])
     NodeState(state='3', description='In Sync')

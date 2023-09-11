@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, NamedTuple, Sequence, Tuple
 
 from .agent_based_api.v1 import Attributes, exists, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -23,8 +23,8 @@ class SNMPExtendedInfoEntry(NamedTuple):
 
 class SNMPExtendedInfo(NamedTuple):
     description: str  # First description is used for host labels
-    serial: Optional[str]  # Used for 'global' device Attributes
-    model: Optional[str]  # Used for 'global' device Attributes
+    serial: str | None  # Used for 'global' device Attributes
+    model: str | None  # Used for 'global' device Attributes
     entities: Mapping[str, Sequence[SNMPExtendedInfoEntry]]
 
 

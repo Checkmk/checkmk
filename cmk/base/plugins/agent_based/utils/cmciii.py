@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping
 
 from ..agent_based_api.v1 import all_of, Service, startswith, type_defs
 
@@ -41,7 +41,7 @@ def get_item(id_: str, params: DiscoveryParams, sensor: Sensor) -> str:
     return id_
 
 
-def get_sensor(item: str, params: CheckParams, sensors: Sensors) -> Optional[Sensor]:
+def get_sensor(item: str, params: CheckParams, sensors: Sensors) -> Sensor | None:
     # This function is used for compatibility whith discovered services that do
     # not use _item_key in the params (yet).
     if params and (params_key := params.get("_item_key")):

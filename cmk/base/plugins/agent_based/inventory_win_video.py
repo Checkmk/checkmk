@@ -15,7 +15,7 @@
 # MaxMemorySupported   :
 
 import time
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -66,7 +66,7 @@ def _parse_graphic_memory(graphic_memory: str) -> int:
         return 0
 
 
-def _get_drive_date(raw_driver_date: str) -> Optional[int]:
+def _get_drive_date(raw_driver_date: str) -> int | None:
     try:
         return int(time.mktime(time.strptime(raw_driver_date.split(".", 1)[0], "%Y%m%d%H%M%S")))
     except ValueError:

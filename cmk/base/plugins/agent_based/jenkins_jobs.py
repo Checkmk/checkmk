@@ -14,7 +14,7 @@
 import json
 from collections import namedtuple
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple, Optional
+from typing import Any, Dict, Mapping, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -174,7 +174,7 @@ def _handle_single_job(job):
 
     # key lastSuccessfulBuild can have None value: {'lastSuccessfulBuild':None}
     try:
-        last_sb: Optional[float] = float(job["lastSuccessfulBuild"]["timestamp"]) / 1000.0
+        last_sb: float | None = float(job["lastSuccessfulBuild"]["timestamp"]) / 1000.0
     except (
         KeyError,
         TypeError,
@@ -184,10 +184,10 @@ def _handle_single_job(job):
 
     # key lastBuild can have None value: {'lastBuild':None}
     try:
-        last_br: Optional[str] = job["lastBuild"]["result"]
-        last_bn: Optional[str] = job["lastBuild"]["number"]
-        last_bd: Optional[float] = float(job["lastBuild"]["duration"]) / 1000.0
-        last_bt: Optional[int] = int(int(job["lastBuild"]["timestamp"]) / 1000)
+        last_br: str | None = job["lastBuild"]["result"]
+        last_bn: str | None = job["lastBuild"]["number"]
+        last_bd: float | None = float(job["lastBuild"]["duration"]) / 1000.0
+        last_bt: int | None = int(int(job["lastBuild"]["timestamp"]) / 1000)
     except (KeyError, TypeError, ValueError):
         last_br = None
         last_bn = None

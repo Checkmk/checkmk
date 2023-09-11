@@ -13,7 +13,7 @@
 # inet 10.8.57.39 netmask ffffff00 broadcast 10.8.57.255
 # ether 0:3:ba:29:fc:cc
 
-from typing import Dict, NamedTuple, Optional, Sequence, Tuple
+from typing import Dict, NamedTuple, Sequence, Tuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -30,8 +30,8 @@ class Interface(NamedTuple):
 
 class Address(NamedTuple):
     device: str
-    address: Optional[str]
-    address_type: Optional[str]
+    address: str | None
+    address_type: str | None
 
 
 Section = Tuple[Sequence[Interface], Sequence[Address]]
@@ -75,8 +75,8 @@ def parse_solaris_addresses(string_table: StringTable) -> Section:
                 )
             )
 
-        address: Optional[str] = None
-        address_type: Optional[str] = None
+        address: str | None = None
+        address_type: str | None = None
         if "IPv4" in attrs:
             address = attrs["IPv4"]
             address_type = "IPv4"

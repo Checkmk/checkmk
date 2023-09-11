@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 from .agent_based_api.v1 import (
     contains,
@@ -44,7 +44,7 @@ def sanitize_variable(variable: str) -> Variable:
     return start + [end]
 
 
-def sensor_type(variable: Variable) -> Optional[SensorType]:
+def sensor_type(variable: Variable) -> SensorType | None:
     if variable[0].startswith("PSM_") and "Unit" in variable:
         return "psm_current"
     if variable[0].startswith("PSM_") and variable[1].startswith("Plug"):
@@ -126,7 +126,7 @@ def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: i
 
 def sensor_value(
     value_str: str, value_int: str, scale: str, var_type: str, var_unit: str
-) -> Union[str, float]:
+) -> str | float:
     if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
         return value_str
 

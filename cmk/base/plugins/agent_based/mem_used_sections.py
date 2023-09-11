@@ -114,13 +114,13 @@
     Hugepagesize: 2048 kB
 
 """
-from typing import Dict, Optional
+from typing import Dict
 
 from .agent_based_api.v1 import register, type_defs
 from .utils.memory import SectionMemUsed
 
 
-def parse_aix_memory(string_table: type_defs.StringTable) -> Optional[SectionMemUsed]:
+def parse_aix_memory(string_table: type_defs.StringTable) -> SectionMemUsed | None:
     """Parse AIX vmstat output into something compatible with the Linux output of /proc/meminfo
 
     AIX speaks of 4k pages while Linux of kilobytes.
@@ -184,7 +184,7 @@ register.agent_section(
 )
 
 
-def parse_solaris_mem(string_table: type_defs.StringTable) -> Optional[SectionMemUsed]:
+def parse_solaris_mem(string_table: type_defs.StringTable) -> SectionMemUsed | None:
     """
     >>> import pprint
     >>> test = 'Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap'
@@ -230,7 +230,7 @@ register.agent_section(
 )
 
 
-def parse_statgrab_mem(string_table: type_defs.StringTable) -> Optional[SectionMemUsed]:
+def parse_statgrab_mem(string_table: type_defs.StringTable) -> SectionMemUsed | None:
     """
     >>> import pprint
     >>> pprint.pprint(parse_statgrab_mem([
@@ -284,7 +284,7 @@ register.agent_section(
 )
 
 
-def parse_openbsd_mem(string_table: type_defs.StringTable) -> Optional[SectionMemUsed]:
+def parse_openbsd_mem(string_table: type_defs.StringTable) -> SectionMemUsed | None:
     units = {"kB": 1024, "MB": 1024**2}
 
     try:

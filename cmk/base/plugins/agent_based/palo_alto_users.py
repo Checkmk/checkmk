@@ -98,7 +98,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
 
 def cluster_check(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     yield from check(
         params,

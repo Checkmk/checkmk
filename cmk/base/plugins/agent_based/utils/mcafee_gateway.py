@@ -18,10 +18,10 @@ PredictiveLevels = dict[str, object] | tuple[float, float] | None
 
 
 class MiscParams(typing.TypedDict, total=True):
-    clients: typing.Optional[typing.Tuple[int, int]]
-    network_sockets: typing.Optional[typing.Tuple[int, int]]
-    time_to_resolve_dns: typing.Optional[typing.Tuple[int, int]]
-    time_consumed_by_rule_engine: typing.Optional[typing.Tuple[int, int]]
+    clients: typing.Tuple[int, int] | None
+    network_sockets: typing.Tuple[int, int] | None
+    time_to_resolve_dns: typing.Tuple[int, int] | None
+    time_consumed_by_rule_engine: typing.Tuple[int, int] | None
     client_requests_http: PredictiveLevels
     client_requests_httpv2: PredictiveLevels
     client_requests_https: PredictiveLevels
@@ -42,10 +42,10 @@ MISC_DEFAULT_PARAMS = MiscParams(
 class Section:
     """section: mcafee_webgateway_misc"""
 
-    client_count: typing.Optional[int]
-    socket_count: typing.Optional[int]
-    time_to_resolve_dns: typing.Optional[datetime.timedelta]
-    time_consumed_by_rule_engine: typing.Optional[datetime.timedelta]
+    client_count: int | None
+    socket_count: int | None
+    time_to_resolve_dns: datetime.timedelta | None
+    time_consumed_by_rule_engine: datetime.timedelta | None
 
 
 def _get_param_in_seconds(param: tuple[int, int] | None) -> tuple[float, float] | None:

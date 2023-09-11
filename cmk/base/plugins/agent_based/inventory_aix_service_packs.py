@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 class Section(NamedTuple):
-    latest_service_pack: Optional[str]
+    latest_service_pack: str | None
     service_packs: List[str]
 
 

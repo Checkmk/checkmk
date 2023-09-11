@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from enum import Enum
-from typing import Any, Final, Mapping, NamedTuple, Optional, Union
+from typing import Any, Final, Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -55,8 +55,8 @@ class NetworkFSMount(NamedTuple):
     mountpoint: str
     state: str
     mount_seems_okay: bool
-    usage: Optional[NetworkFSUsage]
-    source: Optional[str]
+    usage: NetworkFSUsage | None
+    source: str | None
 
 
 NetworkFSSection = Mapping[str, NetworkFSMount]
@@ -197,7 +197,7 @@ def check_network_fs_mount(
         )
     )
 
-    results: list[Union[Result, Metric]] = []
+    results: list[Result | Metric] = []
     metrics: dict[str, Metric] = {}
     for entry in entries:
         if isinstance(entry, Result):

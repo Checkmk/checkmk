@@ -20,7 +20,7 @@
 # hardware.cpuPkg.vendor.1 intel
 
 import time
-from typing import Callable, Dict, Final, List, Optional, Tuple, Union
+from typing import Callable, Dict, Final, List, Tuple
 
 from typing_extensions import TypedDict
 
@@ -84,7 +84,7 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
 }
 
 
-def _try_convert_to_epoch(release_date: str) -> Optional[str]:
+def _try_convert_to_epoch(release_date: str) -> str | None:
     try:
         epoch = time.strftime("%Y-%m-%d", time.strptime(release_date, "%Y-%m-%dT%H:%M:%SZ"))
     except ValueError:
@@ -94,7 +94,7 @@ def _try_convert_to_epoch(release_date: str) -> Optional[str]:
 
 def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
     for name, sub_section in SECTION_TO_INVENTORY.items():
-        data: Dict[str, Union[None, str, float]] = {}
+        data: Dict[str, None | str | float] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
                 # Found after update to 2.9.0. Seems to be a false positive

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State, type_defs
 
@@ -85,7 +85,7 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
 
 
 def cluster_check_site_object_counts(
-    section: Mapping[str, Optional[Section]]
+    section: Mapping[str, Section | None]
 ) -> type_defs.CheckResult:
     yield from check_site_object_counts(
         {

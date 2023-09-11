@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, List, Mapping, MutableMapping, NamedTuple, Sequence, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -123,7 +123,7 @@ def check_cpu_util(
     util: float,
     params: Mapping[str, Any],
     cores: Sequence[Tuple[str, float]] = (),
-    perf_max: Optional[float] = 100,
+    perf_max: float | None = 100,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
@@ -305,8 +305,8 @@ def check_cpu_util_unix(
 
 def _check_single_core_util(
     util: float,
-    metric: Optional[str],
-    levels: Optional[Tuple[float, float]],
+    metric: str | None,
+    levels: Tuple[float, float] | None,
     label: str,
 ) -> CheckResult:
     yield from check_levels(
@@ -345,7 +345,7 @@ def _util_perfdata(
 
     config_single_avg = params.get("average_single", {})
 
-    metric_names: Tuple[Optional[str], Optional[str]] = core_name(core, core_index)
+    metric_names: Tuple[str | None, str | None] = core_name(core, core_index)
     metric_raw, metric_avg = metric_names
     if not params.get("core_util_graph"):
         metric_raw = None
@@ -397,7 +397,7 @@ def cpu_util_time(
     core: str,
     perc: float,
     threshold: float,
-    levels: Optional[Tuple[float, float]],
+    levels: Tuple[float, float] | None,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:

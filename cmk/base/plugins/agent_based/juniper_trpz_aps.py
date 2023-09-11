@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping, Optional, Tuple
+from typing import List, Mapping, Tuple
 
 from .agent_based_api.v1 import (
     any_of,
@@ -19,7 +19,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 Section = Tuple[int, int]
 
 
-def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Optional[Section]:
+def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Section | None:
     """
     >>> parse_juniper_trpz_aps([[['1', '0']]])
     (1, 0)
@@ -52,7 +52,7 @@ def check_juniper_trpz_aps(section: Section) -> CheckResult:
     yield from _check_common_juniper_trpz_aps("", section)
 
 
-def cluster_check_juniper_trpz_aps(section: Mapping[str, Optional[Section]]) -> CheckResult:
+def cluster_check_juniper_trpz_aps(section: Mapping[str, Section | None]) -> CheckResult:
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)

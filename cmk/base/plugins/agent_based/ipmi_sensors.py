@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import register, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -16,7 +16,7 @@ def _na_str(str_value: str) -> str:
     return "" if str_value in _NA_VALUES else str_value
 
 
-def _na_float(str_value: str) -> Optional[float]:
+def _na_float(str_value: str) -> float | None:
     return None if str_value in _NA_VALUES else float(str_value)
 
 

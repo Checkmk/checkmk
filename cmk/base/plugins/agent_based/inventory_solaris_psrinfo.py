@@ -31,7 +31,7 @@
 # The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
-from typing import Dict, NamedTuple, Optional, Union
+from typing import Dict, NamedTuple
 
 from .agent_based_api.v1 import Attributes, regex, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -72,9 +72,9 @@ register.agent_section(
 class ProcessorInfo(NamedTuple):
     model: str
     maximum_speed: str
-    cpus: Optional[int]
-    cores: Optional[int]
-    threads: Optional[int]
+    cpus: int | None
+    cores: int | None
+    threads: int | None
 
 
 def parse_solaris_psrinfo_verbose(string_table: StringTable) -> ProcessorInfo:
@@ -141,8 +141,8 @@ register.agent_section(
 
 
 class ParsedTable(NamedTuple):
-    cpus: Optional[int]
-    cores: Optional[int]
+    cpus: int | None
+    cores: int | None
 
 
 # Don't include info about threads.
@@ -191,12 +191,12 @@ register.agent_section(
 
 
 def inventory_solaris_cpus(
-    section_solaris_psrinfo_physical: Optional[int],
-    section_solaris_psrinfo_virtual: Optional[int],
-    section_solaris_psrinfo_verbose: Optional[ProcessorInfo],
-    section_solaris_psrinfo_table: Optional[ParsedTable],
+    section_solaris_psrinfo_physical: int | None,
+    section_solaris_psrinfo_virtual: int | None,
+    section_solaris_psrinfo_verbose: ProcessorInfo | None,
+    section_solaris_psrinfo_table: ParsedTable | None,
 ) -> InventoryResult:
-    inventory_attributes: Dict[str, Union[int, str]] = {}
+    inventory_attributes: Dict[str, int | str] = {}
 
     # cpus and threads are also (partly) available in section_solaris_psrinfo
     # and section_solaris_psrinfo_table, but these are more reliable
@@ -235,10 +235,10 @@ def inventory_solaris_cpus(
 
 
 def _get_cores(
-    processor_info: Optional[ProcessorInfo],
-    parsed_table: Optional[ParsedTable],
-    threads: Optional[int],
-) -> Optional[int]:
+    processor_info: ProcessorInfo | None,
+    parsed_table: ParsedTable | None,
+    threads: int | None,
+) -> int | None:
     # 1st try: Obtain cores from parsed "psrinfo -t" table
     if parsed_table is not None and parsed_table.cores is not None:
         return parsed_table.cores

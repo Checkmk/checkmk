@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional
+from typing import Any, Dict, List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
@@ -37,7 +37,7 @@ state_mappings = {
 
 def parse_zpool_status(  # pylint: disable=too-many-branches
     string_table: type_defs.StringTable,
-) -> Optional[Section]:
+) -> Section | None:
     if not string_table:
         return None
 

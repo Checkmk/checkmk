@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Dict, Mapping, MutableMapping, Optional
+from typing import Any, Dict, Mapping, MutableMapping
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -96,8 +96,8 @@ register.agent_section(
 
 
 def discovery_livestatus_status(
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -109,8 +109,8 @@ def discovery_livestatus_status(
 def check_livestatus_status(
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
 ) -> CheckResult:
     # Check Performance counters
     this_time = time.time()
@@ -128,8 +128,8 @@ def check_livestatus_status(
 def _generate_livestatus_results(  # pylint: disable=too-many-branches
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:

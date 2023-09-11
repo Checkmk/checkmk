@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import suppress
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -25,7 +25,7 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     """
     info = string_table[0]
 
-    def identify_map_type(hrtype_str: str) -> Optional[str]:
+    def identify_map_type(hrtype_str: str) -> str | None:
         map_types = {
             ".1.3.6.1.2.1.25.2.1.1": "other",
             ".1.3.6.1.2.1.25.2.1.2": "RAM",
@@ -124,7 +124,7 @@ def aggregate_meminfo(parsed: PreParsed) -> memory.SectionMemUsed:
     return meminfo
 
 
-def parse_hr_mem(string_table: List[StringTable]) -> Optional[memory.SectionMemUsed]:
+def parse_hr_mem(string_table: List[StringTable]) -> memory.SectionMemUsed | None:
     pre_parsed = pre_parse_hr_mem(string_table)
 
     # Do we find at least one entry concerning memory?

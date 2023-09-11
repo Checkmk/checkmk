@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -12,7 +12,7 @@ from .utils.fortinet import DETECT_FORTISANDBOX
 Section = Sequence[str]
 
 
-def parse_fortisandbox_system(string_table: StringTable) -> Optional[Section]:
+def parse_fortisandbox_system(string_table: StringTable) -> Section | None:
     """
     >>> parse_fortisandbox_system([["v2.52-build0340 (GA)"]])
     ['v2.52-build0340 (GA)']

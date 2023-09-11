@@ -41,7 +41,7 @@ class Phase:
         now: float,
     ) -> Optional["Phase"]:
         try:
-            rate_input: Optional[float] = get_rate(
+            rate_input: float | None = get_rate(
                 value_store,
                 f"{value_store_key_prefix}_input",
                 now,
@@ -51,7 +51,7 @@ class Phase:
         except GetRateError:
             rate_input = None
         try:
-            rate_output: Optional[float] = get_rate(
+            rate_output: float | None = get_rate(
                 value_store,
                 f"{value_store_key_prefix}_output",
                 now,
@@ -73,7 +73,7 @@ class Phase:
 @dataclass
 class VPNTunnel:
     phase_1: Phase
-    phase_2: Optional[Phase] = None
+    phase_2: Phase | None = None
 
     def rates(
         self,

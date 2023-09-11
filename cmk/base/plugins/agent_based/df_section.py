@@ -5,7 +5,7 @@
 
 import json
 from contextlib import suppress
-from typing import Callable, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Callable, List, Mapping, Sequence, Set, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -50,7 +50,7 @@ def _processed(
     line: List[str],
     seen_btrfs_devices: Set[str],
     device_to_uuid: LsblkMap,
-) -> Optional[DfBlock]:
+) -> DfBlock | None:
     device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
     if fs_type == "btrfs":
         # This particular bit of magic originated in Werk #2671 and has the purpose of
@@ -109,7 +109,7 @@ def _parse_blocks_subsection(
 def _parse_inodes_subsection(
     inodes_subsection: StringTable, mp_to_device: MpToDevice, device_to_uuid: LsblkMap
 ) -> InodesSubsection:
-    def _to_entry(line: Sequence[str]) -> Optional[DfInode]:
+    def _to_entry(line: Sequence[str]) -> DfInode | None:
         with suppress(ValueError):
             mountpoint = line[-1]
             device = mp_to_device.get(mountpoint)

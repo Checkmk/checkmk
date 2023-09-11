@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Union
+from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence
 
 from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result, State, type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
@@ -29,7 +29,7 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_bluecat(string_table: type_defs.StringTable) -> Section | None:
     """
     >>> parse_bluecat([['1', '2']])
     {'oper_state': 1, 'leases': 2}
@@ -89,14 +89,14 @@ def check_bluecat_operational_state(
 
 class OKNodeResults(NamedTuple):
     name: str
-    results: Sequence[Union[IgnoreResults, Metric, Result]]
+    results: Sequence[IgnoreResults | Metric | Result]
 
 
 def cluster_check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
-    results: Dict[str, Sequence[Union[IgnoreResults, Metric, Result]]] = {}
+    results: Dict[str, Sequence[IgnoreResults | Metric | Result]] = {}
     ok_node_results = None
     overall_state = State.OK
 

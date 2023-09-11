@@ -19,8 +19,8 @@ CmkUpdateAgentStatus = Mapping[str, str]
 class Plugin(NamedTuple):
     name: str
     version: str
-    version_int: Optional[int]
-    cache_interval: Optional[int]
+    version_int: int | None
+    cache_interval: int | None
 
 
 class PluginSection(NamedTuple):

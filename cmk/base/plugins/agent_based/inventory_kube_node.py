@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Optional
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils.kube import KubeletInfo, NodeInfo
@@ -13,8 +11,8 @@ from cmk.base.plugins.agent_based.utils.kube_inventory import labels_to_table
 
 
 def inventory_kube_node(
-    section_kube_node_info: Optional[NodeInfo],
-    section_kube_node_kubelet: Optional[KubeletInfo],
+    section_kube_node_info: NodeInfo | None,
+    section_kube_node_kubelet: KubeletInfo | None,
 ) -> InventoryResult:
     if section_kube_node_info is None or section_kube_node_kubelet is None:
         return

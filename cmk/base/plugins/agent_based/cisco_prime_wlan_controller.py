@@ -6,7 +6,7 @@
 import json
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Final, Generator, Mapping, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Final, Generator, Mapping, NamedTuple, Tuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -38,14 +38,14 @@ class WlanController(NamedTuple):
     type: str
     software_version: str
     ip_address: str
-    location: Optional[str]
+    location: str | None
     group_name: str
-    mobility_group_name: Optional[str]
+    mobility_group_name: str | None
     alarm_status: AlarmStatus
     access_points_count: int
     client_count: int
     reachability_status: bool
-    last_backup: Optional[datetime]
+    last_backup: datetime | None
 
 
 def get_controllers(controller_data: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
@@ -54,7 +54,7 @@ def get_controllers(controller_data: Dict[str, Any]) -> Generator[Dict[str, Any]
         yield entity[dto_type]
 
 
-def get_last_backup(last_backup: Optional[str]) -> Optional[datetime]:
+def get_last_backup(last_backup: str | None) -> datetime | None:
     if not last_backup:
         return None
 

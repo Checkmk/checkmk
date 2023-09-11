@@ -14,7 +14,7 @@
 
 import re
 import time
-from typing import List, NamedTuple, Optional, Sequence
+from typing import List, NamedTuple, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -24,7 +24,7 @@ class Package(NamedTuple):
     name: str
     version: str
     vendor: str
-    install_date: Optional[int]
+    install_date: int | None
     language: str
     package_type: str
 

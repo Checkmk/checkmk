@@ -61,7 +61,7 @@ def parse_kernel(string_table: StringTable) -> Section:
 
     """
     try:
-        timestamp: Optional[int] = int(string_table[0][0])
+        timestamp: int | None = int(string_table[0][0])
     except (IndexError, ValueError):
         timestamp = None
 
@@ -109,7 +109,7 @@ def discover_kernel_util(section: Section) -> DiscoveryResult:
 
 
 def check_kernel_util(params: Mapping[str, Any], section: Section) -> CheckResult:
-    total: Optional[CPUInfo] = None
+    total: CPUInfo | None = None
     cores = []
 
     # Look for entry matching "cpu" (this is the combined load of all cores)

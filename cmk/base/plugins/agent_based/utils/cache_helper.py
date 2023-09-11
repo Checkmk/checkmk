@@ -39,7 +39,7 @@ class CacheInfo(
         )
 
     @classmethod
-    def from_raw(cls, cache_raw: Optional[str], now: float) -> Optional["CacheInfo"]:
+    def from_raw(cls, cache_raw: str | None, now: float) -> Optional["CacheInfo"]:
         """Parse and preprocess cache info
         make sure max(..) will give the oldest/most outdated case
         """

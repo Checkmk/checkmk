@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Sequence, Tuple
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -72,7 +72,7 @@ register.agent_section(
 
 def _extract_wato_compatible_rules(
     params: Sequence[Mapping[str, Any]],
-) -> Sequence[Tuple[Optional[str], Optional[str], Optional[str]]]:
+) -> Sequence[Tuple[str | None, str | None, str | None]]:
     return [
         (pattern, rule.get("state"), rule.get("start_mode"))
         # If no rule is set by user, *no* windows services should be discovered.
@@ -84,9 +84,9 @@ def _extract_wato_compatible_rules(
 
 def _add_matching_services(
     service: WinService,
-    pattern: Optional[str],
-    state: Optional[str],
-    mode: Optional[str],
+    pattern: str | None,
+    state: str | None,
+    mode: str | None,
 ) -> DiscoveryResult:
     if pattern:
         # First match name or description (optional since rule based config option available)
@@ -168,7 +168,7 @@ def check_windows_services(
 def cluster_check_windows_services(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their

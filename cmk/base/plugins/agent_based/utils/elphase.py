@@ -96,8 +96,8 @@ def check_elphase(  # pylint: disable=too-many-branches
             value = entry  # 12.0
             state_info = None
 
-        levels_upper: Optional[Tuple[float, float]] = None
-        levels_lower: Optional[Tuple[float, float]] = None
+        levels_upper: Tuple[float, float] | None = None
+        levels_lower: Tuple[float, float] | None = None
         if quantity in params:
             if bound == Bounds.Both:
                 levels = params[quantity]

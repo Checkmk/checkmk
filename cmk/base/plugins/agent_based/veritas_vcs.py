@@ -121,7 +121,7 @@ CHECK_DEFAULT_PARAMETERS = {
 class Vcs(NamedTuple):
     attr: str
     value: str
-    cluster: Optional[str]
+    cluster: str | None
 
 
 SubSection = MutableMapping[str, List[Vcs]]
@@ -136,7 +136,7 @@ class ClusterNodeResults(NamedTuple):
     node_summaries: Sequence[str]
 
 
-def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_veritas_vcs(string_table: type_defs.StringTable) -> Section | None:
     parsed: Section = {}
 
     for line in string_table:
@@ -212,7 +212,7 @@ def _frozen_state_results(
     )
 
 
-def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> Optional[str]:
+def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> str | None:
     # get last not None cluster name
     return functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
 

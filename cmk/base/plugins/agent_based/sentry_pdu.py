@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -12,7 +12,7 @@ from .utils.sentry import DEVICE_STATES_V4
 
 class PDU(NamedTuple):
     state: int
-    power: Optional[int]
+    power: int | None
 
 
 Section = Mapping[str, PDU]

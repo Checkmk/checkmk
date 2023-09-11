@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -11,7 +10,7 @@ from .utils.cpu import Load, Section
 from .utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def parse_mcafee_emailgateway_cpuload(string_table: StringTable) -> Optional[Section]:
+def parse_mcafee_emailgateway_cpuload(string_table: StringTable) -> Section | None:
     """
     >>> parse_mcafee_emailgateway_cpuload([["1.234"]])
     Section(load=Load(load1=1.234, load5=1.234, load15=1.234), num_cpus=1, threads=None, type=<ProcessorType.unspecified: 0>)

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-import typing
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
 from cmk.base.plugins.agent_based.utils import mcafee_gateway
@@ -12,7 +11,7 @@ from cmk.base.plugins.agent_based.utils import mcafee_gateway
 
 def parse_mcafee_webgateway_misc(
     string_table: v1.type_defs.StringTable,
-) -> typing.Optional[mcafee_gateway.Section]:
+) -> mcafee_gateway.Section | None:
     if not string_table:
         return None
     # -- Miscellaneous (these counter are NO lifetime counter; they show the actual number)

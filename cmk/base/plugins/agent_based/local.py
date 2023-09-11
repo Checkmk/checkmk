@@ -31,11 +31,11 @@ class Perfdata(NamedTuple):
     value: float
     levels_upper: Levels
     levels_lower: Levels
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]]
+    boundaries: Tuple[float | None, float | None] | None
 
 
 class LocalResult(NamedTuple):
-    cache_info: Optional[CacheInfo]
+    cache_info: CacheInfo | None
     item: str
     state: State
     apply_levels: bool
@@ -63,15 +63,15 @@ def float_ignore_uom(value: str) -> float:
     return 0.0
 
 
-def _try_convert_to_float(value: str) -> Optional[float]:
+def _try_convert_to_float(value: str) -> float | None:
     try:
         return float(value)
     except ValueError:
         return None
 
 
-def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
-    state_mapping: Mapping[str, Tuple[Union[int, str], str]] = {
+def _sanitize_state(raw_state: str) -> Tuple[int | str, str]:
+    state_mapping: Mapping[str, Tuple[int | str, str]] = {
         "0": (0, ""),
         "1": (1, ""),
         "2": (2, ""),
@@ -117,7 +117,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     value = float_ignore_uom(raw[0])
 
     # create a check_levels compatible levels quadruple
-    levels: List[Optional[float]] = [None] * 4
+    levels: List[float | None] = [None] * 4
     if len(raw) >= 2:
         warn = raw[1].split(":", 1)
         levels[0] = _try_convert_to_float(warn[-1])
@@ -141,7 +141,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     if levels[2] is not None and levels[3] is None:
         levels[3] = float("-inf")
 
-    def optional_tuple(warn: Optional[float], crit: Optional[float]) -> Levels:
+    def optional_tuple(warn: float | None, crit: float | None) -> Levels:
         assert (warn is None) == (crit is None)
         if warn is not None and crit is not None:
             return warn, crit
@@ -175,7 +175,7 @@ def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
     return perfdata, ""
 
 
-def _split_check_result(line: str) -> Optional[Tuple[str, str, str, Optional[str]]]:
+def _split_check_result(line: str) -> Tuple[str, str, str, str | None] | None:
     """Parse the output of a local check and return the individual components
     Note: this regex does not check the validity of each component. E.g. the state component
           could be 'NOK' (which is not a valid state) but would be complained later

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Literal, MutableMapping, Optional, Tuple, Union
+from typing import Any, Literal, MutableMapping, Tuple, Union
 
 from typing_extensions import TypedDict
 
@@ -75,7 +75,7 @@ def _calc_restart_rate_in_last_hour(
     restart_count: int,
     curr_timestamp_seconds: int,
     host_value_store: MutableMapping[str, Any],
-) -> Optional[int]:
+) -> int | None:
     restart_count_list = host_value_store.setdefault("restart_count_list", [])
     while restart_count_list and restart_count_list[0][0] <= curr_timestamp_seconds - ONE_HOUR:
         restart_count_list.pop(0)

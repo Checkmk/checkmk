@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import cast, Literal, Mapping, Optional, Tuple, Union
+from typing import cast, Literal, Mapping, Tuple, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -48,7 +48,7 @@ def _get_levels(
     params: KubeContainersLevelsUpperLower,
     name: CountName,
     level_name: Literal["upper", "lower"],
-) -> Optional[Tuple[int, int]]:
+) -> Tuple[int, int] | None:
     level = params.get(f"{name}_{level_name}", "no_levels")
     if level == "no_levels":
         return None

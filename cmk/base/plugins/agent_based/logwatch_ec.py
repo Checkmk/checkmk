@@ -93,7 +93,7 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
 
 def cluster_check_logwatch_ec(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     yield from check_logwatch_ec_common(
         None,
@@ -144,7 +144,7 @@ def check_logwatch_ec_single(
 def cluster_check_logwatch_ec_single(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
@@ -172,7 +172,7 @@ register.check_plugin(
 # Yet another unbelievable API violation:
 def _get_effective_service_level(
     plugin_name: CheckPluginName,
-    item: Optional[str],
+    item: str | None,
 ) -> int:
     """Get the service level that applies to the current service."""
 
@@ -305,7 +305,7 @@ def _filter_accumulated_lines(
 
 
 def check_logwatch_ec_common(  # pylint: disable=too-many-branches
-    item: Optional[str],
+    item: str | None,
     params: Mapping[str, Any],
     parsed: ClusterSection,
     *,

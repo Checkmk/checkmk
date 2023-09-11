@@ -5,7 +5,7 @@
 
 
 import json
-from typing import List, Literal, Mapping, Optional, Sequence
+from typing import List, Literal, Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -59,9 +59,9 @@ register.agent_section(
 
 
 def discover(
-    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
-    section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
-    section_kube_collector_daemons: Optional[CollectorDaemons],
+    section_kube_collector_metadata: CollectorComponentsMetadata | None,
+    section_kube_collector_processing_logs: CollectorProcessingLogs | None,
+    section_kube_collector_daemons: CollectorDaemons | None,
 ) -> DiscoveryResult:
     if section_kube_collector_metadata is not None and section_kube_collector_daemons is not None:
         yield Service()
@@ -70,7 +70,7 @@ def discover(
 def _component_check(
     params: Mapping[str, int],
     component: Literal["container_metrics", "machine_metrics"],
-    component_log: Optional[CollectorHandlerLog],
+    component_log: CollectorHandlerLog | None,
 ) -> CheckResult:
     component_name = {
         "container_metrics": "Container Metrics",
@@ -160,9 +160,9 @@ def _check_collector_daemons(collector_daemons: CollectorDaemons) -> CheckResult
 
 def check(
     params: Mapping[str, int],
-    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
-    section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
-    section_kube_collector_daemons: Optional[CollectorDaemons],
+    section_kube_collector_metadata: CollectorComponentsMetadata | None,
+    section_kube_collector_processing_logs: CollectorProcessingLogs | None,
+    section_kube_collector_daemons: CollectorDaemons | None,
 ) -> CheckResult:
     if section_kube_collector_metadata is None or section_kube_collector_daemons is None:
         return

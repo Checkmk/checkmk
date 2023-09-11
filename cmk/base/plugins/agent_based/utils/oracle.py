@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, Mapping, NamedTuple, Tuple
 
 from typing_extensions import TypedDict
 
@@ -90,12 +90,12 @@ class DataFiles(TypedDict):
     status: str
     ts_status: str
     ts_type: str
-    block_size: Optional[int]
-    size: Optional[int]
-    max_size: Optional[int]
-    used_size: Optional[int]
-    free_space: Optional[int]
-    increment_size: Optional[int]
+    block_size: int | None
+    size: int | None
+    max_size: int | None
+    used_size: int | None
+    free_space: int | None
+    increment_size: int | None
 
 
 class TableSpaces(TypedDict):

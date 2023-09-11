@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, Mapping, Optional, Tuple, Union
+from typing import Literal, Mapping, Optional, Tuple
 
 from typing_extensions import TypedDict
 
@@ -38,7 +38,7 @@ def is_linux_section(section: SectionMem) -> bool:
     } <= section.keys()
 
 
-def get_levels_mode_from_value(warn: Optional[float]) -> _LevelsMode:
+def get_levels_mode_from_value(warn: float | None) -> _LevelsMode:
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -61,12 +61,12 @@ def get_levels_mode_from_value(warn: Optional[float]) -> _LevelsMode:
 
 def normalize_levels(
     mode: _LevelsMode,
-    warn: Optional[float],
-    crit: Optional[float],
+    warn: float | None,
+    crit: float | None,
     total: float,
-    _perc_total: Optional[float] = None,
+    _perc_total: float | None = None,
     render_unit: int = 1,
-) -> Union[Tuple[float, float, str], Tuple[None, None, str]]:
+) -> Tuple[float, float, str] | Tuple[None, None, str]:
     """get normalized levels and formatter
 
     Levels may be given either as
@@ -112,7 +112,7 @@ def normalize_levels(
     return warn_used, crit_used, levels_text
 
 
-def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> State:
+def compute_state(value: float, warn: float | None, crit: float | None) -> State:
     """get state according to levels
 
     >>> print(compute_state(23., 12, 42))
@@ -131,10 +131,10 @@ def check_element(
     used: float,
     total: float,
     # levels: we can deal with anything, though
-    levels: Optional[MemoryLevels] = None,
+    levels: MemoryLevels | None = None,
     label_total: str = "",
     show_free: bool = False,
-    metric_name: Optional[str] = None,
+    metric_name: str | None = None,
     create_percent_metric: bool = False,
 ) -> CheckResult:
     """Yield a check result and metric for one memory element

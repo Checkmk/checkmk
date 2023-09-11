@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import List, Mapping, NamedTuple, Tuple
 
 from .agent_based_api.v1 import (
     Attributes,
@@ -26,7 +26,7 @@ class MemBytes(
         "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
     )
 ):
-    def __new__(cls, value: Union[float, int]):  # type: ignore[no-untyped-def]
+    def __new__(cls, value: float | int):  # type: ignore[no-untyped-def]
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
     def render(self) -> str:
@@ -40,8 +40,8 @@ def discover_mem_used(section: memory.SectionMemUsed) -> DiscoveryResult:
 
 def _get_total_usage(
     ramused: MemBytes,
-    swapused: Optional[MemBytes],
-    pagetables: Optional[MemBytes],
+    swapused: MemBytes | None,
+    pagetables: MemBytes | None,
 ) -> Tuple[MemBytes, str]:
     """get total usage and a description how it was computed"""
     totalused_kb = ramused.kb
@@ -85,8 +85,8 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
 
     memused = MemBytes(memtotal.kb - meminfo["MemFree"])
 
-    swaptotal: Optional[MemBytes] = None
-    swapused: Optional[MemBytes] = None
+    swaptotal: MemBytes | None = None
+    swapused: MemBytes | None = None
     metrics: List[Metric] = []
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo["SwapTotal"])
@@ -96,7 +96,7 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    pagetables: Optional[MemBytes] = None
+    pagetables: MemBytes | None = None
     if "PageTables" in meminfo:
         pagetables = MemBytes(meminfo["PageTables"])
         metrics.append(Metric("mem_lnx_page_tables", pagetables.bytes))

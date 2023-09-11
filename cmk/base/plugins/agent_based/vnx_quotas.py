@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, NamedTuple, Sequence, Tuple
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -105,7 +105,7 @@ def discover_vnx_quotas(params: List[Mapping[str, Any]], section: Section) -> Di
         yield Service(item=f"{dms} {mpt}", parameters={"pattern": quota.name})
 
 
-def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Optional[Quota]:
+def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Quota | None:
     for quota in section.quotas:
         if quota.name in (item, params["pattern"]):
             return quota

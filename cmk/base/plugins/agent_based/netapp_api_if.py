@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from typing_extensions import TypedDict
 
@@ -43,7 +43,7 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
     # List of virtual interfaces
     vif_list = []
 
-    speed: Union[str, int]
+    speed: str | int
 
     # Calculate speed, state and create mac-address list
     for name, values in ifaces.items():

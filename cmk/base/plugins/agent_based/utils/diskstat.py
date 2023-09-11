@@ -15,11 +15,9 @@ from typing import (
     Iterator,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
     Tuple,
     TypedDict,
-    Union,
 )
 
 from ..agent_based_api.v1 import (
@@ -191,7 +189,7 @@ def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
 
 def _scale_levels_predictive(
     levels: Dict[str, Any],
-    factor: Union[int, float],
+    factor: int | float,
 ) -> Dict[str, Any]:
     def generator() -> Iterator[Tuple[str, Any]]:
         for key, value in levels.items():
@@ -213,9 +211,9 @@ def _scale_levels_predictive(
 
 
 def _scale_levels(
-    levels: Optional[Tuple[float, float]],
-    factor: Union[int, float],
-) -> Optional[Tuple[float, float]]:
+    levels: Tuple[float, float] | None,
+    factor: int | float,
+) -> Tuple[float, float] | None:
     if levels is None:
         return None
     return (levels[0] * factor, levels[1] * factor)

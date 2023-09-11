@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Mapping, NamedTuple, Sequence, Tuple, Union
+from typing import Mapping, NamedTuple, Sequence, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -88,7 +88,7 @@ register.snmp_section(
 )
 
 
-def discover_ciena_cpu_util(section: Union[Section5171, Section5142]) -> DiscoveryResult:
+def discover_ciena_cpu_util(section: Section5171 | Section5142) -> DiscoveryResult:
     yield Service()
 
 

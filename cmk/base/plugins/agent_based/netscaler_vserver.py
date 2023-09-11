@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Iterable, List, Mapping, Sequence, Tuple
 
 from typing_extensions import TypedDict
 
@@ -323,7 +323,7 @@ def check_netscaler_vserver(
 def cluster_check_netscaler_vserver(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> type_defs.CheckResult:
     """
     >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}

@@ -16,7 +16,6 @@ from typing import (
     NamedTuple,
     NewType,
     Sequence,
-    Union,
 )
 
 from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
@@ -385,7 +384,7 @@ def check_inodes(
     levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
-) -> Generator[Union[Metric, Result], None, None]:
+) -> Generator[Metric | Result, None, None]:
     """
     >>> levels = {
     ...     "inodes_levels": (10, 5),

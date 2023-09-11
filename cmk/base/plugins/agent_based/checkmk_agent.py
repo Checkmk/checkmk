@@ -6,7 +6,7 @@
 import collections
 import time
 from datetime import datetime
-from typing import Any, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Iterable, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation
@@ -66,16 +66,16 @@ def _is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or "-" in v
 
 
-def _get_configured_only_from() -> Union[None, str, list[str]]:
+def _get_configured_only_from() -> None | str | list[str]:
     return get_config_cache().only_from(HostName(host_name()))
 
 
 def discover_checkmk_agent(
-    section_check_mk: Optional[CheckmkSection],
-    section_checkmk_agent_plugins: Optional[PluginSection],
-    section_cmk_agent_ctl_status: Optional[ControllerSection],
-    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
-    section_checkmk_cached_plugins: Optional[CachedPluginsSection],
+    section_check_mk: CheckmkSection | None,
+    section_checkmk_agent_plugins: PluginSection | None,
+    section_cmk_agent_ctl_status: ControllerSection | None,
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
+    section_checkmk_cached_plugins: CachedPluginsSection | None,
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
@@ -84,7 +84,7 @@ def discover_checkmk_agent(
 def _check_cmk_agent_installation(
     params: Mapping[str, Any],
     agent_info: CheckmkSection,
-    controller_info: Optional[ControllerSection],
+    controller_info: ControllerSection | None,
 ) -> CheckResult:
     yield from _check_version(
         agent_info.get("version"),
@@ -115,7 +115,7 @@ def _check_cmk_agent_installation(
 
 
 def _check_version(
-    agent_version: Optional[str],
+    agent_version: str | None,
     site_version: str,
     expected_version: tuple[str, dict[str, str]],
     fail_state: State,
@@ -162,8 +162,8 @@ def _render_agent_version_mismatch(
 
 
 def _check_only_from(
-    agent_only_from: Union[None, str, Sequence[str]],
-    config_only_from: Union[None, str, list[str]],
+    agent_only_from: None | str | Sequence[str],
+    config_only_from: None | str | list[str],
     fail_state: State,
 ) -> CheckResult:
     if agent_only_from is None or config_only_from is None:
@@ -195,8 +195,8 @@ def _check_only_from(
 
 
 def _check_python_plugins(
-    agent_failed_plugins: Optional[str],
-    agent_fail_reason: Optional[str],
+    agent_failed_plugins: str | None,
+    agent_fail_reason: str | None,
 ) -> CheckResult:
     if agent_failed_plugins:
         yield Result(
@@ -207,7 +207,7 @@ def _check_python_plugins(
 
 
 def _check_encryption_panic(
-    panic: Optional[str],
+    panic: str | None,
 ) -> CheckResult:
     if panic:
         yield Result(
@@ -217,8 +217,8 @@ def _check_encryption_panic(
 
 
 def _check_agent_update(
-    update_fail_reason: Optional[str],
-    on_update_fail_action: Optional[str],
+    update_fail_reason: str | None,
+    on_update_fail_action: str | None,
 ) -> CheckResult:
     if update_fail_reason and on_update_fail_action:
         yield Result(state=State.WARN, summary=f"{update_fail_reason} {on_update_fail_action}")
@@ -226,7 +226,7 @@ def _check_agent_update(
 
 def _check_transport(
     ssh_transport: bool,
-    controller_info: Optional[ControllerSection],
+    controller_info: ControllerSection | None,
     fail_state: State,
 ) -> CheckResult:
     if ssh_transport:
@@ -430,8 +430,8 @@ def _check_plugins(
 
 def _check_versions_and_duplicates(
     plugins: Iterable[Plugin],
-    version_params: Optional[Mapping[str, Any]],
-    exclude_pattern: Optional[str],
+    version_params: Mapping[str, Any] | None,
+    exclude_pattern: str | None,
     type_: str,
 ) -> CheckResult:
     if exclude_pattern is None:
@@ -570,11 +570,11 @@ def _check_cached_plugins(section_checkmk_cached_plugins: CachedPluginsSection) 
 
 def check_checkmk_agent(
     params: Mapping[str, Any],
-    section_check_mk: Optional[CheckmkSection],
-    section_checkmk_agent_plugins: Optional[PluginSection],
-    section_cmk_agent_ctl_status: Optional[ControllerSection],
-    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
-    section_checkmk_cached_plugins: Optional[CachedPluginsSection],
+    section_check_mk: CheckmkSection | None,
+    section_checkmk_agent_plugins: PluginSection | None,
+    section_cmk_agent_ctl_status: ControllerSection | None,
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
+    section_checkmk_cached_plugins: CachedPluginsSection | None,
 ) -> CheckResult:
     if section_check_mk is not None:
         yield from _check_cmk_agent_installation(

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Iterable, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Sequence, Tuple
 
 FSBlock = Tuple[str, float, float, str]
 FSBlocks = Sequence[FSBlock]
@@ -57,7 +57,7 @@ def parse_virtual_volumes(map_label: Dict, virtual_volumes: Iterable, quotas: It
         the first element of the virtual volume."""
         return ".".join([phys_volume_id] + virtual_volume_oid_end.split(".")[1:] + ["0"])
 
-    parsed: Dict[str, Tuple[Optional[float], Optional[float]]] = {}
+    parsed: Dict[str, Tuple[float | None, float | None]] = {}
     map_quota_oid: Dict = {}
     for oid_end, phys_volume_id, virtual_volume_label in virtual_volumes:
         phys_volume_label = map_label[phys_volume_id]

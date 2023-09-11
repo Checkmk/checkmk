@@ -761,6 +761,24 @@ def split_expression(expression: MetricExpression) -> tuple[str, str | None, str
     return expression, explicit_unit_name, explicit_color
 
 
+# TODO: real unit computation!
+def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
+    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
+
+
+_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+
+
+def _choose_operator_color(a: str, b: str) -> str:
+    if a == "#000000":
+        return b
+    if b == "#000000":
+        return a
+    return render_color(_mix_colors(parse_color(a), parse_color(b)))
+
+
 @dataclass(frozen=True)
 class RPNExpression:
     value: float
@@ -1066,24 +1084,6 @@ class Percent(ABCMetricOperation):
 RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
 
 
-# TODO: real unit computation!
-def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
-    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
-
-
-_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-
-
-def _choose_operator_color(a: str, b: str) -> str:
-    if a == "#000000":
-        return b
-    if b == "#000000":
-        return a
-    return render_color(_mix_colors(parse_color(a), parse_color(b)))
-
-
 def _apply_operator(
     operator: RPNOperators, left: ABCMetricOperation, right: ABCMetricOperation
 ) -> ABCMetricOperation:
@@ -1146,15 +1146,14 @@ def _parse_single_expression(
     if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 
-    operation: Metric | WarningOf | CriticalOf | MinimumOf | MaximumOf
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
         metric = Metric(var_name)
-        operation = _from_scalar(scalar_name, metric)
-    else:
-        metric = operation = Metric(var_name)
+        reference = _from_scalar(scalar_name, metric)
+        return Percent(reference=reference, metric=metric) if percent else reference
 
-    return Percent(reference=operation, metric=metric) if percent else operation
+    metric = Metric(var_name)
+    return Percent(reference=metric, metric=metric) if percent else metric
 
 
 # Evaluates an expression, returns a triple of value, unit and color.

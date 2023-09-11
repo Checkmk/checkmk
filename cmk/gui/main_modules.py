@@ -17,7 +17,7 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
-# The following imports trigger loading of builtin main modules.
+# The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plugin discovery mechanism.
 with suppress(ModuleNotFoundError):
@@ -43,7 +43,7 @@ def _imports() -> Iterator[str]:
 
 def load_plugins() -> None:
     """Loads and initializes main modules and plugins into the application
-    Only builtin main modules are already imported."""
+    Only built-in main modules are already imported."""
     local_main_modules = _import_local_main_modules()
     main_modules = _cmk_gui_top_level_modules() + local_main_modules
     _import_main_module_plugins(main_modules)
@@ -56,7 +56,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
     which are expected to contain the actual imports of the main modules.
 
-    Please note that the builtin main modules are already loaded by the imports of
+    Please note that the built-in main modules are already loaded by the imports of
     `cmk.gui.{cee.,cme.,cce.}plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports

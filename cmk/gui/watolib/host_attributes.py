@@ -91,11 +91,11 @@ class MetaData(TypedDict):
 #   in effective attributes many more attributes are mandatory
 # - Some attributes are actually folder specific (see ABCHostAttribute.show_in_folder)
 # - How to represent the tag group attributes?
-#   -> Builtin tags can be defined here while custom(izable) tag groups can not
+#   -> Built-in tags can be defined here while custom(izable) tag groups can not
 # - How to represent custom host attributes?
 #   -> The values are always of type str, but can have arbritary keys
 class HostAttributes(TypedDict, total=False):
-    """All builtin host attributes to
+    """All built-in host attributes to
 
     Host attributes are set on folders (mostly for inheritance to folders) and on hosts
     directly.
@@ -126,7 +126,7 @@ class HostAttributes(TypedDict, total=False):
     bake_agent_package: bool
     # Enterprise editions only
     cmk_agent_connection: Literal["push-agent", "pull-agent"]
-    # Builtin tag groups
+    # Built-in tag groups
     tag_agent: Literal["cmk-agent", "all-agents", "special-agents", "no-agent"]
     tag_piggyback: Literal["auto-piggyback", "piggyback", "no-piggyback"]
     tag_snmp_ds: Literal["no-snmp", "snmp-v2", "snmp-v1"]
@@ -689,7 +689,7 @@ def _clear_config_based_host_attributes() -> None:
 def _declare_host_tag_attributes() -> None:
     for topic_spec, tag_groups in active_config.tags.get_tag_groups_by_topic():
         for tag_group in tag_groups:
-            # Try to translate the title to a builtin topic ID. In case this is not possible mangle the given
+            # Try to translate the title to a built-in topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
             # TODO: We need to adapt the tag data structure to contain topic IDs
             topic_id = _transform_attribute_topic_title_to_id(topic_spec)

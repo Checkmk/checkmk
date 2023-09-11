@@ -454,7 +454,7 @@ class CREConfig:
         ]
     )
 
-    # Override toplevel and sort_index settings of builtin icons
+    # Override toplevel and sort_index settings of built-in icons
     builtin_icon_visibility: dict = field(default_factory=dict)
 
     trusted_certificate_authorities: dict[str, Any] = field(

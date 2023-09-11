@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Register the builtin global setting configuration variable groups"""
+"""Register the built-in global setting configuration variable groups"""
 
 from cmk.gui.i18n import _
 from cmk.gui.watolib.config_domain_name import config_variable_group_registry, ConfigVariableGroup

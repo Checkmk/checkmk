@@ -457,7 +457,7 @@ def available(  # pylint: disable=too-many-branches
             if u == user.id:
                 visuals[n] = visual
 
-    # 2. visuals of special users allowed to globally override builtin visuals
+    # 2. visuals of special users allowed to globally override built-in visuals
     for (u, n), visual in all_visuals.items():
         # Honor original permissions for the current user
         if (
@@ -469,17 +469,17 @@ def available(  # pylint: disable=too-many-branches
         ):
             visuals[n] = visual
 
-    # 3. Builtin visuals, if allowed.
+    # 3. Built-in visuals, if allowed.
     for (u, n), visual in all_visuals.items():
         if u == UserId.builtin() and n not in visuals and user.may(f"{permprefix}.{n}"):
             visuals[n] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
-    #    for builtin visuals. Also the permission "general.see_user_visuals" is
+    #    for built-in visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
     if user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
-            # Is there a builtin visual with the same name? If yes, honor permissions.
+            # Is there a built-in visual with the same name? If yes, honor permissions.
             if (
                 n not in visuals
                 and published_to_user(visual)
@@ -508,7 +508,7 @@ def get_permissioned_visual(
 ) -> TVisual:
     if (
         owner is not None
-        and owner != user.id  # Var is set from edit page and can be empty string for builtin
+        and owner != user.id  # Var is set from edit page and can be empty string for built-in
         and user.may(  # user has top priority, thus only change if other user
             "general.edit_foreign_%ss" % what
         )

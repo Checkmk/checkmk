@@ -6,14 +6,14 @@
 
 In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
-The builtin roles cannot be deleted. Users listed in admin_users in
+The built-in roles cannot be deleted. Users listed in admin_users in
 multisite.mk automatically get the role admin - even if no such user or contact
 has been configured yet. By that way an initial login - e.g. as omdamin - is
 possible. The admin role cannot be removed from that user as long as he is
 listed in admin_users. Also the variables guest_users, users and default_user_
 role still work. That way Multisite is fully operable without Setup and also
 backwards compatible.  In Setup you can create further roles and also edit the
-permissions of the existing roles. Users can be assigned to builtin and custom
+permissions of the existing roles. Users can be assigned to built-in and custom
 roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
@@ -157,7 +157,7 @@ class ModeRoles(WatoMode):
                 table.cell(_("Alias"), role.alias)
 
                 # Type
-                table.cell(_("Type"), _("builtin") if role.builtin else _("custom"))
+                table.cell(_("Type"), _("built-in") if role.builtin else _("custom"))
 
                 # Modifications
                 table.cell(
@@ -265,7 +265,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("builtin role")))
+            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)
@@ -281,10 +281,10 @@ class ModeEditRole(WatoMode):
             forms.section(_("Based on role"))
             html.help(
                 _(
-                    "Each user defined role is based on one of the builtin roles. "
+                    "Each user defined role is based on one of the built-in roles. "
                     "When created it will start with all permissions of that role. When due to a software "
                     "update or installation of an addons new permissions appear, the user role will get or "
-                    "not get those new permissions based on the default settings of the builtin role it's "
+                    "not get those new permissions based on the default settings of the built-in role it's "
                     "based on."
                 )
             )
@@ -303,7 +303,7 @@ class ModeEditRole(WatoMode):
         html.help(
             _(
                 'If you leave the permissions at "default", '
-                "they get their settings from the factory defaults (for builtin roles) or from the "
+                "they get their settings from the factory defaults (for built-in roles) or from the "
                 "factory default of their base role (for user define roles). "
                 "Factory defaults may change due to software updates. "
                 "When choosing another base role, all permissions that are on default will reflect "

@@ -12,7 +12,7 @@ That is what contact groups are for.
 As standard Checkmk comes with the following three predefined roles, which can never be deleted, but can be customised at will:
 
 When adding a new custom role, it will be a clone of one of the default roles, i.e it will automatically inherit all of the
-permissions of that default role.  Also, when new permissions are added, builtin roles will automatically be permitted or not
+permissions of that default role.  Also, when new permissions are added, built-in roles will automatically be permitted or not
 permitted and the custom roles will also inherit those permission settings.
 
 * Role: admin
@@ -223,8 +223,8 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
         if userrole_to_edit.builtin:
             return problem(
                 status=400,
-                title="Builtin role",
-                detail="You can't edit the basedon value of a builtin role.",
+                title="Built-in role",
+                detail="You can't edit the basedon value of a built-in role.",
             )
         userrole_to_edit.basedon = basedon
 

@@ -576,7 +576,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
             if is_builtin_view or not is_own_view:
                 yield PageMenuEntry(
-                    title=_("Clone builtin view") if is_builtin_view else _("Clone view"),
+                    title=_("Clone built-in view") if is_builtin_view else _("Clone view"),
                     icon_name="clone",
                     item=make_simple_link(
                         makeuri_contextless(

@@ -78,6 +78,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_temperature_trends,
-        title=lambda: _("Temperature trends for devices with builtin levels"),
+        title=lambda: _("Temperature trends for devices with built-in levels"),
     )
 )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Register the builtin topics. These are the ones that may be referenced by different Setup
+"""Register the built-in topics. These are the ones that may be referenced by different Setup
 plugins. Additional individual plugins are allowed to create their own topics."""
 
 from cmk.gui.i18n import _l

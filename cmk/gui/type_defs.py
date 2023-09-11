@@ -463,7 +463,7 @@ class ViewSpec(Visual):
     column_headers: Literal["off", "pergroup", "repeat"]
     sorters: Sequence[SorterSpec]
     add_headers: NotRequired[str]
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: NotRequired[bool]
     mustsearch: NotRequired[bool]

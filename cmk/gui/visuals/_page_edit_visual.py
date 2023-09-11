@@ -99,7 +99,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         visual = _get_visual(owner_id, mode)
 
-        if mode == "edit" and owner_id != "":  # editing builtins requires copy
+        if mode == "edit" and owner_id != "":  # editing built-ins requires copy
             if owner_id != user.id:
                 if not user.may("general.edit_foreign_%s" % what):
                     raise MKAuthException(
@@ -118,7 +118,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         elif mode == "delete":
             delete_local_file(what, visualname)
             raise HTTPRedirect(back_url)
-        else:  # clone explicit or edit from builtin that needs copy
+        else:  # clone explicit or edit from built-in that needs copy
             title = _("Clone %s") % visual_type.title
             visual = copy.deepcopy(visual)
             visual["public"] = False
@@ -523,7 +523,7 @@ def _vs_general(
                         "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
                         "internally for identifying a view. You can create several views "
                         "with the same title but only one per view name. If you create a "
-                        "view that has the same view name as a builtin view, then your "
+                        "view that has the same view name as a built-in view, then your "
                         "view will override that (shadowing it)."
                     ),
                     regex="^[a-zA-Z0-9_]+$",

@@ -1957,9 +1957,9 @@ class BIModeEditAggregation(ABCBIMode):
                                 _("Default (%s)")
                                 % active_config.default_bi_layout["node_style"][8:].title(),
                             ),
-                            ("builtin_force", _("Builtin: Force")),
-                            ("builtin_hierarchy", _("Builtin: Hierarchy")),
-                            ("builtin_radial", _("Builtin: Radial")),
+                            ("builtin_force", _("Built-in: Force")),
+                            ("builtin_hierarchy", _("Built-in: Hierarchy")),
+                            ("builtin_radial", _("Built-in: Radial")),
                             # TODO: continue this list with user configurable layouts
                         ],
                         default_value="builtin_default",

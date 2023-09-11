@@ -22,12 +22,12 @@ class UserRoleAttributes(BaseSchema):
     )
     builtin = fields.Boolean(
         required=True,
-        description="True if it's a builtin user role, otherwise False.",
+        description="True if it's a built-in user role, otherwise False.",
     )
     basedon = fields.String(
         enum=builtin_role_ids,
         required=False,
-        description="The builtin user role id that the user role is based on.",
+        description="The built-in user role id that the user role is based on.",
     )
 
 

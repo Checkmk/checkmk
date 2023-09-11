@@ -56,7 +56,7 @@ class TimePeriodAlias(fields.String):
     default_error_messages = {
         "should_exist": "Time period alias does not exist: {name!r}",
         "should_not_exist": "Time period alias {name!r} already exists.",
-        "should_not_be_builtin": "Time period alias {name!r} can't be a builtin",
+        "should_not_be_builtin": "Time period alias {name!r} can't be a built-in",
     }
 
     def __init__(  # type: ignore[no-untyped-def]

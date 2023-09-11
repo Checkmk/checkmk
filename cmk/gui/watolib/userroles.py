@@ -80,7 +80,7 @@ def delete_role(role_id: RoleID) -> None:
     role_to_delete: UserRole = get_role(role_id)
 
     if transactions.transaction_valid() and role_to_delete.builtin:
-        raise MKUserError(None, _("You cannot delete the builtin roles!"))
+        raise MKUserError(None, _("You cannot delete the built-in roles!"))
 
     # Check if currently being used by a user
     users: Users = load_users()
@@ -136,7 +136,7 @@ def validate_new_roleid(old_roleid: str, new_roleid: str) -> None:
 
     if old_roleid != new_roleid:
         if existing_role.builtin:
-            raise ValidationError(_("The ID of a builtin user role cannot be changed"))
+            raise ValidationError(_("The ID of a built-in user role cannot be changed"))
 
         if new_roleid in get_all_roles():
             raise ValidationError(_("The ID is already used by another role"))

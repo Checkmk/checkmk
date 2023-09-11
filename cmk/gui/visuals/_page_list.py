@@ -200,8 +200,8 @@ def page_list(  # pylint: disable=too-many-branches
                 if not is_packaged and render_custom_buttons:
                     render_custom_buttons(visual_name, visual)
 
-                # Packaged visuals have builtin user as owner, so we have to
-                # make sure to not show packaged related icons for builtin
+                # Packaged visuals have built-in user as owner, so we have to
+                # make sure to not show packaged related icons for built-in
                 # visuals
                 if user.may("wato.manage_mkps") and source != "builtin":
                     _render_extension_package_icons(
@@ -409,5 +409,5 @@ def _partition_visuals(
         ("custom", _("Customized"), my_visuals),
         ("foreign", _("Owned by other users"), foreign_visuals),
         ("packaged", _("Extensions"), packaged_visuals),
-        ("builtin", _("Builtin"), builtin_visuals),
+        ("builtin", _("Built-in"), builtin_visuals),
     ]

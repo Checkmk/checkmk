@@ -7328,7 +7328,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         categories = list(self.categories())
         if self._show_builtin_icons:
-            categories.append(("builtin", _("Builtin")))
+            categories.append(("builtin", _("Built-in")))
 
         icon_categories = []
         for category_name, category_alias in categories:

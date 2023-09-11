@@ -68,7 +68,7 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
-    For builtin config variables type checking and code completion works.
+    For built-in config variables type checking and code completion works.
 
     This class is extended by `load_config` to support custom config variables which may
     be introduced by 3rd party extensions. For these variables we don't have the features
@@ -189,7 +189,7 @@ def load_config() -> None:
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 
-    # Make sure, builtin roles are present, even if not modified and saved with Setup.
+    # Make sure, built-in roles are present, even if not modified and saved with Setup.
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
@@ -236,7 +236,7 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def get_default_config() -> dict[str, Any]:
-    default_config = asdict(Config())  # First apply the builtin config
+    default_config = asdict(Config())  # First apply the built-in config
     default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config

@@ -220,7 +220,7 @@ class PainterCrashSource(Painter):
             None,
             _("Extension")
             if local_files_involved_in_crash(row["crash_exc_traceback"])
-            else _("Builtin"),
+            else _("Built-in"),
         )
 
 

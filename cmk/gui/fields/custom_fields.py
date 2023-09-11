@@ -191,7 +191,7 @@ class AuxTagIDField(fields.String):
     default_error_messages = {
         "should_exist": "The aux_tag {aux_tag_id!r} should exist but it doesn't.",
         "should_not_exist": "The aux_tag {aux_tag_id!r} should not exist but it does.",
-        "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing builtin aux tag but it's not.",
+        "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing built-in aux tag but it's not.",
         "should_exist_and_should_be_custom": "The aux_tag {aux_tag_id!r} should be an existing custom aux tag but it's not.",
     }
 

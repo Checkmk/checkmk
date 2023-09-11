@@ -68,7 +68,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleVMCloudContainer)
     main_module_registry.register(MainModuleOtherIntegrations)
 
-    # Register the builtin agent download page on the top level of Setup only when the agent bakery
+    # Register the built-in agent download page on the top level of Setup only when the agent bakery
     # does not exist (e.g. when using CRE)
     if cmk_version.edition() in (cmk_version.Edition.CRE, cmk_version.Edition.CSE):
         main_module_registry.register(MainModuleAgentsWindows)

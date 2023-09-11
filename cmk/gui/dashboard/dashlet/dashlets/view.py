@@ -73,7 +73,7 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
 class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
     # From: ViewSpec
     add_headers: str
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: bool
     mustsearch: bool
@@ -108,7 +108,7 @@ def copy_view_into_dashlet(
         if not view:
             raise MKGeneralException(
                 _(
-                    "Failed to convert a builtin dashboard which is referencing "
+                    "Failed to convert a built-in dashboard which is referencing "
                     'the view "%s". You will have to migrate it to the new '
                     "dashboard format on your own to work properly."
                 )

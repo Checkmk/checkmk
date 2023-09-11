@@ -90,7 +90,7 @@ def load_dashboard_with_cloning(
         all_dashboards,
     )
     if edit and board["owner"] == UserId.builtin():
-        # Trying to edit a builtin dashboard results in doing a copy
+        # Trying to edit a built-in dashboard results in doing a copy
         active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)

@@ -205,7 +205,7 @@ class ModeTags(ABCTagMode):
         if not request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
             del_id
         ):
-            message: bool | str = _('Transformed the user tag group "%s" to builtin.') % del_id
+            message: bool | str = _('Transformed the user tag group "%s" to built-in.') % del_id
         else:
             message = _rename_tags_after_confirmation(
                 self.breadcrumb(), OperationRemoveTagGroup(del_id)
@@ -233,7 +233,7 @@ class ModeTags(ABCTagMode):
 
         In case a user wants to remove such a "agent" tag group do not perform the
         usual validations since this is not a real delete operation because it just
-        replaces a custom group with a builtin one.
+        replaces a custom group with a built-in one.
         """
         if del_id != "agent":
             return False
@@ -246,7 +246,7 @@ class ModeTags(ABCTagMode):
         if user_tg is None:
             return False
 
-        # When the tag choices are matching the builtin tag group choices
+        # When the tag choices are matching the built-in tag group choices
         # simply allow removal without confirm
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
@@ -348,7 +348,7 @@ class ModeTags(ABCTagMode):
         html.show_warning(
             _(
                 "You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
-                "In current Checkmk versions these are <i>builtin</i> tag groups which "
+                "In current Checkmk versions these are <i>built-in</i> tag groups which "
                 "can not be customized anymore. Your customized tag group will work for "
                 "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
                 "anymore."
@@ -391,14 +391,14 @@ class ModeTags(ABCTagMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_group, nr):
-        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # Tag groups were made built-in with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
         # user configuration and should be able to cleanup this using the GUI
         # for the moment. Make the buttons available to the users.
         if self._builtin_config.tag_group_exists(
             tag_group.id
         ) and not self._tag_config.tag_group_exists(tag_group.id):
-            html.i("(%s)" % _("builtin"))
+            html.i("(%s)" % _("built-in"))
             return
 
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
@@ -449,7 +449,7 @@ class ModeTags(ABCTagMode):
 
     def _show_aux_tag_icons(self, aux_tag: cmk.utils.tags.AuxTag) -> None:
         if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
-            html.i("(%s)" % _("builtin"))
+            html.i("(%s)" % _("built-in"))
             return
 
         edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
@@ -588,14 +588,14 @@ class ModeTagUsage(ABCTagMode):
             _show_affected_rulesets(affected_rulesets)
 
     def _show_tag_group_icons(self, tag_group: cmk.utils.tags.TagGroup) -> None:
-        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # Tag groups were made built-in with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
         # user configuration and should be able to cleanup this using the GUI
         # for the moment. Make the buttons available to the users.
         if self._builtin_config.tag_group_exists(
             tag_group.id
         ) and not self._tag_config.tag_group_exists(tag_group.id):
-            html.i("(%s)" % _("builtin"))
+            html.i("(%s)" % _("built-in"))
             return
 
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
@@ -638,7 +638,7 @@ class ModeTagUsage(ABCTagMode):
 
     def _show_aux_tag_icons(self, aux_tag: cmk.utils.tags.AuxTag) -> None:
         if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
-            html.i("(%s)" % _("builtin"))
+            html.i("(%s)" % _("built-in"))
             return
 
         edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
@@ -1052,7 +1052,7 @@ def _show_aux_tag_used_by_tags(tags: set[cmk.utils.tags.GroupedTag]) -> None:
         if index > 0:
             html.write_text(", ")
 
-        # Builtin tag groups can not be edited
+        # Built-in tag groups can not be edited
         if builtin_config.tag_group_exists(tag.group.id):
             html.write_text(_u(tag.choice_title))
         else:

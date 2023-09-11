@@ -1637,7 +1637,7 @@ class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[type[LDAPAt
 
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
-    """Base class for all builtin based sync plugins"""
+    """Base class for all built-in based sync plugins"""
 
     @property
     def is_builtin(self) -> bool:

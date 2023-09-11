@@ -43,7 +43,7 @@ class EditUserRole(BaseSchema):
     )
     new_basedon = UserRoleID(
         required=False,
-        description="A builtin user role that you want the user role to be based on.",
+        description="A built-in user role that you want the user role to be based on.",
         example="guest",
         presence="should_exist",
         userrole_type="should_be_builtin",

@@ -14,7 +14,7 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
     declare_permission(
         "general.edit_" + what,
         _("Customize %s and use them") % what_plural,
-        _("Allows to create own %s, customize builtin %s and use them.")
+        _("Allows to create own %s, customize built-in %s and use them.")
         % (what_plural, what_plural),
         ["admin", "user"],
     )
@@ -70,8 +70,8 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
 
     declare_permission(
         "general.force_" + what,
-        _("Modify builtin %s") % what_plural,
-        _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
+        _("Modify built-in %s") % what_plural,
+        _("Make own published %s override built-in %s for all users.") % (what_plural, what_plural),
         ["admin"],
     )
 

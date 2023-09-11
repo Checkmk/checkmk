@@ -79,9 +79,9 @@ def load_plugins() -> None:
 def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plugin API"
 
-    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
     In the moment we define an official plugin API, we can drop this and require all plugins to

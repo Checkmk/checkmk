@@ -214,7 +214,7 @@ class ModeTimeperiods(WatoMode):
             self._timeperiods = watolib.timeperiods.load_timeperiods()
 
         except watolib.timeperiods.TimePeriodBuiltInError:
-            raise MKUserError("_delete", _("Builtin time periods can not be modified"))
+            raise MKUserError("_delete", _("Built-in time periods can not be modified"))
 
         except watolib.timeperiods.TimePeriodInUseError as exception:
             message = "<b>{}</b><br>{}:<ul>".format(
@@ -238,7 +238,7 @@ class ModeTimeperiods(WatoMode):
                 table.cell(_("Actions"), css=["buttons"])
                 alias = timeperiod_spec_alias(timeperiod)
                 if name in watolib.timeperiods.builtin_timeperiods():
-                    html.i(_("(builtin)"))
+                    html.i(_("(built-in)"))
                 else:
                     self._action_buttons(name, alias)
 
@@ -466,7 +466,7 @@ class ModeEditTimeperiod(WatoMode):
         self._new = self._name is None
 
         if self._name in watolib.timeperiods.builtin_timeperiods():
-            raise MKUserError("edit", _("Builtin time periods can not be modified"))
+            raise MKUserError("edit", _("Built-in time periods can not be modified"))
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":

@@ -234,7 +234,7 @@ class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
 
 def _slow_view_logging_help():
     return _(
-        "Some builtin or own views may take longer time than expected. In order to"
+        "Some built-in or own views may take longer time than expected. In order to"
         " detect slow views you have to set"
         "<ul>"
         "<li>the log level to <b>DEBUG</b> at"
@@ -1667,12 +1667,12 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
                         ),
                     ],
                 ),
-                title=_("Builtin icon visibility"),
+                title=_("Built-in icon visibility"),
                 movable=False,
                 totext=_("%d icons customized"),
                 help=_(
                     "You can use this option to change the default visibility "
-                    "options of the builtin icons. You can change whether or not "
+                    "options of the built-in icons. You can change whether or not "
                     "the icons are shown in the popup menu or on top level and "
                     "change the sorting of the icons."
                 ),

@@ -237,7 +237,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
                             title=_("Unique ID"),
                             help=_(
                                 "The ID will be used do identify this page in URLs. If this page has the "
-                                "same ID as a builtin page of the type <i>%s</i> then it will shadow the builtin one."
+                                "same ID as a built-in page of the type <i>%s</i> then it will shadow the built-in one."
                             )
                             % cls.phrase("title"),
                             allow_empty=False,
@@ -413,7 +413,7 @@ class OverridableInstances(Generic[_T]):
         """Return all pages visible to the user, implements shadowing etc."""
         pages = {}
 
-        # Builtin pages
+        # Built-in pages
         for page in self.instances():
             if page.is_published_to_me() and page.may_see() and page.is_builtin():
                 pages[page.name()] = page
@@ -519,7 +519,7 @@ class Overridable(Base[_T_OverridableSpec]):
         return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
 
     def is_public_forced(self) -> bool:
-        """Whether the user is allowed to override builtin pagetypes"""
+        """Whether the user is allowed to override built-in pagetypes"""
         return self.is_public() and user_may(self.owner(), "general.force_" + self.type_name())
 
     def is_published_to_me(self) -> bool:
@@ -696,7 +696,7 @@ class Overridable(Base[_T_OverridableSpec]):
                 section=PermissionSectionGeneral,
                 name="edit_" + cls.type_name(),
                 title=_l("Customize and use %s") % title_lower,
-                description=_l("Allows to create own %s, customize builtin %s and use them.")
+                description=_l("Allows to create own %s, customize built-in %s and use them.")
                 % (title_lower, title_lower),
                 defaults=["admin", "user"],
             )
@@ -768,8 +768,8 @@ class Overridable(Base[_T_OverridableSpec]):
             Permission(
                 section=PermissionSectionGeneral,
                 name="force_" + cls.type_name(),
-                title=_l("Modify builtin %s") % title_lower,
-                description=_l("Make own published %s override builtin %s for all users.")
+                title=_l("Modify built-in %s") % title_lower,
+                description=_l("Make own published %s override built-in %s for all users.")
                 % (title_lower, title_lower),
                 defaults=["admin"],
             )
@@ -851,7 +851,7 @@ class Overridable(Base[_T_OverridableSpec]):
     def load(cls) -> OverridableInstances[Self]:
         instances = OverridableInstances[Self]()
 
-        # First load builtin pages. Set username to ''
+        # First load built-in pages. Set username to ''
         for name, page_dict in cls.builtin_pages().items():
             new_page = cls(page_dict)
             instances.add_instance((page_dict["owner"], name), new_page)
@@ -915,7 +915,7 @@ class Overridable(Base[_T_OverridableSpec]):
 
     @classmethod
     def reserved_unique_ids(cls) -> list[str]:
-        """Used to exclude names from choosing as unique ID, e.g. builtin names
+        """Used to exclude names from choosing as unique ID, e.g. built-in names
         in sidebar snapins"""
         return []
 
@@ -1008,7 +1008,7 @@ class ListPage(Page, Generic[_T]):
         for what, title, scope_instances in [
             ("my", _("Customized"), my_instances),
             ("foreign", _("Owned by other users"), foreign_instances),
-            ("builtin", _("Builtin"), builtin_instances),
+            ("builtin", _("Built-in"), builtin_instances),
         ]:
             if scope_instances:
                 self._show_table(instances, what, title, scope_instances)
@@ -1116,7 +1116,7 @@ class ListPage(Page, Generic[_T]):
                 # Owner
                 table.cell(
                     _("Owner"),
-                    HTMLWriter.render_i(_("builtin"))
+                    HTMLWriter.render_i(_("built-in"))
                     if instance.is_builtin()
                     else instance.owner(),
                 )

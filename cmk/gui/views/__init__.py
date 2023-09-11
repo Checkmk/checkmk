@@ -58,7 +58,7 @@ def load_plugins() -> None:
 
     multisite_builtin_views.update(builtin_views)
 
-    # Needs to be executed after all plugins (builtin and local) are loaded
+    # Needs to be executed after all plugins (built-in and local) are loaded
     register_table_views_and_columns()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
@@ -71,7 +71,7 @@ def load_plugins() -> None:
 
     visuals.declare_visual_permissions("views", _("views"))
 
-    # Declare permissions for builtin views
+    # Declare permissions for built-in views
     for name, view_spec in multisite_builtin_views.items():
         declare_permission(
             "view.%s" % name,
@@ -88,9 +88,9 @@ def load_plugins() -> None:
 def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """Register pre 2.1 "plugin API"
 
-    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
     In the moment we define an official plugin API, we can drop this and require all plugins to

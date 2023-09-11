@@ -194,7 +194,7 @@ class ModeBulkCleanup(WatoMode):
             _(
                 "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
                 "explicit attribute values from hosts. The hosts will then inherit attributes "
-                "configured at the host list or folders or simply fall back to the builtin "
+                "configured at the host list or folders or simply fall back to the built-in "
                 "default values."
             )
             % len(hosts)

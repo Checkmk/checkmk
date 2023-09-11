@@ -165,7 +165,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     except TimePeriodBuiltInError:
         return problem(
             status=405,
-            title="Builtin time periods can not be deleted",
+            title="Built-in time periods can not be deleted",
             detail=f"The built-in time period '{name}' cannot be deleted.",
         )
     except TimePeriodInUseError as e:

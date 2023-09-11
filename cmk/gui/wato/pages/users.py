@@ -904,87 +904,10 @@ class ModeEditUser(WatoMode):
 
         html.begin_form("user", method="POST")
         html.prevent_password_auto_completion()
-
-        forms.header(_("Identity"))
-
-        # ID
-        forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
-        if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False, size=73)
-        else:
-            vs_user_id = FixedValue(value=self._user_id)
-        vs_user_id.render_input("user_id", self._user_id)
-
-        def lockable_input(name: str, dflt: str | None) -> None:
-            # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
-            value = cast(str, self._user.get(name, dflt))
-            if self._is_locked(name):
-                html.write_text(value)
-                html.hidden_field(name, value)
-            else:
-                html.text_input(name, value, size=73)
-
-        # Full name
-        forms.section(_("Full name"), is_required=True)
-        lockable_input("alias", self._user_id)
-        html.help(_("Full name or alias of the user"))
-
-        # Email address
-        forms.section(_("Email address"))
-        email = self._user.get("email", "")
-        if not self._is_locked("email"):
-            EmailAddress(size=73).render_input("email", email)
-        else:
-            html.write_text(email)
-            html.hidden_field("email", email)
-
-        html.help(
-            _(
-                "The email address is optional and is needed "
-                "if the user is a monitoring contact and receives notifications "
-                "via Email."
-            )
-        )
-
-        forms.section(_("Pager address"))
-        lockable_input("pager", "")
-        html.help(_("The pager address is optional "))
-
-        if edition() is Edition.CME:
-            forms.section(self._vs_customer.title())
-            self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
-
-            html.help(self._vs_customer.help())
-
-        vs_sites = self._vs_sites()
-        forms.section(vs_sites.title())
-        authorized_sites = self._user.get("authorized_sites", vs_sites.default_value())
-        if not self._is_locked("authorized_sites"):
-            vs_sites.render_input("authorized_sites", authorized_sites)
-        else:
-            html.write_text(vs_sites.value_to_html(authorized_sites))
-        html.help(vs_sites.help())
-
         custom_user_attr_topics = get_user_attributes_by_topic()
 
-        self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
-
-        # ntopng
-        if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                forms.section(_("ntopng Username"))
-                lockable_input(ntop_username_attribute, "")
-                html.help(
-                    _(
-                        "The corresponding username in ntopng of the current checkmk user. "
-                        "It is used, in case the user mapping to ntopng is configured to use this "
-                        "custom attribute"
-                    )
-                )
+        if self._can_create_users:
+            self._render_identity(custom_user_attr_topics)
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))
@@ -1233,6 +1156,88 @@ class ModeEditUser(WatoMode):
             html.set_focus("alias")
         html.hidden_fields()
         html.end_form()
+
+    def _render_identity(
+        self, custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]]
+    ) -> None:
+        forms.header(_("Identity"))
+
+        # ID
+        forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
+        if self._is_new_user:
+            vs_user_id = UserID(allow_empty=False, size=73)
+        else:
+            vs_user_id = FixedValue(value=self._user_id)
+        vs_user_id.render_input("user_id", self._user_id)
+
+        # Full name
+        forms.section(_("Full name"), is_required=True)
+        self._lockable_input("alias", self._user_id)
+        html.help(_("Full name or alias of the user"))
+
+        # Email address
+        forms.section(_("Email address"))
+        email = self._user.get("email", "")
+        if not self._is_locked("email"):
+            EmailAddress(size=73).render_input("email", email)
+        else:
+            html.write_text(email)
+            html.hidden_field("email", email)
+
+        html.help(
+            _(
+                "The email address is optional and is needed "
+                "if the user is a monitoring contact and receives notifications "
+                "via Email."
+            )
+        )
+
+        forms.section(_("Pager address"))
+        self._lockable_input("pager", "")
+        html.help(_("The pager address is optional "))
+
+        if edition() is Edition.CME:
+            forms.section(self._vs_customer.title())
+            self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
+
+            html.help(self._vs_customer.help())
+
+        vs_sites = self._vs_sites()
+        forms.section(vs_sites.title())
+        authorized_sites = self._user.get("authorized_sites", vs_sites.default_value())
+        if not self._is_locked("authorized_sites"):
+            vs_sites.render_input("authorized_sites", authorized_sites)
+        else:
+            html.write_text(vs_sites.value_to_html(authorized_sites))
+        html.help(vs_sites.help())
+
+        self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
+
+        # ntopng
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding Setup rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                forms.section(_("ntopng Username"))
+                self._lockable_input(ntop_username_attribute, "")
+                html.help(
+                    _(
+                        "The corresponding username in ntopng of the current checkmk user. "
+                        "It is used, in case the user mapping to ntopng is configured to use this "
+                        "custom attribute"
+                    )
+                )
+
+    def _lockable_input(self, name: str, dflt: str | None) -> None:
+        # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
+        value = cast(str, self._user.get(name, dflt))
+        if self._is_locked(name):
+            html.write_text(value)
+            html.hidden_field(name, value)
+        else:
+            html.text_input(name, value, size=73)
 
     def _pw_suffix(self) -> str:
         if self._is_new_user:

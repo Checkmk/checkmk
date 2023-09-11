@@ -107,7 +107,10 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     if cmk_version.edition() is cmk_version.Edition.CME:
         yield f"cmk.gui.cme.plugins.{main_module_name}"
 
-    if cmk_version.edition() is cmk_version.Edition.CCE:
+    if (
+        cmk_version.edition() is cmk_version.Edition.CCE
+        or cmk_version.edition() is cmk_version.Edition.CSE
+    ):
         yield f"cmk.gui.cce.plugins.{main_module_name}"
 
     if cmk_version.edition() is cmk_version.Edition.CSE:

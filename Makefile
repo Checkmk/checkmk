@@ -312,8 +312,11 @@ EXCLUDE_PROPER= \
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
+	    --exclude=".cargo" \
 	    --exclude="node_modules"
 
+# The list of files and folders to be protected from remove after "buildclean" is called
+# Rust dirs are kept due to heavy load when compiled: .cargo, controller
 AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
@@ -328,13 +331,9 @@ mrproper:
 mrclean:
 	git clean -d --force -x $(EXCLUDE_CLEAN)
 
-# Used by gerrit jobs to cleanup workspaces *after* a gerrit job run.
-# This should not clean up everything - just things which are *not* needed for the next job to run as fast as
-# possible.
+# The target is reserved for a future use
 workspaceclean:
-	# Cargo related things
-	$(RM) -r $(AGENT_CTL_TARGET_PATH)/debug/ # This was the old target before "x86_64-unknown" and is deprecated now
-	$(RM) $(AGENT_CTL_TARGET_PATH)/x86_64-unknown-linux-musl/debug/deps/cmk_agent_ctl-* # Compiling this *should* be fast anyway
+	# Stub
 
 # Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
 # for cleaning up while keeping some build artifacts between version builds.

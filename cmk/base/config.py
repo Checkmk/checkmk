@@ -2165,7 +2165,6 @@ class ConfigCache:
         self._cache_match_object_service_checkgroup: dict[
             tuple[HostName, Item, ServiceName], RulesetMatchObject
         ] = {}
-        self._cache_match_object_host: dict[HostName | HostAddress, RulesetMatchObject] = {}
 
         # Host lookup
 
@@ -3630,22 +3629,6 @@ class ConfigCache:
             ),
         )
 
-    def ruleset_match_object_of_host(self, hostname: HostName | HostAddress) -> RulesetMatchObject:
-        """Construct the object that is needed to match the host rulesets
-
-        Please note that the host attributes like host_folder and host_tags are
-        not set in the object, because the rule optimizer already processes all
-        these host conditions. Adding these attributes here would be
-        consequent, but create some overhead.
-        """
-
-        with contextlib.suppress(KeyError):
-            return self._cache_match_object_host[hostname]
-
-        return self._cache_match_object_host.get(
-            hostname, ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
-        )
-
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
@@ -3934,7 +3917,7 @@ class ConfigCache:
         self, hostname: HostName, ruleset: Iterable[RuleSpec]
     ) -> Mapping[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
-            self.ruleset_match_object_of_host(hostname),
+            RulesetMatchObject(hostname),
             ruleset,
         )
 
@@ -3943,7 +3926,7 @@ class ConfigCache:
     ) -> list:
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
-                self.ruleset_match_object_of_host(hostname),
+                RulesetMatchObject(hostname),
                 ruleset,
                 is_binary=False,
             )
@@ -3953,9 +3936,7 @@ class ConfigCache:
     def in_binary_hostlist(
         self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
     ) -> bool:
-        return self.ruleset_matcher.is_matching_host_ruleset(
-            self.ruleset_match_object_of_host(hostname), ruleset
-        )
+        return self.ruleset_matcher.is_matching_host_ruleset(RulesetMatchObject(hostname), ruleset)
 
     def service_extra_conf(
         self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]

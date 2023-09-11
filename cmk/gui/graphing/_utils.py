@@ -779,7 +779,7 @@ def _choose_operator_color(a: str, b: str) -> str:
 
 
 @dataclass(frozen=True)
-class RPNExpression:
+class MetricExpressionResult:
     value: float
     unit_info: UnitInfo
     color: str
@@ -787,7 +787,7 @@ class RPNExpression:
 
 class ABCMetricOperation(abc.ABC):
     @abc.abstractmethod
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         raise NotImplementedError()
 
 
@@ -795,24 +795,24 @@ class ABCMetricOperation(abc.ABC):
 class ConstantInt(ABCMetricOperation):
     value: int
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(float(self.value), unit_info["count"], "#000000")
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(float(self.value), unit_info["count"], "#000000")
 
 
 @dataclass(frozen=True)
 class ConstantFloat(ABCMetricOperation):
     value: float
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(self.value, unit_info[""], "#000000")
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(self.value, unit_info[""], "#000000")
 
 
 @dataclass(frozen=True)
 class Metric(ABCMetricOperation):
     name: MetricName_
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             translated_metrics[self.name]["value"],
             translated_metrics[self.name]["unit"],
             translated_metrics[self.name]["color"],
@@ -823,8 +823,8 @@ class Metric(ABCMetricOperation):
 class WarningOf(ABCMetricOperation):
     metric: Metric
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["warn"],
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("warn", "#808080"),
@@ -835,8 +835,8 @@ class WarningOf(ABCMetricOperation):
 class CriticalOf(ABCMetricOperation):
     metric: Metric
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["crit"],
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("crit", "#808080"),
@@ -847,8 +847,8 @@ class CriticalOf(ABCMetricOperation):
 class MinimumOf(ABCMetricOperation):
     metric: Metric
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["min"],
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("min", "#808080"),
@@ -859,8 +859,8 @@ class MinimumOf(ABCMetricOperation):
 class MaximumOf(ABCMetricOperation):
     metric: Metric
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["max"],
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("max", "#808080"),
@@ -871,9 +871,9 @@ class MaximumOf(ABCMetricOperation):
 class Sum(ABCMetricOperation):
     summands: Sequence[ABCMetricOperation]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.summands) == 0:
-            return RPNExpression(0.0, unit_info[""], "#000000")
+            return MetricExpressionResult(0.0, unit_info[""], "#000000")
 
         evaluated_first = self.summands[0].evaluate(translated_metrics)
         values = [evaluated_first.value]
@@ -885,16 +885,16 @@ class Sum(ABCMetricOperation):
             unit_info_ = _unit_add(unit_info_, evaluated_successor.unit_info)
             color = _choose_operator_color(color, evaluated_successor.color)
 
-        return RPNExpression(sum(values), unit_info_, color)
+        return MetricExpressionResult(sum(values), unit_info_, color)
 
 
 @dataclass(frozen=True)
 class Product(ABCMetricOperation):
     factors: Sequence[ABCMetricOperation]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.factors) == 0:
-            return RPNExpression(1.0, unit_info[""], "#000000")
+            return MetricExpressionResult(1.0, unit_info[""], "#000000")
 
         evaluated_first = self.factors[0].evaluate(translated_metrics)
         product = evaluated_first.value
@@ -906,7 +906,7 @@ class Product(ABCMetricOperation):
             unit_info_ = _unit_mult(unit_info_, evaluated_successor.unit_info)
             color = _choose_operator_color(color, evaluated_successor.color)
 
-        return RPNExpression(product, unit_info_, color)
+        return MetricExpressionResult(product, unit_info_, color)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -914,7 +914,7 @@ class Difference(ABCMetricOperation):
     minuend: ABCMetricOperation
     subtrahend: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         minuend_evaluated = self.minuend.evaluate(translated_metrics)
         subtrahend_evaluated = self.subtrahend.evaluate(translated_metrics)
 
@@ -923,7 +923,7 @@ class Difference(ABCMetricOperation):
         else:
             value = minuend_evaluated.value - subtrahend_evaluated.value
 
-        return RPNExpression(
+        return MetricExpressionResult(
             value,
             _unit_sub(minuend_evaluated.unit_info, subtrahend_evaluated.unit_info),
             _choose_operator_color(minuend_evaluated.color, subtrahend_evaluated.color),
@@ -935,7 +935,7 @@ class Fraction(ABCMetricOperation):
     dividend: ABCMetricOperation
     divisor: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         dividend_evaluated = self.dividend.evaluate(translated_metrics)
         divisor_evaluated = self.divisor.evaluate(translated_metrics)
 
@@ -944,7 +944,7 @@ class Fraction(ABCMetricOperation):
         else:
             value = dividend_evaluated.value / divisor_evaluated.value
 
-        return RPNExpression(
+        return MetricExpressionResult(
             value,
             _unit_div(dividend_evaluated.unit_info, divisor_evaluated.unit_info),
             _choose_operator_color(dividend_evaluated.color, divisor_evaluated.color),
@@ -956,8 +956,8 @@ class GreaterThan(ABCMetricOperation):
     left: ABCMetricOperation
     right: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             (
                 1.0
                 if self.left.evaluate(translated_metrics).value
@@ -974,8 +974,8 @@ class GreaterEqualThan(ABCMetricOperation):
     left: ABCMetricOperation
     right: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             (
                 1.0
                 if self.left.evaluate(translated_metrics).value
@@ -992,8 +992,8 @@ class LessThan(ABCMetricOperation):
     left: ABCMetricOperation
     right: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             (
                 1.0
                 if self.left.evaluate(translated_metrics).value
@@ -1010,8 +1010,8 @@ class LessEqualThan(ABCMetricOperation):
     left: ABCMetricOperation
     right: ABCMetricOperation
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             (
                 1.0
                 if self.left.evaluate(translated_metrics).value
@@ -1027,9 +1027,9 @@ class LessEqualThan(ABCMetricOperation):
 class Minimum(ABCMetricOperation):
     operands: Sequence[ABCMetricOperation]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.operands) == 0:
-            return RPNExpression(float("nan"), unit_info[""], "#000000")
+            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
 
         minimum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
@@ -1044,9 +1044,9 @@ class Minimum(ABCMetricOperation):
 class Maximum(ABCMetricOperation):
     operands: Sequence[ABCMetricOperation]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.operands) == 0:
-            return RPNExpression(float("nan"), unit_info[""], "#000000")
+            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
 
         maximum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
@@ -1065,8 +1065,8 @@ class Percent(ABCMetricOperation):
     reference: ABCMetricOperation
     metric: Metric
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> RPNExpression:
-        return RPNExpression(
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        return MetricExpressionResult(
             (
                 Fraction(
                     dividend=Product([ConstantFloat(100.0), self.reference]),
@@ -1156,7 +1156,7 @@ def _parse_single_expression(
 
 
 @dataclass(frozen=True)
-class RPNExpressionSpec:
+class MetricExpression:
     operation: ABCMetricOperation
     explicit_unit_name: str | None = None
     explicit_color: str | None = None
@@ -1175,17 +1175,17 @@ class RPNExpressionSpec:
 def _parse_expression(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
-) -> RPNExpressionSpec:
+) -> MetricExpression:
     if isinstance(expression, int):
-        return RPNExpressionSpec(ConstantInt(expression))
+        return MetricExpression(ConstantInt(expression))
 
     if isinstance(expression, float):
-        return RPNExpressionSpec(ConstantFloat(expression))
+        return MetricExpression(ConstantFloat(expression))
 
     expression, explicit_unit_name, explicit_color = split_expression(expression)
 
     if len(parts := expression.split(",")) == 1:
-        return RPNExpressionSpec(
+        return MetricExpression(
             _parse_single_expression(parts[0], translated_metrics),
             explicit_unit_name,
             explicit_color,
@@ -1234,16 +1234,16 @@ def _parse_expression(
             _parse_single_expression(operands.pop(0), translated_metrics),
         )
 
-    return RPNExpressionSpec(operand, explicit_unit_name, explicit_color)
+    return MetricExpression(operand, explicit_unit_name, explicit_color)
 
 
 def evaluate(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
-) -> RPNExpression:
+) -> MetricExpressionResult:
     rpn_expr_spec = _parse_expression(expression, translated_metrics)
     evaluated_operation = rpn_expr_spec.operation.evaluate(translated_metrics)
-    return RPNExpression(
+    return MetricExpressionResult(
         evaluated_operation.value,
         (
             unit_info[rpn_expr_spec.explicit_unit_name]

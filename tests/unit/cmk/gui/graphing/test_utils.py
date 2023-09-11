@@ -19,8 +19,8 @@ from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._utils import (
     _hex_color_to_rgb_color,
     AutomaticDict,
+    MetricExpressionResult,
     NormalizedPerfData,
-    RPNExpression,
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -910,7 +910,7 @@ def test_evaluate(
     assert utils.evaluate(
         raw_expression,
         utils.translate_metrics(perf_data, check_command),
-    ) == RPNExpression(value, utils.unit_info[unit_name], color)
+    ) == MetricExpressionResult(value, utils.unit_info[unit_name], color)
 
 
 @pytest.mark.parametrize(

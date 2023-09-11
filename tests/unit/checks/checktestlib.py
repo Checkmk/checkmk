@@ -489,7 +489,7 @@ class MockHostExtraConf:
         # we can't use get_config_cache here because it may lead to flakiness
         config_cache = cmk.base.config.reset_config_cache()
         self.context = mock.patch.object(
-            config_cache,
+            config_cache.ruleset_matcher,
             self.target,
             # I'm the MockObj myself!
             new_callable=lambda: self,

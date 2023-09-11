@@ -881,7 +881,9 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         providers,
         [
             (name, p.sections)
-            for name, p in DiscoveryPluginMapper(config_cache=config_cache).items()
+            for name, p in DiscoveryPluginMapper(
+                ruleset_matcher=config_cache.ruleset_matcher
+            ).items()
         ],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
@@ -995,8 +997,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             fetcher=fetcher,
             section_plugins=SectionPluginMapper(),
             section_error_handling=lambda *args, **kw: "error",
-            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-            plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
             run_plugin_names=EVERYTHING,
             ignore_plugin=lambda *args, **kw: False,
             arg_only_new=False,
@@ -1296,7 +1298,7 @@ def test__discovery_considers_host_labels(
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -1447,7 +1449,7 @@ def test__discover_host_labels_and_services_on_realhost(
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -1477,7 +1479,7 @@ def test__perform_host_label_discovery_on_realhost(
         ),
         current=discover_host_labels(
             scenario.hostname,
-            HostLabelPluginMapper(config_cache=scenario.config_cache),
+            HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
             providers=scenario.providers,
             on_error=OnError.RAISE,
         ),
@@ -1510,7 +1512,7 @@ def test__discover_services_on_cluster(
         scenario.parent,
         cluster_nodes=nodes,
         providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
+        plugins=DiscoveryPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
         ignore_plugin=lambda *args, **kw: False,
         get_effective_host=lambda *args, **kw: scenario.parent,
         get_service_description=config.service_description,
@@ -1537,7 +1539,7 @@ def test__perform_host_label_discovery_on_cluster(
         discovered_host_labels={
             node: discover_host_labels(
                 node,
-                HostLabelPluginMapper(config_cache=scenario.config_cache),
+                HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
             )

@@ -290,8 +290,10 @@ class AutomationDiscovery(DiscoveryAutomation):
                     ),
                     section_plugins=SectionPluginMapper(),
                     section_error_handling=section_error_handling,
-                    host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-                    plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                    host_label_plugins=HostLabelPluginMapper(
+                        ruleset_matcher=config_cache.ruleset_matcher
+                    ),
+                    plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
                     ignore_service=config_cache.service_ignored,
                     ignore_plugin=config_cache.check_plugin_ignored,
                     get_effective_host=config_cache.effective_host,
@@ -513,7 +515,7 @@ def _execute_discovery(
                 host_name=host_name,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
             check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
@@ -523,7 +525,7 @@ def _execute_discovery(
                     entry.parameters,
                 )
             ),
-            discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
             ignore_service=config_cache.service_ignored,
             ignore_plugin=config_cache.check_plugin_ignored,
             get_effective_host=config_cache.effective_host,
@@ -586,8 +588,8 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
     section_plugins = SectionPluginMapper()
-    host_label_plugins = HostLabelPluginMapper(config_cache=config_cache)
-    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    host_label_plugins = HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
+    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
     get_service_description = config.service_description
     on_error = OnError.IGNORE
 

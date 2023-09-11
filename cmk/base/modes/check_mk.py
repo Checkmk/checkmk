@@ -1676,8 +1676,10 @@ def mode_check_discovery(
                     host_name=hostname,
                     rtc_package=None,
                 ),
-                host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-                plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=config_cache.ruleset_matcher
+                ),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
                 ignore_service=config_cache.service_ignored,
                 ignore_plugin=config_cache.check_plugin_ignored,
                 get_effective_host=config_cache.effective_host,
@@ -1976,8 +1978,10 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 fetcher=fetcher,
                 section_plugins=SectionPluginMapper(),
                 section_error_handling=section_error_handling,
-                host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-                plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=config_cache.ruleset_matcher
+                ),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
                 run_plugin_names=run_plugin_names,
                 ignore_plugin=config_cache.check_plugin_ignored,
                 arg_only_new=options["discover"] == 1,

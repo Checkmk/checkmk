@@ -159,7 +159,8 @@ def host_ruleset():
 
 
 def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf(HostName("host1"), host_ruleset) == [
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.host_extra_conf(HostName("host1"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -169,7 +170,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
         {"9": True},
     ]
 
-    assert ts.config_cache.host_extra_conf(HostName("host2"), host_ruleset) == [
+    assert ruleset_matcher.host_extra_conf(HostName("host2"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"8": True},
@@ -177,7 +178,8 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
 
 
 def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
         "1": True,
         "2": True,
         "3": True,
@@ -187,7 +189,7 @@ def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[ob
         "9": True,
     }
 
-    assert ts.config_cache.host_extra_conf_merged(HostName("host2"), host_ruleset) == {
+    assert ruleset_matcher.host_extra_conf_merged(HostName("host2"), host_ruleset) == {
         "1": True,
         "2": True,
         "8": True,
@@ -335,38 +337,38 @@ def test_in_boolean_serviceconf_list(
 
 
 def test_all_matching_hosts(ts: Scenario) -> None:
-    config_cache = ts.config_cache
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}}, with_foreign_hosts=False
     ) == {"host1", "host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): TagID("test")}}, with_foreign_hosts=False
     ) == {"host1"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=False
     ) == {"host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=True
     ) == {"host2", "host3"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": []},
             with_foreign_hosts=True,
         )
         == set()
     )
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": ["host1"]},
         with_foreign_hosts=True,
     ) == {"host1"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {
                 "host_tags": {TagGroupID("agent"): {"$ne": TagID("no-agent")}},
                 "host_name": ["host1"],
@@ -376,23 +378,23 @@ def test_all_matching_hosts(ts: Scenario) -> None:
         == set()
     )
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "h"}]},
         with_foreign_hosts=False,
     ) == {"host1", "host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2"}]},
         with_foreign_hosts=False,
     ) == {"host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2$"}]},
         with_foreign_hosts=False,
     ) == {"host2"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "2"}]},
             with_foreign_hosts=False,
         )

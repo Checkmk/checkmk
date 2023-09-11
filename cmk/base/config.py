@@ -85,6 +85,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     LabelSources,
+    RulesetMatcher,
     RulesetMatchObject,
     RulesetName,
     RuleSpec,
@@ -946,7 +947,7 @@ def get_shadow_hosts() -> ShadowHosts:
 
 
 def _filter_active_hosts(
-    config_cache: ConfigCache, hostlist: Iterable[HostName], keep_offline_hosts: bool = False
+    matcher: RulesetMatcher, hostlist: Iterable[HostName], keep_offline_hosts: bool = False
 ) -> list[HostName]:
     """Returns a set of active hosts for this site"""
     if only_hosts is None:
@@ -963,16 +964,14 @@ def _filter_active_hosts(
         if keep_offline_hosts:
             return list(hostlist)
         return [
-            hostname
-            for hostname in hostlist
-            if config_cache.in_binary_hostlist(hostname, only_hosts)
+            hostname for hostname in hostlist if matcher.in_binary_hostlist(hostname, only_hosts)
         ]
 
     return [
         hostname
         for hostname in hostlist
         if _host_is_member_of_site(hostname, distributed_wato_site)
-        and (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts))
+        and (keep_offline_hosts or matcher.in_binary_hostlist(hostname, only_hosts))
     ]
 
 
@@ -991,7 +990,7 @@ def duplicate_hosts() -> Sequence[HostName]:
             # This function should only be used during duplicate host check! It has to work like
             # all_active_hosts() but with the difference that duplicates are not removed.
             _filter_active_hosts(
-                get_config_cache(),
+                get_config_cache().ruleset_matcher,
                 strip_tags(list(all_hosts) + list(clusters) + list(get_shadow_hosts())),
             )
         ).items()
@@ -1006,10 +1005,11 @@ def duplicate_hosts() -> Sequence[HostName]:
 # This is not optimized for performance, so use in specific situations.
 def all_offline_hosts() -> set[HostName]:
     config_cache = get_config_cache()
+    matcher = config_cache.ruleset_matcher
 
     hostlist = set(
         _filter_active_hosts(
-            config_cache,
+            matcher,
             config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
             keep_offline_hosts=True,
         )
@@ -1019,23 +1019,20 @@ def all_offline_hosts() -> set[HostName]:
         return set()
 
     return {
-        hostname
-        for hostname in hostlist
-        if not config_cache.in_binary_hostlist(hostname, only_hosts)
+        hostname for hostname in hostlist if not matcher.in_binary_hostlist(hostname, only_hosts)
     }
 
 
 def all_configured_offline_hosts() -> set[HostName]:
     config_cache = get_config_cache()
+    matcher = config_cache.ruleset_matcher
     hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
 
     if only_hosts is None:
         return set()
 
     return {
-        hostname
-        for hostname in hostlist
-        if not config_cache.in_binary_hostlist(hostname, only_hosts)
+        hostname for hostname in hostlist if not matcher.in_binary_hostlist(hostname, only_hosts)
     }
 
 
@@ -1170,8 +1167,8 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
 
 def get_plugin_parameters(
     host_name: HostName,
+    matcher: RulesetMatcher,
     *,
-    config_cache: ConfigCache,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
@@ -1188,7 +1185,7 @@ def get_plugin_parameters(
     rules = rules_getter_function(ruleset_name)
 
     if ruleset_type == "all":
-        host_rules = config_cache.host_extra_conf(host_name, rules)
+        host_rules = matcher.host_extra_conf(host_name, rules)
         host_rules.append(default_parameters)
         return [Parameters(d) for d in host_rules]
 
@@ -1196,7 +1193,7 @@ def get_plugin_parameters(
         return Parameters(
             {
                 **default_parameters,
-                **config_cache.host_extra_conf_merged(host_name, rules),
+                **matcher.host_extra_conf_merged(host_name, rules),
             }
         )
 
@@ -1236,7 +1233,7 @@ def service_description(
         function=__discovery_function,
         parameters=functools.partial(
             get_plugin_parameters,
-            config_cache=config_cache,
+            matcher=config_cache.ruleset_matcher,
             default_parameters=check_plugin.discovery_default_parameters,
             ruleset_name=check_plugin.discovery_ruleset_name,
             ruleset_type=check_plugin.discovery_ruleset_type,
@@ -1364,7 +1361,7 @@ def is_cmc() -> bool:
 
 def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
-    rules = get_config_cache().host_extra_conf(hostname, piggyback_translation)
+    rules = get_config_cache().ruleset_matcher.host_extra_conf(hostname, piggyback_translation)
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         translations.update(rule)
@@ -1376,7 +1373,9 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     with contextlib.suppress(KeyError):
         return translations_cache[hostname]
 
-    rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
+    rules = get_config_cache().ruleset_matcher.host_extra_conf(
+        hostname, service_description_translation
+    )
     rule: cmk.utils.translations.TranslationOptionsSpec
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
@@ -1989,7 +1988,7 @@ def _get_checkgroup_parameters(
     try:
         # checks without an item
         if item is None and checkgroup not in service_rule_groups:
-            return config_cache.host_extra_conf(host, rules)
+            return config_cache.ruleset_matcher.host_extra_conf(host, rules)
 
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
@@ -2145,8 +2144,12 @@ class ConfigCache:
             all_configured_hosts=self._all_configured_hosts,
         )
 
-        self._all_active_clusters = set(_filter_active_hosts(self, self._all_configured_clusters))
-        self._all_active_realhosts = set(_filter_active_hosts(self, self._all_configured_realhosts))
+        self._all_active_clusters = set(
+            _filter_active_hosts(self.ruleset_matcher, self._all_configured_clusters)
+        )
+        self._all_active_realhosts = set(
+            _filter_active_hosts(self.ruleset_matcher, self._all_configured_realhosts)
+        )
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
@@ -2203,7 +2206,7 @@ class ConfigCache:
         return self.translate_commandline(
             host_name,
             ip_address,
-            self.host_extra_conf(host_name, datasource_programs)[0],
+            self.ruleset_matcher.host_extra_conf(host_name, datasource_programs)[0],
         )
 
     def make_special_agent_cmdline(
@@ -2359,14 +2362,14 @@ class ConfigCache:
                 ),
                 port=self._snmp_port(host_name),
                 is_bulkwalk_host=(
-                    self.in_binary_hostlist(
+                    self.ruleset_matcher.in_binary_hostlist(
                         host_name,
                         bulkwalk_hosts
                         if source_type is SourceType.HOST
                         else management_bulkwalk_hosts,
                     )
                 ),
-                is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(
+                is_snmpv2or3_without_bulkwalk_host=self.ruleset_matcher.in_binary_hostlist(
                     host_name, snmpv2c_hosts
                 ),
                 bulk_walk_size_of=self._bulk_walk_size(host_name),
@@ -2374,10 +2377,10 @@ class ConfigCache:
                 oid_range_limits={
                     SectionName(name): rule
                     for name, rule in reversed(
-                        self.host_extra_conf(host_name, snmp_limit_oid_range)
+                        self.ruleset_matcher.host_extra_conf(host_name, snmp_limit_oid_range)
                     )
                 },
-                snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
+                snmpv3_contexts=self.ruleset_matcher.host_extra_conf(host_name, snmpv3_contexts),
                 character_encoding=self._snmp_character_encoding(host_name),
                 snmp_backend=self.get_snmp_backend(host_name),
             ),
@@ -2537,7 +2540,7 @@ class ConfigCache:
                 for checkgroup_name, ruleset in static_checks.items()
                 for check_plugin_name, item, params in (
                     ConfigCache._sanitize_enforced_entry(*entry)
-                    for entry in reversed(self.host_extra_conf(hostname, ruleset))
+                    for entry in reversed(self.ruleset_matcher.host_extra_conf(hostname, ruleset))
                 )
                 if (descr := service_description(hostname, check_plugin_name, item))
             },
@@ -2567,7 +2570,7 @@ class ConfigCache:
 
             # 'host_extra_conf' is already cached thus we can
             # use it after every check cycle.
-            entries = self.host_extra_conf(host_name, rules)
+            entries = self.ruleset_matcher.host_extra_conf(host_name, rules)
 
             if not entries:
                 return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
@@ -2624,7 +2627,7 @@ class ConfigCache:
                     assert_never(protocol)
 
         # If a rule matches, use the first rule for the management board protocol of the host
-        rule_settings = self.host_extra_conf(host_name, management_board_config)
+        rule_settings = self.ruleset_matcher.host_extra_conf(host_name, management_board_config)
         for rule_protocol, credentials in rule_settings:
             if rule_protocol == protocol:
                 return credentials
@@ -2657,7 +2660,9 @@ class ConfigCache:
 
         # Alias by rule matching
         default: Sequence[RuleSpec[HostName]] = []
-        aliases = self.host_extra_conf(host_name, extra_host_conf.get("alias", default))
+        aliases = self.ruleset_matcher.host_extra_conf(
+            host_name, extra_host_conf.get("alias", default)
+        )
 
         # First rule match and Fallback alias
         return aliases[0] if aliases else host_name
@@ -2673,7 +2678,7 @@ class ConfigCache:
             parent_candidates.update(explicit_parents.split(","))
 
         # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
-        for parent_names in self.host_extra_conf(host_name, parents):
+        for parent_names in self.ruleset_matcher.host_extra_conf(host_name, parents):
             parent_candidates.update(parent_names.split(","))
 
         return list(parent_candidates.intersection(self.all_active_realhosts()))
@@ -2690,7 +2695,7 @@ class ConfigCache:
                 # An explicit value is already set
                 values = [attrs[key]]
             else:
-                values = self.host_extra_conf(host_name, ruleset)
+                values = self.ruleset_matcher.host_extra_conf(host_name, ruleset)
                 if not values:
                     continue
 
@@ -2739,7 +2744,7 @@ class ConfigCache:
         )
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
-        return self.in_binary_hostlist(host_name, dyndns_hosts)
+        return self.ruleset_matcher.in_binary_hostlist(host_name, dyndns_hosts)
 
     def is_all_agents_host(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_all_agents_host
@@ -2767,7 +2772,7 @@ class ConfigCache:
             ):
                 return dataclasses.replace(defaults, commandline_only=True)
 
-            entries = self.host_extra_conf(host_name, periodic_discovery)
+            entries = self.ruleset_matcher.host_extra_conf(host_name, periodic_discovery)
             if not entries:
                 return defaults
 
@@ -2797,13 +2802,13 @@ class ConfigCache:
             raise ValueError(plugin)
 
         default: Sequence[RuleSpec[object]] = []
-        return self.host_extra_conf_merged(
+        return self.ruleset_matcher.host_extra_conf_merged(
             host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
     def custom_checks(self, host_name: HostName) -> list[dict]:
         """Return the free form configured custom checks without formalization"""
-        return self.host_extra_conf(host_name, custom_checks)
+        return self.ruleset_matcher.host_extra_conf(host_name, custom_checks)
 
     def active_checks(self, host_name: HostName) -> list[tuple[str, list[Any]]]:
         """Returns the list of active checks configured for this host
@@ -2820,7 +2825,7 @@ class ConfigCache:
                 if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
                     continue
 
-                entries = self.host_extra_conf(host_name, ruleset)
+                entries = self.ruleset_matcher.host_extra_conf(host_name, ruleset)
                 if not entries:
                     continue
 
@@ -2874,7 +2879,7 @@ class ConfigCache:
             # We now sort the matching special agents by their name to at least get
             # a deterministic order of the special agents.
             for agentname, ruleset in sorted(special_agents.items()):
-                params = self.host_extra_conf(host_name, ruleset)
+                params = self.ruleset_matcher.host_extra_conf(host_name, ruleset)
                 if params:
                     matched.append((agentname, params[0]))
             return matched
@@ -2891,7 +2896,7 @@ class ConfigCache:
         (Nagios requires each host to be member of at least on group)."""
 
         def hostgroups_impl() -> Sequence[str]:
-            groups = self.host_extra_conf(host_name, host_groups)
+            groups = self.ruleset_matcher.host_extra_conf(host_name, host_groups)
             return groups or [default_host_group]
 
         with contextlib.suppress(KeyError):
@@ -2917,7 +2922,7 @@ class ConfigCache:
             #
             # It would be clearer to have independent rulesets for this...
             folder_cgrs = []
-            for entry in self.host_extra_conf(host_name, host_contactgroups):
+            for entry in self.ruleset_matcher.host_extra_conf(host_name, host_contactgroups):
                 if isinstance(entry, list):
                     folder_cgrs.append(entry)
                 else:
@@ -2939,7 +2944,7 @@ class ConfigCache:
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
         def explicit_check_command_impl() -> HostCheckCommand:
-            entries = self.host_extra_conf(host_name, host_check_commands)
+            entries = self.ruleset_matcher.host_extra_conf(host_name, host_check_commands)
             if not entries:
                 return None
 
@@ -2964,7 +2969,7 @@ class ConfigCache:
         return default_host_check_command
 
     def _missing_sys_description(self, host_name: HostName) -> bool:
-        return self.in_binary_hostlist(host_name, snmp_without_sys_descr)
+        return self.ruleset_matcher.in_binary_hostlist(host_name, snmp_without_sys_descr)
 
     def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
         """Return the fetch interval of SNMP sections in seconds
@@ -2981,7 +2986,7 @@ class ConfigCache:
             # Previous to 1.5 "match" could be a check name (including subchecks) instead of
             # only main check names -> section names. This has been cleaned up, but we still
             # need to be compatible. Strip of the sub check part of "match".
-            for match, minutes in self.host_extra_conf(
+            for match, minutes in self.ruleset_matcher.host_extra_conf(
                 host_name,
                 snmp_check_interval,
             ):
@@ -3000,7 +3005,7 @@ class ConfigCache:
     def disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
         def disabled_snmp_sections_impl() -> frozenset[SectionName]:
             """Return a set of disabled snmp sections"""
-            rules = self.host_extra_conf(host_name, snmp_exclude_sections)
+            rules = self.ruleset_matcher.host_extra_conf(host_name, snmp_exclude_sections)
             merged_section_settings = {"if64adm": True}
             for rule in reversed(rules):
                 for section in rule.get("sections_enabled", ()):
@@ -3142,7 +3147,7 @@ class ConfigCache:
     ) -> Mapping[str, object]:
         def _impl() -> Mapping[str, object]:
             default: Sequence[RuleSpec[object]] = []
-            return self.host_extra_conf_merged(
+            return self.ruleset_matcher.host_extra_conf_merged(
                 host_name, notification_parameters.get(plugin_name, default)
             )
 
@@ -3173,7 +3178,7 @@ class ConfigCache:
     def exit_code_spec(self, hostname: HostName, data_source_id: str | None = None) -> ExitSpec:
         spec: _NestedExitSpec = {}
         # TODO: Can we use host_extra_conf_merged?
-        specs = self.host_extra_conf(hostname, check_mk_exit_status)
+        specs = self.ruleset_matcher.host_extra_conf(hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
 
@@ -3207,11 +3212,11 @@ class ConfigCache:
         return merged_spec
 
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
-        entries = self.host_extra_conf(hostname, inv_retention_intervals)
+        entries = self.ruleset_matcher.host_extra_conf(hostname, inv_retention_intervals)
         return entries[0] if entries else []
 
     def service_level(self, hostname: HostName) -> int | None:
-        entries = self.host_extra_conf(hostname, host_service_levels)
+        entries = self.ruleset_matcher.host_extra_conf(hostname, host_service_levels)
         return entries[0] if entries else None
 
     def _snmp_credentials(self, host_name: HostName | HostAddress) -> SNMPCredentials:
@@ -3223,7 +3228,7 @@ class ConfigCache:
         """
         with contextlib.suppress(KeyError):
             return explicit_snmp_communities[host_name]
-        if communities := self.host_extra_conf(host_name, snmp_communities):
+        if communities := self.ruleset_matcher.host_extra_conf(host_name, snmp_communities):
             return communities[0]
 
         # nothing configured for this host -> use default
@@ -3234,22 +3239,24 @@ class ConfigCache:
         if isinstance(self._snmp_credentials(host_name), tuple):
             return False  # v3
 
-        if self.in_binary_hostlist(host_name, bulkwalk_hosts):
+        if self.ruleset_matcher.in_binary_hostlist(host_name, bulkwalk_hosts):
             return False
 
-        return not self.in_binary_hostlist(host_name, snmpv2c_hosts)
+        return not self.ruleset_matcher.in_binary_hostlist(host_name, snmpv2c_hosts)
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and cmk_version.edition() is not cmk_version.Edition.CRE
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
-        if self.in_binary_hostlist(host_name, usewalk_hosts):
+        if self.ruleset_matcher.in_binary_hostlist(host_name, usewalk_hosts):
             return SNMPBackendEnum.STORED_WALK
 
         with_inline_snmp = ConfigCache._is_inline_backend_supported()
 
-        if host_backend_config := self.host_extra_conf(host_name, snmp_backend_hosts):
+        if host_backend_config := self.ruleset_matcher.host_extra_conf(
+            host_name, snmp_backend_hosts
+        ):
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
             if with_inline_snmp and host_backend == "inline":
@@ -3271,7 +3278,7 @@ class ConfigCache:
     def snmp_credentials_of_version(
         self, hostname: HostName, snmp_version: int
     ) -> SNMPCredentials | None:
-        for entry in self.host_extra_conf(hostname, snmp_communities):
+        for entry in self.ruleset_matcher.host_extra_conf(hostname, snmp_communities):
             if snmp_version == 3 and not isinstance(entry, tuple):
                 continue
 
@@ -3283,19 +3290,19 @@ class ConfigCache:
         return None
 
     def _snmp_port(self, hostname: HostName) -> int:
-        ports = self.host_extra_conf(hostname, snmp_ports)
+        ports = self.ruleset_matcher.host_extra_conf(hostname, snmp_ports)
         return ports[0] if ports else 161
 
     def _snmp_timing(self, hostname: HostName) -> SNMPTiming:
-        timing = self.host_extra_conf(hostname, snmp_timing)
+        timing = self.ruleset_matcher.host_extra_conf(hostname, snmp_timing)
         return timing[0] if timing else {}
 
     def _bulk_walk_size(self, hostname: HostName) -> int:
-        bulk_sizes = self.host_extra_conf(hostname, snmp_bulk_size)
+        bulk_sizes = self.ruleset_matcher.host_extra_conf(hostname, snmp_bulk_size)
         return bulk_sizes[0] if bulk_sizes else 10
 
     def _snmp_character_encoding(self, hostname: HostName) -> str | None:
-        entries = self.host_extra_conf(hostname, snmp_character_encodings)
+        entries = self.ruleset_matcher.host_extra_conf(hostname, snmp_character_encodings)
         return entries[0] if entries else None
 
     @staticmethod
@@ -3344,7 +3351,7 @@ class ConfigCache:
 
     def default_address_family(self, hostname: HostName | HostAddress) -> socket.AddressFamily:
         def primary_ip_address_family_of() -> socket.AddressFamily:
-            rules = self.host_extra_conf(hostname, primary_address_family)
+            rules = self.ruleset_matcher.host_extra_conf(hostname, primary_address_family)
             return socket.AF_INET6 if rules and rules[0] == "ipv6" else socket.AF_INET
 
         def is_ipv6_primary() -> bool:
@@ -3368,7 +3375,7 @@ class ConfigCache:
         ).exists()
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
-        if rules := self.host_extra_conf(host_name, piggybacked_host_files):
+        if rules := self.ruleset_matcher.host_extra_conf(host_name, piggybacked_host_files):
             return self._flatten_piggybacked_host_files_rule(host_name, rules[0])
         return []
 
@@ -3913,31 +3920,6 @@ class ConfigCache:
 
         return _translate_host_macros(_translate_legacy_macros(template))
 
-    def host_extra_conf_merged(
-        self, hostname: HostName, ruleset: Iterable[RuleSpec]
-    ) -> Mapping[str, Any]:
-        return self.ruleset_matcher.get_host_ruleset_merged_dict(
-            RulesetMatchObject(hostname),
-            ruleset,
-        )
-
-    def host_extra_conf(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
-    ) -> list:
-        return list(
-            self.ruleset_matcher.get_host_ruleset_values(
-                RulesetMatchObject(hostname),
-                ruleset,
-                is_binary=False,
-            )
-        )
-
-    # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
-    ) -> bool:
-        return self.ruleset_matcher.is_matching_host_ruleset(RulesetMatchObject(hostname), ruleset)
-
     def service_extra_conf(
         self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
     ) -> list:
@@ -3987,7 +3969,7 @@ class ConfigCache:
         check_plugin_name: CheckPluginName,
     ) -> bool:
         def _checktype_ignored_for_host(check_plugin_name_str: str) -> bool:
-            ignored = self.host_extra_conf(host_name, ignored_checks)
+            ignored = self.ruleset_matcher.host_extra_conf(host_name, ignored_checks)
             for e in ignored:
                 if check_plugin_name_str in e:
                     return True
@@ -4166,15 +4148,15 @@ class ConfigCache:
         return "Check_MK inventory"
 
     def _agent_port(self, host_name: HostName) -> int:
-        ports = self.host_extra_conf(host_name, agent_ports)
+        ports = self.ruleset_matcher.host_extra_conf(host_name, agent_ports)
         return ports[0] if ports else agent_port
 
     def _tcp_connect_timeout(self, host_name: HostName) -> float:
-        timeouts = self.host_extra_conf(host_name, tcp_connect_timeouts)
+        timeouts = self.ruleset_matcher.host_extra_conf(host_name, tcp_connect_timeouts)
         return timeouts[0] if timeouts else tcp_connect_timeout
 
     def _encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
-        if not (settings := self.host_extra_conf(host_name, encryption_handling)):
+        if not (settings := self.ruleset_matcher.host_extra_conf(host_name, encryption_handling)):
             return TCPEncryptionHandling.ANY_AND_PLAIN
         match settings[0]["accept"]:
             case "tls_encrypted_only":
@@ -4187,15 +4169,19 @@ class ConfigCache:
 
     def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:
         return (
-            settings[0] if (settings := self.host_extra_conf(host_name, agent_encryption)) else None
+            settings[0]
+            if (settings := self.ruleset_matcher.host_extra_conf(host_name, agent_encryption))
+            else None
         )
 
     def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
-        settings = self.host_extra_conf(host_name, agent_exclude_sections)
+        settings = self.ruleset_matcher.host_extra_conf(host_name, agent_exclude_sections)
         return settings[0] if settings else {}
 
     def agent_target_version(self, host_name: HostName) -> _AgentTargetVersion:
-        agent_target_versions = self.host_extra_conf(host_name, check_mk_agent_target_versions)
+        agent_target_versions = self.ruleset_matcher.host_extra_conf(
+            host_name, check_mk_agent_target_versions
+        )
         if not agent_target_versions:
             return None
 
@@ -4216,13 +4202,13 @@ class ConfigCache:
         if not ruleset:
             return None
 
-        entries = self.host_extra_conf(host_name, ruleset)
+        entries = self.ruleset_matcher.host_extra_conf(host_name, ruleset)
         return entries[0] if entries else None
 
     def ping_levels(self, host_name: HostName) -> PingLevels:
         levels: PingLevels = {}
 
-        values = self.host_extra_conf(host_name, ping_levels)
+        values = self.ruleset_matcher.host_extra_conf(host_name, ping_levels)
         # TODO: Use host_extra_conf_merged?)
         for value in values[::-1]:  # make first rules have precedence
             levels.update(value)
@@ -4230,7 +4216,7 @@ class ConfigCache:
         return levels
 
     def icons_and_actions(self, host_name: HostName) -> list[str]:
-        return list(set(self.host_extra_conf(host_name, host_icons_and_actions)))
+        return list(set(self.ruleset_matcher.host_extra_conf(host_name, host_icons_and_actions)))
 
 
 def get_config_cache() -> ConfigCache:
@@ -4406,7 +4392,7 @@ class CEEConfigCache(ConfigCache):
         if description is None:
             return next(
                 iter(
-                    self.host_extra_conf(
+                    self.ruleset_matcher.host_extra_conf(
                         hostname,
                         cmc_graphite_host_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
                     )
@@ -4441,7 +4427,7 @@ class CEEConfigCache(ConfigCache):
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {
-            varname: self.host_extra_conf(hostname, ruleset)
+            varname: self.ruleset_matcher.host_extra_conf(hostname, ruleset)
             for varname, ruleset in CEEConfigCache._agent_config_rulesets()
         }
 
@@ -4481,19 +4467,21 @@ class CEEHostConfig:
 
     @property
     def rrd_config(self) -> RRDConfig | None:
-        entries = self._config_cache.host_extra_conf(self.hostname, cmc_host_rrd_config)
+        entries = self._config_cache.ruleset_matcher.host_extra_conf(
+            self.hostname, cmc_host_rrd_config
+        )
         return entries[0] if entries else None
 
     @property
     def recurring_downtimes(self) -> list[RecurringDowntime]:
-        return self._config_cache.host_extra_conf(
+        return self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname,
             host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
     @property
     def flap_settings(self) -> tuple[float, float, float]:
-        values = self._config_cache.host_extra_conf(
+        values = self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname,
             cmc_host_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
@@ -4503,7 +4491,7 @@ class CEEHostConfig:
 
     @property
     def log_long_output(self) -> bool:
-        entries = self._config_cache.host_extra_conf(
+        entries = self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname,
             cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
@@ -4511,7 +4499,7 @@ class CEEHostConfig:
 
     @property
     def state_translation(self) -> dict:
-        entries = self._config_cache.host_extra_conf(
+        entries = self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname,
             host_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
@@ -4524,7 +4512,7 @@ class CEEHostConfig:
     @property
     def smartping_settings(self) -> dict:
         settings = {"timeout": 2.5}
-        settings |= self._config_cache.host_extra_conf_merged(
+        settings |= self._config_cache.ruleset_matcher.host_extra_conf_merged(
             self.hostname,
             cmc_smartping_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
@@ -4533,14 +4521,14 @@ class CEEHostConfig:
     @property
     def lnx_remote_alert_handlers(self) -> list[dict[str, str]]:
         default: Sequence[RuleSpec[object]] = []
-        return self._config_cache.host_extra_conf(
+        return self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )
 
     def rtc_secret(self) -> str | None:
         default: Sequence[RuleSpec[object]] = []
         if not (
-            settings := self._config_cache.host_extra_conf(
+            settings := self._config_cache.ruleset_matcher.host_extra_conf(
                 self.hostname, agent_config.get("real_time_checks", default)
             )
         ):

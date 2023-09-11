@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -206,6 +206,12 @@ class RulesetMatcher:
             object,
         ] = {}
 
+    # TODO: Cleanup external in_binary_hostlist call sites
+    def in_binary_hostlist(
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
+    ) -> bool:
+        return self.is_matching_host_ruleset(RulesetMatchObject(hostname), ruleset)
+
     def is_matching_host_ruleset(
         self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[bool]]
     ) -> bool:
@@ -223,6 +229,11 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
+    def host_extra_conf_merged(
+        self, hostname: HostName, ruleset: Iterable[RuleSpec]
+    ) -> Mapping[str, Any]:
+        return self.get_host_ruleset_merged_dict(RulesetMatchObject(hostname), ruleset)
+
     def get_host_ruleset_merged_dict(
         self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
     ) -> Mapping[str, TRuleValue]:
@@ -236,6 +247,17 @@ class RulesetMatcher:
         )
         assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
         return merged
+
+    def host_extra_conf(
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
+    ) -> list:
+        return list(
+            self.get_host_ruleset_values(
+                RulesetMatchObject(hostname),
+                ruleset,
+                is_binary=False,
+            )
+        )
 
     def get_host_ruleset_values(
         self,

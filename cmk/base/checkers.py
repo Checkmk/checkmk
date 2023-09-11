@@ -24,6 +24,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -319,9 +320,9 @@ class SectionPluginMapper(SectionMap[SectionPlugin]):
 
 
 class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
-    def __init__(self, *, config_cache: ConfigCache) -> None:
+    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
         super().__init__()
-        self.config_cache: Final = config_cache
+        self.ruleset_matcher: Final = ruleset_matcher
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
         plugin = _api.get_section_plugin(__key)
@@ -329,7 +330,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
             function=plugin.host_label_function,
             parameters=partial(
                 config.get_plugin_parameters,
-                config_cache=self.config_cache,
+                matcher=self.ruleset_matcher,
                 default_parameters=plugin.host_label_default_parameters,
                 ruleset_name=plugin.host_label_ruleset_name,
                 ruleset_type=plugin.host_label_ruleset_type,
@@ -689,9 +690,9 @@ def _final_read_only_check_parameters(
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     # See comment to SectionPluginMapper.
-    def __init__(self, *, config_cache: ConfigCache) -> None:
+    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
         super().__init__()
-        self.config_cache: Final = config_cache
+        self.ruleset_matcher: Final = ruleset_matcher
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plugins and
@@ -720,7 +721,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             function=__discovery_function,
             parameters=partial(
                 config.get_plugin_parameters,
-                config_cache=self.config_cache,
+                matcher=self.ruleset_matcher,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,

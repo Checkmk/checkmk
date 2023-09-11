@@ -3560,8 +3560,17 @@ class ConfigCache:
         except KeyError:
             return {}
 
+    def cache_ruleset_match_object_of_service(
+        self, hostname: HostName, svc_desc: ServiceName, labels: Labels
+    ) -> None:
+        cache_id = (hostname, svc_desc)
+        if cache_id not in self._cache_match_object_service:
+            self._cache_match_object_service[cache_id] = RulesetMatchObject(
+                hostname, svc_desc, labels
+            )
+
     def ruleset_match_object_of_service(
-        self, hostname: HostName, svc_desc: ServiceName, svc_labels: Labels | None = None
+        self, hostname: HostName, svc_desc: ServiceName
     ) -> RulesetMatchObject:
         """Construct the object that is needed to match this service to rulesets
 
@@ -3576,22 +3585,29 @@ class ConfigCache:
         """
 
         cache_id = (hostname, svc_desc)
-        if cache_id in self._cache_match_object_service:
+        with contextlib.suppress(KeyError):
             return self._cache_match_object_service[cache_id]
-        if svc_labels is None:
-            svc_labels = self.ruleset_matcher.labels_of_service(hostname, svc_desc)
-        result = RulesetMatchObject(
-            host_name=hostname, service_description=svc_desc, service_labels=svc_labels
+
+        return self._cache_match_object_service.setdefault(
+            cache_id,
+            RulesetMatchObject(
+                host_name=hostname,
+                service_description=svc_desc,
+                service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
+            ),
         )
-        self._cache_match_object_service[cache_id] = result
-        return result
+
+    def cache_ruleset_match_object_for_checkgroup_parameters(
+        self, hostname: HostName, item: Item, svc_desc: ServiceName, labels: Labels
+    ) -> None:
+        cache_id = (hostname, item, svc_desc)
+        if cache_id not in self._cache_match_object_service_checkgroup:
+            self._cache_match_object_service_checkgroup[cache_id] = RulesetMatchObject(
+                hostname, svc_desc, labels
+            )
 
     def ruleset_match_object_for_checkgroup_parameters(
-        self,
-        hostname: HostName,
-        item: Item,
-        svc_desc: ServiceName,
-        svc_labels: Labels | None = None,
+        self, hostname: HostName, item: Item, svc_desc: ServiceName
     ) -> RulesetMatchObject:
         """Construct the object that is needed to match checkgroup parameters rulesets
 
@@ -3602,18 +3618,17 @@ class ConfigCache:
         """
 
         cache_id = (hostname, item, svc_desc)
-        if cache_id in self._cache_match_object_service_checkgroup:
+        with contextlib.suppress(KeyError):
             return self._cache_match_object_service_checkgroup[cache_id]
 
-        result = RulesetMatchObject(
-            host_name=hostname,
-            service_description=item,
-            service_labels=svc_labels
-            if svc_labels is not None
-            else self.ruleset_matcher.labels_of_service(hostname, svc_desc),
+        return self._cache_match_object_service_checkgroup.setdefault(
+            cache_id,
+            RulesetMatchObject(
+                host_name=hostname,
+                service_description=item,
+                service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
+            ),
         )
-        self._cache_match_object_service_checkgroup[cache_id] = result
-        return result
 
     def ruleset_match_object_of_host(self, hostname: HostName | HostAddress) -> RulesetMatchObject:
         """Construct the object that is needed to match the host rulesets
@@ -3624,12 +3639,12 @@ class ConfigCache:
         consequent, but create some overhead.
         """
 
-        if hostname in self._cache_match_object_host:
+        with contextlib.suppress(KeyError):
             return self._cache_match_object_host[hostname]
 
-        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
-        self._cache_match_object_host[hostname] = match_object
-        return match_object
+        return self._cache_match_object_host.get(
+            hostname, ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
+        )
 
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(

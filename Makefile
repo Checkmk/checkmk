@@ -30,10 +30,7 @@ BLACK              := scripts/run-black
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
-DIST_DEPS          := $(CONFIG_DEPS) \
-                      omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe \
-                      omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
-
+DIST_DEPS          := $(CONFIG_DEPS) 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
@@ -248,11 +245,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
-omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
-	$(MAKE) -C omd openhardwaremonitor-dist
-
-omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
-
 ntop-mkp:
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
 
@@ -419,8 +411,6 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude="enterprise/core/src/doc/plantuml.jar"
 
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
-	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe" \
-	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll" \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude="agents/cmk-agent-ctl/target" \
@@ -497,7 +487,6 @@ setup:
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
-	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
 	$(MAKE) -C locale setup
 

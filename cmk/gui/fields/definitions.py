@@ -214,7 +214,7 @@ class FolderField(base.String):
                 raise self.make_error("not_found", folder_id=value)
         return None
 
-    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+    def _serialize(self, value, attr, obj, **kwargs) -> str:  # type: ignore[no-untyped-def]
         if isinstance(value, str):
             if not value.startswith("/"):
                 value = f"/{value}"
@@ -1455,6 +1455,64 @@ class Username(base.String):
             raise self.make_error("should_not_exist", username=value)
 
 
+class FolderIDField(FolderField):
+    """This field represents a folder's path.
+
+    On deserialize, it will also check if the folder exists and will return
+    the path with format 'path/to/folder' or in the case of the main folder,
+    it will return ''.
+
+    e.g.
+    'path~to~folder' -> 'path/to/folder
+    '~' -> ''
+
+    On serialize, it will take the folder path str and replace all / for
+    a ~. The root folder will be returned as '~'.
+
+    e.g.
+    'path/to/folder' -> 'path~to~folder
+    '' -> '~'
+
+    """
+
+    default_error_messages = {
+        "should_exist": "The folder id {folder_id!r} should exist but it doesn't.",
+        "should_not_exist": "The folder id {folder_id!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.presence = presence
+
+    def _deserialize(self, value: str, attr, data, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+        folder: Folder | None = None
+        try:
+            folder = super()._deserialize(value, attr, data)
+        except ValidationError:
+            if self.presence == "should_exist":
+                raise self.make_error("should_exist", folder_id=value)
+
+        if self.presence == "should_not_exist" and folder is not None:
+            raise self.make_error("should_not_exist", folder_id=value)
+
+        if folder is None:
+            return None
+
+        return folder.path()
+
+    def _serialize(self, value: str, attr, obj, **kwargs) -> str:  # type: ignore[no-untyped-def]
+        folder_path = super()._serialize(value, attr, obj, **kwargs)
+        return folder_path.replace("/", "~")
+
+
 __all__ = [
     "host_attributes_field",
     "column_field",
@@ -1462,6 +1520,7 @@ __all__ = [
     "DateTime",
     "ExprSchema",
     "FolderField",
+    "FolderIDField",
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",

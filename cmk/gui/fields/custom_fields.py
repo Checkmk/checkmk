@@ -12,7 +12,6 @@ from cmk.utils.tags import BuiltinTagConfig, TagID
 
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.userdb import connection_choices
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
@@ -269,40 +268,6 @@ class ContactGroupField(fields.String):
         if self.presence == "should_not_exist":
             if value in cgs:
                 raise self.make_error("should_not_exist", contact_group=value)
-
-
-class FolderIDField(fields.String):
-    default_error_messages = {
-        "should_exist": "The folder id {folder_id!r} should exist but it doesn't.",
-        "should_not_exist": "The folder id {folder_id!r} should not exist but it does.",
-    }
-
-    def __init__(
-        self,
-        presence: Literal[
-            "should_exist",
-            "should_not_exist",
-            "ignore",
-        ] = "ignore",
-        description: str = "A folder id",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(
-            description=description,
-            example="~",
-            **kwargs,
-        )
-        self.presence = presence
-
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        folder_ids = [folder_id for _, folder_id in folder_tree().folder_choices_fulltitle()]
-
-        if value in folder_ids and self.presence == "should_not_exist":
-            raise self.make_error("should_not_exist", folder_id=value)
-        if value not in folder_ids and self.presence == "should_exist":
-            raise self.make_error("should_exist", folder_id=value)
 
 
 class TimePeriodIDField(fields.String):

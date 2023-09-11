@@ -48,7 +48,9 @@ def time_period_option() -> Iterator[str]:
 
 
 def cb_folder_options() -> Iterator[str]:
-    yield "Main"
+    yield "~"
+    yield "~test_folder1"
+    yield "~test_folder1~test_folder2"
 
 
 def cb_list_str_options() -> Iterator[list[str]]:
@@ -366,6 +368,9 @@ def setup_site_data(clients: ClientRegistry) -> None:
         shared=["all"],
         customer="global",
     )
+
+    clients.Folder.create(title="test_folder1", parent="~")
+    clients.Folder.create(title="test_folder2", parent="~test_folder1")
 
 
 @managedtest

@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import yaml
 
@@ -217,7 +217,7 @@ def _verify_check_result(
     result_data: dict[str, Any],
     output_dir: Path,
     mode: CheckModes,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """Verify that the check result is matching the stored canon.
 
     Optionally update the stored canon if it does not match."""

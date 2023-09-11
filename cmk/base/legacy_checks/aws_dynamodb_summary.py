@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable
-from typing import Dict
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
@@ -19,7 +18,7 @@ def discover_aws_dynamodb_summary(section: GenericAWSSection) -> Iterable[tuple[
 
 
 def check_aws_dynamodb_summary(item, params, parsed):
-    tables_by_region: Dict[str, Dict] = {}
+    tables_by_region: dict[str, dict] = {}
 
     for table in parsed:
         tables_by_region.setdefault(AWSRegions[table["Region"]], {})[table["TableName"]] = table

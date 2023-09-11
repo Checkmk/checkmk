@@ -6,7 +6,7 @@
 
 import collections
 from collections.abc import Iterable
-from typing import Dict, List, Tuple
+from typing import List
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
@@ -15,9 +15,9 @@ from cmk.base.config import check_info
 
 def check_ucs_c_rack_server_faultinst(
     _item: None,
-    _params: Dict,
-    parsed: Dict[str, List[str]],
-) -> Iterable[Tuple[int, str]]:
+    _params: dict,
+    parsed: dict[str, List[str]],
+) -> Iterable[tuple[int, str]]:
     if not parsed:
         yield 0, "No fault instances found"
         return

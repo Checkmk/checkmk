@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable
-from typing import Dict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
@@ -19,7 +18,7 @@ def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[Non
 
 
 def check_aws_wafv2_summary(item, params, parsed):
-    web_acls_by_region: Dict[str, Dict] = {}
+    web_acls_by_region: dict[str, dict] = {}
 
     for web_acl in parsed:
         try:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Iterator, Mapping, NamedTuple, Sequence, Tuple
+from typing import Any, Iterator, Mapping, NamedTuple, Sequence
 
 from cmk.base.check_api import is_ipv6_primary
 from cmk.base.config import active_check_info
@@ -99,7 +99,7 @@ def get_icmp_description_all_ips(params: Mapping[str, Any]) -> str:
 
 def generate_single_address_services(
     address_args: AddressCmdArgs, host_config: Any
-) -> Iterator[Tuple[str, AddressCmdArgs]]:
+) -> Iterator[tuple[str, AddressCmdArgs]]:
     for arg in address_args.address_args:
         if arg == "$_HOSTADDRESSES_4$":
             for macro, ip_address in host_config.indexed_ipv4addresses.items():
@@ -141,7 +141,7 @@ def generate_single_address_services(
 # "$_HOSTADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
 def generate_icmp_services(
     host_config: Any, params: Mapping[str, Any]
-) -> Iterator[Tuple[str, str]]:
+) -> Iterator[tuple[str, str]]:
     multiple_services = params.get("multiple_services", False)
 
     common_args = get_common_arguments(params)

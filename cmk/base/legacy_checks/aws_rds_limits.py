@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import Any, Type
+from typing import Any
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
@@ -21,7 +21,7 @@ def parse_aws_rds_limits(string_table):
             factor = 1024**4 / 1000.0
             limit = limit * factor
             amount = amount * factor
-            human_readable_f: Callable[[Any], str] | Type[int] = get_bytes_human_readable
+            human_readable_f: Callable[[Any], str] | type[int] = get_bytes_human_readable
         else:
             human_readable_f = int
         limits_by_region.setdefault(region, []).append(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Sequence, Tuple
+from typing import Any, Mapping, Sequence
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
@@ -12,7 +12,7 @@ from cmk.base.config import special_agent_info
 
 def agent_proxmox_ve_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: str | None
-) -> Sequence[str | Tuple[str, str, str]]:
+) -> Sequence[str | tuple[str, str, str]]:
     return [
         elem
         for chunk in (

@@ -8,19 +8,19 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from cmk_commands.v1._utils import EnvironmentConfig, HostConfig, Secret
+from cmk.commands.v1._utils import EnvironmentConfig, HostConfig, Secret
 
 _T = TypeVar("_T")
 
 
 @dataclass(frozen=True)
-class SpecialAgentConfig:
+class ActiveService:
+    service_description: str
     command_arguments: Sequence[str | Secret]
-    stdin: str | None = None
 
 
 @dataclass(frozen=True)
-class SpecialAgentCommand(Generic[_T]):
+class ActiveCheckCommand(Generic[_T]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _T]
-    config_function: Callable[[_T, HostConfig, EnvironmentConfig], Iterable[SpecialAgentConfig]]
+    service_function: Callable[[_T, HostConfig, EnvironmentConfig], Iterable[ActiveService]]

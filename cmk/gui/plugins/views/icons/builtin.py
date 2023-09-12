@@ -41,6 +41,8 @@ import json
 import re
 from typing import Dict, List, Set, Tuple, Union
 
+from livestatus import SiteId
+
 import cmk.utils
 import cmk.utils.render
 from cmk.utils.type_defs import TagID
@@ -59,10 +61,11 @@ from cmk.gui.plugins.views.utils import (
     render_cache_info,
     url_to_visual,
 )
+from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -470,7 +473,6 @@ class PredictionIcon(Icon):
                     varname, _value = p.split("=")
                     dsname = varname[8:]
                     urlvars = [
-                        ("site", row["site"]),
                         ("host", row["host_name"]),
                         ("service", row["service_description"]),
                         ("dsname", dsname),
@@ -478,7 +480,11 @@ class PredictionIcon(Icon):
                     return (
                         "prediction",
                         _("Analyse predictive monitoring for this service"),
-                        makeuri_contextless(request, urlvars, "prediction_graph.py"),
+                        (
+                            f"{get_site_config(SiteId(row['site']))['url_prefix']}"
+                            "check_mk/prediction_graph.py?"
+                            f"{urlencode_vars(urlvars)}"
+                        ),
                     )
 
 

@@ -5,7 +5,7 @@
 
 
 from ._paths import PREDICTION_DIR
-from ._plugin_interface import estimate_levels, EstimatedLevels, get_predictive_levels
+from ._plugin_interface import estimate_levels, get_predictive_levels
 from ._prediction import (
     DataStat,
     get_rrd_data,
@@ -14,7 +14,6 @@ from ._prediction import (
     PredictionData,
     PredictionInfo,
     PredictionParameters,
-    PredictionStore,
     rrd_timestamps,
     Seconds,
     Timegroup,
@@ -38,7 +37,6 @@ __all__ = [
     "PredictionData",
     "PredictionInfo",
     "PredictionQuerier",
-    "PredictionStore",
     "PREDICTION_DIR",
     "PredictionParameters",
     "rrd_timestamps",

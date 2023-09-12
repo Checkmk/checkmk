@@ -6,7 +6,7 @@
 import logging
 import math
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
@@ -358,13 +358,6 @@ class PredictionStore:
             / host_name
             / cmk.utils.pnp_cleanup(service_description)
             / cmk.utils.pnp_cleanup(dsname)
-        )
-
-    def available_predictions(self) -> Iterable[PredictionInfo]:
-        return (
-            tg_info
-            for f in self._dir.glob(f"*{INFO_FILE_SUFFIX}")
-            if (tg_info := self.get_info(Timegroup(f.stem))) is not None
         )
 
     def _data_file(self, timegroup: Timegroup) -> Path:

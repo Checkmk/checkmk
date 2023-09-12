@@ -202,6 +202,7 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
+        "experimental_features",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

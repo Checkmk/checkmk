@@ -603,6 +603,33 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableExperimentalFeatures(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "experimental_features"
+
+    def valuespec(self) -> ValueSpec:
+        return Dictionary(
+            title=_("Experimental features"),
+            elements=[
+                (
+                    "use_vue_rendering",
+                    Checkbox(
+                        title=_("Use vue rendering"),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface

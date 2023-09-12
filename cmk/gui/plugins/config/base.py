@@ -604,3 +604,6 @@ class CREConfig:
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
+
+    # Experimental feature flags
+    experimental_features: dict[str, Any] = field(default_factory=dict)

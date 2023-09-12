@@ -31,8 +31,8 @@ class Resource(NamedTuple):
     kind: str | None = None
     location: str | None = None
     tags: Mapping[str, str] = {}
-    properties: Mapping = {}
-    specific_info: Mapping = {}
+    properties: Mapping[Any, Any] = {}
+    specific_info: Mapping[Any, Any] = {}
     metrics: Mapping[str, AzureMetric] = {}
     subscription: str | None = None
 

@@ -373,6 +373,6 @@ STAGES:
     - NAME: 'SQL Check'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SQL_CHECK_FILES
       DIR: 'packages/database_checks/sql_check'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/sql_check.txt"
+      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/sql_check.txt"
       TEXT_ON_SKIP: 'No SQL check files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sql_check.txt"

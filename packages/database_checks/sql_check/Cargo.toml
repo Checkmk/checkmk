@@ -6,6 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# need to compile OpenSSL. See:
+# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
+# https://github.com/rust-cross/rust-musl-cross/issues/44
+openssl = { version = "0.10.57", features = ["vendored"] }
 tokio = { version = "1.32.0", features = [
     "full",
     "rt",

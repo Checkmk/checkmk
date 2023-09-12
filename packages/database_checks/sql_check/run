@@ -17,7 +17,7 @@ usage() {
     echo "  -e, --setup-environment  setup environment"
     echo "  -c, --clean              remove artifacts first"
     echo "  -F, --check-format       check for correct formatting"
-    echo "  -b, --build              build sql_check"
+    echo "  -b, --build              build executable"
     echo "  -U, --build-unit-tests   build unit tests"
     echo "  -u, --unit-tests         run unit tests"
     echo "  -C, --clippy             run clippy linter"

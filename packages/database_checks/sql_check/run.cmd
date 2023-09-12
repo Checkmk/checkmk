@@ -1,6 +1,6 @@
 @echo off
 ::
-:: Script to build/test/sign/deploy sql_check plugin
+:: Script to build/test/sign/deploy
 ::
 :: Prefix worker, standart for NON-COMPOSITE run.cmd
 ::
@@ -8,9 +8,6 @@
 ::
 
 SETLOCAL EnableDelayedExpansion
-call setup_config.cmd
-if ERRORLEVEL 1 powershell Write-Host "Failed to configure" -Foreground Red &&  exit /b 99
-
 
 if "%*" == "" (
 echo: Run default...
@@ -45,7 +42,9 @@ if "%~1"=="--test"          (set worker_arg_test=1)         & shift & goto Check
 if "%~1"=="-D"              (set worker_arg_doc=1)          & shift & goto CheckOpts
 if "%~1"=="--documentation" (set worker_arg_doc=1)          & shift & goto CheckOpts
 
-if "%~1"=="--sign"          (set worker_arg_sign_file=%1) & (set worker_arg_sign_secret=%2)   & (set worker_arg_sign=1) & shift & shift & shift goto CheckOpts
+if "%~1"=="--var"           (set worker_var_name=%~2) & (set worker_var_value=%~3)   & shift & shift & shift & goto CheckOpts
+
+if "%~1"=="--sign"          (set worker_arg_sign_file=%~2) & (set worker_arg_sign_secret=%~3)   & (set worker_arg_sign=1) & shift & shift & shift goto CheckOpts
 )
 if "%worker_arg_all%"=="1" (set worker_arg_clippy=1) & (set worker_arg_build=1) & (set worker_arg_test=1) & (set worker_arg_check_format=1)
 
@@ -55,6 +54,8 @@ set worker_arte=%worker_root_dir%\artefacts
 set ci_root_dir=workdir\workspace
 set ci_junction_to_root_dir=x
 set script_to_run=.\scripts\cargo_build_core.cmd
+call setup_config.cmd
+if ERRORLEVEL 1 powershell Write-Host "Failed to configure" -Foreground Red &&  exit /b 99
 powershell -ExecutionPolicy ByPass -File %worker_root_dir%/scripts/windows/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
 GOTO :EOF
 

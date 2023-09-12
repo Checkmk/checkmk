@@ -7,7 +7,7 @@ set worker_name=controller
 set worker_exe_name=cmk-agent-ctl.exe
 :: relative location 
 set worker_root_dir=%cd%\..\..
-:: Rust only
-set worker_rustup_version=1.72.0
+:: Rust
+set worker_target=i686-pc-windows-msvc
 
 exit /b 0

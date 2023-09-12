@@ -40,7 +40,7 @@ TEST(PlayerTest, Pipe) {
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     {
         std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);

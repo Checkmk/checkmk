@@ -804,7 +804,7 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
                                         Protection protection) {
     if (data_folder.empty()) {
         using tools::win::GetSomeSystemFolder;
-        auto draw_folder = [](std::wstring_view DataFolder) -> auto{
+        auto draw_folder = [](std::wstring_view DataFolder) -> auto {
             fs::path app_data = DataFolder;
             app_data /= kAppDataCompanyName;
             app_data /= kAppDataAppName;
@@ -1752,7 +1752,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
         XLOG::l(XLOG_FLINE + " empty name");
         return LoadCfgStatus::kAllFailed;
     }
-    auto yamls = buildYamlData(config_filename);
+    const auto yamls = buildYamlData(config_filename);
 
     // check root
     auto &root = yamls[0];
@@ -1761,48 +1761,31 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
         return LoadCfgStatus::kAllFailed;
     }
 
-    bool changed = false;
-    for (auto &yd : yamls) {
-        if (yd.changed()) {
-            changed = true;
-            break;
-        }
-    }
-
-    if (!changed) {
+    if (rs::all_of(yamls, [](const auto &v) { return !v.changed(); })) {
         return LoadCfgStatus::kFileLoaded;
     }
 
-    int error_code = 0;
     try {
         auto config = YAML::LoadFile(wtools::ToUtf8(yamls[0].path_.wstring()));
-
         if (config[groups::kGlobal].IsDefined()) {
             mergeYamlData(config, yamls);
 
             if (ok_ && user_ok_ && cache_op == YamlCacheOp::update) {
                 StoreUserYamlToCache();
             }
-            return LoadCfgStatus::kFileLoaded;
         }
-        error_code = ErrorCode::kNotCheckMK;
-
+        ok_ = true;
+        return LoadCfgStatus::kFileLoaded;
     } catch (const YAML::ParserException &e) {
         XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-        error_code = ErrorCode::kMalformed;
     } catch (const YAML::BadFile &e) {
         XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-        error_code = ErrorCode::kMissing;
     } catch (...) {
         XLOG::l.crit("Strange exception");
-        error_code = ErrorCode::kWeird;
     }
 
-    if (error_code != 0) {
-        ok_ = false;
-        return LoadCfgStatus::kAllFailed;
-    }
-    return LoadCfgStatus::kFileLoaded;
+    ok_ = false;
+    return LoadCfgStatus::kAllFailed;
 }
 
 // LOOOONG operation

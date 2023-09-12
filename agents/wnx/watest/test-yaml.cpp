@@ -856,19 +856,18 @@ TEST(AgentConfig, UTF16LE) {
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
 
-    cma::OnStart(cma::AppType::test);
+    OnStartTest();
 }
 
 TEST(AgentConfig, FailScenario_Simulation) {
     auto loader = [](auto &...str) -> bool {
-        auto cfg_files = cma::tools::ConstructVectorWstring(str...);
+        auto cfg_files = tools::ConstructVectorWstring(str...);
 
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
         if (!ret) {
             return false;
         }
-        auto cfg = GetLoadedConfig();
-        return cfg.IsMap();
+        return GetLoadedConfig().IsMap();
     };
 
     details::KillDefaultConfig();
@@ -890,7 +889,7 @@ TEST(AgentConfig, FailScenario_Simulation) {
 
     auto node = GetNode(groups::kGlobal, "xxx2");
     EXPECT_TRUE(node.IsNull() || !node.IsDefined());
-    OnStart(AppType::test);
+    OnStartTest();
     EXPECT_FALSE(loader(L"StranegName.yml"));
 }
 
@@ -928,7 +927,7 @@ TEST(AgentConfig, BackupCheck) {
             user_f, "user:\n  status: 'loaded'\nglobal:\n  port: 111");
     }
     ASSERT_TRUE(temp_fs->reloadConfig());
-    auto expected_name = GetCfg().getCacheDir() / source_name.filename();
+    const auto expected_name = GetCfg().getCacheDir() / source_name.filename();
 
     EXPECT_TRUE(fs::exists(expected_name));
     fs::remove(expected_name);

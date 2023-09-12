@@ -184,9 +184,8 @@ TEST(RealtimeTest, Base_Simulation) {
     // stub
     using namespace std::chrono;
 
-    cma::OnStart(cma::AppType::test);
-    ON_OUT_OF_SCOPE(
-        cma::OnStart(cma::AppType::test));  // restore original config
+    OnStartTest();
+    ON_OUT_OF_SCOPE( OnStartTest());  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled

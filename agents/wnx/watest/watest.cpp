@@ -38,11 +38,10 @@ int wmain(int argc, wchar_t **argv) {
     XLOG::setup::ColoredOutputOnStdio(true);
 
     ::SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    if (!cma::OnStart(cma::AppType::test)) {
+    if (!cma::OnStartTest()) {
         std::cout << "Fail Create Folders\n";
         return 33;
     }
-    OnStart(cma::AppType::test);
     ::testing::InitGoogleTest(&argc, argv);
 #if defined(_DEBUG)
     //::testing::GTEST_FLAG(filter) = "EventLogTest*";

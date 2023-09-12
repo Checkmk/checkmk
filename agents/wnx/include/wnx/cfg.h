@@ -20,12 +20,11 @@
 
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
-// bit mask
 enum class LoadCfgStatus {
-    kAllFailed = -2,    // root config not found
-    kCacheFailed = -1,  // cached not found, only root loaded, user is bad
-    kFileLoaded = 0,    // all loaded
-    kCacheLoaded = 1,   // user is bad, cache loaded
+    kAllFailed,    // root config not found
+    kCacheFailed,  // cached not found, only root loaded, user is bad
+    kFileLoaded,   // all loaded
+    kCacheLoaded,  // user is bad, cache loaded
 };
 
 enum class Error {
@@ -148,15 +147,6 @@ bool StoreUserYamlToCache();
 std::wstring StoreFileToCache(const std::filesystem::path &file_name);
 
 int RemoveInvalidNodes(YAML::Node node);
-
-// *******************************************************
-// yaml for Humans
-enum ErrorCode {
-    kMalformed = 1,  // exception during parsing
-    kMissing = 2,    // no file at all
-    kWeird = 3,      // strange
-    kNotCheckMK = 4  // missing critical parts
-};
 
 enum class FallbackPolicy {
     kNone,      // do not fallback at all

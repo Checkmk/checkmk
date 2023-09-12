@@ -456,7 +456,7 @@ TEST(LogTest, Functional) {
     fs::path logf = log_file_name;
     fs::remove(logf);
 
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     setup::ChangeLogFileName(wtools::ToUtf8(logf.wstring()));
 
     XLOG::l("simple test");

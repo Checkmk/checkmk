@@ -56,7 +56,7 @@ public:
     YamlLoader() {
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
-        cma::OnStart(cma::AppType::test);
+        cma::OnStartTest();
 
         auto yaml = cma::cfg::GetLoadedConfig();
         cma::cfg::ProcessKnownConfigGroups();
@@ -64,7 +64,7 @@ public:
     }
     YamlLoader(const YamlLoader &) = delete;
     YamlLoader &operator=(const YamlLoader &) = delete;
-    ~YamlLoader() { cma::OnStart(cma::AppType::test); }
+    ~YamlLoader() { cma::OnStartTest(); }
 };
 
 void SafeCleanTempDir();

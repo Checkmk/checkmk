@@ -18,6 +18,7 @@ import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
+from pprint import pformat
 from typing import Final, Literal
 
 import pytest
@@ -249,6 +250,38 @@ class Site:
             expected_state,
             wait_timeout,
         )
+
+    def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
+        """Reschedule services in the test-site for a given host until no pending services are
+        found."""
+        count = 0
+        pending_services = self.get_host_services(hostname, pending=True)
+
+        # reschedule services
+        self.schedule_check(hostname, "Check_MK", 0)
+
+        while len(pending_services) > 0 and count < max_count:
+            logger.info(
+                "The following services in %s host were found with pending status:\n%s.\n"
+                "Rescheduling checks...",
+                hostname,
+                pformat(pending_services),
+            )
+            self.schedule_check(hostname, "Check_MK", 0)
+            pending_services = self.get_host_services(hostname, pending=True)
+            count += 1
+
+        assert len(pending_services) == 0
+
+    def get_host_services(self, hostname: str, pending: bool = False) -> dict:
+        """Return dict with key=service and value=status for all services in the given site and host.
+
+        If pending=True, return the pending services only.
+        """
+        services = {}
+        for service in self.openapi.get_host_services(hostname, columns=["state"], pending=pending):
+            services[service["extensions"]["description"]] = service["extensions"]["state"]
+        return services
 
     @staticmethod
     def _command_timestamp(last_check_before: float) -> float:

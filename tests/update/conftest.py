@@ -68,17 +68,6 @@ class BaseVersions:
     ]
 
 
-def get_host_services(site: Site, hostname: str, pending: bool = False) -> dict:
-    """Return dict with key=service and value=status for all services in the given site and host.
-
-    If pending=True, return the pending services only.
-    """
-    services = {}
-    for service in site.openapi.get_host_services(hostname, columns=["state"], pending=pending):
-        services[service["extensions"]["description"]] = service["extensions"]["state"]
-    return services
-
-
 def get_services_with_status(
     host_data: dict, service_status: int, skipped_services: list | tuple = ()
 ) -> list:
@@ -249,28 +238,6 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bo
     """Update the test site to the target version."""
     logger.info("Updating site (interactive-mode=%s) ...", not interactive_mode_off)
     return _get_site(target_version, base_site=site, interactive=not interactive_mode_off)
-
-
-def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
-    """Reschedule services in the test-site for a given host until no pending services are found."""
-    count = 0
-    pending_services = get_host_services(site, hostname, pending=True)
-
-    # reschedule services
-    site.schedule_check(hostname, "Check_MK", 0)
-
-    while len(pending_services) > 0 and count < max_count:
-        logger.info(
-            "The following services in %s host were found with pending status:\n%s.\n"
-            "Rescheduling checks...",
-            hostname,
-            pformat(pending_services),
-        )
-        site.schedule_check(hostname, "Check_MK", 0)
-        pending_services = get_host_services(site, hostname, pending=True)
-        count += 1
-
-    assert len(pending_services) == 0
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")

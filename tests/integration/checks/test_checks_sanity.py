@@ -11,7 +11,7 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-from tests.update.conftest import get_host_services, get_services_with_status, reschedule_services
+from tests.update.conftest import get_services_with_status
 
 from cmk.utils.hostaddress import HostName
 
@@ -40,9 +40,9 @@ def test_checks_sanity(site: Site, agent_ctl: Path) -> None:
     wait_until_host_receives_data(site, hostname)
     site.openapi.bulk_discover_services([str(hostname)], wait_for_completion=True)
     site.openapi.activate_changes_and_wait_for_completion()
-    reschedule_services(site, hostname)
+    site.reschedule_services(hostname)
 
-    found_services = get_host_services(site, hostname)
+    found_services = site.get_host_services(hostname)
     found_ok_services = get_services_with_status(found_services, 0)
     not_ok_services = [service for service in found_services if service not in found_ok_services]
 

@@ -17,14 +17,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import (
-    get_host_services,
-    get_services_with_status,
-    get_site_status,
-    reschedule_services,
-    update_config,
-    update_site,
-)
+from .conftest import get_services_with_status, get_site_status, update_config, update_site
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +78,10 @@ def test_update(  # pylint: disable=too-many-branches
     base_ok_services = {}
 
     for hostname in hostnames:
-        reschedule_services(test_site, hostname)
+        test_site.reschedule_services(hostname)
 
         # get baseline monitoring data for each host
-        base_data[hostname] = get_host_services(test_site, hostname)
+        base_data[hostname] = test_site.get_host_services(hostname)
 
         # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
         #  after the update. See CMK-13774.
@@ -136,10 +129,10 @@ def test_update(  # pylint: disable=too-many-branches
     target_ok_services = {}
 
     for hostname in hostnames:
-        reschedule_services(target_site, hostname)
+        target_site.reschedule_services(hostname)
 
         # get update monitoring data
-        target_data[hostname] = get_host_services(target_site, hostname)
+        target_data[hostname] = target_site.get_host_services(hostname)
 
         target_ok_services[hostname] = get_services_with_status(target_data[hostname], 0)
         # used in debugging mode

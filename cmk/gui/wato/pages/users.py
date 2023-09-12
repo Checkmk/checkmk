@@ -638,7 +638,7 @@ class ModeEditUser(WatoMode):
         if edition() is Edition.CME:
             self._vs_customer = managed.vs_customer()
 
-        self._can_create_users = edition() != Edition.CSE
+        self._can_edit_users = edition() != Edition.CSE
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
@@ -752,7 +752,7 @@ class ModeEditUser(WatoMode):
             self._user_id = request.get_validated_type_input_mandatory(UserId, "edit")
             user_attrs = self._users[self._user_id].copy()
 
-        if self._can_create_users:
+        if self._can_edit_users:
             self._get_identity_userattrs(user_attrs)
 
         # Roles
@@ -912,7 +912,7 @@ class ModeEditUser(WatoMode):
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
 
-        if self._can_create_users:
+        if self._can_edit_users:
             self._render_identity(custom_user_attr_topics)
 
         forms.header(_("Security"))

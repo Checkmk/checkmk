@@ -192,7 +192,8 @@ TEST(AgentConfig, AggregateMap) {
                                        vars::kPluginPattern);
         auto merged_yaml = full_yaml[vars::kPluginsExecution];
 
-        auto select = [merged_yaml](int index, const std::string &name) -> auto{
+        auto select = [merged_yaml](int index,
+                                    const std::string &name) -> auto {
             return merged_yaml[index][name].as<std::string>();
         };
 
@@ -214,7 +215,7 @@ TEST(AgentConfig, AggregateMap) {
 }
 
 TEST(AgentConfig, SmartMerge) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
@@ -313,7 +314,7 @@ TEST(AgentConfig, SmartMerge) {
 }
 
 TEST(AgentConfig, Aggregate) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
@@ -432,7 +433,7 @@ TEST(AgentConfig, Aggregate) {
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     {
         // prepare file
@@ -477,17 +478,13 @@ TEST(AgentConfig, ReloadWithTimestamp) {
 }
 
 TEST(AgentConfig, GetValueTest) {
-    std::wstring key_path{L"System\\CurrentControlSet\\services\\"};
-    key_path += L"Ntfs";
-    auto type = wtools::GetRegistryValue(key_path, L"Type", 0);
-    EXPECT_EQ(type, 2);
-    auto group = wtools::GetRegistryValue(key_path, L"Group", L"");
-    EXPECT_EQ(group, L"Boot File System");
+    const std::wstring key_path{L"System\\CurrentControlSet\\services\\Ntfs"};
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Type", 0), 2);
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Group", L""),
+              L"Boot File System");
 
-    type = wtools::GetRegistryValue(key_path, L"Typex", 0);
-    EXPECT_EQ(type, 0);
-    group = wtools::GetRegistryValue(key_path, L"Groupf", L"--");
-    EXPECT_EQ(group, L"--");
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Typex", 0), 0);
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Groupf", L"--"), L"--");
 }
 
 TEST(AgentConfig, FoldersTest) {
@@ -539,22 +536,15 @@ TEST(AgentConfig, FoldersTest) {
 
 namespace cma::cfg {  // to become friendly for cma::cfg classes
 
-TEST(AgentConfig, LogFile) {
-    auto fname = GetCurrentLogFileName();
-    EXPECT_TRUE(!fname.empty());
-}
+TEST(AgentConfig, LogFile) { EXPECT_TRUE(!GetCurrentLogFileName().empty()); }
 
 TEST(AgentConfig, YamlRead) {
-    auto file = tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
-    auto ret = fs::exists(file);
-    ASSERT_TRUE(ret);
+    const auto file =
+        tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
 
     auto result = LoadAndCheckYamlFile(file.wstring());
-    auto sz = result.size();
-    auto val_global = result["global"];
-    auto v = result["globalvas"];
-    EXPECT_TRUE(v.size() == 0);
-    EXPECT_TRUE(sz > 0);
+    EXPECT_EQ(result["globalvas"].size(), 0);
+    EXPECT_GT(result.size(), 0U);
 }
 
 TEST(AgentConfig, InternalArray) {
@@ -632,7 +622,7 @@ TEST(AgentConfig, InternalArray) {
 }
 
 TEST(AgentConfig, FactoryConfig) {
-    auto temp_fs{tst::TempCfgFs::Create()};
+    const auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     const auto cfg = GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
@@ -924,7 +914,7 @@ TEST(AgentConfig, CacheApi) {
 }
 
 TEST(AgentConfig, BackupCheck) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     // caching USER
@@ -950,10 +940,10 @@ TEST(AgentConfig, LoadingCheck) {
     XLOG::setup::ChangeLogFileName("b.log");
     XLOG::setup::EnableDebugLog(false);
     XLOG::setup::EnableWinDbg(false);
-    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    const auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    auto fname =
+    const auto fname =
         wtools::ToStr(fs::path{XLOG::l.getLogParam().filename()}.filename());
     EXPECT_TRUE(fname == std::string{kDefaultLogFileName});
     EXPECT_TRUE(XLOG::d.isFileDbg());
@@ -972,7 +962,7 @@ TEST(AgentConfig, LoadingCheck) {
 }
 
 TEST(AgentConfig, FactoryConfigBase) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
@@ -1001,7 +991,7 @@ TEST(AgentConfig, FactoryConfigBase) {
 }
 
 TEST(AgentConfig, GlobalTest) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
@@ -1015,7 +1005,7 @@ TEST(AgentConfig, GlobalTest) {
     fname = g.fullLogFileNameAsString();
     EXPECT_EQ(fname, std::string("C:\\Windows\\Logs\\") + kDefaultLogFileName);
 
-    if (cma::tools::win::IsElevated()) {
+    if (tools::win::IsElevated()) {
         g.setupLogEnvironment();
         fs::path logf = fname;
         fs::remove(logf);
@@ -1098,8 +1088,8 @@ TEST(AgentConfig, MergeSeqCombineValue) {
                              details::Combine::merge_value);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = cma::tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_USER_APP);
     EXPECT_EQ(table[1], LW_USER_SYS);
@@ -1113,8 +1103,8 @@ TEST(AgentConfig, MergeSeqCombine) {
                              details::Combine::merge);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_ROOT_APP);
     EXPECT_EQ(table[1], LW_ROOT_STAR);
@@ -1122,14 +1112,14 @@ TEST(AgentConfig, MergeSeqCombine) {
 }
 
 TEST(AgentConfig, MergeSeqOverride) {
-    YAML::Node user = YAML::Load(lw_user);
-    YAML::Node target = YAML::Load(lw_root);
+    const auto user = YAML::Load(lw_user);
+    const auto target = YAML::Load(lw_root);
     details::CombineSequence("name", target["logfile"], user["logfile"],
                              details::Combine::overwrite);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 2);
     EXPECT_EQ(table[0], LW_USER_APP);
     EXPECT_EQ(table[1], LW_USER_SYS);
@@ -1163,11 +1153,9 @@ static std::string node_text =
     "  sections:\n"
     "    - x y\n"
     "    - [z]\n"
-    "  disabled_sections: ~"
+    "  disabled_sections: ~";
 
-    ;
-
-static std::string node_ok =
+constexpr std::string_view g_node_ok =
     "global:\n"
     "  execute: []\n"  // expected clean
     "  realtime:\n"
@@ -1184,19 +1172,19 @@ static std::string node_ok =
     "  sections:\n"
     "    - x y\n"
     "    - [z]\n"
-    "  disabled_sections: ~"
+    "  disabled_sections: ~";
 
-    ;
-
-static YAML::Node generateTestNode(const std::string &node_text) {
+namespace {
+YAML::Node generateTestNode(std::string_view node_text) {
     try {
-        return YAML::Load(node_text);
+        return YAML::Load(std::string{node_text});
     } catch (const std::exception &e) {
         XLOG::l("exception '{}'", e.what());
     }
 
     return {};
 }
+}  // namespace
 
 TEST(AgentConfig, NodeCleanup) {
     const auto temp_fs = tst::TempCfgFs::Create();
@@ -1209,12 +1197,12 @@ TEST(AgentConfig, NodeCleanup) {
     YAML::Emitter emit;
     emit << node;
     const std::string value = emit.c_str();
-    EXPECT_EQ(value, node_ok);
+    EXPECT_EQ(value, g_node_ok);
     expected_count = RemoveInvalidNodes(node);
     EXPECT_EQ(expected_count, 0);
 }
 
-static std::string node_plugins_execution =
+constexpr std::string_view node_plugins_execution =
     "plugins:\n"
     "  execution:\n"  // expected clean
     "  - pattern: a_1\n"
@@ -1453,7 +1441,7 @@ static void SetCfgMode(YAML::Node cfg, std::string_view name,
 }
 
 TEST(AgentConfig, CleanupUninstall) {
-    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    const auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto cfg = GetLoadedConfig();
 

@@ -10,6 +10,7 @@ import logging
 import re
 import textwrap
 from collections.abc import Sequence
+from email.headerregistry import Address
 from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
@@ -60,25 +61,65 @@ class Args(NamedTuple):
         )
 
 
-def get_fullname_and_address(werk: Werk) -> tuple[str, str]:
+DOMAIN = "lists.checkmk.com"
+LEVEL1_ADDRESS = Address(
+    domain=DOMAIN,
+    username="checkmk-werks-lvl1",
+    display_name="Checkmk werks level 1",
+)
+
+LEVEL2_ADDRESS = Address(
+    domain=DOMAIN,
+    username="checkmk-werks-lvl2",
+    display_name="Checkmk werks level 2",
+)
+
+LEVEL3_ADDRESS = Address(
+    domain=DOMAIN,
+    username="checkmk-werks-lvl3",
+    display_name="Checkmk werks level 3",
+)
+SEC_ADDRESS = Address(
+    domain=DOMAIN,
+    username="checkmk-werks-sec",
+    display_name="Checkmk werks security",
+)
+
+
+def get_default_addresses(werk: Werk) -> list[Address]:
+    addresses = []
     if werk.class_ == Class.SECURITY:
-        return "Checkmk werks security", "checkmk-werks-sec@lists.checkmk.com"
+        addresses.append(SEC_ADDRESS)
     if werk.level == Level.LEVEL_1:
-        return "Checkmk werks level 1", "checkmk-werks-lvl1@lists.checkmk.com"
+        addresses.append(LEVEL1_ADDRESS)
     if werk.level == Level.LEVEL_2:
-        return "Checkmk werks level 2", "checkmk-werks-lvl2@lists.checkmk.com"
+        addresses.extend([LEVEL1_ADDRESS, LEVEL2_ADDRESS])
     if werk.level == Level.LEVEL_3:
-        return "Checkmk werks level 3", "checkmk-werks-lvl3@lists.checkmk.com"
-    raise NotImplementedError()
+        addresses.extend([LEVEL1_ADDRESS, LEVEL2_ADDRESS, LEVEL3_ADDRESS])
+    assert addresses, f"Default address list cannot be empty! {werk.class_=}, {werk.level=}"
+    return addresses
 
 
-def build_mail_address(werk: Werk, args: Args) -> str:
-    fullname, mail_address = get_fullname_and_address(werk)
+def replace_default_address(default: Address, mail: Address) -> Address:
+    """
+    >>> str(replace_default_address(LEVEL1_ADDRESS, Address(addr_spec="timotheus.bachinger@checkmk.com")))
+    'Checkmk werks level 1 <timotheus.bachinger+checkmk-werks-lvl1%lists.checkmk.com@checkmk.com>'
+    """
+    return Address(
+        username=f"{mail.username}+{default.username}%{default.domain}",
+        domain=mail.domain,
+        display_name=default.display_name,
+    )
+
+
+def build_mail_addresses(werk: Werk, args: Args) -> Sequence[Address]:
+    addresses = get_default_addresses(werk)
 
     if args.mail:
-        mail_address = args.mail.replace("@", "+" + mail_address.replace("@", "%") + "@")
+        args_mail = Address(addr_spec=args.mail)
+        addresses = [replace_default_address(addr, args_mail) for addr in addresses]
 
-    return f"{fullname} <{mail_address}>"
+    return addresses
 
 
 class File(NamedTuple):
@@ -264,33 +305,34 @@ def send_mail(
 
     base_version = str(Version.from_str(werk.version).base)
 
-    mail_address = build_mail_address(werk, args)
+    mail_addresses = build_mail_addresses(werk, args)
 
-    subject = f"[{base_version}] Checkmk Werk {werk.id} {change.action}: {werk.title}"
-    message = template.render(
-        werk=werk,
-        werk_plaintext=change.file.content,
-        component=translator.component_of(werk),
-        class_=translator.class_of(werk),
-        change=change,
-        werk_modified=isinstance(change, WerkModified),
-        werk_removed=isinstance(change, WerkRemoved),
-    )
+    for mail_address in mail_addresses:
+        subject = f"[{base_version}] Checkmk Werk {werk.id} {change.action}: {werk.title}"
+        message = template.render(
+            werk=werk,
+            werk_plaintext=change.file.content,
+            component=translator.component_of(werk),
+            class_=translator.class_of(werk),
+            change=change,
+            werk_modified=isinstance(change, WerkModified),
+            werk_removed=isinstance(change, WerkRemoved),
+        )
 
-    mail = EmailMessage()
-    mail.set_content(message, cte="quoted-printable")
-    set_mail_headers(
-        MailString(mail_address),
-        MailString(subject),
-        MailString("noreply@checkmk.com"),  # keep this in sync with the mailing lists settings
-        MailString(""),
-        mail,
-    )
+        mail = EmailMessage()
+        mail.set_content(message, cte="quoted-printable")
+        set_mail_headers(
+            MailString(str(mail_address)),
+            MailString(subject),
+            MailString("noreply@checkmk.com"),  # keep this in sync with the mailing lists settings
+            MailString(""),
+            mail,
+        )
 
-    if args.do_send_mail:
-        send_mail_sendmail(mail, MailString(mail_address), MailString(""))
-    else:
-        print(textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True))
+        if args.do_send_mail:
+            send_mail_sendmail(mail, MailString(str(mail_address)), MailString(""))
+        else:
+            print(textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True))
 
 
 def main(argparse_args: argparse.Namespace) -> None:

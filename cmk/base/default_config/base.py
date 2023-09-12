@@ -159,7 +159,7 @@ static_checks: dict[str, list[RuleSpec[object]]] = {}
 check_parameters: list[RuleSpec[object]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
 # for HW/SW-Inventory
-inv_parameters: dict[str, list[RuleSpec[object]]] = {}
+inv_parameters: dict[str, list[RuleSpec[dict[str, object]]]] = {}
 # WATO variant for fully formalized checks
 active_checks: dict[str, list[RuleSpec[object]]] = {}
 # WATO variant for datasource_programs
@@ -263,7 +263,7 @@ check_periods: list[RuleSpec[object]] = []
 snmp_check_interval: list[RuleSpec[object]] = []
 snmp_exclude_sections: list[RuleSpec[object]] = []
 # Rulesets for parameters of notification scripts
-notification_parameters: dict[str, list[RuleSpec[object]]] = {}
+notification_parameters: dict[str, list[RuleSpec[dict[str, object]]]] = {}
 use_new_descriptions_for: list[CheckPluginNameStr] = []
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[object]] = []

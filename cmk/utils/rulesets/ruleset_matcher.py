@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -230,8 +230,8 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def host_extra_conf_merged(
-        self, hostname: HostName, ruleset: Iterable[RuleSpec]
-    ) -> Mapping[str, Any]:
+        self, hostname: HostName, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
+    ) -> Mapping[str, TRuleValue]:
         return self.get_host_ruleset_merged_dict(RulesetMatchObject(hostname), ruleset)
 
     def get_host_ruleset_merged_dict(

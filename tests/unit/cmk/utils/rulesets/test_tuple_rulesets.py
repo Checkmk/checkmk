@@ -177,7 +177,9 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
     ]
 
 
-def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
+def test_host_extra_conf_merged(
+    ts: Scenario, host_ruleset: Sequence[RuleSpec[dict[str, object]]]
+) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     assert ruleset_matcher.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
         "1": True,

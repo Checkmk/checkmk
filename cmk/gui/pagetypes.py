@@ -191,7 +191,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
 
     @classmethod
     @abc.abstractmethod
-    def deserialize(cls, page_dict: object) -> Self:
+    def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1946,7 +1946,7 @@ def page_menu_add_to_topics(added_type: str) -> list[PageMenuTopic]:
 
 class PagetypeTopics(Overridable[PagetypeTopicSpec]):
     @classmethod
-    def deserialize(cls, page_dict: object) -> Self:
+    def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         # TODO Remove 'cast' and do real parsing
         return cls(cast(PagetypeTopicSpec, page_dict))
 

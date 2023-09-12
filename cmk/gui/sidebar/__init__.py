@@ -10,7 +10,7 @@ import copy
 import json
 import textwrap
 import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Any, cast, Self
 
@@ -772,7 +772,7 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
 
 class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
-    def deserialize(cls, page_dict: object) -> Self:
+    def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         # TODO Remove 'cast' and do real parsing
         return cls(cast(CustomSpaninsSpec, page_dict))
 

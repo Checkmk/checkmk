@@ -874,15 +874,15 @@ class Sum(ABCMetricOperation):
         if len(self.summands) == 0:
             return MetricExpressionResult(0.0, unit_info[""], "#000000")
 
-        evaluated_first = self.summands[0].evaluate(translated_metrics)
-        values = [evaluated_first.value]
-        unit_info_ = evaluated_first.unit_info
-        color = evaluated_first.color
+        first_result = self.summands[0].evaluate(translated_metrics)
+        values = [first_result.value]
+        unit_info_ = first_result.unit_info
+        color = first_result.color
         for successor in self.summands[1:]:
-            evaluated_successor = successor.evaluate(translated_metrics)
-            values.append(evaluated_successor.value)
-            unit_info_ = _unit_add(unit_info_, evaluated_successor.unit_info)
-            color = _choose_operator_color(color, evaluated_successor.color)
+            successor_result = successor.evaluate(translated_metrics)
+            values.append(successor_result.value)
+            unit_info_ = _unit_add(unit_info_, successor_result.unit_info)
+            color = _choose_operator_color(color, successor_result.color)
 
         return MetricExpressionResult(sum(values), unit_info_, color)
 
@@ -895,15 +895,15 @@ class Product(ABCMetricOperation):
         if len(self.factors) == 0:
             return MetricExpressionResult(1.0, unit_info[""], "#000000")
 
-        evaluated_first = self.factors[0].evaluate(translated_metrics)
-        product = evaluated_first.value
-        unit_info_ = evaluated_first.unit_info
-        color = evaluated_first.color
+        first_result = self.factors[0].evaluate(translated_metrics)
+        product = first_result.value
+        unit_info_ = first_result.unit_info
+        color = first_result.color
         for successor in self.factors[1:]:
-            evaluated_successor = successor.evaluate(translated_metrics)
-            product *= evaluated_successor.value
-            unit_info_ = _unit_mult(unit_info_, evaluated_successor.unit_info)
-            color = _choose_operator_color(color, evaluated_successor.color)
+            successor_result = successor.evaluate(translated_metrics)
+            product *= successor_result.value
+            unit_info_ = _unit_mult(unit_info_, successor_result.unit_info)
+            color = _choose_operator_color(color, successor_result.color)
 
         return MetricExpressionResult(product, unit_info_, color)
 
@@ -914,18 +914,18 @@ class Difference(ABCMetricOperation):
     subtrahend: ABCMetricOperation
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        minuend_evaluated = self.minuend.evaluate(translated_metrics)
-        subtrahend_evaluated = self.subtrahend.evaluate(translated_metrics)
+        minuend_result = self.minuend.evaluate(translated_metrics)
+        subtrahend_result = self.subtrahend.evaluate(translated_metrics)
 
-        if (subtrahend_evaluated.value) == 0.0:
+        if (subtrahend_result.value) == 0.0:
             value = 0.0
         else:
-            value = minuend_evaluated.value - subtrahend_evaluated.value
+            value = minuend_result.value - subtrahend_result.value
 
         return MetricExpressionResult(
             value,
-            _unit_sub(minuend_evaluated.unit_info, subtrahend_evaluated.unit_info),
-            _choose_operator_color(minuend_evaluated.color, subtrahend_evaluated.color),
+            _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info),
+            _choose_operator_color(minuend_result.color, subtrahend_result.color),
         )
 
 
@@ -935,18 +935,18 @@ class Fraction(ABCMetricOperation):
     divisor: ABCMetricOperation
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        dividend_evaluated = self.dividend.evaluate(translated_metrics)
-        divisor_evaluated = self.divisor.evaluate(translated_metrics)
+        dividend_result = self.dividend.evaluate(translated_metrics)
+        divisor_result = self.divisor.evaluate(translated_metrics)
 
-        if (divisor_evaluated.value) == 0.0:
+        if (divisor_result.value) == 0.0:
             value = 0.0
         else:
-            value = dividend_evaluated.value / divisor_evaluated.value
+            value = dividend_result.value / divisor_result.value
 
         return MetricExpressionResult(
             value,
-            _unit_div(dividend_evaluated.unit_info, divisor_evaluated.unit_info),
-            _choose_operator_color(dividend_evaluated.color, divisor_evaluated.color),
+            _unit_div(dividend_result.unit_info, divisor_result.unit_info),
+            _choose_operator_color(dividend_result.color, divisor_result.color),
         )
 
 
@@ -1032,9 +1032,9 @@ class Minimum(ABCMetricOperation):
 
         minimum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
-            evaluated_operand = operand.evaluate(translated_metrics)
-            if evaluated_operand.value < minimum.value:
-                minimum = evaluated_operand
+            operand_result = operand.evaluate(translated_metrics)
+            if operand_result.value < minimum.value:
+                minimum = operand_result
 
         return minimum
 
@@ -1049,9 +1049,9 @@ class Maximum(ABCMetricOperation):
 
         maximum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
-            evaluated_operand = operand.evaluate(translated_metrics)
-            if evaluated_operand.value > maximum.value:
-                maximum = evaluated_operand
+            operand_result = operand.evaluate(translated_metrics)
+            if operand_result.value > maximum.value:
+                maximum = operand_result
 
         return maximum
 
@@ -1240,19 +1240,19 @@ def evaluate(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
 ) -> MetricExpressionResult:
-    rpn_expr_spec = _parse_expression(expression, translated_metrics)
-    evaluated_operation = rpn_expr_spec.operation.evaluate(translated_metrics)
+    metric_expression = _parse_expression(expression, translated_metrics)
+    result = metric_expression.operation.evaluate(translated_metrics)
     return MetricExpressionResult(
-        evaluated_operation.value,
+        result.value,
         (
-            unit_info[rpn_expr_spec.explicit_unit_name]
-            if rpn_expr_spec.explicit_unit_name
-            else evaluated_operation.unit_info
+            unit_info[metric_expression.explicit_unit_name]
+            if metric_expression.explicit_unit_name
+            else result.unit_info
         ),
         (
-            "#" + rpn_expr_spec.explicit_color
-            if rpn_expr_spec.explicit_color
-            else evaluated_operation.color
+            "#" + metric_expression.explicit_color
+            if metric_expression.explicit_color
+            else result.color
         ),
     )
 
@@ -1403,10 +1403,10 @@ def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str
 
     def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
         try:
-            rpn_expr_metric = evaluate(match.group()[2:-1], translated_metrics)
+            result = evaluate(match.group()[2:-1], translated_metrics)
         except ValueError:
             return _("n/a")
-        return rpn_expr_metric.unit_info["render"](rpn_expr_metric.value)
+        return result.unit_info["render"](result.value)
 
     r = cmk.utils.regex.regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)
@@ -1634,12 +1634,12 @@ def horizontal_rules_from_thresholds(
                 title = expression
 
         try:
-            if (rpn_expr_metric := evaluate(expression, translated_metrics)).value:
+            if (result := evaluate(expression, translated_metrics)).value:
                 horizontal_rules.append(
                     (
-                        rpn_expr_metric.value,
-                        rpn_expr_metric.unit_info["render"](rpn_expr_metric.value),
-                        rpn_expr_metric.color,
+                        result.value,
+                        result.unit_info["render"](result.value),
+                        result.color,
                         str(title),
                     )
                 )

@@ -6,7 +6,7 @@
 import json
 import time
 from collections.abc import Mapping, MutableMapping
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -82,7 +82,7 @@ register.agent_section(
     parse_function=parse_kube_controller_spec,
 )
 
-Replicas = Union[DeploymentReplicas, StatefulSetReplicas, DaemonSetReplicas]
+Replicas = DeploymentReplicas | StatefulSetReplicas | DaemonSetReplicas
 
 
 def discover_kube_replicas(

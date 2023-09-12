@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Generator, MutableMapping
-from typing import Any, Optional, Union
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -17,9 +17,9 @@ StatusType = int
 TempUnitType = str
 LevelModes = str
 
-TwoLevelsType = tuple[Optional[float], Optional[float]]
-FourLevelsType = tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
-LevelsType = Union[TwoLevelsType, FourLevelsType]
+TwoLevelsType = tuple[float | None, float | None]
+FourLevelsType = tuple[float | None, float | None, float | None, float | None]
+LevelsType = TwoLevelsType | FourLevelsType
 
 
 class TrendComputeDict(TypedDict, total=False):
@@ -38,7 +38,7 @@ class TempParamDict(TypedDict, total=False):
     trend_compute: TrendComputeDict
 
 
-TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
+TempParamType = None | TwoLevelsType | FourLevelsType | TempParamDict
 
 
 def fahrenheit_to_celsius(tempf, relative=False):

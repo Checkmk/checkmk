@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping
 from enum import Enum
 from re import Match
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .interfaces import saveint
 
-DiscoveryParams = Iterable[Mapping[str, list[tuple[str, Union[str, tuple[str, str]]]]]]
+DiscoveryParams = Iterable[Mapping[str, list[tuple[str, str | tuple[str, str]]]]]
 
 
 class FileinfoItem(NamedTuple):

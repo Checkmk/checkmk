@@ -11,7 +11,7 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired, TypedDict, Union
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 
@@ -51,13 +51,13 @@ class HostContactGroupSpec(TypedDict):
     recurse_use: bool
 
 
-IPRange = Union[
-    tuple[Literal["ip_range"], tuple[str, str]],
-    tuple[Literal["ip_network"], tuple[str, int]],
-    tuple[Literal["ip_list"], Sequence[HostAddress]],
-]
+IPRange = (
+    tuple[Literal["ip_range"], tuple[str, str]]
+    | tuple[Literal["ip_network"], tuple[str, int]]
+    | tuple[Literal["ip_list"], Sequence[HostAddress]]
+)
 
-ExcludeIPRange = Union[IPRange, tuple[Literal["ip_regex_list"], Sequence[str]]]
+ExcludeIPRange = IPRange | tuple[Literal["ip_regex_list"], Sequence[str]]
 
 
 class NetworkScanSpec(TypedDict):

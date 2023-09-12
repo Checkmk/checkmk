@@ -25,15 +25,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import (  # noqa: F401 # pylint: disable=unused-import
-        Any,
-        Callable,
-        Dict,
-        List,
-        Optional,
-        Tuple,
-        Union,
-    )
+    from collections.abc import Callable  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -79,7 +72,7 @@ MBEAN_SECTIONS = {
     "jvm_garbagecollectors": (
         "java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",
     ),
-}  # type: Dict[str, Tuple[str, ...]]
+}  # type: dict[str, tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
     "tomcat": {
@@ -230,7 +223,7 @@ QUERY_SPECS_LEGACY = [
         [],
         True,
     ),
-]  # type: List[Tuple[str, str, str, List, bool]]
+]  # type: list[tuple[str, str, str, list, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -294,7 +287,7 @@ DEFAULT_CONFIG_TUPLES = (
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
     ("instances", [{}]),
-)  # type: Tuple[Tuple[Union[Optional[str], float, List[Any]], ...], ...]
+)  # type: tuple[tuple[str | None | float | list[Any], ...], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -316,7 +309,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}  # type: Dict[str, Callable]
+    cache = {}  # type: dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)
@@ -563,7 +556,7 @@ def extract_item(key, itemspec):
     components = path.split(",")
     comp_dict = dict(c.split("=") for c in components if c.count("=") == 1)
 
-    item = ()  # type: Tuple[Any, ...]
+    item = ()  # type: tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]

@@ -31,7 +31,7 @@ from cmk.gui.wsgi.dev_utils import git_absolute, mocked_livestatus, modified_env
 if typing.TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
 
-ResponseTypes = typing.Union[flask.Response, werkzeug.Response]
+ResponseTypes = flask.Response | werkzeug.Response
 
 logger = logging.getLogger(__name__)
 

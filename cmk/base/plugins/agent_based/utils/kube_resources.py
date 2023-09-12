@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
-from typing import Any, cast, Literal, TypedDict, Union
+from typing import Any, cast, Literal, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
@@ -93,7 +93,7 @@ def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource
     return AllocatableResource(**json.loads(string_table[0][0]))
 
 
-Param = Union[Literal["no_levels"], tuple[Literal["levels"], tuple[float, float]]]
+Param = Literal["no_levels"] | tuple[Literal["levels"], tuple[float, float]]
 
 
 class Params(TypedDict, total=False):

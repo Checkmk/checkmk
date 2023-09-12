@@ -6,7 +6,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -21,7 +21,7 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.palo_alto import DETECT_PALO_ALTO
 
-LEVEL_TYPE = Optional[tuple[float, float]]
+LEVEL_TYPE = tuple[float, float] | None
 
 
 @dataclass(frozen=True)

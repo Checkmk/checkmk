@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any, Final, Optional, Union
+from typing import Any, Final
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -13,13 +13,10 @@ from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 
 SectionDict = dict[
     str,
-    Union[
-        list[tuple[str, int]],  #
-        list[tuple[str, list[str]]],  # TODO: .util.cpu_util.CPUInfo?
-    ],
+    (list[tuple[str, int]] | list[tuple[str, list[str]]]),  #  # TODO: .util.cpu_util.CPUInfo?
 ]
 
-Section = tuple[Optional[int], SectionDict]
+Section = tuple[int | None, SectionDict]
 
 
 KERNEL_COUNTER_NAMES: Final[dict[str, str]] = {  # order determines the service output!

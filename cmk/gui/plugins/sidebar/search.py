@@ -11,7 +11,7 @@ import traceback
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Final, Literal, TypeVar, Union
+from typing import Final, Literal, TypeVar
 
 import livestatus
 
@@ -74,7 +74,7 @@ LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
 UsedFilters = dict[str, list[str]]
-Matches = Union[tuple[str, HTTPVariables] | None]
+Matches = tuple[str, HTTPVariables] | None
 
 
 @dataclass

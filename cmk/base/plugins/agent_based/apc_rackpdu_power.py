@@ -29,12 +29,11 @@
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
 
-from typing import Union
 
 from .agent_based_api.v1 import all_of, exists, register, SNMPTree, startswith, type_defs
 
 StatusInfo = tuple[float, tuple[int, str]]
-Parsed = dict[str, dict[str, Union[float, StatusInfo]]]
+Parsed = dict[str, dict[str, float | StatusInfo]]
 
 STATE_MAP = {
     "1": (0, "load normal"),

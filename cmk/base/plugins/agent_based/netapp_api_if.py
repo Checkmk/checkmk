@@ -5,7 +5,7 @@
 
 
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, Optional
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
 
-MACList = list[tuple[str, Optional[str]]]
+MACList = list[tuple[str, str | None]]
 
 
 class NICExtraInfo(TypedDict, total=False):

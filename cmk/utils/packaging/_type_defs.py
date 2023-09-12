@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterable, Iterator
 from functools import cached_property
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel, validator
 from semver import VersionInfo
@@ -17,15 +17,15 @@ class PackageError(Exception):
     pass
 
 
-_SortKeyElement = Union[
+_SortKeyElement = (
     # First element makes sure
     #  a) Never compare different types
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
     #  c) A larger set of fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
-    tuple[Literal[0], str],
-    tuple[Literal[1], int],
-    tuple[Literal[2], None],
-]
+    tuple[Literal[0], str]
+    | tuple[Literal[1], int]
+    | tuple[Literal[2], None]
+)
 
 
 class PackageVersion(str):

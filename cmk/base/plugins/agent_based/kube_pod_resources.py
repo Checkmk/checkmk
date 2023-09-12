@@ -9,7 +9,7 @@ import math
 import time
 from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, NamedTuple, Union
+from typing import Literal, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -132,11 +132,11 @@ def _check_phase_duration_pods(
     return Result(state=State.OK, summary=summary)
 
 
-VSResultPercent = Union[
-    tuple[Literal["levels_abs"], tuple[int, int]],
-    tuple[Literal["levels_perc"], tuple[float, float]],
-    Literal["no_levels"],
-]
+VSResultPercent = (
+    tuple[Literal["levels_abs"], tuple[int, int]]
+    | tuple[Literal["levels_perc"], tuple[float, float]]
+    | Literal["no_levels"]
+)
 
 
 class Params(TypedDict):

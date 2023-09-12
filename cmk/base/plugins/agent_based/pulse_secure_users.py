@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Generator, Mapping
-from typing import Any, Union
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,7 +19,7 @@ from .agent_based_api.v1 import (
 from .utils import pulse_secure
 
 Section = Mapping[str, int]
-CheckOutput = Generator[Union[Result, Metric], None, None]
+CheckOutput = Generator[Result | Metric, None, None]
 
 
 def parse_pulse_secure_users(string_table: list[type_defs.StringTable]) -> Section | None:

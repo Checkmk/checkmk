@@ -17,7 +17,7 @@
 # % 127.127.1.0     .LOCL.          10 l   40   64  377    0.000    0.000   0.001
 import time
 from collections.abc import Mapping
-from typing import Any, Final, NamedTuple, Optional
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -43,7 +43,7 @@ class Peer(NamedTuple):
     jitter: float
 
 
-Section = dict[Optional[str], Peer]
+Section = dict[str | None, Peer]
 NTP_STATE_CODES: Final[Mapping[str, str]] = {
     "x": "falsetick",
     ".": "excess",

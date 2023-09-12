@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import MutableMapping
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
@@ -26,7 +26,7 @@ def discovery(section: PodContainers) -> DiscoveryResult:
     yield Service()
 
 
-VSResultInteger = Union[tuple[Literal["levels"], tuple[int, int]], Literal["no_levels"]]
+VSResultInteger = tuple[Literal["levels"], tuple[int, int]] | Literal["no_levels"]
 
 
 class Params(TypedDict):

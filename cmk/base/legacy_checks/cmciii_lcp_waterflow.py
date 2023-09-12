@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -23,7 +23,7 @@ class WaterflowReading(NamedTuple):
     maxflow: float
 
 
-Section = Optional[WaterflowReading]
+Section = WaterflowReading | None
 
 
 def parse_cmciii_lcp_waterflow(string_table) -> Section:

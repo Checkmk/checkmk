@@ -29,7 +29,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import islice
 from re import Pattern
-from typing import Any, ClassVar, NamedTuple, Optional
+from typing import Any, ClassVar, NamedTuple
 
 from .agent_based_api.v1 import Metric, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -64,7 +64,7 @@ class ParsedLine:
     update_metadata: str | None
 
     @classmethod
-    def try_from_str(cls, line: str) -> Optional["ParsedLine"]:
+    def try_from_str(cls, line: str) -> "ParsedLine | None":
         """Parse a line of the agent output, returning the parts
         >>> assert ParsedLine.try_from_str(
         ...     "Remv default-java-plugin [2:1.8-58]"

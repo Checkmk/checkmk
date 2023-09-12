@@ -6,12 +6,11 @@
 
 import re
 from collections.abc import Mapping
-from typing import Union
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, Union[str, int]]
+Section = Mapping[str, str | int]
 
 
 def parse_lnx_cpuinfo(string_table: StringTable) -> Section:

@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML, HTMLInput
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
@@ -282,9 +282,9 @@ def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
 
 def _render_dashlet(
     board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
-) -> tuple[str | HTML, HTMLInput]:
-    content: HTMLInput = ""
-    title: str | HTML = ""
+) -> tuple[HTML | str, HTML | str]:
+    content: HTML | str = ""
+    title: HTML | str = ""
     missing_infos = visuals.missing_context_filters(
         set(board["mandatory_context_filters"]), board["context"]
     )
@@ -336,7 +336,7 @@ def _render_dashlet_content(
         return output_funnel.drain()
 
 
-def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | str:
     if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
         return html.render_message(str(e))
 
@@ -1069,7 +1069,7 @@ def get_dashlet_type(dashlet_spec: DashletConfig) -> type[Dashlet]:
     return dashlet_registry[dashlet_spec["type"]]
 
 
-def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: str | HTML) -> None:
+def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in

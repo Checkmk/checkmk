@@ -12,7 +12,7 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from html import unescape
 from pathlib import Path
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -54,7 +54,7 @@ from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
 
 ExportCellContent = str | dict[str, Any]
-PDFCellContent = Union[str | tuple[Literal["icon"], str]]
+PDFCellContent = str | tuple[Literal["icon"], str]
 PDFCellSpec = tuple[Sequence[str], PDFCellContent]
 
 

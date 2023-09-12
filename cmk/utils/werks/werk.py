@@ -9,7 +9,7 @@ import datetime
 from collections.abc import Iterable
 from enum import Enum
 from functools import partial
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -66,7 +66,7 @@ class Werk(NamedTuple):
     title: str
     id: int
     date: datetime.datetime
-    description: Union[str, "NoWiki"]
+    description: "str | NoWiki"
     level: Level
     class_: Class
     component: str

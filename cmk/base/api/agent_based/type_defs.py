@@ -8,7 +8,7 @@ Some of these are exposed in the API, some are not.
 """
 
 from collections.abc import Callable, Generator, Sequence
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
@@ -45,15 +45,9 @@ AgentParseFunction = Callable[[StringTable], Any]
 HostLabelGenerator = Generator[HostLabel, None, None]
 HostLabelFunction = Callable[..., HostLabelGenerator]
 
-SNMPParseFunction = Union[  #
-    Callable[[list[StringTable]], Any],  #
-    Callable[[list[StringByteTable]], Any],  #
-]
+SNMPParseFunction = Callable[[list[StringTable]], Any] | Callable[[list[StringByteTable]], Any]
 
-SimpleSNMPParseFunction = Union[  #
-    Callable[[StringTable], Any],  #
-    Callable[[StringByteTable], Any],  #
-]
+SimpleSNMPParseFunction = Callable[[StringTable], Any] | Callable[[StringByteTable], Any]
 
 
 class AgentSectionPlugin(NamedTuple):
@@ -82,4 +76,4 @@ class SNMPSectionPlugin(NamedTuple):
     module: str | None  # not available for auto migrated plugins.
 
 
-SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
+SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin

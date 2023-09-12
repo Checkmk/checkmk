@@ -35,11 +35,6 @@ import struct
 import sys
 import time
 
-try:
-    from typing import Dict, Tuple, Union  # noqa: F401 # pylint: disable=unused-import
-except ImportError:
-    pass
-
 
 def which(prg):
     for path in os.environ["PATH"].split(os.pathsep):
@@ -145,7 +140,7 @@ def get_config(cfg_file):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
     section_name = "DOCKER" if config.sections() else "DEFAULT"
-    conf_dict = dict(config.items(section_name))  # type: Dict[str, Union[str, Tuple]]
+    conf_dict = dict(config.items(section_name))  # type: dict[str, str | tuple]
     skip_sections = conf_dict.get("skip_sections", "")
     if isinstance(skip_sections, str):
         skip_list = skip_sections.split(",")

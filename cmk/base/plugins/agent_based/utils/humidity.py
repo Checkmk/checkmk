@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, Optional, Union
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, type_defs
 
-CheckParams = Union[
-    None, Mapping[str, Any], Optional[list[float]], tuple[float, float, float, float]
-]
+CheckParams = None | Mapping[str, Any] | list[float] | None | tuple[float, float, float, float]
 
 
 def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:

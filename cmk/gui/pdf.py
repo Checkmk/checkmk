@@ -23,7 +23,7 @@ import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Literal, NewType, overload, Protocol, Union
+from typing import Literal, NewType, overload, Protocol
 
 from PIL import PngImagePlugin
 from PIL.Image import Image
@@ -52,11 +52,11 @@ SizeDPI = NewType("SizeDPI", int)
 Align = Literal["left", "right", "center"]
 VerticalAlign = Literal["bottom", "middle"]
 OddEven = Literal["even", "odd", "heading"]
-Position = Union[
-    tuple[Literal["n", "s", "w", "e"], SizeMM],
-    tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]],
-    Literal["c"],
-]
+Position = (
+    tuple[Literal["n", "s", "w", "e"], SizeMM]
+    | tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]]
+    | Literal["c"]
+)
 
 
 @overload

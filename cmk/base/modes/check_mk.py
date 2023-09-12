@@ -12,7 +12,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypeVar, Union
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -1797,7 +1797,7 @@ _option_detect_plugins = Option(
 
 @overload
 def _extract_plugin_selection(
-    options: Union["_CheckingOptions", "_DiscoveryOptions"],
+    options: "_CheckingOptions | _DiscoveryOptions",
     type_: type[CheckPluginName],
 ) -> tuple[SectionNameCollection, Container[CheckPluginName]]:
     pass
@@ -1812,7 +1812,7 @@ def _extract_plugin_selection(
 
 
 def _extract_plugin_selection(
-    options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
+    options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
     type_: type,
 ) -> tuple[SectionNameCollection, Container]:
     detect_plugins = options.get("detect-plugins")

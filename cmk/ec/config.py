@@ -13,7 +13,7 @@ from collections.abc import (
     Sequence,
 )
 from re import Pattern
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions
@@ -34,7 +34,7 @@ class UseSNMPTrapTranslation(TypedDict, total=False):
     add_description: Literal[True]
 
 
-SNMPTrapTranslation = Union[Literal[False], tuple[Literal[True], UseSNMPTrapTranslation]]
+SNMPTrapTranslation = Literal[False] | tuple[Literal[True], UseSNMPTrapTranslation]
 
 
 class EMailActionConfig(TypedDict):
@@ -132,10 +132,7 @@ StatePatterns = TypedDict(
     total=False,
 )
 
-State = Union[
-    Literal[-1, 0, 1, 2, 3],
-    tuple[Literal["text_pattern"], StatePatterns],
-]
+State = Literal[-1, 0, 1, 2, 3] | tuple[Literal["text_pattern"], StatePatterns]
 
 
 class Count(TypedDict):

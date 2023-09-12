@@ -5,7 +5,7 @@
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final, Union
+from typing import Any, Final
 
 from .agent_based_api.v1 import (
     get_rate,
@@ -104,7 +104,7 @@ _LINE_TO_METRIC: Final = {
     "-26": "average_write_wait",  # 208 Avg. Disc sec/Read
 }
 
-DiskType = dict[str, Union[int, float]]
+DiskType = dict[str, int | float]
 SectionsType = dict[str, DiskType]
 
 _METRIC_DENOM_SUFFIX: Final = "_base"

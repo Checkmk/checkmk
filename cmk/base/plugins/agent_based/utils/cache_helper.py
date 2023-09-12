@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import NamedTuple, Optional
+
+from typing import NamedTuple
 
 from ..agent_based_api.v1.render import percent, timespan
 
@@ -39,7 +40,7 @@ class CacheInfo(
         )
 
     @classmethod
-    def from_raw(cls, cache_raw: str | None, now: float) -> Optional["CacheInfo"]:
+    def from_raw(cls, cache_raw: str | None, now: float) -> "CacheInfo | None":
         """Parse and preprocess cache info
         make sure max(..) will give the oldest/most outdated case
         """

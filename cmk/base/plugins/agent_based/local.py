@@ -16,15 +16,15 @@ from collections.abc import Iterable, Mapping, Sequence
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, NamedTuple, Optional, Union
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them
-LocalCheckResult = Iterable[Union[Metric, Result]]
-Levels = Optional[tuple[float, float]]
+LocalCheckResult = Iterable[Metric | Result]
+Levels = tuple[float, float] | None
 
 
 class Perfdata(NamedTuple):

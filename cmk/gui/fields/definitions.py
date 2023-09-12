@@ -407,7 +407,7 @@ def query_field(  # type: ignore[no-untyped-def]
     )
 
 
-ColumnTypes = typing.Union[Column, str]
+ColumnTypes = Column | str
 
 
 def column_field(

@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Union
 
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
 from .utils import if64, interfaces
 
-StringByteLine = list[Union[str, list[int]]]
+StringByteLine = list[str | list[int]]
 
 IF64_BASE_TREE = SNMPTree(
     base=if64.BASE_OID,

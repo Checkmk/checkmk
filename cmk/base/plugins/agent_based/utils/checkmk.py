@@ -8,12 +8,12 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from enum import StrEnum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from pyasn1.type.useful import GeneralizedTime
 from pydantic import BaseModel, validator
 
-CheckmkSection = Mapping[str, Optional[str]]
+CheckmkSection = Mapping[str, str | None]
 CmkUpdateAgentStatus = Mapping[str, str]
 
 

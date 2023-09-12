@@ -51,8 +51,8 @@ from typing import (
     NamedTuple,
     Protocol,
     SupportsFloat,
+    TypeAlias,
     TypeVar,
-    Union,
 )
 
 from dateutil.relativedelta import relativedelta
@@ -136,7 +136,7 @@ T = TypeVar("T")
 # A value which can be delayed.
 # NOTE: Due to the use of Union below, we can't have Callables as values.
 # NOTE: No caching, so it's different from e.g. Scheme's delay/force.
-Promise = Union[T, Callable[[], T]]
+Promise: TypeAlias = T | Callable[[], T]
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -152,8 +152,8 @@ def force(p: Promise[T]) -> T:
 
 
 ValueSpecValidateFunc = Callable[[T, str], None]
-ValueSpecDefault = Promise[Union[Sentinel, T]]
-ValueSpecText = Union[str, HTML]
+ValueSpecDefault = Promise[Sentinel | T]
+ValueSpecText = str | HTML
 ValueSpecHelp = Promise[ValueSpecText]
 # TODO: redefine after https://github.com/python/mypy/pull/13516 is released
 JSONValue = Any
@@ -3281,13 +3281,13 @@ def HostState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-built
     )
 
 
-CascadingDropdownChoiceIdent = Union[None, str, bool, int]
-CascadingDropdownChoiceValue = Union[
-    CascadingDropdownChoiceIdent, tuple[CascadingDropdownChoiceIdent, Any]
-]
+CascadingDropdownChoiceIdent = None | str | bool | int
+CascadingDropdownChoiceValue = (
+    CascadingDropdownChoiceIdent | tuple[CascadingDropdownChoiceIdent, Any]
+)
 CascadingDropdownCleanChoice = tuple[CascadingDropdownChoiceIdent, str, None | ValueSpec]
 CascadingDropdownShortChoice = tuple[CascadingDropdownChoiceIdent, str]
-CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
+CascadingDropdownChoice = CascadingDropdownShortChoice | CascadingDropdownCleanChoice
 CascadingDropdownChoices = Promise[Sequence[CascadingDropdownChoice]]
 
 
@@ -3666,13 +3666,9 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
 
 # TODO: Can we clean up the int type here?
-ListChoiceChoiceIdent = Union[str, int]
+ListChoiceChoiceIdent = str | int
 ListChoiceChoice = tuple[ListChoiceChoiceIdent, str]
-ListChoiceChoices = Union[
-    None,
-    Promise[Sequence[ListChoiceChoice]],
-    Mapping[ListChoiceChoiceIdent, str],
-]
+ListChoiceChoices = None | Promise[Sequence[ListChoiceChoice]] | Mapping[ListChoiceChoiceIdent, str]
 ListChoiceModel = Sequence[ListChoiceChoiceIdent]
 
 
@@ -4543,8 +4539,7 @@ class AbsoluteDate(ValueSpec[None | float]):
             raise MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
-# https://github.com/python/mypy/issues/11098
-TimeofdayValue = Union[tuple[int, int], None]
+TimeofdayValue = tuple[int, int] | None
 
 
 class Timeofday(ValueSpec[TimeofdayValue]):
@@ -4656,8 +4651,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         return (json_value[0], json_value[1])
 
 
-# https://github.com/python/mypy/issues/11098
-TimeofdayRangeValue = Union[None, tuple[tuple[int, int], tuple[int, int]]]
+TimeofdayRangeValue = None | tuple[tuple[int, int], tuple[int, int]]
 
 
 class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
@@ -4804,8 +4798,7 @@ class TimeHelper:
         return lt.timestamp()
 
 
-# https://github.com/python/mypy/issues/11098
-TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specific
+TimerangeValue = None | int | str | tuple[str, Any]  # TODO: Be more specific
 
 
 class ComputedTimerange(NamedTuple):
@@ -7206,7 +7199,7 @@ class LabelGroups(LabelGroup):
 
 
 # https://github.com/python/mypy/issues/12368
-IconSelectorModel = Union[None, Icon]
+IconSelectorModel = None | Icon
 
 
 class IconSelector(ValueSpec[IconSelectorModel]):
@@ -7846,8 +7839,7 @@ def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-
     )
 
 
-# https://github.com/python/mypy/issues/11098
-_CAInputModel = Union[None, tuple[str, int, bytes]]
+_CAInputModel = None | tuple[str, int, bytes]
 
 
 class _CAInput(ValueSpec[_CAInputModel]):

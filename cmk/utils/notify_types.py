@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, NewType, Union
+from typing import Any, Literal, NewType
 
 from typing_extensions import TypedDict
 
@@ -419,7 +419,7 @@ SortOrder = Literal[
 NoProxy = tuple[Literal["no_proxy"], None]
 EnvProxy = tuple[Literal["environment"], Literal["environment"]]
 UrlProxy = tuple[Literal["url"], str]
-ProxyUrl = Union[NoProxy, EnvProxy, UrlProxy]
+ProxyUrl = NoProxy | EnvProxy | UrlProxy
 
 WebHookUrl = tuple[
     Literal["webhook_url", "store"],

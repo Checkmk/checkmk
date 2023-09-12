@@ -10,7 +10,7 @@ from __future__ import annotations
 import enum
 import sys
 from collections.abc import Callable, Iterable, Sequence
-from typing import NamedTuple, Optional, overload, Self, Union
+from typing import NamedTuple, overload, Self
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -23,7 +23,7 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.base.api.agent_based.type_defs import RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
-_OptionalPair = Optional[tuple[Optional[float], Optional[float]]]
+_OptionalPair = tuple[float | None, float | None] | None
 
 
 class _KV(NamedTuple):
@@ -73,7 +73,7 @@ class Service(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_ServiceTuple",
         [
-            ("item", Optional[str]),
+            ("item", str | None),
             ("parameters", ParametersTypeAlias),
             ("labels", Sequence[ServiceLabel]),
         ],
@@ -227,8 +227,8 @@ class Metric(
         [
             ("name", str),
             ("value", EvalableFloat),
-            ("levels", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
-            ("boundaries", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("levels", tuple[EvalableFloat | None, EvalableFloat | None]),
+            ("boundaries", tuple[EvalableFloat | None, EvalableFloat | None]),
         ],
     )
 ):
@@ -500,7 +500,7 @@ class IgnoreResults:
         return isinstance(other, IgnoreResults) and self._value == other._value
 
 
-CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
+CheckResult = Iterable[IgnoreResults | Metric | Result]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]

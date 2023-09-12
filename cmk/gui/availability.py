@@ -10,7 +10,7 @@ import itertools
 import os
 import time
 from collections.abc import Callable, Iterator
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from livestatus import LivestatusOutputFormat, OnlySites, SiteId
 
@@ -73,7 +73,7 @@ AVOptions = dict[str, Any]  # TODO: Improve this type
 AVOptionValueSpecs = list  # TODO: Be more specific here
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
-AVObjectSpec = Union[None, AVBIObjectSpec, AVHostOrServiceObjectSpec]
+AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
 AVOutageStatisticsAggregations = list[Literal["min", "max", "avg", "cnt"]]
 AVOutageStatisticsStates = list[
     Literal[
@@ -99,7 +99,7 @@ AVObjectCells = list[tuple[str, str]]
 AVRowCells = list[tuple[HTML | str, CSSClass]]
 AVGroups = list[tuple[str | None, AVData]]
 HostOrServiceGroupName = str
-AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
+AVGroupKey = SiteHost | HostOrServiceGroupName | None
 AVGroupIds = list[SiteHost] | set[HostOrServiceGroupName] | None
 AVTimeStamp = float
 AVTimeRange = tuple[AVTimeStamp, AVTimeStamp]
@@ -115,14 +115,14 @@ AVTimeformatSpecLegacy = Literal[
     "hours",
     "hhmmss",
 ]
-AVTimeformatSpec = Union[
-    AVTimeformatSpecLegacy,
-    tuple[
+AVTimeformatSpec = (
+    AVTimeformatSpecLegacy
+    | tuple[
         Literal["both", "perc", "time"],
         Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
         Literal["seconds", "minutes", "hours", "hhmmss"],
-    ],
-]
+    ]
+)
 AVTimelineLabelling = Literal[
     "omit_headers",
     "omit_host",

@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result, State, type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
-ClusterSection = Mapping[str, Optional[Section]]
+ClusterSection = Mapping[str, Section | None]
 
 DETECT_BLUECAT = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.2.1")
 

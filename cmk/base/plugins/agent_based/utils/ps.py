@@ -16,7 +16,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from html import escape
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -36,7 +36,7 @@ from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLab
 from . import cpu, memory
 
 # typing: nothing intentional, just adapt to sad reality
-_ProcessValue = tuple[Union[str, float], str]
+_ProcessValue = tuple[str | float, str]
 _Process = list[tuple[str, _ProcessValue]]
 
 
@@ -92,15 +92,15 @@ Section = tuple[int, Sequence[tuple[PsInfo, Sequence[str]]], int]
 
 _InventorySpec = tuple[
     str,
-    Optional[str],
-    Optional[Union[str, Literal[False]]],
-    tuple[Optional[str], bool],
+    str | None,
+    str | Literal[False] | None,
+    tuple[str | None, bool],
     Mapping[str, str],
     Mapping[str, Any],
 ]
 
 # process_lines: (Node, PsInfo, cmd_line, time)
-ProcessLine = tuple[Optional[str], PsInfo, Sequence[str], int]
+ProcessLine = tuple[str | None, PsInfo, Sequence[str], int]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:

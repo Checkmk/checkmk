@@ -6,7 +6,7 @@
 import functools
 import inspect
 from collections.abc import Callable, Container, Iterator, Sequence
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from cmk.utils.validatedstr import ValidatedString
 
@@ -42,7 +42,7 @@ WindowsConfigFunction = Callable[..., WindowsConfigGenerator]
 
 _PossibleReturnType = FileReturnType | ScriptletReturnType | WindowsConfigReturnType
 # NOTE: Union is used because of bug https://github.com/python/mypy/issues/12393
-_PossibleFunctionType = Union[FilesFunction, ScriptletsFunction, WindowsConfigFunction]
+_PossibleFunctionType = FilesFunction | ScriptletsFunction | WindowsConfigFunction
 
 
 class BakeryPluginName(ValidatedString):

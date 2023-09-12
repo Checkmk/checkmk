@@ -46,7 +46,6 @@ from typing import (
     overload,
     Protocol,
     TypedDict,
-    Union,
 )
 
 import cmk.utils
@@ -179,8 +178,7 @@ HostgroupName = str
 service_service_levels = []
 host_service_levels = []
 
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-_AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
+_AgentTargetVersion = None | str | tuple[str, str] | tuple[str, dict[str, str]]
 
 AllHosts = list[HostName]
 ShadowHosts = dict[HostName, dict]
@@ -188,7 +186,7 @@ AllClusters = dict[HostName, list[HostName]]
 
 ObjectMacros = dict[str, AnyStr]
 
-CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
+CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
 class FilterMode(enum.Enum):
@@ -396,7 +394,7 @@ class SpecialAgentConfiguration(Protocol):
 
 
 SpecialAgentInfoFunctionResult = (
-    str | Sequence[Union[str, int, float, tuple[str, str, str]]] | SpecialAgentConfiguration
+    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentConfiguration
 )
 
 # Note: being more specific here makes no sense,
@@ -406,8 +404,8 @@ SpecialAgentInfoFunctionResult = (
 # We're building a proper API for 2.3 anyway.
 SpecialAgentInfoFunction = Callable
 
-HostCheckCommand = Union[None, str, tuple[str, int | str]]
-PingLevels = dict[str, Union[int, tuple[float, float]]]
+HostCheckCommand = None | str | tuple[str, int | str]
+PingLevels = dict[str, int | tuple[float, float]]
 
 # TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
 ObjectAttributes = dict[str, Any]

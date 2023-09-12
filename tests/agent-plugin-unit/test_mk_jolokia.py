@@ -16,12 +16,6 @@ if sys.version_info[0] == 2:
 else:
     import agents.plugins.mk_jolokia as mk_jolokia
 
-# Continue if typing cannot be imported, e.g. for running unit tests
-try:
-    from typing import Dict  # noqa: F401
-except ImportError:
-    pass
-
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
 def test_missing_config_basic(removed: str) -> None:
@@ -124,7 +118,7 @@ def test_jolokia_yield_configured_instances() -> None:
 class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
-        self.headers = {}  # type: Dict
+        self.headers = {}  # type: dict
         self.content = b"\x00"
         self._payload = kwargs
 

@@ -44,7 +44,7 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, NoReturn, Union
+from typing import Literal, NoReturn
 
 from typing_extensions import TypedDict
 
@@ -56,8 +56,7 @@ from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedC
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-PasswordId = Union[str, tuple[PasswordLookupType, str]]
+PasswordId = str | tuple[PasswordLookupType, str]
 
 
 class Password(TypedDict):

@@ -15,7 +15,7 @@ import enum
 import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
-from typing import final, NewType, Union
+from typing import final, NewType
 
 import requests
 import urllib3
@@ -33,12 +33,9 @@ from cmk.special_agents.utils_kubernetes.prometheus_api import (
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 
-HTTPResult = Union[
-    Response,
-    ValidationError,
-    json.JSONDecodeError,
-    requests.exceptions.RequestException,
-]
+HTTPResult = (
+    Response | ValidationError | json.JSONDecodeError | requests.exceptions.RequestException
+)
 
 
 class PrometheusEndpoints(enum.StrEnum):

@@ -6,7 +6,7 @@
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from time import time
-from typing import Any, Optional
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -40,7 +40,7 @@ class Phase:
         value_store: MutableMapping[str, Any],
         value_store_key_prefix: str,
         now: float,
-    ) -> Optional["Phase"]:
+    ) -> "Phase | None":
         try:
             rate_input: float | None = get_rate(
                 value_store,

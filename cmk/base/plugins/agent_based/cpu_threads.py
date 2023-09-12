@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Union
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.cpu import Section
 
-Params = Mapping[str, Union[str, tuple[str, tuple[float, float]]]]
+Params = Mapping[str, str | tuple[str, tuple[float, float]]]
 
 
 def discover_cpu_threads(section: Section) -> DiscoveryResult:

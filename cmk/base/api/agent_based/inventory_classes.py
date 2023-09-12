@@ -6,7 +6,7 @@
 """
 import string
 from collections.abc import Callable, Iterable, Mapping
-from typing import get_args, NamedTuple, NoReturn, Union
+from typing import get_args, NamedTuple, NoReturn
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
@@ -180,7 +180,7 @@ class TableRow(
             collection.status_data_rows.append({**self.key_columns, **self.status_columns})
 
 
-InventoryResult = Iterable[Union[Attributes, TableRow]]
+InventoryResult = Iterable[Attributes | TableRow]
 InventoryFunction = Callable[..., InventoryResult]
 
 

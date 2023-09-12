@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Union
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -99,7 +99,7 @@ OPER_STATUS_MAP = {
     "9": "admin down",
 }
 
-ValueAndStatus = Union[tuple[float, str], tuple[None, None]]
+ValueAndStatus = tuple[float, str] | tuple[None, None]
 Lane = Mapping[str, ValueAndStatus]
 
 

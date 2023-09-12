@@ -18,7 +18,7 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 import socket
 import time
 from collections.abc import Callable
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 import cmk.utils.debug as _debug
 
@@ -47,9 +47,9 @@ from cmk.base.api.agent_based.register.utils_legacy import (
 
 # pylint: enable=unused-import
 
-Warn = Union[None, int, float]
-Crit = Union[None, int, float]
-_Bound = Union[None, int, float]
+Warn = None | int | float
+Crit = None | int | float
+_Bound = None | int | float
 Levels = tuple  # Has length 2 or 4
 
 _MetricTuple = tuple[

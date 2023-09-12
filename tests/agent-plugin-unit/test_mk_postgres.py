@@ -20,11 +20,6 @@ else:
 
     import agents.plugins.mk_postgres as mk_postgres
 
-try:
-    from typing import Dict, Optional  # noqa: F401
-except ImportError:
-    # We need typing only for testing
-    pass
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -119,7 +114,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
@@ -180,7 +175,7 @@ class TestLinux:
             "pg_database": "postgres",
             "pg_port": "5432",
             "pg_passfile": "",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
@@ -206,7 +201,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
@@ -243,7 +238,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
@@ -408,7 +403,7 @@ class TestWindows:
             "name": "data",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
@@ -436,7 +431,7 @@ class TestWindows:
             "pg_user": "myuser",
             "pg_passfile": "c:\\User\\.pgpass",
             "pg_version": "12.1",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [

@@ -5,14 +5,13 @@
 
 import time
 from collections.abc import Callable, Generator, Mapping
-from typing import Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = list[tuple[str, StringTable]]
 
-Converter = Union[str, tuple[str, Callable[[str], Union[str, float, None]]]]
+Converter = str | tuple[str, Callable[[str], str | float | None]]
 
 
 def parse_dmidecode(string_table: StringTable) -> Section:

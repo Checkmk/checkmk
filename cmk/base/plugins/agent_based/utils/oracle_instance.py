@@ -5,7 +5,7 @@
 
 import dataclasses
 from collections.abc import Mapping
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -76,4 +76,4 @@ class Instance(BaseModel):
         return f"{self.name}.{self.pname}" if self.pdb else str(self.name)
 
 
-Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
+Section = Mapping[str, InvalidData | GeneralError | Instance]

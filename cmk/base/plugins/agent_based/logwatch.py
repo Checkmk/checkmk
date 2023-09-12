@@ -20,7 +20,7 @@ import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from re import Match
-from typing import Any, IO, Literal, Optional
+from typing import Any, IO, Literal
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -36,7 +36,7 @@ from .utils import eval_regex, logwatch
 
 AllParams = Sequence[Mapping[str, Any]]
 
-ClusterSection = dict[Optional[str], logwatch.Section]
+ClusterSection = dict[str | None, logwatch.Section]
 
 GroupingPattern = tuple[str, str]
 DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]

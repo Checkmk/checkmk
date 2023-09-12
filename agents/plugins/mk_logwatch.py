@@ -45,15 +45,13 @@ import socket
 import time
 
 try:
-    from typing import (  # noqa: F401 # pylint: disable=unused-import
-        Any,
+    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import
         Collection,
-        Dict,
         Iterable,
         Iterator,
         Sequence,
-        Tuple,
     )
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     # We need typing only for testing
     pass
@@ -180,7 +178,7 @@ else:
     # Python 2 and Python < 3.4 don't support decoding with "backslashreplace" error handler,
     # but we need it to uniquely represent UNIX paths in monitoring.
     def backslashreplace_decode(exception):
-        # type: (UnicodeError) -> Tuple[text_type, int]
+        # type: (UnicodeError) -> tuple[text_type, int]
 
         if not isinstance(exception, UnicodeDecodeError):
             # We'll use this error handler only for decoding, as the original
@@ -836,7 +834,7 @@ class Options:
 
     def __init__(self):
         # type: () -> None
-        self.values = {}  # type: Dict
+        self.values = {}  # type: dict
 
     @property
     def encoding(self):

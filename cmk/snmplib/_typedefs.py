@@ -8,7 +8,7 @@ import copy
 import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
@@ -18,11 +18,7 @@ SNMPContext = str | None
 SNMPValueEncoding = Literal["string", "binary"]
 OID = str
 OIDRange = tuple[int, int]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-RangeLimit = Union[
-    tuple[Literal["first", "last"], int],
-    tuple[Literal["mid"], OIDRange],
-]
+RangeLimit = tuple[Literal["first", "last"], int] | tuple[Literal["mid"], OIDRange]
 SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
 

@@ -7,7 +7,7 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -17,13 +17,9 @@ import cmk.utils.paths
 from cmk.utils.structured_data import SDRawTree
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
-_JSONSerializable = Union[
-    str,
-    list[str],
-    list[tuple[str, bool]],
-    Mapping[str, str],
-    Mapping[str, list[str]],
-]
+_JSONSerializable = (
+    str | list[str] | list[tuple[str, bool]] | Mapping[str, str] | Mapping[str, list[str]]
+)
 
 DiagnosticsCLParameters = list[str]
 DiagnosticsModesParameters = dict[str, Any]

@@ -25,7 +25,6 @@ from typing import (
     NewType,
     TypedDict,
     TypeVar,
-    Union,
 )
 
 from pydantic import BaseModel
@@ -84,7 +83,7 @@ from ._graph_specification import (
 
 LegacyPerfometer = tuple[str, Any]
 
-ScalarDefinition = Union[str, tuple[str, str | LazyString]]
+ScalarDefinition = str | tuple[str, str | LazyString]
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):

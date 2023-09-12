@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal, TypeVar, Union
+from typing import assert_never, Literal, TypeVar
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -75,10 +75,12 @@ class DiscoveryResult:
 
 
 _BasicTransition = Literal["old", "new", "vanished"]
-_Transition = Union[
-    _BasicTransition,
-    Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished", "clustered_ignored"],
-]
+_Transition = (
+    _BasicTransition
+    | Literal[
+        "ignored", "clustered_old", "clustered_new", "clustered_vanished", "clustered_ignored"
+    ]
+)
 
 
 _L = TypeVar("_L", bound=str)

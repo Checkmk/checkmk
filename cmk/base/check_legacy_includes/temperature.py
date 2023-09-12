@@ -6,7 +6,7 @@
 # pylint: disable=unused-import
 
 import time
-from typing import AnyStr, Union
+from typing import AnyStr
 
 from cmk.base.check_api import check_levels, state_markers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.utils.temperature import TwoLevelsType as TwoL
 Number = int | float
 
 # ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
-PerfDataEntryType = Union[tuple[AnyStr, Number], tuple[AnyStr, Number, Number | None]]
+PerfDataEntryType = tuple[AnyStr, Number] | tuple[AnyStr, Number, Number | None]
 PerfDataType = list[PerfDataEntryType]
 
 # Generic Check Type. Can be used elsewhere too.

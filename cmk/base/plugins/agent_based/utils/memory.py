@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Literal, Optional
+from typing import Literal
 
 from typing_extensions import TypedDict
 
@@ -12,7 +12,7 @@ from ..agent_based_api.v1 import Metric, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
-MemoryLevels = tuple[_LevelsMode, tuple[Optional[float], Optional[float]]]
+MemoryLevels = tuple[_LevelsMode, tuple[float | None, float | None]]
 
 SectionMem = Mapping[str, int]
 

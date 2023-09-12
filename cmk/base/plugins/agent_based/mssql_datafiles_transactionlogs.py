@@ -6,7 +6,7 @@
 import dataclasses
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
@@ -32,7 +32,7 @@ class MSSQLInstanceData(TypedDict):
     mountpoint: str
 
 
-SectionDatafiles = dict[tuple[Optional[str], str, str], MSSQLInstanceData]
+SectionDatafiles = dict[tuple[str | None, str, str], MSSQLInstanceData]
 
 
 def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:

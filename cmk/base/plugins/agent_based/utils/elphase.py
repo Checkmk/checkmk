@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, Result, State, type_defs
 
-CheckParams = Optional[Mapping[str, Any]]
+CheckParams = Mapping[str, Any] | None
 Sensor = Mapping[str, Any]
 Section = Mapping[str, Sensor]
 

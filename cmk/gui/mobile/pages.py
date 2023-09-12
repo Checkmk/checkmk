@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
 
 from cmk.utils.site import omd_site
 
@@ -45,7 +44,7 @@ from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_only_sites_from_context, view_title
 from cmk.gui.visuals.filter import Filter
 
-HeaderButton = Union[tuple[str, str, str], tuple[str, str, str, str]]
+HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
 Items = list[tuple[str, str, str]]
 NavigationBar = list[tuple[str, str, str, str]]
 

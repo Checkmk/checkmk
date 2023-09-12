@@ -27,7 +27,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Any, cast, Literal, overload, Union
+from typing import Any, cast, Literal, overload
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -90,7 +90,7 @@ logger = logging.getLogger("cmk.base.notify")
 _log_to_stdout = False
 notify_mode = "notify"
 
-NotificationTableEntry = dict[str, Union[NotificationPluginNameStr, list]]
+NotificationTableEntry = dict[str, NotificationPluginNameStr | list]
 NotificationTable = list[NotificationTableEntry]
 
 Event = str

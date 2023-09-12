@@ -20,7 +20,7 @@ from collections import Counter, defaultdict
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -49,7 +49,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-ClusterSection = dict[Optional[str], logwatch.Section]
+ClusterSection = dict[str | None, logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
 CHECK_DEFAULT_PARAMETERS = {

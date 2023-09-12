@@ -796,9 +796,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
     assert (
         list(
             matcher.get_service_ruleset_values(
-                config_cache.ruleset_match_object_of_service(
-                    hostname, ServiceName(service_description)
-                ),
+                matcher._service_match_object(hostname, ServiceName(service_description)),
                 ruleset=service_label_ruleset,
                 is_binary=False,
             )

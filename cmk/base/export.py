@@ -52,9 +52,9 @@ def ruleset_match_object_of_service(
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match service rulesets"""
     _load_config()
-    config_cache = config.get_config_cache()
-    config_cache.cache_ruleset_match_object_of_service(hostname, svc_desc, svc_labels)
-    return config_cache.ruleset_match_object_of_service(hostname, svc_desc)
+    matcher = config.get_config_cache().ruleset_matcher
+    matcher.cache_service_labels(hostname, svc_desc, svc_labels)
+    return matcher._service_match_object(hostname, svc_desc)
 
 
 def ruleset_match_object_for_checkgroup_parameters(

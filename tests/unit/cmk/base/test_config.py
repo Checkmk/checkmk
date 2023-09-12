@@ -2357,16 +2357,16 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
             )
         ],
     )
-    config_cache = ts.apply(monkeypatch)
+    matcher = ts.apply(monkeypatch).ruleset_matcher
 
-    obj = config_cache.ruleset_match_object_of_service(xyz_host, "bla blä")
+    obj = matcher._service_match_object(xyz_host, "bla blä")
     assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
 
     # Funny service description because the plugin isn't loaded.
     # We could patch config.service_description, but this is easier:
     description = "Unimplemented check cpu_load"
 
-    obj = config_cache.ruleset_match_object_of_service(test_host, description)
+    obj = matcher._service_match_object(test_host, description)
     service_labels = {"abc": "xä"}
     assert obj == RulesetMatchObject(HostName("test-host"), description, service_labels)
 

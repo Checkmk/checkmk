@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
+import contextlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
 from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
@@ -205,6 +206,8 @@ class RulesetMatcher:
             ],
             object,
         ] = {}
+        # Expensive and mostly useless caching.
+        self.__service_match_obj: dict[tuple[HostName, ServiceName], RulesetMatchObject] = {}
 
     # TODO: Cleanup external call sites
     def get_host_bool_value(self, hostname: HostName, ruleset: Iterable[RuleSpec[bool]]) -> bool:
@@ -259,6 +262,27 @@ class RulesetMatcher:
         )
 
         return optimized_ruleset.get(hostname, [])
+
+    def cache_service_labels(
+        self, hostname: HostName, description: ServiceName, labels: Labels
+    ) -> None:
+        cache_id = (hostname, description)
+        if cache_id not in self.__service_match_obj:
+            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
+
+    def _service_match_object(
+        self, hostname: HostName, description: ServiceName
+    ) -> RulesetMatchObject:
+        cache_id = (hostname, description)
+        with contextlib.suppress(KeyError):
+            return self.__service_match_obj[cache_id]
+
+        return self.__service_match_obj.setdefault(
+            cache_id,
+            RulesetMatchObject(
+                hostname, description, self.labels_of_service(hostname, description)
+            ),
+        )
 
     def is_matching_service_ruleset(
         self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[TRuleValue]]

@@ -2161,9 +2161,6 @@ class ConfigCache:
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
 
-        self._cache_match_object_service: dict[
-            tuple[HostName, ServiceName], RulesetMatchObject
-        ] = {}
         self._cache_match_object_service_checkgroup: dict[
             tuple[HostName, Item, ServiceName], RulesetMatchObject
         ] = {}
@@ -3565,43 +3562,6 @@ class ConfigCache:
         except KeyError:
             return {}
 
-    def cache_ruleset_match_object_of_service(
-        self, hostname: HostName, svc_desc: ServiceName, labels: Labels
-    ) -> None:
-        cache_id = (hostname, svc_desc)
-        if cache_id not in self._cache_match_object_service:
-            self._cache_match_object_service[cache_id] = RulesetMatchObject(
-                hostname, svc_desc, labels
-            )
-
-    def ruleset_match_object_of_service(
-        self, hostname: HostName, svc_desc: ServiceName
-    ) -> RulesetMatchObject:
-        """Construct the object that is needed to match this service to rulesets
-
-        Please note that the host attributes like host_folder and host_tags are
-        not set in the object, because the rule optimizer already processes all
-        these host conditions. Adding these attributes here would be
-        consequent, but create some overhead.
-
-        BE AWARE: When matching on checkgroup_parameters (Which use the check
-        item in the service_description field), you need to use the
-        ruleset_match_object_for_checkgroup_parameters()
-        """
-
-        cache_id = (hostname, svc_desc)
-        with contextlib.suppress(KeyError):
-            return self._cache_match_object_service[cache_id]
-
-        return self._cache_match_object_service.setdefault(
-            cache_id,
-            RulesetMatchObject(
-                host_name=hostname,
-                service_description=svc_desc,
-                service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
-            ),
-        )
-
     def cache_ruleset_match_object_for_checkgroup_parameters(
         self, hostname: HostName, item: Item, svc_desc: ServiceName, labels: Labels
     ) -> None:
@@ -3925,7 +3885,7 @@ class ConfigCache:
         """Compute outcome of a service rule set that has an item."""
         return list(
             self.ruleset_matcher.get_service_ruleset_values(
-                self.ruleset_match_object_of_service(hostname, description),
+                self.ruleset_matcher._service_match_object(hostname, description),
                 ruleset,
                 is_binary=False,
             )
@@ -3937,7 +3897,7 @@ class ConfigCache:
         """Compute first match service ruleset outcome with fallback to a default value"""
         return next(
             self.ruleset_matcher.get_service_ruleset_values(
-                self.ruleset_match_object_of_service(hostname, description),
+                self.ruleset_matcher._service_match_object(hostname, description),
                 ruleset,
                 is_binary=False,
             ),
@@ -3948,7 +3908,7 @@ class ConfigCache:
         self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
     ) -> Mapping[str, Any]:
         return self.ruleset_matcher.get_service_ruleset_merged_dict(
-            self.ruleset_match_object_of_service(hostname, description), ruleset
+            self.ruleset_matcher._service_match_object(hostname, description), ruleset
         )
 
     def in_boolean_serviceconf_list(
@@ -3956,7 +3916,7 @@ class ConfigCache:
     ) -> bool:
         """Compute outcome of a service rule set that just say yes/no"""
         return self.ruleset_matcher.is_matching_service_ruleset(
-            self.ruleset_match_object_of_service(hostname, description), ruleset
+            self.ruleset_matcher._service_match_object(hostname, description), ruleset
         )
 
     def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:

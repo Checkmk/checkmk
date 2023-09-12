@@ -20,7 +20,9 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import dateutils
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -260,7 +262,7 @@ class TimeSeries:
         return self.values.count(v)
 
 
-def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
+def lq_logic(filter_condition: str, values: Sequence[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
     conditions = "".join(f"{filter_condition} {livestatus.lqencode(x)}\n" for x in values)
     connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
@@ -268,9 +270,9 @@ def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
 
 
 def livestatus_lql(
-    host_names: list[str],
+    host_names: Sequence[HostName],
     columns: list[str],
-    service_description: str | None = None,
+    service_description: ServiceName | None = None,
 ) -> str:
     query_filter = "Columns: %s\n" % " ".join(columns)
     query_filter += lq_logic(
@@ -288,8 +290,8 @@ def livestatus_lql(
 
 def get_rrd_data(
     connection: livestatus.SingleSiteConnection,
-    hostname: str,
-    service_description: str,
+    host_name: HostName,
+    service_description: ServiceName,
     metric_name: str,
     cf: ConsolidationFunctionName,
     fromtime: Timestamp,
@@ -325,7 +327,7 @@ def get_rrd_data(
     )
     column = f"rrddata:m1:{rpn}:{point_range}"
 
-    lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
+    lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
     try:
         response = connection.query_value(lql)
@@ -345,8 +347,8 @@ class PredictionStore:
     def __init__(
         self,
         basedir: Path,
-        host_name: str,
-        service_description: str,
+        host_name: HostName,
+        service_description: ServiceName,
         dsname: str,
     ) -> None:
         self._dir = (
@@ -404,8 +406,8 @@ def compute_prediction(
     prediction_store: PredictionStore,
     now: int,
     period_info: _PeriodInfo,
-    hostname: str,
-    service_description: str,
+    host_name: HostName,
+    service_description: ServiceName,
 ) -> PredictionData:
     logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
     prediction_store.remove_prediction(info.name)
@@ -417,7 +419,7 @@ def compute_prediction(
         (
             get_rrd_data(
                 livestatus.LocalConnection(),
-                hostname,
+                host_name,
                 service_description,
                 info.dsname,
                 info.cf,

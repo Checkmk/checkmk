@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import _prediction
+from cmk.utils.servicename import ServiceName
 
 
 @pytest.mark.parametrize(
@@ -29,20 +33,20 @@ def test_lq_logic(filter_condition: str, values: list[str], join: str, result: s
     "args, result",
     [
         (
-            (["heute"], ["util", "user"], "CPU"),
+            ([HostName("heute")], ["util", "user"], ServiceName("CPU")),
             """GET services
 Columns: util user
 Filter: host_name = heute
 Filter: service_description = CPU\n""",
         ),
         (
-            (["gestern"], ["check_command"], None),
+            ([HostName("gestern")], ["check_command"], None),
             """GET hosts
 Columns: check_command
 Filter: host_name = gestern\n""",
         ),
         (
-            (["fire", "water"], ["description", "metrics"], "cpu"),
+            ([HostName("fire"), HostName("water")], ["description", "metrics"], ServiceName("cpu")),
             """GET services
 Columns: description metrics
 Filter: host_name = fire
@@ -51,14 +55,17 @@ Or: 2
 Filter: service_description = cpu\n""",
         ),
         (
-            ([], ["test"], "invent"),
+            ([], ["test"], ServiceName("invent")),
             """GET services
 Columns: test
 Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args: tuple[list[str], list[str], str], result: str) -> None:
+def test_livestatus_lql(
+    args: tuple[Sequence[HostName], list[str], ServiceName | None],
+    result: str,
+) -> None:
     assert _prediction.livestatus_lql(*args) == result
 
 

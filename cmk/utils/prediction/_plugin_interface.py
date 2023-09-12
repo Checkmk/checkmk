@@ -8,7 +8,9 @@ import logging
 import time
 from typing import assert_never, Literal
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.servicename import ServiceName
 
 from ._paths import PREDICTION_DIR
 from ._prediction import (
@@ -63,8 +65,8 @@ def _get_prediction(
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
 def get_predictive_levels(
-    hostname: str,
-    service_description: str,
+    host_name: HostName,
+    service_description: ServiceName,
     dsname: str,
     params: PredictionParameters,
     cf: ConsolidationFunctionName,
@@ -79,7 +81,7 @@ def get_predictive_levels(
 
     prediction_store = PredictionStore(
         PREDICTION_DIR,
-        hostname,
+        host_name,
         service_description,
         dsname,
     )
@@ -105,7 +107,7 @@ def get_predictive_levels(
             prediction_store,
             now,
             period_info,
-            hostname,
+            host_name,
             service_description,
         )
 

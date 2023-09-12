@@ -752,6 +752,50 @@ class ModeEditUser(WatoMode):
             self._user_id = request.get_validated_type_input_mandatory(UserId, "edit")
             user_attrs = self._users[self._user_id].copy()
 
+        if self._can_create_users:
+            self._get_identity_userattrs(user_attrs)
+
+        # Roles
+        user_attrs["roles"] = [
+            role for role in self._roles.keys() if html.get_checkbox("role_" + role)
+        ]
+
+        # Language configuration
+        language = request.get_ascii_input_mandatory("language", "")
+        if language != "_default_":
+            user_attrs["language"] = language
+        elif "language" in user_attrs:
+            del user_attrs["language"]
+
+        # Contact groups
+        cgs = []
+        for c in self._contact_groups:
+            if html.get_checkbox("cg_" + c):
+                cgs.append(c)
+        user_attrs["contactgroups"] = cgs
+
+        user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
+
+        # Custom user attributes
+        for name, attr in get_user_attributes():
+            value = attr.valuespec().from_html_vars("ua_" + name)
+            # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+            user_attrs[name] = value  # type: ignore[literal-required]
+
+        # Generate user "object" to update
+        user_object: UserObject = {
+            self._user_id: {
+                "attributes": user_attrs,
+                "is_new_user": self._is_new_user,
+            }
+        }
+        # The following call validates and updated the users
+        edit_users(user_object)
+        return redirect(mode_url("users"))
+
+    def _get_identity_userattrs(  # pylint: disable=too-many-branches
+        self, user_attrs: UserSpec
+    ) -> None:
         # Full name
         user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()
 
@@ -859,44 +903,6 @@ class ModeEditUser(WatoMode):
                 user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
                     ntop_username_attribute
                 )
-
-        # Roles
-        user_attrs["roles"] = [
-            role for role in self._roles.keys() if html.get_checkbox("role_" + role)
-        ]
-
-        # Language configuration
-        language = request.get_ascii_input_mandatory("language", "")
-        if language != "_default_":
-            user_attrs["language"] = language
-        elif "language" in user_attrs:
-            del user_attrs["language"]
-
-        # Contact groups
-        cgs = []
-        for c in self._contact_groups:
-            if html.get_checkbox("cg_" + c):
-                cgs.append(c)
-        user_attrs["contactgroups"] = cgs
-
-        user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
-
-        # Custom user attributes
-        for name, attr in get_user_attributes():
-            value = attr.valuespec().from_html_vars("ua_" + name)
-            # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-            user_attrs[name] = value  # type: ignore[literal-required]
-
-        # Generate user "object" to update
-        user_object: UserObject = {
-            self._user_id: {
-                "attributes": user_attrs,
-                "is_new_user": self._is_new_user,
-            }
-        }
-        # The following call validates and updated the users
-        edit_users(user_object)
-        return redirect(mode_url("users"))
 
     def page(self) -> None:  # pylint: disable=too-many-branches
         # Let exceptions from loading notification scripts happen now

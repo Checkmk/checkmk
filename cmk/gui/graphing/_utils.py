@@ -745,7 +745,6 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 #   +----------------------------------------------------------------------+
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
-# TODO: Refactor evaluate and all helpers into single class
 
 
 def split_expression(expression: str) -> tuple[str, str | None, str | None]:

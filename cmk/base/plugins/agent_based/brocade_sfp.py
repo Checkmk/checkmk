@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -43,7 +43,7 @@ class Port(TypedDict):
 Section = Mapping[int, Port]
 
 
-def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
+def parse_brocade_sfp(string_table: list[StringTable]) -> Section:
     parsed: dict[int, Port] = {}
 
     isl_ports = [int(x[0]) for x in string_table[1]]

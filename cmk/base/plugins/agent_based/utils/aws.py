@@ -6,7 +6,7 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -56,7 +56,7 @@ class AWSMetric:
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
-AWSLimitsByRegion = dict[str, List]
+AWSLimitsByRegion = dict[str, list]
 
 
 def discover_lambda_functions(

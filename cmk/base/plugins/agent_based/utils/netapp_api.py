@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, List, Literal, Optional
+from typing import Any, Literal, Optional
 
 from typing_extensions import TypedDict
 
@@ -20,7 +20,7 @@ CPUSection = TypedDict(
 )
 
 Instance = dict[str, str]
-SectionMultipleInstances = dict[str, List[Instance]]
+SectionMultipleInstances = dict[str, list[Instance]]
 SectionSingleInstance = Mapping[str, Instance]
 CustomKeys = Optional[Sequence[str]]
 ItemFunc = Optional[Callable[[str, Instance], str]]

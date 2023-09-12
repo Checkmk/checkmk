@@ -6,7 +6,7 @@
 import re
 import time
 from collections.abc import Sequence
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -28,7 +28,7 @@ Section = Sequence[Package]
 
 
 def parse_win_reg_uninstall(string_table: StringTable) -> Section:
-    parsed_packages: List[Package] = []
+    parsed_packages: list[Package] = []
     for line in string_table:
         if len(line) == 7:
             display_name, publisher, path, pacname, version, estimated_size, date = line

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
@@ -16,7 +15,7 @@ from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
 Section = Mapping[str, Mapping[str, object]]
 
 
-def parse_casa_cpu_mem(string_table: List[StringTable]) -> Section:
+def parse_casa_cpu_mem(string_table: list[StringTable]) -> Section:
     entity_names = {int(k): v for k, v in (x for x in string_table[0])}
     data = {}
     for idx, entry in enumerate(string_table[1]):

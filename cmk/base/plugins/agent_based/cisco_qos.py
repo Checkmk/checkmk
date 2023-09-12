@@ -97,7 +97,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 from .agent_based_api.v1 import (
     all_of,
@@ -149,7 +149,7 @@ Section = Mapping[tuple[InterfaceName, cbQosCMName], QosData]
 
 
 def parse_cisco_qos(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> Section:
     policy_index_to_interface_index = {
         _cbQosPolicyIndex(pol_id): _InterfaceIndex(if_idx) for pol_id, if_idx in string_table[0]

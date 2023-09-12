@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any, Final, List, Optional, Union
+from typing import Any, Final, Optional, Union
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -14,8 +14,8 @@ from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 SectionDict = dict[
     str,
     Union[
-        List[tuple[str, int]],  #
-        List[tuple[str, List[str]]],  # TODO: .util.cpu_util.CPUInfo?
+        list[tuple[str, int]],  #
+        list[tuple[str, list[str]]],  # TODO: .util.cpu_util.CPUInfo?
     ],
 ]
 
@@ -66,7 +66,7 @@ def parse_kernel(string_table: StringTable) -> Section:
     except (IndexError, ValueError):
         timestamp = None
 
-    parsed: dict[str, List] = {}
+    parsed: dict[str, list] = {}
     for line in string_table[1:]:
         if line[0] in KERNEL_COUNTER_NAMES:
             try:

@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -14,7 +14,7 @@ from .utils import huawei, interfaces
 Section = Mapping[str, interfaces.InterfaceWithCounters]
 
 
-def parse_huawei_osn_if(string_table: List[StringTable]) -> Section:
+def parse_huawei_osn_if(string_table: list[StringTable]) -> Section:
     return {
         name: interfaces.InterfaceWithCounters(
             interfaces.Attributes(

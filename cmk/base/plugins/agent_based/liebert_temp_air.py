@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, MutableMapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -25,7 +25,7 @@ def _get_item_data(item: str, section_liebert_temp_air: ParsedSection) -> tuple[
     return None
 
 
-def parse_liebert_temp_air(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_temp_air(string_table: list[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 

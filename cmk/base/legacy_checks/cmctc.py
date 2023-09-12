@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
@@ -38,7 +38,7 @@ Section = Mapping[str, Sensor]
 _TABLES = ["3", "4", "5", "6"]
 
 
-def parse_cmctc_temp(string_table: List[StringTable]) -> Section:
+def parse_cmctc_temp(string_table: list[StringTable]) -> Section:
     return {
         f"{table}.{item}": Sensor(
             status=int(status),

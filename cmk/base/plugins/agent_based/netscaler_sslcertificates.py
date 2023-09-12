@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -22,7 +22,7 @@ from .utils.netscaler import SNMP_DETECT
 Section = Mapping[str, int]
 
 
-def parse_netscaler_sslcertificates(string_table: List[StringTable]) -> Section:
+def parse_netscaler_sslcertificates(string_table: list[StringTable]) -> Section:
     """
     >>> parse_netscaler_sslcertificates([[['cert1', '3'], ['cert2', '100']]])
     {'cert1': 3, 'cert2': 100}

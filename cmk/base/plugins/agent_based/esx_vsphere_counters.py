@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -239,7 +239,7 @@ def _sum_instance_counts(counts: SubSectionCounter) -> float:
 
 
 def _max_latency(latencies: SubSectionCounter) -> int | None:
-    all_latencies: List[int] = []
+    all_latencies: list[int] = []
     for data in latencies.values():
         multivalues, _unit = data[0]
         all_latencies.extend(map(int, multivalues))

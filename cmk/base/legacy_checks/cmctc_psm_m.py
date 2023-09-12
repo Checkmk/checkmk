@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -47,7 +47,7 @@ Section = Mapping[str, Sensor]
 _SUBTREES = ("3", "4", "5", "6")
 
 
-def parse_cmctc_psm_m(string_table: List[StringTable]) -> Section:
+def parse_cmctc_psm_m(string_table: list[StringTable]) -> Section:
     section = {}
     for tree_idx, block in zip(_SUBTREES, string_table):
         for sensor_idx, type_, status, reading, descr in block:

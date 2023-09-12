@@ -6,7 +6,7 @@
 import dataclasses
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Generic, List, TypeVar
+from typing import Generic, TypeVar
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -96,7 +96,7 @@ _REFERENCES_5171 = [
 
 
 def parse_ciena_health(
-    references: Iterable[tuple[str, type[SNMPEnum]]], string_table: List[StringTable]
+    references: Iterable[tuple[str, type[SNMPEnum]]], string_table: list[StringTable]
 ) -> Section:
     return [
         SNMPData(display_name, data_type, data)

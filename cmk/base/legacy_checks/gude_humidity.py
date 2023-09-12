@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Mapping
 from itertools import chain
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
@@ -23,7 +22,7 @@ gude_humidity_default_levels = (0, 0, 60, 70)
 Section = Mapping[str, float]
 
 
-def parse_gude_humidity(string_table: List[StringTable]) -> Section:
+def parse_gude_humidity(string_table: list[StringTable]) -> Section:
     return {
         f"Sensor {index}": float(reading) / 10
         for index, reading in chain.from_iterable(string_table)

@@ -16,7 +16,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from html import escape
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -37,7 +37,7 @@ from . import cpu, memory
 
 # typing: nothing intentional, just adapt to sad reality
 _ProcessValue = tuple[Union[str, float], str]
-_Process = List[tuple[str, _ProcessValue]]
+_Process = list[tuple[str, _ProcessValue]]
 
 
 @dataclass(frozen=True)
@@ -334,7 +334,7 @@ class ProcessAggregator:
         self.percent_cpu = 0.0
         self.max_elapsed: float | None = None
         self.min_elapsed: float | None = None
-        self.processes: List[_Process] = []
+        self.processes: list[_Process] = []
         self.running_on_nodes: set = set()
 
     def __getitem__(self, item: int) -> _Process:

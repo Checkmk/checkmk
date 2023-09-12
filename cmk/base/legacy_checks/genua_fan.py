@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
@@ -14,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 
 
-def inventory_genua_fan(string_table: List[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
+def inventory_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
     for tree in string_table:
         if not tree:
             continue

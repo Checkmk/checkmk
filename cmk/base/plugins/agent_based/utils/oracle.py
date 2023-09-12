@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -27,7 +27,7 @@ class OraErrors:
     [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
 
-    def __init__(self, line: List[str]) -> None:
+    def __init__(self, line: list[str]) -> None:
         # Default values
         self.ignore = False
         self.has_error = False
@@ -101,7 +101,7 @@ class DataFiles(TypedDict):
 class TableSpaces(TypedDict):
     amount_missing_filenames: int
     autoextensible: bool
-    datafiles: List[DataFiles]
+    datafiles: list[DataFiles]
     db_version: int
     status: str
     type: str
@@ -129,7 +129,7 @@ class UnavailableDatafiles(NamedTuple):
 
 
 def check_unavailable_datafiles(
-    datafiles: List[DataFiles],
+    datafiles: list[DataFiles],
 ) -> UnavailableDatafiles:
     offline = []
     recover = []
@@ -160,7 +160,7 @@ class OnlineStatsResult(NamedTuple):
 
 
 def datafiles_online_stats(
-    datafiles: List[DataFiles],
+    datafiles: list[DataFiles],
     db_version: int,
 ) -> OnlineStatsResult | None:
     """

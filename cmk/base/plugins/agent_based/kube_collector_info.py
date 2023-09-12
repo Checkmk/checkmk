@@ -6,7 +6,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
-from typing import List, Literal
+from typing import Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -103,7 +103,7 @@ def _collector_component_versions(components: Sequence[NodeComponent]) -> str:
         ... collector_type=CollectorType.CONTAINER_METRICS)])
         'Container Metrics: Checkmk_kube_agent v1, component 1'
     """
-    formatted_components: List[str] = []
+    formatted_components: list[str] = []
     for component in sorted(components, key=lambda c: c.collector_type.value):
         formatted_components.append(
             f"{component.collector_type.value}: Checkmk_kube_agent v{component.checkmk_kube_agent.project_version}, {component.name} {component.version}"

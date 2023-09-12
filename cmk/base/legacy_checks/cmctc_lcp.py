@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
@@ -89,7 +89,7 @@ _TREES = [
 ]
 
 
-def parse_cmctc_lcp(string_table: List[StringTable]) -> Section:
+def parse_cmctc_lcp(string_table: list[StringTable]) -> Section:
     return {
         f"{sensor_spec[0]} - {tree}.{index}"
         if sensor_spec[0]

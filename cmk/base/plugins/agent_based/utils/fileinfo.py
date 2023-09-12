@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping
 from enum import Enum
 from re import Match
-from typing import Any, List, NamedTuple, Union
+from typing import Any, NamedTuple, Union
 
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .interfaces import saveint
 
-DiscoveryParams = Iterable[Mapping[str, List[tuple[str, Union[str, tuple[str, str]]]]]]
+DiscoveryParams = Iterable[Mapping[str, list[tuple[str, Union[str, tuple[str, str]]]]]]
 
 
 class FileinfoItem(NamedTuple):
@@ -71,14 +71,14 @@ def _cast_value(value: Any, data_type: type) -> Any:
         return None
 
 
-def _get_field(row: List[Any], index: int) -> Any:
+def _get_field(row: list[Any], index: int) -> Any:
     try:
         return row[index]
     except IndexError:
         return None
 
 
-def _parse_single_legacy_row(row: List[str]) -> FileStats | None:
+def _parse_single_legacy_row(row: list[str]) -> FileStats | None:
     name = _cast_value(row[0], str)
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
@@ -100,7 +100,7 @@ def _parse_single_legacy_row(row: List[str]) -> FileStats | None:
     )
 
 
-def _parse_single_row(row: List[str], header: Iterable[str]) -> FileStats | None:
+def _parse_single_row(row: list[str], header: Iterable[str]) -> FileStats | None:
     file_data = dict(zip(header, row))
 
     name = _cast_value(file_data.get("name"), str)
@@ -192,10 +192,10 @@ def fileinfo_process_date(pattern: str, reftime: int) -> str:
 
 
 def fileinfo_groups_get_group_name(
-    group_patterns: List[tuple[str, str | tuple[str, str]]],
+    group_patterns: list[tuple[str, str | tuple[str, str]]],
     filename: str,
     reftime: int,
-) -> dict[str, List[str | tuple[str, str]]]:
+) -> dict[str, list[str | tuple[str, str]]]:
     found_these_groups: dict[str, set] = {}
 
     for group_name, pattern in group_patterns:
@@ -289,7 +289,7 @@ def discovery_fileinfo_groups(
 
 
 def _fileinfo_check_function(
-    check_definition: List[MetricInfo],
+    check_definition: list[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
     for metric in check_definition:
@@ -460,7 +460,7 @@ def _check_individual_files(
 
 def _define_fileinfo_group_check(
     files_matching: dict[str, Any],
-) -> List[MetricInfo]:
+) -> list[MetricInfo]:
     size_smallest, size_largest = files_matching["size_minmax"] or (None, None)
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
@@ -474,7 +474,7 @@ def _define_fileinfo_group_check(
 
 
 def _fileinfo_check_conjunctions(
-    check_definition: List[MetricInfo],
+    check_definition: list[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
     conjunctions = params.get("conjunctions", [])

@@ -11,7 +11,7 @@
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.5.1 -1
 
 from collections.abc import Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -46,7 +46,7 @@ MAP_STATES = {
 }
 
 
-def parse_fjdarye_pcie_flash_modules(string_table: List[StringTable]) -> PCIeFlashModuleSection:
+def parse_fjdarye_pcie_flash_modules(string_table: list[StringTable]) -> PCIeFlashModuleSection:
     if not string_table:
         return {}
 

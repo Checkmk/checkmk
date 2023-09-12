@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,7 +21,7 @@ class Quota(NamedTuple):
 
 class Section(NamedTuple):
     fs_sizes: dict[str, int]
-    quotas: List[Quota]
+    quotas: list[Quota]
 
 
 def parse_vnx_quotas(string_table: StringTable) -> Section:
@@ -97,7 +97,7 @@ def vnx_quotas_renaming(name: str, mappings: Sequence[tuple[str, str]]) -> str:
     return name
 
 
-def discover_vnx_quotas(params: List[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+def discover_vnx_quotas(params: list[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     for quota in section.quotas:
         dms, mpt = quota.name.split(" ")
         if params and params[0]:

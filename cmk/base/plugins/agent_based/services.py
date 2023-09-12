@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Generator, Mapping, Sequence
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -51,7 +51,7 @@ class WinService(NamedTuple):
     description: str
 
 
-Section = List[WinService]  # deterministic order!
+Section = list[WinService]  # deterministic order!
 
 
 def parse_windows_services(string_table: StringTable) -> Section:

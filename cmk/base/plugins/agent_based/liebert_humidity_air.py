@@ -12,7 +12,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -40,7 +40,7 @@ def _get_item_data(
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_humidity_air(string_table: list[StringTable]) -> ParsedSection:
     return liebert.parse_liebert(string_table, str)
 
 

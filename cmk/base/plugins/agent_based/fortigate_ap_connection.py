@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -53,7 +53,7 @@ _CONN_STATE_TO_READABLE: Mapping[str, tuple[str, str]] = {
 }
 
 
-def parse_fortigate_ap_connection(string_table: List[StringTable]) -> Section:
+def parse_fortigate_ap_connection(string_table: list[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_fortigate_ap_connection([

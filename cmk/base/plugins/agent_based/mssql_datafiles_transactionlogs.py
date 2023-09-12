@@ -6,7 +6,7 @@
 import dataclasses
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, List, Literal, Optional
+from typing import Any, Literal, Optional
 
 from typing_extensions import TypedDict
 
@@ -184,7 +184,7 @@ def _mssql_datafiles_process_sizes(
 
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
     summarize = params[0].get("summarize_%s" % mode, False)
@@ -199,7 +199,7 @@ def discover_mssql_common(
 
 
 def discover_mssql_datafiles(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section_mssql_datafiles: SectionDatafiles | None,
     section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:
@@ -209,7 +209,7 @@ def discover_mssql_datafiles(
 
 
 def discover_mssql_transactionlogs(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section_mssql_transactionlogs: SectionDatafiles | None,
     section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:

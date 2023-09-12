@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import List
 
 from .agent_based_api.v1 import (
     any_of,
@@ -103,7 +102,7 @@ STATE = {
 }
 
 
-def parse_infoblox_services(string_table: List[StringTable]) -> Section:
+def parse_infoblox_services(string_table: list[StringTable]) -> Section:
     """
     >>> for item, status in parse_infoblox_services([[
     ...         ['9', '1', 'Running'],

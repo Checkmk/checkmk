@@ -9,7 +9,7 @@ Knowledge:
 firmware problem
 """
 from collections.abc import Mapping
-from typing import Any, List, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     any_of,
@@ -60,7 +60,7 @@ AS_DISCOVERED = "as_discovered"
 STATES_DURING_DISC_KEY = "states_during_discovery"
 
 
-def parse_wut_webio(string_table: List[type_defs.StringTable]) -> Section | None:
+def parse_wut_webio(string_table: list[type_defs.StringTable]) -> Section | None:
     # We may have a EA12x6, EA2x2 or EA12x12
     webio_data = string_table[0] or string_table[1] or string_table[2]
     if not webio_data:

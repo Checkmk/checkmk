@@ -29,7 +29,7 @@
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
 
-from typing import List, Union
+from typing import Union
 
 from .agent_based_api.v1 import all_of, exists, register, SNMPTree, startswith, type_defs
 
@@ -48,7 +48,7 @@ def get_status_info(amperage_str: str, device_state: str) -> StatusInfo:
     return float(amperage_str) / 10, STATE_MAP[device_state]
 
 
-def parse_apc_rackpdu_power(string_table: List[type_defs.StringTable]) -> Parsed | None:
+def parse_apc_rackpdu_power(string_table: list[type_defs.StringTable]) -> Parsed | None:
     if not any(string_table):
         return None
 

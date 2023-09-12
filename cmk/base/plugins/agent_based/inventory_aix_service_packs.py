@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -11,12 +11,12 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 class Section(NamedTuple):
     latest_service_pack: str | None
-    service_packs: List[str]
+    service_packs: list[str]
 
 
 def parse_aix_service_packs(string_table: StringTable) -> Section:
     latest_service_pack = None
-    service_packs: List[str] = []
+    service_packs: list[str] = []
     for line in string_table:
         if line[0].startswith("----") or line[0].startswith("Known"):
             continue

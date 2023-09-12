@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Final, List, NamedTuple
+from typing import Final, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -29,7 +29,7 @@ class Sensor(NamedTuple):
 Section = Mapping[str, Sensor]
 
 
-def parse_kentix_temp(string_table: List[StringTable]) -> Section:
+def parse_kentix_temp(string_table: list[StringTable]) -> Section:
     return {
         item: Sensor(
             reading=float(value) / 10,

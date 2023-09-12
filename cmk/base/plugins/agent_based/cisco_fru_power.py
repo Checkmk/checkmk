@@ -49,7 +49,7 @@
 from collections.abc import Container, Mapping
 from dataclasses import dataclass
 from itertools import groupby
-from typing import Final, List
+from typing import Final
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -94,7 +94,7 @@ _STATE_MAP: Final = {
 }
 
 
-def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
+def parse_cisco_fru_power(string_table: list[StringTable]) -> Section:
     states_and_currents, names = string_table
 
     raw_states = {oid_end: oper_state for oid_end, oper_state, _current in states_and_currents}

@@ -10,7 +10,7 @@
 # <oid>.1: Index
 # <oid>.3: Status
 
-from typing import List, NewType
+from typing import NewType
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -35,7 +35,7 @@ FJDARYE_SUM_STATUS = {
 FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
 
 
-def parse_fjdarye_sum(string_table: List[StringTable]) -> FjdaryeDeviceStatus | None:
+def parse_fjdarye_sum(string_table: list[StringTable]) -> FjdaryeDeviceStatus | None:
     for row in string_table:
         for status in row:
             if len(status) == 1:

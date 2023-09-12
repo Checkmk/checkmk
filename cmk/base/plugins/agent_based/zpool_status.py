@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
@@ -13,7 +13,7 @@ from .utils.interfaces import saveint
 
 class ZpoolStatus(NamedTuple):
     message: str = ""
-    state_messages: List[str] = []
+    state_messages: list[str] = []
     error_pools: dict[str, Any] = {}
     warning_pools: dict[str, Any] = {}
     pool_messages: dict[str, Any] = {}
@@ -54,7 +54,7 @@ def parse_zpool_status(  # pylint: disable=too-many-branches
     error_pools: dict[str, Any] = {}
     warning_pools: dict[str, Any] = {}
     pool_messages: dict[str, Any] = {}
-    state_messages: List[str] = []
+    state_messages: list[str] = []
 
     for line in string_table:
         if line[0] == "pool:":
@@ -111,7 +111,7 @@ def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:
 
 def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     state: State = State.OK
-    messages: List[str] = []
+    messages: list[str] = []
 
     if section.message == "All pools are healthy":
         state = State.OK

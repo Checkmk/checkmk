@@ -5,7 +5,7 @@
 
 from contextlib import suppress
 from statistics import mean
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -38,7 +38,7 @@ class Entity(NamedTuple):
     physical_class: PhysicalClasses
 
 
-def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
+def parse_cisco_cpu_multiitem(string_table: list[StringTable]) -> Section:
     ph_idx_to_entity: dict[str, Entity] = {}
     for idx, desc, class_idx in string_table[1]:
         if desc.lower().startswith("cpu "):

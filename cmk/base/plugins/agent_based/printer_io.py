@@ -5,7 +5,7 @@
 
 import enum
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -93,7 +93,7 @@ ALARM_MAP = {
 }
 
 
-def parse_printer_io(string_table: List[StringTable]) -> Section:
+def parse_printer_io(string_table: list[StringTable]) -> Section:
     parsed: Section = {}
     for line in string_table[0]:
         tray_index, name, descr, snmp_status_raw, capacity_unit, capacity_max, level = line[:7]

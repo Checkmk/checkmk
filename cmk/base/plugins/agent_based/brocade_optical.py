@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, List, Union
+from typing import Any, Union
 
 from typing_extensions import TypedDict
 
@@ -129,7 +129,7 @@ def _parse_value(value_string: str) -> ValueAndStatus:
         return None, None
 
 
-def parse_brocade_optical(string_table: List[type_defs.StringTable]) -> Section:
+def parse_brocade_optical(string_table: list[type_defs.StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_brocade_optical([

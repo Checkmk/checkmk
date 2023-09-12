@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, List
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -133,7 +133,7 @@ def _to_vserver(line: Iterable[str]) -> tuple[str, VServer]:
     return full_name or name, vserver
 
 
-def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Section:
+def parse_netscaler_vserver(string_table: list[type_defs.StringTable]) -> Section:
     """
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[

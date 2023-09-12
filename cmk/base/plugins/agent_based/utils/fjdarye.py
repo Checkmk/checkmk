@@ -15,7 +15,7 @@
 # the latter can be one of the following:
 
 from collections.abc import Mapping, MutableMapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from ..agent_based_api.v1 import any_of, equals, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -49,7 +49,7 @@ class FjdaryeItem(NamedTuple):
 SectionFjdaryeItem = Mapping[str, FjdaryeItem]
 
 
-def parse_fjdarye_item(string_table: List[StringTable]) -> SectionFjdaryeItem:
+def parse_fjdarye_item(string_table: list[StringTable]) -> SectionFjdaryeItem:
     fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
 
     for device in string_table:

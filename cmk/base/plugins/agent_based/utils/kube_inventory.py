@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterator
-from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.utils.kube import Labels, MatchExpressions, MatchLabels
@@ -59,7 +58,7 @@ def match_expressions_to_str(match_expressions: MatchExpressions) -> str:
     'app in (agent, kube-dns), k8s-app, !k8s, k8s notin (check)'
 
     """
-    pretty_match_expressions: List[str] = []
+    pretty_match_expressions: list[str] = []
     for match_expression in match_expressions:
         key, operator = match_expression["key"], match_expression["operator"]
         if operator == "Exists":

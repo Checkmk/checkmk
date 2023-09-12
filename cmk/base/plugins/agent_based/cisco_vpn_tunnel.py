@@ -6,7 +6,7 @@
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from time import time
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from typing_extensions import TypedDict
 
@@ -121,7 +121,7 @@ def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type: ignore[no-unt
     return phase_2_data
 
 
-def parse_cisco_vpn_tunnel(string_table: List[StringTable]) -> Section:
+def parse_cisco_vpn_tunnel(string_table: list[StringTable]) -> Section:
     phase_2_data = _parse_phase_2(string_table[1])
 
     section: dict[str, VPNTunnel] = {}

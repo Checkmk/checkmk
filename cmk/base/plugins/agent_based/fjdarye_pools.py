@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import equals, get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,7 +29,7 @@ def _to_float(value: str) -> float | None:
     return None
 
 
-def parse_fjdarye_pools(string_table: List[StringTable]) -> FjdaryePoolsSection:
+def parse_fjdarye_pools(string_table: list[StringTable]) -> FjdaryePoolsSection:
     pools: MutableMapping[str, PoolEntry] = {}
 
     if not string_table:

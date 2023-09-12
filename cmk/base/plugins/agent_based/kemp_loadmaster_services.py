@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, List
+from typing import Final
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
@@ -32,7 +32,7 @@ _VS_STATE_MAP: Final = {
 }
 
 
-def parse_kemp_loadmaster_services(string_table: List[List[str]]) -> Section:
+def parse_kemp_loadmaster_services(string_table: list[list[str]]) -> Section:
     return {
         name: VirtualService(
             name,

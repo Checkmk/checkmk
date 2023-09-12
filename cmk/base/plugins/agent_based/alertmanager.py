@@ -6,7 +6,7 @@
 
 import json
 from enum import Enum
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -52,7 +52,7 @@ StateMapping = dict[str, int]
 
 class GroupServices(TypedDict, total=False):
     min_amount_rules: int
-    no_group_services: List[str]
+    no_group_services: list[str]
 
 
 class DiscoveryParams(TypedDict, total=False):
@@ -64,12 +64,12 @@ class DiscoveryParams(TypedDict, total=False):
 
 
 class AlertRemapping(TypedDict):
-    rule_names: List[str]
+    rule_names: list[str]
     map: StateMapping
 
 
 class CheckParams(TypedDict, total=False):
-    alert_remapping: List[AlertRemapping]
+    alert_remapping: list[AlertRemapping]
 
 
 default_discovery_parameters = DiscoveryParams(

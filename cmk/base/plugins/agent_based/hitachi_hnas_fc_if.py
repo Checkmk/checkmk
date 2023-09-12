@@ -2,14 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
 
 from .agent_based_api.v1 import register, SNMPTree, type_defs
 from .utils import hitachi_hnas, if64, interfaces
 
 
 def parse_hitachi_hnas_fc_if(
-    string_table: List[type_defs.StringTable],
+    string_table: list[type_defs.StringTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(

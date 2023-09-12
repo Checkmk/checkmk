@@ -6,7 +6,6 @@
 import json
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -22,7 +21,7 @@ LsblkMap = Mapping[str, str | None]
 MpToDevice = Mapping[str, str]
 
 
-def _padded_line(line: List[str]) -> List[str]:
+def _padded_line(line: list[str]) -> list[str]:
     try:
         int(line[1])
     except ValueError:
@@ -31,7 +30,7 @@ def _padded_line(line: List[str]) -> List[str]:
     return [line[0], ""] + line[1:]
 
 
-def _reformat_line(line: List[str]) -> List[str]:
+def _reformat_line(line: list[str]) -> list[str]:
     # Handle known cases, where the file system contains spaces
     for index, entry in enumerate(line):
         if entry == "NTFS":
@@ -48,7 +47,7 @@ def _reformat_line(line: List[str]) -> List[str]:
 
 
 def _processed(
-    line: List[str],
+    line: list[str],
     seen_btrfs_devices: set[str],
     device_to_uuid: LsblkMap,
 ) -> DfBlock | None:

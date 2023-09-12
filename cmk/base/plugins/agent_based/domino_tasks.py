@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -27,7 +27,7 @@ from .utils import domino, memory, ps
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
 # [PsInfo(), u'/sbin/init', u'splash']
-def parse_domino_tasks(string_table: List[StringTable]) -> ps.Section:
+def parse_domino_tasks(string_table: list[StringTable]) -> ps.Section:
     now = int(time.time())
     process_lines = [(ps.PsInfo(), line) for line in string_table[0]]
     # add cpu_cores count to be compatible with ps section

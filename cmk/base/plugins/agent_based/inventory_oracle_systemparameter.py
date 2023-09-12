@@ -9,7 +9,6 @@
 # XE|sessions|172|FALSE
 
 from collections.abc import Mapping, Sequence
-from typing import List
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -18,7 +17,7 @@ Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 def parse_oracle_systemparameter(string_table: StringTable) -> Section:
-    parsed: dict[str, List[Mapping[str, str]]] = {}
+    parsed: dict[str, list[Mapping[str, str]]] = {}
 
     for line in string_table:
         if len(line) != 4:

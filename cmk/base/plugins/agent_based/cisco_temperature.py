@@ -6,7 +6,7 @@
 import dataclasses
 import enum
 from collections.abc import Mapping, Sequence
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -132,7 +132,7 @@ def _parse_unspecified_thresholds(
 
 
 def parse_cisco_temperature(  # pylint: disable=too-many-branches
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> Section:
     # CISCO-ENTITY-SENSOR-MIB entSensorType
     cisco_sensor_types = {

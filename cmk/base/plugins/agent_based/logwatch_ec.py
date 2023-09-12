@@ -20,7 +20,7 @@ from collections import Counter, defaultdict
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Protocol
+from typing import Any, Optional, Protocol
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -626,7 +626,7 @@ class MessageForwarder:
     @staticmethod
     def _forward_send_tcp(
         method: tuple,
-        message_chunks: Iterable[tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, list[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         protocol, method_params = method
@@ -654,7 +654,7 @@ class MessageForwarder:
     # b) Write files for new chunk
     def _spool_messages(
         self,
-        message_chunks: Iterable[tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, list[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         self._spool_path.mkdir(parents=True, exist_ok=True)
@@ -683,7 +683,7 @@ class MessageForwarder:
         self,
         method: tuple,
         result: LogwatchFordwardResult,
-    ) -> List[tuple[float, int, List[str]]]:
+    ) -> list[tuple[float, int, list[str]]]:
         spool_params = method[1]["spool"]
 
         try:

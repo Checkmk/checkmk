@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, MutableMapping
-from typing import Any, Final, List, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -25,12 +25,12 @@ from .utils.cpu_util import check_cpu_util
 class CoreTicks(NamedTuple):
     name: str
     total: int
-    per_core: List[int]
+    per_core: list[int]
 
 
 class Section(NamedTuple):
     time: int
-    ticks: List[CoreTicks]
+    ticks: list[CoreTicks]
 
 
 WHAT_MAP: Final = {"-232": "util", "-96": "user", "-94": "privileged"}
@@ -118,7 +118,7 @@ def _get_cores(
     value_store: MutableMapping[str, Any],
     ticks: CoreTicks,
     this_time: float,
-) -> List[tuple[str, float]]:
+) -> list[tuple[str, float]]:
     cores = []
     for idx in range(len(ticks.per_core)):
         try:

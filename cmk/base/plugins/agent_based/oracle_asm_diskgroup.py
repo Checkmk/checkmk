@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -72,7 +72,7 @@ class Diskgroup(NamedTuple):
     req_mir_free_mb: int
     offline_disks: int
     voting_files: str
-    fail_groups: List[Failgroup]
+    fail_groups: list[Failgroup]
 
 
 class Section(NamedTuple):
@@ -209,7 +209,7 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             )
 
         else:
-            failgroups: List[Failgroup] = []
+            failgroups: list[Failgroup] = []
             if dgstate == "MOUNTED":
                 this_failgroup = Failgroup(
                     fg_name=fg_name,

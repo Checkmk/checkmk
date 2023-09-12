@@ -16,7 +16,7 @@ from collections.abc import Iterable, Mapping, Sequence
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, List, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, Optional, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -118,7 +118,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     value = float_ignore_uom(raw[0])
 
     # create a check_levels compatible levels quadruple
-    levels: List[float | None] = [None] * 4
+    levels: list[float | None] = [None] * 4
     if len(raw) >= 2:
         warn = raw[1].split(":", 1)
         levels[0] = _try_convert_to_float(warn[-1])

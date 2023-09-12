@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from ..agent_based_api.v1 import exists, OIDBytes, type_defs
 from . import interfaces
 
 BASE_OID = ".1.3.6.1.2.1"
 
-END_OIDS: List[str | OIDBytes] = [
+END_OIDS: list[str | OIDBytes] = [
     "2.2.1.1",  # ifIndex                      0
     "2.2.1.2",  # ifDescr                      1
     "2.2.1.3",  # ifType                       2

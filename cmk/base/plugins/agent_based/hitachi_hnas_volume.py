@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -91,7 +91,7 @@ register.snmp_section(
 
 
 def discovery_hitachi_hnas_volume(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from df_discovery(params, list(section.volumes.keys()))
@@ -173,7 +173,7 @@ register.check_plugin(
 
 
 def discovery_hitachi_hnas_virtual_volume(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from df_discovery(params, list(section.virtual_volumes.keys()))

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import List
 
 from ..agent_based_api.v1.type_defs import StringTable
 
@@ -12,7 +11,7 @@ Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 def parse_dbs(string_table: StringTable) -> Section:
-    dbs: dict[str, List[Mapping[str, str]]] = {}
+    dbs: dict[str, list[Mapping[str, str]]] = {}
     inst_name = ""
     lines = iter(string_table)
 

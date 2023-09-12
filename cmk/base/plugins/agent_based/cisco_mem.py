@@ -27,7 +27,7 @@ False
 
 from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import (
     all_of,
@@ -52,7 +52,7 @@ CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def parse_cisco_mem(string_table: List[StringTable]) -> Section | None:
+def parse_cisco_mem(string_table: list[StringTable]) -> Section | None:
     """
     >>> for item, values in parse_cisco_mem([
     ...         [['System memory', '319075344', '754665920', '731194056']],

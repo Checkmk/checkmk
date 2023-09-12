@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from collections.abc import Iterable
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from ..agent_based_api.v1.type_defs import StringTable
 from .memory import SectionMemUsed
@@ -156,7 +156,7 @@ class MemorySection(NamedTuple):
         }
 
 
-def _mem_bytes(line: List[str]) -> int:
+def _mem_bytes(line: list[str]) -> int:
     if len(line) == 2 and line[1] == "kB":
         return int(line[0]) * 1024
     return int(line[0])
@@ -188,5 +188,5 @@ def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> Memory
     )
 
 
-def is_string_table_heading(line: List[str]) -> bool:
+def is_string_table_heading(line: list[str]) -> bool:
     return len(line) == 1 and line[0].startswith("[") and line[0].endswith("]")

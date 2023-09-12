@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import (
@@ -24,7 +23,7 @@ huawei_switch_hw_oper_state_map = {
 }
 
 
-def parse_huawei_switch_psu(string_table: List[StringTable]) -> Section:
+def parse_huawei_switch_psu(string_table: list[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table, "power card")
 
 

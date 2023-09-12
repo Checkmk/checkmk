@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -214,7 +214,7 @@ def check_cpu_util_unix(
     params: Mapping,
     this_time: float,
     value_store: MutableMapping,
-    cores: List[CPUInfo],
+    cores: list[CPUInfo],
     values_counter: bool,
 ) -> CheckResult:
     if values_counter:

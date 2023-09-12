@@ -13,14 +13,13 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5074 Unit Operating State Reason
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5074 Reason Unknown
 
-from typing import List
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import liebert
 
 
-def parse_liebert_system(string_table: List[StringTable]) -> liebert.SystemSection:
+def parse_liebert_system(string_table: list[StringTable]) -> liebert.SystemSection:
     return liebert.parse_liebert_without_unit(string_table, str)
 
 

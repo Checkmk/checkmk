@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from ..agent_based_api.v1 import all_of, Service, startswith, type_defs
 
-Variable = List[str]
+Variable = list[str]
 DiscoveryParams = Mapping[str, bool]
 CheckParams = Mapping[str, Any]
 

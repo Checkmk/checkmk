@@ -34,7 +34,7 @@ False
 """
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -64,7 +64,7 @@ map_states = {
 }
 
 
-def parse_cisco_wlc(string_table: List[StringTable]) -> Section:
+def parse_cisco_wlc(string_table: list[StringTable]) -> Section:
     """
     >>> parse_cisco_wlc([[['AP19', '1'], ['AP02', '1']]])
     {'AP19': '1', 'AP02': '1'}

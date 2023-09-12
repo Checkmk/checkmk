@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -20,7 +20,7 @@ _KEYS = [
 ]
 
 
-def parse_adva_fsp_if(string_table: List[StringTable]) -> Section:
+def parse_adva_fsp_if(string_table: list[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_adva_fsp_if([[

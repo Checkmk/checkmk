@@ -5,12 +5,12 @@
 
 import time
 from collections.abc import Callable, Generator, Mapping
-from typing import List, Union
+from typing import Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = List[tuple[str, StringTable]]
+Section = list[tuple[str, StringTable]]
 
 Converter = Union[str, tuple[str, Callable[[str], Union[str, float, None]]]]
 
@@ -116,7 +116,7 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
 
 def _dispatch_subsection(
     title: str,
-    lines: List[List[str]],
+    lines: list[list[str]],
     memory_array_number: int,
 ) -> InventoryResult:
     if title == "BIOS Information":
@@ -144,7 +144,7 @@ def _dispatch_subsection(
         return
 
 
-def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
+def _make_inventory_bios(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["software", "bios"],
         inventory_attributes=_make_dict(
@@ -160,7 +160,7 @@ def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
     )
 
 
-def _make_inventory_system(lines: List[List[str]]) -> Attributes:
+def _make_inventory_system(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "system"],
         inventory_attributes=_make_dict(
@@ -177,7 +177,7 @@ def _make_inventory_system(lines: List[List[str]]) -> Attributes:
     )
 
 
-def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
+def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "chassis"],
         inventory_attributes=_make_dict(
@@ -191,7 +191,7 @@ def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
 
 
 # Note: This node is also being filled by lnx_cpuinfo
-def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, None, None]:
+def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, None, None]:
     vendor_map = {
         "GenuineIntel": "intel",
         "Intel(R) Corporation": "intel",
@@ -217,7 +217,7 @@ def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, N
     )
 
 
-def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int) -> Attributes:
+def _make_inventory_physical_mem_array(lines: list[list[str]], array_number: int) -> Attributes:
     # We expect several possible arrays
     return Attributes(
         path=["hardware", "memory", "arrays", str(array_number)],
@@ -234,7 +234,7 @@ def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int
 
 
 def _make_inventory_mem_device(
-    lines: List[List[str]],
+    lines: list[list[str]],
     array_number: int,
 ) -> Generator[TableRow, None, None]:
     device = _make_dict(
@@ -271,7 +271,7 @@ def _make_inventory_mem_device(
 
 
 def _make_dict(
-    lines: List[List[str]],
+    lines: list[list[str]],
     converter_map: Mapping[str, Converter],
 ) -> dict[str, float | str | None]:
     dict_: dict[str, float | str | None] = {}

@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     Attributes,
@@ -88,7 +88,7 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
 
     swaptotal: MemBytes | None = None
     swapused: MemBytes | None = None
-    metrics: List[Metric] = []
+    metrics: list[Metric] = []
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo["SwapTotal"])
         swapused = MemBytes(swaptotal.kb - meminfo["SwapFree"])

@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -38,7 +38,7 @@ def extract_esx_vsphere_hostsystem_cpu_usage(
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
     section_esx_vsphere_hostsystem: Section | None,
-    section_winperf_processor: List | None,  # currently no parse function
+    section_winperf_processor: list | None,  # currently no parse function
 ) -> DiscoveryResult:
     if section_winperf_processor or not section_esx_vsphere_hostsystem:
         return
@@ -88,7 +88,7 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
 def check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
     section_esx_vsphere_hostsystem: Section | None,
-    section_winperf_processor: List | None,
+    section_winperf_processor: list | None,
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
@@ -118,7 +118,7 @@ def _applicable_thresholds(
 def cluster_check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
     section_esx_vsphere_hostsystem: Mapping[str, Section | None],
-    section_winperf_processor: Mapping[str, List | None],
+    section_winperf_processor: Mapping[str, list | None],
 ) -> CheckResult:
     aggregated_section = None
     total_mhz = 0.0

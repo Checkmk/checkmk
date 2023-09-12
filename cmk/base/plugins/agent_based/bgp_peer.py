@@ -94,7 +94,7 @@ This is the data we can extract
 """
 
 from collections.abc import Mapping, Sequence
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -212,7 +212,7 @@ def _clean_address(address_as_oids: Sequence[str]) -> str:
     return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
 
 
-def parse_bgp_peer(string_table: List[StringByteTable]) -> Section:
+def parse_bgp_peer(string_table: list[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         aristaBgp4V2PrefixGaugesEntry:
@@ -229,7 +229,7 @@ def parse_bgp_peer(string_table: List[StringByteTable]) -> Section:
     return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
 
 
-def parse_bgp_peer_cisco_2(string_table: List[StringByteTable]) -> Section:
+def parse_bgp_peer_cisco_2(string_table: list[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         cbgpPeer2Entry:
@@ -243,7 +243,7 @@ def parse_bgp_peer_cisco_2(string_table: List[StringByteTable]) -> Section:
     return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
 
 
-def parse_bgp_peer_cisco_3(string_table: List[StringByteTable]) -> Section:
+def parse_bgp_peer_cisco_3(string_table: list[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         cbgpPeer3Entry:

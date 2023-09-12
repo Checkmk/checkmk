@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -25,7 +25,7 @@ def _to_bytes(raw: str) -> int:
     return int(float(raw) * 1024)
 
 
-def parse_cisco_cpu_memory_multiitem(string_table: List[StringTable]) -> Section:
+def parse_cisco_cpu_memory_multiitem(string_table: list[StringTable]) -> Section:
     ph_idx_to_desc = {
         idx: desc[4:] if desc.lower().startswith("cpu ") else desc for idx, desc in string_table[1]
     }

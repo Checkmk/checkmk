@@ -6,7 +6,6 @@
 """
 
 from collections.abc import Mapping
-from typing import List
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -27,7 +26,7 @@ STATE_NAMES = {
 
 
 def parse_f5_bigip_cluster_status(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_cluster_status([[['4']]])
@@ -188,7 +187,7 @@ register.check_plugin(
 # F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 
 
-def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> NodeState | None:
+def parse_f5_bigip_vcmpfailover(string_table: list[StringTable]) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_vcmpfailover([[["0", "4"]]])
     4

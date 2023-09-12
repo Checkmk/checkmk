@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Callable, Mapping
-from typing import Any, Final, List
+from typing import Any, Final
 
 from typing_extensions import TypedDict
 
@@ -48,7 +48,7 @@ class Job(TypedDict, total=False):
     running: bool
     exit_code: int
     start_time: float
-    running_start_time: List[int]
+    running_start_time: list[int]
     metrics: Metrics
 
 
@@ -65,7 +65,7 @@ def _job_parse_real_time(s: str) -> float:
     return float(parts[-1]) + min_sec + hour_sec
 
 
-def _job_parse_metrics(line: List[str]) -> tuple[str, float]:
+def _job_parse_metrics(line: list[str]) -> tuple[str, float]:
     name, value = line
     name = _METRIC_TRANSLATION.get(name, name)
     value = value.replace(",", ".")

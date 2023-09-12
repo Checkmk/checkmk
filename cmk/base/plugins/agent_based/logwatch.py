@@ -20,7 +20,7 @@ import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from re import Match
-from typing import Any, IO, List, Literal, Optional
+from typing import Any, IO, Literal, Optional
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -44,7 +44,7 @@ DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPatt
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[List[tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
@@ -214,7 +214,7 @@ def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> tuple
 
 
 def _groups_of_logfile(
-    group_patterns: List[tuple[str, GroupingPattern]],
+    group_patterns: list[tuple[str, GroupingPattern]],
     filename: str,
 ) -> dict[str, set[GroupingPattern]]:
     found_these_groups: dict[str, set[GroupingPattern]] = {}
@@ -383,7 +383,7 @@ class LogwatchBlockCollector:
         self.worst = 0
         self.last_worst_line = ""
         self.saw_lines = False
-        self._output_lines: List[str] = []
+        self._output_lines: list[str] = []
         self._states_counter: Counter[str] = Counter()
 
     @property
@@ -410,7 +410,7 @@ class LogwatchBlockCollector:
     def clear_lines(self) -> None:
         self._output_lines = []
 
-    def get_lines(self) -> List[str]:
+    def get_lines(self) -> list[str]:
         return self._output_lines
 
     def get_count_info(self) -> str:

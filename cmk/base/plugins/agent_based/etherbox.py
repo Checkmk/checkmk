@@ -19,7 +19,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, assert_never, List, Literal, TypedDict
+from typing import Any, assert_never, Literal, TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -53,7 +53,7 @@ class Section:
     sensor_data: Mapping[Index, Mapping[Type, SensorData]]
 
 
-def etherbox_convert(string_table: List[StringTable]) -> Section | None:
+def etherbox_convert(string_table: list[StringTable]) -> Section | None:
     if not string_table[0] and not string_table[1]:
         return None
     unit_of_measurement = {"0": "c", "1": "f", "2": "k"}[string_table[0][0][0]]

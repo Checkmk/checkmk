@@ -5,7 +5,6 @@
 
 import dataclasses
 from collections.abc import Mapping
-from typing import List
 
 from .agent_based_api.v1 import (
     all_of,
@@ -116,7 +115,7 @@ class Module:
 Section = Mapping[str, Module]
 
 
-def parse(string_table: List[StringTable]) -> Section:
+def parse(string_table: list[StringTable]) -> Section:
     collected_entities: dict[str, str] = {}
     for oid, hardware_type, hardware_name in string_table[0]:
         if PhysicalClasses.parse_cisco(hardware_type) is PhysicalClasses.module:

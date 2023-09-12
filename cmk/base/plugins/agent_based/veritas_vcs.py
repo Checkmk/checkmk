@@ -5,7 +5,7 @@
 
 import functools
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, List, NamedTuple, Optional
+from typing import Any, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 
@@ -115,7 +115,7 @@ class Vcs(NamedTuple):
     cluster: str | None
 
 
-SubSection = MutableMapping[str, List[Vcs]]
+SubSection = MutableMapping[str, list[Vcs]]
 Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Optional[Section]]
 

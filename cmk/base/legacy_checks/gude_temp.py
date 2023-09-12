@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Mapping
 from itertools import chain
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
@@ -20,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 Section = Mapping[str, float]
 
 
-def parse_gude_temp(string_table: List[StringTable]) -> Section:
+def parse_gude_temp(string_table: list[StringTable]) -> Section:
     return {
         f"Sensor {index}": float(reading) / 10
         for index, reading in chain.from_iterable(string_table)

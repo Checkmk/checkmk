@@ -11,19 +11,18 @@
 # faultInst<TAB>severity major<TAB>cause equipmentDegraded<TAB>code F0969<TAB>descr Storage Raid Battery 11 Degraded: please check the battery or the storage controller<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 # faultInst<TAB>severity major<TAB>cause equipmentInoperable<TAB>code F0531<TAB>descr Storage Raid Battery 11 is inoperable: Check Controller battery<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 
-from typing import List
 
 from .agent_based_api.v1 import register, type_defs
 
 
-def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> dict[str, List[str]]:
+def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> dict[str, list[str]]:
     """
     >>> parse_ucs_c_rack_server_faultinst([['faultInst', 'severity critical', 'cause powerproblem', 'code F0883', 'descr Broken', 'affectedDN sys/rack-unit-1/psu-4']])
     {'Severity': ['critical'], 'Cause': ['powerproblem'], 'Code': ['F0883'], 'Description': ['Broken'], 'Affected DN': ['rack-unit-1/psu-4']}
     >>> parse_ucs_c_rack_server_faultinst([])
     {}
     """
-    parsed: dict[str, List[str]] = {}
+    parsed: dict[str, list[str]] = {}
     key_translation = {"descr": "Description", "affectedDN": "Affected DN"}
 
     for fault_inst_data in string_table:

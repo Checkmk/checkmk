@@ -16,7 +16,7 @@
 import re
 from collections import Counter
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, List, NamedTuple, TypedDict
+from typing import Any, NamedTuple, TypedDict
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
@@ -67,7 +67,7 @@ def get_ec_rule_params() -> list:
     )
 
 
-def discoverable_items(*sections: Section) -> List[str]:
+def discoverable_items(*sections: Section) -> list[str]:
     """only consider files which are 'ok' on at least one node or 'cannotopen' to notify about
     unreadable files"""
     return sorted(

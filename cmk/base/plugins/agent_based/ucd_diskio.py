@@ -6,7 +6,7 @@
 
 import time
 from collections.abc import Mapping, MutableMapping
-from typing import Any, List
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -42,7 +42,7 @@ class Disk(TypedDict):
 Section = Mapping[str, Disk]
 
 
-def parse_ucd_diskio(string_table: List[StringTable]) -> Section:
+def parse_ucd_diskio(string_table: list[StringTable]) -> Section:
     section: MutableMapping[str, Disk] = {}
 
     if not string_table:

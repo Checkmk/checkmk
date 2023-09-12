@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, exists, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -78,7 +78,7 @@ def parse_snmp_extended_info(string_table: StringTable) -> Section:
 
     parent_info_serial = None
     parent_info_model = None
-    children_info_by_type: dict[str, List[SNMPExtendedInfoEntry]] = {}
+    children_info_by_type: dict[str, list[SNMPExtendedInfoEntry]] = {}
 
     for index, (
         parent,

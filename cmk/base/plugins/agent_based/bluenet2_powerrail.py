@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -116,7 +116,7 @@ from .utils.temperature import check_temperature, TempParamType
 
 
 def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> dict:
     map_status = {
         "0": (0, "expected"),

@@ -27,7 +27,7 @@
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
@@ -51,7 +51,7 @@ from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensorSectio
 from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
 
-def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
+def parse_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:
     return utils.parse_entity_sensors(string_table)
 
 

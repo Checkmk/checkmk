@@ -17,7 +17,6 @@
 # DefaultGateway: 192.168.178.1
 
 from collections.abc import Mapping, Sequence
-from typing import List
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -28,7 +27,7 @@ Section = Sequence[Mapping]
 def parse_win_networkadapter(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    adapters: List[Mapping] = []
+    adapters: list[Mapping] = []
     first_varname = None
     array: dict = {}
     addrtypes: dict = {}

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, Final, List, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -61,7 +61,7 @@ def get_unit(unit_info: str) -> str:
     return unit if unit in ("", "%") else f" {unit}"
 
 
-def parse_printer_supply(string_table: List[StringTable]) -> Section:
+def parse_printer_supply(string_table: list[StringTable]) -> Section:
     if len(string_table) < 2:
         return {}
 

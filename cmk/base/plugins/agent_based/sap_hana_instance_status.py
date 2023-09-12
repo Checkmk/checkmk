@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta
-from typing import Final, List, NamedTuple
+from typing import Final, NamedTuple
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,7 +21,7 @@ class InstanceProcess(NamedTuple):
 
 class InstanceStatus(NamedTuple):
     status: str
-    processes: List[InstanceProcess] = []
+    processes: list[InstanceProcess] = []
 
 
 INSTANCE_STATUSES: Final = {

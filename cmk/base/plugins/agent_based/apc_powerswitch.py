@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import List
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, startswith, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -20,7 +19,7 @@ class APCPowerswitch:
 APCPowerswitchSection = Mapping[str, APCPowerswitch]
 
 
-def parse_apc_powerswitch(string_table: List[StringTable]) -> APCPowerswitchSection:
+def parse_apc_powerswitch(string_table: list[StringTable]) -> APCPowerswitchSection:
     if not string_table:
         return {}
 

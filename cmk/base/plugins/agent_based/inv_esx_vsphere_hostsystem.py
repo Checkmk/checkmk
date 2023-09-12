@@ -21,7 +21,7 @@
 
 import time
 from collections.abc import Callable
-from typing import Final, List
+from typing import Final
 
 from typing_extensions import TypedDict
 
@@ -34,7 +34,7 @@ JOIN_LIST: Final = " ".join
 
 
 class SUB_SECTION(TypedDict):
-    path: List[str]
+    path: list[str]
     translation: dict[str, tuple[str, Callable]]
 
 

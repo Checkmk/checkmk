@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
@@ -37,7 +36,7 @@ def parse_omd_info(string_table: StringTable) -> Section:
     """
     section: Section = {}
     current_subsection: dict[str, dict[str, str]] = {}
-    headers: List[str] = []
+    headers: list[str] = []
     for line in (l for l in string_table if l):
         if line[0][0] == "[" and line[0][-1] == "]":
             current_subsection = section.setdefault(line[0].strip("[]"), {})

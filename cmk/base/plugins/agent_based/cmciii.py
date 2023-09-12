@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 from .agent_based_api.v1 import (
     contains,
@@ -183,7 +182,7 @@ def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     return in_out_sensors
 
 
-def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
+def parse_cmciii(string_table: list[type_defs.StringTable]) -> Sensors:
     device_table, var_table = string_table
     devices, states = parse_devices_and_states(device_table)
 

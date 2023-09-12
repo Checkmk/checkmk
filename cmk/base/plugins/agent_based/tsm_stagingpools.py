@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State, type_defs
 
@@ -26,7 +26,7 @@ TSM_STAGINGPOOLS_DEFAULT_LEVELS = {
     "free_below": 70,
 }
 
-SECTION = dict[str, List[str]]
+SECTION = dict[str, list[str]]
 
 
 def parse_tsm_stagingpools(string_table: type_defs.StringTable) -> SECTION:

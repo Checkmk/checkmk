@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -24,7 +24,7 @@ class FortigateCluster(NamedTuple):
 FortigateClusterSection = Sequence[FortigateCluster]
 
 
-def parse_fortigate_sync_status(string_table: List[StringTable]) -> FortigateClusterSection:
+def parse_fortigate_sync_status(string_table: list[StringTable]) -> FortigateClusterSection:
     if not string_table:
         return []
 

@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import List
 
 from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
@@ -92,7 +91,7 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
     )
 
 
-def parse_inv_if(string_table: List[StringByteTable]) -> SectionInvIf:
+def parse_inv_if(string_table: list[StringByteTable]) -> SectionInvIf:
     return SectionInvIf(
         [
             iface_and_last_change

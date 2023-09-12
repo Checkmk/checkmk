@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 from ..agent_based_api.v1 import check_levels, render, type_defs
 
 CheckParams = Union[
-    None, Mapping[str, Any], Optional[List[float]], tuple[float, float, float, float]
+    None, Mapping[str, Any], Optional[list[float]], tuple[float, float, float, float]
 ]
 
 

@@ -13,7 +13,7 @@
 import time
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, List
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -34,7 +34,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-RadioCounters = List[float]
+RadioCounters = list[float]
 
 RadioInfo = dict[str, tuple[RadioCounters, int, int]]
 RadioDict = dict[str, RadioInfo]
@@ -64,7 +64,7 @@ AP_STATES = {
 }
 
 
-def parse_juniper_trpz_aps_sessions(string_table: List[StringTable]) -> Section:
+def parse_juniper_trpz_aps_sessions(string_table: list[StringTable]) -> Section:
     """
     >>> aps, radios = parse_juniper_trpz_aps_sessions(
     ...     [[['12.109.103.48.50.49.50.48.51.48.50.54.50', '7', 'ap1'],

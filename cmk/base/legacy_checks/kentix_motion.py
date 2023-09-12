@@ -13,7 +13,7 @@ import time
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, List
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -31,7 +31,7 @@ class Sensor:
 Section = Mapping[str, Sensor]
 
 
-def parse_kentix_motion(string_table: List[StringTable]) -> Section:
+def parse_kentix_motion(string_table: list[StringTable]) -> Section:
     return {
         index: Sensor(
             value=int(value),

@@ -11,13 +11,13 @@ import pytest
 
 from tests.testlib.agent import register_controller, wait_until_host_receives_data
 from tests.testlib.site import Site
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_services_with_status, get_site_status, update_config, update_site
+from .conftest import get_site_status, update_config, update_site
 
 logger = logging.getLogger(__name__)
 

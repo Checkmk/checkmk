@@ -14,6 +14,7 @@ import sys
 import textwrap
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from pprint import pformat
 
 import pexpect  # type: ignore[import]
 
@@ -361,3 +362,21 @@ def restart_httpd() -> None:
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
         execute(["sudo", "httpd", "-k", "restart"])
+
+
+def get_services_with_status(
+    host_data: dict, service_status: int, skipped_services: list | tuple = ()
+) -> list:
+    """Return a list of services in the given status which are not in the 'skipped' list."""
+    services_list = []
+    for service in host_data:
+        if host_data[service] == service_status and service not in skipped_services:
+            services_list.append(service)
+
+    LOGGER.debug(
+        "%s service(s) found in state %s:\n%s",
+        len(services_list),
+        service_status,
+        pformat(services_list),
+    )
+    return services_list

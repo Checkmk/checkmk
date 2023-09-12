@@ -11,7 +11,7 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-from tests.update.conftest import get_services_with_status
+from tests.testlib.utils import get_services_with_status
 
 from cmk.utils.hostaddress import HostName
 

@@ -897,6 +897,33 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             "#808080",
             id="max percentage",
         ),
+        pytest.param(
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name.max",
+            10.0,
+            "",
+            "#cc00ff",
+            id="consolidation func name max",
+        ),
+        pytest.param(
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name.min",
+            10.0,
+            "",
+            "#cc00ff",
+            id="consolidation func name min",
+        ),
+        pytest.param(
+            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name.max",
+            10.0,
+            "",
+            "#cc00ff",
+            id="consolidation func name min",
+        ),
     ],
 )
 def test_evaluate(

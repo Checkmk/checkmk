@@ -799,6 +799,7 @@ class ConstantFloat(ABCMetricOperation):
 @dataclass(frozen=True)
 class Metric(ABCMetricOperation):
     name: MetricName_
+    consolidation_func_name: GraphConsoldiationFunction | None = None
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
@@ -1101,6 +1102,18 @@ def _apply_operator(
     assert_never(operator)
 
 
+def _extract_consolidation_func_name(
+    expression: str,
+) -> tuple[str, GraphConsoldiationFunction | None]:
+    if expression.endswith(".max"):
+        return expression[:-4], "max"
+    if expression.endswith(".min"):
+        return expression[:-4], "min"
+    if expression.endswith(".average"):
+        return expression[:-8], "average"
+    return expression, None
+
+
 def _from_scalar(
     scalar_name: str, metric: Metric
 ) -> WarningOf | CriticalOf | MinimumOf | MaximumOf:
@@ -1130,17 +1143,17 @@ def _parse_single_expression(
         except ValueError:
             pass
 
-    var_name = _drop_metric_consolidation_advice(expression)
+    var_name, consolidation_func_name = _extract_consolidation_func_name(expression)
     if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name)
+        metric = Metric(var_name, consolidation_func_name)
         reference = _from_scalar(scalar_name, metric)
         return Percent(reference=reference, metric=metric) if percent else reference
 
-    metric = Metric(var_name)
+    metric = Metric(var_name, consolidation_func_name)
     return Percent(reference=metric, metric=metric) if percent else metric
 
 

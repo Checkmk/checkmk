@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import enum
-from typing import assert_never, Callable
+from collections.abc import Callable
+from typing import assert_never
 
 
 class _Operation(enum.Enum):

@@ -17,7 +17,6 @@ from cmk.gui.graphing._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
     MetricDefinition,
-    MetricExpression,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
@@ -37,7 +36,7 @@ from cmk.gui.metrics import translate_perf_data
     ],
 )
 def test_rpn_consolidation(
-    expression: MetricExpression,
+    expression: str,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
     result: Sequence[tuple[str, GraphConsoldiationFunction | None]],
 ) -> None:
@@ -48,7 +47,7 @@ def test_rpn_consolidation(
     "expression, enforced_consolidation_function", [("user.min", "max"), ("user.min,sys,+", "avg")]
 )
 def test_rpn_consolidation_exception(
-    expression: MetricExpression, enforced_consolidation_function: GraphConsoldiationFunction | None
+    expression: str, enforced_consolidation_function: GraphConsoldiationFunction | None
 ) -> None:
     with pytest.raises(MKGeneralException):
         list(gt.iter_rpn_expression(expression, enforced_consolidation_function))
@@ -106,7 +105,7 @@ def test_rpn_consolidation_exception(
         ),
     ],
 )
-def test_rpn_stack(expression: MetricExpression, result: MetricOperation) -> None:
+def test_rpn_stack(expression: str, result: MetricOperation) -> None:
     translated_metrics = translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )
@@ -254,7 +253,7 @@ def test_metric_unit_color(
     ],
 )
 def test_metric_unit_color_skip(
-    expression: MetricExpression, perf_string: str, check_command: str | None
+    expression: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
     assert gt.metric_unit_color(expression, translated_metrics, ["test"]) is None
@@ -267,7 +266,7 @@ def test_metric_unit_color_skip(
     ],
 )
 def test_metric_unit_color_exception(
-    metric: MetricExpression, perf_string: str, check_command: str | None
+    metric: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
     with pytest.raises(MKGeneralException):

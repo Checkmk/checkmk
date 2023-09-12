@@ -23,12 +23,11 @@ GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 HorizontalRule = tuple[float, str, str, str]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
-MetricExpression = str
 
 
 @dataclass(frozen=True, kw_only=True)
 class MetricDefinition:
-    expression: MetricExpression
+    expression: str
     line_type: LineType
     title: str = ""
 

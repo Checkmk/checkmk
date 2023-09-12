@@ -29,11 +29,7 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing._graph_specification import (
-    GraphMetric,
-    MetricExpression,
-    parse_raw_graph_specification,
-)
+from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
@@ -613,7 +609,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
-    def _evaluate_total(self, total_expression: MetricExpression | int | float) -> float:
+    def _evaluate_total(self, total_expression: str | int | float) -> float:
         if isinstance(total_expression, float | int):
             return self._unit().get("conversion", lambda v: v)(total_expression)
         return evaluate(total_expression, self._translated_metrics).value

@@ -21,7 +21,6 @@ from ._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
     MetricDefinition,
-    MetricExpression,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
@@ -205,7 +204,7 @@ def create_graph_recipe_from_template(
 
 
 def iter_rpn_expression(
-    expression: MetricExpression,
+    expression: str,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> Iterator[tuple[str, GraphConsoldiationFunction | None]]:
     for part in expression.split(","):  # var names, operators
@@ -240,7 +239,7 @@ def iter_rpn_expression(
 
 
 def metric_expression_to_graph_recipe_expression(
-    expression: MetricExpression,
+    expression: str,
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
@@ -330,12 +329,12 @@ def metric_line_title(
 
 
 def metric_unit_color(
-    metric_expression: MetricExpression,
+    expression: str,
     translated_metrics: TranslatedMetrics,
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:
-        rpn_expr_metric = evaluate(metric_expression, translated_metrics)
+        rpn_expr_metric = evaluate(expression, translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
@@ -343,7 +342,7 @@ def metric_unit_color(
         raise MKGeneralException(
             _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
             % (
-                metric_expression,
+                expression,
                 metric_name,
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )

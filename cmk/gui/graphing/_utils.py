@@ -78,7 +78,6 @@ from ._graph_specification import (
     HorizontalRule,
     LineType,
     MetricDefinition,
-    MetricExpression,
     MetricOperation,
     MetricOpRRDChoice,
 )
@@ -749,7 +748,7 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression: MetricExpression) -> tuple[str, str | None, str | None]:
+def split_expression(expression: str) -> tuple[str, str | None, str | None]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -1174,7 +1173,7 @@ class RPNExpressionSpec:
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
 def _parse_expression(
-    expression: MetricExpression | int | float,
+    expression: str | int | float,
     translated_metrics: TranslatedMetrics,
 ) -> RPNExpressionSpec:
     if isinstance(expression, int):
@@ -1239,7 +1238,7 @@ def _parse_expression(
 
 
 def evaluate(
-    expression: MetricExpression | int | float,
+    expression: str | int | float,
     translated_metrics: TranslatedMetrics,
 ) -> RPNExpression:
     rpn_expr_spec = _parse_expression(expression, translated_metrics)
@@ -1345,14 +1344,14 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 
 def graph_templates_internal() -> dict[str, GraphTemplate]:
-    def _parse_metric_expression(
-        metric_expression: (
+    def _parse_raw_metric(
+        raw_metric: (
             tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
         )
     ) -> MetricDefinition:
-        expression = metric_expression[0]
-        line_type = metric_expression[1]
-        if len(metric_expression) == 2:
+        expression = raw_metric[0]
+        line_type = raw_metric[1]
+        if len(raw_metric) == 2:
             return MetricDefinition(
                 expression=expression,
                 line_type=line_type,
@@ -1360,7 +1359,7 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
         return MetricDefinition(
             expression=expression,
             line_type=line_type,
-            title=str(metric_expression[-1]),
+            title=str(raw_metric[-1]),
         )
 
     return {
@@ -1375,10 +1374,7 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
             omit_zero_metrics=template.get("omit_zero_metrics", False),
             # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
             # https://github.com/python/mypy/issues/1178
-            metrics=[
-                _parse_metric_expression(metric_expression)
-                for metric_expression in template["metrics"]
-            ],
+            metrics=[_parse_raw_metric(raw_metric) for raw_metric in template["metrics"]],
         )
         for template_id, template in graph_info.items()
     }
@@ -1503,14 +1499,14 @@ def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
         yield from metrics_used_in_expression(metric_definition.expression)
 
 
-def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
-    for part in split_expression(metric_expression)[0].split(","):
+def metrics_used_in_expression(expression: str) -> Iterator[str]:
+    for part in split_expression(expression)[0].split(","):
         metric_or_operator = _drop_metric_consolidation_advice(part)
         if metric_or_operator not in get_args(RPNOperators):
             yield metric_or_operator
 
 
-def _drop_metric_consolidation_advice(expression: MetricExpression) -> str:
+def _drop_metric_consolidation_advice(expression: str) -> str:
     if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
         return expression.rsplit(".", 1)[0]
     return expression

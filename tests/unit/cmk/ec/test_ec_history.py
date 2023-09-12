@@ -7,7 +7,38 @@ import logging
 import shlex
 from pathlib import Path
 
-from cmk.ec.history import _grep_pipeline, convert_history_line, History, parse_history_file
+import pytest
+
+from tests.testlib import on_time
+
+from cmk.ec.config import Config
+from cmk.ec.history import (
+    _current_history_period,
+    _grep_pipeline,
+    convert_history_line,
+    History,
+    parse_history_file,
+)
+
+
+@pytest.fixture(name="config_with_weekly_history_rotation")
+def fixture_config_with_host_patterns(config: Config) -> Config:
+    """Return a config with a history_rotation='weekly'."""
+    with_host_patterns: Config = config.copy()
+    with_host_patterns["history_rotation"] = "weekly"
+    return with_host_patterns
+
+
+def test_current_history_period(
+    config: Config, config_with_weekly_history_rotation: Config
+) -> None:
+    """timestamp of the beginning of the current history period correctly returned."""
+
+    with on_time(1550000000.0, "CET"):
+        assert _current_history_period(config=config) == 1549929600
+
+    with on_time(1550000000.0, "CET"):
+        assert _current_history_period(config=config_with_weekly_history_rotation) == 1549843200
 
 
 def test_convert_history_line(history: History) -> None:

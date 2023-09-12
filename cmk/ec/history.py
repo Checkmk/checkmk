@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import datetime
 import os
 import shlex
 import subprocess
@@ -109,8 +110,6 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    import datetime
-
     from pymongo import DESCENDING
     from pymongo.connection import Connection  # type: ignore[import]
     from pymongo.errors import OperationFailure
@@ -401,26 +400,18 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-    lt = time.localtime()
-    ts = time.mktime(
-        time.struct_time(
-            (
-                lt.tm_year,
-                lt.tm_mon,
-                lt.tm_mday,
-                0,  # tm_hour
-                0,  # tm_min
-                0,  # tm_sec
-                lt.tm_wday,
-                lt.tm_yday,
-                lt.tm_isdst,
-                lt.tm_zone,
-                lt.tm_gmtoff,
+
+    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return int(
+        (
+            today
+            - datetime.datetime(1970, 1, 1)
+            - datetime.timedelta(
+                days=today.weekday() if config["history_rotation"] == "weekly" else 0
             )
-        )
+        ).total_seconds()
     )
-    offset = lt.tm_wday * 86400 if config["history_rotation"] == "weekly" else 0
-    return int(ts) - offset
 
 
 def _expire_logfiles(

@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -93,7 +93,7 @@ class HWSWInventoryParameters:
     status_data_inventory: bool
 
     @classmethod
-    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
+    def from_raw(cls, raw_parameters: Mapping[str, Any]) -> HWSWInventoryParameters:
         return cls(
             hw_changes=int(raw_parameters.get("hw-changes", 0)),
             sw_changes=int(raw_parameters.get("sw-changes", 0)),

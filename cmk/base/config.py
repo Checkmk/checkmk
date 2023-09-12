@@ -175,8 +175,8 @@ SERVICE_CHECK_INTERVAL: Final = 1.0
 ServicegroupName = str
 HostgroupName = str
 
-service_service_levels = []
-host_service_levels = []
+service_service_levels: list[RuleSpec[int]] = []
+host_service_levels: list[RuleSpec[int]] = []
 
 _AgentTargetVersion = None | str | tuple[str, str] | tuple[str, dict[str, str]]
 
@@ -411,7 +411,7 @@ PingLevels = dict[str, int | tuple[float, float]]
 ObjectAttributes = dict[str, Any]
 
 GroupDefinitions = dict[str, str]
-RecurringDowntime = dict[str, int | str]  # TODO(sk): TypedDict here
+RecurringDowntime = Mapping[str, int | str]  # TODO(sk): TypedDict here
 
 
 class _NestedExitSpec(ExitSpec, total=False):
@@ -726,7 +726,8 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
 def _initialize_derived_config_variables() -> None:
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
-    host_service_levels = extra_host_conf.get("_ec_sl", [])
+    _default: list[RuleSpec[int]] = []
+    host_service_levels = extra_host_conf.get("_ec_sl", _default)
 
 
 def get_derived_config_variable_names() -> set[str]:
@@ -2804,7 +2805,7 @@ class ConfigCache:
             host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
-    def custom_checks(self, host_name: HostName) -> list[dict]:
+    def custom_checks(self, host_name: HostName) -> list[dict[Any, Any]]:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.host_extra_conf(host_name, custom_checks)
 
@@ -2919,7 +2920,7 @@ class ConfigCache:
             # ruleset and should all match because the ruleset is a match all ruleset.
             #
             # It would be clearer to have independent rulesets for this...
-            folder_cgrs = []
+            folder_cgrs: list[RuleSpec[str]] = []
             for entry in self.ruleset_matcher.host_extra_conf(host_name, host_contactgroups):
                 if isinstance(entry, list):
                     folder_cgrs.append(entry)
@@ -3378,7 +3379,7 @@ class ConfigCache:
         return []
 
     def _flatten_piggybacked_host_files_rule(
-        self, host_name: HostName, rule: dict[str, Any]
+        self, host_name: HostName, rule: Mapping[str, Any]
     ) -> list[tuple[str | None, str, int]]:
         """This rule is a first match rule.
 
@@ -4502,7 +4503,7 @@ class CEEHostConfig:
             host_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
-        spec: dict = {}
+        spec: dict[object, object] = {}
         for entry in entries[::-1]:
             spec |= entry
         return spec
@@ -4517,8 +4518,8 @@ class CEEHostConfig:
         return settings
 
     @property
-    def lnx_remote_alert_handlers(self) -> list[dict[str, str]]:
-        default: Sequence[RuleSpec[object]] = []
+    def lnx_remote_alert_handlers(self) -> Sequence[Mapping[str, str]]:
+        default: Sequence[RuleSpec[Mapping[str, str]]] = []
         return self._config_cache.ruleset_matcher.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )

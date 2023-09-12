@@ -251,8 +251,8 @@ class RulesetMatcher:
         return merged
 
     def host_extra_conf(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
-    ) -> list:
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec[TRuleValue]]
+    ) -> list[TRuleValue]:
         return list(
             self.get_host_ruleset_values(
                 RulesetMatchObject(hostname),

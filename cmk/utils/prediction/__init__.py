@@ -26,6 +26,7 @@ from ._prediction import (
     TimeWindow,
     timezone_at,
 )
+from ._query import PredictionQuerier
 
 __all__ = [
     "get_predictive_levels",
@@ -36,6 +37,7 @@ __all__ = [
     "lq_logic",
     "PredictionData",
     "PredictionInfo",
+    "PredictionQuerier",
     "PredictionStore",
     "PREDICTION_DIR",
     "PredictionParameters",

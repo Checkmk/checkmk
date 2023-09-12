@@ -9,3 +9,6 @@ from typing import Final
 import cmk.utils.paths
 
 PREDICTION_DIR: Final = Path(cmk.utils.paths.var_dir) / "prediction"
+
+INFO_FILE_SUFFIX = ".info"
+DATA_FILE_SUFFIX = ""

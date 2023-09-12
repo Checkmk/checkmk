@@ -24,6 +24,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
+from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
+
 logger = logging.getLogger("cmk.prediction")
 
 Seconds = int
@@ -361,15 +363,15 @@ class PredictionStore:
     def available_predictions(self) -> Iterable[PredictionInfo]:
         return (
             tg_info
-            for f in self._dir.glob("*.info")
+            for f in self._dir.glob(f"*{INFO_FILE_SUFFIX}")
             if (tg_info := self.get_info(Timegroup(f.stem))) is not None
         )
 
     def _data_file(self, timegroup: Timegroup) -> Path:
-        return self._dir / timegroup
+        return self._dir / Path(timegroup).with_suffix(DATA_FILE_SUFFIX)
 
     def _info_file(self, timegroup: Timegroup) -> Path:
-        return self._dir / f"{timegroup}.info"
+        return self._dir / Path(timegroup).with_suffix(INFO_FILE_SUFFIX)
 
     def save_prediction(
         self,

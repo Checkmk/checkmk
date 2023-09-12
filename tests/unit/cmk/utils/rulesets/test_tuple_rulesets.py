@@ -425,9 +425,6 @@ def test_in_extraconf_hostlist() -> None:
     assert tuple_rulesets.in_extraconf_hostlist(["~.*1$"], "host1") is True
 
 
-# TODO: in_binary_hostlist
-
-
 def test_get_rule_options_regular_rule() -> None:
     options = {"description": 'Put all hosts into the contact group "all"'}
     entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)

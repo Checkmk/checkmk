@@ -206,22 +206,17 @@ class RulesetMatcher:
             object,
         ] = {}
 
-    # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec[bool]]
-    ) -> bool:
-        return self.is_matching_host_ruleset(RulesetMatchObject(hostname), ruleset)
-
-    def is_matching_host_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[bool]]
-    ) -> bool:
+    # TODO: Cleanup external call sites
+    def get_host_bool_value(self, hostname: HostName, ruleset: Iterable[RuleSpec[bool]]) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
         Depending on the value the outcome is negated or not.
 
-        Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
-        for value in self.get_host_ruleset_values(match_object, ruleset, is_binary=True):
+        Replaces get_host_bool_value / in_boolean_serviceconf_list"""
+        for value in self.get_host_ruleset_values(
+            RulesetMatchObject(hostname), ruleset, is_binary=True
+        ):
             # Next line may be controlled by `is_binary` in which case we
             # should overload the function instead of asserting to check
             # during typing instead of runtime.
@@ -294,9 +289,9 @@ class RulesetMatcher:
         The binary match only cares about the first matching rule of an object.
         Depending on the value the outcome is negated or not.
 
-        Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
+        Replaces get_host_bool_value / in_boolean_serviceconf_list"""
         for value in self.get_service_ruleset_values(match_object, ruleset, is_binary=True):
-            # See `is_matching_host_ruleset()`.
+            # See `get_host_bool_value()`.
             assert isinstance(value, bool)
             return value
         return False  # no match. Do not ignore

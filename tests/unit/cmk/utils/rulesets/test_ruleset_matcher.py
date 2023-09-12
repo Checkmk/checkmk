@@ -520,7 +520,7 @@ binary_ruleset: list[RuleSpec] = [
 ]
 
 
-def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -> None:
+def test_basic_host_ruleset_get_host_bool_value() -> None:
     matcher = RulesetMatcher(
         tag_to_group_map={},
         host_tags={
@@ -546,34 +546,10 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -
         nodes_of={},
     )
 
-    assert (
-        matcher.is_matching_host_ruleset(
-            RulesetMatchObject(host_name=HostName("abc"), service_description=None),
-            ruleset=binary_ruleset,
-        )
-        is False
-    )
-    assert (
-        matcher.is_matching_host_ruleset(
-            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-            ruleset=binary_ruleset,
-        )
-        is False
-    )
-    assert (
-        matcher.is_matching_host_ruleset(
-            RulesetMatchObject(host_name=HostName("host1"), service_description=None),
-            ruleset=binary_ruleset,
-        )
-        is True
-    )
-    assert (
-        matcher.is_matching_host_ruleset(
-            RulesetMatchObject(host_name=HostName("host2"), service_description=None),
-            ruleset=binary_ruleset,
-        )
-        is False
-    )
+    assert matcher.get_host_bool_value(HostName("abc"), ruleset=binary_ruleset) is False
+    assert matcher.get_host_bool_value(HostName("xyz"), ruleset=binary_ruleset) is False
+    assert matcher.get_host_bool_value(HostName("host1"), ruleset=binary_ruleset) is True
+    assert matcher.get_host_bool_value(HostName("host2"), ruleset=binary_ruleset) is False
 
 
 tag_ruleset: Sequence[RuleSpec[str]] = [

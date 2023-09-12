@@ -963,14 +963,14 @@ def _filter_active_hosts(
         if keep_offline_hosts:
             return list(hostlist)
         return [
-            hostname for hostname in hostlist if matcher.in_binary_hostlist(hostname, only_hosts)
+            hostname for hostname in hostlist if matcher.get_host_bool_value(hostname, only_hosts)
         ]
 
     return [
         hostname
         for hostname in hostlist
         if _host_is_member_of_site(hostname, distributed_wato_site)
-        and (keep_offline_hosts or matcher.in_binary_hostlist(hostname, only_hosts))
+        and (keep_offline_hosts or matcher.get_host_bool_value(hostname, only_hosts))
     ]
 
 
@@ -1018,7 +1018,7 @@ def all_offline_hosts() -> set[HostName]:
         return set()
 
     return {
-        hostname for hostname in hostlist if not matcher.in_binary_hostlist(hostname, only_hosts)
+        hostname for hostname in hostlist if not matcher.get_host_bool_value(hostname, only_hosts)
     }
 
 
@@ -1031,7 +1031,7 @@ def all_configured_offline_hosts() -> set[HostName]:
         return set()
 
     return {
-        hostname for hostname in hostlist if not matcher.in_binary_hostlist(hostname, only_hosts)
+        hostname for hostname in hostlist if not matcher.get_host_bool_value(hostname, only_hosts)
     }
 
 
@@ -2361,14 +2361,14 @@ class ConfigCache:
                 ),
                 port=self._snmp_port(host_name),
                 is_bulkwalk_host=(
-                    self.ruleset_matcher.in_binary_hostlist(
+                    self.ruleset_matcher.get_host_bool_value(
                         host_name,
                         bulkwalk_hosts
                         if source_type is SourceType.HOST
                         else management_bulkwalk_hosts,
                     )
                 ),
-                is_snmpv2or3_without_bulkwalk_host=self.ruleset_matcher.in_binary_hostlist(
+                is_snmpv2or3_without_bulkwalk_host=self.ruleset_matcher.get_host_bool_value(
                     host_name, snmpv2c_hosts
                 ),
                 bulk_walk_size_of=self._bulk_walk_size(host_name),
@@ -2743,7 +2743,7 @@ class ConfigCache:
         )
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
-        return self.ruleset_matcher.in_binary_hostlist(host_name, dyndns_hosts)
+        return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)
 
     def is_all_agents_host(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_all_agents_host
@@ -2968,7 +2968,7 @@ class ConfigCache:
         return default_host_check_command
 
     def _missing_sys_description(self, host_name: HostName) -> bool:
-        return self.ruleset_matcher.in_binary_hostlist(host_name, snmp_without_sys_descr)
+        return self.ruleset_matcher.get_host_bool_value(host_name, snmp_without_sys_descr)
 
     def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
         """Return the fetch interval of SNMP sections in seconds
@@ -3238,17 +3238,17 @@ class ConfigCache:
         if isinstance(self._snmp_credentials(host_name), tuple):
             return False  # v3
 
-        if self.ruleset_matcher.in_binary_hostlist(host_name, bulkwalk_hosts):
+        if self.ruleset_matcher.get_host_bool_value(host_name, bulkwalk_hosts):
             return False
 
-        return not self.ruleset_matcher.in_binary_hostlist(host_name, snmpv2c_hosts)
+        return not self.ruleset_matcher.get_host_bool_value(host_name, snmpv2c_hosts)
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and cmk_version.edition() is not cmk_version.Edition.CRE
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
-        if self.ruleset_matcher.in_binary_hostlist(host_name, usewalk_hosts):
+        if self.ruleset_matcher.get_host_bool_value(host_name, usewalk_hosts):
             return SNMPBackendEnum.STORED_WALK
 
         with_inline_snmp = ConfigCache._is_inline_backend_supported()

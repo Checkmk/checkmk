@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Any, Final, Literal, TypeAlias
 
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -159,7 +160,7 @@ static_checks: dict[str, list[RuleSpec[object]]] = {}
 check_parameters: list[RuleSpec[object]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
 # for HW/SW-Inventory
-inv_parameters: dict[str, list[RuleSpec[dict[str, object]]]] = {}
+inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # WATO variant for fully formalized checks
 active_checks: dict[str, list[RuleSpec[object]]] = {}
 # WATO variant for datasource_programs
@@ -172,9 +173,9 @@ host_tags: TagsOfHosts = {}
 # store explicit host labels per host
 host_labels: dict[HostName, Labels] = {}
 # Assign labels via ruleset to hosts
-host_label_rules: list[RuleSpec[dict[str, str]]] = []
+host_label_rules: list[RuleSpec[Mapping[str, str]]] = []
 # Asssing labels via ruleset to services
-service_label_rules: list[RuleSpec[dict[str, str]]] = []
+service_label_rules: list[RuleSpec[Mapping[str, str]]] = []
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 # Map of hostnames to .mk files declaring the hosts (e.g. /wato/hosts.mk)
@@ -263,7 +264,7 @@ check_periods: list[RuleSpec[object]] = []
 snmp_check_interval: list[RuleSpec[object]] = []
 snmp_exclude_sections: list[RuleSpec[object]] = []
 # Rulesets for parameters of notification scripts
-notification_parameters: dict[str, list[RuleSpec[dict[str, object]]]] = {}
+notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 use_new_descriptions_for: list[CheckPluginNameStr] = []
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[object]] = []

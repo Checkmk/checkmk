@@ -2801,7 +2801,7 @@ class ConfigCache:
         if plugin.ruleset_name is None:
             raise ValueError(plugin)
 
-        default: Sequence[RuleSpec[dict[str, object]]] = []
+        default: Sequence[RuleSpec[Mapping[str, object]]] = []
         return self.ruleset_matcher.host_extra_conf_merged(
             host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
@@ -3146,7 +3146,7 @@ class ConfigCache:
         self, host_name: HostName, plugin_name: CheckPluginNameStr
     ) -> Mapping[str, object]:
         def _impl() -> Mapping[str, object]:
-            default: Sequence[RuleSpec[dict[str, object]]] = []
+            default: Sequence[RuleSpec[Mapping[str, object]]] = []
             return self.ruleset_matcher.host_extra_conf_merged(
                 host_name, notification_parameters.get(plugin_name, default)
             )

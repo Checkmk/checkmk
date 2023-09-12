@@ -107,8 +107,8 @@ class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
     explicit_host_labels: dict[HostName, Labels]
-    host_label_rules: Sequence[RuleSpec[dict[str, str]]]
-    service_label_rules: Sequence[RuleSpec[dict[str, str]]]
+    host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
+    service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
@@ -230,18 +230,20 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def host_extra_conf_merged(
-        self, hostname: HostName, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
+        self, hostname: HostName, ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]]
     ) -> Mapping[str, TRuleValue]:
         return self.get_host_ruleset_merged_dict(RulesetMatchObject(hostname), ruleset)
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
+        self,
+        match_object: RulesetMatchObject,
+        ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        default: dict[str, dict[str, TRuleValue]] = {}
+        default: Mapping[str, TRuleValue] = {}
         merged = boil_down_parameters(
             self.get_host_ruleset_values(match_object, ruleset, is_binary=False), default
         )
@@ -300,7 +302,9 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
+        self,
+        match_object: RulesetMatchObject,
+        ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -309,7 +313,7 @@ class RulesetMatcher:
         merged = boil_down_parameters(
             self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
         )
-        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        assert isinstance(merged, Mapping)  # remove along with LegacyCheckParameters
         return merged
 
     def get_service_ruleset_values(

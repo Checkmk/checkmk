@@ -10,7 +10,7 @@ Tests for legacy tuple rulesets.
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -178,7 +178,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
 
 
 def test_host_extra_conf_merged(
-    ts: Scenario, host_ruleset: Sequence[RuleSpec[dict[str, object]]]
+    ts: Scenario, host_ruleset: Sequence[RuleSpec[Mapping[str, object]]]
 ) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     assert ruleset_matcher.host_extra_conf_merged(HostName("host1"), host_ruleset) == {

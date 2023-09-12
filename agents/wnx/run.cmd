@@ -30,6 +30,12 @@ if "%~1"=="-h" goto Usage
 if "%~1"=="--help" goto Usage
 if "%~1"=="-?" goto Usage
 
+if not "%arg_var_value%" == "" (
+set %arg_var_name%=%arg_var_value%
+set arg_var_value=
+)
+
+
 if "%~1"=="-A"              (set arg_all=1)          & shift & goto CheckOpts
 if "%~1"=="--all"           (set arg_all=1)          & shift & goto CheckOpts
 
@@ -71,10 +77,11 @@ if "%~1"=="--documentation" (set arg_doc=1)          & shift & goto CheckOpts
 
 if "%~1"=="--detach"        (set arg_detach=1)       & shift & goto CheckOpts
 
+if "%~1"=="--var"           (set arg_var_name=%~2) & (set arg_var_value=%~3) & shift & shift & shift & goto CheckOpts
+
 if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
 if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_sql_check=1) & (set arg_ext=1) & (set arg_msi=1)
-
 
 
 @echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
@@ -244,7 +251,7 @@ goto :eof
 if not "%arg_sql_check%" == "1" powershell Write-Host "Skipped Sql Check Build" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Building Agent Controller..." -Foreground White
 pushd ..\..\packages\database_checks\sql_check
-call run.cmd --build
+call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
 popd
 goto :eof

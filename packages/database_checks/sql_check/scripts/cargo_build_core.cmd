@@ -36,6 +36,7 @@ set exe=target\%target%\release\%worker_exe_name%
 @echo RUST versions:
 cargo -V
 rustc -V
+echo Settings:
 echo worker_arg_build=%worker_arg_build%
 echo worker_arg_clippy=%worker_arg_clippy%
 echo worker_arg_test=%worker_arg_test%

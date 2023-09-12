@@ -18,6 +18,11 @@ if "%~1"=="-h" goto Usage
 if "%~1"=="-help" goto Usage
 if "%~1"=="-?" goto Usage
 
+if not "%worker_var_value%" == "" (
+set %worker_var_name%=%worker_var_value%
+set worker_var_value=
+)
+
 if "%~1"=="-A"              (set worker_arg_all=1)          & shift & goto CheckOpts
 if "%~1"=="--all"           (set worker_arg_all=1)          & shift & goto CheckOpts
 

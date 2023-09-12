@@ -154,6 +154,86 @@ class PageRendererSpec(OverridableContainerSpec):
     is_show_more: bool
 
 
+def _deserialize_public(public: object) -> bool | tuple[Literal["contact_groups"], Sequence[str]]:
+    if public is None:
+        # Note: public is not allowed to be None (from typing perspective)
+        # But if it's set to None we get a crash :(
+        return False
+
+    if isinstance(public, bool):
+        return public
+
+    if isinstance(public, tuple) and len(public) == 2:
+        ident, contact_groups = public
+        if ident == "contact_groups" and isinstance(contact_groups, list):
+            return "contact_groups", contact_groups
+
+    raise TypeError(public)
+
+
+def deserialize_page_renderer_spec(page_dict: Mapping[str, object]) -> PageRendererSpec:
+    if not isinstance(name := page_dict.get("name"), str):
+        raise TypeError(name)
+
+    if not isinstance(title := page_dict.get("title"), str):
+        raise TypeError(title)
+
+    if not isinstance(owner := page_dict.get("owner"), str):
+        raise TypeError(owner)
+
+    if not isinstance(elements := page_dict.get("elements"), list):
+        raise TypeError(elements)
+
+    if not isinstance(topic := page_dict.get("topic"), str):
+        raise TypeError(topic)
+
+    if not isinstance(sort_index := page_dict.get("sort_index"), int):
+        raise TypeError(sort_index)
+
+    if not isinstance(is_show_more := page_dict.get("is_show_more"), bool):
+        raise TypeError(is_show_more)
+
+    page_renderer_spec: PageRendererSpec = {
+        "name": name,
+        "title": title,
+        "owner": UserId(owner),
+        "public": _deserialize_public(page_dict.get("public")),
+        "elements": elements,
+        "topic": topic,
+        "sort_index": sort_index,
+        "is_show_more": is_show_more,
+    }
+
+    if isinstance(description := page_dict.get("description"), str):
+        page_renderer_spec["description"] = description
+
+    if isinstance(hidden := page_dict.get("hidden"), bool):
+        page_renderer_spec["hidden"] = hidden
+
+    return page_renderer_spec
+
+
+def serialize_page_renderer_spec(page_renderer_spec: PageRendererSpec) -> Mapping[str, object]:
+    raw_page_renderer_spec = {
+        "name": page_renderer_spec["name"],
+        "title": page_renderer_spec["title"],
+        "owner": page_renderer_spec["owner"],
+        "public": page_renderer_spec["public"],
+        "elements": page_renderer_spec["elements"],
+        "topic": page_renderer_spec["topic"],
+        "sort_index": page_renderer_spec["sort_index"],
+        "is_show_more": page_renderer_spec["is_show_more"],
+    }
+
+    if (description := page_renderer_spec.get("description")) is not None:
+        raw_page_renderer_spec["description"] = description
+
+    if (hidden := page_renderer_spec.get("hidden")) is not None:
+        raw_page_renderer_spec["hidden"] = hidden
+
+    return raw_page_renderer_spec
+
+
 class _PagetypeTopicSpecMandatory(OverridableSpec):
     icon_name: str
     sort_index: int

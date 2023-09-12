@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Final, Generic, Protocol, TypeVar
@@ -12,24 +13,30 @@ from cmk.utils.store import load_object_from_file
 from cmk.utils.user import UserId
 
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.pagetypes import all_page_types, Overridable, OverridableInstances
-from cmk.gui.plugins.sidebar.bookmarks import BookmarkList
+from cmk.gui.pagetypes import (
+    all_page_types,
+    InstanceId,
+    Overridable,
+    OverridableInstances,
+    OverridableSpec,
+)
+from cmk.gui.plugins.sidebar.bookmarks import BookmarkList, BookmarkListSpec
 from cmk.gui.userdb import load_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
-TOverridable = TypeVar("TOverridable", bound=Overridable)
+_TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)
 
 
-class PagetypeUpdater(Protocol, Generic[TOverridable]):
+class PagetypeUpdater(Protocol, Generic[_TOverridable_co]):
     @property
-    def target_type(self) -> type[TOverridable]:
+    def target_type(self) -> type[_TOverridable_co]:
         ...
 
     def __call__(
-        self, instances: OverridableInstances[TOverridable]
-    ) -> OverridableInstances[TOverridable]:
+        self, page_dicts: Mapping[InstanceId, dict[str, object]]
+    ) -> Mapping[InstanceId, Mapping[str, object]]:
         ...
 
 
@@ -48,7 +55,11 @@ class UpdatePagetypes(UpdateAction):
                 if not issubclass(pagetype, updater.target_type):
                     continue
 
-                instances = updater(pagetype.load())
+                instances = OverridableInstances[Overridable[OverridableSpec]]()
+                for (user_id, name), page_dict in updater(pagetype.load_raw()).items():
+                    instances.add_instance(
+                        (user_id, name), updater.target_type.deserialize(page_dict)
+                    )
 
                 for user_id in (
                     user_id
@@ -72,15 +83,16 @@ class BookmarkListUpdater:
         self.target_type: Final = BookmarkList
 
     def __call__(
-        self, instances: OverridableInstances[BookmarkList]
-    ) -> OverridableInstances[BookmarkList]:
+        self, page_dicts: Mapping[InstanceId, dict[str, object]]
+    ) -> Mapping[InstanceId, Mapping[str, object]]:
+        bookmark_lists_by_instance_id: dict[InstanceId, BookmarkListSpec] = {}
         for user_id in load_users():
             # Don't load the legacy bookmarks when there is already a my_bookmarks list
-            if instances.has_instance((user_id, "my_bookmarks")):
+            if (user_id, "my_bookmarks") in page_dicts:
                 continue
 
             # Also don't load them when the user has at least one bookmark list
-            for user_id_bookmarks, _name in instances.instances_dict():
+            for user_id_bookmarks, _name in page_dicts:
                 if user_id == user_id_bookmarks:
                     continue
 
@@ -88,13 +100,28 @@ class BookmarkListUpdater:
             if not (user_confdir := LoggedInUser(user_id).confdir):
                 continue
 
-            BookmarkList.add_default_bookmark_list(instances, user_id)
-            bookmark_list = instances.instance((user_id, "my_bookmarks"))
+            bookmark_lists_by_instance_id.setdefault(
+                (user_id, "my_bookmarks"),
+                {
+                    "title": "My Bookmarks",
+                    "public": False,
+                    "owner": user_id,
+                    "name": "my_bookmarks",
+                    "description": "Your personal bookmarks",
+                    "default_topic": "My Bookmarks",
+                    "bookmarks": [
+                        {
+                            "title": title,
+                            "url": url,
+                            "icon": None,
+                            "topic": None,
+                        }
+                        for title, url in self._load_and_delete_legacy_bookmarks(Path(user_confdir))
+                    ],
+                },
+            )
 
-            for title, url in self._load_and_delete_legacy_bookmarks(Path(user_confdir)):
-                bookmark_list.add_bookmark(title, url)
-
-        return instances
+        return page_dicts
 
     @staticmethod
     def _load_and_delete_legacy_bookmarks(user_confdir: Path) -> list[tuple[str, str]]:

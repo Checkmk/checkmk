@@ -707,9 +707,9 @@ def test_replace_expression() -> None:
 @pytest.mark.parametrize(
     "text, out",
     [
-        ("fs_size", ("fs_size", None, None)),
-        ("if_in_octets,8,*@bits/s", ("if_in_octets,8,*", "bits/s", None)),
-        ("fs_size,fs_used,-#e3fff9", ("fs_size,fs_used,-", None, "e3fff9")),
+        ("fs_size", ("fs_size", "", "")),
+        ("if_in_octets,8,*@bits/s", ("if_in_octets,8,*", "bits/s", "")),
+        ("fs_size,fs_used,-#e3fff9", ("fs_size,fs_used,-", "", "e3fff9")),
         ("fs_size,fs_used,-@kb#e3fff9", ("fs_size,fs_used,-", "kb", "e3fff9")),
     ],
 )

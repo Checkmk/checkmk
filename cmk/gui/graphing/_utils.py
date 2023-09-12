@@ -737,12 +737,12 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 #   '----------------------------------------------------------------------'
 
 
-def split_expression(expression: str) -> tuple[str, str | None, str | None]:
-    explicit_color = None
+def split_expression(expression: str) -> tuple[str, str, str]:
+    explicit_color = ""
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
 
-    explicit_unit_name = None
+    explicit_unit_name = ""
     if "@" in expression:
         expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
 
@@ -1147,8 +1147,8 @@ def _parse_single_expression(
 @dataclass(frozen=True)
 class MetricExpression:
     operation: ABCMetricOperation
-    explicit_unit_name: str | None = None
-    explicit_color: str | None = None
+    explicit_unit_name: str = ""
+    explicit_color: str = ""
 
 
 # Evaluates an expression, returns a triple of value, unit and color.

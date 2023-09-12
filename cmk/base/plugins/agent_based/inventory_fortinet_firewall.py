@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import MutableMapping
-from typing import List, Mapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import List, NamedTuple
 
 from .agent_based_api.v1 import equals, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

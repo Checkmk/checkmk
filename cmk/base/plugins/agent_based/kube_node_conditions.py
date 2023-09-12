@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import MutableSequence
-from typing import Mapping
+from collections.abc import Mapping, MutableSequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,

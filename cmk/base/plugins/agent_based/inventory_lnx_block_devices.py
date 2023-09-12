@@ -15,9 +15,8 @@ Sample agent output:
     |device/serial|AJ98N635810808T29   |
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from itertools import groupby
-from typing import Mapping
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

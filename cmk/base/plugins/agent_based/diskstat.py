@@ -68,8 +68,8 @@
 
 import re
 import time
-from collections.abc import MutableMapping, Sequence
-from typing import Any, Mapping, TypeVar
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, TypeVar
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat, multipath

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import List, NamedTuple
 
 from .agent_based_api.v1 import (
     Attributes,

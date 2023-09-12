@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Iterable, MutableMapping
-from typing import Any, cast, Literal, Mapping, TypedDict, Union
+from collections.abc import Callable, Iterable, Mapping, MutableMapping
+from typing import Any, cast, Literal, TypedDict, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable

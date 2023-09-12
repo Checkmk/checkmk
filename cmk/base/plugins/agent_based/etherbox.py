@@ -17,8 +17,9 @@
 # Note: The short contact config option in the etherbox is of type switch contact
 #       The short contact status is set for 15 seconds after a button press
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, assert_never, List, Literal, Mapping, TypedDict
+from typing import Any, assert_never, List, Literal, TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

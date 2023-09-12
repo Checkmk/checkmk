@@ -5,9 +5,9 @@
 
 import collections
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Mapping
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation

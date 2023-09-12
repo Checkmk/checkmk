@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Literal, Mapping, Union
+from collections.abc import Mapping
+from typing import Literal, Union
 
 from pydantic import BaseModel
 

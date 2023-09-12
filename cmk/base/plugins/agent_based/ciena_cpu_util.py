@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Sequence
-from typing import Mapping, NamedTuple
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,

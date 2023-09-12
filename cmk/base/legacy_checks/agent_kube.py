@@ -6,8 +6,8 @@
 
 # mypy: disable-error-code="arg-type"
 
-from collections.abc import Sequence
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
 from cmk.base.config import special_agent_info

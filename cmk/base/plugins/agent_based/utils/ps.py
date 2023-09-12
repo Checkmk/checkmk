@@ -5,10 +5,18 @@
 import contextlib
 import re
 import time
-from collections.abc import Callable, Generator, Iterable, Iterator, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import dataclass
 from html import escape
-from typing import Any, List, Literal, Mapping, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
 from ..agent_based_api.v1 import (
     check_levels,

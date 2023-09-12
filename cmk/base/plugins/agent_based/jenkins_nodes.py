@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
-from typing import Any, Final, List, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any, Final, List
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

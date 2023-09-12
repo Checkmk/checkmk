@@ -5,7 +5,8 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import List, Mapping
+from collections.abc import Mapping
+from typing import List
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

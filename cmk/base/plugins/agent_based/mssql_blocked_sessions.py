@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple, NotRequired
+from typing import NamedTuple, NotRequired
 
 from typing_extensions import TypedDict
 

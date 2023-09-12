@@ -19,9 +19,7 @@ from collections.abc import (
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, assert_never, Literal
-from typing import Mapping as TypingMapping
-from typing import ParamSpec, TypeVar
+from typing import Any, assert_never, Literal, ParamSpec, TypeVar
 
 import pydantic
 from typing_extensions import TypedDict
@@ -2096,7 +2094,7 @@ def _check_single_packet_rate(
 def cluster_check(
     item: str,
     params: Mapping[str, Any],
-    section: TypingMapping[str, Section[TInterfaceType] | None],
+    section: Mapping[str, Section[TInterfaceType] | None],
 ) -> type_defs.CheckResult:
     yield from check_multiple_interfaces(
         item,

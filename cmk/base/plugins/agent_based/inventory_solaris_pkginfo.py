@@ -24,8 +24,7 @@
 #                8862 blocks used (approx)
 
 import time
-from collections.abc import Sequence
-from typing import Mapping
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

@@ -19,7 +19,7 @@
 
 
 import enum
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import contains, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

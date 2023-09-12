@@ -15,8 +15,8 @@
 
 import re
 from collections import Counter
-from collections.abc import Iterable, MutableMapping, Sequence
-from typing import Any, List, Mapping, NamedTuple, TypedDict
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, List, NamedTuple, TypedDict
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation

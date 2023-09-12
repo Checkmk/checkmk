@@ -14,8 +14,8 @@
 # the latter can be one of the following:
 
 from collections import Counter
-from collections.abc import MutableMapping
-from typing import Any, List, Mapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import Any, List, NamedTuple
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

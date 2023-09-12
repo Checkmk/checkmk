@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, List, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

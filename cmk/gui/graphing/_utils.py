@@ -1221,7 +1221,7 @@ def _parse_expression(
 
     if len(operators) != (len(operands) - 1):
         # "a,b,+,c,-,..." -> operators = ["+", "-", ...], operands = ["a", "b", "c", ...]
-        raise ValueError("Too few or many operators {!r} for {!r}".format(operators, operands))
+        raise ValueError(f"Too few or many operators {operators!r} for {operands!r}")
 
     operand = _apply_operator(
         operators.pop(0),

@@ -13,8 +13,9 @@
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.6  'Active unit'
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.7  'Standby unit'
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,

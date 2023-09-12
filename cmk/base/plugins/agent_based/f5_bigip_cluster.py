@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Any, List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, List, NamedTuple
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

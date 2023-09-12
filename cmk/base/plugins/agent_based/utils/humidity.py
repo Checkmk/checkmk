@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Any, List, Optional, Union
 
 from ..agent_based_api.v1 import check_levels, render, type_defs
 

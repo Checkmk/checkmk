@@ -5,8 +5,8 @@
 
 import dataclasses
 from collections import Counter
-from collections.abc import Iterable, Sequence
-from typing import Generic, List, Mapping, TypeVar
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Generic, List, TypeVar
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable

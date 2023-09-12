@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import MutableMapping
-from typing import Any, Mapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,

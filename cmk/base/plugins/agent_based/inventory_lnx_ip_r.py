@@ -8,8 +8,7 @@
 # default via 10.10.0.1 dev wlan0  proto static
 # 10.10.0.0/16 dev wlan0  proto kernel  scope link  src 10.10.0.41  metric 9
 
-from collections.abc import Sequence
-from typing import Mapping
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

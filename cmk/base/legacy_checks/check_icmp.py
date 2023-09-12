@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Sequence
-from typing import Any, Mapping, NamedTuple
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any, NamedTuple
 
 from cmk.base.check_api import is_ipv6_primary
 from cmk.base.config import active_check_info

@@ -16,7 +16,8 @@
 # + 42.202.62.15    42.202.62.100    2 u  186  256  276    0.088    0.716   0.165
 # % 127.127.1.0     .LOCL.          10 l   40   64  377    0.000    0.000   0.001
 import time
-from typing import Any, Final, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, Final, NamedTuple, Optional
 
 from .agent_based_api.v1 import (
     check_levels,

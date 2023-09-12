@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any, Mapping
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info

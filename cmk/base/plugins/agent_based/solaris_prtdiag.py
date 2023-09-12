@@ -65,7 +65,8 @@
 #
 
 import time
-from typing import Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

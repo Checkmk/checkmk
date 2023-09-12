@@ -5,8 +5,8 @@
 
 import json
 import time
-from collections.abc import Sequence
-from typing import Any, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

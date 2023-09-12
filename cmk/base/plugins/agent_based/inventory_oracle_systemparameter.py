@@ -8,8 +8,8 @@
 # XE|processes|100|TRUE
 # XE|sessions|172|FALSE
 
-from collections.abc import Sequence
-from typing import List, Mapping
+from collections.abc import Mapping, Sequence
+from typing import List
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable

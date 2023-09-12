@@ -8,8 +8,8 @@
 # }
 
 
-from collections.abc import Sequence
-from typing import Any, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.config import special_agent_info
 

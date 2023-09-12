@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
-from typing import Any, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
 from cmk.base.config import special_agent_info

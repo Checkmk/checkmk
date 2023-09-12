@@ -5,9 +5,8 @@
 
 import json
 import re
-from collections.abc import Container, Iterable
+from collections.abc import Container, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from typing_extensions import TypedDict
 

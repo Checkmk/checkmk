@@ -18,9 +18,9 @@ import hashlib
 import pathlib
 import time
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from re import Match
-from typing import Any, IO, List, Literal, Mapping, Optional
+from typing import Any, IO, List, Literal, Optional
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation

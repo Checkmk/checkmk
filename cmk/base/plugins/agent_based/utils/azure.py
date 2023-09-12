@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Mapping, NamedTuple
+from typing import Any, NamedTuple
 
 from pydantic import BaseModel
 

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import List, Mapping
+from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable

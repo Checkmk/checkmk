@@ -11,9 +11,9 @@
 # juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
 import time
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, List, Mapping
+from typing import Any, List
 
 from typing_extensions import TypedDict
 

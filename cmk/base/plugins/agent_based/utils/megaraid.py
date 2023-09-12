@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, NamedTuple, TypeVar
+from collections.abc import Mapping
+from typing import Final, NamedTuple, TypeVar
 
 from ..agent_based_api.v1 import Result, State
 

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, List, Literal, Mapping, Optional
+from typing import Any, List, Literal, Optional
 
 from typing_extensions import TypedDict
 

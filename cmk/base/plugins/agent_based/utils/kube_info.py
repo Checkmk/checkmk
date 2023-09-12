@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-from typing import Any, Literal, Mapping, NewType, Protocol
+from collections.abc import Callable, Mapping
+from typing import Any, Literal, NewType, Protocol
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (

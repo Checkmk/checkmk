@@ -16,8 +16,8 @@
 # snapvault my_snap	state snapmirrored	source-system t1	destination-location d2:my_snap	policy Default	lag-time 73487	destination-system a2-b0-02	status idle
 
 from collections import OrderedDict
-from collections.abc import Iterable
-from typing import Any, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

@@ -10,7 +10,8 @@
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.5.0 49
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.5.1 -1
 
-from typing import List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import List, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,

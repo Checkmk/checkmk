@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Mapping
+from collections.abc import Mapping
+from typing import List
 
 import cmk.base.plugins.agent_based.utils.docker as docker
 

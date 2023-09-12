@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from enum import Enum
 from time import time
-from typing import Any, Mapping, NamedTuple
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,

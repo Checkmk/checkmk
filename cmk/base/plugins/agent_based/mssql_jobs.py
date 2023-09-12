@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Final, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

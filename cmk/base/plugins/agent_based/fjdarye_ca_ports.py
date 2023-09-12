@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import MutableMapping, Sequence
-from typing import Any, List, Mapping
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, List
 
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 

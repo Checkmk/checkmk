@@ -26,7 +26,8 @@
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,

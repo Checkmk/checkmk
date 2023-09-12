@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
-from collections.abc import Callable, Generator, Iterable, MutableMapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from enum import Enum
-from typing import Any, Literal, Mapping, NamedTuple, NewType
+from typing import Any, Literal, NamedTuple, NewType
 
 from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

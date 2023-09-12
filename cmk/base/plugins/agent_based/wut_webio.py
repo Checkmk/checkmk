@@ -8,7 +8,8 @@ Knowledge:
 * a device can potentially be in an Unknown state for different reasons such as an occasional
 firmware problem
 """
-from typing import Any, List, Literal, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, List, Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     any_of,

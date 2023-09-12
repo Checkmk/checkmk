@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, Mapping
+from typing import Any
 
 from ..agent_based_api.v1 import all_of, contains, exists, GetRateError, not_contains, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult

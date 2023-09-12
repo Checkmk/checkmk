@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (

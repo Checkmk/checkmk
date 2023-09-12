@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import cast, Literal, Mapping, TypeVar
+from typing import cast, Literal, TypeVar
 from xml.etree import ElementTree
 
 from pydantic import BaseModel

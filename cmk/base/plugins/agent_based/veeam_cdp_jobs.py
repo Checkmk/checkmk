@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple
+from typing import NamedTuple
 
 from typing_extensions import TypedDict
 

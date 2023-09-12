@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import time
-from collections.abc import Iterator, MutableMapping
-from typing import Any, Mapping
+from collections.abc import Iterator, Mapping, MutableMapping
+from typing import Any
 
 from typing_extensions import TypedDict
 

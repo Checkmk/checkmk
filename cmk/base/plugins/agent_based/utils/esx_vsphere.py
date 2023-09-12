@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 from collections import OrderedDict
-from collections.abc import Sequence
-from typing import Mapping
+from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel
 

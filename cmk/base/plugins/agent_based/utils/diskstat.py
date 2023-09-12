@@ -5,8 +5,16 @@
 
 import re
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable, Iterator, MutableMapping, Sequence
-from typing import Any, DefaultDict, Mapping, TypedDict
+from collections.abc import (
+    Callable,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
+from typing import Any, DefaultDict, TypedDict
 
 from ..agent_based_api.v1 import (
     check_levels,

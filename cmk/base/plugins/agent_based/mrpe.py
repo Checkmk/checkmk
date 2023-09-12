@@ -5,8 +5,8 @@
 
 import time
 import urllib.parse
-from collections.abc import Sequence
-from typing import Mapping, NamedTuple
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

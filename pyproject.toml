@@ -163,7 +163,7 @@ testpaths = ["tests"]
 # at load time, tons of our own tests emit warnings up to ERROR even when
 # successful, etc. etc. We might reconsinder lowering the live log level when we
 # have cleaned up things...
-addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20 --disable-socket --allow-unix-socket"
+addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
 markers = ["checks: Run all existing test cases for checks."]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [

@@ -12,6 +12,8 @@ CYCLES := $(PIPENV) run py_import_cycles
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
+    --disable-socket \
+    --allow-unix-socket \
     ../cmk/base \
     ../cmk/bi \
     ../cmk/fields \

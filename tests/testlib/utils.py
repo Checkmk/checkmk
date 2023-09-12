@@ -355,7 +355,7 @@ def restart_httpd() -> None:
     e.g. the controller from querying the agent receiver port.
 
     Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
-    see eg. sles-15sp4.
+    see e.g. sles-15sp4.
     """
 
     # When executed locally and un-dockerized, DISTRO may not be set

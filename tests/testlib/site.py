@@ -155,7 +155,8 @@ class Site:
                     check=True,
                 )
                 raise Exception(
-                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef (to check if core is actually running):\n{ps_proc.stdout}"
+                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef "
+                    f"(to check if core is actually running):\n{ps_proc.stdout}"
                 )
             time.sleep(0.2)
 
@@ -206,7 +207,8 @@ class Site:
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
-            f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};{service_description};{state};{output}"
+            f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};"
+            f"{service_description};{state};{output}"
         )
         self._wait_for_next_service_check(
             hostname,
@@ -230,7 +232,10 @@ class Site:
 
         command_timestamp = self._command_timestamp(last_check_before)
 
-        command = f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{service_description};{command_timestamp:.0f}"
+        command = (
+            f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};"
+            f"{service_description};{command_timestamp:.0f}"
+        )
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
 
@@ -245,7 +250,8 @@ class Site:
             wait_timeout,
         )
 
-    def _command_timestamp(self, last_check_before: float) -> float:
+    @staticmethod
+    def _command_timestamp(last_check_before: float) -> float:
         # Ensure the next check result is not in same second as the previous check
         timestamp = time.time()
         while int(last_check_before) == int(timestamp):
@@ -316,8 +322,8 @@ class Site:
             wait_timeout,
         )
 
+    @staticmethod
     def _verify_next_check_output(
-        self,
         command_timestamp: float,
         last_check: float,
         last_check_before: float,
@@ -808,7 +814,8 @@ class Site:
 
         self.write_text_file(
             "etc/default/cmc",
-            f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet --log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
+            f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet '
+            f'--log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
         )
 
     def _set_number_of_apache_processes(self) -> None:
@@ -1120,7 +1127,8 @@ class Site:
         else:
             self._livestatus_port = self.get_free_port_from(9123)
 
-    def get_free_port_from(self, port: int) -> int:
+    @staticmethod
+    def get_free_port_from(port: int) -> int:
         used_ports = set()
         for cfg_path in Path("/omd/sites").glob("*/etc/omd/site.conf"):
             with cfg_path.open() as cfg_file:
@@ -1486,7 +1494,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
     ) -> Iterator[Site]:
-        """Return a fully-setup test site (for use in site fixtures)."""
+        """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
         # by default, the site will be cleaned up if REUSE=1 is not set
         # you can also explicitly set CLEANUP=[0|1] though (for debug purposes)

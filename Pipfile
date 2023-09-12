@@ -30,7 +30,6 @@ pytest-profiling = "*"  # used to analyze test run performance
 pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
 pytest-xdist = "*" # used to limit number of procs in e2e tests
-pytest-socket = "*" # not network calls in tests
 responses = "*"  # used for unit tests
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before committing changes

@@ -110,7 +110,6 @@ def test_livestatus_local_connection(sock_path: Path) -> None:
     assert isinstance(live, livestatus.SingleSiteConnection)
 
 
-@pytest.mark.enable_socket
 def test_livestatus_ipv4_connection() -> None:
     with closing(socket.socket(socket.AF_INET)) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -125,7 +124,6 @@ def test_livestatus_ipv4_connection() -> None:
         live.connect()
 
 
-@pytest.mark.enable_socket
 def test_livestatus_ipv6_connection() -> None:
     with closing(socket.socket(socket.AF_INET6)) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -175,7 +173,6 @@ def test_single_site_connection_socketurl(
 @pytest.mark.parametrize("tls", [True, False])
 @pytest.mark.parametrize("verify", [True, False])
 @pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
-@pytest.mark.enable_socket
 def test_create_socket(
     tls: bool,
     verify: bool,
@@ -216,7 +213,6 @@ def test_create_socket(
     assert live.tls_ca_file_path == str(ca_file_path)
 
 
-@pytest.mark.enable_socket
 def test_create_socket_not_existing_ca_file() -> None:
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="/x/y/z.pem"
@@ -225,7 +221,6 @@ def test_create_socket_not_existing_ca_file() -> None:
         live._create_socket(socket.AF_INET)
 
 
-@pytest.mark.enable_socket
 def test_create_socket_no_cert(tmp_path: Path) -> None:
     with Path(tmp_path, "z.pem").open("wb"):
         live = livestatus.SingleSiteConnection(

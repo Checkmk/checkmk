@@ -40,6 +40,8 @@ import json
 import re
 from collections.abc import Sequence
 
+from livestatus import SiteId
+
 import cmk.utils
 import cmk.utils.render
 from cmk.utils.tags import TagID
@@ -53,11 +55,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.visual_link import url_to_visual
 
 from ..graph import cmk_graph_url
@@ -472,8 +475,12 @@ class PredictionIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: list[TagID],
+        custom_vars: dict[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
         # only creates a link to the first one. Add multiple icons or add a navigation
@@ -485,7 +492,6 @@ class PredictionIcon(Icon):
                     varname, _value = p.split("=")
                     dsname = varname[8:]
                     urlvars = [
-                        ("site", row["site"]),
                         ("host", row["host_name"]),
                         ("service", row["service_description"]),
                         ("dsname", dsname),
@@ -493,7 +499,11 @@ class PredictionIcon(Icon):
                     return (
                         "prediction",
                         _("Analyse predictive monitoring for this service"),
-                        makeuri_contextless(request, urlvars, "prediction_graph.py"),
+                        (
+                            f"{get_site_config(SiteId(row['site']))['url_prefix']}"
+                            "check_mk/prediction_graph.py?"
+                            f"{urlencode_vars(urlvars)}"
+                        ),
                     )
         return None
 

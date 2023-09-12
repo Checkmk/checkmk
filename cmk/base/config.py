@@ -3911,16 +3911,8 @@ class ConfigCache:
             self.ruleset_matcher._service_match_object(hostname, description), ruleset
         )
 
-    def in_boolean_serviceconf_list(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
-    ) -> bool:
-        """Compute outcome of a service rule set that just say yes/no"""
-        return self.ruleset_matcher.is_matching_service_ruleset(
-            self.ruleset_matcher._service_match_object(hostname, description), ruleset
-        )
-
     def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
-        return self.in_boolean_serviceconf_list(host_name, description, ignored_services)
+        return self.ruleset_matcher.get_service_bool_value(host_name, description, ignored_services)
 
     def check_plugin_ignored(
         self,
@@ -4042,14 +4034,14 @@ class ConfigCache:
                 raise MKGeneralException(
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )
-            if node_name in nodes and self.in_boolean_serviceconf_list(
+            if node_name in nodes and self.ruleset_matcher.get_service_bool_value(
                 node_name, servicedesc, conf
             ):
                 return cluster
 
         # 1. Old style: clustered_services assumes that each host belong to
         #    exactly on cluster
-        if self.in_boolean_serviceconf_list(node_name, servicedesc, clustered_services):
+        if self.ruleset_matcher.get_service_bool_value(node_name, servicedesc, clustered_services):
             return the_clusters[0]
 
         return node_name

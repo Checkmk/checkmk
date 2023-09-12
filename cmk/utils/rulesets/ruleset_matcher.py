@@ -209,14 +209,13 @@ class RulesetMatcher:
         # Expensive and mostly useless caching.
         self.__service_match_obj: dict[tuple[HostName, ServiceName], RulesetMatchObject] = {}
 
-    # TODO: Cleanup external call sites
     def get_host_bool_value(self, hostname: HostName, ruleset: Iterable[RuleSpec[bool]]) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
         Depending on the value the outcome is negated or not.
 
-        Replaces get_host_bool_value / in_boolean_serviceconf_list"""
+        """
         for value in self.get_host_values(hostname, ruleset, is_binary=True):
             # Next line may be controlled by `is_binary` in which case we
             # should overload the function instead of asserting to check
@@ -284,16 +283,18 @@ class RulesetMatcher:
             ),
         )
 
-    def is_matching_service_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[TRuleValue]]
+    def get_service_bool_value(
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec[TRuleValue]]
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
         Depending on the value the outcome is negated or not.
 
-        Replaces get_host_bool_value / in_boolean_serviceconf_list"""
-        for value in self.get_service_ruleset_values(match_object, ruleset, is_binary=True):
+        """
+        for value in self.get_service_ruleset_values(
+            self._service_match_object(hostname, description), ruleset, is_binary=True
+        ):
             # See `get_host_bool_value()`.
             assert isinstance(value, bool)
             return value

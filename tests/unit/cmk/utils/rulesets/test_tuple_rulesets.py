@@ -323,19 +323,14 @@ def test_get_host_merged_dict(
         ),
     ],
 )
-def test_in_boolean_serviceconf_list(
+def test_get_service_bool_value(
     ts: Scenario, parameters: tuple[Sequence[RuleSpec], bool, bool]
 ) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters
+    matcher = ts.config_cache.ruleset_matcher
 
-    assert (
-        ts.config_cache.in_boolean_serviceconf_list(HostName("host1"), "service1", ruleset)
-        == outcome_host1
-    )
-    assert (
-        ts.config_cache.in_boolean_serviceconf_list(HostName("host2"), "service2", ruleset)
-        == outcome_host2
-    )
+    assert matcher.get_service_bool_value(HostName("host1"), "service1", ruleset) == outcome_host1
+    assert matcher.get_service_bool_value(HostName("host2"), "service2", ruleset) == outcome_host2
 
 
 def test_all_matching_hosts(ts: Scenario) -> None:

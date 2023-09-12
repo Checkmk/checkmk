@@ -438,14 +438,14 @@ class MockHostExtraConf:
     """Mock the calls to host_extra_conf.
 
     Due to our rather unorthodox import structure, we cannot mock
-    host_extra_conf_merged directly (it's a global var in running checks!)
+    get_host_merged_dict directly (it's a global var in running checks!)
     Instead, we mock the calls to cmk.base.config.host_extra_conf.
 
     Passing a single dict to this objects init method will result in
-    host_extra_conf_merged returning said dict.
+    get_host_merged_dict returning said dict.
 
     You can also pass a list of dicts, but that's rather pointless, as
-    host_extra_conf_merged will return a merged dict, the result of
+    get_host_merged_dict will return a merged dict, the result of
 
         merged_dict = {}
         for d in reversed(list_of_dicts):
@@ -456,7 +456,7 @@ class MockHostExtraConf:
 
     with MockHostExtraConf(mockconfig):
         # run your check test here,
-        # host_extra_conf_merged in your check will return
+        # get_host_merged_dict in your check will return
         # mockconfig
 
     See for example 'test_df_check.py'.

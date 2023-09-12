@@ -1192,7 +1192,7 @@ def get_plugin_parameters(
         return Parameters(
             {
                 **default_parameters,
-                **matcher.host_extra_conf_merged(host_name, rules),
+                **matcher.get_host_merged_dict(host_name, rules),
             }
         )
 
@@ -2801,7 +2801,7 @@ class ConfigCache:
             raise ValueError(plugin)
 
         default: Sequence[RuleSpec[Mapping[str, object]]] = []
-        return self.ruleset_matcher.host_extra_conf_merged(
+        return self.ruleset_matcher.get_host_merged_dict(
             host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
@@ -3146,7 +3146,7 @@ class ConfigCache:
     ) -> Mapping[str, object]:
         def _impl() -> Mapping[str, object]:
             default: Sequence[RuleSpec[Mapping[str, object]]] = []
-            return self.ruleset_matcher.host_extra_conf_merged(
+            return self.ruleset_matcher.get_host_merged_dict(
                 host_name, notification_parameters.get(plugin_name, default)
             )
 
@@ -3176,7 +3176,7 @@ class ConfigCache:
 
     def exit_code_spec(self, hostname: HostName, data_source_id: str | None = None) -> ExitSpec:
         spec: _NestedExitSpec = {}
-        # TODO: Can we use host_extra_conf_merged?
+        # TODO: Can we use get_host_merged_dict?
         specs = self.ruleset_matcher.host_extra_conf(hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
@@ -4208,7 +4208,7 @@ class ConfigCache:
         levels: PingLevels = {}
 
         values = self.ruleset_matcher.host_extra_conf(host_name, ping_levels)
-        # TODO: Use host_extra_conf_merged?)
+        # TODO: Use get_host_merged_dict?)
         for value in values[::-1]:  # make first rules have precedence
             levels.update(value)
 
@@ -4511,7 +4511,7 @@ class CEEHostConfig:
     @property
     def smartping_settings(self) -> dict:
         settings = {"timeout": 2.5}
-        settings |= self._config_cache.ruleset_matcher.host_extra_conf_merged(
+        settings |= self._config_cache.ruleset_matcher.get_host_merged_dict(
             self.hostname,
             cmc_smartping_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )

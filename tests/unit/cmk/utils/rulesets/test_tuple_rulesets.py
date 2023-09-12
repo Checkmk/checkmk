@@ -177,11 +177,11 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
     ]
 
 
-def test_host_extra_conf_merged(
+def test_get_host_merged_dict(
     ts: Scenario, host_ruleset: Sequence[RuleSpec[Mapping[str, object]]]
 ) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
-    assert ruleset_matcher.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
+    assert ruleset_matcher.get_host_merged_dict(HostName("host1"), host_ruleset) == {
         "1": True,
         "2": True,
         "3": True,
@@ -191,7 +191,7 @@ def test_host_extra_conf_merged(
         "9": True,
     }
 
-    assert ruleset_matcher.host_extra_conf_merged(HostName("host2"), host_ruleset) == {
+    assert ruleset_matcher.get_host_merged_dict(HostName("host2"), host_ruleset) == {
         "1": True,
         "2": True,
         "8": True,

@@ -452,32 +452,14 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
         nodes_of={},
     )
 
-    assert (
-        matcher.get_host_ruleset_merged_dict(
-            RulesetMatchObject(host_name=HostName("abc"), service_description=None),
-            ruleset=dict_ruleset,
-        )
-        == {}
-    )
-    assert (
-        matcher.get_host_ruleset_merged_dict(
-            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-            ruleset=dict_ruleset,
-        )
-        == {}
-    )
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name=HostName("host1"), service_description=None),
-        ruleset=dict_ruleset,
-    ) == {
+    assert matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset) == {}
+    assert matcher.get_host_merged_dict(HostName("xyz"), ruleset=dict_ruleset) == {}
+    assert matcher.get_host_merged_dict(HostName("host1"), ruleset=dict_ruleset) == {
         "hu": "BLA",
         "ho": "BLA",
         "he": "BLUB",
     }
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name=HostName("host2"), service_description=None),
-        ruleset=dict_ruleset,
-    ) == {
+    assert matcher.get_host_merged_dict(HostName("host2"), ruleset=dict_ruleset) == {
         "hu": "BLUB",
         "ho": "BLA",
         "he": "BLUB",

@@ -242,7 +242,7 @@ def run(check_info, dataset):
             with current_host(HostName("non-existent-testhost")), mock_item_state(
                 mock_is
             ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
-                check, mock_hecm, "host_extra_conf_merged"
+                check, mock_hecm, "get_host_merged_dict"
             ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 

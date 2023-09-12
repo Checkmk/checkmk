@@ -224,23 +224,19 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
-    def host_extra_conf_merged(
-        self, hostname: HostName, ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]]
-    ) -> Mapping[str, TRuleValue]:
-        return self.get_host_ruleset_merged_dict(RulesetMatchObject(hostname), ruleset)
-
-    def get_host_ruleset_merged_dict(
+    def get_host_merged_dict(
         self,
-        match_object: RulesetMatchObject,
+        hostname: HostName,
         ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
-        Replaces host_extra_conf_merged / service_extra_conf_merged"""
+        """
         default: Mapping[str, TRuleValue] = {}
         merged = boil_down_parameters(
-            self.get_host_ruleset_values(match_object, ruleset, is_binary=False), default
+            self.get_host_ruleset_values(RulesetMatchObject(hostname), ruleset, is_binary=False),
+            default,
         )
         assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
         return merged
@@ -304,7 +300,7 @@ class RulesetMatcher:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
-        Replaces host_extra_conf_merged / service_extra_conf_merged"""
+        """
         merged = boil_down_parameters(
             self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
         )
@@ -917,10 +913,7 @@ class RulesetOptimizer:
         return labels
 
     def _ruleset_labels_of_host(self, hostname: HostName) -> Labels:
-        match_object = RulesetMatchObject(hostname, service_description=None)
-        return self._ruleset_matcher.get_host_ruleset_merged_dict(
-            match_object, self._labels.host_label_rules
-        )
+        return self._ruleset_matcher.get_host_merged_dict(hostname, self._labels.host_label_rules)
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
         host_labels = (

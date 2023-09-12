@@ -241,3 +241,10 @@ nagios(
     sha256 = NAGIOS_SHA256,
     version_str = NAGIOS_VERSION,
 )
+
+load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
+create_python_requirements(
+    name = "python_modules",
+    requirements = "//:Pipfile",
+)
+

@@ -214,9 +214,7 @@ class RulesetMatcher:
         Depending on the value the outcome is negated or not.
 
         Replaces get_host_bool_value / in_boolean_serviceconf_list"""
-        for value in self.get_host_ruleset_values(
-            RulesetMatchObject(hostname), ruleset, is_binary=True
-        ):
+        for value in self.get_host_values(hostname, ruleset, is_binary=True):
             # Next line may be controlled by `is_binary` in which case we
             # should overload the function instead of asserting to check
             # during typing instead of runtime.
@@ -235,38 +233,24 @@ class RulesetMatcher:
         """
         default: Mapping[str, TRuleValue] = {}
         merged = boil_down_parameters(
-            self.get_host_ruleset_values(RulesetMatchObject(hostname), ruleset, is_binary=False),
+            self.get_host_values(hostname, ruleset, is_binary=False),
             default,
         )
         assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
         return merged
 
-    def host_extra_conf(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec[TRuleValue]]
-    ) -> list[TRuleValue]:
-        return list(
-            self.get_host_ruleset_values(
-                RulesetMatchObject(hostname),
-                ruleset,
-                is_binary=False,
-            )
-        )
-
-    def get_host_ruleset_values(
+    def get_host_values(
         self,
-        match_object: RulesetMatchObject,
+        hostname: HostName | HostAddress,
         ruleset: Iterable[RuleSpec[TRuleValue]],
-        is_binary: bool,
-    ) -> Iterator[TRuleValue]:
-        """Returns a generator of the values of the matched rules
-        Replaces host_extra_conf"""
+        is_binary: bool = False,
+    ) -> list[TRuleValue]:
+        """Returns a generator of the values of the matched rules."""
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=is_binary)
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = (
-            match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
-        )
+        with_foreign_hosts = hostname not in self.ruleset_optimizer.all_processed_hosts()
 
         optimized_ruleset: PreprocessedHostRuleset[
             TRuleValue
@@ -274,8 +258,7 @@ class RulesetMatcher:
             ruleset, with_foreign_hosts, is_binary=is_binary
         )
 
-        assert match_object.host_name is not None
-        yield from optimized_ruleset.get(match_object.host_name, ())
+        return optimized_ruleset.get(hostname, [])
 
     def is_matching_service_ruleset(
         self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[TRuleValue]]

@@ -435,11 +435,11 @@ def mock_item_state(mock_state):
 
 
 class MockHostExtraConf:
-    """Mock the calls to host_extra_conf.
+    """Mock the calls to get_host_values.
 
     Due to our rather unorthodox import structure, we cannot mock
     get_host_merged_dict directly (it's a global var in running checks!)
-    Instead, we mock the calls to cmk.base.config.host_extra_conf.
+    Instead, we mock the calls to cmk.base.config.get_host_values.
 
     Passing a single dict to this objects init method will result in
     get_host_merged_dict returning said dict.
@@ -466,7 +466,7 @@ class MockHostExtraConf:
         self,
         check: object,
         mock_config: Callable | dict[object, object],
-        target: str = "host_extra_conf",
+        target: str = "get_host_values",
     ) -> None:
         self.target = target
         self.context: Any = None  # TODO: Figure out the right type
@@ -478,7 +478,7 @@ class MockHostExtraConf:
         if hasattr(self.config, "__call__"):
             return self.config(_hostname, _ruleset)
 
-        if self.target == "host_extra_conf" and isinstance(self.config, dict):
+        if self.target == "get_host_values" and isinstance(self.config, dict):
             return [self.config]
         return self.config
 

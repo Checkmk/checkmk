@@ -1308,8 +1308,10 @@ class Rule:
                 return
         else:
             if list(
-                matcher.get_host_ruleset_values(
-                    match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset
+                matcher.get_host_values(
+                    match_object.host_name,
+                    ruleset,
+                    is_binary=self.ruleset.rulespec.is_binary_ruleset,
                 )
             ):
                 return

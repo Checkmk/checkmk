@@ -158,9 +158,9 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
+def test_get_host_values(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
-    assert ruleset_matcher.host_extra_conf(HostName("host1"), host_ruleset) == [
+    assert ruleset_matcher.get_host_values(HostName("host1"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -170,7 +170,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
         {"9": True},
     ]
 
-    assert ruleset_matcher.host_extra_conf(HostName("host2"), host_ruleset) == [
+    assert ruleset_matcher.get_host_values(HostName("host2"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"8": True},

@@ -156,7 +156,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         ("host2", ["hu", "BLA"]),
     ],
 )
-def test_ruleset_matcher_get_host_ruleset_values_labels(
+def test_ruleset_matcher_get_host_values_labels(
     hostname_str: str, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
@@ -179,10 +179,8 @@ def test_ruleset_matcher_get_host_ruleset_values_labels(
 
     assert (
         list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName(hostname_str), service_description=None),
-                ruleset=host_label_ruleset,
-                is_binary=False,
+            matcher.get_host_values(
+                HostName(hostname_str), ruleset=host_label_ruleset, is_binary=False
             )
         )
         == expected_result
@@ -267,7 +265,7 @@ def test_labels_of_service_discovered_labels() -> None:
     }
 
 
-def test_basic_get_host_ruleset_values() -> None:
+def test_basic_get_host_values() -> None:
     matcher = RulesetMatcher(
         tag_to_group_map={},
         host_tags={
@@ -293,37 +291,18 @@ def test_basic_get_host_ruleset_values() -> None:
         nodes_of={},
     )
 
-    assert not list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("abc"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    )
-    assert not list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    )
-    assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("host1"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    ) == ["BLA", "BLUB"]
-    assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("host2"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    ) == ["BLUB"]
+    assert not list(matcher.get_host_values(HostName("abc"), ruleset=ruleset, is_binary=False))
+    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset, is_binary=False))
+    assert list(matcher.get_host_values(HostName("host1"), ruleset=ruleset, is_binary=False)) == [
+        "BLA",
+        "BLUB",
+    ]
+    assert list(matcher.get_host_values(HostName("host2"), ruleset=ruleset, is_binary=False)) == [
+        "BLUB"
+    ]
 
 
-def test_basic_get_host_ruleset_values_subfolders() -> None:
+def test_basic_get_host_values_subfolders() -> None:
     matcher = RulesetMatcher(
         tag_to_group_map={},
         host_tags={
@@ -355,34 +334,15 @@ def test_basic_get_host_ruleset_values_subfolders() -> None:
         nodes_of={},
     )
 
-    assert not list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    )
-    assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("lvl1"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    ) == ["LEVEL1"]
-    assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("lvl2"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    ) == ["LEVEL1", "LEVEL2"]
-    assert not list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=HostName("lvl1a"), service_description=None),
-            ruleset=ruleset,
-            is_binary=False,
-        )
-    )
+    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset, is_binary=False))
+    assert list(matcher.get_host_values(HostName("lvl1"), ruleset=ruleset, is_binary=False)) == [
+        "LEVEL1"
+    ]
+    assert list(matcher.get_host_values(HostName("lvl2"), ruleset=ruleset, is_binary=False)) == [
+        "LEVEL1",
+        "LEVEL2",
+    ]
+    assert not list(matcher.get_host_values(HostName("lvl1a"), ruleset=ruleset, is_binary=False))
 
 
 dict_ruleset: Sequence[RuleSpec[Mapping[str, str]]] = [
@@ -615,7 +575,7 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         (HostName("host3"), ["not_lan", "not_wan_and_not_lan", "BLA"]),
     ],
 )
-def test_ruleset_matcher_get_host_ruleset_values_tags(
+def test_ruleset_matcher_get_host_values_tags(
     hostname: HostName, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
@@ -651,13 +611,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
         nodes_of={},
     )
     assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=hostname, service_description=None),
-                ruleset=tag_ruleset,
-                is_binary=False,
-            )
-        )
+        list(matcher.get_host_values(hostname, ruleset=tag_ruleset, is_binary=False))
         == expected_result
     )
 
@@ -693,7 +647,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
         ),
     ],
 )
-def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
+def test_ruleset_matcher_get_host_values_tags_duplicate_ids(
     monkeypatch: MonkeyPatch,
     rule_spec: RuleConditionsSpec,
     expected_result: Sequence[Any],
@@ -740,13 +694,8 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
 
     assert (
         list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(
-                    host_name=HostName("host"),
-                    service_description=None,
-                ),
-                ruleset=[rule_spec],  # type: ignore[arg-type]
-                is_binary=False,
+            matcher.get_host_values(
+                HostName("host"), ruleset=[rule_spec], is_binary=False  # type: ignore[arg-type]
             )
         )
         == expected_result

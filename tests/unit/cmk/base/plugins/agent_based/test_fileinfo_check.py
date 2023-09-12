@@ -416,7 +416,7 @@ def test_check_fileinfo_group_patterns(
         ),
     ],
 )
-def test_check_fileinfo_group_patterns_host_extra_conf(
+def test_check_fileinfo_group_patterns_get_host_values(
     item: str,
     params: Mapping[str, object],
     expected_result: CheckResult,

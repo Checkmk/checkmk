@@ -14,7 +14,7 @@ from typing_extensions import TypedDict
 from livestatus import LocalConnection, SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
@@ -133,10 +133,10 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
     for hostname, check_mk_service_crit_since in _livestatus_query_local_candidates():
         try:
             rule_value = next(
-                ruleset_matcher.get_host_ruleset_values(
-                    match_object=RulesetMatchObject(hostname),
-                    ruleset=automatic_host_removal_ruleset,
-                    is_binary=False,
+                iter(
+                    ruleset_matcher.get_host_values(
+                        hostname, ruleset=automatic_host_removal_ruleset, is_binary=False
+                    )
                 )
             )
         except StopIteration:

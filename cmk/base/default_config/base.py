@@ -112,7 +112,7 @@ management_snmp_credentials: dict[HostName, SNMPCredentials] = {}
 # Mapping from hostname to IPMI credentials
 management_ipmi_credentials: dict[HostName, IPMICredentials] = {}
 # Ruleset to specify whether or not to use bulkwalk
-management_bulkwalk_hosts: list[RuleSpec[object]] = []
+management_bulkwalk_hosts: list[RuleSpec[bool]] = []
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation: Literal["terse", "full"] | None = None
@@ -192,13 +192,13 @@ tcp_hosts: list = [
 # directly couple these two definitions
 # https://github.com/python/typing/issues/781
 cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
-bulkwalk_hosts: list[RuleSpec[object]] = []
-snmpv2c_hosts: list[RuleSpec[object]] = []
-snmp_without_sys_descr: list[RuleSpec[object]] = []
+bulkwalk_hosts: list[RuleSpec[bool]] = []
+snmpv2c_hosts: list[RuleSpec[bool]] = []
+snmp_without_sys_descr: list[RuleSpec[bool]] = []
 snmpv3_contexts: list[RuleSpec[object]] = []
-usewalk_hosts: list[RuleSpec[object]] = []
+usewalk_hosts: list[RuleSpec[bool]] = []
 # use host name as ip address for these hosts
-dyndns_hosts: list[RuleSpec[object]] = []
+dyndns_hosts: list[RuleSpec[bool]] = []
 primary_address_family: list[RuleSpec[object]] = []
 # exclude from inventory
 ignored_checktypes: list[str] = []
@@ -239,7 +239,7 @@ ipv6addresses: dict[HostName | HostAddress, HostAddress] = {}
 additional_ipv4addresses: dict[HostName, list[HostAddress]] = {}
 # mapping from hostname to addtional IPv6 addresses
 additional_ipv6addresses: dict[HostName, list[HostAddress]] = {}
-only_hosts: list[RuleSpec[object]] | None = None
+only_hosts: list[RuleSpec[bool]] | None = None
 distributed_wato_site: str | None = None  # used by distributed WATO
 is_wato_slave_site = False
 extra_host_conf: dict[str, list[RuleSpec[str]]] = {}

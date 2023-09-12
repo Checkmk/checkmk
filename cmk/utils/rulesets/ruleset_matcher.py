@@ -208,7 +208,7 @@ class RulesetMatcher:
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(
-        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec[bool]]
     ) -> bool:
         return self.is_matching_host_ruleset(RulesetMatchObject(hostname), ruleset)
 

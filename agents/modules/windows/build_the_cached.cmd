@@ -9,7 +9,7 @@
 :: Name format 'python-<version>.<subversion>_<hash>_<id>.cab
 :: where <hash> is pretty formatted output from git log .
 ::       <id> is fixed number(BUILD_NUM)
-::       <version> is either 3.4 or 3.9
+::       <version> is 3.9
 ::       <subversion> is any digit
 
 @echo off
@@ -48,25 +48,16 @@ set git_hash=%git_hash:'=%
 
 set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.cab
-if "%version%" == "3.4" (
-set artifact_name=%arti_dir%\python-3.4.cab
-) else (
-set artifact_name=%arti_dir%\python-3.cab
-)
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
-  
-  :: BUILDING
-  if "%version%" == "3.4" (
-    make python_344 PY_VER=3.4 PY_SUBVER=4 ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 33
-  ) else (
-    make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
-  )
 
- 
+  :: BUILDING
+  make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
+
+
   echo "Checking the result of the build..."
   if NOT exist %artifact_name% (
     echo "The file %artifact_name% absent, build failed"
@@ -81,17 +72,17 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
   curl -sSf --user %creds% --upload-file %fname% %url%
   IF /I "!ERRORLEVEL!" NEQ "0" (
-    del %fname% > nul 
+    del %fname% > nul
     powershell Write-Host "[-] Failed to upload" -Foreground red
     exit /B 35
   ) else (
-    del %fname% > nul 
+    del %fname% > nul
     powershell Write-Host "[+] Uploaded successfully" -Foreground green
     exit /B 0
   )
 ) else (
   :: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
-  powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green 
+  powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green
   move /Y %fname% %artifact_name%
   powershell Write-Host "[+] Downloaded successfully" -Foreground green
   exit /b 0

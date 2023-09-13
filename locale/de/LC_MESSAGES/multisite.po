@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-09-11 08:34+0000\n"
-"Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
+"PO-Revision-Date: 2023-09-13 10:30+0000\n"
+"Last-Translator: Robert Sander <r.sander@heinlein-support.de>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -855,7 +855,8 @@ msgstr "(Dieses Modul ist noch nicht programmiert)"
 msgid "(Untitled module)"
 msgstr "(Modul ohne Namen)"
 
-msgid "(builtin)"
+#, fuzzy
+msgid "(built-in)"
 msgstr "(eingebaut)"
 
 #, python-format
@@ -5613,8 +5614,8 @@ msgstr ""
 "Erlaubt dem Benutzer das Erstellen von Berichten. Um eigene Berichtsvorlagen "
 "zu erstellen ist eine zusätzliche Berechtigung notwendig."
 
-#, python-format
-msgid "Allows to create own %s, customize builtin %s and use them."
+#, fuzzy, python-format
+msgid "Allows to create own %s, customize built-in %s and use them."
 msgstr ""
 "Erlaubt es, eigene %s zu erstellen, sowie vorhandene %s anzupassen und zu "
 "benutzen."
@@ -8049,22 +8050,28 @@ msgstr "Bauzeit"
 msgid "Building of search index started"
 msgstr "Bauen der Suchindex gestartet"
 
-msgid "Builtin"
+#, fuzzy
+msgid "Built-in"
 msgstr "eingebaut"
 
-msgid "Builtin icon visibility"
+#, fuzzy
+msgid "Built-in icon visibility"
 msgstr "Sichtbarkeit eingebauter Icons"
 
-msgid "Builtin time periods can not be modified"
+#, fuzzy
+msgid "Built-in time periods can not be modified"
 msgstr "Eingebaute Zeitperioden können nicht modifiziert werden"
 
-msgid "Builtin: Force"
+#, fuzzy
+msgid "Built-in: Force"
 msgstr "Vordefiniert: Rolle"
 
-msgid "Builtin: Hierarchy"
+#, fuzzy
+msgid "Built-in: Hierarchy"
 msgstr "Vordefiniert Hierarchie"
 
-msgid "Builtin: Radial"
+#, fuzzy
+msgid "Built-in: Radial"
 msgstr "Vordefiniert: Radial"
 
 msgid "Bulk"
@@ -11261,10 +11268,12 @@ msgstr "Klone SLA"
 msgid "Clone bookmark list"
 msgstr "Lesezeichenliste klonen"
 
-msgid "Clone builtin dashboard"
+#, fuzzy
+msgid "Clone built-in dashboard"
 msgstr "Eingebautes Dashboard klonen"
 
-msgid "Clone builtin view"
+#, fuzzy
+msgid "Clone built-in view"
 msgstr "Eingebaute Tabellenansicht klonen"
 
 msgid "Clone custom graph"
@@ -18356,12 +18365,13 @@ msgstr ""
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
+#, fuzzy
 msgid ""
-"Each user defined role is based on one of the builtin roles. When created it "
-"will start with all permissions of that role. When due to a software update "
-"or installation of an addons new permissions appear, the user role will get "
-"or not get those new permissions based on the default settings of the "
-"builtin role it's based on."
+"Each user defined role is based on one of the built-in roles. When created "
+"it will start with all permissions of that role. When due to a software "
+"update or installation of an addons new permissions appear, the user role "
+"will get or not get those new permissions based on the default settings of "
+"the built-in role it's based on."
 msgstr ""
 "Jeder benutzerdefinierte Rolle basiert auf einer der eingebauten Rollen. "
 "Beim Anlegen erhält die Rolle alle Berechtigungen der Ausgangsrolle. Wenn "
@@ -20340,6 +20350,10 @@ msgstr "Erwarteter Status"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
+#, fuzzy
+msgid "Experimental features"
+msgstr "Enterprise Funktion"
+
 msgid "Expire acknowledgement after"
 msgstr "Quittierung auslaufen lassen nach"
 
@@ -20715,9 +20729,9 @@ msgstr ""
 "Der ntop Server '%s' konnte mit dem Benutzer '%s' nicht kontaktiert werden. "
 "Bitte überprüfen Sie Ihre ntop-Verbindungseinstellungen."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Failed to convert a builtin dashboard which is referencing the view \"%s\". "
+"Failed to convert a built-in dashboard which is referencing the view \"%s\". "
 "You will have to migrate it to the new dashboard format on your own to work "
 "properly."
 msgstr ""
@@ -27093,9 +27107,10 @@ msgstr ""
 "Wenn Sie als Interval für den Update-Check 60 Minuten definiert haben, dann "
 "sollten alle Hosts hier gelistet werden."
 
+#, fuzzy
 msgid ""
 "If you leave the permissions at \"default\", they get their settings from "
-"the factory defaults (for builtin roles) or from the factory default of "
+"the factory defaults (for built-in roles) or from the factory default of "
 "their base role (for user define roles). Factory defaults may change due to "
 "software updates. When choosing another base role, all permissions that are "
 "on default will reflect the new base role."
@@ -27233,6 +27248,14 @@ msgstr ""
 "Mit diesem Parameter lassen sie Alarme über syslog/UDP (Port 514) an eine "
 "entfernte Event Console oder Syslog-Server versenden."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a 'Check_MK' service then results will be "
+"processed only within this period."
+msgstr ""
+"Wenn Sie einen Benachrichtigungszeitraum für einen 'Check_MK'-Service "
+"anlegen, dann werden Ergebnisse nur innerhalb dieser Periode verarbeitet."
+
 msgid ""
 "If you specify a check period for a host then active checks of that host "
 "will only take place within that period. In the rest of the time the state "
@@ -27242,6 +27265,19 @@ msgstr ""
 "Checks für diesen Host nur innerhalb der Periode ausgeführt. Außerhalb "
 "dieser Zeit wird der letzte Host-Status angezeigt."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a service then active checks of that "
+"service will only be done in that period. Please note, that the checks "
+"driven by Checkmk are passive checks and are not affected by this rule. You "
+"can use the rule for the active Checkmk check, however."
+msgstr ""
+"Wenn Sie einen Benachrichtigungszeitraum für einen Service festlegen, dann "
+"werden aktive Checks dieses Services nur in dieser Periode ausgeführt. Bitte "
+"beachten Sie, dass es sich bei den von Checkmk durchgeführten Checks um "
+"passive Checks handelt, die von dieser Regel nicht betroffen sind. Sie "
+"können die Regel jedoch für den aktiven Checkmk-Check verwenden."
+
 msgid ""
 "If you specify a hostname here, then a dynamic DNS lookup will be done "
 "instead of using the IP address of the host as configured in your host "
@@ -27249,13 +27285,6 @@ msgid ""
 msgstr ""
 "Wenn Sie einen Hostnamen anlegen, dann wird eine DNS Abfrage durchgeführt. "
 "Die IP Adresse des Hosts wird nicht verwendet."
-
-msgid ""
-"If you specify a notification period for a 'Check_MK' service then results "
-"will be processed only within this period."
-msgstr ""
-"Wenn Sie einen Benachrichtigungszeitraum für einen 'Check_MK'-Service "
-"anlegen, dann werden Ergebnisse nur innerhalb dieser Periode verarbeitet."
 
 msgid ""
 "If you specify a notification period for a host then notifications about "
@@ -27270,18 +27299,6 @@ msgstr ""
 "auftreten. Außerdem können Sie in den Problemansichten Probleme für Objekte "
 "herausfiltern, die nicht in ihrem Benachrichtigungszeitraum liegen (Sie "
 "können sich den Benachrichtigungszeitraum als \"Servicezeit\" vorstellen)."
-
-msgid ""
-"If you specify a notification period for a service then active checks of "
-"that service will only be done in that period. Please note, that the checks "
-"driven by Checkmk are passive checks and are not affected by this rule. You "
-"can use the rule for the active Checkmk check, however."
-msgstr ""
-"Wenn Sie einen Benachrichtigungszeitraum für einen Service festlegen, dann "
-"werden aktive Checks dieses Services nur in dieser Periode ausgeführt. Bitte "
-"beachten Sie, dass es sich bei den von Checkmk durchgeführten Checks um "
-"passive Checks handelt, die von dieser Regel nicht betroffen sind. Sie "
-"können die Regel jedoch für den aktiven Checkmk-Check verwenden."
 
 msgid ""
 "If you specify a notification period for a service then notifications about "
@@ -32834,8 +32851,8 @@ msgstr "Setze Check auf OK"
 msgid "Make check WARNING"
 msgstr "Setze Check auf WARN"
 
-#, python-format
-msgid "Make own published %s override builtin %s for all users."
+#, fuzzy, python-format
+msgid "Make own published %s override built-in %s for all users."
 msgstr ""
 "Eigene(r) %s soll den/die gleichen eingebaute(n) %s für alle Benutzer "
 "überschreiben."
@@ -34775,8 +34792,8 @@ msgstr "Geänderte Benutzer: %s"
 msgid "Modify"
 msgstr "Ändern"
 
-#, python-format
-msgid "Modify builtin %s"
+#, fuzzy, python-format
+msgid "Modify built-in %s"
 msgstr "Eingebaute %s bearbeiten"
 
 msgid "Modify display options"
@@ -48842,8 +48859,9 @@ msgstr ""
 "konfigurieren. Hinweise: Diese Regel muss für den denjenigen Host "
 "konfiguriert werden, auf dem der Agent läuft - nicht für die Piggyback-Hosts."
 
+#, fuzzy
 msgid ""
-"Some builtin or own views may take longer time than expected. In order to "
+"Some built-in or own views may take longer time than expected. In order to "
 "detect slow views you have to set<ul><li>the log level to <b>DEBUG</b> at "
 "<b>Setup > General > Global settings > User interface > Log levels > Slow "
 "views</b>,</li><li>a threshold (in seconds) at <b>Setup > General > Global "
@@ -52104,10 +52122,12 @@ msgid ""
 msgstr ""
 "Temperaturschwellwerte für Geräte mit einem einzelnen Temperatursensor."
 
-msgid "Temperature sensors with builtin levels"
+#, fuzzy
+msgid "Temperature sensors with built-in levels"
 msgstr "Temperatursensoren mit eingeb. Schwellwerten"
 
-msgid "Temperature trends for devices with builtin levels"
+#, fuzzy
+msgid "Temperature trends for devices with built-in levels"
 msgstr "Temperaturtrends für Geräte mit eingb. Schellen"
 
 msgid "Temperature unit"
@@ -52669,7 +52689,8 @@ msgstr ""
 msgid "The ID needs to be unique."
 msgstr "Die ID muss eindeutig sein."
 
-msgid "The ID of a builtin user role cannot be changed"
+#, fuzzy
+msgid "The ID of a built-in user role cannot be changed"
 msgstr "Die ID einer eingebauten Benutzerrolle kann nicht geändert werden"
 
 msgid "The ID of an exported rule pack cannot be modified."
@@ -52733,10 +52754,10 @@ msgstr ""
 "Benachrichtigungsskripten als Umgebungsvariable namens <tt>SERVICE_[ID]</tt> "
 "zur Verfügung."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The ID will be used do identify this page in URLs. If this page has the same "
-"ID as a builtin page of the type <i>%s</i> then it will shadow the builtin "
+"ID as a built-in page of the type <i>%s</i> then it will shadow the built-in "
 "one."
 msgstr ""
 "Die ID wird benutzt, um diese Seite in URLs zu identifizieren. Wenn diese "
@@ -52746,12 +52767,13 @@ msgstr ""
 msgid "The ID will be used do identify this schedule in URLs"
 msgstr "Die ID wird genutzt um diesen"
 
+#, fuzzy
 msgid ""
 "The ID will be used in URLs that point to a view, e.g. <tt>view.py?"
 "view_name=<b>myview</b></tt>. It will also be used internally for "
 "identifying a view. You can create several views with the same title but "
 "only one per view name. If you create a view that has the same view name as "
-"a builtin view, then your view will override that (shadowing it)."
+"a built-in view, then your view will override that (shadowing it)."
 msgstr ""
 "Die ID wird in URLs für Ansichten verwendet, z.B. <tt>view.py?"
 "view_name=<b>myview</b></tt> und um die Ansicht zu identifizieren. Sie "
@@ -62573,8 +62595,8 @@ msgstr "Status-Ausgabe umschreiben"
 msgid "Transformation on selected metric"
 msgstr "Transformation auf ausgewählte Metriken"
 
-#, python-format
-msgid "Transformed the user tag group \"%s\" to builtin."
+#, fuzzy, python-format
+msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "Die Benutzer-Tag-Gruppe \"%s\" wurde in builtin umgewandelt."
 
 msgid "Translate Hostnames"
@@ -65264,6 +65286,10 @@ msgstr "Volume-Name und Mount-Punkt verwenden"
 
 msgid "Use volume name as mountpoint"
 msgstr "Volume-Name als Mount-Punkt verwenden"
+
+#, fuzzy
+msgid "Use vue rendering"
+msgstr "Reporting verwenden"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -69726,9 +69752,10 @@ msgstr ""
 "des Backvorgangs auswirken kann. Standardmäßig wird für alle Plattformen "
 "ohne Komprimierung gebacken."
 
+#, fuzzy
 msgid ""
 "You can use this option to change the default visibility options of the "
-"builtin icons. You can change whether or not the icons are shown in the "
+"built-in icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
 msgstr ""
 "Mit dieser Option können Sie die voreingestellte Sichtbarkeit der "
@@ -69770,7 +69797,8 @@ msgstr ""
 msgid "You cannot delete roles, that are still in use (%s)!"
 msgstr "Sie können keine Rollen löschen, die noch in Verwendung sind (%s)!"
 
-msgid "You cannot delete the builtin roles!"
+#, fuzzy
+msgid "You cannot delete the built-in roles!"
 msgstr "Die eingebauten Rollen können nicht gelöscht werden!"
 
 #, python-format
@@ -69985,10 +70013,10 @@ msgstr ""
 msgid "You have created %d signature keys for signing agents"
 msgstr "Sie haben %d Signaturschlüssel zum Signieren von Agenten erzeugt"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
-"In current Checkmk versions these are <i>builtin</i> tag groups which can "
+"In current Checkmk versions these are <i>built-in</i> tag groups which can "
 "not be customized anymore. Your customized tag group will work for the "
 "moment, but needs to be migrated until 1.7. With 1.7 it won't work anymore."
 msgstr ""
@@ -70080,11 +70108,11 @@ msgstr "Für diesen Host haben Sie Berechtigungen."
 msgid "You have selected %d %s for migration: %s"
 msgstr "Sie haben %d %s für die Migration ausgewählt: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
 "explicit attribute values from hosts. The hosts will then inherit attributes "
-"configured at the host list or folders or simply fall back to the builtin "
+"configured at the host list or folders or simply fall back to the built-in "
 "default values."
 msgstr ""
 "Sie haben <b>%d</b> Hosts für Massen-Aufräumen gewählt. Das bedeutet, dass "
@@ -70481,8 +70509,9 @@ msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
 msgid "Your hostname has an invalid format."
 msgstr "Der Hostname hat ein ungültiges Format."
 
+#, fuzzy
 msgid ""
-"Your icon conflicts with a Checkmk builtin icon. Please choose another name "
+"Your icon conflicts with a Checkmk built-in icon. Please choose another name "
 "for your icon."
 msgstr ""
 "Ihr Symbol befindet sich im Konflikt mit einem mitgelieferten Checkmk-"
@@ -70916,11 +70945,16 @@ msgstr "Blöcke/Sek"
 msgid "broadcast"
 msgstr "an alle"
 
-msgid "builtin"
+#, fuzzy
+msgid "built-in"
 msgstr "eingebaut"
 
-msgid "builtin role"
+#, fuzzy
+msgid "built-in role"
 msgstr "eingebaute Rolle"
+
+msgid "builtin"
+msgstr "eingebaut"
 
 msgid "busy workers"
 msgstr "Beschäftigte Worker"

@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-06-19 05:18+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@checkmk.com>\n"
+"PO-Revision-Date: 2023-09-13 10:31+0000\n"
+"Last-Translator: Weblate Admin <admin@checkmk.com>\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
 "software/ro/>\n"
 "Language: ro\n"
@@ -854,7 +854,8 @@ msgstr "(Acest modul nu este încă implementat)"
 msgid "(Untitled module)"
 msgstr "(Modul fără titlu)"
 
-msgid "(builtin)"
+#, fuzzy
+msgid "(built-in)"
 msgstr "(built-in)"
 
 #, python-format
@@ -5648,8 +5649,8 @@ msgstr ""
 "Pentru a crea propriile șabloane de rapoarte sau pentru a le personaliza pe "
 "cele existente este necesară o permisiune dedicată."
 
-#, python-format
-msgid "Allows to create own %s, customize builtin %s and use them."
+#, fuzzy, python-format
+msgid "Allows to create own %s, customize built-in %s and use them."
 msgstr "Permite crearea propriilor %s, personalizarea %s și utilizarea lor."
 
 msgid ""
@@ -8105,22 +8106,28 @@ msgstr "Durata construcției"
 msgid "Building of search index started"
 msgstr "A început construirea indexului de căutare"
 
-msgid "Builtin"
+#, fuzzy
+msgid "Built-in"
 msgstr "Integrat"
 
-msgid "Builtin icon visibility"
+#, fuzzy
+msgid "Built-in icon visibility"
 msgstr "Vizibilitatea pictogramelor încorporate"
 
-msgid "Builtin time periods can not be modified"
+#, fuzzy
+msgid "Built-in time periods can not be modified"
 msgstr "Perioadele de timp prestabilite nu pot fi modificate"
 
-msgid "Builtin: Force"
+#, fuzzy
+msgid "Built-in: Force"
 msgstr "Builtin: Forțați"
 
-msgid "Builtin: Hierarchy"
+#, fuzzy
+msgid "Built-in: Hierarchy"
 msgstr "Builtin: Ierarhie"
 
-msgid "Builtin: Radial"
+#, fuzzy
+msgid "Built-in: Radial"
 msgstr "Builtin: Radial"
 
 msgid "Bulk"
@@ -11341,10 +11348,12 @@ msgstr "Clonarea SLA"
 msgid "Clone bookmark list"
 msgstr "Clonarea listei de marcaje"
 
-msgid "Clone builtin dashboard"
+#, fuzzy
+msgid "Clone built-in dashboard"
 msgstr "Clonarea tabloului de bord integrat"
 
-msgid "Clone builtin view"
+#, fuzzy
+msgid "Clone built-in view"
 msgstr "Clonarea vizualizării integrate"
 
 msgid "Clone custom graph"
@@ -18482,12 +18491,13 @@ msgstr ""
 "Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
 "ori."
 
+#, fuzzy
 msgid ""
-"Each user defined role is based on one of the builtin roles. When created it "
-"will start with all permissions of that role. When due to a software update "
-"or installation of an addons new permissions appear, the user role will get "
-"or not get those new permissions based on the default settings of the "
-"builtin role it's based on."
+"Each user defined role is based on one of the built-in roles. When created "
+"it will start with all permissions of that role. When due to a software "
+"update or installation of an addons new permissions appear, the user role "
+"will get or not get those new permissions based on the default settings of "
+"the built-in role it's based on."
 msgstr ""
 "Fiecare rol definit de utilizator se bazează pe unul dintre rolurile "
 "predefinite. Atunci când este creat, acesta va începe cu toate permisiunile "
@@ -20465,6 +20475,10 @@ msgstr "Starea așteptată"
 msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
 
+#, fuzzy
+msgid "Experimental features"
+msgstr "Caracteristica Enterprise"
+
 msgid "Expire acknowledgement after"
 msgstr "Expiră confirmarea după"
 
@@ -20843,9 +20857,9 @@ msgstr ""
 "Nu s-a reușit contactarea serverului ntop '%s' cu utilizatorul '%s'. Vă "
 "rugăm să verificați setările de conectare ntop."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Failed to convert a builtin dashboard which is referencing the view \"%s\". "
+"Failed to convert a built-in dashboard which is referencing the view \"%s\". "
 "You will have to migrate it to the new dashboard format on your own to work "
 "properly."
 msgstr ""
@@ -27255,9 +27269,10 @@ msgstr ""
 "Dacă ați selectat 60 de minute ca interval pentru verificările de "
 "actualizare, atunci toate gazdele ar trebui să fie enumerate aici."
 
+#, fuzzy
 msgid ""
 "If you leave the permissions at \"default\", they get their settings from "
-"the factory defaults (for builtin roles) or from the factory default of "
+"the factory defaults (for built-in roles) or from the factory default of "
 "their base role (for user define roles). Factory defaults may change due to "
 "software updates. When choosing another base role, all permissions that are "
 "on default will reflect the new base role."
@@ -27395,6 +27410,14 @@ msgstr ""
 "UDP (portul 514) către o consolă de evenimente la distanță sau un server "
 "syslog."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a 'Check_MK' service then results will be "
+"processed only within this period."
+msgstr ""
+"Dacă specificați o perioadă de notificare pentru un serviciu 'Check_MK' "
+"atunci rezultatele vor fi procesate numai în această perioadă."
+
 msgid ""
 "If you specify a check period for a host then active checks of that host "
 "will only take place within that period. In the rest of the time the state "
@@ -27404,6 +27427,19 @@ msgstr ""
 "verificările active ale acelei gazde vor avea loc numai în perioada "
 "respectivă. În restul timpului, starea gazdei va rămâne la ultima sa stare."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a service then active checks of that "
+"service will only be done in that period. Please note, that the checks "
+"driven by Checkmk are passive checks and are not affected by this rule. You "
+"can use the rule for the active Checkmk check, however."
+msgstr ""
+"Dacă specificați o perioadă de notificare pentru un serviciu, atunci "
+"verificările active ale acelui serviciu vor fi efectuate numai în perioada "
+"respectivă. Vă rugăm să rețineți că verificările efectuate de Checkmk sunt "
+"verificări pasive și nu sunt afectate de această regulă. Cu toate acestea, "
+"puteți utiliza regula pentru verificarea activă Checkmk."
+
 msgid ""
 "If you specify a hostname here, then a dynamic DNS lookup will be done "
 "instead of using the IP address of the host as configured in your host "
@@ -27412,13 +27448,6 @@ msgstr ""
 "Dacă specificați aici un nume de gazdă, atunci se va efectua o căutare "
 "dinamică DNS în loc să se utilizeze adresa IP a gazdei, așa cum este "
 "configurată în proprietățile gazdei."
-
-msgid ""
-"If you specify a notification period for a 'Check_MK' service then results "
-"will be processed only within this period."
-msgstr ""
-"Dacă specificați o perioadă de notificare pentru un serviciu 'Check_MK' "
-"atunci rezultatele vor fi procesate numai în această perioadă."
 
 msgid ""
 "If you specify a notification period for a host then notifications about "
@@ -27433,18 +27462,6 @@ msgstr ""
 "asemenea, puteți filtra problemele din vizualizările de probleme pentru "
 "obiectele care nu se află în perioada de notificare (vă puteți gândi la "
 "perioada de notificare ca la 'timpul serviciului')."
-
-msgid ""
-"If you specify a notification period for a service then active checks of "
-"that service will only be done in that period. Please note, that the checks "
-"driven by Checkmk are passive checks and are not affected by this rule. You "
-"can use the rule for the active Checkmk check, however."
-msgstr ""
-"Dacă specificați o perioadă de notificare pentru un serviciu, atunci "
-"verificările active ale acelui serviciu vor fi efectuate numai în perioada "
-"respectivă. Vă rugăm să rețineți că verificările efectuate de Checkmk sunt "
-"verificări pasive și nu sunt afectate de această regulă. Cu toate acestea, "
-"puteți utiliza regula pentru verificarea activă Checkmk."
 
 msgid ""
 "If you specify a notification period for a service then notifications about "
@@ -33060,8 +33077,8 @@ msgstr "Efectuați verificarea OK"
 msgid "Make check WARNING"
 msgstr "Efectuați o verificare AVERTISMENT"
 
-#, python-format
-msgid "Make own published %s override builtin %s for all users."
+#, fuzzy, python-format
+msgid "Make own published %s override built-in %s for all users."
 msgstr ""
 "Faceți ca propriul %s publicat să înlocuiască %s pentru toți utilizatorii."
 
@@ -35013,8 +35030,8 @@ msgstr "Utilizatori modificați: %s"
 msgid "Modify"
 msgstr "Modificați"
 
-#, python-format
-msgid "Modify builtin %s"
+#, fuzzy, python-format
+msgid "Modify built-in %s"
 msgstr "Modifică builtinul %s."
 
 msgid "Modify display options"
@@ -49248,8 +49265,9 @@ msgstr ""
 "pig&quot; - adică pentru gazda pe care rulează agentul. Ea nu se aplică la "
 "gazdele traduse de tip piggybacked."
 
+#, fuzzy
 msgid ""
-"Some builtin or own views may take longer time than expected. In order to "
+"Some built-in or own views may take longer time than expected. In order to "
 "detect slow views you have to set<ul><li>the log level to <b>DEBUG</b> at "
 "<b>Setup > General > Global settings > User interface > Log levels > Slow "
 "views</b>,</li><li>a threshold (in seconds) at <b>Setup > General > Global "
@@ -52551,10 +52569,12 @@ msgstr ""
 "Niveluri de temperatură pentru dispozitive hardware cu un singur senzor de "
 "temperatură."
 
-msgid "Temperature sensors with builtin levels"
+#, fuzzy
+msgid "Temperature sensors with built-in levels"
 msgstr "Senzori de temperatură cu niveluri încorporate"
 
-msgid "Temperature trends for devices with builtin levels"
+#, fuzzy
+msgid "Temperature trends for devices with built-in levels"
 msgstr "Tendințe de temperatură pentru dispozitive cu niveluri integrate"
 
 msgid "Temperature unit"
@@ -53117,7 +53137,8 @@ msgstr ""
 msgid "The ID needs to be unique."
 msgstr "ID-ul trebuie să fie unic."
 
-msgid "The ID of a builtin user role cannot be changed"
+#, fuzzy
+msgid "The ID of a built-in user role cannot be changed"
 msgstr "ID-ul unui rol de utilizator încorporat nu poate fi modificat"
 
 msgid "The ID of an exported rule pack cannot be modified."
@@ -53179,10 +53200,10 @@ msgstr ""
 "scripturile de notificare ca variabilă de mediu denumită <tt>SERVICE_[ID]</"
 "tt>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The ID will be used do identify this page in URLs. If this page has the same "
-"ID as a builtin page of the type <i>%s</i> then it will shadow the builtin "
+"ID as a built-in page of the type <i>%s</i> then it will shadow the built-in "
 "one."
 msgstr ""
 "ID-ul va fi utilizat pentru a identifica această pagină în URL-uri. Dacă "
@@ -53192,12 +53213,13 @@ msgstr ""
 msgid "The ID will be used do identify this schedule in URLs"
 msgstr "ID-ul va fi folosit pentru a identifica acest program în URL-uri."
 
+#, fuzzy
 msgid ""
 "The ID will be used in URLs that point to a view, e.g. <tt>view.py?"
 "view_name=<b>myview</b></tt>. It will also be used internally for "
 "identifying a view. You can create several views with the same title but "
 "only one per view name. If you create a view that has the same view name as "
-"a builtin view, then your view will override that (shadowing it)."
+"a built-in view, then your view will override that (shadowing it)."
 msgstr ""
 "ID-ul va fi utilizat în URL-urile care indică o vizualizare, de exemplu "
 "<tt>view.py?view_name=<b>myview</b></tt>. De asemenea, va fi utilizat la "
@@ -63097,8 +63119,8 @@ msgstr "Transformare ieșire de stare"
 msgid "Transformation on selected metric"
 msgstr "Transformare pe metrica selectată"
 
-#, python-format
-msgid "Transformed the user tag group \"%s\" to builtin."
+#, fuzzy, python-format
+msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "A transformat grupul de etichete de utilizator \"%s\" în builtin."
 
 msgid "Translate Hostnames"
@@ -65801,6 +65823,10 @@ msgstr "Utilizați numele volumului și punctul de montare"
 
 msgid "Use volume name as mountpoint"
 msgstr "Utilizați numele volumului ca punct de montare"
+
+#, fuzzy
+msgid "Use vue rendering"
+msgstr "Utilizare Raportare"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -70301,9 +70327,10 @@ msgstr ""
 "asupra performanței procedurii de coacere. În mod implicit, se prepară "
 "pentru toate platformele fără compresie."
 
+#, fuzzy
 msgid ""
 "You can use this option to change the default visibility options of the "
-"builtin icons. You can change whether or not the icons are shown in the "
+"built-in icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
 msgstr ""
 "Puteți utiliza această opțiune pentru a modifica opțiunile de vizibilitate "
@@ -70346,7 +70373,8 @@ msgstr ""
 msgid "You cannot delete roles, that are still in use (%s)!"
 msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
-msgid "You cannot delete the builtin roles!"
+#, fuzzy
+msgid "You cannot delete the built-in roles!"
 msgstr "Nu puteți șterge rolurile integrate!"
 
 #, python-format
@@ -70558,10 +70586,10 @@ msgstr ""
 msgid "You have created %d signature keys for signing agents"
 msgstr "Ați creat %d chei de semnătură pentru agenții semnatari"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
-"In current Checkmk versions these are <i>builtin</i> tag groups which can "
+"In current Checkmk versions these are <i>built-in</i> tag groups which can "
 "not be customized anymore. Your customized tag group will work for the "
 "moment, but needs to be migrated until 1.7. With 1.7 it won't work anymore."
 msgstr ""
@@ -70653,11 +70681,11 @@ msgstr "Aveți permisiunea de a accesa această gazdă."
 msgid "You have selected %d %s for migration: %s"
 msgstr "Ați selectat %d %s pentru migrare: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
 "explicit attribute values from hosts. The hosts will then inherit attributes "
-"configured at the host list or folders or simply fall back to the builtin "
+"configured at the host list or folders or simply fall back to the built-in "
 "default values."
 msgstr ""
 "Ați selectat <b><x>%d</b> gazde pentru curățarea în masă. Aceasta înseamnă "
@@ -71057,8 +71085,9 @@ msgstr "Numele de fișier nu trebuie să se termine cu o bară oblică."
 msgid "Your hostname has an invalid format."
 msgstr "Numele dvs. de gazdă are un format invalid."
 
+#, fuzzy
 msgid ""
-"Your icon conflicts with a Checkmk builtin icon. Please choose another name "
+"Your icon conflicts with a Checkmk built-in icon. Please choose another name "
 "for your icon."
 msgstr ""
 "Pictograma dvs. intră în conflict cu o pictogramă încorporată Checkmk. Vă "
@@ -71491,11 +71520,16 @@ msgstr "blocuri/s"
 msgid "broadcast"
 msgstr "difuzare"
 
-msgid "builtin"
+#, fuzzy
+msgid "built-in"
 msgstr "built-in"
 
-msgid "builtin role"
+#, fuzzy
+msgid "built-in role"
 msgstr "rol predefinit"
+
+msgid "builtin"
+msgstr "built-in"
 
 msgid "busy workers"
 msgstr "muncitori ocupați"

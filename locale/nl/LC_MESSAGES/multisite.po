@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-05-18 06:00+0000\n"
-"Last-Translator: Marc Nerreter <marc.nerreter@checkmk.com>\n"
+"PO-Revision-Date: 2023-09-13 10:32+0000\n"
+"Last-Translator: Sam Daenen <sam.daenen@continu-it.be>\n"
 "Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/"
 "software/nl/>\n"
 "Language: nl\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.13\n"
+"X-Generator: Weblate 4.17\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -849,7 +849,8 @@ msgstr "(Deze module is nog niet geïmplementeerd)"
 msgid "(Untitled module)"
 msgstr "(Module zonder naam)"
 
-msgid "(builtin)"
+#, fuzzy
+msgid "(built-in)"
 msgstr "(ingebouwd)"
 
 #, python-format
@@ -5606,8 +5607,8 @@ msgstr ""
 "genereren. Voor het maken van eigen rapportsjablonen of het aanpassen van "
 "bestaande is een speciale toestemming nodig."
 
-#, python-format
-msgid "Allows to create own %s, customize builtin %s and use them."
+#, fuzzy, python-format
+msgid "Allows to create own %s, customize built-in %s and use them."
 msgstr ""
 "Maakt het mogelijk om eigen %s te maken, ingebouwde %s aan te passen en ze "
 "te gebruiken."
@@ -8039,22 +8040,28 @@ msgstr "Bouwduur"
 msgid "Building of search index started"
 msgstr "Bouw van zoekindex begonnen"
 
-msgid "Builtin"
+#, fuzzy
+msgid "Built-in"
 msgstr "Ingebouwd"
 
-msgid "Builtin icon visibility"
+#, fuzzy
+msgid "Built-in icon visibility"
 msgstr "Ingebouwde pictogram zichtbaarheid"
 
-msgid "Builtin time periods can not be modified"
+#, fuzzy
+msgid "Built-in time periods can not be modified"
 msgstr "Ingebouwde tijdsperioden kunnen niet worden gewijzigd"
 
-msgid "Builtin: Force"
+#, fuzzy
+msgid "Built-in: Force"
 msgstr "Ingebouwd: Force"
 
-msgid "Builtin: Hierarchy"
+#, fuzzy
+msgid "Built-in: Hierarchy"
 msgstr "Bouwsteen: Hiërarchie"
 
-msgid "Builtin: Radial"
+#, fuzzy
+msgid "Built-in: Radial"
 msgstr "Ingebouwd: Radiaal"
 
 msgid "Bulk"
@@ -11242,10 +11249,12 @@ msgstr "Kloon SLA"
 msgid "Clone bookmark list"
 msgstr "Bladwijzerlijst klonen"
 
-msgid "Clone builtin dashboard"
+#, fuzzy
+msgid "Clone built-in dashboard"
 msgstr "Kloon ingebouwd dashboard"
 
-msgid "Clone builtin view"
+#, fuzzy
+msgid "Clone built-in view"
 msgstr "Kloon ingebouwde weergave"
 
 msgid "Clone custom graph"
@@ -18321,12 +18330,13 @@ msgstr "Elke tag groep zal een dropdown keuze creëren in de host configuratie."
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
 
+#, fuzzy
 msgid ""
-"Each user defined role is based on one of the builtin roles. When created it "
-"will start with all permissions of that role. When due to a software update "
-"or installation of an addons new permissions appear, the user role will get "
-"or not get those new permissions based on the default settings of the "
-"builtin role it's based on."
+"Each user defined role is based on one of the built-in roles. When created "
+"it will start with all permissions of that role. When due to a software "
+"update or installation of an addons new permissions appear, the user role "
+"will get or not get those new permissions based on the default settings of "
+"the built-in role it's based on."
 msgstr ""
 "Elke door de gebruiker gedefinieerde rol is gebaseerd op één van de "
 "ingebouwde rollen. Wanneer hij aangemaakt wordt, zal hij starten met alle "
@@ -20285,6 +20295,10 @@ msgstr "Verwachte toestand"
 msgid "Expected update interval"
 msgstr "Verwacht update-interval"
 
+#, fuzzy
+msgid "Experimental features"
+msgstr "Ondernemingsfunctie"
+
 msgid "Expire acknowledgement after"
 msgstr "Bevestiging vervallen na"
 
@@ -20658,9 +20672,9 @@ msgstr ""
 "Mislukt contact te maken met ntop server '%s' met gebruiker '%s'. Controleer "
 "uw ntop verbindingsinstellingen."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Failed to convert a builtin dashboard which is referencing the view \"%s\". "
+"Failed to convert a built-in dashboard which is referencing the view \"%s\". "
 "You will have to migrate it to the new dashboard format on your own to work "
 "properly."
 msgstr ""
@@ -27028,9 +27042,10 @@ msgstr ""
 "Als je 60 minuten hebt gekozen als interval voor de update checks, dan "
 "zouden alle hosts hier in de lijst moeten staan."
 
+#, fuzzy
 msgid ""
 "If you leave the permissions at \"default\", they get their settings from "
-"the factory defaults (for builtin roles) or from the factory default of "
+"the factory defaults (for built-in roles) or from the factory default of "
 "their base role (for user define roles). Factory defaults may change due to "
 "software updates. When choosing another base role, all permissions that are "
 "on default will reflect the new base role."
@@ -27167,6 +27182,14 @@ msgstr ""
 "Als u deze parameter instelt, worden de meldingen via syslog/UDP (poort 514) "
 "naar een externe Event Console of syslog-server gestuurd."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a 'Check_MK' service then results will be "
+"processed only within this period."
+msgstr ""
+"Als u voor een 'Check_MK' dienst een meldingsperiode opgeeft, worden de "
+"resultaten alleen binnen deze periode verwerkt."
+
 msgid ""
 "If you specify a check period for a host then active checks of that host "
 "will only take place within that period. In the rest of the time the state "
@@ -27176,6 +27199,19 @@ msgstr ""
 "controles van die host alleen binnen die periode plaatsvinden. In de rest "
 "van de tijd zal de status van de host op zijn laatste status blijven staan."
 
+#, fuzzy
+msgid ""
+"If you specify a check period for a service then active checks of that "
+"service will only be done in that period. Please note, that the checks "
+"driven by Checkmk are passive checks and are not affected by this rule. You "
+"can use the rule for the active Checkmk check, however."
+msgstr ""
+"Als u een meldingsperiode voor een dienst opgeeft, zullen actieve controles "
+"van die dienst alleen in die periode plaatsvinden. Merk op dat de door "
+"Checkmk gestuurde controles passieve controles zijn en niet door deze regel "
+"worden beïnvloed. U kunt de regel wel gebruiken voor de actieve Checkmk-"
+"controle."
+
 msgid ""
 "If you specify a hostname here, then a dynamic DNS lookup will be done "
 "instead of using the IP address of the host as configured in your host "
@@ -27184,13 +27220,6 @@ msgstr ""
 "Als u hier een hostnaam opgeeft, dan zal een dynamische DNS lookup gedaan "
 "worden in plaats van het IP adres van de host te gebruiken zoals "
 "geconfigureerd in uw host eigenschappen."
-
-msgid ""
-"If you specify a notification period for a 'Check_MK' service then results "
-"will be processed only within this period."
-msgstr ""
-"Als u voor een 'Check_MK' dienst een meldingsperiode opgeeft, worden de "
-"resultaten alleen binnen deze periode verwerkt."
 
 msgid ""
 "If you specify a notification period for a host then notifications about "
@@ -27205,18 +27234,6 @@ msgstr ""
 "notificatieperiode. Ook kun je problemen uitfilteren in de problemen "
 "overzichten voor objecten die niet in hun notificatie periode zitten (je "
 "kunt de notificatie periode zien als de 'service tijd')."
-
-msgid ""
-"If you specify a notification period for a service then active checks of "
-"that service will only be done in that period. Please note, that the checks "
-"driven by Checkmk are passive checks and are not affected by this rule. You "
-"can use the rule for the active Checkmk check, however."
-msgstr ""
-"Als u een meldingsperiode voor een dienst opgeeft, zullen actieve controles "
-"van die dienst alleen in die periode plaatsvinden. Merk op dat de door "
-"Checkmk gestuurde controles passieve controles zijn en niet door deze regel "
-"worden beïnvloed. U kunt de regel wel gebruiken voor de actieve Checkmk-"
-"controle."
 
 msgid ""
 "If you specify a notification period for a service then notifications about "
@@ -32783,8 +32800,8 @@ msgstr "Maak controle OK"
 msgid "Make check WARNING"
 msgstr "Maak controle WAARSCHUWING"
 
-#, python-format
-msgid "Make own published %s override builtin %s for all users."
+#, fuzzy, python-format
+msgid "Make own published %s override built-in %s for all users."
 msgstr ""
 "Laat eigen gepubliceerde %s de ingebouwde %s overschrijven voor alle "
 "gebruikers."
@@ -34728,8 +34745,8 @@ msgstr "Gewijzigde gebruikers: %s"
 msgid "Modify"
 msgstr "Wijzigen"
 
-#, python-format
-msgid "Modify builtin %s"
+#, fuzzy, python-format
+msgid "Modify built-in %s"
 msgstr "Aanpassen builtin %s"
 
 msgid "Modify display options"
@@ -48763,8 +48780,9 @@ msgstr ""
 "w.z. de host waar de agent op draait. Hij wordt niet toegepast op de "
 "vertaalde piggybacked hosts."
 
+#, fuzzy
 msgid ""
-"Some builtin or own views may take longer time than expected. In order to "
+"Some built-in or own views may take longer time than expected. In order to "
 "detect slow views you have to set<ul><li>the log level to <b>DEBUG</b> at "
 "<b>Setup > General > Global settings > User interface > Log levels > Slow "
 "views</b>,</li><li>a threshold (in seconds) at <b>Setup > General > Global "
@@ -52032,10 +52050,12 @@ msgid ""
 msgstr ""
 "Temperatuurniveaus voor hardware-apparaten met een enkele temperatuursensor."
 
-msgid "Temperature sensors with builtin levels"
+#, fuzzy
+msgid "Temperature sensors with built-in levels"
 msgstr "Temperatuursensoren met ingebouwde niveaus"
 
-msgid "Temperature trends for devices with builtin levels"
+#, fuzzy
+msgid "Temperature trends for devices with built-in levels"
 msgstr "Temperatuurtrends voor toestellen met ingebouwde niveaus"
 
 msgid "Temperature unit"
@@ -52591,7 +52611,8 @@ msgstr ""
 msgid "The ID needs to be unique."
 msgstr "De ID moet uniek zijn."
 
-msgid "The ID of a builtin user role cannot be changed"
+#, fuzzy
+msgid "The ID of a built-in user role cannot be changed"
 msgstr "De ID van een ingebouwde gebruikersrol kan niet worden gewijzigd"
 
 msgid "The ID of an exported rule pack cannot be modified."
@@ -52655,10 +52676,10 @@ msgstr ""
 "beschikbaar voor notificatie-scripts als omgevingsvariabele met de naam "
 "<tt>SERVICE_[ID]</tt>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The ID will be used do identify this page in URLs. If this page has the same "
-"ID as a builtin page of the type <i>%s</i> then it will shadow the builtin "
+"ID as a built-in page of the type <i>%s</i> then it will shadow the built-in "
 "one."
 msgstr ""
 "De ID wordt gebruikt om deze pagina te identificeren in URL's. Als deze "
@@ -52668,12 +52689,13 @@ msgstr ""
 msgid "The ID will be used do identify this schedule in URLs"
 msgstr "De ID zal worden gebruikt om dit schema te identificeren in URL's"
 
+#, fuzzy
 msgid ""
 "The ID will be used in URLs that point to a view, e.g. <tt>view.py?"
 "view_name=<b>myview</b></tt>. It will also be used internally for "
 "identifying a view. You can create several views with the same title but "
 "only one per view name. If you create a view that has the same view name as "
-"a builtin view, then your view will override that (shadowing it)."
+"a built-in view, then your view will override that (shadowing it)."
 msgstr ""
 "De ID zal worden gebruikt in URLs die naar een view verwijzen, bv. <tt>view."
 "py?view_name=<b>myview</b></tt>. Het zal ook intern gebruikt worden om een "
@@ -62487,8 +62509,8 @@ msgstr "Transformeer status uitgang"
 msgid "Transformation on selected metric"
 msgstr "Transformatie op geselecteerde metriek"
 
-#, python-format
-msgid "Transformed the user tag group \"%s\" to builtin."
+#, fuzzy, python-format
+msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "Heeft de gebruiker tag groep \"%s\" getransformeerd naar builtin."
 
 msgid "Translate Hostnames"
@@ -65167,6 +65189,10 @@ msgstr "Gebruik volumenaam en koppelpunt"
 
 msgid "Use volume name as mountpoint"
 msgstr "Gebruik volumenaam als koppelpunt"
+
+#, fuzzy
+msgid "Use vue rendering"
+msgstr "Gebruik Rapportage"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr "Gebruik uw eigen niveaus indien aanwezig, anders zijn de"
@@ -69646,9 +69672,10 @@ msgstr ""
 "prestatie van de bakprocedure. Standaard om te bakken voor alle platformen "
 "zonder compressie."
 
+#, fuzzy
 msgid ""
 "You can use this option to change the default visibility options of the "
-"builtin icons. You can change whether or not the icons are shown in the "
+"built-in icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
 msgstr ""
 "U kunt deze optie gebruiken om de standaard zichtbaarheidsopties van de "
@@ -69691,7 +69718,8 @@ msgstr ""
 msgid "You cannot delete roles, that are still in use (%s)!"
 msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
 
-msgid "You cannot delete the builtin roles!"
+#, fuzzy
+msgid "You cannot delete the built-in roles!"
 msgstr "Je kunt de ingebouwde rollen niet verwijderen!"
 
 #, python-format
@@ -69905,10 +69933,10 @@ msgstr ""
 msgid "You have created %d signature keys for signing agents"
 msgstr "U hebt %d handtekeningsleutels aangemaakt voor ondertekenaars"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
-"In current Checkmk versions these are <i>builtin</i> tag groups which can "
+"In current Checkmk versions these are <i>built-in</i> tag groups which can "
 "not be customized anymore. Your customized tag group will work for the "
 "moment, but needs to be migrated until 1.7. With 1.7 it won't work anymore."
 msgstr ""
@@ -69997,11 +70025,11 @@ msgstr "Je hebt toestemming voor deze host."
 msgid "You have selected %d %s for migration: %s"
 msgstr "U heeft %d %s geselecteerd voor migratie: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
 "explicit attribute values from hosts. The hosts will then inherit attributes "
-"configured at the host list or folders or simply fall back to the builtin "
+"configured at the host list or folders or simply fall back to the built-in "
 "default values."
 msgstr ""
 "U heeft <b>%d</b> hosts geselecteerd voor bulk cleanup. Dit betekent het "
@@ -70394,8 +70422,9 @@ msgstr "Uw bestandsnaam mag niet eindigen met een schuine streep."
 msgid "Your hostname has an invalid format."
 msgstr "Uw hostnaam heeft een ongeldig formaat."
 
+#, fuzzy
 msgid ""
-"Your icon conflicts with a Checkmk builtin icon. Please choose another name "
+"Your icon conflicts with a Checkmk built-in icon. Please choose another name "
 "for your icon."
 msgstr ""
 "Uw icoon conflicteert met een Checkmk ingebouwd icoon. Kies een andere naam "
@@ -70811,11 +70840,16 @@ msgstr "blokken/s"
 msgid "broadcast"
 msgstr "uitzending"
 
-msgid "builtin"
+#, fuzzy
+msgid "built-in"
 msgstr "ingebouwd"
 
-msgid "builtin role"
+#, fuzzy
+msgid "built-in role"
 msgstr "ingebouwde rol"
+
+msgid "builtin"
+msgstr "ingebouwd"
 
 msgid "busy workers"
 msgstr "drukke werknemers"

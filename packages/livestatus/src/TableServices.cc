@@ -579,10 +579,18 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             if (!std::filesystem::directory_entry{path}.is_directory()) {
                 return out;
             }
-            for (const auto &entry :
-                 std::filesystem::recursive_directory_iterator{path}) {
-                out.emplace_back(
-                    std::filesystem::relative(entry, path).string());
+            for (const auto &metric_dir :
+                 std::filesystem::directory_iterator{path}) {
+                if (!metric_dir.is_directory()) {
+                    continue;
+                }
+                for (const auto &prediction :
+                     std::filesystem::directory_iterator{metric_dir}) {
+                    if (prediction.is_regular_file()) {
+                        out.emplace_back(
+                            std::filesystem::relative(prediction, path));
+                    }
+                }
             }
             return out;
         }));

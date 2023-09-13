@@ -123,7 +123,19 @@ cmc_log_rrdcreation: Literal["terse", "full"] | None = None
 # Rule for per-host configuration of RRDs
 cmc_host_rrd_config: list[RuleSpec[Any]] = []
 # Rule for per-service configuration of RRDs
-cmc_service_rrd_config: list[RuleSpec[object]] = []
+
+
+class _RRDConfig(TypedDict):
+    """RRDConfig
+    This typing might not be complete or even wrong, feel free to improve"""
+
+    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
+    rras: list[tuple[float, int, int]]
+    step: int
+    format: Literal["pnp_multiple", "cmc_single"]
+
+
+cmc_service_rrd_config: list[RuleSpec[_RRDConfig]] = []
 
 # Inventory and inventory checks
 inventory_check_interval: int | None = None  # Nagios intervals (4h = 240)
@@ -283,7 +295,7 @@ class _NestedExitSpec(ExitSpec, total=False):
 check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
-check_periods: list[RuleSpec[object]] = []
+check_periods: list[RuleSpec[str]] = []
 snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts

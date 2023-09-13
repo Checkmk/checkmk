@@ -3541,20 +3541,14 @@ class ConfigCache:
         )
 
     def service_level_of_service(self, hostname: HostName, description: ServiceName) -> int | None:
-        return self.ruleset_matcher.service_extra_conf_2(
-            hostname,
-            description,
-            service_service_levels,
-            deflt=None,
-        )
+        out = self.ruleset_matcher.service_extra_conf(hostname, description, service_service_levels)
+        return out[0] if out else None
 
     def check_period_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> TimeperiodName | None:
-        entry = self.ruleset_matcher.service_extra_conf_2(
-            hostname, description, check_periods, deflt=None
-        )
-        return None if entry == "24X7" else entry
+        out = self.ruleset_matcher.service_extra_conf(hostname, description, check_periods)
+        return out[0] if out and out[0] != "24X7" else None
 
     @staticmethod
     def get_explicit_service_custom_variables(
@@ -4219,9 +4213,8 @@ class CEEConfigCache(ConfigCache):
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> RRDConfig | None:
-        return self.ruleset_matcher.service_extra_conf_2(
-            hostname, description, cmc_service_rrd_config, deflt=None
-        )
+        out = self.ruleset_matcher.service_extra_conf(hostname, description, cmc_service_rrd_config)
+        return out[0] if out else None
 
     def recurring_downtimes_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4306,13 +4299,12 @@ class CEEConfigCache(ConfigCache):
         if description is None:
             return default
 
-        value = self.ruleset_matcher.service_extra_conf_2(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_influxdb_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=None,
+            deflt=default,
         )
-        return default if value is None else value
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {

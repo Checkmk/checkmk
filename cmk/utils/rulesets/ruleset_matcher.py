@@ -68,7 +68,11 @@ PreprocessedHostRuleset: TypeAlias = dict[HostName | HostAddress, list[TRuleValu
 PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset: TypeAlias = list[
     tuple[
-        object, set[HostName], LabelConditions, tuple[tuple[str, object], ...], PreprocessedPattern
+        TRuleValue,
+        set[HostName],
+        LabelConditions,
+        tuple[tuple[str, object], ...],
+        PreprocessedPattern,
     ]
 ]
 
@@ -327,13 +331,14 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
+        default: Mapping[str, TRuleValue] = {}
         merged = boil_down_parameters(
             self.get_service_ruleset_values(
                 self._service_match_object(hostname, description), ruleset, is_binary=False
             ),
-            {},
+            default,
         )
-        assert isinstance(merged, Mapping)  # remove along with LegacyCheckParameters
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
         return merged
 
     def get_service_ruleset_values(
@@ -341,9 +346,8 @@ class RulesetMatcher:
         match_object: RulesetMatchObject,
         ruleset: Iterable[RuleSpec[TRuleValue]],
         is_binary: bool,
-    ) -> Iterator[object]:
-        """Returns a generator of the values of the matched rules
-        Replaces service_extra_conf"""
+    ) -> Iterator[TRuleValue]:
+        """Returns a generator of the values of the matched rules"""
         self.tuple_transformer.transform_in_place(ruleset, is_service=True, is_binary=is_binary)
 
         with_foreign_hosts = (
@@ -604,7 +608,7 @@ class RulesetOptimizer:
 
     def get_service_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-    ) -> PreprocessedServiceRuleset:
+    ) -> PreprocessedServiceRuleset[TRuleValue]:
         cache_id = id(ruleset), with_foreign_hosts
 
         if cache_id in self._service_ruleset_cache:
@@ -618,8 +622,8 @@ class RulesetOptimizer:
 
     def _convert_service_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-    ) -> PreprocessedServiceRuleset:
-        new_rules: PreprocessedServiceRuleset = []
+    ) -> PreprocessedServiceRuleset[TRuleValue]:
+        new_rules: PreprocessedServiceRuleset[TRuleValue] = []
         for rule in ruleset:
             if _is_disabled(rule):
                 continue
@@ -999,14 +1003,17 @@ class RulesetOptimizer:
         return labels
 
     def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
-        return boil_down_parameters(  # type: ignore[return-value]
+        default: Labels = {}
+        merged = boil_down_parameters(
             self._ruleset_matcher.get_service_ruleset_values(
                 RulesetMatchObject(hostname, service_desc),
                 self._labels.service_label_rules,
                 is_binary=False,
             ),
-            {},
+            default,
         )
+        assert isinstance(merged, dict)
+        return merged
 
 
 def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:

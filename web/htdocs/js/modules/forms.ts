@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
-import {toggle_label_row_opacity, initialize_autocompleters} from "valuespecs";
+import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
 
 export function enable_dynamic_form_elements(
     container: HTMLElement | null = null
@@ -285,7 +285,11 @@ export function textinput_enter_submit(e, submit) {
 }
 
 // Helper function to display nice popup confirm dialogs
-export function confirm_dialog(optional_args, confirm_handler) {
+export function confirm_dialog(
+    optional_args,
+    confirm_handler,
+    cancel_handler: any = null
+) {
     const default_custom_class_args = {
         title: "confirm_title",
         container: "confirm_container",
@@ -337,8 +341,10 @@ export function confirm_dialog(optional_args, confirm_handler) {
     };
 
     Swal.fire(args).then(result => {
-        if (confirm_handler && result.value) {
-            confirm_handler();
+        if (result.value) {
+            if (confirm_handler) confirm_handler();
+        } else if (result.dismiss == Swal.DismissReason.cancel) {
+            if (cancel_handler) cancel_handler();
         }
     });
 }

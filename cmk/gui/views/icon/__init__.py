@@ -13,8 +13,6 @@ from .builtin import (
     AcknowledgeIcon,
     ActionMenuIcon,
     ActiveChecksIcon,
-    AggregationIcon,
-    AggregationsIcon,
     CheckPeriodIcon,
     CommentsIcon,
     CrashdumpsIcon,
@@ -78,9 +76,7 @@ def register(
     icon_registry.register(PassiveChecksIcon)
     icon_registry.register(NotificationPeriodIcon)
     icon_registry.register(ServicePeriodIcon)
-    icon_registry.register(AggregationsIcon)
     icon_registry.register(StarsIcon)
-    icon_registry.register(AggregationIcon)
     icon_registry.register(CrashdumpsIcon)
     icon_registry.register(CheckPeriodIcon)
     # Better move these implementations & registrations to the feature related modules

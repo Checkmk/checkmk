@@ -44,7 +44,6 @@ import cmk.utils
 import cmk.utils.render
 from cmk.utils.tags import TagID
 
-import cmk.gui.bi as bi
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
@@ -60,7 +59,7 @@ from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.visual_link import url_to_visual
 
 from ..graph import cmk_graph_url
@@ -1028,57 +1027,6 @@ class ServicePeriodIcon(Icon):
 
 
 # .
-#   .--Aggregations--------------------------------------------------------.
-#   |       _                                    _   _                     |
-#   |      / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  ___     |
-#   |     / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \/ __|    |
-#   |    / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | \__ \    |
-#   |   /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|___/    |
-#   |           |___/ |___/          |___/                                 |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class AggregationsIcon(Icon):
-    @classmethod
-    def ident(cls):
-        return "aggregations"
-
-    @classmethod
-    def title(cls) -> str:
-        return _("Aggregations")
-
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
-    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-        # Link to aggregations of the host/service
-        # When precompile on demand is enabled, this icon is displayed for all hosts/services
-        # otherwise only for the hosts/services which are part of aggregations.
-        if bi.is_part_of_aggregation(row["host_name"], row.get("service_description")):
-            view_name = "aggr_%s" % what
-
-            if not user.may("view.%s" % view_name):
-                return None
-
-            urivars = [
-                ("view_name", view_name),
-                ("aggr_%s_site" % what, row["site"]),
-                ("aggr_%s_host" % what, row["host_name"]),
-            ]
-            if what == "service":
-                urivars += [("aggr_service_service", row["service_description"])]
-            url = makeuri_contextless(request, urivars, filename="view.py")
-            return (
-                "aggr",
-                _("BI Aggregations containing this %s")
-                % (what == "host" and _("Host") or _("Service")),
-                url,
-            )
-        return None
-
-
-# .
 #   .--Stars *-------------------------------------------------------------.
 #   |                   ____  _                                            |
 #   |                  / ___|| |_ __ _ _ __ ___  __/\__                    |
@@ -1118,61 +1066,6 @@ class StarsIcon(Icon):
     @request_memoize()
     def _get_stars(self) -> set[str]:
         return user.stars.copy()
-
-
-# .
-#   .--BI-Aggr.------------------------------------------------------------.
-#   |                ____ ___        _                                     |
-#   |               | __ )_ _|      / \   __ _  __ _ _ __                  |
-#   |               |  _ \| |_____ / _ \ / _` |/ _` | '__|                 |
-#   |               | |_) | |_____/ ___ \ (_| | (_| | | _                  |
-#   |               |____/___|   /_/   \_\__, |\__, |_|(_)                 |
-#   |                                    |___/ |___/                       |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class AggregationIcon(Icon):
-    @classmethod
-    def ident(cls):
-        return "aggregation_checks"
-
-    @classmethod
-    def title(cls) -> str:
-        return _("Aggregation checks")
-
-    def host_columns(self):
-        return ["check_command", "name", "address"]
-
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
-    ) -> None | tuple[str, str, str]:
-        # service_check_command looks like:
-        # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."
-        if what == "service" and row.get("service_check_command", "").startswith(
-            "check_mk_active-bi_aggr!"
-        ):
-            args = row["service_check_command"]
-            start = args.find("-b' '") + 5
-            end = args.find("' ", start)
-            base_url = args[start:end].rstrip("/")
-            base_url = base_url.replace("$HOSTADDRESS$", row["host_address"])
-            base_url = base_url.replace("$HOSTNAME$", row["host_name"])
-
-            start = args.find("-a' '") + 5
-            end = args.find("' ", start)
-            aggr_name = args[start:end]
-            aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
-            aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
-
-            url = "{}/check_mk/view.py?view_name=aggr_single&aggr_name={}".format(
-                base_url,
-                urlencode(aggr_name),
-            )
-
-            return "aggr", _("Open this Aggregation"), url
-        return None
 
 
 # .

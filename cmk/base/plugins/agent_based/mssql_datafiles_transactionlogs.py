@@ -233,12 +233,12 @@ def _datafile_usage(
         unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
-
-        max_size = instance["max_size"] or 0
-        filesystem_free_size = available_bytes.get(instance["mountpoint"])
-        if filesystem_free_size is not None and ((max_size > filesystem_free_size) or unlimited):
-            max_size = filesystem_free_size + used_size
-
+        max_size = _effective_max_size(
+            instance["max_size"],
+            available_bytes.get(instance["mountpoint"]),
+            used_size,
+            unlimited,
+        )
         max_size_sum += max_size
 
     return (
@@ -250,6 +250,25 @@ def _datafile_usage(
         if instances_found
         else None
     )
+
+
+def _effective_max_size(
+    max_size: float | None,
+    free_size: float | None,
+    used_size: float,
+    unlimited: bool,
+) -> float:
+    max_size_float = max_size or 0
+
+    if free_size is None:
+        return max_size_float
+
+    total_size = free_size + used_size
+
+    if unlimited:
+        return total_size
+
+    return min(max_size_float, total_size)
 
 
 def check_mssql_common(

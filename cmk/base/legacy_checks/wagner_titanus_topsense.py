@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
@@ -282,35 +282,30 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 20.0)
-
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
     return [
-        ("1", wagner_titanus_topsense_airflow_deviation_default_values),
-        ("2", wagner_titanus_topsense_airflow_deviation_default_values),
+        ("1", {}),
+        ("2", {}),
     ]
 
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
     parsed = parse_wagner_titanus_topsens(info)
-    lower_crit, lower_warn, upper_warn, upper_crit = params
-    status = 0
     if item == "1":
         airflow_deviation = float(parsed[2][0][4])
     elif item == "2":
         airflow_deviation = float(parsed[2][0][5])
     else:
-        return 3, "Airflow Deviation Detector %s not found in SNMP" % item
+        return
 
-    if airflow_deviation >= upper_warn or airflow_deviation <= lower_warn:
-        status = 1
-    if airflow_deviation >= upper_crit or airflow_deviation <= lower_crit:
-        status = 2
-
-    perfdata = [("airflow_deviation", airflow_deviation, upper_warn, upper_crit, 0)]
-
-    return status, "Airflow Deviation is %0.6f%%" % airflow_deviation, perfdata
+    yield check_levels(
+        airflow_deviation,
+        "airflow_deviation",
+        params["levels_upper"] + params["levels_lower"],
+        human_readable_func=lambda v: "%0.6f%%",
+        infoname="Airflow deviation",
+    )
 
 
 check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
@@ -319,6 +314,10 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
     discovery_function=inventory_wagner_titanus_topsense_airflow_deviation,
     check_function=check_wagner_titanus_topsense_airflow_deviation,
     check_ruleset_name="airflow_deviation",
+    check_default_parameters={
+        "levels_upper": (20.0, 20.0),
+        "levels_lower": (-20.0, -20.0),
+    },
 )
 
 # .

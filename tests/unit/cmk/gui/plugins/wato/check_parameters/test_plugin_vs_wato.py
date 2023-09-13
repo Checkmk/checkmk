@@ -944,11 +944,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "wagner_titanus_topsense_airflow_deviation",
-            RuleGroup.CheckgroupParameters("airflow_deviation"),
-        ),
-        (
-            "check",
             "watchdog_sensors_humidity",
             RuleGroup.CheckgroupParameters("humidity"),
         ),

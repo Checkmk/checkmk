@@ -105,6 +105,7 @@ def register(
     painter_registry.register(PainterSvcPerfVal10)
     painter_registry.register(PainterSvcCheckCommand)
     painter_registry.register(PainterSvcCheckCommandExpanded)
+    painter_registry.register(PainterSvcNotesURLExpanded)
     painter_registry.register(PainterSvcContacts)
     painter_registry.register(PainterSvcContactGroups)
     painter_registry.register(PainterServiceDescription)
@@ -148,6 +149,7 @@ def register(
     painter_registry.register(PainterHostPerfData)
     painter_registry.register(PainterHostCheckCommand)
     painter_registry.register(PainterHostCheckCommandExpanded)
+    painter_registry.register(PainterHostNotesURLExpanded)
     painter_registry.register(PainterHostStateAge)
     painter_registry.register(PainterHostCheckAge)
     painter_registry.register(PainterHostNextCheck)
@@ -833,6 +835,28 @@ class PainterSvcCheckCommandExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_check_command_expanded"])
+
+
+class PainterSvcNotesURLExpanded(Painter):
+    @property
+    def ident(self) -> str:
+        return "svc_notes_url_expanded"
+
+    def title(self, cell: Cell) -> str:
+        return _("Service notes URL expanded")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Notes URL expanded")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["service_notes_url_expanded"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        content: HTML = HTMLWriter.render_a(
+            row["service_notes_url_expanded"], href=row["service_notes_url_expanded"]
+        )
+        return (None, content)
 
 
 class PainterSvcContacts(Painter):
@@ -1965,6 +1989,28 @@ class PainterHostCheckCommandExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_check_command_expanded"])
+
+
+class PainterHostNotesURLExpanded(Painter):
+    @property
+    def ident(self) -> str:
+        return "host_notes_url_expanded"
+
+    def title(self, cell: Cell) -> str:
+        return _("Host notes URL expanded")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Notes URL expanded")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_notes_url_expanded"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        content: HTML = HTMLWriter.render_a(
+            row["host_notes_url_expanded"], href=row["host_notes_url_expanded"]
+        )
+        return (None, content)
 
 
 class PainterHostStateAge(Painter):

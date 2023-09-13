@@ -909,11 +909,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "sansymphony_alerts",
-            RuleGroup.CheckgroupParameters("sansymphony_alerts"),
-        ),
-        (
-            "check",
             "siemens_plc_flag",
             RuleGroup.CheckgroupParameters("siemens_plc_flag"),
         ),

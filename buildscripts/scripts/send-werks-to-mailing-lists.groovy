@@ -83,11 +83,15 @@ def main() {
     stage("Send mails") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
-                withCredentials([sshUserPrivateKey(credentialsId: "ssh-git-gerrit-jenkins", keyFileVariable: 'keyfile')]) {
-                    withEnv(["GIT_SSH_COMMAND=ssh -o \"StrictHostKeyChecking no\" -i ${keyfile} -l jenkins"]) {
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: "ssh-git-gerrit-jenkins", keyFileVariable: 'keyfile', usernameVariable: 'user')
+                ]) {
+                    withEnv(["GIT_SSH_COMMAND=ssh -o \"StrictHostKeyChecking no\" -i ${keyfile} -l ${user}"]) {
                         dir("${checkout_dir}") {
                             send_werk_mails_of_branches.each{branch ->
                                 sh("""
+                                    git config --add user.name ${user};
+                                    git config --add user.email ${JENKINS_MAIL};
                                     scripts/run-pipenv run python3 -m cmk.utils.werks mail \
                                     . origin/${branch} werk_mail ${cmd_line};
                                 """);

@@ -112,6 +112,27 @@ def make_confirmed_form_submit_link(
     )
 
 
+def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | None = None) -> None:
+    html.javascript(
+        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
+        % (
+            json.dumps(
+                {
+                    "title": title,
+                    "confirmButtonText": _("Confirm"),
+                    "cancelButtonText": _("Cancel"),
+                    "customClass": {
+                        "confirmButton": "confirm_question",
+                        "icon": "confirm_icon" + " confirm_question",
+                    },
+                }
+            ),
+            json.dumps(confirm_url),
+            f"()=>{{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
+        )
+    )
+
+
 def confirmed_form_submit_options(
     title: str | None = None,
     suffix: str | None = None,

@@ -3525,7 +3525,9 @@ class ConfigCache:
         return list(cgrs)
 
     def passive_check_period_of_service(self, hostname: HostName, description: ServiceName) -> str:
-        return self.get_service_ruleset_value(hostname, description, check_periods, deflt="24X7")
+        return self.ruleset_matcher.service_extra_conf_2(
+            hostname, description, check_periods, deflt="24X7"
+        )
 
     def custom_attributes_of_service(
         self, hostname: HostName, description: ServiceName
@@ -3539,7 +3541,7 @@ class ConfigCache:
         )
 
     def service_level_of_service(self, hostname: HostName, description: ServiceName) -> int | None:
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             service_service_levels,
@@ -3549,7 +3551,9 @@ class ConfigCache:
     def check_period_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> TimeperiodName | None:
-        entry = self.get_service_ruleset_value(hostname, description, check_periods, deflt=None)
+        entry = self.ruleset_matcher.service_extra_conf_2(
+            hostname, description, check_periods, deflt=None
+        )
         return None if entry == "24X7" else entry
 
     @staticmethod
@@ -3844,19 +3848,6 @@ class ConfigCache:
             )
 
         return _translate_host_macros(_translate_legacy_macros(template))
-
-    def get_service_ruleset_value(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec], deflt: Any
-    ) -> Any:
-        """Compute first match service ruleset outcome with fallback to a default value"""
-        return next(
-            self.ruleset_matcher.get_service_ruleset_values(
-                self.ruleset_matcher._service_match_object(hostname, description),
-                ruleset,
-                is_binary=False,
-            ),
-            deflt,
-        )
 
     def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
         return self.ruleset_matcher.get_service_bool_value(host_name, description, ignored_services)
@@ -4228,7 +4219,7 @@ class CEEConfigCache(ConfigCache):
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> RRDConfig | None:
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname, description, cmc_service_rrd_config, deflt=None
         )
 
@@ -4244,7 +4235,7 @@ class CEEConfigCache(ConfigCache):
     def flap_settings_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> tuple[float, float, float]:
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -4252,7 +4243,7 @@ class CEEConfigCache(ConfigCache):
         )
 
     def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -4273,7 +4264,7 @@ class CEEConfigCache(ConfigCache):
 
     def check_timeout_of_service(self, hostname: HostName, description: ServiceName) -> int:
         """Returns the check timeout in seconds"""
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -4298,7 +4289,7 @@ class CEEConfigCache(ConfigCache):
                 default,
             )
 
-        return self.get_service_ruleset_value(
+        return self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -4315,7 +4306,7 @@ class CEEConfigCache(ConfigCache):
         if description is None:
             return default
 
-        value = self.get_service_ruleset_value(
+        value = self.ruleset_matcher.service_extra_conf_2(
             hostname,
             description,
             cmc_influxdb_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable

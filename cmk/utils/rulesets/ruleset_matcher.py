@@ -7,7 +7,7 @@
 import contextlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -351,6 +351,19 @@ class RulesetMatcher:
                 ruleset,
                 is_binary=False,
             )
+        )
+
+    def service_extra_conf_2(
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec], deflt: Any
+    ) -> Any:
+        """Compute first match service ruleset outcome with fallback to a default value"""
+        return next(
+            self.get_service_ruleset_values(
+                self._service_match_object(hostname, description),
+                ruleset,
+                is_binary=False,
+            ),
+            deflt,
         )
 
     def get_service_ruleset_values(

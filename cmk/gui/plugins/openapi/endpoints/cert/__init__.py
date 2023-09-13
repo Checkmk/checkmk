@@ -97,7 +97,8 @@ def root_cert(param: Mapping[str, Any]) -> Response:
     if not _user_is_authorized():
         raise ProblemException(
             status=403,
-            title=_403_STATUS_DESCRIPTION,
+            title="Unauthorized",
+            detail=_403_STATUS_DESCRIPTION,
         )
     return serve_json(
         {
@@ -124,7 +125,8 @@ def make_certificate(param: Mapping[str, Any]) -> Response:
     if not _user_is_authorized():
         raise ProblemException(
             status=403,
-            title=_403_STATUS_DESCRIPTION,
+            title="Unauthorized",
+            detail=_403_STATUS_DESCRIPTION,
         )
     return serve_json(
         {

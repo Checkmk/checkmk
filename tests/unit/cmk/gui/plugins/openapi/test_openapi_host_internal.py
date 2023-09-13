@@ -53,7 +53,7 @@ def test_link_with_uuid_401(
             status=401,
             headers={"Accept": "application/json"},
             content_type="application/json; charset=utf-8",
-        ).json_body["title"]
+        ).json_body["detail"]
         == "You do not have write access to the host example.com"
     )
     mocker.stopall()
@@ -137,7 +137,7 @@ def test_openapi_show_host_401(
             urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
             headers={"Accept": "application/json"},
             status=401,
-        ).json_body["title"]
+        ).json_body["detail"]
         == "You do not have read access to the host heute"
     )
     mocker.stopall()

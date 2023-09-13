@@ -424,8 +424,9 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
     discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
     if not has_discovery_action_specific_permissions(discovery_action, None):
         return problem(
-            403,
-            "You do not have the necessary permissions to execute this action",
+            status=403,
+            title="Permission denied",
+            detail="You do not have the necessary permissions to execute this action",
         )
     discovery_result = get_check_table(host, discovery_action, raise_errors=False)
     match api_discovery_action:

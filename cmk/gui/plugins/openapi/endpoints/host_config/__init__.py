@@ -549,7 +549,8 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     except BackgroundJobAlreadyRunning:
         return problem(
             status=409,
-            title="A host rename process is already running",
+            title="Conflict",
+            detail="A host rename process is already running",
         )
 
     response = Response(status=302)
@@ -583,7 +584,8 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
     if not job_exists:
         return problem(
             status=404,
-            title="No running renaming job was found",
+            title="Not found",
+            detail="No running renaming job was found",
         )
 
     if job_is_active:

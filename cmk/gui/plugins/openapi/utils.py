@@ -29,7 +29,7 @@ EXT = NewType("EXT", dict[str, Any])
 def problem(
     status: int = 400,
     title: str = "A problem occurred.",
-    detail: str | None = None,
+    detail: str = "",
     type_: str | None = None,
     fields: FIELDS | None = None,
     ext: EXT | None = None,
@@ -37,9 +37,8 @@ def problem(
     problem_dict = {
         "title": title,
         "status": status,
+        "detail": detail,
     }
-    if detail is not None:
-        problem_dict["detail"] = detail
     if type_ is not None:
         problem_dict["type"] = type_
 
@@ -257,7 +256,7 @@ class ProblemException(HTTPException):
         self,
         status: int = 400,
         title: str = "A problem occured.",
-        detail: str | None = None,
+        detail: str = "",
         type_: str | None = None,
         fields: FIELDS | None = None,
         ext: EXT | None = None,

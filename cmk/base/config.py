@@ -161,7 +161,6 @@ from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.command import load_active_checks
 
 # TODO: Prefix helper functions with "_".
 
@@ -1596,8 +1595,6 @@ def load_all_plugins(
     filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
     errors.extend(load_checks(get_check_api_context, filelist))
-
-    errors.extend(load_active_checks())
 
     return errors
 

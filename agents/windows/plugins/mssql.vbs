@@ -715,7 +715,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "BEGIN " & _
                     "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
                     "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
-                    "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
                     "GROUP BY type, machine_name,database_name ' " & _
                 "END " & _
                 "ELSE " & _
@@ -726,7 +726,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                     "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
                     "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
                     "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
-                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
                     "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
                 "END " & _
                 "EXEC (@SQLCommand)"

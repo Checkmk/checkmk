@@ -76,7 +76,7 @@ def main() {
                             send_werk_mails_of_branches.each{branch ->
                                 sh("""
                                     scripts/run-pipenv run python3 -m cmk.utils.werks mail \
-                                    . origin/${branch} review ${cmd_line};
+                                    . origin/${branch} werk_mail ${cmd_line};
                                 """);
                             }
                         }

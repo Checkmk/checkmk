@@ -603,7 +603,7 @@ def test_check_table__get_static_check_entries(
     ]
 
     entries = config._get_checkgroup_parameters(
-        config_cache,
+        config_cache.ruleset_matcher,
         hostname,
         "ps",
         "item",

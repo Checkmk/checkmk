@@ -341,6 +341,18 @@ class RulesetMatcher:
         assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
         return merged
 
+    def service_extra_conf(
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
+    ) -> list:
+        """Compute outcome of a service rule set that has an item."""
+        return list(
+            self.get_service_ruleset_values(
+                self._service_match_object(hostname, description),
+                ruleset,
+                is_binary=False,
+            )
+        )
+
     def get_service_ruleset_values(
         self,
         match_object: RulesetMatchObject,

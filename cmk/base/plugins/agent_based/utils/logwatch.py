@@ -38,7 +38,7 @@ class Section(NamedTuple):
 
 
 def service_extra_conf(service: str) -> list:
-    return cmk.base.config.get_config_cache().service_extra_conf(
+    return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
         host_name(), service, cmk.base.config.logwatch_rules
     )
 

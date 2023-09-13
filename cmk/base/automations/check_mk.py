@@ -519,6 +519,7 @@ def _execute_discovery(
             check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
+                    config_cache.ruleset_matcher,
                     host_name,
                     entry.check_plugin_name,
                     entry.item,

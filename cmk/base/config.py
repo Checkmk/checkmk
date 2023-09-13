@@ -1876,6 +1876,7 @@ def _extract_check_plugins(
 
 
 def compute_check_parameters(
+    matcher: RulesetMatcher,
     host: HostName,
     plugin_name: CheckPluginName,
     item: Item,
@@ -1891,7 +1892,7 @@ def compute_check_parameters(
 
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(
-            host, plugin_name, check_plugin.check_ruleset_name, item
+            matcher, host, plugin_name, check_plugin.check_ruleset_name, item
         )
 
     return _update_with_configured_check_parameters(
@@ -1944,18 +1945,18 @@ def _update_with_configured_check_parameters(
 
 
 def _get_configured_parameters(
+    matcher: RulesetMatcher,
     host: HostName,
     plugin_name: CheckPluginName,
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
-    config_cache = get_config_cache()
     descr = service_description(host, plugin_name, item)
 
     # parameters configured via check_parameters
     extra = [
         TimespecificParameterSet.from_parameters(p)
-        for p in config_cache.service_extra_conf(host, descr, check_parameters)
+        for p in matcher.service_extra_conf(host, descr, check_parameters)
     ]
 
     if ruleset_name is None:
@@ -1965,14 +1966,14 @@ def _get_configured_parameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(cast(LegacyCheckParameters, p))
-            for p in _get_checkgroup_parameters(config_cache, host, str(ruleset_name), item, descr)
+            for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
         ]
         + extra
     )
 
 
 def _get_checkgroup_parameters(
-    config_cache: ConfigCache,
+    matcher: RulesetMatcher,
     host: HostName,
     checkgroup: RulesetName,
     item: Item,
@@ -1985,15 +1986,11 @@ def _get_checkgroup_parameters(
     try:
         # checks without an item
         if item is None and checkgroup not in service_rule_groups:
-            return config_cache.ruleset_matcher.get_host_values(host, rules)
+            return matcher.get_host_values(host, rules)
 
         # checks with an item need service-specific rules
-        match_object = config_cache.ruleset_matcher._checkgroup_match_object(host, descr, item)
-        return list(
-            config_cache.ruleset_matcher.get_service_ruleset_values(
-                match_object, rules, is_binary=False
-            )
-        )
+        match_object = matcher._checkgroup_match_object(host, descr, item)
+        return list(matcher.get_service_ruleset_values(match_object, rules, is_binary=False))
     except MKGeneralException as e:
         raise MKGeneralException(f"{e} (on host {host}, checkgroup {checkgroup})")
 
@@ -2513,6 +2510,7 @@ class ConfigCache:
                         item=item,
                         description=descr,
                         parameters=compute_check_parameters(
+                            self.ruleset_matcher,
                             self.effective_host(hostname, descr),
                             check_plugin_name,
                             item,
@@ -3429,7 +3427,9 @@ class ConfigCache:
         """
         return {
             k: v
-            for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules)
+            for entry in self.ruleset_matcher.service_extra_conf(
+                hostname, svc_desc, service_tag_rules
+            )
             for k, v in entry
         }
 
@@ -3440,7 +3440,7 @@ class ConfigCache:
             "check_interval": SERVICE_CHECK_INTERVAL,
         }
         for key, ruleset in extra_service_conf.items():
-            values = self.service_extra_conf(hostname, description, ruleset)
+            values = self.ruleset_matcher.service_extra_conf(hostname, description, ruleset)
             if not values:
                 continue
 
@@ -3465,7 +3465,11 @@ class ConfigCache:
         check_plugin_name: CheckPluginName | None,
         params: LegacyCheckParameters | TimespecificParameters,
     ) -> list[str]:
-        actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
+        actions = set(
+            self.ruleset_matcher.service_extra_conf(
+                hostname, description, service_icons_and_actions
+            )
+        )
 
         # Some WATO rules might register icons on their own
         if check_plugin_name:
@@ -3484,7 +3488,7 @@ class ConfigCache:
         self, hostname: HostName, description: ServiceName
     ) -> list[ServicegroupName]:
         """Returns the list of servicegroups of this services"""
-        return self.service_extra_conf(hostname, description, service_groups)
+        return self.ruleset_matcher.service_extra_conf(hostname, description, service_groups)
 
     def contactgroups_of_service(self, hostname: HostName, description: ServiceName) -> list[str]:
         """Returns the list of contactgroups of this service"""
@@ -3503,7 +3507,9 @@ class ConfigCache:
         #
         # It would be clearer to have independent rulesets for this...
         folder_cgrs: list[list[str]] = []
-        for entry in self.service_extra_conf(hostname, description, service_contactgroups):
+        for entry in self.ruleset_matcher.service_extra_conf(
+            hostname, description, service_contactgroups
+        ):
             if isinstance(entry, list):
                 folder_cgrs.append(entry)
             else:
@@ -3526,7 +3532,9 @@ class ConfigCache:
     ) -> dict[str, str]:
         return dict(
             itertools.chain(
-                *self.service_extra_conf(hostname, description, custom_service_attributes)
+                *self.ruleset_matcher.service_extra_conf(
+                    hostname, description, custom_service_attributes
+                )
             )
         )
 
@@ -3556,7 +3564,7 @@ class ConfigCache:
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
-            compute_check_parameters,
+            functools.partial(compute_check_parameters, self.ruleset_matcher),
             functools.partial(service_description),
             self.effective_host,
         )
@@ -3837,18 +3845,6 @@ class ConfigCache:
 
         return _translate_host_macros(_translate_legacy_macros(template))
 
-    def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
-    ) -> list:
-        """Compute outcome of a service rule set that has an item."""
-        return list(
-            self.ruleset_matcher.get_service_ruleset_values(
-                self.ruleset_matcher._service_match_object(hostname, description),
-                ruleset,
-                is_binary=False,
-            )
-        )
-
     def get_service_ruleset_value(
         self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec], deflt: Any
     ) -> Any:
@@ -3970,7 +3966,7 @@ class ConfigCache:
         if not the_clusters:
             return node_name
 
-        cluster_mapping = self.service_extra_conf(
+        cluster_mapping = self.ruleset_matcher.service_extra_conf(
             node_name, servicedesc, clustered_services_mapping
         )
         for cluster in cluster_mapping:
@@ -4002,7 +3998,7 @@ class ConfigCache:
         host_name: HostName,
         service_descr: str,
     ) -> tuple[ClusterMode, Mapping[str, Any]]:
-        matching_rules = self.service_extra_conf(
+        matching_rules = self.ruleset_matcher.service_extra_conf(
             host_name,
             service_descr,
             clustered_services_configuration,
@@ -4239,7 +4235,7 @@ class CEEConfigCache(ConfigCache):
     def recurring_downtimes_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> list[RecurringDowntime]:
-        return self.service_extra_conf(
+        return self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             service_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -4264,7 +4260,7 @@ class CEEConfigCache(ConfigCache):
         )
 
     def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> dict:
-        entries = self.service_extra_conf(
+        entries = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             service_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable

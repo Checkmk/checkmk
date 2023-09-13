@@ -90,7 +90,8 @@ def test_service_extra_conf(ts: Scenario) -> None:
         {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": "12"},
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host1"), "service1", ruleset) == [
+    matcher = ts.config_cache.ruleset_matcher
+    assert matcher.service_extra_conf(HostName("host1"), "service1", ruleset) == [
         "1",
         "2",
         "3",
@@ -101,7 +102,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host1"), "serv", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host1"), "serv", ruleset) == [
         "1",
         "2",
         "3",
@@ -112,7 +113,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host2"), "service1", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host2"), "service1", ruleset) == [
         "1",
         "2",
         "3",

@@ -3862,13 +3862,6 @@ class ConfigCache:
             deflt,
         )
 
-    def service_extra_conf_merged(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
-    ) -> Mapping[str, Any]:
-        return self.ruleset_matcher.get_service_ruleset_merged_dict(
-            self.ruleset_matcher._service_match_object(hostname, description), ruleset
-        )
-
     def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
         return self.ruleset_matcher.get_service_bool_value(host_name, description, ignored_services)
 

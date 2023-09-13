@@ -321,9 +321,10 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
-    def get_service_ruleset_merged_dict(
+    def get_service_merged_dict(
         self,
-        match_object: RulesetMatchObject,
+        hostname: HostName,
+        description: ServiceName,
         ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
@@ -331,7 +332,10 @@ class RulesetMatcher:
 
         """
         merged = boil_down_parameters(
-            self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
+            self.get_service_ruleset_values(
+                self._service_match_object(hostname, description), ruleset, is_binary=False
+            ),
+            {},
         )
         assert isinstance(merged, Mapping)  # remove along with LegacyCheckParameters
         return merged
@@ -992,9 +996,13 @@ class RulesetOptimizer:
         return labels
 
     def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
-        match_object = RulesetMatchObject(hostname, service_description=service_desc)
-        return self._ruleset_matcher.get_service_ruleset_merged_dict(
-            match_object, self._labels.service_label_rules
+        return boil_down_parameters(  # type: ignore[return-value]
+            self._ruleset_matcher.get_service_ruleset_values(
+                RulesetMatchObject(hostname, service_desc),
+                self._labels.service_label_rules,
+                is_binary=False,
+            ),
+            {},
         )
 
 

@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from json import JSONDecodeError
 from typing import Annotated, Literal, NewType
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, parse_raw_as, ValidationError
 
 Labels = NewType("Labels", Mapping[str, str])
 
@@ -47,10 +47,9 @@ class ValueType(str, enum.Enum):
 
 
 class ParseModel(BaseModel):
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
+    class Config:
+        allow_mutation = False
+        extra = "forbid"
 
 
 Point = tuple[datetime.datetime, float]
@@ -103,10 +102,9 @@ Response = Annotated[ResponseSuccess | ResponseError, Field(discriminator="statu
 
 
 def parse_raw_response(
-    response: bytes | str,
+    response: bytes | str | bytearray,
 ) -> Response | ValidationError | JSONDecodeError:
     try:
-        adapter = TypeAdapter(Response)
-        return adapter.validate_json(response)  # type: ignore[return-value]
+        return parse_raw_as(Response, response)  # type: ignore[arg-type]
     except (ValidationError, JSONDecodeError) as e:
         return e

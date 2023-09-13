@@ -16,7 +16,7 @@ from cmk.utils.i18n import _
 from cmk.utils.version import parse_check_mk_version
 
 
-class WerkError(MKGeneralException, TypeError):
+class WerkError(MKGeneralException):
     pass
 
 

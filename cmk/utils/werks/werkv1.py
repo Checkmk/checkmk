@@ -7,14 +7,12 @@
 import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Extra, Field
 
 from .werk import Class, Compatibility, Edition, Level, NoWiki, RawWerk, Werk, WerkError
 
 
 class RawWerkV1(BaseModel, RawWerk):
-    model_config = ConfigDict(extra="forbid")
-
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     class_: str = Field(alias="class")
@@ -25,17 +23,19 @@ class RawWerkV1(BaseModel, RawWerk):
     version: str
     compatible: str
     edition: str
-    knowledge: str | None = (
-        None  # this field is currently not used, but kept so parsing still works
-    )
+    knowledge: None | str  # this field is currently not used, but kept so parsing still works
     # it will be removed after the transfer to markdown werks was completed.
-    state: str | None = None
+    state: None | str
     id: int
-    targetversion: str | None = None
+    targetversion: None | str
     description: list[str]
 
+    class Config:
+        extra = Extra.forbid
+        fields = {"class_": "class"}
+
     def to_json_dict(self) -> dict[str, object]:
-        return self.model_dump(by_alias=True)
+        return self.dict(by_alias=True)
 
     def to_werk(self) -> "Werk":
         return Werk(
@@ -83,6 +83,6 @@ def load_werk_v1(content: str, werk_id: int) -> RawWerkV1:
 
     # TODO: Check if all fields have an allowed value, see .werks/config.
     try:
-        return RawWerkV1.model_validate(werk)
+        return RawWerkV1.parse_obj(werk)
     except ValueError as e:
         raise WerkError(f"Parsing of werk {werk_id} failed:\n{e}") from e

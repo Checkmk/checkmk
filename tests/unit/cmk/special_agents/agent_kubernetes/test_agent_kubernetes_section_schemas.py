@@ -101,7 +101,7 @@ def test_schema_did_not_diverge(
     same jsonschema.
     """
     name_to_check_model = {
-        m.__name__: m.model_json_schema() for m in frozenset(kube_check_section_models.values())
+        m.__name__: m.schema() for m in frozenset(kube_check_section_models.values())
     }
-    name_to_agent_model = {m.__name__: m.model_json_schema() for m in kube_agent_section_models}
+    name_to_agent_model = {m.__name__: m.schema() for m in kube_agent_section_models}
     assert name_to_agent_model == name_to_check_model

@@ -5,9 +5,10 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
+import json
+
 import pytest
-from polyfactory import Use
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory, Use
 
 from cmk.base.plugins.agent_based import kube_node_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
@@ -30,7 +31,7 @@ class NodeConditionsFactory(ModelFactory):
 
 
 class FalsyNodeCustomConditionFactory(ModelFactory):
-    __model__ = kube.NodeCustomCondition
+    __model__ = kube.FalsyNodeCustomCondition
 
 
 class NodeCustomConditionsFactory(ModelFactory):
@@ -54,12 +55,12 @@ PARAMS = {
 
 @pytest.fixture
 def string_table():
-    return [[NodeConditionsFactory.build().model_dump_json()]]
+    return [[json.dumps(NodeConditionsFactory.build().dict())]]
 
 
 @pytest.fixture
 def custom_string_table():
-    return [[NodeCustomConditionsFactory.build().model_dump_json()]]
+    return [[json.dumps(NodeCustomConditionsFactory.build().dict())]]
 
 
 @pytest.fixture

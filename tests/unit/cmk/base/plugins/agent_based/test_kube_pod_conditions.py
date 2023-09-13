@@ -8,8 +8,8 @@
 import json
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
+from pydantic_factories import ModelFactory
 
 from tests.unit.conftest import FixRegister
 
@@ -186,16 +186,10 @@ def check_plugin(fix_register: FixRegister) -> CheckPlugin:
 
 def test_parse(string_table: StringTable) -> None:
     section = kube_pod_conditions.parse(string_table)
-
-    def assert_ready(cond: PodCondition | None) -> None:
-        if cond is None:
-            raise AssertionError("Condition should not be None")
-        assert cond.model_dump() == ready()
-
-    assert_ready(section.initialized)
-    assert_ready(section.scheduled)
-    assert_ready(section.containersready)
-    assert_ready(section.ready)
+    assert section.initialized == ready()
+    assert section.scheduled == ready()
+    assert section.containersready == ready()
+    assert section.ready == ready()
 
 
 @pytest.mark.parametrize(
@@ -227,14 +221,6 @@ def test_parse(string_table: StringTable) -> None:
 def test_parse_multi(
     expected_initialized, expected_scheduled, expected_containersready, expected_ready, string_table
 ):
-    expected_initialized = (
-        PodCondition(**expected_initialized) if expected_initialized is not None else None
-    )
-    expected_scheduled = PodCondition(**expected_scheduled)
-    expected_containersready = (
-        PodCondition(**expected_containersready) if expected_containersready is not None else None
-    )
-    expected_ready = PodCondition(**expected_ready) if expected_ready is not None else None
     section = kube_pod_conditions.parse(string_table)
     assert section.initialized == expected_initialized
     assert section.scheduled == expected_scheduled

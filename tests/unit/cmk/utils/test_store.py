@@ -864,7 +864,7 @@ def test_pydantic_store_serialization(tmp_path: Path) -> None:
     my_store = store.PydanticStore(store_path, MyModel)
     with my_store.locked():
         my_store.write_obj(MyModel(unit="bar", test=42))
-    assert store_path.read_text() == '{"unit":"bar","test":42}'
+    assert store_path.read_text() == '{"unit": "bar", "test": 42}'
 
     other_store = store.PydanticStore(store_path, MyModel)
     with other_store.locked():

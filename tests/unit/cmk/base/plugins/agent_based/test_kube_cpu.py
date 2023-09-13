@@ -6,7 +6,7 @@
 import itertools
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory
 
 import cmk.base.plugins.agent_based.utils.kube
 from cmk.base.plugins.agent_based import kube_cpu

@@ -116,7 +116,7 @@ class LabelManager(NamedTuple):
 class RulesetMatchObject:
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
 
-    __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
+    __slots__ = ["host_name", "service_description", "service_labels"]
 
     def __init__(
         self,
@@ -128,10 +128,6 @@ class RulesetMatchObject:
         self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels
-        self.service_cache_id = (
-            self.service_description,
-            hash(None if service_labels is None else frozenset(service_labels.items())),
-        )
 
     def copy(self) -> "RulesetMatchObject":
         return RulesetMatchObject(
@@ -369,7 +365,14 @@ class RulesetMatcher:
                 continue
 
             service_cache_id = (
-                match_object.service_cache_id,
+                (
+                    match_object.service_description,
+                    hash(
+                        None
+                        if match_object.service_labels is None
+                        else frozenset(match_object.service_labels.items())
+                    ),
+                ),
                 service_description_condition,
                 service_labels_condition_cache_id,
             )

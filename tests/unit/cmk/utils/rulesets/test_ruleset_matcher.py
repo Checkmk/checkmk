@@ -44,25 +44,6 @@ def test_ruleset_match_object_service_description() -> None:
     assert obj.service_description == "Ümlaut"
 
 
-def test_ruleset_match_object_service_cache_id() -> None:
-    obj1 = RulesetMatchObject(
-        host_name=HostName("host"),
-        service_description="svc",
-        service_labels={"a": "v1"},
-    )
-    obj2 = RulesetMatchObject(
-        host_name=HostName("host"),
-        service_description="svc",
-        service_labels={"a": "v2"},
-    )
-    assert obj1.service_cache_id != obj2.service_cache_id
-
-
-def test_ruleset_match_object_service_cache_id_no_labels() -> None:
-    obj = RulesetMatchObject(host_name=HostName("host"), service_description="svc")
-    assert obj.service_cache_id == ("svc", hash(None))
-
-
 ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "1",

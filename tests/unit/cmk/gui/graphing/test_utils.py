@@ -19,9 +19,20 @@ from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._utils import (
     _hex_color_to_rgb_color,
     AutomaticDict,
+    ConstantFloat,
+    ConstantInt,
+    CriticalOf,
+    Difference,
+    MaximumOf,
+    Metric,
+    MetricExpression,
     MetricExpressionResult,
+    MinimumOf,
     NormalizedPerfData,
+    Percent,
+    Product,
     TranslationInfo,
+    WarningOf,
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -718,12 +729,16 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
 
 
 @pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, value, unit_name, color",
+    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
     [
         pytest.param(
             [PerfDataTuple(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
+            MetricExpression(
+                operation=Product(factors=[Metric(name="if_in_octets"), ConstantInt(value=8)]),
+                explicit_unit_name="bits/s",
+            ),
             16.0,
             "bits/s",
             "#00e060",
@@ -733,6 +748,13 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
             "check_mk-df",
             "fs_size,fs_used,-#e3fff9",
+            MetricExpression(
+                operation=Difference(
+                    minuend=Metric(name="fs_size"),
+                    subtrahend=Metric(name="fs_used"),
+                ),
+                explicit_color="e3fff9",
+            ),
             6291456,
             "bytes",
             "#e3fff9",
@@ -746,6 +768,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
+            MetricExpression(operation=Metric(name="127.0.0.1pl")),
             5,
             "",
             "#cc00ff",
@@ -757,6 +780,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             utils.parse_perf_data("10.172=6")[0],
             "check_mk-local",
             "10.172",
+            MetricExpression(operation=Metric(name="10.172")),
             6,
             "",
             "#cc00ff",
@@ -766,6 +790,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             "97",
+            MetricExpression(operation=ConstantInt(value=97)),
             97.0,
             "count",
             "#000000",
@@ -775,6 +800,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             97,
+            MetricExpression(operation=ConstantInt(value=97)),
             97.0,
             "count",
             "#000000",
@@ -784,6 +810,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             "97.0",
+            MetricExpression(operation=ConstantFloat(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -793,6 +820,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             97.0,
+            MetricExpression(operation=ConstantFloat(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -802,6 +830,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             "97.0@bytes",
+            MetricExpression(operation=ConstantFloat(value=97.0), explicit_unit_name="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -811,6 +840,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [],
             "check_mk-foo",
             "97.0#123456",
+            MetricExpression(operation=ConstantFloat(value=97.0), explicit_color="123456"),
             97.0,
             "",
             "#123456",
@@ -820,6 +850,12 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name(%)",
+            MetricExpression(
+                operation=Percent(
+                    reference=Metric(name="metric_name"),
+                    metric=Metric(name="metric_name"),
+                )
+            ),
             20.0,
             "%",
             "#cc00ff",
@@ -829,6 +865,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
+            MetricExpression(operation=WarningOf(metric=Metric(name="metric_name"))),
             20.0,
             "",
             "#ffd000",
@@ -838,6 +875,12 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn(%)",
+            MetricExpression(
+                operation=Percent(
+                    reference=WarningOf(metric=Metric(name="metric_name")),
+                    metric=Metric(name="metric_name"),
+                )
+            ),
             40.0,
             "%",
             "#ffd000",
@@ -847,6 +890,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
+            MetricExpression(operation=CriticalOf(metric=Metric(name="metric_name"))),
             30.0,
             "",
             "#ff3232",
@@ -856,6 +900,12 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit(%)",
+            MetricExpression(
+                operation=Percent(
+                    reference=CriticalOf(metric=Metric(name="metric_name")),
+                    metric=Metric(name="metric_name"),
+                )
+            ),
             60.0,
             "%",
             "#ff3232",
@@ -865,6 +915,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
+            MetricExpression(operation=MinimumOf(metric=Metric(name="metric_name"))),
             0.0,
             "",
             "#808080",
@@ -874,6 +925,12 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min(%)",
+            MetricExpression(
+                operation=Percent(
+                    reference=MinimumOf(metric=Metric(name="metric_name")),
+                    metric=Metric(name="metric_name"),
+                )
+            ),
             0.0,
             "%",
             "#808080",
@@ -883,6 +940,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
+            MetricExpression(operation=MaximumOf(metric=Metric(name="metric_name"))),
             50.0,
             "",
             "#808080",
@@ -892,6 +950,12 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max(%)",
+            MetricExpression(
+                operation=Percent(
+                    reference=MaximumOf(metric=Metric(name="metric_name")),
+                    metric=Metric(name="metric_name"),
+                )
+            ),
             100.0,
             "%",
             "#808080",
@@ -901,6 +965,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.max",
+            MetricExpression(operation=Metric(name="metric_name", consolidation_func_name="max")),
             10.0,
             "",
             "#cc00ff",
@@ -910,6 +975,7 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.min",
+            MetricExpression(operation=Metric(name="metric_name", consolidation_func_name="min")),
             10.0,
             "",
             "#cc00ff",
@@ -918,26 +984,32 @@ def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None
         pytest.param(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
-            "metric_name.max",
+            "metric_name.average",
+            MetricExpression(
+                operation=Metric(name="metric_name", consolidation_func_name="average")
+            ),
             10.0,
             "",
             "#cc00ff",
-            id="consolidation func name min",
+            id="consolidation func name average",
         ),
     ],
 )
-def test_evaluate(
+def test_parse_and_evaluate(
     perf_data: Perfdata,
     check_command: str,
     raw_expression: str,
+    expected_metric_expression: utils.MetricExpression,
     value: float,
     unit_name: str,
     color: str,
 ) -> None:
-    assert utils.evaluate(
-        raw_expression,
-        utils.translate_metrics(perf_data, check_command),
-    ) == MetricExpressionResult(value, utils.unit_info[unit_name], color)
+    translated_metrics = utils.translate_metrics(perf_data, check_command)
+    metric_expression = utils.parse_expression(raw_expression, translated_metrics)
+    assert metric_expression == expected_metric_expression
+    assert metric_expression.evaluate(translated_metrics) == MetricExpressionResult(
+        value, utils.unit_info[unit_name], color
+    )
 
 
 @pytest.mark.parametrize(
@@ -981,7 +1053,10 @@ def test_evaluate_cpu_utilization(
     assert utils.graph_info, "Global variable is empty/has not been initialized."
     perf_data_parsed, check_command = utils.parse_perf_data(perf_data, check_command)
     translated_metrics = utils.translate_metrics(perf_data_parsed, check_command)
-    assert utils.evaluate(expression, translated_metrics).value == expected_result
+    assert (
+        utils.parse_expression(expression, translated_metrics).evaluate(translated_metrics).value
+        == expected_result
+    )
 
 
 def test_stack_resolver_str_to_nested() -> None:

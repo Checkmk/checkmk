@@ -27,7 +27,6 @@ from ._graph_specification import (
     TemplateGraphSpecification,
 )
 from ._utils import (
-    evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
     get_graph_template,
@@ -38,6 +37,7 @@ from ._utils import (
     horizontal_rules_from_thresholds,
     metrics_used_in_expression,
     MetricUnitColor,
+    parse_expression,
     replace_expressions,
     split_expression,
     stack_resolver,
@@ -334,7 +334,7 @@ def metric_unit_color(
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:
-        result = evaluate(expression, translated_metrics)
+        result = parse_expression(expression, translated_metrics).evaluate(translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:

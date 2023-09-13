@@ -1163,6 +1163,14 @@ class MetricExpression:
     explicit_unit_name: str = ""
     explicit_color: str = ""
 
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        result = self.operation.evaluate(translated_metrics)
+        return MetricExpressionResult(
+            result.value,
+            unit_info[self.explicit_unit_name] if self.explicit_unit_name else result.unit_info,
+            "#" + self.explicit_color if self.explicit_color else result.color,
+        )
+
 
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
@@ -1174,7 +1182,7 @@ class MetricExpression:
 # "fs_growth.max" is the same as fs_growth. The .max is just
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
-def _parse_expression(
+def parse_expression(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
 ) -> MetricExpression:
@@ -1237,27 +1245,6 @@ def _parse_expression(
         )
 
     return MetricExpression(operand, explicit_unit_name, explicit_color)
-
-
-def evaluate(
-    expression: str | int | float,
-    translated_metrics: TranslatedMetrics,
-) -> MetricExpressionResult:
-    metric_expression = _parse_expression(expression, translated_metrics)
-    result = metric_expression.operation.evaluate(translated_metrics)
-    return MetricExpressionResult(
-        result.value,
-        (
-            unit_info[metric_expression.explicit_unit_name]
-            if metric_expression.explicit_unit_name
-            else result.unit_info
-        ),
-        (
-            "#" + metric_expression.explicit_color
-            if metric_expression.explicit_color
-            else result.color
-        ),
-    )
 
 
 _TAtom = TypeVar("_TAtom")
@@ -1390,12 +1377,20 @@ def get_graph_range(
 
     # TODO really? see test_create_graph_recipe_from_template
     try:
-        from_ = evaluate(graph_template.range[0], translated_metrics).value
+        from_ = (
+            parse_expression(graph_template.range[0], translated_metrics)
+            .evaluate(translated_metrics)
+            .value
+        )
     except Exception:
         from_ = None
 
     try:
-        to = evaluate(graph_template.range[1], translated_metrics).value
+        to = (
+            parse_expression(graph_template.range[1], translated_metrics)
+            .evaluate(translated_metrics)
+            .value
+        )
     except Exception:
         to = None
     return from_, to
@@ -1406,7 +1401,9 @@ def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str
 
     def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
         try:
-            result = evaluate(match.group()[2:-1], translated_metrics)
+            result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
+                translated_metrics
+            )
         except ValueError:
             return _("n/a")
         return result.unit_info["render"](result.value)
@@ -1547,7 +1544,9 @@ def _filter_renderable_graph_metrics(
 ) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:
         try:
-            evaluate(metric_definition.expression, translated_metrics)
+            parse_expression(metric_definition.expression, translated_metrics).evaluate(
+                translated_metrics
+            )
             yield metric_definition
         except KeyError as err:  # because can't find necessary metric_name in translated_metrics
             metric_name = err.args[0]
@@ -1637,7 +1636,11 @@ def horizontal_rules_from_thresholds(
                 title = expression
 
         try:
-            if (result := evaluate(expression, translated_metrics)).value:
+            if (
+                result := parse_expression(expression, translated_metrics).evaluate(
+                    translated_metrics
+                )
+            ).value:
                 horizontal_rules.append(
                     (
                         result.value,

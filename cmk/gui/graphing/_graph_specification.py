@@ -77,7 +77,7 @@ class MetricOpTransformation(BaseModel, frozen=True):
 class SingleMetricSpec(TypedDict):
     datasource: str
     context: VisualContext
-    selected_metric: tuple[str, LineType]
+    selected_metric: MetricDefinition
     consolidation_function: GraphConsoldiationFunction | None
     presentation: GraphPresentation
     single_infos: list[str]

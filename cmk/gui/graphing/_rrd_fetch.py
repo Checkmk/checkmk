@@ -28,7 +28,6 @@ from cmk.gui.type_defs import ColumnName
 from ._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
-    MetricDefinition,
     MetricOpCombined,
     MetricOpConstant,
     MetricOperation,
@@ -202,14 +201,12 @@ def _needed_elements_of_expression(
     ):
         if (cf := expression.single_metric_spec["consolidation_function"]) is None:
             raise TypeError(cf)
+
         metrics = resolve_combined_single_metric_spec(
             CombinedSingleMetricSpec(
                 datasource=expression.single_metric_spec["datasource"],
                 context=expression.single_metric_spec["context"],
-                selected_metric=MetricDefinition(
-                    expression=expression.single_metric_spec["selected_metric"][0],
-                    line_type=expression.single_metric_spec["selected_metric"][1],
-                ),
+                selected_metric=expression.single_metric_spec["selected_metric"],
                 consolidation_function=cf,
                 presentation=expression.single_metric_spec["presentation"],
             )

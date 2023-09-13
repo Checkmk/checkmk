@@ -945,7 +945,8 @@ class ActivateChanges:
 
         # A list of changes ordered by time and grouped by the change.
         # Each change contains a list of affected sites.
-        self._changes: list[tuple[str, dict]] = []
+        self._all_changes: list[tuple[str, dict]] = []
+        self._pending_changes: list[tuple[str, dict]] = []
         super().__init__()
 
     def load(self):
@@ -954,7 +955,9 @@ class ActivateChanges:
 
     def _load_changes(self):
         self._changes_by_site = {}
-        changes = {}
+
+        active_changes: dict[str, dict[str, Any]] = {}
+        pending_changes: dict[str, dict[str, Any]] = {}
 
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
@@ -968,14 +971,18 @@ class ActivateChanges:
             # Assume changes can be recorded multiple times and deduplicate them.
             for change in site_changes:
                 change_id = change["id"]
+                target_bucket = active_changes if has_been_activated(change) else pending_changes
+                if change_id not in target_bucket:
+                    target_bucket[change_id] = change.copy()
 
-                if change_id not in changes:
-                    changes[change_id] = change.copy()
-
-                affected_sites = changes[change_id].setdefault("affected_sites", [])
+                affected_sites = target_bucket[change_id].setdefault("affected_sites", [])
                 affected_sites.append(site_id)
 
-        self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
+        self._pending_changes = sorted(pending_changes.items(), key=lambda k_v: k_v[1]["time"])
+        self._all_changes = sorted(
+            list(pending_changes.items()) + list(active_changes.items()),
+            key=lambda k_v: k_v[1]["time"],
+        )
 
     def load_changes_until(self, activation_id: ActivationId, sites: Iterable[SiteId]) -> None:
         manager = load_activate_change_manager_with_id(activation_id)
@@ -1003,7 +1010,10 @@ class ActivateChanges:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
-            changes_counter += len(SiteChanges(site_id).read())
+            changes = SiteChanges(site_id).read()
+            changes_counter += len(
+                list(change for change in changes if not has_been_activated(change))
+            )
         return changes_counter
 
     @staticmethod
@@ -1033,7 +1043,7 @@ class ActivateChanges:
         return False
 
     def grouped_changes(self):
-        return self._changes
+        return self._pending_changes
 
     def _changes_of_site(self, site_id):
         return self._changes_by_site[site_id]
@@ -1077,7 +1087,7 @@ class ActivateChanges:
 
     def _site_has_foreign_changes(self, site_id):
         changes = self._changes_of_site(site_id)
-        return bool([c for c in changes if self._is_foreign(c)])
+        return bool([c for c in changes if is_foreign_change(c)])
 
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
@@ -1109,35 +1119,47 @@ class ActivateChanges:
         )
 
     def _get_last_change_id(self) -> str:
-        return self._changes[-1][1]["id"]
+        return self._pending_changes[-1][1]["id"]
 
     def has_changes(self) -> bool:
-        return bool(self._changes)
+        return bool(self._all_changes)
+
+    def has_pending_changes(self) -> bool:
+        return bool(self._pending_changes)
 
     def has_foreign_changes(self) -> bool:
-        return any(change for _change_id, change in self._changes if self._is_foreign(change))
+        return any(
+            change for _change_id, change in self._pending_changes if is_foreign_change(change)
+        )
 
     def _has_foreign_changes_on_any_site(self) -> bool:
         return any(
             change
-            for _change_id, change in self._changes
-            if self._is_foreign(change) and self._affects_all_sites(change)
+            for _change_id, change in self._pending_changes
+            if is_foreign_change(change) and affects_all_sites(change)
         )
-
-    def _is_foreign(self, change) -> bool:  # type: ignore[no-untyped-def]
-        return change["user_id"] and change["user_id"] != user.id
-
-    def _prevent_discard_changes(self, change) -> bool:  # type:ignore[no-untyped-def]
-        return change.get("prevent_discard_changes", False)
-
-    def _affects_all_sites(self, change):
-        return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
     def get_activation_time(self, site_id, ty, deflt=None):
         return get_activation_times(site_id).get(ty, deflt)
 
     def get_changes_to_activate(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site_until[site_id]
+
+
+def has_been_activated(change) -> bool:  # type:ignore[no-untyped-def]
+    return change.get("has_been_activated", False)
+
+
+def prevent_discard_changes(change) -> bool:  # type:ignore[no-untyped-def]
+    return change.get("prevent_discard_changes", False)
+
+
+def is_foreign_change(change) -> bool:  # type:ignore[no-untyped-def]
+    return change["user_id"] and change["user_id"] != user.id
+
+
+def affects_all_sites(change) -> bool:  # type:ignore[no-untyped-def]
+    return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 
 class ActivateChangesManager(ActivateChanges):
@@ -1414,7 +1436,7 @@ class ActivateChangesManager(ActivateChanges):
     def _set_persisted_changes(self) -> None:
         """Sets the persisted_changes, which are a subset of self._changes."""
         if not self._persisted_changes:
-            for _activation_id, change in self._changes:
+            for _activation_id, change in self._pending_changes:
                 self._persisted_changes.append(
                     asdict(
                         ActivationChange(
@@ -1455,7 +1477,7 @@ class ActivateChangesManager(ActivateChanges):
 
         """
         with store.lock_checkmk_configuration():
-            if not self._changes:
+            if not self._pending_changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
             if self._get_last_change_id() != self._activate_until:
@@ -3181,7 +3203,7 @@ def activate_changes_start(
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)
 
-    if not manager.has_changes():
+    if not manager.has_pending_changes():
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:

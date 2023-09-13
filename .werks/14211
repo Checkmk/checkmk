@@ -1,0 +1,14 @@
+Title: Discard/Revert pending changes now shows a confirmation page instead of instant snapshot rollback
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1694597619
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The confirmation page also shows changes which are already activated in the current configuration,
+but will be reverted once the latest snapshot is restored.
+

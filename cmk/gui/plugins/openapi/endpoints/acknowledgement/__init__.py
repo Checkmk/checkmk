@@ -97,6 +97,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
             raise ProblemException(
                 status=422,
                 title=f"Host {name!r} has no problem.",
+                detail="You can't acknowledge a problem that doesn't exist.",
             )
         acknowledge_host_problem(
             live,
@@ -131,7 +132,8 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
         if not hosts:
             raise ProblemException(
                 status=422,
-                title="The provided query returned no monitored hosts",
+                title="No hosts found",
+                detail="The provided query returned no monitored hosts",
             )
         for host in hosts:
             acknowledge_host_problem(
@@ -189,12 +191,14 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
         if not service:
             raise ProblemException(
                 status=400,
-                title=f"Service {description!r}@{host_name!r} could not be found.",
+                title="Service not found",
+                detail=f"Service {description!r}@{host_name!r} could not be found.",
             )
         if not service.state:
             raise ProblemException(
                 status=422,
-                title=f"Service {description!r}@{host_name!r} has no problem.",
+                title="This service has no problem",
+                detail=f"Service {description!r}@{host_name!r} has no problem.",
             )
         acknowledge_service_problem(
             live,

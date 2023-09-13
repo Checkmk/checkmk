@@ -259,7 +259,8 @@ def _retrieve_group(ident: str) -> TagGroup:
     if tag_group is None:
         raise ProblemException(
             status=500,
-            title="The expected host tag group was not found",
+            title="Tag group not found",
+            detail="The expected host tag group was not found",
         )
     return tag_group
 

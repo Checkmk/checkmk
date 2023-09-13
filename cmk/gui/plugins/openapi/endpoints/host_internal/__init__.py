@@ -166,7 +166,8 @@ def _check_host_access_permissions(
     except MKAuthException:
         raise ProblemException(
             status=401,
-            title=f"You do not have {access_type} access to the host {host_name}",
+            title="Unauthorized",
+            detail=f"You do not have {access_type} access to the host {host_name}",
         )
     return host
 

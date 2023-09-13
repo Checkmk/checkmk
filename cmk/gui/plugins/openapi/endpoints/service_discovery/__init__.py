@@ -443,8 +443,9 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
     discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
     if not has_discovery_action_specific_permissions(discovery_options.action, None):
         return problem(
-            403,
-            "You do not have the necessary permissions to execute this action",
+            status=403,
+            title="Permission denied",
+            detail="You do not have the necessary permissions to execute this action",
         )
     discovery_result = get_check_table(
         StartDiscoveryRequest(

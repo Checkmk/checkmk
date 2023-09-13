@@ -22,9 +22,9 @@ from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr, Item
+from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters

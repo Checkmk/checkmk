@@ -17,6 +17,7 @@ from typing import Any, assert_never, Final, Literal, NamedTuple
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.servicename import Item
 from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.version import __version__, Version
 
@@ -26,7 +27,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
 )
 
-from cmk.checkengine.checking import CheckPluginNameStr, Item
+from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 
 import cmk.gui.watolib.changes as _changes

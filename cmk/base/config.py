@@ -85,12 +85,11 @@ from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     LabelSources,
     RulesetMatcher,
-    RulesetMatchObject,
     RulesetName,
     RuleSpec,
 )
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     apply_hosts_file_to_object,
@@ -126,7 +125,6 @@ from cmk.checkengine.checking import (
     CheckPluginName,
     CheckPluginNameStr,
     ConfiguredService,
-    Item,
     ServiceID,
 )
 from cmk.checkengine.discovery import (
@@ -1990,9 +1988,7 @@ def _get_checkgroup_parameters(
             return config_cache.ruleset_matcher.get_host_values(host, rules)
 
         # checks with an item need service-specific rules
-        match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
-            host, item, descr
-        )
+        match_object = config_cache.ruleset_matcher._checkgroup_match_object(host, descr, item)
         return list(
             config_cache.ruleset_matcher.get_service_ruleset_values(
                 match_object, rules, is_binary=False
@@ -2161,12 +2157,7 @@ class ConfigCache:
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
 
-        self._cache_match_object_service_checkgroup: dict[
-            tuple[HostName, Item, ServiceName], RulesetMatchObject
-        ] = {}
-
         # Host lookup
-
         self._all_configured_hosts = set()
         self._all_configured_clusters = set()
         self._all_configured_realhosts = set()
@@ -3561,39 +3552,6 @@ class ConfigCache:
             return explicit_service_custom_variables[(hostname, description)]
         except KeyError:
             return {}
-
-    def cache_ruleset_match_object_for_checkgroup_parameters(
-        self, hostname: HostName, item: Item, svc_desc: ServiceName, labels: Labels
-    ) -> None:
-        cache_id = (hostname, item, svc_desc)
-        if cache_id not in self._cache_match_object_service_checkgroup:
-            self._cache_match_object_service_checkgroup[cache_id] = RulesetMatchObject(
-                hostname, svc_desc, labels
-            )
-
-    def ruleset_match_object_for_checkgroup_parameters(
-        self, hostname: HostName, item: Item, svc_desc: ServiceName
-    ) -> RulesetMatchObject:
-        """Construct the object that is needed to match checkgroup parameters rulesets
-
-        Please note that the host attributes like host_folder and host_tags are
-        not set in the object, because the rule optimizer already processes all
-        these host conditions. Adding these attributes here would be
-        consequent, but create some overhead.
-        """
-
-        cache_id = (hostname, item, svc_desc)
-        with contextlib.suppress(KeyError):
-            return self._cache_match_object_service_checkgroup[cache_id]
-
-        return self._cache_match_object_service_checkgroup.setdefault(
-            cache_id,
-            RulesetMatchObject(
-                host_name=hostname,
-                service_description=item,
-                service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
-            ),
-        )
 
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(

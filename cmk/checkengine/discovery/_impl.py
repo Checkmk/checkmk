@@ -16,11 +16,11 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.checking import CheckPluginName, Item, ServiceID
+from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction

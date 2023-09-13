@@ -13,10 +13,10 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import ObjectStore
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Item, ServiceID
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 

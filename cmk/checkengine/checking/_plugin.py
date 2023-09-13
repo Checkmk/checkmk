@@ -12,7 +12,7 @@ from typing import Final, NamedTuple, Protocol
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
@@ -27,13 +27,11 @@ __all__ = [
     "CheckPluginName",
     "CheckPluginNameStr",
     "ConfiguredService",
-    "Item",
     "ServiceID",
 ]
 
 
 CheckPluginNameStr = str
-Item = str | None
 
 
 class CheckPluginName(ValidatedString):

@@ -12,9 +12,9 @@ from the configuration.
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 
 import cmk.base.config as config
 
@@ -62,11 +62,9 @@ def ruleset_match_object_for_checkgroup_parameters(
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match checkgroup parameter rulesets"""
     _load_config()
-    config_cache = config.get_config_cache()
-    config_cache.cache_ruleset_match_object_for_checkgroup_parameters(
-        hostname, item, svc_desc, svc_labels
-    )
-    return config_cache.ruleset_match_object_for_checkgroup_parameters(hostname, item, svc_desc)
+    matcher = config.get_config_cache().ruleset_matcher
+    matcher.cache_service_checkgroup(hostname, svc_desc, item, svc_labels)
+    return matcher._checkgroup_match_object(hostname, svc_desc, item)
 
 
 def get_host_labels(hostname: HostName) -> Labels:

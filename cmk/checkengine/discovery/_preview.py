@@ -14,16 +14,10 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.checkengine.checking import (
-    CheckPlugin,
-    CheckPluginName,
-    ConfiguredService,
-    Item,
-    ServiceID,
-)
+from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.legacy import LegacyCheckParameters

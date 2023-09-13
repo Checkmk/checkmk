@@ -10,10 +10,9 @@ from collections.abc import Callable, Collection, Iterator
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import Item
 
 from cmk.automations.results import AnalyseServiceResult, ServiceInfo
-
-from cmk.checkengine.checking import Item
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

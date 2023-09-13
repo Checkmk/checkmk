@@ -20,11 +20,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import Item
 from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
-from cmk.checkengine.checking import CheckPluginNameStr, Item
+from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.background_job import JobStatusStates

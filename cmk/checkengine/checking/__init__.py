@@ -10,7 +10,6 @@ from ._plugin import (
     CheckPluginName,
     CheckPluginNameStr,
     ConfiguredService,
-    Item,
     ServiceID,
 )
 from ._timing import make_timing_results
@@ -23,7 +22,6 @@ __all__ = [
     "CheckPluginNameStr",
     "ConfiguredService",
     "execute_checkmk_checks",
-    "Item",
     "make_timing_results",
     "ServiceID",
 ]

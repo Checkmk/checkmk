@@ -24,7 +24,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
     NEGATE,
     PHYSICAL_HOSTS,
 )
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
@@ -207,7 +207,9 @@ class RulesetMatcher:
             object,
         ] = {}
         # Expensive and mostly useless caching.
-        self.__service_match_obj: dict[tuple[HostName, ServiceName], RulesetMatchObject] = {}
+        self.__service_match_obj: dict[
+            tuple[HostName, ServiceName, Item | None], RulesetMatchObject
+        ] = {}
 
     def get_host_bool_value(self, hostname: HostName, ruleset: Iterable[RuleSpec[bool]]) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
@@ -265,14 +267,21 @@ class RulesetMatcher:
     def cache_service_labels(
         self, hostname: HostName, description: ServiceName, labels: Labels
     ) -> None:
-        cache_id = (hostname, description)
+        cache_id = (hostname, description, None)
+        if cache_id not in self.__service_match_obj:
+            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
+
+    def cache_service_checkgroup(
+        self, hostname: HostName, description: ServiceName, item: Item, labels: Labels
+    ) -> None:
+        cache_id = (hostname, description, item)
         if cache_id not in self.__service_match_obj:
             self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
 
     def _service_match_object(
         self, hostname: HostName, description: ServiceName
     ) -> RulesetMatchObject:
-        cache_id = (hostname, description)
+        cache_id = (hostname, description, None)
         with contextlib.suppress(KeyError):
             return self.__service_match_obj[cache_id]
 
@@ -281,6 +290,18 @@ class RulesetMatcher:
             RulesetMatchObject(
                 hostname, description, self.labels_of_service(hostname, description)
             ),
+        )
+
+    def _checkgroup_match_object(
+        self, hostname: HostName, description: ServiceName, item: Item
+    ) -> RulesetMatchObject:
+        cache_id = (hostname, description, item)
+        with contextlib.suppress(KeyError):
+            return self.__service_match_obj[cache_id]
+
+        return self.__service_match_obj.setdefault(
+            cache_id,
+            RulesetMatchObject(hostname, item, self.labels_of_service(hostname, description)),
         )
 
     def get_service_bool_value(

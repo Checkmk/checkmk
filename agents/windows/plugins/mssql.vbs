@@ -715,7 +715,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "BEGIN " & _
                     "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
                     "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
-                    "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
                     "GROUP BY type, machine_name,database_name ' " & _
                 "END " & _
                 "ELSE " & _

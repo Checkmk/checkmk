@@ -3426,7 +3426,7 @@ class ConfigCache:
         It takes all explicitly configured tag groups into account.
         """
         return {
-            k: v
+            TagGroupID(k): TagID(v)
             for entry in self.ruleset_matcher.service_extra_conf(
                 hostname, svc_desc, service_tag_rules
             )
@@ -3444,7 +3444,7 @@ class ConfigCache:
             if not values:
                 continue
 
-            value = values[0]
+            value: float = values[0]
             if value is None:
                 continue
 

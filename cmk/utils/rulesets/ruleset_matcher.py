@@ -342,8 +342,8 @@ class RulesetMatcher:
         return merged
 
     def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
-    ) -> list:
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec[TRuleValue]]
+    ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
             self.get_service_ruleset_values(

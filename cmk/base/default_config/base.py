@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict, Union
 
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -169,7 +169,7 @@ tag_config: TagConfigSpec = {
     "tag_groups": [],
 }
 static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
-check_parameters: list[RuleSpec[object]] = []
+check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
 # for HW/SW-Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
@@ -220,8 +220,8 @@ ignored_services: list[RuleSpec[object]] = []
 # exclude from inventory
 ignored_checks: list[RuleSpec[Container[str]]] = []
 host_groups: list[RuleSpec[str]] = []
-service_groups: list[RuleSpec[object]] = []
-service_contactgroups: list[RuleSpec[object]] = []
+service_groups: list[RuleSpec[str]] = []
+service_contactgroups: list[RuleSpec[str]] = []
 # deprecated, will be removed soon.
 service_notification_periods: list[RuleSpec[object]] = []
 # deprecated, will be removed soon.
@@ -238,10 +238,12 @@ timeperiods: TimeperiodSpecs = {}
 clusters: dict[HostName, list[HostName]] = {}
 clustered_services: list[RuleSpec[object]] = []
 # new in 1.1.4
-clustered_services_of: dict = {}
+clustered_services_of: dict[HostAddress, Iterable[RuleSpec[object]]] = {}
 # new for 1.2.5i1 Wato Rule
-clustered_services_mapping: list[RuleSpec[object]] = []
-clustered_services_configuration: list[RuleSpec[object]] = []
+clustered_services_mapping: list[RuleSpec[HostAddress]] = []
+clustered_services_configuration: list[
+    RuleSpec[Sequence[Mapping[str, Mapping[object, object]]]]
+] = []
 datasource_programs: list[RuleSpec[str]] = []
 service_dependencies: list = []
 # mapping from hostname to IPv4 address
@@ -290,11 +292,11 @@ use_new_descriptions_for: list[CheckPluginNameStr] = []
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[str]] = []
 # Custom user icons / actions to be configured
-service_icons_and_actions: list[RuleSpec[object]] = []
+service_icons_and_actions: list[RuleSpec[str]] = []
 # Match all ruleset to assign custom service attributes
-custom_service_attributes: list[RuleSpec[object]] = []
+custom_service_attributes: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Assign tags to services
-service_tag_rules: list[RuleSpec[object]] = []
+service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 
 # Rulesets for agent bakery
 agent_config: dict[str, list[RuleSpec[Any]]] = {}

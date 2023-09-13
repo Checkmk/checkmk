@@ -1031,7 +1031,9 @@ def _from_scalar(
 
 
 def _parse_single_expression(
-    expression: str, translated_metrics: TranslatedMetrics
+    expression: str,
+    translated_metrics: TranslatedMetrics,
+    enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> ABCMetricOperation:
     if expression not in translated_metrics:
         try:
@@ -1050,11 +1052,11 @@ def _parse_single_expression(
 
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name, consolidation_func_name)
+        metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
         reference = _from_scalar(scalar_name, metric)
         return Percent(reference=reference, metric=metric) if percent else reference
 
-    metric = Metric(var_name, consolidation_func_name)
+    metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
     return Percent(reference=metric, metric=metric) if percent else metric
 
 
@@ -1086,6 +1088,7 @@ class MetricExpression:
 def parse_expression(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
+    enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> MetricExpression:
     if isinstance(expression, int):
         return MetricExpression(ConstantInt(expression))
@@ -1097,7 +1100,11 @@ def parse_expression(
 
     if len(parts := expression.split(",")) == 1:
         return MetricExpression(
-            _parse_single_expression(parts[0], translated_metrics),
+            _parse_single_expression(
+                parts[0],
+                translated_metrics,
+                enforced_consolidation_func_name,
+            ),
             explicit_unit_name,
             explicit_color,
         )
@@ -1135,14 +1142,26 @@ def parse_expression(
 
     operand = _apply_operator(
         operators.pop(0),
-        _parse_single_expression(operands.pop(0), translated_metrics),
-        _parse_single_expression(operands.pop(0), translated_metrics),
+        _parse_single_expression(
+            operands.pop(0),
+            translated_metrics,
+            enforced_consolidation_func_name,
+        ),
+        _parse_single_expression(
+            operands.pop(0),
+            translated_metrics,
+            enforced_consolidation_func_name,
+        ),
     )
     while operands:
         operand = _apply_operator(
             operators.pop(0),
             operand,
-            _parse_single_expression(operands.pop(0), translated_metrics),
+            _parse_single_expression(
+                operands.pop(0),
+                translated_metrics,
+                enforced_consolidation_func_name,
+            ),
         )
 
     return MetricExpression(operand, explicit_unit_name, explicit_color)

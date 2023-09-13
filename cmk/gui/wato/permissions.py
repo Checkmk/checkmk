@@ -69,6 +69,18 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
+        name="revert_changes",
+        title=_l("Revert configuration changes"),
+        description=_l(
+            "This permission is needed for the configuration rollback, up the last activate changes."
+        ),
+        defaults=["admin"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
         name="activateforeign",
         title=_l("Activate foreign changes"),
         description=_l(

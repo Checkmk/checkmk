@@ -500,6 +500,7 @@ def test_registered_permissions() -> None:
         "wato.random_hosts",
         "wato.rename_hosts",
         "wato.rulesets",
+        "wato.revert_changes",
         "wato.see_all_folders",
         "wato.seeall",
         "wato.service_discovery_to_ignored",

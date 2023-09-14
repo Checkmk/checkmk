@@ -23,18 +23,12 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    BinaryHostRulespec,
-    BinaryServiceRulespec,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
     get_section_information,
-    HostRulespec,
     HTTPProxyInput,
     PluginCommandLine,
-    rulespec_group_registry,
-    rulespec_registry,
-    RulespecGroup,
     RulespecGroupAgentSNMP,
     RulespecGroupDiscoveryCheckParameters,
     RulespecGroupHostsMonitoringRulesHostChecks,
@@ -44,8 +38,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupMonitoringConfigurationNotifications,
     RulespecGroupMonitoringConfigurationServiceChecks,
     RulespecGroupMonitoringConfigurationVarious,
-    RulespecSubGroup,
-    ServiceRulespec,
     UserIconOrAction,
 )
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
@@ -97,10 +89,10 @@ from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
@@ -109,10 +101,109 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainOMD,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
+from cmk.gui.watolib.rulespecs import (
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
+    HostRulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+    RulespecSubGroup,
+    ServiceRulespec,
+)
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
+
+
+def register(
+    config_variable_registry: ConfigVariableRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
+) -> None:
+    config_variable_registry.register(ConfigVariableUITheme)
+    config_variable_registry.register(ConfigVariableEnableCommunityTranslations)
+    config_variable_registry.register(ConfigVariableDefaultLanguage)
+    config_variable_registry.register(ConfigVariableShowMoreMode)
+    config_variable_registry.register(ConfigVariableBulkDiscoveryDefaultSettings)
+    config_variable_registry.register(ConfigVariableLogLevels)
+    config_variable_registry.register(ConfigVariableSlowViewsDurationThreshold)
+    config_variable_registry.register(ConfigVariableDebug)
+    config_variable_registry.register(ConfigVariableGUIProfile)
+    config_variable_registry.register(ConfigVariableDebugLivestatusQueries)
+    config_variable_registry.register(ConfigVariableSelectionLivetime)
+    config_variable_registry.register(ConfigVariableShowLivestatusErrors)
+    config_variable_registry.register(ConfigVariableEnableSounds)
+    config_variable_registry.register(ConfigVariableSoftQueryLimit)
+    config_variable_registry.register(ConfigVariableHardQueryLimit)
+    config_variable_registry.register(ConfigVariableQuicksearchDropdownLimit)
+    config_variable_registry.register(ConfigVariableQuicksearchSearchOrder)
+    config_variable_registry.register(ConfigVariableExperimentalFeatures)
+    config_variable_registry.register(ConfigVariableTableRowLimit)
+    config_variable_registry.register(ConfigVariableStartURL)
+    config_variable_registry.register(ConfigVariablePageHeading)
+    config_variable_registry.register(ConfigVariableBIDefaultLayout)
+    config_variable_registry.register(ConfigVariablePagetitleDateFormat)
+    config_variable_registry.register(ConfigVariableEscapePluginOutput)
+    config_variable_registry.register(ConfigVariableDrawRuleIcon)
+    config_variable_registry.register(ConfigVariableVirtualHostTrees)
+    config_variable_registry.register(ConfigVariableRescheduleTimeout)
+    config_variable_registry.register(ConfigVariableSidebarUpdateInterval)
+    config_variable_registry.register(ConfigVariableSidebarNotifyInterval)
+    config_variable_registry.register(ConfigVariableiAdHocDowntime)
+    config_variable_registry.register(ConfigVariableAuthByHTTPHeader)
+    config_variable_registry.register(EnableLoginViaGet)
+    config_variable_registry.register(ConfigVariableStalenessThreshold)
+    config_variable_registry.register(ConfigVariableLoginScreen)
+    config_variable_registry.register(ConfigVariableUserLocalizations)
+    config_variable_registry.register(ConfigVariableUserIconsAndActions)
+    config_variable_registry.register(ConfigVariableCustomServiceAttributes)
+    config_variable_registry.register(ConfigVariableUserDowntimeTimeranges)
+    config_variable_registry.register(ConfigVariableBuiltinIconVisibility)
+    config_variable_registry.register(ConfigVariableServiceViewGrouping)
+    config_variable_registry.register(ConfigVariableViewActionDefaults)
+    config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
+    config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
+    config_variable_registry.register(ConfigVariableAgentControllerCertificates)
+    config_variable_registry.register(RestAPIETagLocking)
+    config_variable_registry.register(ConfigVariableWATOMaxSnapshots)
+    config_variable_registry.register(ConfigVariableWATOActivateChangesCommentMode)
+    config_variable_registry.register(ConfigVariableWATOActivationMethod)
+    config_variable_registry.register(ConfigVariableWATOHideFilenames)
+    config_variable_registry.register(ConfigVariableWATOUploadInsecureSnapshots)
+    config_variable_registry.register(ConfigVariableWATOHideHosttags)
+    config_variable_registry.register(ConfigVariableWATOHideVarnames)
+    config_variable_registry.register(ConfigVariableHideHelpInLists)
+    config_variable_registry.register(ConfigVariableWATOUseGit)
+    config_variable_registry.register(ConfigVariableWATOPrettyPrintConfig)
+    config_variable_registry.register(ConfigVariableWATOHideFoldersWithoutReadPermissions)
+    config_variable_registry.register(ConfigVariableWATOIconCategories)
+    config_variable_group_registry.register(ConfigVariableGroupUserManagement)
+    config_variable_registry.register(ConfigVariableLogLogonFailures)
+    config_variable_registry.register(ConfigVariableLockOnLogonFailures)
+    config_variable_registry.register(ConfigVariablePasswordPolicy)
+    config_variable_registry.register(ConfigVariableSessionManagement)
+    config_variable_registry.register(ConfigVariableSingleUserSession)
+    config_variable_registry.register(ConfigVariableDefaultUserProfile)
+    config_variable_group_registry.register(ConfigVariableGroupCheckExecution)
+    config_variable_registry.register(ConfigVariableUseNewDescriptionsFor)
+    config_variable_registry.register(ConfigVariableTCPConnectTimeout)
+    config_variable_registry.register(ConfigVariableSimulationMode)
+    config_variable_registry.register(ConfigVariableRestartLocking)
+    config_variable_registry.register(ConfigVariableAgentSimulator)
+    config_variable_registry.register(ConfigVariableDelayPrecompile)
+    config_variable_registry.register(ConfigVariableClusterMaxCachefileAge)
+    config_variable_registry.register(ConfigVariablePiggybackMaxCachefileAge)
+    config_variable_registry.register(ConfigVariableCheckMKPerfdataWithTimes)
+    config_variable_registry.register(ConfigVariableUseDNSCache)
+    config_variable_registry.register(ConfigVariableChooseSNMPBackend)
+    config_variable_registry.register(ConfigVariableUseInlineSNMP)
+    config_variable_registry.register(ConfigVariableHTTPProxies)
+    config_variable_group_registry.register(ConfigVariableGroupServiceDiscovery)
+    config_variable_registry.register(ConfigVariableInventoryCheckInterval)
+    config_variable_registry.register(ConfigVariableInventoryCheckSeverity)
+    config_variable_registry.register(ConfigVariableInventoryCheckAutotrigger)
+
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -126,7 +217,6 @@ from cmk.gui.watolib.utils import site_neutral_path
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_registry.register
 class ConfigVariableUITheme(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -145,7 +235,6 @@ class ConfigVariableUITheme(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEnableCommunityTranslations(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -173,7 +262,6 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
         return True
 
 
-@config_variable_registry.register
 class ConfigVariableDefaultLanguage(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -191,7 +279,6 @@ class ConfigVariableDefaultLanguage(ConfigVariable):
         return False
 
 
-@config_variable_registry.register
 class ConfigVariableShowMoreMode(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -217,7 +304,6 @@ class ConfigVariableShowMoreMode(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -255,7 +341,6 @@ def _add_saml_log_level(params: dict[str, int]) -> dict[str, int]:
     return params
 
 
-@config_variable_registry.register
 class ConfigVariableLogLevels(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -361,7 +446,6 @@ class ConfigVariableLogLevels(ConfigVariable):
         return elements
 
 
-@config_variable_registry.register
 class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -383,7 +467,6 @@ class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDebug(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -406,7 +489,6 @@ class ConfigVariableDebug(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableGUIProfile(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -438,7 +520,6 @@ class ConfigVariableGUIProfile(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDebugLivestatusQueries(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -460,7 +541,6 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSelectionLivetime(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -484,7 +564,6 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableShowLivestatusErrors(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -507,7 +586,6 @@ class ConfigVariableShowLivestatusErrors(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEnableSounds(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -531,7 +609,6 @@ class ConfigVariableEnableSounds(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSoftQueryLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -554,7 +631,6 @@ class ConfigVariableSoftQueryLimit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableHardQueryLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -578,7 +654,6 @@ class ConfigVariableHardQueryLimit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -602,34 +677,6 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
-class ConfigVariableExperimentalFeatures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "experimental_features"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Experimental features"),
-            elements=[
-                (
-                    "use_vue_rendering",
-                    Checkbox(
-                        title=_("Use vue rendering"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            optional_keys=False,
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -678,7 +725,32 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
         )
 
 
-@config_variable_registry.register
+class ConfigVariableExperimentalFeatures(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "experimental_features"
+
+    def valuespec(self) -> ValueSpec:
+        return Dictionary(
+            title=_("Experimental features"),
+            elements=[
+                (
+                    "use_vue_rendering",
+                    Checkbox(
+                        title=_("Use vue rendering"),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        )
+
+
 class ConfigVariableTableRowLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -702,7 +774,6 @@ class ConfigVariableTableRowLimit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableStartURL(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -727,7 +798,6 @@ class ConfigVariableStartURL(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariablePageHeading(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -749,7 +819,6 @@ class ConfigVariablePageHeading(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableBIDefaultLayout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -800,7 +869,6 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
         return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
 
 
-@config_variable_registry.register
 class ConfigVariablePagetitleDateFormat(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -826,7 +894,6 @@ class ConfigVariablePagetitleDateFormat(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEscapePluginOutput(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -858,7 +925,6 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDrawRuleIcon(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -881,7 +947,6 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableVirtualHostTrees(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1000,7 +1065,6 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                 seen.add(element)
 
 
-@config_variable_registry.register
 class ConfigVariableRescheduleTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1026,7 +1090,6 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSidebarUpdateInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1052,7 +1115,6 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSidebarNotifyInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1079,7 +1141,6 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableiAdHocDowntime(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1128,7 +1189,6 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableAuthByHTTPHeader(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1177,7 +1237,6 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class EnableLoginViaGet(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1200,7 +1259,6 @@ class EnableLoginViaGet(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableStalenessThreshold(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1224,7 +1282,6 @@ class ConfigVariableStalenessThreshold(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableLoginScreen(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1288,7 +1345,6 @@ class ConfigVariableLoginScreen(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableUserLocalizations(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1323,7 +1379,6 @@ class ConfigVariableUserLocalizations(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableUserIconsAndActions(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1444,7 +1499,6 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableCustomServiceAttributes(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1586,7 +1640,6 @@ def _service_tag_rules_tag_group_choices():
     return sorted(choices, key=lambda x: x[1])
 
 
-@config_variable_registry.register
 class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1639,7 +1692,6 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableBuiltinIconVisibility(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1712,7 +1764,6 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
         return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
 
 
-@config_variable_registry.register
 class ConfigVariableServiceViewGrouping(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1774,7 +1825,6 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableViewActionDefaults(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1826,7 +1876,6 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -1848,7 +1897,6 @@ class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -1900,7 +1948,6 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableAgentControllerCertificates(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -1944,7 +1991,6 @@ class ConfigVariableAgentControllerCertificates(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class RestAPIETagLocking(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -1983,7 +2029,6 @@ class RestAPIETagLocking(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_registry.register
 class ConfigVariableWATOMaxSnapshots(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2006,7 +2051,6 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2032,7 +2076,6 @@ class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOActivationMethod(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2054,7 +2097,6 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOHideFilenames(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2078,7 +2120,6 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2102,7 +2143,6 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOHideHosttags(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2121,7 +2161,6 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOHideVarnames(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2143,7 +2182,6 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableHideHelpInLists(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2162,7 +2200,6 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOUseGit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2188,7 +2225,6 @@ class ConfigVariableWATOUseGit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2211,7 +2247,6 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2234,7 +2269,6 @@ class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableWATOIconCategories(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2280,7 +2314,6 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupUserManagement(ConfigVariableGroup):
     def title(self) -> str:
         return _("User management")
@@ -2289,7 +2322,6 @@ class ConfigVariableGroupUserManagement(ConfigVariableGroup):
         return 40
 
 
-@config_variable_registry.register
 class ConfigVariableLogLogonFailures(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2312,7 +2344,6 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableLockOnLogonFailures(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2343,7 +2374,6 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariablePasswordPolicy(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2403,7 +2433,6 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSessionManagement(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2468,7 +2497,6 @@ class ConfigVariableSessionManagement(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSingleUserSession(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2501,7 +2529,6 @@ class ConfigVariableSingleUserSession(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDefaultUserProfile(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
@@ -2577,7 +2604,6 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
     def title(self) -> str:
         return _("Execution of checks")
@@ -2586,7 +2612,6 @@ class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
         return 10
 
 
-@config_variable_registry.register
 class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2726,7 +2751,6 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableTCPConnectTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2751,7 +2775,6 @@ class ConfigVariableTCPConnectTimeout(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSimulationMode(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2775,7 +2798,6 @@ class ConfigVariableSimulationMode(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableRestartLocking(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2803,7 +2825,6 @@ class ConfigVariableRestartLocking(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableAgentSimulator(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2826,7 +2847,6 @@ class ConfigVariableAgentSimulator(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableDelayPrecompile(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2852,7 +2872,6 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2877,7 +2896,6 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2899,7 +2917,6 @@ class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2923,7 +2940,6 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableUseDNSCache(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -2970,7 +2986,6 @@ def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["
             raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
-@config_variable_registry.register
 class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -3006,7 +3021,6 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableUseInlineSNMP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -3037,7 +3051,6 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableHTTPProxies(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
@@ -3110,7 +3123,6 @@ class ConfigVariableHTTPProxies(ConfigVariable):
             seen_titles.append(http_proxy["title"])
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
     def title(self) -> str:
         return _("Service discovery")
@@ -3119,7 +3131,6 @@ class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
         return 4
 
 
-@config_variable_registry.register
 class ConfigVariableInventoryCheckInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery
@@ -3152,7 +3163,6 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableInventoryCheckSeverity(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery
@@ -3179,7 +3189,6 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery

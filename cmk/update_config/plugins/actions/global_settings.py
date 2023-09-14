@@ -9,7 +9,6 @@ from logging import Logger
 from cmk.utils.log import VERBOSE
 
 from cmk.gui.i18n import is_community_translation
-from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_users
@@ -178,7 +177,8 @@ def _handle_community_translations(logger: Logger, global_config: GlobalSettings
     UI language. Otherwise this global setting defaults to False and community translations are not
     choosable as language.
     """
-    if (enable_ct_ident := ConfigVariableEnableCommunityTranslations().ident()) in global_config:
+    enable_ct_ident = "enable_community_translations"
+    if enable_ct_ident in global_config:
         return global_config
 
     enable_ct: bool = False

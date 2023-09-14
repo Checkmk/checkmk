@@ -13,12 +13,14 @@ from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
 
 from . import (
+    _check_mk_configuration,
     _main_module_topics,
     _main_modules,
     _permissions,
@@ -54,6 +56,8 @@ def register(
     main_module_topic_registry: MainModuleTopicRegistry,
     main_module_registry: MainModuleRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -80,3 +84,4 @@ def register(
     _main_modules.register(main_module_registry)
     _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()
+    _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)

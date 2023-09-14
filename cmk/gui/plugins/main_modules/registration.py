@@ -164,6 +164,8 @@ def register() -> None:
         main_module_topic_registry,
         main_module_registry,
         rulespec_group_registry,
+        config_variable_registry,
+        config_variable_group_registry,
     )
     bi_registration.register(
         data_source_registry,

@@ -18,6 +18,7 @@ from typing_extensions import TypedDict
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
 
+from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -27,7 +28,7 @@ from cmk.gui.utils.theme import theme
 from ._graph_specification import GraphMetric, HorizontalRule, LineType
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, compute_graph_curves
-from ._utils import CombinedSingleMetricSpec, Curve, GraphDataRange, GraphRecipe, SizeEx, unit_info
+from ._utils import CombinedSingleMetricSpec, Curve, GraphDataRange, GraphRecipe, SizeEx
 
 Label = tuple[float, str | None, int]
 

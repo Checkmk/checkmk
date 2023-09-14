@@ -16,6 +16,7 @@ import cmk.gui.graphing._utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import HorizontalRule
+from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import (
     _hex_color_to_rgb_color,
     AutomaticDict,
@@ -1008,7 +1009,7 @@ def test_parse_and_evaluate(
     metric_expression = utils.parse_expression(raw_expression, translated_metrics)
     assert metric_expression == expected_metric_expression
     assert metric_expression.evaluate(translated_metrics) == MetricExpressionResult(
-        value, utils.unit_info[unit_name], color
+        value, unit_info[unit_name], color
     )
 
 

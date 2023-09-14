@@ -15,7 +15,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, assert_never, Final, get_args, Literal, NamedTuple, NewType, TypeVar
+from typing import Any, assert_never, get_args, Literal, NamedTuple, NewType, TypeVar
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -71,6 +71,7 @@ from ._graph_specification import (
     MetricOperation,
     MetricOpRRDChoice,
 )
+from ._unit_info import unit_info
 
 LegacyPerfometer = tuple[str, Any]
 
@@ -246,30 +247,6 @@ class AutomaticDict(OrderedDict[str, GraphTemplateRegistration]):
         ]
 
 
-class UnitRegistry:
-    def __init__(self) -> None:
-        self.units: Final[dict[str, UnitInfo | Callable[[], UnitInfo]]] = {}
-
-    def __getitem__(self, unit_id: str) -> UnitInfo:
-        item = unit() if callable(unit := self.units[unit_id]) else unit
-        item["id"] = unit_id
-        item.setdefault("description", item["title"])
-        return item
-
-    def __setitem__(self, unit_id: str, unit: UnitInfo | Callable[[], UnitInfo]) -> None:
-        self.units[unit_id] = unit
-
-    def keys(self) -> Iterator[str]:
-        yield from self.units
-
-    def items(self) -> Iterator[tuple[str, UnitInfo]]:
-        yield from ((key, self[key]) for key in self.keys())
-
-
-# TODO: Refactor to plugin_registry structures
-# Note: we cannot simply use dict[str, Callable[[], UnitInfo]] and refactor all unit registrations
-# in our codebase because we need to stay compatible with custom extensions
-unit_info = UnitRegistry()
 metric_info: dict[MetricName_, MetricInfo] = {}
 check_metrics: dict[str, dict[MetricName_, CheckMetricEntry]] = {}
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []

@@ -29,7 +29,8 @@ from cmk.gui.valuespec import (
 )
 
 from ._artwork import get_default_graph_render_options
-from ._utils import metric_info, unit_info
+from ._unit_info import unit_info
+from ._utils import metric_info
 
 
 def migrate_graph_render_options_title_format(

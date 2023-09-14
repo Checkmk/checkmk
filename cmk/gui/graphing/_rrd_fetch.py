@@ -38,6 +38,7 @@ from ._graph_specification import (
     MetricOpTransformation,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
+from ._unit_info import unit_info
 from ._utils import (
     CheckMetricEntry,
     CombinedSingleMetricSpec,
@@ -48,7 +49,6 @@ from ._utils import (
     reverse_translate_into_all_potentially_relevant_metrics_cached,
     RRDData,
     RRDDataKey,
-    unit_info,
 )
 
 

@@ -34,6 +34,7 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import (
     CombinedSingleMetricSpec,
     LegacyPerfometer,
@@ -41,7 +42,6 @@ from cmk.gui.graphing._utils import (
     parse_perf_data,
     perfometer_info,
     translate_metrics,
-    unit_info,
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _

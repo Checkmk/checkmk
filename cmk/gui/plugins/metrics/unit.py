@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 import cmk.utils.render
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._utils import unit_info
+from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UnitInfo

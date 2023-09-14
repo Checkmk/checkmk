@@ -6,7 +6,7 @@ Date: 1691425439
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0p8
+Version: 2.2.0p10
 
 Introduces configurable upper levels + default values for `check_epower`
 

@@ -259,7 +259,7 @@ def _allow_default_plus_component_under_test(
 ) -> bool:
     if component.startswith("tests.unit.checks"):
         component_under_test = Component("cmk.base.plugins.agent_based")
-    elif component.startswith("tests.unit."):
+    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
         component_under_test = Component(".".join(component.split(".")[2:]))
     else:
         raise ValueError(f"Unhandled component: {component}")
@@ -290,11 +290,33 @@ def _is_allowed_for_legacy_check_tests(
     )
 
 
+def _allow_default_plus_component_under_test_bakery_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_component_under_test(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.cee.bakery")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.cmk_metrics"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
+    (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.snmplib"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.cee.liveproxy"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.integration.cmk.base"),
+        _allow_default_plus_component_under_test_bakery_checkengine,
+    ),
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
@@ -389,9 +411,7 @@ class CMKModuleLayerChecker(BaseChecker):
         importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
         # Tests are allowed to import everything for now. Should be cleaned up soon
-        if str(importing_path).startswith("tests/integration") or str(importing_path).startswith(
-            "tests/testlib"
-        ):
+        if str(importing_path).startswith("tests/testlib"):
             return
 
         importing = self._get_module_name_of_files(importing_path)

@@ -15,10 +15,13 @@ from cmk.utils.version import edition, Edition
 
 from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
 
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
+from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
+    ClassicSNMPBackend,
+    StoredWalkSNMPBackend,
+)
 
 if edition() is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:

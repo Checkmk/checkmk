@@ -902,14 +902,14 @@ def applicable_metrics(
     conflicting_metrics: Iterable[str],
     optional_metrics: Sequence[str],
     translated_metrics: TranslatedMetrics,
-) -> list[MetricDefinition] | None:
+) -> list[MetricDefinition]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:
-            return None
+            return []
 
     try:
-        reduced_metrics = list(
+        return list(
             _filter_renderable_graph_metrics(
                 metrics_to_consider,
                 translated_metrics,
@@ -917,9 +917,7 @@ def applicable_metrics(
             )
         )
     except KeyError:
-        return None
-
-    return reduced_metrics or None
+        return []
 
 
 def _filter_renderable_graph_metrics(

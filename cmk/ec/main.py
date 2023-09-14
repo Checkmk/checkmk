@@ -277,6 +277,16 @@ def unmap_ipv4_address(ip_address: str) -> str:
     return ip_address
 
 
+def parse_address(what: str, address: object) -> tuple[str, int]:
+    # We always have an AF_INET or AF_INET6 socket, so the remote address we're dealing with is a
+    # pair (host: str, port: int), where host can be the domain name or an IPv4/IPv6 address.
+    if not (
+        isinstance(address, tuple) and isinstance(address[0], str) and isinstance(address[1], int)
+    ):
+        raise ValueError(f"Invalid remote address '{address!r}' for {what}")
+    return unmap_ipv4_address(address[0]), address[1]
+
+
 def terminate(
     terminate_main_event: threading.Event,
     event_server: EventServer,
@@ -735,19 +745,9 @@ class EventServer(ECServerThread):
             # Same for the TCP syslog socket
             if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
-                # where host can be the domain name or an IPv4/IPv6 address.
-                if not (
-                    isinstance(address, tuple)
-                    and isinstance(address[0], str)
-                    and isinstance(address[1], int)
-                ):
-                    raise ValueError(
-                        f"Invalid remote address '{address!r}' for syslog socket (TCP)"
-                    )
                 client_sockets[client_socket.fileno()] = (
                     client_socket,
-                    (unmap_ipv4_address(address[0]), address[1]),
+                    parse_address("syslog socket (TCP)", address),
                     b"",
                 )
 
@@ -791,35 +791,17 @@ class EventServer(ECServerThread):
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
                 message, address = self._syslog_udp.recvfrom(4096)
-                # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
-                # where host can be the domain name or an IPv4/IPv6 address.
-                if not (
-                    isinstance(address, tuple)
-                    and isinstance(address[0], str)
-                    and isinstance(address[1], int)
-                ):
-                    raise ValueError(
-                        f"Invalid remote address '{address!r}' for syslog socket (UDP)"
-                    )
-                self.process_raw_line(message, (unmap_ipv4_address(address[0]), address[1]))
+                self.process_raw_line(message, parse_address("syslog socket (UDP)", address))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
                 try:
                     message, address = self._snmptrap.recvfrom(65535)
-                    # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
-                    # where host can be the domain name or an IPv4/IPv6 address.
-                    if not (
-                        isinstance(address, tuple)
-                        and isinstance(address[0], str)
-                        and isinstance(address[1], int)
-                    ):
-                        raise ValueError(f"Invalid remote address '{address!r}' for SNMP trap")
                     self.process_raw_data(
                         partial(
                             self._snmp_trap_engine.process_snmptrap,
                             message,
-                            (unmap_ipv4_address(address[0]), address[1]),
+                            parse_address("SNMP trap", address),
                         )
                     )
                 except Exception:

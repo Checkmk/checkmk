@@ -52,9 +52,13 @@ class SNMPTrapEngine:
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
-        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(
-            self.snmp_engine, self._handle_snmptrap
-        )
+        # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
+        # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
+        # receiver instance is kept alive by the registration itself, so there is no need to store
+        # it anywhere here. To make things even more convoluted, that callback calls back our
+        # callback here. So in a nutshell: When process_snmptrap() below is called, it calls the
+        # callback parameter above with the variable bindings of the trap and its IP address.
+        SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
         self._callback = callback
 

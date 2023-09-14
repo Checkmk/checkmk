@@ -4,13 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import makeuri
 
 
 def confirm_with_preview(
@@ -57,3 +61,56 @@ def confirm_with_preview(
 
     # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
     return True if transactions.check_transaction() else None
+
+
+# TODO Try to replace all call sites of confirm_with_preview() with command_confirm_dialog()
+def command_confirm_dialog(
+    confirm_options: list[tuple[str, str]],
+    command_title: str,
+    command_html: HTML,
+    confirm_button: LazyString = _l("Confirm"),
+    cancel_button: LazyString = _l("Cancel"),
+) -> bool | None:
+    if any(request.has_var(varname) for _title, varname in confirm_options):
+        return True if transactions.check_transaction() else None
+    mobile = is_mobile(request, response)
+
+    if mobile:
+        html.open_center()
+
+    html.begin_form("confirm", method="POST", add_transid=False)
+    html.hidden_fields(add_action_vars=True)
+    for title, varname in confirm_options:
+        html.hidden_field(varname, title)
+    html.end_form()
+
+    cancel_url = makeuri(
+        request=request,
+        addvars=[("_do_actions", "no")],
+        delvars=["_transid"],
+    )
+    html.javascript(
+        "cmk.forms.confirm_dialog(%s, () => {const form = document.getElementById('form_confirm');form.submit()}, %s)"
+        % (
+            json.dumps(
+                {
+                    "title": command_title,
+                    "html": command_html,
+                    "confirmButtonText": str(confirm_button),
+                    "cancelButtonText": str(cancel_button),
+                    "icon": "question",
+                    "customClass": {
+                        "confirmButton": "confirm_question",
+                        "footer": "confirm_footer",
+                        "icon": "confirm_icon confirm_question",
+                    },
+                },
+            ),
+            f"()=>{{location.href = {json.dumps(cancel_url)}}}",
+        )
+    )
+
+    if mobile:
+        html.close_center()
+
+    return False  # False --> "Dialog shown, no answer yet"

@@ -6,21 +6,36 @@
 import abc
 import time
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from typing import Literal
 
 from livestatus import SiteId
 
 from cmk.gui import sites
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 
 from .group import command_group_registry, CommandGroup
 
 CommandSpecWithoutSite = str
 CommandSpecWithSite = tuple[SiteId | None, CommandSpecWithoutSite]
 CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
-CommandActionResult = tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None
+
+
+@dataclass
+class CommandConfirmDialogOptions:
+    confirm_title: str
+    affected: HTML
+    additions: HTML
+    confirm_button: LazyString
+
+
+CommandActionResult = (
+    tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str, CommandConfirmDialogOptions] | None
+)
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
 
@@ -37,6 +52,14 @@ class Command(abc.ABC):
         raise NotImplementedError()
 
     @property
+    def confirm_title(self) -> str:
+        return ("%s %s?") % (self.confirm_button, self.title.lower())
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Submit")
+
+    @property
     @abc.abstractmethod
     def permission(self) -> Permission:
         raise NotImplementedError()
@@ -47,23 +70,39 @@ class Command(abc.ABC):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + " the following %(count)d %(what)s?" % {
-            "count": len_action_rows,
-            "what": ungettext(
-                "host",
-                "hosts",
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML("")
+
+    def confirm_dialog_options(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> CommandConfirmDialogOptions:
+        return CommandConfirmDialogOptions(
+            self.confirm_title,
+            self.affected_hosts_or_services(len_action_rows, cmdtag),
+            self.confirm_dialog_additions(),
+            self.confirm_button,
+        )
+
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "host",
+                    "hosts",
+                    len_action_rows,
+                )
+                if cmdtag == "HOST"
+                else ungettext(
+                    "service",
+                    "services",
+                    len_action_rows,
+                ),
                 len_action_rows,
             )
-            if cmdtag == "HOST"
-            else ungettext(
-                "service",
-                "services",
-                len_action_rows,
-            ),
-        }
+        )
 
     def user_confirm_options(
         self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
@@ -78,8 +117,8 @@ class Command(abc.ABC):
     ) -> CommandActionResult:
         result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
-            commands, title = result
-            return commands, self.user_dialog_suffix(title, len(action_rows), cmdtag)
+            commands, title, confirm_dialog_options = result
+            return commands, title, confirm_dialog_options
         return None
 
     @abc.abstractmethod
@@ -113,6 +152,10 @@ class Command(abc.ABC):
     @property
     def is_suggested(self) -> bool:
         return False
+
+    @property
+    def show_command_form(self) -> bool:
+        return True
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         """Function that is called to execute this action"""

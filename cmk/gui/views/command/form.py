@@ -18,16 +18,18 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
-from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 
-from .base import Command, CommandExecutor, CommandSpec
+from .base import Command, CommandConfirmDialogOptions, CommandExecutor, CommandSpec
 from .group import CommandGroup
 from .registry import command_registry
 
 
 def core_command(
     what: str, row: Row, row_nr: int, action_rows: Rows
-) -> tuple[Sequence[CommandSpec], list[tuple[str, str]], str, CommandExecutor]:
+) -> tuple[
+    Sequence[CommandSpec], list[tuple[str, str]], str, CommandConfirmDialogOptions, CommandExecutor
+]:
     """Examine the current HTML variables in order determine, which command the user has selected.
     The fetch ids from a data row (host name, service description, downtime/commands id) and
     construct one or several core command lines and a descriptive title."""
@@ -63,7 +65,7 @@ def core_command(
             confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
             if result:
                 executor = cmd.executor
-                commands, title = result
+                commands, title, confirm_dialog_options = result
                 break
 
     if commands is None or title is None:
@@ -74,7 +76,7 @@ def core_command(
     if isinstance(commands, str):
         commands = [commands]
 
-    return commands, confirm_options, title, executor
+    return commands, confirm_options, title, confirm_dialog_options, executor
 
 
 def should_show_command_form(
@@ -145,12 +147,20 @@ def do_actions(  # pylint: disable=too-many-branches
         return False  # no actions done
 
     command = None
-    confirm_options, cmd_title, executor = core_command(what, action_rows[0], 0, action_rows)[
-        1:4
-    ]  # just get confirm_options, title and executor
+    confirm_options, _command_title, confirm_dialog_options, executor = core_command(
+        what, action_rows[0], 0, action_rows
+    )[
+        1:5
+    ]  # just get confirm_options, title, confirm_dialog_options and executor
 
-    command_title = _("Do you really want to %s") % cmd_title
-    if not confirm_with_preview(command_title, confirm_options, method="GET"):
+    if not command_confirm_dialog(
+        confirm_options,
+        confirm_dialog_options.confirm_title,
+        confirm_dialog_options.affected + confirm_dialog_options.additions
+        if confirm_dialog_options.additions
+        else confirm_dialog_options.affected,
+        confirm_dialog_options.confirm_button,
+    ):
         return False
 
     if request.has_var("_do_confirm_host_downtime"):
@@ -159,7 +169,7 @@ def do_actions(  # pylint: disable=too-many-branches
     count = 0
     already_executed = set()
     for nr, row in enumerate(action_rows):
-        core_commands, _confirm_options, _title, executor = core_command(
+        core_commands, _confirm_options, _title, _confirm_dialog_options, executor = core_command(
             what,
             row,
             nr,

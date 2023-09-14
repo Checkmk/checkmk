@@ -482,8 +482,10 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    confirm_options, title, executor = core_command(what, rows[0], 0, rows)[
-        1:4
+    confirm_options, title, _confirm_dialog_options, executor = core_command(
+        what, rows[0], 0, rows
+    )[
+        1:5
     ]  # just get confirm_options, title and executor
 
     confirm_title = _("Do you really want to %s") % title
@@ -494,7 +496,7 @@ def do_commands(what: str, rows: Rows) -> bool:
     count = 0
     already_executed: set[CommandSpec] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, _confirm_options, title, executor = core_command(
+        nagios_commands, _confirm_options, title, _confirm_dialog_options, executor = core_command(
             what,
             row,
             nr,

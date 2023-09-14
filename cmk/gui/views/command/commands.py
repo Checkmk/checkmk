@@ -29,10 +29,12 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import AbsoluteDate, Age
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
-from .base import Command, CommandActionResult, CommandSpec
+from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
 from .group import CommandGroup, CommandGroupRegistry
 from .registry import CommandRegistry
 
@@ -156,7 +158,7 @@ class CommandReschedule(Command):
                 t += spread * 60.0 * row_index / len(action_rows)
 
             command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
-            return command, title
+            return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 
 
@@ -215,11 +217,13 @@ class CommandNotifications(Command):
             return (
                 "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                 _("<b>enable notifications</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         if request.var("_disable_notifications"):
             return (
                 "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                 _("<b>disable notifications</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None
 
@@ -268,6 +272,10 @@ class CommandToggleActiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
+    @property
+    def show_command_form(self):
+        return False
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
@@ -276,9 +284,17 @@ class CommandToggleActiveChecks(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_enable_checks"):
-            return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
+            return (
+                "ENABLE_" + cmdtag + "_CHECK;%s" % spec,
+                _("<b>enable active checks</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
+            )
         if request.var("_disable_checks"):
-            return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>disable active checks</b> for"))
+            return (
+                "DISABLE_" + cmdtag + "_CHECK;%s" % spec,
+                _("<b>disable active checks</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
+            )
         return None
 
 
@@ -327,11 +343,13 @@ class CommandTogglePassiveChecks(Command):
             return (
                 "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                 _("<b>enable passive checks</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         if request.var("_disable_passive_checks"):
             return (
                 "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                 _("<b>disable passive checks</b> for"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None
 
@@ -376,6 +394,10 @@ class CommandClearModifiedAttributes(Command):
         return _("Modified attributes")
 
     @property
+    def confirm_button(self) -> LazyString:
+        return _l("Reset")
+
+    @property
     def permission(self) -> Permission:
         return PermissionActionClearModifiedAttributes
 
@@ -386,12 +408,25 @@ class CommandClearModifiedAttributes(Command):
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_clear_modattr", _("Clear modified attributes"))
 
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML(
+            "<br><br>"
+            + _("Resets the commands '%s', '%s' and '%s' to the default state")
+            % (
+                CommandToggleActiveChecks().title,
+                CommandTogglePassiveChecks().title,
+                CommandNotifications().title,
+            )
+        )
+
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_clear_modattr"):
-            return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _(
-                "<b>clear the modified attributes</b> of"
+            return (
+                "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
+                _("Reset modified commands?"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None
 
@@ -520,10 +555,8 @@ class CommandFakeCheckResult(Command):
                     s,
                     livestatus.lqencode(pluginoutput),
                 )
-                title = _(
-                    "<b>manually set check results to %s</b> for"
-                ) % escaping.escape_attribute(statename)
-                return command, title
+                title = _("Manually set check results?") % escaping.escape_attribute(statename)
+                return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 
 
@@ -618,7 +651,7 @@ class CommandCustomNotification(Command):
                 livestatus.lqencode(comment),
             )
             title = _("<b>send a custom notification</b> regarding")
-            return command, title
+            return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 
 
@@ -771,7 +804,8 @@ class CommandAcknowledge(Command):
                     + cmdtag
                     + "_PROBLEM;%s;%d;%d;%d;%s" % (spec, sticky, sendnot, perscomm, user.id)
                     + (";%s" % livestatus.lqencode(non_empty_comment))
-                    + expire_text
+                    + expire_text,
+                    self.confirm_dialog_options(len(action_rows), cmdtag),
                 )
 
             if "aggr_tree" in row:  # BI mode
@@ -784,7 +818,7 @@ class CommandAcknowledge(Command):
             title = _("<b>acknowledge the problems%s</b> of") % (
                 expire_text and (_(" for a period of %s") % Age().value_to_html(expire_secs)) or ""
             )
-            return commands, title
+            return commands, title, self.confirm_dialog_options(len(action_rows), cmdtag)
 
         if request.var("_remove_ack"):
 
@@ -798,7 +832,7 @@ class CommandAcknowledge(Command):
             else:
                 commands = [make_command_rem(spec, cmdtag)]
             title = _("<b>remove acknowledgements</b> from")
-            return commands, title
+            return commands, title, self.confirm_dialog_options(len(action_rows), cmdtag)
 
         return None
 
@@ -881,7 +915,7 @@ class CommandAddComment(Command):
                 + (";%s" % livestatus.lqencode(comment))
             )
             title = _("<b>add a comment to</b>")
-            return command, title
+            return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 
 
@@ -963,16 +997,17 @@ class CommandScheduleDowntimes(Command):
     def tables(self):
         return ["host", "service", "aggr"]
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        if cmdtag == "SVC" and not request.var("_down_remove"):
-            return title + "?"
-        return super().user_dialog_suffix(
-            title if request.var("_down_remove") else title + " on",
-            len_action_rows,
-            cmdtag,
-        )
+    # TODO Will be used later for the new confirm dialogs
+    # def user_dialog_suffix(
+    #    self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    # ) -> str:
+    #    if cmdtag == "SVC" and not request.var("_down_remove"):
+    #        return title + "?"
+    #    return super().user_dialog_suffix(
+    #        title if request.var("_down_remove") else title + " on",
+    #        len_action_rows,
+    #        cmdtag,
+    #    )
 
     def user_confirm_options(
         self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
@@ -1068,7 +1103,7 @@ class CommandScheduleDowntimes(Command):
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
         if request.var("_down_remove"):
-            return self._remove_downtime_details(cmdtag, row)
+            return self._remove_downtime_details(cmdtag, row, action_rows)
 
         recurring_number = self._recurring_number()
         title_prefix = self._title_prefix(recurring_number)
@@ -1118,12 +1153,20 @@ class CommandScheduleDowntimes(Command):
         cmdtag, specs, title = self._downtime_specs(cmdtag, row, spec, title)
         if "aggr_tree" in row:  # BI mode
             node = row["aggr_tree"]
-            return _bi_commands(downtime, node), title
-        return [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs], title
+            return (
+                _bi_commands(downtime, node),
+                title,
+                self.confirm_dialog_options(len(action_rows), cmdtag),
+            )
+        return (
+            [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
+            title,
+            self.confirm_dialog_options(len(action_rows), cmdtag),
+        )
 
     def _remove_downtime_details(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row
-    ) -> tuple[list[str], str] | None:
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
+    ) -> tuple[list[str], str, CommandConfirmDialogOptions] | None:
         if not user.may("action.remove_all_downtimes"):
             return None
         if request.var("_on_hosts"):
@@ -1143,7 +1186,7 @@ class CommandScheduleDowntimes(Command):
         for dtid in downtime_ids:
             commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
         title = _("<b>remove all scheduled downtimes</b> of ")
-        return commands, title
+        return (commands, title, self.confirm_dialog_options(len(action_rows), cmdtag))
 
     def _recurring_number(self):
         """Retrieve integer value for repeat downtime option
@@ -1457,7 +1500,11 @@ class CommandRemoveDowntime(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
-            return (f"DEL_{cmdtag}_DOWNTIME;{spec}", _("remove"))
+            return (
+                f"DEL_{cmdtag}_DOWNTIME;{spec}",
+                _("remove"),
+                self.confirm_dialog_options(len(action_rows), cmdtag),
+            )
         return None
 
 
@@ -1486,13 +1533,14 @@ class CommandRemoveComments(Command):
     def tables(self):
         return ["comment"]
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return _("remove the following %d %s?") % (
-            len_action_rows,
-            ungettext("comment", "comments", len_action_rows),
-        )
+    # TODO Will be used later for the new confirm dialogs
+    # def user_dialog_suffix(
+    #    self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    # ) -> str:
+    #    return _("remove the following %d %s?") % (
+    #        len_action_rows,
+    #        ungettext("comment", "comments", len_action_rows),
+    #    )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_remove_comments", _("Remove"))
@@ -1517,4 +1565,4 @@ class CommandRemoveComments(Command):
         # itself, that's the whole point of being persistent. The only way to get rid of such a
         # comment is via DEL_FOO_COMMENT.
         del_cmt = [f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"]
-        return (rm_ack + del_cmt), ""
+        return (rm_ack + del_cmt), "", self.confirm_dialog_options(len(action_rows), cmdtag)

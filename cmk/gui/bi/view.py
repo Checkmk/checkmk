@@ -1143,7 +1143,11 @@ class CommandFreezeAggregation(Command):
 
         if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
             if compiled_aggregation.frozen_info:
-                return [compiled_aggregation.frozen_info.based_on_branch_title], ""
+                return (
+                    [compiled_aggregation.frozen_info.based_on_branch_title],
+                    "",
+                    self.confirm_dialog_options(len(action_rows), cmdtag),
+                )
 
         return None
 

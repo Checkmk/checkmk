@@ -1,0 +1,43 @@
+Title: licensing: the 'settings' field is now required for license configuration
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1694687452
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue found by our QA team with regards to the
+following endpoint
+
+PUT /domain-types/licensing/actions/configure/invoke
+
+Previously, we got an internal server error when attempting to call
+this endpoint with no 'settings' field or with no data for the 'settings'
+field.  We have now made 'settings' a required field and the correct
+request data must be present.
+
+Examples of correct request data
+
+C+:
+{
+    "settings": {
+        "mode": "offline"
+    }
+}
+C-:
+
+or
+
+C+:
+{
+    "settings": {
+        "mode": "online",
+        "credentials": {
+            "username": "application-account-id",
+            "password": "application-account-password"
+        }}
+}
+C-:
+

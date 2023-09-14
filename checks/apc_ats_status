@@ -52,10 +52,9 @@ def check_apc_ats_status(_no_item, source, info):
         messages.append("exceedet ouput current threshold(!!)")
 
     # 5Volt power supply
-    if ps5:
-        if ps5 != 2:
-            state = 2
-            messages.append("5V power supply failed(!!)")
+    if ps5 and ps5 != 2:
+        state = 2
+        messages.append("5V power supply failed(!!)")
 
     # 24Volt power supply
     if ps24 != 2:
@@ -63,16 +62,14 @@ def check_apc_ats_status(_no_item, source, info):
         messages.append("24V power suppy failed(!!)")
 
     # 3.3Volt power supply
-    if ps3:
-        if ps3 != 2:
-            state = 2
-            messages.append("3.3V power supply failed(!!)")
+    if ps3 and ps3 != 2:
+        state = 2
+        messages.append("3.3V power supply failed(!!)")
 
     # 1Volt power supply
-    if ps1:
-        if ps1 != 2:
-            state = 2
-            messages.append("1V power supply failed(!!)")
+    if ps1 and ps1 != 2:
+        state = 2
+        messages.append("1V power supply failed(!!)")
 
     return state, ", ".join(messages)
 

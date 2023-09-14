@@ -856,11 +856,13 @@ class EventServer(ECServerThread):
         """Takes one line message, handles encoding and processes it."""
         if line := scrub_string(data.rstrip().decode("utf-8")):
             try:
-
-                def handler(line: str = line) -> None:
-                    self.process_line(line, address)
-
-                self.process_raw_data(handler)
+                self.process_raw_data(
+                    lambda: self.process_event(
+                        create_event_from_line(
+                            line, address, self._logger, verbose=self._config["debug_rules"]
+                        )
+                    )
+                )
             except Exception:
                 self._logger.exception("Exception handling a log line (skipping this one)")
 
@@ -1359,11 +1361,6 @@ class EventServer(ECServerThread):
                 count,
                 (100.0 * count / float(total_count)),
             )
-
-    def process_line(self, line: str, address: tuple[str, int] | None) -> None:
-        self.process_event(
-            create_event_from_line(line, address, self._logger, verbose=self._config["debug_rules"])
-        )
 
     def process_event(self, event: Event) -> None:  # pylint: disable=too-many-branches
         self.do_translate_hostname(event)

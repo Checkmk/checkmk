@@ -73,8 +73,7 @@ def check_apc_ats_output(item, params, data):
 
 
 factory_settings["apc_ats_output_default_levels"] = {
-    "output_voltage_max": (127, 136),
-    "output_voltage_min": (106, 97),
+    "output_voltage_max": (240, 250),
     "load_perc_max": (85, 95),
 }
 

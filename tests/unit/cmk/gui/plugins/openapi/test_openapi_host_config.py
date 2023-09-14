@@ -1422,3 +1422,30 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
     )
     resp4.assert_status_code(400)
     assert expected_error_msg in resp4.json["fields"]["_schema"][0]
+
+
+invalid_host_names = (
+    "test_host\\n",
+    "test_host\n",
+    "test_\nhost",
+    "\ntest_host",
+)
+
+
+@managedtest
+@pytest.mark.parametrize("host_name", invalid_host_names)
+def test_create_host_with_newline_in_the_name(
+    clients: ClientRegistry,
+    host_name: str,
+) -> None:
+    resp = clients.HostConfig.create(
+        host_name=host_name,
+        folder="/",
+        attributes={"ipaddress": "192.168.0.123"},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["host_name"][0]
+        == f"{host_name!r} does not match pattern '^[-0-9a-zA-Z_.]+\\\\Z'."
+    )

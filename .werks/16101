@@ -1,0 +1,20 @@
+Title: host_config: host names no longer allow newline characters
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1694709595
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue identified by our QA team. Previously,
+you could include the newline character in the 'host_name', when
+creating a host via the following endpoint
+
+/domain-types/host_config/collections/all
+
+We have now made pattern matching stricter, which means that this
+is no longer allowed.
+
+

@@ -529,7 +529,7 @@ class _LiveStatusColumn(base.String):
         return value
 
 
-HOST_NAME_REGEXP = "^[-0-9a-zA-Z_.]+$"
+HOST_NAME_REGEXP = r"^[-0-9a-zA-Z_.]+\Z"
 
 
 class HostField(base.String):

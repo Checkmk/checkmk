@@ -294,6 +294,7 @@ _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.cmk_metrics"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
+    (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
@@ -388,11 +389,8 @@ class CMKModuleLayerChecker(BaseChecker):
         importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
         # Tests are allowed to import everything for now. Should be cleaned up soon
-        if (
-            str(importing_path).startswith("tests/integration")
-            or str(importing_path).startswith("tests/composition")
-            or str(importing_path).startswith("tests/extension_compatibility")
-            or str(importing_path).startswith("tests/testlib")
+        if str(importing_path).startswith("tests/integration") or str(importing_path).startswith(
+            "tests/testlib"
         ):
             return
 

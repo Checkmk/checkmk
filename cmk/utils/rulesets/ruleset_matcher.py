@@ -407,7 +407,7 @@ class RulesetMatcher:
     def _matches_service_conditions(
         self,
         service_description_condition: tuple[bool, Pattern[str]],
-        service_labels_condition: Mapping[str, object],
+        service_labels_condition: Mapping[str, str | Mapping[Literal["$ne"], str]],
         match_object: RulesetMatchObject,
     ) -> bool:
         if not self._matches_service_description_condition(
@@ -1104,7 +1104,7 @@ def matches_tag_condition(
 
 
 def matches_labels(
-    object_labels: Mapping[str, object] | None, required_labels: Mapping[str, object]
+    object_labels: Labels | None, required_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
 ) -> bool:
     for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)

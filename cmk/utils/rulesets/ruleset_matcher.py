@@ -1160,50 +1160,51 @@ class RulesetToDictTransformer:
 
     def _transform_rule(
         self,
-        rule_spec: RuleSpec[object],
+        rule_spec: RuleSpec[TRuleValue],
         is_service: bool,
         is_binary: bool,
-    ) -> Mapping[str, object]:
-        rule: dict[str, object] = {}
+    ) -> RuleSpec[object]:
         tuple_rule = list(rule_spec)
 
         # Extract optional rule_options from the end of the tuple
-        if isinstance(tuple_rule[-1], dict):
-            rule["options"] = tuple_rule.pop()
+        rule_options: RuleOptionsSpec = {}
+        tuple_last = tuple_rule[-1]
+        if isinstance(tuple_last, dict):
+            rule_options = cast(RuleOptionsSpec, tuple_last)
+            tuple_rule.pop()
 
         # Extract value from front, if rule has a value
         if not is_binary:
-            rule["value"] = tuple_rule.pop(0)
+            rule_value: object = tuple_rule.pop(0)
         else:
             value = True
             if tuple_rule[0] == NEGATE:
                 value = False
                 tuple_rule = tuple_rule[1:]
-            rule["value"] = value
+            rule_value = value
 
         # Extract list of items from back, if rule has items
-        service_condition = {}
+        rule_condition: RuleConditionsSpec = {}
         if is_service:
-            service_condition = self._transform_item_list(tuple_rule.pop())
+            rule_condition.update(self._transform_item_list(tuple_rule.pop()))
 
         # Rest is host list or tag list + host list
-        host_condition = self._transform_host_conditions(tuple_rule)
+        rule_condition.update(self._transform_host_conditions(tuple_rule))
 
-        condition = {}
-        condition.update(service_condition)
-        condition.update(host_condition)
-        rule["condition"] = condition
+        return RuleSpec(
+            value=rule_value,
+            condition=rule_condition,
+            options=rule_options,
+        )
 
-        return rule
-
-    def _transform_item_list(self, item_list: Sequence[str]):  # type: ignore[no-untyped-def]
+    def _transform_item_list(self, item_list: Sequence[str]) -> RuleConditionsSpec:
         if item_list == ALL_SERVICES:
             return {}
 
         if not item_list:
             return {"service_description": []}
 
-        sub_conditions = []
+        sub_conditions: HostOrServiceConditionsSimple = []
 
         # Assume WATO conforming rule where either *all* or *none* of the
         # host expressions are negated.
@@ -1232,7 +1233,7 @@ class RulesetToDictTransformer:
             return {"service_description": {"$nor": sub_conditions}}
         return {"service_description": sub_conditions}
 
-    def _transform_host_conditions(self, tuple_rule: Sequence[str]) -> Mapping[str, object]:
+    def _transform_host_conditions(self, tuple_rule: Sequence[str]) -> RuleConditionsSpec:
         host_tags: Sequence[str]
         host_list: Sequence[str]
         if len(tuple_rule) == 1:
@@ -1242,19 +1243,19 @@ class RulesetToDictTransformer:
             host_tags = tuple_rule[0]
             host_list = tuple_rule[1]
 
-        condition: dict[str, object] = {}
+        condition: RuleConditionsSpec = {}
         condition.update(self.transform_host_tags(host_tags))
         condition.update(self._transform_host_list(host_list))
         return condition
 
-    def _transform_host_list(self, host_list: Sequence[str]) -> Mapping[str, object]:
+    def _transform_host_list(self, host_list: Sequence[str]) -> RuleConditionsSpec:
         if host_list == ALL_HOSTS:
             return {}
 
         if not host_list:
             return {"host_name": []}
 
-        sub_conditions: list[object] = []
+        sub_conditions: HostOrServiceConditionsSimple = []
 
         # Assume WATO conforming rule where either *all* or *none* of the
         # host expressions are negated.
@@ -1295,11 +1296,11 @@ class RulesetToDictTransformer:
             return {"host_name": {"$nor": sub_conditions}}
         return {"host_name": sub_conditions}
 
-    def transform_host_tags(self, host_tags: Sequence[str]) -> Mapping[str, object]:
+    def transform_host_tags(self, host_tags: Sequence[str]) -> RuleConditionsSpec:
         if not host_tags:
             return {}
 
-        conditions: dict[str, object] = {}
+        conditions: RuleConditionsSpec = {}
         tag_conditions: dict[TagGroupID, TagCondition] = {}
         for tag_id in host_tags:
             # Folder is either not present (main folder) or in this format

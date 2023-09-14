@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import TypeAlias
+
 from typing_extensions import TypedDict
 
 __all__ = [
@@ -21,10 +23,10 @@ HostOrServiceConditionRegex = TypedDict(
     "HostOrServiceConditionRegex",
     {"$regex": str},
 )
-HostOrServiceConditionsSimple = list[HostOrServiceConditionRegex | str]
+HostOrServiceConditionsSimple: TypeAlias = list[HostOrServiceConditionRegex | str]
 HostOrServiceConditionsNegated = TypedDict(
     "HostOrServiceConditionsNegated",
     {"$nor": HostOrServiceConditionsSimple},
 )
 
-HostOrServiceConditions = HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
+HostOrServiceConditions: TypeAlias = HostOrServiceConditionsSimple | HostOrServiceConditionsNegated

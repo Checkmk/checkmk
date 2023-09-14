@@ -102,8 +102,8 @@ def get_default_addresses(werk: Werk) -> list[Address]:
 
 def replace_default_address(default: Address, mail: Address) -> Address:
     """
-    >>> str(replace_default_address(LEVEL1_ADDRESS, Address(addr_spec="timotheus.bachinger@checkmk.com")))
-    'Checkmk werks level 1 <timotheus.bachinger+checkmk-werks-lvl1%lists.checkmk.com@checkmk.com>'
+    >>> str(replace_default_address(LEVEL1_ADDRESS, Address(addr_spec="timi@wf.com")))
+    'Checkmk werks level 1 <timi+checkmk-werks-lvl1%lists.checkmk.com@wf.com>'
     """
     return Address(
         username=f"{mail.username}+{default.username}%{default.domain}",

@@ -61,7 +61,7 @@ def test_werk_loading(tmp_path: Path) -> None:
 def test_werk_loading_missing_field(tmp_path: Path) -> None:
     bad_werk = dict(WERK)
     bad_werk.pop("class")
-    with pytest.raises(MKGeneralException, match="class\n  Field required"):
+    with pytest.raises(MKGeneralException, match="class\n  field required"):
         load_werk_v1(get_werk_v1(bad_werk), 1)
 
 
@@ -70,7 +70,7 @@ def test_werk_loading_unknown_field(tmp_path: Path) -> None:
     bad_werk["foo"] = "bar"
     with pytest.raises(
         MKGeneralException,
-        match="validation error for RawWerkV1\nfoo\n  Extra inputs are not permitted",
+        match="validation error for RawWerkV1\nfoo\n  extra fields not permitted",
     ):
         load_werk_v1(get_werk_v1(bad_werk), 1)
 
@@ -118,7 +118,7 @@ edition | cre
 
 this is the `description` with some *formatting.*
 """
-    with pytest.raises(WerkError, match="Field required"):
+    with pytest.raises(WerkError, match="field required"):
         _markdown_string_to_werk(md)
 
 
@@ -138,7 +138,7 @@ edition | cre
 
 this is the `description` with some *formatting.*
 """
-    with pytest.raises(WerkError, match="Input should be a valid datetime"):
+    with pytest.raises(WerkError, match="invalid datetime format"):
         _markdown_string_to_werk(md)
 
 
@@ -264,5 +264,5 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
 
 def test_parse_werkv1_missing_class() -> None:
-    with pytest.raises(WerkError, match="class\n  Field required"):
+    with pytest.raises(WerkError, match="class\n  field required"):
         assert load_werk_v1(WERK_V1_MISSING_CLASS, werk_id=1234)

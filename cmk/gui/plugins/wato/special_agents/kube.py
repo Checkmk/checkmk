@@ -2,13 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import ipaddress
-import re
-import typing
 
-import annotated_types
+
 import pydantic
-import pydantic_core
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition, edition, mark_edition_only
@@ -37,56 +33,9 @@ from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
-def is_valid_hostname(hostname: str) -> bool:
-    if hostname.startswith("[") and hostname.endswith("]"):
-        try:
-            ipaddress.IPv6Address(hostname[1:-1])
-            return True
-        except ValueError:
-            return False
-
-    try:
-        ipaddress.ip_address(hostname)
-        return True
-    except ValueError:
-        # Not an IP, continue to check for hostname
-        pass
-
-    if len(hostname) > 253:
-        return False
-
-    labels = hostname.split(".")
-
-    # Two consecutive dots
-    if "" in labels:
-        return False
-
-    for label in labels:
-        if len(label) > 63:
-            return False
-        # Check for valid characters and placement of the dash
-        # Now we're also allowing underscores and labels to start with numbers
-        if not re.match(r"^[a-z0-9]([-_a-z0-9]{0,61}[a-z0-9])?$", label, re.IGNORECASE):
-            return False
-
-    return True
-
-
-def is_hostname(value: pydantic_core.Url) -> pydantic_core.Url | None:
-    if not value.host:
-        return None
-    if not is_valid_hostname(value.host):
-        return None
-    return value
-
-
-HttpUrl = typing.Annotated[pydantic.AnyHttpUrl, annotated_types.Predicate(is_hostname)]
-
-
 def _validate(url: str, varprefix: str) -> None:
     try:
-        adapter = pydantic.TypeAdapter(HttpUrl)
-        adapter.validate_python(url)
+        pydantic.parse_obj_as(pydantic.AnyHttpUrl, url)
     except pydantic.ValidationError as e:
         message = ", ".join(s["msg"] for s in e.errors())
         raise MKUserError(varprefix, f"{url} has problem(s): {message}") from e

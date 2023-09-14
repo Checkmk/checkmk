@@ -10,7 +10,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        "fastapi~=0.103.0",
+        "fastapi~=0.92",
         "python-multipart==0.0.*",
         "uvicorn==0.20.0",
         "gunicorn==20.1.0",

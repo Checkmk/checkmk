@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disallow_untyped_defs
-import polyfactory.factories.pydantic_factory
+import pydantic_factories
 import pytest
 
 from cmk.utils import gcp_constants
@@ -13,11 +13,11 @@ from cmk.base.plugins.agent_based import gcp_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
-class IncidentFactory(polyfactory.factories.pydantic_factory.ModelFactory):
+class IncidentFactory(pydantic_factories.ModelFactory):
     __model__ = gcp_status.Incident
 
 
-class AgentOutputFactory(polyfactory.factories.pydantic_factory.ModelFactory):
+class AgentOutputFactory(pydantic_factories.ModelFactory):
     __model__ = gcp_status.AgentOutput
 
 

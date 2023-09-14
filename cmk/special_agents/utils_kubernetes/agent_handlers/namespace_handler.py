@@ -64,14 +64,14 @@ def create_resource_quota_api_sections(
     if hard.memory is not None:
         yield WriteableSection(
             section_name=SectionName("kube_resource_quota_memory_resources_v1"),
-            section=section.HardResourceRequirement.model_validate(hard.memory.model_dump()),
+            section=section.HardResourceRequirement.parse_obj(hard.memory),
             piggyback_name=piggyback_name,
         )
 
     if hard.cpu is not None:
         yield WriteableSection(
             section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
-            section=section.HardResourceRequirement.model_validate(hard.cpu.model_dump()),
+            section=section.HardResourceRequirement.parse_obj(hard.cpu),
             piggyback_name=piggyback_name,
         )
 

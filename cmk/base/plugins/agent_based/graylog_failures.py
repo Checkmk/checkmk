@@ -6,7 +6,7 @@
 import json
 from collections.abc import Collection, Iterable, Mapping, Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -65,9 +65,9 @@ class Section(BaseModel):
     data (it only says 'anyMap'), see SUP-11170.
     """
 
-    failures: Sequence[Failure] | None = Field(None)
-    total: int | None = Field(None)
-    count: int | None = Field(None)
+    failures: Sequence[Failure] | None
+    total: int | None
+    count: int | None
     ds_param_since: float
 
 

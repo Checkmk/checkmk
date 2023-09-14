@@ -359,7 +359,7 @@ class Event(pydantic.BaseModel, frozen=True):
     text: str
     date_happened: int
     # None should not happen according to docs, but reality says something different ...
-    host: str | None = None
+    host: str | None
     title: str
     source: str
 
@@ -404,7 +404,7 @@ class EventsQuerier:
                 current_page,
                 tags,
             ):
-                yield from (Event.model_validate(raw_event) for raw_event in raw_events_in_page)
+                yield from (Event.parse_obj(raw_event) for raw_event in raw_events_in_page)
                 current_page += 1
                 continue
 
@@ -554,7 +554,7 @@ class LogsQuerier:
                 self.indexes,
                 cursor,
             )
-            yield from (Log.model_validate(raw_log) for raw_log in response["data"])
+            yield from (Log.parse_obj(raw_log) for raw_log in response["data"])
             if (meta := response.get("meta")) is None:
                 break
 

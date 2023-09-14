@@ -13,7 +13,6 @@ import typing
 
 import feedparser  # type: ignore[import]
 import pydantic
-from pydantic import ConfigDict
 
 from cmk.utils import aws_constants  # pylint: disable=[cmk-module-layer-violation]
 
@@ -50,9 +49,6 @@ class Entry(pydantic.BaseModel):
 
     External format, which we obtain from AWS and parse with feedparser.
     """
-
-    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     title: str
     published_parsed: time.struct_time

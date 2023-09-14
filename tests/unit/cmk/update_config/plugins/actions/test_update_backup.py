@@ -38,7 +38,7 @@ def test_update_backup_config() -> None:
                         "period": ("week", 2),
                         "timeofday": [
                             (0, 0),
-                            None,
+                            None,  # type: ignore[list-item]
                         ],
                     },
                     "compress": False,

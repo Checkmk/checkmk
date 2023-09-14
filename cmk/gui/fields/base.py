@@ -630,9 +630,6 @@ Keys 'optional1', 'required1' occur more than once.
                         if key in value:
                             del value[key]
                 except ValidationError as exc:
-                    for key in schema_inst.declared_fields:
-                        if key in value and key not in exc.messages:
-                            del value[key]
                     self._add_error(error_store, exc.messages)
                     continue
 

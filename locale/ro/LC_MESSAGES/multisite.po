@@ -11991,6 +11991,10 @@ msgstr "Dumps de configurare și de stare ale CMC"
 msgid "Configuration"
 msgstr "Configurație"
 
+#, fuzzy
+msgid "Configuration Error"
+msgstr "Eroare de configurare"
+
 msgid "Configuration connection"
 msgstr "Conexiune de configurare"
 

@@ -11696,6 +11696,10 @@ msgstr "CMCのコンフィグとステートダンプ"
 msgid "Configuration"
 msgstr "コンフィギュレーション"
 
+#, fuzzy
+msgid "Configuration Error"
+msgstr "構成エラー"
+
 msgid "Configuration connection"
 msgstr "設定接続"
 

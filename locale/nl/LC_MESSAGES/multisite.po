@@ -11887,6 +11887,10 @@ msgstr "Configuratie en toestandsdumps van de CMC"
 msgid "Configuration"
 msgstr "Configuratie"
 
+#, fuzzy
+msgid "Configuration Error"
+msgstr "Configuratiefout"
+
 msgid "Configuration connection"
 msgstr "Configuratie aansluiting"
 

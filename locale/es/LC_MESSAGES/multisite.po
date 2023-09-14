@@ -11987,6 +11987,10 @@ msgstr "Volcados de configuración y estado de la CMC"
 msgid "Configuration"
 msgstr "Configuración"
 
+#, fuzzy
+msgid "Configuration Error"
+msgstr "Error de configuración"
+
 msgid "Configuration connection"
 msgstr "Conexión de la configuración"
 

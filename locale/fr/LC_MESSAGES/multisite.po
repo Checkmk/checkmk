@@ -12041,6 +12041,10 @@ msgstr "Dumps de configuration et d'état du CMC"
 msgid "Configuration"
 msgstr "Configuration"
 
+#, fuzzy
+msgid "Configuration Error"
+msgstr "Erreur de configuration"
+
 msgid "Configuration connection"
 msgstr "Connexion de configuration"
 

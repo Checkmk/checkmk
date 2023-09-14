@@ -28,6 +28,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
@@ -91,29 +92,21 @@ def _register_pre_21_plugin_api() -> None:
 
     for name in (
         "check_metrics",
-        "darken_color",
         "G",
         "GB",
         "graph_info",
         "GraphTemplate",
-        "indexed_color",
         "K",
         "KB",
-        "lighten_color",
         "m",
         "M",
         "MAX_CORES",
         "MAX_NUMBER_HOPS",
         "MB",
         "metric_info",
-        "MONITORING_STATUS_COLORS",
         "P",
-        "parse_color",
-        "parse_color_into_hexrgb",
         "PB",
         "perfometer_info",
-        "render_color",
-        "scalar_colors",
         "scale_symbols",
         "skype_mobile_devices",
         "T",
@@ -124,10 +117,23 @@ def _register_pre_21_plugin_api() -> None:
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
 
+    for name in (
+        "darken_color",
+        "indexed_color",
+        "lighten_color",
+        "MONITORING_STATUS_COLORS",
+        "parse_color",
+        "parse_color_into_hexrgb",
+        "render_color",
+        "scalar_colors",
+    ):
+        legacy_api_module.__dict__[name] = graphing_color.__dict__[name]
+        legacy_plugin_utils.__dict__[name] = graphing_color.__dict__[name]
+
     # Avoid needed imports, see CMK-12147
     globals().update(
         {
-            "indexed_color": graphing_utils.indexed_color,
+            "indexed_color": graphing_color.indexed_color,
             "metric_info": graphing_utils.metric_info,
             "check_metrics": graphing_utils.check_metrics,
             "graph_info": graphing_utils.graph_info,

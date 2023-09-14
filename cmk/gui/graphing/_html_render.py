@@ -44,9 +44,10 @@ from ._artwork import (
     order_graph_curves_for_legend_and_mouse_hover,
     save_graph_pin,
 )
+from ._color import render_color_icon
 from ._graph_recipe_builder import build_graph_recipes
 from ._graph_specification import GraphMetric, GraphSpecification, TemplateGraphSpecification
-from ._utils import CombinedSingleMetricSpec, GraphDataRange, GraphRecipe, render_color_icon, SizeEx
+from ._utils import CombinedSingleMetricSpec, GraphDataRange, GraphRecipe, SizeEx
 from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str

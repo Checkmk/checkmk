@@ -21,7 +21,8 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.graphing._utils import metric_info, render_color_icon
+from cmk.gui.graphing._color import render_color_icon
+from cmk.gui.graphing._utils import metric_info
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

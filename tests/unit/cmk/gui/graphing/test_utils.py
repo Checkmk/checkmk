@@ -15,10 +15,10 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.graphing._utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config
+from cmk.gui.graphing._color import _COLOR_WHEEL_SIZE, _hex_color_to_rgb_color, indexed_color
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import (
-    _hex_color_to_rgb_color,
     AutomaticDict,
     ConstantFloat,
     ConstantInt,
@@ -1211,15 +1211,15 @@ def test__hex_color_to_rgb_color(hex_color: str, expected_rgb: tuple[int, int, i
 )
 def test_indexed_color_raises(idx: int, total: int) -> None:
     with pytest.raises(MKGeneralException):
-        utils.indexed_color(idx, total)
+        indexed_color(idx, total)
 
 
 @pytest.mark.parametrize(
     "idx",
-    range(0, utils._COLOR_WHEEL_SIZE),
+    range(0, _COLOR_WHEEL_SIZE),
 )
 def test_indexed_color_uses_color_wheel_first(idx: int) -> None:
-    assert "/" in utils.indexed_color(idx, utils._COLOR_WHEEL_SIZE)
+    assert "/" in indexed_color(idx, _COLOR_WHEEL_SIZE)
 
 
 @pytest.mark.parametrize(
@@ -1235,9 +1235,9 @@ def test_indexed_color_uses_color_wheel_first(idx: int) -> None:
     ],
 )
 def test_indexed_color_sanity(idx: int, total: int) -> None:
-    color = utils.indexed_color(idx, total)
+    color = indexed_color(idx, total)
     assert "/" not in color
-    r, g, b = utils._hex_color_to_rgb_color(color)
+    r, g, b = _hex_color_to_rgb_color(color)
     if r == g == b:
         assert all(100 <= component <= 200 for component in (r, g, b))
     else:

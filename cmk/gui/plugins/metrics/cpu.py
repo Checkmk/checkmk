@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import graph_info, indexed_color, MAX_CORES, metric_info
+from cmk.gui.graphing._color import indexed_color
+from cmk.gui.graphing._utils import graph_info, MAX_CORES, metric_info
 from cmk.gui.i18n import _l
 
 # .

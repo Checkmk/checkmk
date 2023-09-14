@@ -14,6 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.graphing._color import fade_color, parse_color, render_color
 from cmk.gui.i18n import _
 
 from ._graph_specification import (
@@ -28,9 +29,6 @@ from ._graph_specification import (
 from ._utils import (
     AugmentedTimeSeries,
     Curve,
-    fade_color,
-    parse_color,
-    render_color,
     RRDData,
     time_series_expression_registry,
     TimeSeriesExpressionRegistry,

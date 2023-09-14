@@ -13,8 +13,9 @@ from cmk.utils.oracle_constants import (
     oracle_waitclasses,
 )
 
+from cmk.gui.graphing._color import indexed_color
 from cmk.gui.graphing._graph_specification import LineType
-from cmk.gui.graphing._utils import graph_info, indexed_color, metric_info
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
 
 # .

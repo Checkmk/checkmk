@@ -17,6 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, TranslatedMetrics
 
+from ._expression import parse_expression, split_expression
 from ._graph_specification import (
     GraphConsoldiationFunction,
     GraphMetric,
@@ -37,9 +38,7 @@ from ._utils import (
     horizontal_rules_from_thresholds,
     metrics_used_in_expression,
     MetricUnitColor,
-    parse_expression,
     replace_expressions,
-    split_expression,
     stack_resolver,
     translated_metrics_from_row,
 )

@@ -31,6 +31,7 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
+from cmk.gui.graphing._expression import parse_expression
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
@@ -40,7 +41,6 @@ from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import (
     CombinedSingleMetricSpec,
     LegacyPerfometer,
-    parse_expression,
     parse_perf_data,
     perfometer_info,
     translate_metrics,

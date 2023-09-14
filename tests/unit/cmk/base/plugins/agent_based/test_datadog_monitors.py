@@ -8,17 +8,12 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.datadog_monitors import (
-    _DEFAULT_DATADOG_AND_CHECKMK_STATES,
     check_datadog_monitors,
     CheckParams,
     discover_datadog_monitors,
     DiscoveryParams,
     Monitor,
     parse_datadog_monitors,
-)
-
-from cmk.gui.plugins.wato.check_parameters.datadog_monitors import (
-    _DEFAULT_DATADOG_AND_CHECKMK_STATES as WATO_DEFAULTS,
 )
 
 _SECTION = {
@@ -218,7 +213,3 @@ def test_check_datadog_monitors_does_not_crash_on_empty_message() -> None:
     """
     section = {"item": Monitor(state="OK", message="", thresholds={}, tags=[])}
     list(check_datadog_monitors("item", {"state_mapping": {}, "tags_to_show": []}, section))
-
-
-def test_default_datadog_and_checkmk_states() -> None:
-    assert _DEFAULT_DATADOG_AND_CHECKMK_STATES == WATO_DEFAULTS

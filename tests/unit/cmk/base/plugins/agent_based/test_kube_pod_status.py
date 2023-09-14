@@ -26,8 +26,6 @@ from cmk.base.plugins.agent_based.utils.kube import (
     PodLifeCycle,
 )
 
-from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_pod_status
-
 
 def _mocked_container_info_from_state(
     state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
@@ -493,8 +491,3 @@ def test_check_group_order_matters() -> None:
         ):
             assert isinstance(summary_result, Result)
             assert summary_result.state == State.OK
-
-
-def test_check_variables_in_check_parameters_and_agent_based_plugins_agree() -> None:
-    """Variables have to be defined twice in order to preserve cmk-module-layer"""
-    assert wato_kube_pod_status.DESIRED_PHASE == kube_pod_status.DESIRED_PHASE

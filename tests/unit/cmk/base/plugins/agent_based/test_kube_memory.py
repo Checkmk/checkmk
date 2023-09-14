@@ -15,8 +15,6 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
     Resources,
 )
 
-from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
-
 
 def test_discovery() -> None:
     resources = Resources(
@@ -293,9 +291,3 @@ def test_crashes_if_no_resources(
                 AllocatableResource(context="node", value=35917989.0),
             )
         )
-
-
-def test_valuespec_and_check_agree() -> None:
-    assert tuple(DEFAULT_PARAMS) == tuple(
-        element[0] for element in _parameter_valuespec_memory(valuespec_help="")._get_elements()
-    )

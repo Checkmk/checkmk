@@ -15,8 +15,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.kube import PodContainers
 
-from cmk.gui.plugins.wato.check_parameters.kube_pod_restarts import _parameter_valuespec
-
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
 TIMESTAMP = 359
@@ -228,9 +226,3 @@ def test_check_results_maintains_restart_count_list_sorted(
 ) -> None:
     list(check_result)
     assert value_store["restart_count_list"] == sorted(value_store["restart_count_list"])
-
-
-def test_valuespec_and_check_agree() -> None:
-    assert tuple(kube_pod_restarts._DEFAULT_PARAMS) == tuple(
-        element[0] for element in _parameter_valuespec()._get_elements()
-    )

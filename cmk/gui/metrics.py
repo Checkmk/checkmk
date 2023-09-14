@@ -29,6 +29,7 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _color as graphing_color
+from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
@@ -112,10 +113,12 @@ def _register_pre_21_plugin_api() -> None:
         "T",
         "TB",
         "time_series_expression_registry",
-        "unit_info",
     ):
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
+
+    legacy_api_module.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
+    legacy_plugin_utils.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
 
     for name in (
         "darken_color",

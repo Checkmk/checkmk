@@ -25,7 +25,7 @@ from ._graph_specification import (
     MetricOpRRDSource,
     MetricOpTransformation,
 )
-from ._type_defs import LineType
+from ._type_defs import LineType, Operators
 from ._utils import (
     AugmentedTimeSeries,
     Curve,
@@ -191,11 +191,8 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, 
     return 1, (0, 60, 60)
 
 
-Operator = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
-
-
 def _time_series_math(
-    operator_id: Operator,
+    operator_id: Operators,
     operands_evaluated: list[TimeSeries],
 ) -> TimeSeries | None:
     operators = time_series_operators()
@@ -284,7 +281,7 @@ def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
 
 def time_series_operators() -> (
     dict[
-        Operator,
+        Operators,
         tuple[
             str,
             Callable[[TimeSeries | TimeSeriesValues], float | None],

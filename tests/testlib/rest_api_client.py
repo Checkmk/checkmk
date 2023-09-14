@@ -361,7 +361,7 @@ class LicensingClient(RestApiClient):
     def call_configure_licensing_settings(
         self, settings: Mapping[str, str | Mapping[str, str]], expect_ok: bool = False
     ) -> Response:
-        body = {"settings": settings}
+        body = {"settings": settings} if settings else {}
         return self.request(
             "put",
             url="/domain-types/licensing/actions/configure/invoke",

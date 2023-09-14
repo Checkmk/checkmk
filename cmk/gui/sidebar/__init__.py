@@ -590,7 +590,7 @@ class SidebarRenderer:
         html.open_div(
             id_="saas",
             title=_("Go to the Saas Admin Panel"),
-            onclick="window.open('https://admin-panel.saas-prod.check-mk.net/', '_blank')",
+            onclick="window.open('https://admin-panel.saas-prod.cloudsandbox.check-mk.net/', '_blank')",
         )
         html.icon("saas")
         if not user.get_attribute("nav_hide_icons_title"):

@@ -20,10 +20,9 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
-GraphConsoldiationFunction = Literal["max", "min", "average"]
-GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
+from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType, Operators
+
 HorizontalRule = tuple[float, str, str, str]
-LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,7 +47,7 @@ class MetricOpScalar(BaseModel, frozen=True):
 
 class MetricOpOperator(BaseModel, frozen=True):
     ident: Literal["operator"] = "operator"
-    operator_name: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+    operator_name: Operators
     # TODO Should be a sequence
     operands: list[MetricOperation] = []
 

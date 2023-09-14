@@ -26,7 +26,6 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import (
-    GraphConsoldiationFunction,
     GraphMetric,
     MetricOpCombined,
     MetricOpConstant,
@@ -38,6 +37,7 @@ from ._graph_specification import (
     MetricOpTransformation,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
+from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
 from ._utils import (
     CheckMetricEntry,

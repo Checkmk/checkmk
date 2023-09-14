@@ -14,7 +14,6 @@ from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.graphing._graph_specification import (
-    GraphConsoldiationFunction,
     GraphMetric,
     MetricDefinition,
     MetricOpConstant,
@@ -22,6 +21,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
+from cmk.gui.graphing._type_defs import GraphConsoldiationFunction
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
 

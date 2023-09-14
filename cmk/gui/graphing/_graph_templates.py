@@ -19,7 +19,6 @@ from cmk.gui.type_defs import Row, TranslatedMetrics
 
 from ._expression import parse_expression, split_expression
 from ._graph_specification import (
-    GraphConsoldiationFunction,
     GraphMetric,
     MetricDefinition,
     MetricOpConstant,
@@ -27,6 +26,7 @@ from ._graph_specification import (
     MetricOpRRDSource,
     TemplateGraphSpecification,
 )
+from ._type_defs import GraphConsoldiationFunction
 from ._utils import (
     get_graph_data_from_livestatus,
     get_graph_range,

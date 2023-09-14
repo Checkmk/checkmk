@@ -60,16 +60,14 @@ from ._color import (
 )
 from ._expression import parse_expression, RPNOperators, split_expression
 from ._graph_specification import (
-    GraphConsoldiationFunction,
     GraphMetric,
-    GraphPresentation,
     GraphSpecification,
     HorizontalRule,
-    LineType,
     MetricDefinition,
     MetricOperation,
     MetricOpRRDChoice,
 )
+from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType
 from ._unit_info import unit_info
 
 LegacyPerfometer = tuple[str, Any]

@@ -14,7 +14,7 @@ from cmk.utils.metrics import MetricName
 from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 
 from ._color import mix_colors, parse_color, render_color, scalar_colors
-from ._graph_specification import GraphConsoldiationFunction
+from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
 
 

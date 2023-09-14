@@ -19,13 +19,13 @@ from cmk.gui.i18n import _
 
 from ._graph_specification import (
     GraphMetric,
-    LineType,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
     MetricOpTransformation,
 )
+from ._type_defs import LineType
 from ._utils import (
     AugmentedTimeSeries,
     Curve,

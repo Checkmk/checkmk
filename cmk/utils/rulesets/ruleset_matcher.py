@@ -353,23 +353,6 @@ class RulesetMatcher:
             )
         )
 
-    def service_extra_conf_2(
-        self,
-        hostname: HostName,
-        description: ServiceName,
-        ruleset: Iterable[RuleSpec[TRuleValue]],
-        deflt: TRuleValue,
-    ) -> TRuleValue:
-        """Compute first match service ruleset outcome with fallback to a default value"""
-        return next(
-            self.get_service_ruleset_values(
-                self._service_match_object(hostname, description),
-                ruleset,
-                is_binary=False,
-            ),
-            deflt,
-        )
-
     def get_service_ruleset_values(
         self,
         match_object: RulesetMatchObject,

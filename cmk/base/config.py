@@ -3525,9 +3525,8 @@ class ConfigCache:
         return list(cgrs)
 
     def passive_check_period_of_service(self, hostname: HostName, description: ServiceName) -> str:
-        return self.ruleset_matcher.service_extra_conf_2(
-            hostname, description, check_periods, deflt="24X7"
-        )
+        out = self.ruleset_matcher.service_extra_conf(hostname, description, check_periods)
+        return out[0] if out else "24X7"
 
     def custom_attributes_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4228,20 +4227,20 @@ class CEEConfigCache(ConfigCache):
     def flap_settings_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> tuple[float, float, float]:
-        return self.ruleset_matcher.service_extra_conf_2(
+        out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
+        return out[0] if out else cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
-        return self.ruleset_matcher.service_extra_conf_2(
+        out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=False,
         )
+        return out[0] if out else False
 
     def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> dict:
         entries = self.ruleset_matcher.service_extra_conf(
@@ -4257,12 +4256,12 @@ class CEEConfigCache(ConfigCache):
 
     def check_timeout_of_service(self, hostname: HostName, description: ServiceName) -> int:
         """Returns the check timeout in seconds"""
-        return self.ruleset_matcher.service_extra_conf_2(
+        out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
+        return out[0] if out else cmc_check_timeout  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     def graphite_metrics_of(
         self,
@@ -4282,12 +4281,12 @@ class CEEConfigCache(ConfigCache):
                 default,
             )
 
-        return self.ruleset_matcher.service_extra_conf_2(
+        out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=default,
         )
+        return out[0] if out else default
 
     def influxdb_metrics_of_service(
         self,
@@ -4299,12 +4298,12 @@ class CEEConfigCache(ConfigCache):
         if description is None:
             return default
 
-        return self.ruleset_matcher.service_extra_conf_2(
+        out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
             cmc_influxdb_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=default,
         )
+        return out[0] if out else default
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {

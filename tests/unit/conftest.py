@@ -256,9 +256,9 @@ class FixRegister:
 
     def __init__(self) -> None:
         # Local import to have faster pytest initialization
-        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
 
         config._initialize_data_structures()
         assert not config.check_info
@@ -296,7 +296,7 @@ class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
     def __init__(self, fixed_register: FixRegister) -> None:
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 

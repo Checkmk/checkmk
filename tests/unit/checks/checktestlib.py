@@ -484,7 +484,7 @@ class MockHostExtraConf:
 
     def __enter__(self):
         """The default context: just mock get_item_state"""
-        import cmk.base.config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
 
         # we can't use get_config_cache here because it may lead to flakiness
         config_cache = cmk.base.config.reset_config_cache()

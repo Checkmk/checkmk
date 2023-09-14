@@ -9,7 +9,9 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.config import SpecialAgentInfoFunctionResult
+from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+    SpecialAgentInfoFunctionResult,
+)
 
 pytestmark = pytest.mark.checks
 

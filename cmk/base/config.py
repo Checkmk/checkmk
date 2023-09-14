@@ -4312,8 +4312,8 @@ class CEEConfigCache(ConfigCache):
         }
 
     def generic_agent_config_entries(
-        self, *, defaults: Mapping[str, Any]
-    ) -> Iterable[tuple[str, Mapping[str, Any]]]:
+        self, *, defaults: Mapping[str, object]
+    ) -> Iterable[tuple[str, Mapping[str, object]]]:
         yield from (
             (
                 match_path,

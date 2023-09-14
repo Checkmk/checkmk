@@ -437,8 +437,8 @@ class RulesetMatcher:
         return negate
 
     def get_values_for_generic_agent(
-        self, ruleset: Iterable[RuleSpec[object]], path_for_rule_matching: str
-    ) -> list[object]:
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], path_for_rule_matching: str
+    ) -> Sequence[TRuleValue]:
         """Compute rulesets for "generic" hosts
 
         This fictious host has no name and no tags.
@@ -447,7 +447,7 @@ class RulesetMatcher:
         """
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
 
-        entries: list[object] = []
+        entries: list[TRuleValue] = []
         for rule in ruleset:
             if _is_disabled(rule):
                 continue

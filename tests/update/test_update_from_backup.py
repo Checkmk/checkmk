@@ -13,11 +13,12 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion
-from tests.update.conftest import BaseVersions, get_host_services, get_services_with_status
+from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
+
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     base_ok_services = {}
     for hostname in hostnames:
         base_site.schedule_check(hostname, "Check_MK")
-        base_services[hostname] = get_host_services(base_site, hostname)
+        base_services[hostname] = base_site.get_host_services(hostname)
         base_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
         assert len(base_ok_services[hostname]) > 0
@@ -86,7 +87,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     target_ok_services = {}
     for hostname in hostnames:
         target_site.schedule_check(hostname, "Check_MK")
-        target_services[hostname] = get_host_services(target_site, hostname)
+        target_services[hostname] = target_site.get_host_services(hostname)
         target_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
         not_found_services = [

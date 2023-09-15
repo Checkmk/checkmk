@@ -135,7 +135,7 @@ class UpdateHost(BaseSchema):
         fields.String(),
         description=(
             "A list of attributes which should be removed. Can't be used together with "
-            "attributes or attributes fields."
+            "attributes or update attributes fields."
         ),
         example=["tag_foobar"],
         required=False,

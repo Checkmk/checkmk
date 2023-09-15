@@ -453,3 +453,53 @@ def test_openapi_bulk_group_schema(
         "extensions",
     }
     assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"
+
+
+invalid_group_ids = (
+    "test_group_id\\n",
+    "test_group_id\n",
+    "test_gr\noup_id",
+    "\test_group_id",
+)
+
+
+@managedtest
+@pytest.mark.parametrize("group_id", invalid_group_ids)
+def test_host_group_id_with_newline(
+    clients: ClientRegistry,
+    group_id: str,
+) -> None:
+    resp = clients.HostGroup.create(name=group_id, alias="not_important", expect_ok=False)
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+    )
+
+
+@managedtest
+@pytest.mark.parametrize("group_id", invalid_group_ids)
+def test_contact_group_id_with_newline(
+    clients: ClientRegistry,
+    group_id: str,
+) -> None:
+    resp = clients.ContactGroup.create(name=group_id, alias="not_important", expect_ok=False)
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+    )
+
+
+@managedtest
+@pytest.mark.parametrize("group_id", invalid_group_ids)
+def test_service_group_id_with_newline(
+    clients: ClientRegistry,
+    group_id: str,
+) -> None:
+    resp = clients.ServiceGroup.create(name=group_id, alias="not_important", expect_ok=False)
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+    )

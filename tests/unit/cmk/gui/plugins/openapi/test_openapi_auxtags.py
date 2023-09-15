@@ -6,6 +6,8 @@
 
 from typing import Any
 
+import pytest
+
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -220,4 +222,33 @@ def test_update_builtin_aux_tag(clients: ClientRegistry) -> None:
     assert (
         r.json["fields"]["aux_tag_id"][0]
         == "The aux_tag 'ip-v4' should be an existing custom aux tag but it's not."
+    )
+
+
+invalid_aux_tag_ids = (
+    "aux_tag_id_test\\n",
+    "aux_tag_id_test\n",
+    "aux_tag\n_id_test",
+    "\naux_tag_id_test",
+)
+
+
+@pytest.mark.parametrize("aux_tag_id", invalid_aux_tag_ids)
+def test_create_host_tag_with_newline_in_the_id(
+    clients: ClientRegistry,
+    aux_tag_id: str,
+) -> None:
+    resp = clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": aux_tag_id,
+            "title": "aux_tag_1",
+            "topic": "topic_1",
+            "help": "HELP",
+        },
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["aux_tag_id"][0]
+        == f"{aux_tag_id!r} does not match pattern '^[-0-9a-zA-Z_]+\\\\Z'."
     )

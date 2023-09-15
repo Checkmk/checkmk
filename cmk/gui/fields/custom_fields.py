@@ -208,7 +208,7 @@ class AuxTagIDField(fields.String):
         super().__init__(
             description="An auxiliary tag id",
             example="ip-v4",
-            pattern="^[-a-z0-9A-Z_]+$",
+            pattern=r"^[-0-9a-zA-Z_]+\Z",
             **kwargs,
         )
         self.presence = presence

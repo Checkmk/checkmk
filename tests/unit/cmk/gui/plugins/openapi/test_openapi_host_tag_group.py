@@ -406,3 +406,31 @@ def test_openapi_delete_dependant_host_tag(
     assert resp.json["detail"].startswith(
         "The host tag group you intend to delete is used in the following occurrences: hosts (example.com)."
     )
+
+
+invalid_tag_group_ids = (
+    "test_tag_group_id\\n",
+    "test_tag_group_id\n",
+    "test_tag_gr\noup_id",
+    "\ntest_tag_group_id",
+)
+
+
+@pytest.mark.parametrize("group_id", invalid_tag_group_ids)
+def test_host_tag_group_ident_with_newline(
+    clients: ClientRegistry,
+    group_id: str,
+) -> None:
+    resp = clients.HostTagGroup.create(
+        ident=group_id,
+        title="not_important",
+        help_text="not_important",
+        tags=[{"ident": "pod", "title": "Pod"}],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["ident"][0]
+        == f"{group_id!r} does not match pattern '^[^\\\\d\\\\W][-\\\\w]*\\\\Z'."
+    )

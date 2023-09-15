@@ -1,0 +1,20 @@
+Title: host_tag_group: host tag group field 'ident' no longer allows newline characters
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1694775953
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue identified by our QA team. Previously,
+you could include the newline character in the host tag group field
+'ident' when creating a host tag group via the following endpoint
+
+/domain-types/host_tag_group/collections/all
+
+We have now made pattern matching stricter, which means that this
+is no longer allowed.
+
+

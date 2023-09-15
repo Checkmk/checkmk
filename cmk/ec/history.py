@@ -363,10 +363,10 @@ def quote_tab(col: Any) -> bytes:
     if isinstance(col, (float, int)):
         return str(col).encode("utf-8")
     if isinstance(col, (tuple, list)):
-        col = b"\1" + b"\1".join(quote_tab(e) for e in col)
-    elif col is None:
-        col = b"\2"
-    elif isinstance(col, str):
+        return b"\1" + b"\1".join(quote_tab(e) for e in col)
+    if col is None:
+        return b"\2"
+    if isinstance(col, str):
         col = col.encode("utf-8")
 
     return col.replace(b"\t", b" ")

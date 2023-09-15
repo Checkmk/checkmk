@@ -27,7 +27,7 @@ try:
 except ImportError:
     alert_handling = None  # type: ignore[assignment]
 
-TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+$"
+TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
 
 

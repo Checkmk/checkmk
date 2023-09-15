@@ -689,3 +689,32 @@ def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
         time_period_data={"exclude": "This should be a list"},
         expect_ok=False,
     ).assert_status_code(400)
+
+
+invalid_timeperiod_names = (
+    "test_timeperiod\\n",
+    "test_timeperiod\n",
+    "test_time\nperiod",
+    "\ntest_timeperiod",
+)
+
+
+@pytest.mark.parametrize("timeperiod_name", invalid_timeperiod_names)
+def test_create_timeperiod_name_with_newline(
+    clients: ClientRegistry,
+    timeperiod_name: str,
+) -> None:
+    resp = clients.TimePeriod.create(
+        time_period_data={
+            "name": timeperiod_name,
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{timeperiod_name!r} does not match pattern '^[-a-z0-9A-Z_]+\\\\Z'."
+    )

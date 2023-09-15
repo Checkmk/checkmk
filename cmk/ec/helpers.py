@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from logging import Logger
 from types import TracebackType
 from typing import Literal, TypeAlias, TypeVar
@@ -83,14 +83,9 @@ def parse_syslog_message(tokens: Tokens) -> ParseResult[bytes]:
     return msg, rest2
 
 
-def parse_syslog_messages(
-    data: bytes,
-    address: tuple[str, int] | None,
-    process: Callable[[bytes, tuple[str, int] | None], None],
-) -> bytes:
+def parse_syslog_messages(data: bytes) -> tuple[Iterable[bytes], bytes]:
     """
-    Parse a bunch of bytes into separate syslog messages, calling the
-    given callback for each of these.
+    Parse a bunch of bytes into separate syslog messages and an unparsed rest.
 
     This method handles Octet counting (if message starts with a digit)
     and Transparent framing messages (if '\n' used as a separator).
@@ -104,15 +99,16 @@ def parse_syslog_messages(
 
     Returns the remaining unprocessed bytes.
     """
+    messages: list[bytes] = []
     rest = memoryview(b"")
     tokens = memoryview(data)
     while tokens:
         complete, rest = parse_syslog_message(tokens)
         if complete is Failure:
             break
-        process(complete, address)
+        messages.append(complete)
         tokens = rest
-    return bytes(rest)
+    return messages, bytes(rest)
 
 
 class ECLock:

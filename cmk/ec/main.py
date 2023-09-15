@@ -766,7 +766,10 @@ class EventServer(ECServerThread):
                         cs.close()
                         del client_sockets[fd]
 
-                    if unprocessed := parse_syslog_messages(data, address, self.process_raw_line):
+                    messages, unprocessed = parse_syslog_messages(data)
+                    for message in messages:
+                        self.process_raw_line(message, address)
+                    if unprocessed:
                         client_sockets[fd] = (cs, address, unprocessed)
 
             # Read data from pipe
@@ -782,7 +785,10 @@ class EventServer(ECServerThread):
                     listen_list.remove(pipe)
                     listen_list.append(self.open_pipe())
 
-                if unprocessed := parse_syslog_messages(data, None, self.process_raw_line):
+                messages, unprocessed = parse_syslog_messages(data)
+                for message in messages:
+                    self.process_raw_line(message, None)
+                if unprocessed:
                     self._logger.warning(
                         "Ignoring incomplete message '%r' from pipe", pipe_fragment
                     )

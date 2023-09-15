@@ -84,7 +84,7 @@ def test_parse_syslog_message_transparent_framing(
 
 
 @pytest.mark.parametrize(
-    "message, unprocessed",
+    "data, unprocessed",
     (
         pytest.param(
             b"May 26 13:45:01 Klapprechner CRON[8046]:  message\n",
@@ -103,21 +103,17 @@ def test_parse_syslog_message_transparent_framing(
         ),
     ),
 )
-def test_return_unprocessed(message: bytes, unprocessed: bytes) -> None:
+def test_return_unprocessed(data: bytes, unprocessed: bytes) -> None:
     """
     Unprocessed bytes returned correctly
     """
-
-    assert parse_syslog_messages(message, None, lambda msg, addr: None) == unprocessed
+    assert parse_syslog_messages(data)[1] == unprocessed
 
 
 def test_process_spool_file() -> None:
     """
     Spool files correctly handle each line as a message
     """
-
     file_to_process = b""""May 26 13:45:01 Klapprechner CRON[8046]:  message\n55 May 26 13:45:01 Klapprechner CRON[8046]: octet message\n"""
-
-    for line_bytes in file_to_process.splitlines(keepends=True):
-        remainder = parse_syslog_messages(line_bytes, None, lambda msg, addr: None)
-        assert remainder is None or bytes(remainder) == b""
+    for data in file_to_process.splitlines(keepends=True):
+        assert parse_syslog_messages(data)[1] == b""

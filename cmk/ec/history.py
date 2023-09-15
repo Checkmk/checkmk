@@ -358,16 +358,15 @@ def _add_files(history: History, event: Event, what: HistoryWhat, who: str, addi
 
 
 def quote_tab(col: Any) -> bytes:
-    ty = type(col)
-    if ty in [float, int]:
-        return str(col).encode("utf-8")
-    if ty is bool:
+    if isinstance(col, bool):
         return b"1" if col else b"0"
-    if ty in [tuple, list]:
-        col = b"\1" + b"\1".join([quote_tab(e) for e in col])
+    if isinstance(col, (float, int)):
+        return str(col).encode("utf-8")
+    if isinstance(col, (tuple, list)):
+        col = b"\1" + b"\1".join(quote_tab(e) for e in col)
     elif col is None:
         col = b"\2"
-    elif ty is str:
+    elif isinstance(col, str):
         col = col.encode("utf-8")
 
     return col.replace(b"\t", b" ")

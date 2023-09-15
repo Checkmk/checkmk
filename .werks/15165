@@ -1,0 +1,22 @@
+Title: Add two livestatus column: prediction_file and prediction_files
+Class: feature
+Compatible: compat
+Component: core
+Date: 1694757240
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Add two livestatus columns to the service table.
+
+The "prediction_files" column returns a list of files under
+"var/check_mk/prediction/HOST/SERVICE/".
+
+Example: <tt>lq 'GET services\nColumns: prediction_files\nFilter: description = Uptime'</tt>
+
+The "prediction_file" column is a dynamic column that returns the content of a
+file under "var/check_mk/prediction/HOST/SERVICE/"
+
+Example: <tt>lq 'GET services\nColumns: prediction_file:file:metric1/prediction1\nFilter: description = Uptime'</tt>
+

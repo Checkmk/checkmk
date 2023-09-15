@@ -14,7 +14,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 
-from cmk.gui.plugins.wato.inventory import RulespecGroupInventory
+from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,

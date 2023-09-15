@@ -96,7 +96,14 @@ def register() -> None:
         visual_type_registry,
         register_post_config_load_hook,
     )
-    inventory.register(page_registry, visual_info_registry, filter_registry)
+    inventory.register(
+        page_registry,
+        visual_info_registry,
+        filter_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+        icon_and_action_registry,
+    )
     dashboard.register(
         permission_section_registry,
         page_registry,

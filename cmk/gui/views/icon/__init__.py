@@ -37,7 +37,6 @@ from .builtin import (
     StarsIcon,
 )
 from .config_icons import update_icons_from_configuration
-from .inventory import InventoryIcon
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
 from .painter import PainterHostIcons, PainterServiceIcons
 from .permission_section import PermissionSectionIconsAndActions
@@ -80,7 +79,6 @@ def register(
     icon_registry.register(CrashdumpsIcon)
     icon_registry.register(CheckPeriodIcon)
     # Better move these implementations & registrations to the feature related modules
-    icon_registry.register(InventoryIcon)
     icon_registry.register(RobotmkIcon)
     icon_registry.register(RobotmkErrorIcon)
 

@@ -8,13 +8,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.i18n import _
-from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_group_registry,
-    rulespec_registry,
-    RulespecGroup,
-)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -28,9 +21,27 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
+from cmk.gui.watolib.rulespecs import (
+    HostRulespec,
+    RulespecGroup,
+    RulespecGroupRegistry,
+    RulespecRegistry,
+)
+
+from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 
 
-@rulespec_group_registry.register
+def register(
+    rulespec_group_registry: RulespecGroupRegistry, rulespec_registry: RulespecRegistry
+) -> None:
+    rulespec_group_registry.register(RulespecGroupInventory)
+    rulespec_registry.register(ActiveCheckCmkInv)
+    rulespec_registry.register(InvExportSoftwareCSV)
+    rulespec_registry.register(InvParameterInvIf)
+    rulespec_registry.register(InvParameterLnxSysctl)
+    rulespec_registry.register(InvRetentionIntervals)
+
+
 class RulespecGroupInventory(RulespecGroup):
     @property
     def name(self) -> str:
@@ -116,13 +127,11 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        match_type="all",
-        name=RuleGroup.ActiveChecks("cmk_inv"),
-        valuespec=_valuespec_active_checks_cmk_inv,
-    )
+ActiveCheckCmkInv = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="all",
+    name=RuleGroup.ActiveChecks("cmk_inv"),
+    valuespec=_valuespec_active_checks_cmk_inv,
 )
 
 
@@ -185,13 +194,11 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        name=RuleGroup.InvExports("software_csv"),
-        valuespec=_valuespec_inv_exports_software_csv,
-        is_deprecated=True,
-    )
+InvExportSoftwareCSV = HostRulespec(
+    group=RulespecGroupInventory,
+    name=RuleGroup.InvExports("software_csv"),
+    valuespec=_valuespec_inv_exports_software_csv,
+    is_deprecated=True,
 )
 
 
@@ -236,13 +243,11 @@ def _valuespec_inv_parameters_inv_if():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        match_type="dict",
-        name=RuleGroup.InvParameters("inv_if"),
-        valuespec=_valuespec_inv_parameters_inv_if,
-    )
+InvParameterInvIf = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="dict",
+    name=RuleGroup.InvParameters("inv_if"),
+    valuespec=_valuespec_inv_parameters_inv_if,
 )
 
 
@@ -284,13 +289,11 @@ def _valuespec_inv_parameters_lnx_sysctl():
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        match_type="dict",
-        name=RuleGroup.InvParameters("lnx_sysctl"),
-        valuespec=_valuespec_inv_parameters_lnx_sysctl,
-    )
+InvParameterLnxSysctl = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="dict",
+    name=RuleGroup.InvParameters("lnx_sysctl"),
+    valuespec=_valuespec_inv_parameters_lnx_sysctl,
 )
 
 
@@ -342,11 +345,9 @@ def _valuespec_inv_retention_intervals() -> ValueSpec:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        match_type="all",
-        name="inv_retention_intervals",
-        valuespec=_valuespec_inv_retention_intervals,
-    )
+InvRetentionIntervals = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="all",
+    name="inv_retention_intervals",
+    valuespec=_valuespec_inv_retention_intervals,
 )

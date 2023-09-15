@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import VisualLinkSpec
+from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
 
-from .base import Icon
+from ._store import has_inventory
 
 
 class InventoryIcon(Icon):
@@ -30,7 +30,7 @@ class InventoryIcon(Icon):
         if (
             what == "host"
             or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
-        ) and inventory.has_inventory(row["host_name"]):
+        ) and has_inventory(row["host_name"]):
             if not user.may("view.inv_host"):
                 return None
 

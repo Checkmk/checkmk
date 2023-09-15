@@ -50,11 +50,21 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
+from . import _rulespec
+from ._icon import InventoryIcon
 from ._inventory_path import InventoryPath as InventoryPath
 from ._inventory_path import TreeSource as TreeSource
+from ._rulespec import RulespecGroupInventory as RulespecGroupInventory
+from ._store import has_inventory as has_inventory
+from ._valuespecs import (
+    vs_element_inventory_visible_raw_path as vs_element_inventory_visible_raw_path,
+)
+from ._valuespecs import vs_inventory_path_or_keys_help as vs_inventory_path_or_keys_help
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 
@@ -62,12 +72,17 @@ def register(
     page_registry: PageRegistry,
     visual_info_registry: VisualInfoRegistry,
     filter_registry: FilterRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,
+    rulespec_registry: RulespecRegistry,
+    icon_and_action_registry: IconRegistry,
 ) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
     register_job(execute_inventory_housekeeping_job)
     visual_info_registry.register(VisualInfoInventoryHistory)
     filter_registry.register(FilterHasInv())
     filter_registry.register(FilterInvHasSoftwarePackage())
+    _rulespec.register(rulespec_group_registry, rulespec_registry)
+    icon_and_action_registry.register(InventoryIcon)
 
 
 # TODO Cleanup variation:
@@ -143,31 +158,6 @@ def get_short_inventory_filepath(hostname: HostName) -> Path:
         Path(cmk.utils.paths.inventory_output_dir)
         .joinpath(hostname)
         .relative_to(cmk.utils.paths.omd_root)
-    )
-
-
-def vs_element_inventory_visible_raw_path() -> tuple[str, ValueSpec]:
-    # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
-    # We keep this format in order to easily copy&paste these tree paths to
-    # 'Contact groups::Permitted HW/SW inventory paths'.
-    return (
-        "visible_raw_path",
-        TextInput(
-            title=_("Path to categories"),
-            size=60,
-            allow_empty=False,
-        ),
-    )
-
-
-def vs_inventory_path_or_keys_help():
-    return _(
-        "Via <tt>Display options > Show internal tree paths</tt>"
-        " on the HW/SW Inventory page of a host the internal tree paths leading"
-        " to subcategories, the keys of singles values or table column names"
-        " become visible. Key columns of tables are marked with '*'. See"
-        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
-        " for more details about the HW/SW Inventory system."
     )
 
 
@@ -627,12 +617,6 @@ def page_host_inv_api() -> None:
         _write_xml(resp)
     else:
         _write_python(resp)
-
-
-def has_inventory(hostname: HostName) -> bool:
-    return (
-        os.path.exists(f"{cmk.utils.paths.inventory_output_dir}/{hostname}") if hostname else False
-    )
 
 
 def _make_filter_choices_from_api_request_paths(

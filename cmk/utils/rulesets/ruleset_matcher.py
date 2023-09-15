@@ -5,6 +5,7 @@
 """This module provides generic Check_MK ruleset processing functionality"""
 
 import contextlib
+import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
 from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
@@ -117,45 +118,12 @@ class LabelManager(NamedTuple):
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
 class RulesetMatchObject:
-    """Wrapper around dict to ensure the ruleset match objects are correctly created"""
-
-    __slots__ = ["host_name", "service_description", "service_labels"]
-
-    def __init__(
-        self,
-        host_name: HostName | HostAddress | None = None,
-        service_description: ServiceName | None = None,
-        service_labels: Labels | None = None,
-    ) -> None:
-        super().__init__()
-        self.host_name = host_name
-        self.service_description = service_description
-        self.service_labels = service_labels
-
-    def copy(self) -> "RulesetMatchObject":
-        return RulesetMatchObject(
-            host_name=self.host_name,
-            service_description=self.service_description,
-            service_labels=self.service_labels,
-        )
-
-    def __repr__(self) -> str:
-        return (
-            "RulesetMatchObject("
-            f"host_name={self.host_name!r}, "
-            f"service_description={self.service_description!r}, "
-            f"service_labels={self.service_labels!r})"
-        )
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, RulesetMatchObject):
-            return False
-        return (
-            self.host_name == other.host_name
-            and self.service_description == other.service_description
-            and self.service_labels == other.service_labels
-        )
+    # TODO: Get rid of this.  Or at least, make it private to this module.
+    host_name: HostName | HostAddress
+    service_description: ServiceName | None = None
+    service_labels: Labels | None = None
 
 
 def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:

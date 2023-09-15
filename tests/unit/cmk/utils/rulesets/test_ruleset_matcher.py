@@ -28,20 +28,9 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 
-def test_ruleset_match_object_no_conditions() -> None:
-    x = RulesetMatchObject(host_name=None, service_description=None)
-    assert x.host_name is None
-    assert x.service_description is None
-
-
 def test_ruleset_match_object_host_name() -> None:
     obj = RulesetMatchObject(host_name=HostName("abc"), service_description=None)
     assert obj.host_name == "abc"
-
-
-def test_ruleset_match_object_service_description() -> None:
-    obj = RulesetMatchObject(host_name=None, service_description="Ümlaut")
-    assert obj.service_description == "Ümlaut"
 
 
 ruleset: Sequence[RuleSpec[str]] = [

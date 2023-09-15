@@ -135,7 +135,7 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
             rule_value = next(
                 iter(
                     ruleset_matcher.get_host_values(
-                        hostname, ruleset=automatic_host_removal_ruleset, is_binary=False
+                        hostname, ruleset=automatic_host_removal_ruleset
                     )
                 )
             )

@@ -38,7 +38,7 @@ URL_CHAR_REGEX: Final = f"^[{URL_CHAR_REGEX_CHARS}]+$"
 WATO_FOLDER_PATH_NAME_CHARS: Final = r"-\w"
 WATO_FOLDER_PATH_NAME_REGEX: Final = f"^[{WATO_FOLDER_PATH_NAME_CHARS}]*$"
 
-GROUP_NAME_PATTERN: Final = r"^[-a-z0-9A-Z_\.]*$"
+GROUP_NAME_PATTERN: Final = r"^[-a-z0-9A-Z_\.]*\Z"
 
 
 def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:

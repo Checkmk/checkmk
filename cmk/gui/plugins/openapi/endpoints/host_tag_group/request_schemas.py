@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.regex import REGEX_ID
+
+from typing import Any
 
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
@@ -72,6 +73,12 @@ class HostTagGroupId(fields.String):
         "invalid": "The specified tag group id is already in use: {name!r}",
     }
 
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(
+            pattern=r"^[^\d\W][-\w]*\Z",
+            **kwargs,
+        )
+
     def _validate(self, value):
         super()._validate(value)
         group_exists = tag_group_exists(value, builtin_included=True)
@@ -110,7 +117,6 @@ class InputHostTagGroup(BaseSchema):
         example="group_id",
         description="An id for the host tag group",
         attribute="id",
-        pattern=REGEX_ID,
     )
     title = fields.String(
         required=True,

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::args::Args;
+use crate::config::CheckConfig;
 use crate::constants;
 use clap::Parser;
 use flexi_logger::{self, FileSpec, LogSpecification};
@@ -27,6 +28,10 @@ pub fn init(args: ArgsOs) -> anyhow::Result<()> {
             SendTo::Null
         },
     )?;
+
+    if let Some(config_file) = args.config_file {
+        let _ = CheckConfig::load_file(&config_file)?;
+    }
 
     Ok(())
 }

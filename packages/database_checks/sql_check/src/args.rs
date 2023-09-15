@@ -27,7 +27,7 @@ pub struct Args {
 
     /// Use custom config file
     #[arg(short, long)]
-    pub config_file: Option<String>,
+    pub config_file: Option<PathBuf>,
 }
 
 impl Args {

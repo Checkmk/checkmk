@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub mod args;
+pub mod config;
 mod constants;
 pub mod ms_sql;
 pub mod setup;

@@ -1,0 +1,55 @@
+---
+mssql:
+  defaults: # to be used if no specific config
+    authentication: # mandatory
+      username: "foo" # has no default
+      password: "bar" # has no default
+      type: "system" # default
+      access_token: "baz" # has no default
+    connection: # optional
+      hostname: "localhost" # default
+      failoverpartner: "localhost2" # has no default
+      port: 1433 # default for mssql
+      paths:
+        TNSNAMES: # has no default
+          file: 'C:\path\to\file'
+          prefix: "myprod"
+          postfix: "mycustomer"
+      socket: 'C:\path\to\file' # has no default
+      tls: # has no default
+        ca: 'C:\path\to\file'
+        client_certificate: 'C:\path\to\file'
+      timeout: 5 # default
+    sqls: # always and cached is also the default; optional
+      always:
+        - "instance"
+        - "databases"
+        - "counters"
+        - "blocked_sessions"
+        - "transactionlogs"
+        - "clusters"
+        - "mirroring"
+        - "availability_groups"
+        - "connections"
+      cached:
+        - "tablespaces"
+        - "datafiles"
+        - "backup"
+        - "jobs"
+      disabled:
+        - "someOtherSQL"
+      cache_age: 600 # in seconds; default
+    instances: # optional
+      detect: yes # default
+      all: no # prio 1; ignore include/exclude if yes
+      include: ["foo", "bar"] # prio 2; use instance even if excluded
+      exclude: ["baz"] # prio 3
+    mode: "port" # default; can be "socket", "port" or "special"
+  instances: # optional
+    - instance: "INST1" # mandatory
+      authentication: # same as above
+      connection: # same as above
+      alias: "someApplicationName" # has no default
+      piggyback: # has no default
+        hostname: "myPiggybackHost"
+        sqls: # same as above

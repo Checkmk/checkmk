@@ -96,6 +96,8 @@ load(
     "XINETD_VERSION",
     "XMLSEC1_SHA256",
     "XMLSEC1_VERSION",
+    "MOD_WSGI_SHA256",
+    "MOD_WSGI_VERSION",
 )
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
@@ -248,3 +250,9 @@ create_python_requirements(
     requirements = "//:Pipfile",
 )
 
+load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi")
+
+mod_wsgi(
+    sha256 = MOD_WSGI_SHA256,
+    version_str = MOD_WSGI_VERSION,
+)

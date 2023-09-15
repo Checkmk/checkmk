@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.ec.helpers import Failure, parse_syslog_message, ParseResult
-from cmk.ec.main import EventServer
+from cmk.ec.helpers import Failure, parse_syslog_message, parse_syslog_messages, ParseResult
 
 
 @pytest.mark.parametrize(
@@ -104,15 +103,15 @@ def test_parse_syslog_message_transparent_framing(
         ),
     ),
 )
-def test_return_unprocessed(event_server: EventServer, message: bytes, unprocessed: bytes) -> None:
+def test_return_unprocessed(message: bytes, unprocessed: bytes) -> None:
     """
     Unprocessed bytes returned correctly
     """
 
-    assert event_server.process_syslog_data(message, None) == unprocessed
+    assert parse_syslog_messages(message, None, lambda msg, addr: None) == unprocessed
 
 
-def test_process_spool_file(event_server: EventServer) -> None:
+def test_process_spool_file() -> None:
     """
     Spool files correctly handle each line as a message
     """
@@ -120,5 +119,5 @@ def test_process_spool_file(event_server: EventServer) -> None:
     file_to_process = b""""May 26 13:45:01 Klapprechner CRON[8046]:  message\n55 May 26 13:45:01 Klapprechner CRON[8046]: octet message\n"""
 
     for line_bytes in file_to_process.splitlines(keepends=True):
-        remainder = event_server.process_syslog_data(line_bytes, None)
+        remainder = parse_syslog_messages(line_bytes, None, lambda msg, addr: None)
         assert remainder is None or bytes(remainder) == b""

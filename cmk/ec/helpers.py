@@ -83,6 +83,37 @@ def parse_syslog_message(tokens: Tokens) -> ParseResult[bytes]:
     return msg, rest2
 
 
+def parse_syslog_messages(
+    data: bytes,
+    address: tuple[str, int] | None,
+    process: Callable[[bytes, tuple[str, int] | None], None],
+) -> bytes:
+    """
+    Parse a bunch of bytes into separate syslog messages, calling the
+    given callback for each of these.
+
+    This method handles Octet counting (if message starts with a digit)
+    and Transparent framing messages (if '\n' used as a separator).
+    See the RFC doc: https://www.rfc-editor.org/rfc/rfc6587#section-3.4:
+
+    Octet counting:
+        TCP-DATA = *SYSLOG-FRAME
+        SYSLOG-FRAME = MSG-LEN SP SYSLOG-MSG   ; Octet-counting method
+        MSG-LEN = NONZERO-DIGIT *DIGIT
+        NONZERO-DIGIT = %d49-57
+
+    Returns the remaining unprocessed bytes.
+    """
+    rest = memoryview(b"")
+    while data:
+        complete, rest = parse_syslog_message(memoryview(data))
+        if complete is Failure:
+            break
+        process(complete, address)
+        data = bytes(rest)
+    return bytes(rest)
+
+
 class ECLock:
     def __init__(self, logger: Logger) -> None:
         self._logger = logger

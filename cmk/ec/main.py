@@ -57,7 +57,7 @@ from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
-from .helpers import ECLock, Failure, parse_syslog_message
+from .helpers import ECLock, parse_syslog_messages
 from .history import (
     ActiveHistoryPeriod,
     Columns,
@@ -766,7 +766,7 @@ class EventServer(ECServerThread):
                         cs.close()
                         del client_sockets[fd]
 
-                    if unprocessed := self.process_syslog_data(data, address):
+                    if unprocessed := parse_syslog_messages(data, address, self.process_raw_line):
                         client_sockets[fd] = (cs, address, unprocessed)
 
             # Read data from pipe
@@ -782,7 +782,7 @@ class EventServer(ECServerThread):
                     listen_list.remove(pipe)
                     listen_list.append(self.open_pipe())
 
-                if unprocessed := self.process_syslog_data(data, None):
+                if unprocessed := parse_syslog_messages(data, None, self.process_raw_line):
                     self._logger.warning(
                         "Ignoring incomplete message '%r' from pipe", pipe_fragment
                     )
@@ -847,38 +847,6 @@ class EventServer(ECServerThread):
                 )
             except Exception:
                 self._logger.exception("Exception handling a log line (skipping this one)")
-
-    def process_syslog_data(self, data: bytes, address: tuple[str, int] | None) -> bytes:
-        """
-        Processes syslog data in a loop.
-
-
-        This method handles Octet counting (if message starts with a digit)
-        and Transparent framing messages (if '\n' used as a separator).
-        See the RFC doc: https://www.rfc-editor.org/rfc/rfc6587#section-3.4:
-
-        Octet counting:
-            TCP-DATA = *SYSLOG-FRAME
-
-            SYSLOG-FRAME = MSG-LEN SP SYSLOG-MSG   ; Octet-counting
-                                                    ; method
-
-            MSG-LEN = NONZERO-DIGIT *DIGIT
-
-            NONZERO-DIGIT = %d49-57
-
-        Returns the remaining unprocessed bytes.
-        """
-        rest = memoryview(b"")
-
-        while data:
-            complete, rest = parse_syslog_message(memoryview(data))
-            if complete is Failure:
-                break
-            self.process_raw_line(complete, address)
-            data = bytes(rest)
-
-        return bytes(rest)
 
     def do_housekeeping(self) -> None:
         with self._event_status.lock, self._lock_configuration:

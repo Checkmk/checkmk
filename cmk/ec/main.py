@@ -711,7 +711,6 @@ class EventServer(ECServerThread):
         self.process_event(create_event_from_trap(trap, ipaddress_))
 
     def serve(self) -> None:  # pylint: disable=too-many-branches
-        pipe_fragment = b""
         pipe = self.open_pipe()
         listen_list = [
             f
@@ -774,9 +773,9 @@ class EventServer(ECServerThread):
 
             # Read data from pipe
             if pipe in readable:
-                data = pipe_fragment
+                data = b""
                 try:
-                    data += os.read(pipe, 4096)
+                    data = os.read(pipe, 4096)
                 except Exception:
                     self._logger.exception("General exception during pipe os.read")
 
@@ -789,10 +788,7 @@ class EventServer(ECServerThread):
                 for message in messages:
                     self.process_raw_line(message, None)
                 if unprocessed:
-                    self._logger.warning(
-                        "Ignoring incomplete message '%r' from pipe", pipe_fragment
-                    )
-                    pipe_fragment = b""
+                    self._logger.warning("Ignoring incomplete message '%r' from pipe", data)
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:

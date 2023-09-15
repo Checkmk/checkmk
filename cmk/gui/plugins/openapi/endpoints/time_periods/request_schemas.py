@@ -35,6 +35,7 @@ class TimePeriodName(fields.String):
         self._should_exist = should_exist
         super().__init__(
             example=example,
+            pattern=TIMEPERIOD_ID_PATTERN,
             required=required,
             validate=validate,
             **kwargs,
@@ -191,7 +192,6 @@ class CreateTimePeriod(BaseSchema):
         description="A unique name for the time period.",
         required=True,
         should_exist=False,
-        pattern=TIMEPERIOD_ID_PATTERN,
     )
     alias = TimePeriodAlias(
         example="alias",

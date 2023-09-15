@@ -10,10 +10,17 @@
 /// Jenkins artifacts: will be directly pushed into the cloud
 /// Depends on: Ubuntu 22.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)
 
+def build_cloud_images_names(version) {
+    def version_suffix = "${version}-build-${env.BUILD_NUMBER}";
+    return ["cmk-ami-https-${version_suffix}", "cmk-azure-${version_suffix}"]
+}
+
 def main() {
     check_job_parameters([
         "EDITION",
         "VERSION",
+        "BUILD_CLOUD_IMAGES",
+        "PUBLISH_IN_MARKETPLACE",
     ])
 
     if (EDITION != 'cloud') {
@@ -29,9 +36,12 @@ def main() {
     }
     shout("Building cloud images for version: ${cmk_version}")
 
-    def version_suffix = "${cmk_version}-build-${env.BUILD_NUMBER}"
-    def env_secret_map = build_env_secret_map(cmk_version, version_suffix)
+    def ami_image_name = build_cloud_images_names(cmk_version)[0];
+    def azure_image_name = build_cloud_images_names(cmk_version)[1];
+    def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name)
     def cloud_targets = ["amazon-ebs", "azure-arm"]
+    def build_cloud_images = params.BUILD_CLOUD_IMAGES
+    def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE
 
     currentBuild.description = (
         """
@@ -39,26 +49,37 @@ def main() {
         |""".stripMargin())
 
 
-    stage('Cleanup') {
-        dir("${checkout_dir}") {
-            sh("git clean -xdf")
-        }
-    }
-
+    // Build Phase
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside() {
-            stage('Packer init') {
+            smart_stage(
+                name: 'Packer init',
+                condition: build_cloud_images,
+                raiseOnError: true,
+            ) {
                 dir("${checkout_dir}/packer") {
                     // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
                     sh("packer init .")
                 }
             }
-            parallel(create_stages(cloud_targets, env_secret_map));
+            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images));
+        }
+    }
+
+    // Publish Phase
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker_image_from_alias("IMAGE_TESTING").inside() {
+            dir("${checkout_dir}") {
+                // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
+                // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
+                sh("make .venv");
+                parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
+            }
         }
     }
 }
 
-def build_env_secret_map(cmk_version, version_suffix) {
+def build_env_secret_map(cmk_version, ami, azure) {
     return [
         "env"    : [
             // ~~~ COMMON ~~~
@@ -66,14 +87,14 @@ def build_env_secret_map(cmk_version, version_suffix) {
             // ~~~ QUEMU ~~~
             "PKR_VAR_qemu_output_dir_name=cmk",
             // ~~~ AWS ~~~
-            "PKR_VAR_aws_ami_name=cmk-ami-https-${version_suffix}",
+            "PKR_VAR_aws_ami_name=${ami}",
             // ~~~ AZURE ~~~
             "PKR_VAR_azure_resource_group=rg-packer-dev-weu",
             "PKR_VAR_azure_build_resource_group_name=rg-packer-dev-weu",
             "PKR_VAR_azure_virtual_network_resource_group_name=rg-spokes-network-weu",
             "PKR_VAR_azure_virtual_network_name=vnet-spoke-packer-dev-weu",
             "PKR_VAR_azure_virtual_network_subnet_name=snet-spoke-packer-dev-default-weu",
-            "PKR_VAR_azure_image_name=cmk-azure-${version_suffix}"
+            "PKR_VAR_azure_image_name=${azure}"
         ],
         "secrets": [
             // ~~~ COMMON ~~~
@@ -104,10 +125,14 @@ def build_env_secret_map(cmk_version, version_suffix) {
 
 }
 
-def create_stages(cloud_targets, env_secret_map) {
+def create_build_stages(cloud_targets, env_secret_map, build_images) {
     return cloud_targets.collectEntries { target ->
-        [("${target}"): {
-            stage("Building target ${target}") {
+        [("Building target ${target}"): {
+            smart_stage(
+                name: "Building target ${target}",
+                condition: build_images,
+                raiseOnError: true,
+            ) {
                 withCredentials(env_secret_map["secrets"]) {
                     withEnv(env_secret_map["env"]) {
                         dir("${checkout_dir}/packer") {
@@ -115,6 +140,36 @@ def create_stages(cloud_targets, env_secret_map) {
                                    packer build -only="checkmk-ansible.${target}.builder" .;
                             """)
                             }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+
+def create_publish_stages(targets_names, version, publish) {
+    return targets_names.collectEntries { target, name ->
+        [("Publish ${target} in marketplace"): {
+            smart_stage(
+                name: 'Publish in marketplace',
+                condition: publish,
+                raiseOnError: true
+            ) {
+                withEnv(["AWS_DEFAULT_REGION=us-east-1", "PYTHONUNBUFFERED=1"]) {
+                    withCredentials([
+                        string(
+                            credentialsId: 'aws_publisher_secret_key',
+                            variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(
+                            credentialsId: 'aws_publisher_access_key',
+                            variable: 'AWS_ACCESS_KEY_ID'),
+                    ]) {
+                        sh("""
+                           scripts/run-pipenv run buildscripts/scripts/publish_cloud_images.py \
+                            --cloud-type ${target} --new-version ${version} \
+                            --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}' --image-name ${name};
+                        """)
                         }
                     }
                 }

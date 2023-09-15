@@ -105,12 +105,13 @@ def parse_syslog_messages(
     Returns the remaining unprocessed bytes.
     """
     rest = memoryview(b"")
-    while data:
-        complete, rest = parse_syslog_message(memoryview(data))
+    tokens = memoryview(data)
+    while tokens:
+        complete, rest = parse_syslog_message(tokens)
         if complete is Failure:
             break
         process(complete, address)
-        data = bytes(rest)
+        tokens = rest
     return bytes(rest)
 
 

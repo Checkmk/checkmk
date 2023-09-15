@@ -36,7 +36,7 @@ class PagetypeUpdater(Protocol, Generic[_TOverridable_co]):
 
     def __call__(
         self, page_dicts: Mapping[InstanceId, dict[str, object]]
-    ) -> Mapping[InstanceId, Mapping[str, object]]:
+    ) -> Mapping[InstanceId, dict[str, object]]:
         ...
 
 
@@ -51,22 +51,21 @@ pagetype_updater_registry = PagetypeUpdaterRegistry()
 class UpdatePagetypes(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         for pagetype in all_page_types().values():
+            raw_page_dicts = pagetype.load_raw()
             for updater in pagetype_updater_registry.values():
-                if not issubclass(pagetype, updater.target_type):
-                    continue
+                if issubclass(pagetype, updater.target_type):
+                    raw_page_dicts = updater(raw_page_dicts)
 
-                instances = OverridableInstances[Overridable[OverridableSpec]]()
-                for (user_id, name), page_dict in updater(pagetype.load_raw()).items():
-                    instances.add_instance(
-                        (user_id, name), updater.target_type.deserialize(page_dict)
-                    )
+            instances = OverridableInstances[Overridable[OverridableSpec]]()
+            for (user_id, name), raw_page_dict in raw_page_dicts.items():
+                instances.add_instance((user_id, name), pagetype.deserialize(raw_page_dict))
 
-                for user_id in (
-                    user_id
-                    for (user_id, name) in instances.instances_dict()
-                    if user_id != UserId.builtin()
-                ):
-                    pagetype.save_user_instances(instances, owner=user_id)
+            for user_id in (
+                user_id
+                for (user_id, name) in instances.instances_dict()
+                if user_id != UserId.builtin()
+            ):
+                pagetype.save_user_instances(instances, owner=user_id)
 
 
 update_action_registry.register(
@@ -84,7 +83,7 @@ class BookmarkListUpdater:
 
     def __call__(
         self, page_dicts: Mapping[InstanceId, dict[str, object]]
-    ) -> Mapping[InstanceId, Mapping[str, object]]:
+    ) -> Mapping[InstanceId, dict[str, object]]:
         bookmark_lists_by_instance_id: dict[InstanceId, BookmarkListSpec] = {}
         for user_id in load_users():
             # Don't load the legacy bookmarks when there is already a my_bookmarks list

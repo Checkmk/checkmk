@@ -321,6 +321,21 @@ class RulesetMatcher:
             )
         )
 
+    def get_checkgroup_ruleset_values(
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        item: Item,
+        ruleset: Iterable[RuleSpec[TRuleValue]],
+    ) -> list[TRuleValue]:
+        return list(
+            self.get_service_ruleset_values(
+                self._checkgroup_match_object(hostname, description, item),
+                ruleset,
+                is_binary=False,
+            )
+        )
+
     def get_service_ruleset_values(
         self,
         match_object: RulesetMatchObject,

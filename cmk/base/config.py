@@ -1989,8 +1989,7 @@ def _get_checkgroup_parameters(
             return matcher.get_host_values(host, rules)
 
         # checks with an item need service-specific rules
-        match_object = matcher._checkgroup_match_object(host, descr, item)
-        return list(matcher.get_service_ruleset_values(match_object, rules, is_binary=False))
+        return matcher.get_checkgroup_ruleset_values(host, descr, item, rules)
     except MKGeneralException as e:
         raise MKGeneralException(f"{e} (on host {host}, checkgroup {checkgroup})")
 

@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import Literal, TypeVar
+from typing import assert_never, Literal, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -18,6 +18,7 @@ from typing_extensions import TypedDict
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
 
+from cmk.gui.graphing._color import fade_color, parse_color, render_color
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -25,11 +26,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-from ._graph_specification import GraphMetric, HorizontalRule
+from ._graph_specification import GraphMetric, HorizontalRule, MetricOpTransformation
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._timeseries import clean_time_series_point, compute_graph_curves
+from ._timeseries import clean_time_series_point, evaluate_time_series_expression
 from ._type_defs import LineType
-from ._utils import CombinedSingleMetricSpec, Curve, GraphDataRange, GraphRecipe, SizeEx
+from ._utils import CombinedSingleMetricSpec, Curve, GraphDataRange, GraphRecipe, RRDData, SizeEx
 
 Label = tuple[float, str | None, int]
 
@@ -392,6 +393,58 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
+def _compute_graph_curves(
+    metrics: Sequence[GraphMetric],
+    rrd_data: RRDData,
+) -> Iterator[Curve]:
+    def _parse_line_type(
+        mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
+    ) -> LineType | Literal["ref"]:
+        match ts_line_type:
+            case "line" | "-line":
+                return "line" if mirror_prefix == "" else "-line"
+            case "area" | "-area":
+                return "area" if mirror_prefix == "" else "-area"
+            case "stack" | "-stack":
+                return "stack" if mirror_prefix == "" else "-stack"
+            case "ref":
+                return "ref"
+        assert_never((mirror_prefix, ts_line_type))
+
+    for metric in metrics:
+        expression = metric.expression
+        time_series = evaluate_time_series_expression(expression, rrd_data)
+        if not time_series:
+            continue
+
+        multi = len(time_series) > 1
+        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
+        for i, ts in enumerate(time_series):
+            title = metric.title
+            if multi and ts.metadata.title:
+                title += " - " + ts.metadata.title
+
+            color = ts.metadata.color or metric.color
+            if i % 2 == 1 and not (
+                isinstance(expression, MetricOpTransformation)
+                and expression.parameters[0] == "forecast"
+            ):
+                color = render_color(fade_color(parse_color(color), 0.3))
+
+            yield Curve(
+                {
+                    "line_type": (
+                        _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                        if multi and ts.metadata.line_type
+                        else metric.line_type
+                    ),
+                    "color": color,
+                    "title": title,
+                    "rrddata": ts.data,
+                }
+            )
+
+
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
@@ -406,7 +459,7 @@ def compute_graph_artwork_curves(
         resolve_combined_single_metric_spec,
     )
 
-    curves = compute_graph_curves(graph_recipe.metrics, rrd_data)
+    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data))
 
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]

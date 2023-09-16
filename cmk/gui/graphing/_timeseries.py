@@ -7,28 +7,24 @@ import functools
 import operator
 from collections.abc import Callable, Sequence
 from itertools import chain
-from typing import assert_never, Literal, TypeVar
+from typing import TypeVar
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.graphing._color import fade_color, parse_color, render_color
 from cmk.gui.i18n import _
 
 from ._graph_specification import (
-    GraphMetric,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
-    MetricOpTransformation,
 )
-from ._type_defs import LineType, Operators
+from ._type_defs import Operators
 from ._utils import (
     AugmentedTimeSeries,
-    Curve,
     RRDData,
     time_series_expression_registry,
     TimeSeriesExpressionRegistry,
@@ -45,63 +41,6 @@ from ._utils import (
 #   +----------------------------------------------------------------------+
 #   |  Compute the curves from the raw RRD data by evaluating expressions. |
 #   '----------------------------------------------------------------------'
-
-
-def compute_graph_curves(
-    metrics: Sequence[GraphMetric],
-    rrd_data: RRDData,
-) -> list[Curve]:
-    def _parse_line_type(
-        mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
-    ) -> LineType | Literal["ref"]:
-        match ts_line_type:
-            case "line" | "-line":
-                return "line" if mirror_prefix == "" else "-line"
-            case "area" | "-area":
-                return "area" if mirror_prefix == "" else "-area"
-            case "stack" | "-stack":
-                return "stack" if mirror_prefix == "" else "-stack"
-            case "ref":
-                return "ref"
-        assert_never((mirror_prefix, ts_line_type))
-
-    curves = []
-    for metric in metrics:
-        expression = metric.expression
-        time_series = evaluate_time_series_expression(expression, rrd_data)
-        if not time_series:
-            continue
-
-        multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
-        for i, ts in enumerate(time_series):
-            title = metric.title
-            if multi and ts.metadata.title:
-                title += " - " + ts.metadata.title
-
-            color = ts.metadata.color or metric.color
-            if i % 2 == 1 and not (
-                isinstance(expression, MetricOpTransformation)
-                and expression.parameters[0] == "forecast"
-            ):
-                color = render_color(fade_color(parse_color(color), 0.3))
-
-            curves.append(
-                Curve(
-                    {
-                        "line_type": (
-                            _parse_line_type(mirror_prefix, ts.metadata.line_type)
-                            if multi and ts.metadata.line_type
-                            else metric.line_type
-                        ),
-                        "color": color,
-                        "title": title,
-                        "rrddata": ts.data,
-                    }
-                )
-            )
-
-    return curves
 
 
 def evaluate_time_series_expression(

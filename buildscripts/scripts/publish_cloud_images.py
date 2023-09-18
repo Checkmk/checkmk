@@ -147,7 +147,7 @@ class AWSPublisher(CloudPublisher):
                     "ChangeType": self.ChangeTypes.ADD_DELIVERY_OPTIONS,
                     "Entity": {
                         "Type": self.ENTITY_TYPE_WITH_VERSION,
-                        "Identifier": self.NON_PRODUCTION_ID,
+                        "Identifier": self.production_id,
                     },
                     "Details": json.dumps(update_details),
                     "ChangeName": "update",

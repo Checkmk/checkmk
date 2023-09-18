@@ -838,17 +838,19 @@ class EventServer(ECServerThread):
 
     def process_raw_line(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes one line message, handles encoding and processes it."""
-        if line := scrub_string(data.decode("utf-8")):
-            try:
-                self.process_raw_data(
-                    lambda: self.process_event(
-                        create_event_from_line(
-                            line, address, self._logger, verbose=self._config["debug_rules"]
-                        )
+        try:
+            self.process_raw_data(
+                lambda: self.process_event(
+                    create_event_from_line(
+                        scrub_string(data.decode("utf-8")),
+                        address,
+                        self._logger,
+                        verbose=self._config["debug_rules"],
                     )
                 )
-            except Exception:
-                self._logger.exception("Exception handling a log line (skipping this one)")
+            )
+        except Exception:
+            self._logger.exception("Exception handling a log line (skipping this one)")
 
     def do_housekeeping(self) -> None:
         with self._event_status.lock, self._lock_configuration:

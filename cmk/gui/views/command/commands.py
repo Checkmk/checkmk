@@ -120,6 +120,14 @@ class CommandReschedule(Command):
         return _("Reschedule active checks")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Reschedule active checks immediately?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Reschedule")
+
+    @property
     def icon_name(self):
         return "service_duration"
 
@@ -131,10 +139,15 @@ class CommandReschedule(Command):
     def tables(self):
         return ["host", "service"]
 
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML("<br><br>" + _("Spreading: %s minutes") % request.var("_resched_spread"))
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
-        html.text_input("_resched_spread", default_value="1", size=3, cssclass="number")
+        html.text_input(
+            "_resched_spread", default_value="1", size=3, cssclass="number", required=True
+        )
         html.write_text(" " + _("minutes"))
         html.close_div()
 
@@ -804,8 +817,7 @@ class CommandAcknowledge(Command):
                     + cmdtag
                     + "_PROBLEM;%s;%d;%d;%d;%s" % (spec, sticky, sendnot, perscomm, user.id)
                     + (";%s" % livestatus.lqencode(non_empty_comment))
-                    + expire_text,
-                    self.confirm_dialog_options(len(action_rows), cmdtag),
+                    + expire_text
                 )
 
             if "aggr_tree" in row:  # BI mode

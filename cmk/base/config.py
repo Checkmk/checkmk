@@ -3279,6 +3279,11 @@ class ConfigCache:
                 return True
             if tag_groups["piggyback"] == "no-piggyback":
                 return False
+
+            # for clusters with an auto-piggyback tag check if nodes have piggyback data
+            if self.is_cluster(host_name) and (nodes := self.nodes_of(host_name)) is not None:
+                return any(self._has_piggyback_data(node) for node in nodes)
+
             # Legacy automatic detection
             return self._has_piggyback_data(host_name)
 

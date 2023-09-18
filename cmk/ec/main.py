@@ -56,17 +56,9 @@ from .actions import do_event_action, do_event_actions, do_notify, event_has_ope
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
-from .event import create_event_from_line, Event
+from .event import create_event_from_line, Event, scrub_string
 from .helpers import ECLock, parse_syslog_messages
-from .history import (
-    ActiveHistoryPeriod,
-    Columns,
-    get_logfile,
-    History,
-    HistoryWhat,
-    quote_tab,
-    scrub_string,
-)
+from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
@@ -842,10 +834,7 @@ class EventServer(ECServerThread):
             self.process_raw_data(
                 lambda: self.process_event(
                     create_event_from_line(
-                        scrub_string(data.decode("utf-8")),
-                        address,
-                        self._logger,
-                        verbose=self._config["debug_rules"],
+                        data, address, self._logger, verbose=self._config["debug_rules"]
                     )
                 )
             )

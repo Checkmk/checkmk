@@ -19,7 +19,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
 from .config import Config
-from .event import Event
+from .event import Event, scrub_string
 from .query import OperatorName, QueryGET
 from .settings import Settings
 
@@ -694,17 +694,3 @@ def _get_logfile_timespan(path: Path) -> tuple[float | None, float | None]:
     except Exception:
         last_entry = None
     return first_entry, last_entry
-
-
-def scrub_string(s: str) -> str:
-    """Rip out/replace any characters which have a special meaning in the UTF-8
-    encoded history files, see e.g. quote_tab. In theory this shouldn't be
-    necessary, because there are a bunch of bytes which are not contained in any
-    valid UTF-8 string, but following Murphy's Law, those are not used in
-    Checkmk. To keep backwards compatibility with old history files, we have no
-    choice and continue to do it wrong... :-/"""
-
-    return s.translate(_scrub_string_unicode_table)
-
-
-_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

@@ -73,8 +73,9 @@ def _make_event(text: str, ipaddress: str) -> Event:
 
 
 def create_event_from_line(
-    line: str, address: tuple[str, int] | None, logger: Logger, *, verbose: bool = False
+    data: bytes, address: tuple[str, int] | None, logger: Logger, *, verbose: bool = False
 ) -> Event:
+    line = scrub_string(data.decode("utf-8"))
     if verbose:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
         logger.info(f'processing message{adr} "{line}"')
@@ -452,3 +453,17 @@ def _unescape_structured_data_value(v: str, /) -> str:
     for escaped_char in ("\\", '"', "]"):
         v_unescaped = v_unescaped.replace(rf"\{escaped_char}", escaped_char)
     return v_unescaped
+
+
+def scrub_string(s: str) -> str:
+    """Rip out/replace any characters which have a special meaning in the UTF-8
+    encoded history files, see e.g. quote_tab. In theory this shouldn't be
+    necessary, because there are a bunch of bytes which are not contained in any
+    valid UTF-8 string, but following Murphy's Law, those are not used in
+    Checkmk. To keep backwards compatibility with old history files, we have no
+    choice and continue to do it wrong... :-/"""
+
+    return s.translate(_scrub_string_unicode_table)
+
+
+_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

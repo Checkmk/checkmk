@@ -890,6 +890,14 @@ class CommandAddComment(Command):
         return _("Add comment")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Add comment?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Add")
+
+    @property
     def icon_name(self):
         return "comment"
 
@@ -1532,6 +1540,14 @@ class CommandRemoveComments(Command):
     @property
     def title(self) -> str:
         return _("Remove comments")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Delete comment?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Delete")
 
     @property
     def is_shortcut(self) -> bool:

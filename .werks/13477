@@ -8,7 +8,7 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0p18
 
-When the agent was executed without the permission to write to <tt>${MK_VARDIR}</tt> (<i>/var/lib/check_mk_agent<i/> by default) the first line of the output would be an error message.
+When the agent was executed without the permission to write to <tt>${MK_VARDIR}</tt> (<i>/var/lib/check_mk_agent</i> by default) the first line of the output would be an error message.
 This lead the fetcher to assume that the agent output must be encrypted.
 If encryption is disabled for the affeted host, the fetcher will fail.
 

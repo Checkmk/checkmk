@@ -8,6 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0p12
 
-This werk fixes the crash in ucs_bladecenter_if.py line 257: "KeyError: '<PCNAME>'.
+This werk fixes the crash in ucs_bladecenter_if.py line 257: "KeyError: '&lt;PCNAME&gt;'.
 The extraction of the pcname did not work correctly in all cases.
 

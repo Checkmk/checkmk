@@ -838,7 +838,7 @@ class EventServer(ECServerThread):
 
     def process_raw_line(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes one line message, handles encoding and processes it."""
-        if line := scrub_string(data.rstrip().decode("utf-8")):
+        if line := scrub_string(data.decode("utf-8")):
             try:
                 self.process_raw_data(
                     lambda: self.process_event(

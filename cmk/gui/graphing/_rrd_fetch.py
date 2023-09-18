@@ -28,7 +28,6 @@ from cmk.gui.type_defs import ColumnName
 from ._graph_specification import (
     GraphMetric,
     MetricOpCombined,
-    MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDChoice,
@@ -172,10 +171,7 @@ def _needed_elements_of_expression(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-    if isinstance(expression, MetricOpConstant):
-        yield from ()
-
-    elif isinstance(expression, (MetricOpScalar, MetricOpRRDChoice)):
+    if isinstance(expression, (MetricOpScalar, MetricOpRRDChoice)):
         yield NeededElementForTranslation(
             expression.host_name,
             expression.service_name,

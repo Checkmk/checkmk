@@ -16,13 +16,8 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.sidebar import search
-from cmk.gui.plugins.sidebar.utils import (
-    footnotelinks,
-    make_topic_menu,
-    show_topic_menu,
-    SidebarSnapin,
-    snapin_registry,
-)
+from cmk.gui.plugins.sidebar.utils import footnotelinks, make_topic_menu, show_topic_menu
+from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import (
     Choices,
     MegaMenu,

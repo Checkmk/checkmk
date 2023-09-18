@@ -5,7 +5,7 @@
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.sidebar import snapin_registry
 
 
 def test_registered_snapins() -> None:

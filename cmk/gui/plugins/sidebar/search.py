@@ -33,8 +33,8 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.sidebar.utils import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.utils import main_module_registry
+from cmk.gui.sidebar import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import (
     ABCMegaMenuSearch,
     HTTPVariables,

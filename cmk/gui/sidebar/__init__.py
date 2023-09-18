@@ -45,8 +45,6 @@ from cmk.gui.plugins.sidebar.utils import heading as heading
 from cmk.gui.plugins.sidebar.utils import iconlink as iconlink
 from cmk.gui.plugins.sidebar.utils import link as link
 from cmk.gui.plugins.sidebar.utils import render_link as render_link
-from cmk.gui.plugins.sidebar.utils import SidebarSnapin as SidebarSnapin
-from cmk.gui.plugins.sidebar.utils import snapin_registry as snapin_registry
 from cmk.gui.plugins.sidebar.utils import snapin_site_choice as snapin_site_choice
 from cmk.gui.plugins.sidebar.utils import snapin_width as snapin_width
 from cmk.gui.plugins.sidebar.utils import write_snapin_exception as write_snapin_exception
@@ -67,6 +65,11 @@ from .main_menu import (
     PageAjaxSidebarGetMessages,
     PageAjaxSidebarGetUnackIncompWerks,
 )
+from .snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from .snapin import PageHandlers as PageHandlers
+from .snapin import SidebarSnapin as SidebarSnapin
+from .snapin import snapin_registry as snapin_registry
+from .snapin import SnapinRegistry as SnapinRegistry
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: dict[str, dict] = {}
@@ -112,21 +115,25 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.sidebar as api_module
     import cmk.gui.plugins.sidebar.utils as plugin_utils
 
+    for name, value in [
+        ("SidebarSnapin", SidebarSnapin),
+        ("CustomizableSidebarSnapin", CustomizableSidebarSnapin),
+        ("PageHandlers", PageHandlers),
+        ("snapin_registry", snapin_registry),
+    ]:
+        api_module.__dict__[name] = plugin_utils.__dict__[name] = value
+
     for name in (
         "begin_footnote_links",
         "bulletlink",
-        "CustomizableSidebarSnapin",
         "end_footnote_links",
         "footnotelinks",
         "heading",
         "iconlink",
         "link",
         "make_topic_menu",
-        "PageHandlers",
         "render_link",
         "show_topic_menu",
-        "SidebarSnapin",
-        "snapin_registry",
         "snapin_site_choice",
         "snapin_width",
         "write_snapin_exception",

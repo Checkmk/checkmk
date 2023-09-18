@@ -9,7 +9,8 @@ import cmk.gui.sites as sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_width
+from cmk.gui.plugins.sidebar.utils import snapin_width
+from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.theme import theme
 

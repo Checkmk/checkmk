@@ -7,13 +7,8 @@ from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.sidebar.utils import (
-    footnotelinks,
-    make_topic_menu,
-    show_topic_menu,
-    SidebarSnapin,
-    snapin_registry,
-)
+from cmk.gui.plugins.sidebar.utils import footnotelinks, make_topic_menu, show_topic_menu
+from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import TopicMenuTopic
 
 

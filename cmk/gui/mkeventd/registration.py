@@ -6,7 +6,7 @@
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
-from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.icon import IconRegistry
@@ -53,6 +53,7 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     filter_registry: FilterRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
+    snapin_registry: SnapinRegistry,
 ) -> None:
     views.register(
         data_source_registry,

@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
+# Names are made available dynamically
+from cmk.gui.plugins.sidebar.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+    SidebarSnapin,
+    snapin_registry,
+)
 
 
 @snapin_registry.register

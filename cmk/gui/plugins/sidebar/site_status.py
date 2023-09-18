@@ -19,9 +19,8 @@ from cmk.gui.plugins.sidebar.utils import (
     end_footnote_links,
     link,
     render_link,
-    SidebarSnapin,
-    snapin_registry,
 )
+from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html

@@ -17,7 +17,7 @@ file again and roll out the newly adapted plugin. For manual adaptation, instanc
 be adapted to have the following format:
 
 <code>
-INSTANCE=<instance env filepath>:<username>:<instance pgpass filepath>:<instance name (optional)>
+INSTANCE=&lt;instance env filepath&gt;:&lt;username&gt;:&lt;instance pgpass filepath&gt;:&lt;instance name (optional)&gt;
 </code>
 
 where ':' (colon) is the respective separator character.

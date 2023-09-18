@@ -261,8 +261,6 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
     def page(self) -> None:
-        user.need_permission("wato.revert_changes")
-
         if not self.has_changes():
             html.open_div(class_="wato")
             html.show_message(_("No pending changes."))
@@ -420,6 +418,20 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self._may_discard_changes():
             return
 
+        enabled = False
+        disabled_tooltip: str | None = None
+        if self.has_changes():
+            if not _get_last_wato_snapshot_file():
+                enabled = False
+                disabled_tooltip = _("No snapshot to restore available.")
+            elif self.discard_changes_forbidden():
+                enabled = False
+                disabled_tooltip = _(
+                    "Blocked due to non-revertible change. Activate those changes to unblock reverting."
+                )
+            else:
+                enabled = True
+
         yield PageMenuEntry(
             title=_("Revert changes"),
             icon_name="revert",
@@ -430,12 +442,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 )
             ),
             name="discard_changes",
-            is_enabled=self.has_changes()
-            and not self.discard_changes_forbidden()
-            and _get_last_wato_snapshot_file(),
-            disabled_tooltip=_(
-                "Blocked due to non-revertible change. Activate those changes to unblock reverting."
-            ),
+            is_enabled=enabled,
+            disabled_tooltip=disabled_tooltip,
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:

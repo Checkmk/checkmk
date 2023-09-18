@@ -518,7 +518,7 @@ class CommandFakeCheckResult(Command):
 
     @property
     def confirm_title(self) -> str:
-        return _("Manually set check results to %s") % self._get_target_state()
+        return _("Manually set check results to %s?") % self._get_target_state()
 
     def _get_target_state(self) -> str:
         for var, value in list(request.itervars(prefix="_fake_")):
@@ -1055,6 +1055,14 @@ class CommandScheduleDowntimes(Command):
         return _("Schedule downtimes")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Schedule downtime?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Schedule")
+
+    @property
     def icon_name(self):
         return "downtime"
 
@@ -1242,7 +1250,17 @@ class CommandScheduleDowntimes(Command):
         return (
             [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
             title,
-            self.confirm_dialog_options(len(action_rows), cmdtag),
+            self._confirm_dialog_options(len(action_rows), cmdtag, title),
+        )
+
+    def _confirm_dialog_options(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"], title: str
+    ) -> CommandConfirmDialogOptions:
+        return CommandConfirmDialogOptions(
+            title,
+            self.affected_hosts_or_services(len_action_rows, cmdtag),
+            self.confirm_dialog_additions(),
+            self.confirm_button,
         )
 
     def _remove_downtime_details(
@@ -1266,8 +1284,8 @@ class CommandScheduleDowntimes(Command):
         commands = []
         for dtid in downtime_ids:
             commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
-        title = _("<b>remove all scheduled downtimes</b> of ")
-        return (commands, title, self.confirm_dialog_options(len(action_rows), cmdtag))
+        title = _("Remove all scheduled downtimes?")
+        return commands, title, self._confirm_dialog_options(len(action_rows), cmdtag, title)
 
     def _recurring_number(self):
         """Retrieve integer value for repeat downtime option
@@ -1360,18 +1378,18 @@ class CommandScheduleDowntimes(Command):
             )
 
             description = (
-                _("schedule a periodic downtime every %s")
+                _("Schedule a periodic downtime every %s")
                 % recurring_downtimes_types()[recurring_number]
             )
         else:
-            description = _("schedule an immediate downtime")
+            description = _("Schedule an immediate downtime")
         return description
 
     def _title_for_next_minutes(self, minutes, prefix):
-        return _("<b>%s for the next %d minutes</b>") % (prefix, minutes)
+        return _("<b>%s for the next %d minutes</b>?") % (prefix, minutes)
 
     def _title_range(self, start_time, end_time):
-        return _("<b>schedule a downtime from %s to %s</b>") % (
+        return _("Schedule a downtime from %s to %s?") % (
             time.asctime(time.localtime(start_time)),
             time.asctime(time.localtime(end_time)),
         )
@@ -1528,24 +1546,24 @@ def time_interval_to_human_readable(next_time_interval, prefix):
 
     Examples:
         >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until 24:00:00</b>'
+        '<b>schedule an immediate downtime until 24:00:00</b>?'
         >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until end of year</b>'
+        '<b>schedule an immediate downtime until end of year</b>?'
 
     Returns:
         string representing the schedule downtime title
     """
     downtime_titles = {
-        "next_day": _("<b>%s until 24:00:00</b>"),
-        "next_week": _("<b>%s until sunday night</b>"),
-        "next_month": _("<b>%s until end of month</b>"),
-        "next_year": _("<b>%s until end of year</b>"),
+        "next_day": _("<b>%s until 24:00:00</b>?"),
+        "next_week": _("<b>%s until sunday night</b>?"),
+        "next_month": _("<b>%s until end of month</b>?"),
+        "next_year": _("<b>%s until end of year</b>?"),
     }
     try:
         title = downtime_titles[next_time_interval]
     except KeyError:
         duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b>") % SecondsRenderer.detailed_str(duration)
+        title = _("<b>%%s of %s length</b>?") % SecondsRenderer.detailed_str(duration)
     return title % prefix
 
 
@@ -1557,6 +1575,14 @@ class CommandRemoveDowntime(Command):
     @property
     def title(self) -> str:
         return _("Remove downtimes")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Remove downtimes?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Remove")
 
     @property
     def permission(self) -> Permission:

@@ -613,6 +613,10 @@ class CommandCustomNotification(Command):
         return _("Custom notification")
 
     @property
+    def confirm_button(self) -> LazyString:
+        return _l("Send")
+
+    @property
     def icon_name(self):
         return "notifications"
 

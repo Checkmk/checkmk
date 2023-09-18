@@ -8,6 +8,6 @@ Date: 1586174639
 Class: fix
 
 Previously Windows Agent couldn't correctly parse UNC-like paths. For example,
-<tt>\\server\share\path\log.txt<\tt> or similar couldn't be processed.
+<tt>\\server\share\path\log.txt</tt> or similar couldn't be processed.
 
 With this fix the problem has been eliminated.

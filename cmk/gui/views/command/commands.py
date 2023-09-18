@@ -517,6 +517,21 @@ class CommandFakeCheckResult(Command):
         return _("Fake check results")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Manually set check results to %s") % self._get_target_state()
+
+    def _get_target_state(self) -> str:
+        for var, value in list(request.itervars(prefix="_fake_")):
+            if not var[-1].isdigit():
+                continue
+            return value
+        return ""
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Set")
+
+    @property
     def icon_name(self):
         return "fake_check_result"
 
@@ -596,7 +611,9 @@ class CommandFakeCheckResult(Command):
                     s,
                     livestatus.lqencode(pluginoutput),
                 )
-                title = _("Manually set check results?") % escaping.escape_attribute(statename)
+                title = _(
+                    "<b>manually set check results to %s</b> for"
+                ) % escaping.escape_attribute(statename)
                 return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 

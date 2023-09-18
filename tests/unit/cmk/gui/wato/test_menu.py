@@ -8,8 +8,8 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.sidebar.wato import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
+from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.gui.watolib.search import MatchItem
 
 

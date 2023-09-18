@@ -5,9 +5,11 @@
 
 
 from cmk.gui.background_job import BackgroundJobRegistry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -18,6 +20,7 @@ from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
     _check_mk_configuration,
@@ -26,9 +29,11 @@ from . import (
     _permissions,
     _pre_21_plugin_api,
     _rulespec_groups,
+    _snapins,
     filters,
     pages,
 )
+from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
@@ -58,6 +63,9 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
+    snapin_registry: SnapinRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+    mega_menu_registry: MegaMenuRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -85,3 +93,5 @@ def register(
     _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()
     _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)
+    _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
+    snapin_registry.register(VirtualHostTree)

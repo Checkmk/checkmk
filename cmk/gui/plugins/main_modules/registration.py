@@ -43,6 +43,7 @@ from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
@@ -77,6 +78,7 @@ from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.search import match_item_generator_registry
 
 
 def register_sites_options() -> None:
@@ -175,6 +177,9 @@ def register() -> None:
         rulespec_group_registry,
         config_variable_registry,
         config_variable_group_registry,
+        snapin_registry,
+        match_item_generator_registry,
+        mega_menu_registry,
     )
     bi_registration.register(
         data_source_registry,

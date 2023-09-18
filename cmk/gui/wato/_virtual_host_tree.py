@@ -16,13 +16,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.sidebar import SidebarSnapin
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
 
 
-@snapin_registry.register
 class VirtualHostTree(SidebarSnapin):
     @staticmethod
     def type_name():

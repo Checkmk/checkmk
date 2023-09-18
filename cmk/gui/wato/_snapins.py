@@ -14,10 +14,10 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.plugins.sidebar import search
 from cmk.gui.plugins.sidebar.utils import footnotelinks, make_topic_menu, show_topic_menu
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
 from cmk.gui.type_defs import (
     Choices,
     MegaMenu,
@@ -34,10 +34,21 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
+    MatchItemGeneratorRegistry,
     MatchItems,
 )
+
+
+def register(
+    snapin_registry: SnapinRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+) -> None:
+    snapin_registry.register(SidebarSnapinWATOMini)
+    snapin_registry.register(SidebarSnapinWATOFoldertree)
+    match_item_generator_registry.register(MatchItemGeneratorSetup)
+    mega_menu_registry.register(MegaMenuSetup)
 
 
 def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
@@ -112,16 +123,14 @@ def _hide_menu() -> bool:
     return site_config.is_wato_slave_site() and not active_config.wato_enabled
 
 
-mega_menu_registry.register(
-    MegaMenu(
-        name="setup",
-        title=_l("Setup"),
-        icon="main_setup",
-        sort_index=15,
-        topics=get_wato_menu_items,
-        search=search.SetupSearch("setup_search"),
-        hide=_hide_menu,
-    )
+MegaMenuSetup = MegaMenu(
+    name="setup",
+    title=_l("Setup"),
+    icon="main_setup",
+    sort_index=15,
+    topics=get_wato_menu_items,
+    search=search.SetupSearch("setup_search"),
+    hide=_hide_menu,
 )
 
 
@@ -158,15 +167,9 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
         return True
 
 
-match_item_generator_registry.register(
-    MatchItemGeneratorSetupMenu(
-        "setup",
-        mega_menu_registry["setup"].topics,
-    )
-)
+MatchItemGeneratorSetup = MatchItemGeneratorSetupMenu("setup", MegaMenuSetup.topics)
 
 
-@snapin_registry.register
 class SidebarSnapinWATOMini(SidebarSnapin):
     @staticmethod
     def type_name():
@@ -305,7 +308,6 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
     html.close_ul()
 
 
-@snapin_registry.register
 class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @staticmethod
     def type_name():

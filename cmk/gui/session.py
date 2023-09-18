@@ -252,8 +252,6 @@ class FileBasedSession(SessionInterface):
         domain = self.get_cookie_domain(app)
         path = self.get_cookie_path(app)
         secure = self.get_cookie_secure(app)
-        samesite = self.get_cookie_samesite(app)
-        httponly = self.get_cookie_httponly(app)
         expires = self.get_expiration_time(app, session)
 
         if not self.should_set_cookie(app, session):
@@ -284,11 +282,11 @@ class FileBasedSession(SessionInterface):
                 cookie_name,
                 cookie_value,
                 expires=expires,
-                httponly=httponly,
+                httponly=True,
                 domain=domain,
                 path=path,
                 secure=secure,
-                samesite=samesite,
+                samesite="Lax",
             )
 
 

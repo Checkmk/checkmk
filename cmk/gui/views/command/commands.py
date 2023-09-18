@@ -762,6 +762,18 @@ class CommandAcknowledge(Command):
         return _("Acknowledge problems")
 
     @property
+    def confirm_title(self) -> str:
+        return (
+            _("Acknowledge problems?")
+            if request.var("_acknowledge")
+            else _("Remove acknowledgement?")
+        )
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Acknowledge") if request.var("_acknowledge") else _l("Remove")
+
+    @property
     def icon_name(self):
         return "host_svc_problems"
 

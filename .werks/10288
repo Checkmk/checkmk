@@ -7,4 +7,4 @@ Version: 1.6.0p6
 Date: 1571926462
 Class: fix
 
-<tt> tags were used but escaped so they were visible. These tags are now removed.
+&lt;tt&gt; tags were used but escaped so they were visible. These tags are now removed.

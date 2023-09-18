@@ -12,7 +12,7 @@ include the renamed host. Such changes are recorded in the audit log,
 including the name of the folders which contain the adjusted rules.
 Up to now, these folder names were not displayed correctly. The audit
 log showed something like
-"Renamed host in 3 rulesets of folder <bound method CREFolder.title of
-Folder('', u'Main directory')>".
+"Renamed host in 3 rulesets of folder &lt;bound method CREFolder.title of
+Folder('', u'Main directory')&gt;".
 With this werk, this becomes
 "Renamed host in 3 rulesets of folder Main directory".

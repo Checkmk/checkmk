@@ -9,6 +9,6 @@ Class: fix
 
 Previously, the uninstallation routine didn't delete the file 
 <tt>share/check_mk/agents/windows/plugins/decoded/cmk-update-agent.exe</tt> 
-thereby causing the command <tt>omd versions>/tt> to work incorrectly.
+thereby causing the command <tt>omd versions</tt> to work incorrectly.
 
 Since this release the problem has been fixed.

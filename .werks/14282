@@ -9,5 +9,5 @@ Level: 1
 Version: 2.1.0p7
 
 Rendering the master control snapin could fail with an exception like
-"TypeError: Unsupported type <class 'livestatus.MKLivestatusSocketError'>" in
+"TypeError: Unsupported type &lt;class 'livestatus.MKLivestatusSocketError'&gt;" in
 case a site was not reachable.

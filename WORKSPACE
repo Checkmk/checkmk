@@ -98,6 +98,8 @@ load(
     "XMLSEC1_VERSION",
     "MOD_WSGI_SHA256",
     "MOD_WSGI_VERSION",
+    "NET_SNMP_SHA256",
+    "NET_SNMP_VERSION",
 )
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
@@ -255,4 +257,11 @@ load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi")
 mod_wsgi(
     sha256 = MOD_WSGI_SHA256,
     version_str = MOD_WSGI_VERSION,
+)
+
+load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
+
+netsnmp(
+    sha256 = NET_SNMP_SHA256,
+    version_str = NET_SNMP_VERSION,
 )

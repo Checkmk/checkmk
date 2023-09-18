@@ -56,7 +56,7 @@ from .actions import do_event_action, do_event_actions, do_notify, event_has_ope
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
-from .event import create_event_from_line, Event, scrub_string
+from .event import create_event_from_syslog_message, Event, scrub_string
 from .helpers import ECLock, parse_syslog_messages
 from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
 from .host_config import HostConfig
@@ -759,7 +759,7 @@ class EventServer(ECServerThread):
 
                     messages, unprocessed = parse_syslog_messages(data)
                     for message in messages:
-                        self.process_raw_line(message, address)
+                        self.process_syslog_message(message, address)
                     if unprocessed:
                         client_sockets[fd] = (cs, address, unprocessed)
 
@@ -778,14 +778,14 @@ class EventServer(ECServerThread):
 
                 messages, unprocessed = parse_syslog_messages(data)
                 for message in messages:
-                    self.process_raw_line(message, None)
+                    self.process_syslog_message(message, None)
                 if unprocessed:
                     self._logger.warning("Ignoring incomplete message '%r' from pipe", data)
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
                 message, address = self._syslog_udp.recvfrom(4096)
-                self.process_raw_line(message, parse_address("syslog socket (UDP)", address))
+                self.process_syslog_message(message, parse_address("syslog socket (UDP)", address))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
@@ -807,7 +807,7 @@ class EventServer(ECServerThread):
                 self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
             ):
                 for line_bytes in spool_files[0].read_bytes().splitlines():
-                    self.process_raw_line(line_bytes, None)
+                    self.process_syslog_message(line_bytes, None)
                 spool_files[0].unlink()
                 select_timeout = 0  # enable fast processing to process further files
             else:
@@ -828,11 +828,11 @@ class EventServer(ECServerThread):
         elapsed = time.time() - before
         self._perfcounters.count_time("processing", elapsed)
 
-    def process_raw_line(self, data: bytes, address: tuple[str, int] | None) -> None:
+    def process_syslog_message(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes one line message, handles encoding and processes it."""
         self.process_raw_data(
             lambda: self.process_event(
-                create_event_from_line(
+                create_event_from_syslog_message(
                     data, address, self._logger if self._config["debug_rules"] else None
                 )
             )
@@ -1889,7 +1889,7 @@ class Queries:
 # - make sure that the new column is filled at *every* place where
 #   an event is being created:
 #   * _create_event_from_trap()
-#   * create_event_from_line()
+#   * create_event_from_syslog_message()
 #   * _handle_absent_event()
 #   * _create_overflow_event()
 # - When loading the status file add the possibly missing column to all
@@ -2394,11 +2394,11 @@ class StatusServer(ECServerThread):
             self._history.add(event, "UPDATE", user)
 
     def handle_command_create(self, arguments: list[str]) -> None:
-        # Would rather use process_raw_line(), but we are already
+        # Would rather use process_syslog_message(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
-        # process_raw_lines("%s" % ";".join(arguments))
+        # process_syslog_messages("%s" % ";".join(arguments))
         with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
             pipe.write(f'{";".join(arguments)}\n'.encode())
 

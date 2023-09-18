@@ -72,7 +72,7 @@ def _make_event(text: str, ipaddress: str) -> Event:
     )
 
 
-def create_event_from_line(
+def create_event_from_syslog_message(
     data: bytes, address: tuple[str, int] | None, logger: Logger | None
 ) -> Event:
     if logger:

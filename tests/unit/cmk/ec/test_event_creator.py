@@ -13,7 +13,7 @@ from tests.testlib import on_time
 
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
-    create_event_from_line,
+    create_event_from_syslog_message,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
     parse_syslog_info,
@@ -390,11 +390,11 @@ from cmk.ec.event import (
         ),
     ],
 )
-def test_create_event_from_line(data: bytes, expected: Mapping[str, Any]) -> None:
+def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, Any]) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
-        assert create_event_from_line(data, address, logger) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(
@@ -417,15 +417,17 @@ def test_create_event_from_line(data: bytes, expected: Mapping[str, Any]) -> Non
         ),
     ],
 )
-def test_create_event_from_line_with_DST(data: bytes, expected: Mapping[str, Any]) -> None:
+def test_create_event_from_syslog_message_with_DST(
+    data: bytes, expected: Mapping[str, Any]
+) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
 
     with on_time(1675748161, "CET"):  # february when there is no DST
-        assert create_event_from_line(data, address, logger) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
     with on_time(1688704561, "CET"):  # July when there is DST
-        assert create_event_from_line(data, address, logger) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(
@@ -448,15 +450,17 @@ def test_create_event_from_line_with_DST(data: bytes, expected: Mapping[str, Any
         ),
     ],
 )
-def test_create_event_from_line_without_DST(data: bytes, expected: Mapping[str, Any]) -> None:
+def test_create_event_from_syslog_message_without_DST(
+    data: bytes, expected: Mapping[str, Any]
+) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
 
     with on_time(1675748161, "CET"):  # february when there is no DST
-        assert create_event_from_line(data, address, logger) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
     with on_time(1688704561, "CET"):  # July when there is DST
-        assert create_event_from_line(data, address, logger) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(

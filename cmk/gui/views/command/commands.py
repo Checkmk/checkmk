@@ -298,6 +298,10 @@ class CommandToggleActiveChecks(Command):
         return _("Active checks")
 
     @property
+    def confirm_button(self) -> LazyString:
+        return _l("Enable") if request.var("_enable_checks") else _l("Disable")
+
+    @property
     def permission(self) -> Permission:
         return PermissionActionEnableChecks
 
@@ -356,6 +360,10 @@ class CommandTogglePassiveChecks(Command):
     @property
     def title(self) -> str:
         return _("Passive checks")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Enable") if request.var("_enable_passive_checks") else _l("Disable")
 
     @property
     def permission(self) -> Permission:

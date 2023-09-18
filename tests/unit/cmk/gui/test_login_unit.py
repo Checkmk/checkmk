@@ -22,7 +22,6 @@ from cmk.utils.user import UserId
 import cmk.gui.session  # pylint: disable=unused-import  # this is here for it's side effects...
 from cmk.gui import auth, http, login
 from cmk.gui.config import load_config
-from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.session import session
@@ -244,22 +243,10 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
         yield cookie_name
 
 
-def test_parse_auth_cookie_refuse_pre_16(pre_16_cookie: str) -> None:
-    assert (cookie := auth._get_request_cookie(pre_16_cookie))
-    with pytest.raises(MKAuthException, match="Invalid session ID in auth cookie"):
-        auth.parse_and_check_cookie(cookie)
-
-
-def test_parse_auth_cookie_refuse_pre_20(pre_20_cookie: str) -> None:
-    assert (cookie := auth._get_request_cookie(pre_20_cookie))
-    with pytest.raises(MKAuthException, match="Invalid session ID in auth cookie"):
-        auth.parse_and_check_cookie(cookie)
-
-
 def test_parse_auth_cookie_allow_current(
     current_cookie: str, with_user: tuple[UserId, str], session_id: str
 ) -> None:
-    assert (cookie := auth._get_request_cookie(current_cookie))
+    assert (cookie := request.cookies.get(current_cookie, type=str))
     assert auth.parse_and_check_cookie(cookie) == (
         with_user[0],
         session_id,

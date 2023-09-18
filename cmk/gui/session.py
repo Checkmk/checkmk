@@ -198,60 +198,54 @@ class FileBasedSession(SessionInterface):
         # the tests.
         return f"/{omd_site()}/"
 
+    def _resume_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
+        """Check if there is a session to resume to
+
+        check if cookie is there and if it is valid. If so return the session
+        otherwise return None"""
+
+        if not (cookie_value := request.cookies.get(self.get_cookie_name(app), type=str)):
+            # No cookie, nothing to resume
+            return None
+
+        try:
+            user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
+            userdb.on_access(user_name, session_id, datetime.now())
+        except MKAuthException:
+            # The cookie is not considered valid, timed out, etc. So we authenticate
+            return None
+        # This can throw a MKAuthException but this one we want to raise because
+        # if there is a valid session but we cannot load it there is something fishy...
+        return self.session_class.load_session(user_name, session_id)
+
+    def _authenticate_and_open(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession:
+        """Authenticate and open new session
+
+        try to authenticate a request based on headers, password login is
+        handled in login.py"""
+
+        user_name, auth_type = check_auth()
+        userdb.session.on_succeeded_login(user_name, datetime.now())
+
+        # Our REST API doesn't hand out session tokens, so every request is a new session.
+        # Filter those for now to avoid spamming the log.
+        if auth_type != "bearer":
+            log_security_event(
+                AuthenticationSuccessEvent(
+                    auth_method=auth_type,
+                    username=str(user_name),
+                    remote_ip=request.remote_addr,
+                )
+            )
+        return self.session_class.create_session(user_name, auth_type)
+
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
-        # In order to log in a user, we need to do the following:
-        #
-        # 1. In the login page, validate the user, persist the current session.
-        # 2. In the session opener, we only validate that there actually is a session. If there is
-        #    not, or it is marked as "logged out", we deny the user access.
-        #
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
 
         try:
-            user_name, auth_type = check_auth()
+            return self._resume_session(app, request) or self._authenticate_and_open(app, request)
         except MKAuthException as exc:
-            # Authentication failed.
-            return self.session_class.create_empty_session(exc=exc)
-
-        # From here on out, the user is considered authenticated.
-        now = datetime.now()
-        try:
-            userdb.session.on_succeeded_login(user_name, now)
-        except MKException as exc:
-            # We can't let the user log in due to some reason, even though successfully logged in.
-            return self.session_class.create_empty_session(exc=exc)
-
-        # No cookie present. We create a new session and the cookie will be sent to the user
-        # through `save_session` below.
-        if not (cookie_value := request.cookies.get(self.get_cookie_name(app), type=str)):
-            # Our REST API doesn't hand out session tokens, so every request is a new session.
-            # Filter those for now to avoid spamming the log.
-            if auth_type != "bearer":
-                log_security_event(
-                    AuthenticationSuccessEvent(
-                        auth_method=auth_type,
-                        username=str(user_name),
-                        remote_ip=request.remote_addr,
-                    )
-                )
-
-            # We didn't receive a cookie, so this is the first time we use this session.
-            return self.session_class.create_session(user_name, auth_type)
-
-        # From here on out, we know we received a cookie. We'll verify its integrity.
-        try:
-            user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
-            userdb.on_access(user_name, session_id, datetime.now())
-        except MKAuthException as exc:
-            # The cookie is not considered valid, timed out, etc. So we don't auto-renew it.
-            return self.session_class.create_empty_session(exc=exc)
-
-        # Everything else taken care of, we load the session...
-        try:
-            return self.session_class.load_session(user_name, session_id)
-        except MKAuthException as exc:
-            # ... unless we can't.
             return self.session_class.create_empty_session(exc=exc)
 
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result

@@ -12,12 +12,16 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import bulletlink
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
 
-@snapin_registry.register
+def register(snapin_registry: SnapinRegistry) -> None:
+    snapin_registry.register(SidebarSnapinAggregationGroupList)
+    snapin_registry.register(SidebarSnapinAggregationGroupTree)
+
+
 class SidebarSnapinAggregationGroupList(SidebarSnapin):
     @staticmethod
     def type_name() -> str:
@@ -38,7 +42,6 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
         html.close_ul()
 
 
-@snapin_registry.register
 class SidebarSnapinAggregationGroupTree(SidebarSnapin):
     @staticmethod
     def type_name() -> str:

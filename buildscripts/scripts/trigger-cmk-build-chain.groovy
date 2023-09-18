@@ -44,6 +44,9 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
+        [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
+        // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
+        [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
     ];
 
     // TODO we should take this list from a single source of truth

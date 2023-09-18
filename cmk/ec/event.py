@@ -73,10 +73,10 @@ def _make_event(text: str, ipaddress: str) -> Event:
 
 
 def create_event_from_line(
-    data: bytes, address: tuple[str, int] | None, logger: Logger, *, verbose: bool = False
+    data: bytes, address: tuple[str, int] | None, logger: Logger | None
 ) -> Event:
     line = scrub_string(data.decode("utf-8"))
-    if verbose:
+    if logger:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
         logger.info(f'processing message{adr} "{line}"')
     # TODO: Is it really never a domain name?
@@ -84,10 +84,10 @@ def create_event_from_line(
     try:
         event = parse_message(line, ipaddress)
     except Exception:
-        if verbose:
+        if logger:
             logger.info('could not parse message "%s"', line)
         event = _make_event(line, ipaddress)
-    if verbose:
+    if logger:
         width = max(len(k) for k in event.keys()) + 1
         logger.info(
             "parsed message: %s",

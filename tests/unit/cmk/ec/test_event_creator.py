@@ -394,7 +394,7 @@ def test_create_event_from_line(data: bytes, expected: Mapping[str, Any]) -> Non
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
-        assert create_event_from_line(data, address, logger, verbose=True) == expected
+        assert create_event_from_line(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(
@@ -422,10 +422,10 @@ def test_create_event_from_line_with_DST(data: bytes, expected: Mapping[str, Any
     logger = logging.getLogger("cmk.mkeventd")
 
     with on_time(1675748161, "CET"):  # february when there is no DST
-        assert create_event_from_line(data, address, logger, verbose=True) == expected
+        assert create_event_from_line(data, address, logger) == expected
 
     with on_time(1688704561, "CET"):  # July when there is DST
-        assert create_event_from_line(data, address, logger, verbose=True) == expected
+        assert create_event_from_line(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(
@@ -453,10 +453,10 @@ def test_create_event_from_line_without_DST(data: bytes, expected: Mapping[str, 
     logger = logging.getLogger("cmk.mkeventd")
 
     with on_time(1675748161, "CET"):  # february when there is no DST
-        assert create_event_from_line(data, address, logger, verbose=True) == expected
+        assert create_event_from_line(data, address, logger) == expected
 
     with on_time(1688704561, "CET"):  # July when there is DST
-        assert create_event_from_line(data, address, logger, verbose=True) == expected
+        assert create_event_from_line(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(

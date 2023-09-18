@@ -834,7 +834,7 @@ class EventServer(ECServerThread):
             self.process_raw_data(
                 lambda: self.process_event(
                     create_event_from_line(
-                        data, address, self._logger, verbose=self._config["debug_rules"]
+                        data, address, self._logger if self._config["debug_rules"] else None
                     )
                 )
             )

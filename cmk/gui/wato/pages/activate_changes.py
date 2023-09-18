@@ -473,7 +473,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 table.cell(_("Summary"), HTML(icon_code + change["text"]))
 
                 table.cell(
-                    _("Details"), HTML(diff_text if (diff_text := change.get("diff_text")) else "")
+                    _("Details"), diff_text if (diff_text := change.get("diff_text")) else ""
                 )
 
                 table.cell(_("Affected sites"), css=["affected_sites"])

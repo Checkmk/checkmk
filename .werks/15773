@@ -1,0 +1,19 @@
+Title: clustered hosts: Fix monitoring if 'Use piggyback data from other hosts if present' is used
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695036015
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Clustered hosts with 'No IP', 'No API integrations, no Checkmk agent' and
+'Use piggyback data from other hosts if present' options configured, weren't
+monitored properly. Clustered services weren't discovered and monitored
+even though they were visible in the discovery page.
+
+
+
+

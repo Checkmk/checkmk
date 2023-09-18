@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Any
@@ -40,13 +40,7 @@ class SNMPTrapEngine:
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    def __init__(
-        self,
-        settings: Settings,
-        config: Config,
-        logger: Logger,
-        callback: Callable[[Iterable[tuple[str, str]], str], None],
-    ) -> None:
+    def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
@@ -55,12 +49,11 @@ class SNMPTrapEngine:
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
         # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
         # receiver instance is kept alive by the registration itself, so there is no need to store
-        # it anywhere here. To make things even more convoluted, that callback calls back our
-        # callback here. So in a nutshell: When process_snmptrap() below is called, it calls the
-        # callback parameter above with the variable bindings of the trap and its IP address.
+        # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
+        # parse_snmptrap() is called.
         SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
-        self._callback = callback
 
         # Hand over our logger to PySNMP
         pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
@@ -158,19 +151,22 @@ class SNMPTrapEngine:
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id),
                 )
 
-    def process_snmptrap(self, message: bytes, sender_address: tuple[str, int]) -> None:
-        """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
-        and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
+    def parse_snmptrap(
+        self, data: bytes, sender_address: tuple[str, int]
+    ) -> tuple[Iterable[tuple[str, str]], str] | None:
+        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
         self._logger.log(
             VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
         )
+        self._varbinds_and_ipaddress = None
         self.snmp_engine.setUserContext(sender_address=sender_address)
         self.snmp_engine.msgAndPduDsp.receiveMessage(
             snmpEngine=self.snmp_engine,
             transportDomain=(),
             transportAddress=sender_address,
-            wholeMsg=message,
+            wholeMsg=data,
         )
+        return self._varbinds_and_ipaddress
 
     def _handle_snmptrap(
         self,
@@ -185,7 +181,8 @@ class SNMPTrapEngine:
         ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
-        self._callback(trap, ipaddress)
+        # NOTE: There can be only one trap per PDU, so we don't run into the risk of overwriting previous info.
+        self._varbinds_and_ipaddress = trap, ipaddress
 
     def _log_snmptrap_details(
         self,

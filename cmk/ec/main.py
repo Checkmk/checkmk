@@ -29,7 +29,6 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
@@ -466,7 +465,7 @@ class EventServer(ECServerThread):
         self.open_syslog_tcp()
         self.open_snmptrap()
         self._snmp_trap_engine = SNMPTrapEngine(
-            self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap
+            self.settings, self._config, self._logger.getChild("snmp")
         )
 
     @classmethod
@@ -699,9 +698,6 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def handle_snmptrap(self, trap: Iterable[tuple[str, str]], ipaddress_: str) -> None:
-        self.process_event(create_event_from_trap(trap, ipaddress_))
-
     def serve(self) -> None:  # pylint: disable=too-many-branches
         pipe = self.open_pipe()
         listen_list = [
@@ -791,13 +787,13 @@ class EventServer(ECServerThread):
             if self._snmptrap is not None and self._snmptrap in readable:
                 try:
                     message, address = self._snmptrap.recvfrom(65535)
-                    self.process_raw_data(
-                        partial(
-                            self._snmp_trap_engine.process_snmptrap,
-                            message,
-                            parse_address("SNMP trap", address),
+                    if varbinds_and_ipaddress := self._snmp_trap_engine.parse_snmptrap(
+                        message, parse_address("SNMP trap", address)
+                    ):
+                        varbinds, ipaddress_ = varbinds_and_ipaddress
+                        self.process_raw_data(
+                            lambda: self.process_event(create_event_from_trap(varbinds, ipaddress_))
                         )
-                    )
                 except Exception:
                     self._logger.exception(
                         "exception while handling an SNMP trap, skipping this one"
@@ -1166,7 +1162,7 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config: Config) -> None:
         self._config = config
         self._snmp_trap_engine = SNMPTrapEngine(
-            self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap
+            self.settings, self._config, self._logger.getChild("snmp")
         )
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)

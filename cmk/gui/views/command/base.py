@@ -12,7 +12,7 @@ from typing import Literal
 from livestatus import SiteId
 
 from cmk.gui import sites
-from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
@@ -56,8 +56,9 @@ class Command(abc.ABC):
         return ("%s %s?") % (self.confirm_button, self.title.lower())
 
     @property
+    @abc.abstractmethod
     def confirm_button(self) -> LazyString:
-        return _l("Submit")
+        raise NotImplementedError()
 
     @property
     @abc.abstractmethod

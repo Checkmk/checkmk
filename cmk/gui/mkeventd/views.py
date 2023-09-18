@@ -1242,6 +1242,16 @@ class CommandECUpdateEvent(ECCommand):
         return _("Update & acknowledge")
 
     @property
+    def confirm_title(self) -> str:
+        return _("%s event") % (
+            _("Update & acknowledge") if request.var("_mkeventd_acknowledge") else _("Update")
+        )
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Update & acknowledge") if request.var("_mkeventd_acknowledge") else _l("Update")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
@@ -1332,6 +1342,14 @@ class CommandECChangeState(ECCommand):
         return _("Change state")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Change event state?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Change")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
@@ -1343,8 +1361,20 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML(
+            "<br><br>"
+            + request.get_str_input_mandatory("_mkeventd_changestate")
+            + {
+                0: _("OK"),
+                1: _("WARN"),
+                2: _("CRIT"),
+                3: _("UNKNOWN"),
+            }[MonitoringState().from_html_vars("_mkeventd_state")]
+        )
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_mkeventd_changestate", _("Change Event state to:"))
+        html.button("_mkeventd_changestate", _("New event state:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
@@ -1382,6 +1412,10 @@ class CommandECCustomAction(ECCommand):
     @property
     def title(self) -> str:
         return _("Custom action")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Execute")
 
     @property
     def permission(self) -> Permission:

@@ -37,6 +37,7 @@ from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -1095,6 +1096,14 @@ class CommandFreezeAggregation(Command):
     @property
     def title(self) -> str:
         return _("Freeze aggregations")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Freeze aggregations?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Freeze")
 
     @property
     def icon_name(self):

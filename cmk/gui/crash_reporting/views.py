@@ -20,6 +20,7 @@ from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
@@ -321,6 +322,14 @@ class CommandDeleteCrashReports(Command):
     @property
     def title(self) -> str:
         return _("Delete crash reports")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Delete crash reports?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Delete")
 
     @property
     def permission(self) -> Permission:

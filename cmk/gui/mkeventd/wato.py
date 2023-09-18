@@ -90,7 +90,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.plugins.wato.check_parameters.logwatch_ec import RulespecLogwatchEC
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -184,6 +183,7 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
+from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, eventd_configuration, service_levels

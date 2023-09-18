@@ -501,7 +501,6 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
     )
 
 
-# Registered in cmk.gui.mkeventd.wato
 RulespecLogwatchEC = CheckParameterRulespecWithoutItem(
     check_group_name="logwatch_ec",
     group=RulespecGroupCheckParametersApplications,

@@ -20,8 +20,6 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.sidebar.utils import begin_footnote_links, end_footnote_links, iconlink, link
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Alternative,
@@ -34,6 +32,9 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from .. import SidebarSnapin, snapin_registry
+from ._helpers import begin_footnote_links, end_footnote_links, iconlink, link
 
 
 class BookmarkSpec(TypedDict):

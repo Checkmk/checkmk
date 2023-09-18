@@ -34,7 +34,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import main_module_registry
-from cmk.gui.sidebar import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import (
     ABCMegaMenuSearch,
     HTTPVariables,
@@ -58,6 +57,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
+
+from .. import PageHandlers, SidebarSnapin, snapin_registry
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |

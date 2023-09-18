@@ -15,9 +15,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MegaMenuRegistry
-from cmk.gui.plugins.sidebar import search
-from cmk.gui.plugins.sidebar.utils import footnotelinks, make_topic_menu, show_topic_menu
-from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
+from cmk.gui.sidebar import (
+    footnotelinks,
+    make_topic_menu,
+    show_topic_menu,
+    SidebarSnapin,
+    SnapinRegistry,
+)
+from cmk.gui.sidebar._snapin.snapins import search
 from cmk.gui.type_defs import (
     Choices,
     MegaMenu,

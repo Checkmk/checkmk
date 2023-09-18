@@ -9,9 +9,10 @@ import cmk.gui.user_sites as user_sites
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import snapin_site_choice
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import RoleName
+
+from .. import SidebarSnapin, snapin_registry
+from ._helpers import snapin_site_choice
 
 
 @snapin_registry.register

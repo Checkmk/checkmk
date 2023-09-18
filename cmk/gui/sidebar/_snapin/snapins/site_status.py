@@ -14,17 +14,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.sidebar.utils import (
-    begin_footnote_links,
-    end_footnote_links,
-    link,
-    render_link,
-)
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeuri_contextless
+
+from .. import SidebarSnapin, snapin_registry
+from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
 
 @snapin_registry.register

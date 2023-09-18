@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.sidebar.search import (
+from cmk.gui.sidebar._snapin.snapins.search import (
     ABCLabelMatchPlugin,
     HostLabelMatchPlugin,
     ServiceLabelMatchPlugin,

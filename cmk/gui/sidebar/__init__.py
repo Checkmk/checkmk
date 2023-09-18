@@ -35,20 +35,6 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
-
-# Kept for compatibility with legacy plugins
-# TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import begin_footnote_links as begin_footnote_links
-from cmk.gui.plugins.sidebar.utils import bulletlink as bulletlink
-from cmk.gui.plugins.sidebar.utils import end_footnote_links as end_footnote_links
-from cmk.gui.plugins.sidebar.utils import footnotelinks as footnotelinks
-from cmk.gui.plugins.sidebar.utils import heading as heading
-from cmk.gui.plugins.sidebar.utils import iconlink as iconlink
-from cmk.gui.plugins.sidebar.utils import link as link
-from cmk.gui.plugins.sidebar.utils import render_link as render_link
-from cmk.gui.plugins.sidebar.utils import snapin_site_choice as snapin_site_choice
-from cmk.gui.plugins.sidebar.utils import snapin_width as snapin_width
-from cmk.gui.plugins.sidebar.utils import write_snapin_exception as write_snapin_exception
 from cmk.gui.type_defs import Icon as Icon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
@@ -60,12 +46,25 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
+from ._snapin import begin_footnote_links as begin_footnote_links
+from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import end_footnote_links as end_footnote_links
+from ._snapin import footnotelinks as footnotelinks
+from ._snapin import heading as heading
+from ._snapin import iconlink as iconlink
+from ._snapin import link as link
+from ._snapin import make_topic_menu as make_topic_menu
 from ._snapin import PageHandlers as PageHandlers
 from ._snapin import PermissionSectionSidebarSnapins
+from ._snapin import render_link as render_link
+from ._snapin import show_topic_menu as show_topic_menu
 from ._snapin import SidebarSnapin as SidebarSnapin
 from ._snapin import snapin_registry as snapin_registry
+from ._snapin import snapin_site_choice as snapin_site_choice
+from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
+from ._snapin import write_snapin_exception as write_snapin_exception
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,
@@ -125,25 +124,21 @@ def _register_pre_21_plugin_api() -> None:
         ("CustomizableSidebarSnapin", CustomizableSidebarSnapin),
         ("PageHandlers", PageHandlers),
         ("snapin_registry", snapin_registry),
+        ("begin_footnote_links", begin_footnote_links),
+        ("bulletlink", bulletlink),
+        ("end_footnote_links", end_footnote_links),
+        ("footnotelinks", footnotelinks),
+        ("heading", heading),
+        ("iconlink", iconlink),
+        ("link", link),
+        ("make_topic_menu", make_topic_menu),
+        ("render_link", render_link),
+        ("show_topic_menu", show_topic_menu),
+        ("snapin_site_choice", snapin_site_choice),
+        ("snapin_width", snapin_width),
+        ("write_snapin_exception", write_snapin_exception),
     ]:
         api_module.__dict__[name] = plugin_utils.__dict__[name] = value
-
-    for name in (
-        "begin_footnote_links",
-        "bulletlink",
-        "end_footnote_links",
-        "footnotelinks",
-        "heading",
-        "iconlink",
-        "link",
-        "make_topic_menu",
-        "render_link",
-        "show_topic_menu",
-        "snapin_site_choice",
-        "snapin_width",
-        "write_snapin_exception",
-    ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 # Pre Checkmk 1.5 the snapins were declared with dictionaries like this:

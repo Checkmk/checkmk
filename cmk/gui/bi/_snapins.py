@@ -5,14 +5,13 @@
 
 from typing import Any
 
-import cmk.gui.bi as bi
+from cmk.gui import bi
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import bulletlink
-from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
+from cmk.gui.sidebar import bulletlink, SidebarSnapin, SnapinRegistry
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 

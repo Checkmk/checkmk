@@ -8,9 +8,10 @@ import abc
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import bulletlink
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import urlencode
+
+from .. import SidebarSnapin, snapin_registry
+from ._helpers import bulletlink
 
 
 class GroupSnapin(SidebarSnapin, abc.ABC):

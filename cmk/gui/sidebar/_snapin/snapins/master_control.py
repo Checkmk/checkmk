@@ -18,10 +18,11 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.sidebar.utils import write_snapin_exception
-from cmk.gui.sidebar import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
+
+from .. import PageHandlers, SidebarSnapin, snapin_registry
+from ._helpers import write_snapin_exception
 
 
 @snapin_registry.register

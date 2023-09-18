@@ -17,10 +17,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.sidebar.utils import link
-from cmk.gui.sidebar import CustomizableSidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
+
+from .. import CustomizableSidebarSnapin, snapin_registry
+from ._helpers import link
 
 
 class ViewURLParams(NamedTuple):

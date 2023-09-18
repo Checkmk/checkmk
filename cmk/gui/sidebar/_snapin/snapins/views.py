@@ -18,11 +18,12 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
-from cmk.gui.plugins.sidebar import search
-from cmk.gui.plugins.sidebar.utils import footnotelinks, make_topic_menu, show_topic_menu
-from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
+
+from .. import SidebarSnapin, snapin_registry
+from . import search
+from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module

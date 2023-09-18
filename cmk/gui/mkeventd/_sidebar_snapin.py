@@ -21,8 +21,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import snapin_site_choice
-from cmk.gui.sidebar import SidebarSnapin
+from cmk.gui.sidebar import SidebarSnapin, snapin_site_choice
 from cmk.gui.type_defs import RoleName
 from cmk.gui.user_sites import get_event_console_site_choices
 

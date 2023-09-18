@@ -359,7 +359,8 @@ export function textinput_enter_submit(
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(
     optional_args: any,
-    confirm_handler: null | (() => void)
+    confirm_handler: null | (() => void),
+    cancel_handler: null | (() => void) = null
 ) {
     const default_custom_class_args = {
         title: "confirm_title",
@@ -412,8 +413,10 @@ export function confirm_dialog(
     };
 
     Swal.fire(args).then(result => {
-        if (confirm_handler && result.value) {
-            confirm_handler();
+        if (result.value) {
+            if (confirm_handler) confirm_handler();
+        } else if (result.dismiss == Swal.DismissReason.cancel) {
+            if (cancel_handler) cancel_handler();
         }
     });
 }

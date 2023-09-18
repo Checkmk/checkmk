@@ -212,12 +212,32 @@ class CommandNotifications(Command):
         return _("Notifications")
 
     @property
+    def confirm_title(self) -> str:
+        return _("%s notifications") % (
+            _("Enable") if request.var("_enable_notifications") else _("Disable")
+        )
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Enable") if request.var("_enable_notifications") else _l("Disable")
+
+    @property
     def permission(self) -> Permission:
         return PermissionActionNotifications
 
     @property
     def tables(self):
         return ["host", "service"]
+
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML(
+            "<br><br>"
+            + (
+                _("Notifications will be sent according to the notification rules")
+                if request.var("_enable_notifications")
+                else _("This will suppress all notifications")
+            )
+        )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_enable_notifications", _("Enable"))

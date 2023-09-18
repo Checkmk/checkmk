@@ -69,18 +69,6 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
-        name="revert_changes",
-        title=_l("Revert configuration changes"),
-        description=_l(
-            "This permission is needed for the configuration rollback, up the last activate changes."
-        ),
-        defaults=["admin"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionWATO,
         name="activateforeign",
         title=_l("Activate foreign changes"),
         description=_l(
@@ -100,8 +88,9 @@ permission_registry.register(
         name="discard",
         title=_l("Discard changes"),
         description=_l(
-            "This permission allows to discard pending changes. Beware that this holds only for "
-            "the user's own pending changes, not for those of other users (foreign changes)."
+            "This permission allows to revert the latest changes, up to the last activate changes. "
+            "Beware that this holds only for the user's own pending changes, not for those of"
+            "other users (foreign changes)."
         ),
         defaults=["admin", "user"],
     )

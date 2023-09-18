@@ -146,7 +146,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["revert_changes"]
+        return ["discard"]
 
     def __init__(self) -> None:
         self._value: dict = {}
@@ -197,7 +197,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if not user.may("wato.activate"):
             return False
 
-        if not user.may("wato.revert_changes"):
+        if not user.may("wato.discard"):
             return False
 
         if read_only.is_enabled() and not read_only.may_override():

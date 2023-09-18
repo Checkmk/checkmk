@@ -41,6 +41,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
@@ -1432,6 +1433,14 @@ class CommandECArchiveEvent(ECCommand):
         return _("Archive event")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Archive event")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Archive")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
@@ -1476,12 +1485,33 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return _("Archive events of hosts")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Archive all events of this host?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Archive")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECArchiveEventsOfHost
 
     @property
     def tables(self):
         return ["service"]
+
+    def confirm_dialog_additions(self) -> HTML:
+        return HTML(
+            _(
+                "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
+            )
+            % request.var("host")
+        )
+
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML("")
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.help(

@@ -2530,17 +2530,11 @@ class ConfigVariableSessionManagement(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Session management"),
-            help=_(
-                "TBA",
-            ),
             elements=[
                 (
                     "max_duration",
                     Dictionary(
                         title=_("Maximum session duration"),
-                        help=_(
-                            "TBA",
-                        ),
                         elements=[
                             (
                                 "enforce_reauth",
@@ -2549,7 +2543,9 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(
-                                        "TBA",
+                                        "Define the maximum session duration. "
+                                        "If reached, the user has to "
+                                        "re-authenticate.",
                                     ),
                                     default_value=86400,
                                 ),
@@ -2558,14 +2554,11 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                 "force_authuser",
                                 Percentage(
                                     title=_(
-                                        "Prevent data loss of forms by forcing re-authentication after"
+                                        "Prevent data loss of forms by forcing "
+                                        "re-authentification after"
                                     ),
-                                    help=_(
-                                        "TBA",
-                                    ),
-                                    allow_int=True,
-                                    unit=_("% of the time"),
-                                    default_value=50,
+                                    unit=_("% of the specified time via GET request"),
+                                    default_value=50.0,
                                 ),
                             ),
                         ],

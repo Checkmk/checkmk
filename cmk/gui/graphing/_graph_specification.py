@@ -66,7 +66,7 @@ class MetricOpTransformation(BaseModel, frozen=True):
     # }
     # TODO Check params
     ident: Literal["transformation"] = "transformation"
-    parameters: tuple[Literal["percentile"], float] | tuple[
+    parameters: tuple[Literal["percentile"], int] | tuple[
         Literal["forecast", "filter_top", "value_sort"], Mapping[str, object]
     ]
     operands: Sequence[MetricOperation]

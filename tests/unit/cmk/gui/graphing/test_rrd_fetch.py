@@ -37,7 +37,7 @@ def test_needed_elements_of_expression() -> None:
     assert set(
         _needed_elements_of_expression(
             MetricOpTransformation(
-                parameters=("percentile", 95.0),
+                parameters=("percentile", 95),
                 operands=[
                     MetricOpRRDChoice(
                         host_name=HostName("heute"),

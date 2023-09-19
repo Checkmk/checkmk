@@ -139,6 +139,10 @@ def do_actions(  # pylint: disable=too-many-branches
         )
         return False  # no actions done
 
+    # User canceled the first confirm dialog
+    if request.get_str_input("_cancel") is not None:
+        return False
+
     if not action_rows:
         message_no_rows = _("No rows selected to perform actions for.")
         message_no_rows += '<br><a href="{}">{}</a>'.format(backurl, _("Back to view"))

@@ -146,14 +146,15 @@ class CommandReschedule(Command):
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input(
-            "_resched_spread", default_value="1", size=3, cssclass="number", required=True
+            "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
         html.write_text(" " + _("minutes"))
         html.close_div()
 
-        html.div(
-            html.render_button("_resched_checks", _("Reschedule"), cssclass="hot"), class_="group"
-        )
+        html.open_div(class_="group")
+        html.button("_resched_checks", _("Reschedule"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

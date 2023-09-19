@@ -239,23 +239,20 @@ class SNMPTrapTranslator:
         self._logger = logger
         match config["translate_snmptraps"]:
             case False:
+                self._mib_resolver: pysnmp.smi.view.MibViewController | None = None
                 self.translate = self._translate_simple
             case (True, {**extra}) if not extra:  # matches empty dict
-                self._init_translate_via_mibs(
-                    settings.paths.compiled_mibs_dir.value,
-                    load_texts=False,
+                self._mib_resolver = self._construct_resolver(
+                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=False
                 )
+                self.translate = self._translate_via_mibs
             case (True, {"add_description": True}):
-                self._init_translate_via_mibs(
-                    settings.paths.compiled_mibs_dir.value,
-                    load_texts=True,
+                self._mib_resolver = self._construct_resolver(
+                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=True
                 )
+                self.translate = self._translate_via_mibs
             case _:
                 raise Exception("invalid SNMP trap translation")
-
-    def _init_translate_via_mibs(self, path: Path, *, load_texts: bool) -> None:
-        self._mib_resolver = self._construct_resolver(self._logger, path, load_texts=load_texts)
-        self.translate = self._translate_via_mibs
 
     @staticmethod
     def _construct_resolver(

@@ -13,16 +13,16 @@ import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
 from .. import SidebarSnapin
-from . import search
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -106,6 +106,49 @@ def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
     return make_topic_menu(visuals_to_show)
 
 
+class MonitoringSearch(ABCMegaMenuSearch):
+    """Search field in the monitoring menu"""
+
+    def show_search_field(self) -> None:
+        html.open_div(id_="mk_side_search_monitoring")
+        # TODO: Implement submit action (e.g. show all results of current query)
+        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _(
+            "Search with regular expressions for menu entries, \n"
+            "hosts, services or host and service groups.\n\n"
+            "You can use the following filters:\n"
+            "h: Host\n"
+            "s: Service\n"
+            "hg: Host group\n"
+            "sg: Service group\n"
+            "ad: Address\n"
+            "al: Alias\n"
+            "tg: Host tag\n"
+            "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+            "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+            "Note that for simplicity '*' will be substituted with '.*'."
+        )
+        html.input(
+            id_=f"mk_side_search_field_{self.name}",
+            type_="text",
+            name="search",
+            title=tooltip,
+            autocomplete="off",
+            placeholder=_("Search in Monitoring"),
+            onkeydown="cmk.search.on_key_down('monitoring')",
+            oninput="cmk.search.on_input_search('monitoring')",
+        )
+        html.input(
+            id_=f"mk_side_search_field_clear_{self.name}",
+            name="reset",
+            type_="button",
+            onclick="cmk.search.on_click_reset('monitoring');",
+        )
+        html.end_form()
+        html.close_div()
+        html.div("", id_="mk_side_clear")
+
+
 mega_menu_registry.register(
     MegaMenu(
         name="monitoring",
@@ -113,6 +156,6 @@ mega_menu_registry.register(
         icon="main_monitoring",
         sort_index=5,
         topics=lambda: get_view_menu_items(include_reports=True),
-        search=search.MonitoringSearch("monitoring_search"),
+        search=MonitoringSearch("monitoring_search"),
     )
 )

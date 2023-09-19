@@ -210,7 +210,7 @@ def test_registered_commands() -> None:
         "clear_modified_attributes": {
             "permission": "action.clearmodattr",
             "tables": ["host", "service"],
-            "title": "Modified attributes",
+            "title": "Reset modified attributes",
         },
         "send_custom_notification": {
             "permission": "action.customnotification",

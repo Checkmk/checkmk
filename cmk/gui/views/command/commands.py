@@ -422,7 +422,7 @@ class CommandClearModifiedAttributes(Command):
 
     @property
     def title(self) -> str:
-        return _("Modified attributes")
+        return _("Reset modified attributes")
 
     @property
     def confirm_button(self) -> LazyString:
@@ -437,7 +437,10 @@ class CommandClearModifiedAttributes(Command):
         return ["host", "service"]
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_clear_modattr", _("Clear modified attributes"))
+        html.open_div(class_="group")
+        html.button("_clear_modattr", _("Reset attributes"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def confirm_dialog_additions(self) -> HTML:
         return HTML(

@@ -791,9 +791,7 @@ class EventServer(ECServerThread):
                         message, parse_address("SNMP trap", address)
                     ):
                         varbinds, ipaddress_ = varbinds_and_ipaddress
-                        self.process_raw_data(
-                            lambda: self.process_event(create_event_from_trap(varbinds, ipaddress_))
-                        )
+                        self.process_raw_data(lambda: create_event_from_trap(varbinds, ipaddress_))
                 except Exception:
                     self._logger.exception(
                         "exception while handling an SNMP trap, skipping this one"
@@ -809,7 +807,7 @@ class EventServer(ECServerThread):
             else:
                 select_timeout = 1  # restore default select timeout
 
-    def process_raw_data(self, handler: Callable[[], None]) -> None:
+    def process_raw_data(self, produce_event: Callable[[], Event]) -> None:
         """
         Processes incoming data, just a wrapper between the real data and the
         handler function to record some statistics etc.
@@ -818,7 +816,7 @@ class EventServer(ECServerThread):
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
-            handler()
+            self.process_event(produce_event())
         elif self.settings.options.debug:
             self._logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
@@ -827,10 +825,8 @@ class EventServer(ECServerThread):
     def process_syslog_message(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes one line message, handles encoding and processes it."""
         self.process_raw_data(
-            lambda: self.process_event(
-                create_event_from_syslog_message(
-                    data, address, self._logger if self._config["debug_rules"] else None
-                )
+            lambda: create_event_from_syslog_message(
+                data, address, self._logger if self._config["debug_rules"] else None
             )
         )
 

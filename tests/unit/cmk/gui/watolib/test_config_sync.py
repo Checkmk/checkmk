@@ -440,69 +440,6 @@ def test_generate_snapshot(
             assert sorted(paths) == sorted(expected_paths)
 
 
-@pytest.mark.parametrize(
-    "master, slave, result",
-    [
-        pytest.param(
-            {"first": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}, "second": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}},
-            id="Delete user from master",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {},
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            id="New users",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            id="Update Global user notifications. Retain Customer user notifications",
-        ),
-    ],
-)
-def test_update_contacts_dict(master: dict, slave: dict, result: dict) -> None:
-    assert config_sync._update_contacts_dict(master, slave) == result
-
-
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")

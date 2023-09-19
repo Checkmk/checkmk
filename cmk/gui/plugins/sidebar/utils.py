@@ -18,7 +18,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.sites import filter_available_site_choices
 from cmk.gui.type_defs import Choices, Icon, TopicMenuItem, TopicMenuTopic, Visual
 from cmk.gui.utils.html import HTML
@@ -28,21 +27,6 @@ from cmk.gui.visuals import visual_title
 snapin_width = 240
 
 search_plugins: list = []
-
-
-@permission_section_registry.register
-class PermissionSectionSidebarSnapins(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "sidesnap"
-
-    @property
-    def title(self) -> str:
-        return _("Sidebar elements")
-
-    @property
-    def do_sort(self) -> bool:
-        return True
 
 
 # .

@@ -205,7 +205,7 @@ def register() -> None:
     autocompleters.register(page_registry)
     werks.register(page_registry)
     login.register(page_registry)
-    sidebar.register(page_registry)
+    sidebar.register(page_registry, permission_section_registry)
     message.register(page_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)

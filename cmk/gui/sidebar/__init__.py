@@ -34,6 +34,7 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.permissions import PermissionSectionRegistry
 
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
@@ -61,6 +62,7 @@ from cmk.gui.werks import may_acknowledge
 
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
 from ._snapin import PageHandlers as PageHandlers
+from ._snapin import PermissionSectionSidebarSnapins
 from ._snapin import SidebarSnapin as SidebarSnapin
 from ._snapin import snapin_registry as snapin_registry
 from ._snapin import SnapinRegistry as SnapinRegistry
@@ -75,7 +77,9 @@ from .main_menu import (
 sidebar_snapins: dict[str, dict] = {}
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
+) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
     page_registry.register_page("sidebar_ajax_add_snapin")(AjaxAddSnapin)
@@ -89,6 +93,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
         PageAjaxSidebarGetUnackIncompWerks
     )
+    permission_section_registry.register(PermissionSectionSidebarSnapins)
 
 
 def load_plugins() -> None:

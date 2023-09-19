@@ -6,5 +6,6 @@
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
 from ._base import PageHandlers as PageHandlers
 from ._base import SidebarSnapin as SidebarSnapin
+from ._permission_section import PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins
 from ._registry import snapin_registry as snapin_registry
 from ._registry import SnapinRegistry as SnapinRegistry

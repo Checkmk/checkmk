@@ -8,10 +8,11 @@ from typing import Any
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.pages import page_registry
-from cmk.gui.permissions import declare_permission
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import PermissionName
 
 from ._base import CustomizableSidebarSnapin, SidebarSnapin
+from ._permission_section import PermissionSectionSidebarSnapins
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
 # of cycles and untyped dependencies. So for now this is just a reminder.
@@ -29,11 +30,14 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
         # Custom snapins have their own permissions "custom_snapin.*"
         if not instance.is_custom_snapin():
-            declare_permission(
-                "sidesnap.%s" % self.plugin_name(instance),
-                instance.title(),
-                instance.description(),
-                instance.allowed_roles(),
+            permission_registry.register(
+                Permission(
+                    section=PermissionSectionSidebarSnapins,
+                    name="sidesnap.%s" % self.plugin_name(instance),
+                    title=instance.title(),
+                    description=instance.description(),
+                    defaults=instance.allowed_roles(),
+                )
             )
 
         for path, page_func in instance().page_handlers().items():

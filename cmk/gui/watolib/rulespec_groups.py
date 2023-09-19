@@ -8,10 +8,35 @@
 
 from cmk.gui.i18n import _
 
-from .rulespecs import rulespec_group_registry, RulespecGroup, RulespecSubGroup
+from .rulespecs import (
+    RulespecGroup,
+    RulespecGroupEnforcedServices,
+    RulespecGroupRegistry,
+    RulespecSubGroup,
+)
 
 
-@rulespec_group_registry.register
+def register(rulespec_group_registry: RulespecGroupRegistry) -> None:
+    rulespec_group_registry.register(RulespecGroupMonitoringConfiguration)
+    rulespec_group_registry.register(RulespecGroupMonitoringConfigurationVarious)
+    rulespec_group_registry.register(RulespecGroupHostsMonitoringRules)
+    rulespec_group_registry.register(RulespecGroupMonitoringConfigurationServiceChecks)
+    rulespec_group_registry.register(RulespecGroupHostsMonitoringRulesVarious)
+    rulespec_group_registry.register(RulespecGroupMonitoringConfigurationNotifications)
+    rulespec_group_registry.register(RulespecGroupHostsMonitoringRulesNotifications)
+    rulespec_group_registry.register(RulespecGroupHostsMonitoringRulesHostChecks)
+    rulespec_group_registry.register(RulespecGroupAgentSNMP)
+    rulespec_group_registry.register(RulespecGroupMonitoringAgents)
+    rulespec_group_registry.register(RulespecGroupMonitoringAgentsGenericOptions)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesNetworking)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesApplications)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesEnvironment)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesOperatingSystem)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesHardware)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesStorage)
+    rulespec_group_registry.register(RulespecGroupEnforcedServicesVirtualization)
+
+
 class RulespecGroupMonitoringConfiguration(RulespecGroup):
     @property
     def name(self) -> str:
@@ -31,7 +56,6 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
         )
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -46,7 +70,6 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return _("Various")
 
 
-@rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRules(RulespecGroup):
     @property
     def name(self) -> str:
@@ -61,7 +84,6 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
         return _("Rules to configure the behaviour of monitored hosts.")
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -76,7 +98,6 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
         return _("Service Checks")
 
 
-@rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -91,7 +112,6 @@ class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
         return _("Various")
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -106,7 +126,6 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
         return _("Notifications")
 
 
-@rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -121,7 +140,6 @@ class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
         return _("Notifications")
 
 
-@rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -136,7 +154,6 @@ class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
         return _("Host checks")
 
 
-@rulespec_group_registry.register
 class RulespecGroupAgentSNMP(RulespecGroup):
     @property
     def name(self) -> str:
@@ -151,7 +168,6 @@ class RulespecGroupAgentSNMP(RulespecGroup):
         return _("Configure SNMP related settings using rulesets")
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringAgents(RulespecGroup):
     @property
     def name(self) -> str:
@@ -166,7 +182,6 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
         return _("Configuration of monitoring agents for Linux, Windows and Unix")
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -181,27 +196,6 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
         return _("Generic Options")
 
 
-@rulespec_group_registry.register
-class RulespecGroupEnforcedServices(RulespecGroup):
-    @property
-    def name(self) -> str:
-        return "static"
-
-    @property
-    def title(self) -> str:
-        return _("Enforced services")
-
-    @property
-    def help(self):
-        return _(
-            "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
-            "up in this way do not depend on the service discovery. This is useful if you want "
-            "to enforce compliance with a specific guideline. You can for example ensure that "
-            "a certain Windows service is always present on a host."
-        )
-
-
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -216,7 +210,6 @@ class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
         return _("Networking")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -231,7 +224,6 @@ class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
         return _("Applications, Processes & Services")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -246,7 +238,6 @@ class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
         return _("Temperature, Humidity, Electrical Parameters, etc.")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -261,7 +252,6 @@ class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
         return _("Operating System Resources")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -276,7 +266,6 @@ class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
         return _("Hardware, BIOS")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -291,7 +280,6 @@ class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
         return _("Storage, Filesystems and Files")
 
 
-@rulespec_group_registry.register
 class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:

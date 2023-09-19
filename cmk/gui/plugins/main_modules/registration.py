@@ -118,6 +118,7 @@ def register() -> None:
         sorter_registry,
         command_registry,
     )
+    watolib.register(rulespec_group_registry)
 
     if edition() is not Edition.CSE:  # disabled in CSE
         backup_register(
@@ -158,7 +159,6 @@ def register() -> None:
         user_connector_registry,
         job_registry,
     )
-    watolib.register()
     wato_registration.register(
         page_registry,
         painter_registry,

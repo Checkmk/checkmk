@@ -203,6 +203,10 @@ def register(
     config_variable_registry.register(ConfigVariableInventoryCheckInterval)
     config_variable_registry.register(ConfigVariableInventoryCheckSeverity)
     config_variable_registry.register(ConfigVariableInventoryCheckAutotrigger)
+    rulespec_group_registry.register(RulespecGroupAgentCMKAgent)
+    rulespec_group_registry.register(RulespecGroupMonitoringConfigurationInventoryAndCMK)
+    rulespec_group_registry.register(RulespecGroupAgent)
+    rulespec_group_registry.register(RulespecGroupAgentGeneralSettings)
     rulespec_registry.register(HostGroupsRulespec)
     rulespec_registry.register(ServiceGroupsRulespec)
     rulespec_registry.register(HostContactGroupsRulespec)
@@ -4002,7 +4006,6 @@ ExtraServiceConfFlapDetectionEnabled = ServiceRulespec(
 )
 
 
-@rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -4919,7 +4922,6 @@ ExtraServiceConfEscapePluginOutput = ServiceRulespec(
 )
 
 
-@rulespec_group_registry.register
 class RulespecGroupAgent(RulespecGroup):
     @property
     def name(self) -> str:
@@ -4934,7 +4936,6 @@ class RulespecGroupAgent(RulespecGroup):
         return _("Settings concerning the connection to the Checkmk and SNMP agents")
 
 
-@rulespec_group_registry.register
 class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:
@@ -5290,7 +5291,6 @@ SnmpPorts = HostRulespec(
 )
 
 
-@rulespec_group_registry.register
 class RulespecGroupAgentCMKAgent(RulespecSubGroup):
     @property
     def main_group(self) -> type[RulespecGroup]:

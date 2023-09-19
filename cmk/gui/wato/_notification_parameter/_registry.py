@@ -8,7 +8,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.i18n import _
-from cmk.gui.watolib.rulespecs import rulespec_group_registry
+from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_title
 
 from ._base import NotificationParameter
@@ -30,7 +30,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
         valuespec._title = _("Call with the following parameters:")
 
         _rulespecs.register_rule(
-            rulespec_group_registry["monconf/notifications"],
+            RulespecGroupMonitoringConfigurationNotifications,
             RuleGroup.NotificationParameters(plugin.ident),
             valuespec,
             _("Parameters for %s") % script_title,

@@ -21,7 +21,6 @@ from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
 from cmk.gui.wato import register_check_parameters
 from cmk.gui.watolib.main_menu import main_module_registry
-from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
     get_rulegroup,
@@ -35,6 +34,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecRegistry,
     RulespecSubGroup,
@@ -1321,14 +1321,10 @@ def _expected_rulespec_group_choices():
     return expected
 
 
-@pytest.mark.parametrize(
-    "result",
-    [
-        (_expected_rulespec_group_choices()),
-    ],
-)
-def test_rulespec_group_choices(result: Sequence[tuple[str, str]]) -> None:
-    assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
+def test_rulespec_group_choices() -> None:
+    assert sorted(rulespec_group_registry.get_group_choices()) == sorted(
+        _expected_rulespec_group_choices()
+    )
 
 
 @pytest.mark.parametrize(

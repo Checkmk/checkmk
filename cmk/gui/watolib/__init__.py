@@ -38,12 +38,15 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.network_scan import execute_network_scan_job as _execute_network_scan_job
 
+from . import rulespec_groups
+from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
+
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
-def register() -> None:
+def register(rulespec_group_registry: RulespecGroupRegistry) -> None:
     _register_automation_commands()
     _register_gui_background_jobs()
     _register_hooks()
@@ -56,6 +59,8 @@ def register() -> None:
     _sync_remote_sites.register(
         _automation_commands.automation_command_registry, _background_job.job_registry
     )
+    rulespec_groups.register(rulespec_group_registry)
+    rulespec_group_registry.register(RulespecGroupEnforcedServices)
 
 
 def _register_automation_commands() -> None:

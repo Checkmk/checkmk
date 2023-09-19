@@ -678,12 +678,11 @@ def _get_manual_check_parameter_rulespec_instance(
         checkparams_static_sub_group_class = rulespec_group_registry[subgroup_key]
     except KeyError:
         group_instance = group()
-        main_group_static_class = rulespec_group_registry["static"]
         checkparams_static_sub_group_class = type(
             "%sStatic" % group_instance.__class__.__name__,
             (group_instance.__class__,),
             {
-                "main_group": main_group_static_class,
+                "main_group": RulespecGroupEnforcedServices,
             },
         )
 
@@ -696,6 +695,25 @@ def _get_manual_check_parameter_rulespec_instance(
         is_optional=is_optional,
         is_deprecated=is_deprecated,
     )
+
+
+class RulespecGroupEnforcedServices(RulespecGroup):
+    @property
+    def name(self) -> str:
+        return "static"
+
+    @property
+    def title(self) -> str:
+        return _("Enforced services")
+
+    @property
+    def help(self):
+        return _(
+            "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
+            "up in this way do not depend on the service discovery. This is useful if you want "
+            "to enforce compliance with a specific guideline. You can for example ensure that "
+            "a certain Windows service is always present on a host."
+        )
 
 
 class CheckParameterRulespecWithItem(ServiceRulespec):

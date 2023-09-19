@@ -84,11 +84,11 @@ class AWSPublisher(CloudPublisher):
 
     def __init__(
         self,
-        version,
-        build_tag,
-        image_name,
-        marketplace_scanner_arn,
-        product_id,
+        version: str,
+        build_tag: str,
+        image_name: str,
+        marketplace_scanner_arn: str,
+        product_id: str,
     ):
         super().__init__(version, build_tag, image_name)
         self.client_ec2 = boto3.client("ec2")
@@ -197,11 +197,9 @@ class AWSPublisher(CloudPublisher):
                     print(f"Got {status=}... sleeping for {self.WAIT_SECONDS_FOR_NEXT_UPDATE}")
                     await asyncio.sleep(self.WAIT_SECONDS_FOR_NEXT_UPDATE)
                 case "CANCELLED" | "FAILED":
-                    # Currently we only start one changeset, expand this if we're doing more
-                    error_list = response["ChangeSet"][0]["ErrorDetailList"]
                     raise RuntimeError(
                         f"The changeset {change_set_id} returned {status=}.\n"
-                        f"The error was: {[error for error in error_list]}"
+                        f"The error was: {response['ChangeSet'][0]['ErrorDetailList']}"
                     )
                 case "SUCCEEDED":
                     return

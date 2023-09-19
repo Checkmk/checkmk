@@ -59,17 +59,17 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
+from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import PageHandlers as PageHandlers
+from ._snapin import SidebarSnapin as SidebarSnapin
+from ._snapin import snapin_registry as snapin_registry
+from ._snapin import SnapinRegistry as SnapinRegistry
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,
     PageAjaxSidebarGetMessages,
     PageAjaxSidebarGetUnackIncompWerks,
 )
-from .snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
-from .snapin import PageHandlers as PageHandlers
-from .snapin import SidebarSnapin as SidebarSnapin
-from .snapin import snapin_registry as snapin_registry
-from .snapin import SnapinRegistry as SnapinRegistry
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: dict[str, dict] = {}

@@ -9598,6 +9598,9 @@ msgstr "リクエストに署名する証明書(PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "HTTPS検証用の証明書"
 
+msgid "Change"
+msgstr "変更"
+
 msgid "Change CRITICAL State to"
 msgstr "CRITICAL状態をに変更します"
 
@@ -17396,6 +17399,10 @@ msgstr "これを再帰的に実行します"
 msgid "Do transfer context"
 msgstr "コンテキストを転送する"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "本当にフォルダ %s を削除しますか?"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "本当に %s したいですか"
@@ -24548,6 +24555,10 @@ msgstr "エージェントのアップデートが必要なホスト"
 
 msgid "Host network"
 msgstr "ホストネットワーク"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "ホストチェックコマンドが拡張されました"
 
 msgid "Host notification number"
 msgstr "ホスト通知番号"
@@ -35908,6 +35919,10 @@ msgstr ""
 msgid "No pending changes"
 msgstr "保留中の変更はありません"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "保留中の変更はありません"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
@@ -35967,6 +35982,10 @@ msgstr "検索なし"
 
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "利用可能な情報はありません"
 
 msgid "No status host"
 msgstr "ステータスホストなし"
@@ -36477,6 +36496,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "ノート"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "サービスのメモURL"
 
 msgid "Notes URL for Hosts"
 msgstr "ホストのメモURL"
@@ -39449,8 +39472,8 @@ msgstr "保留中のDHCPリース"
 msgid "Pending Services of Site"
 msgstr "サイトの保留中のサービス"
 
-#, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "保留中の変更 (%s)"
 
 msgid "Pending create"
@@ -44038,8 +44061,8 @@ msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
 
 #, fuzzy
-msgid "Revert all pending changes"
-msgstr "保留中の変更をすべて破棄します"
+msgid "Revert changes"
+msgstr "インベントリーの変更"
 
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
@@ -46286,6 +46309,10 @@ msgstr "サービスの通常のチェック間隔"
 
 msgid "Service normal/retry check interval"
 msgstr "サービス正常/再試行チェック間隔"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "サービスチェックコマンドが拡張されました"
 
 msgid "Service notification number"
 msgstr "サービス通知番号"
@@ -56538,6 +56565,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "この変更は別のユーザーによって行われました"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "このルールIDはすでに使用されています。"
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -71249,6 +71280,11 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Discard all pending changes"
+#~ msgid "Revert all pending changes"
+#~ msgstr "保留中の変更をすべて破棄します"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(非推奨) Kube-state-metrics"
 
@@ -71267,9 +71303,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #, python-format
 #~ msgid "Cannot update timeperiod information for %s: %s"
 #~ msgstr "%sの期間情報を更新できません:%s"
-
-#~ msgid "Change"
-#~ msgstr "変更"
 
 #~ msgid "Cluster IP"
 #~ msgstr "クラスターIP"
@@ -72534,10 +72567,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #, python-format
 #~ msgid "Do you really want to delete the customer %s?"
 #~ msgstr "本当に顧客 %s を削除しますか？"
-
-#, python-format
-#~ msgid "Do you really want to delete the folder %s?"
-#~ msgstr "本当にフォルダ %s を削除しますか?"
 
 #, python-format
 #~ msgid "Do you really want to delete the host <tt>%s</tt>?"

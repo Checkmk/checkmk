@@ -9887,6 +9887,9 @@ msgstr "Certificat pour signer les demandes (PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "Certificats pour la vérification HTTPS"
 
+msgid "Change"
+msgstr "Changement"
+
 msgid "Change CRITICAL State to"
 msgstr "Changez l'état CRITIQUE en"
 
@@ -17870,6 +17873,10 @@ msgstr "Faites-le de manière récursive"
 msgid "Do transfer context"
 msgstr "Transférer le contexte"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "Voulez-vous vraiment %s"
@@ -25195,6 +25202,10 @@ msgstr "L'hôte a besoin d'une mise à jour de son agent"
 
 msgid "Host network"
 msgstr "Réseau hôte"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "Commande de contrôle de l'hôte étendue"
 
 msgid "Host notification number"
 msgstr "Numéro de notification de l'hôte"
@@ -36829,6 +36840,10 @@ msgstr ""
 msgid "No pending changes"
 msgstr "Aucun changement en cours"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "Aucun changement en cours"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "Aucune donnée de performance : %s"
@@ -36888,6 +36903,10 @@ msgstr "Pas de recherche"
 
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "Aucune information disponible"
 
 msgid "No status host"
 msgstr "Pas de statut hôte"
@@ -37410,6 +37429,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "Notes"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "Notes URL pour les services"
 
 msgid "Notes URL for Hosts"
 msgstr "Notes URL pour les hôtes"
@@ -40437,8 +40460,8 @@ msgstr "Baux DHCP en attente"
 msgid "Pending Services of Site"
 msgstr "Services en attente sur le site"
 
-#, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "Modifications en attente (%s)"
 
 msgid "Pending create"
@@ -45128,8 +45151,8 @@ msgid "Return process times within performance data"
 msgstr "Retour des temps de traitement dans les données de performance"
 
 #, fuzzy
-msgid "Revert all pending changes"
-msgstr "Rejeter tous les changements en attente"
+msgid "Revert changes"
+msgstr "Variation des stocks"
 
 msgid "Revolutions per minute"
 msgstr "Révolutions par minute"
@@ -47393,6 +47416,10 @@ msgstr "Intervalle de contrôle normal de l'entretien"
 
 msgid "Service normal/retry check interval"
 msgstr "Intervalle de contrôle normal/de relance du service"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "Commande de contrôle de service étendue"
 
 msgid "Service notification number"
 msgstr "Numéro de notification du service"
@@ -58183,6 +58210,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "Cette modification a été effectuée par un autre utilisateur"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "Toutes les modifications ont été activées."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -73686,6 +73717,11 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "Discard all pending changes"
+#~ msgid "Revert all pending changes"
+#~ msgstr "Rejeter tous les changements en attente"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(obsolète) Kube-state-metrics"
 
@@ -73706,9 +73742,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~ msgstr ""
 #~ "Impossible de mettre à jour les informations relatives à la période de "
 #~ "temps pour %s : %s"
-
-#~ msgid "Change"
-#~ msgstr "Changement"
 
 #~ msgid "Cluster IP"
 #~ msgstr "IP en grappe"
@@ -75106,10 +75139,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #, python-format
 #~ msgid "Do you really want to delete the customer %s?"
 #~ msgstr "Voulez-vous vraiment supprimer le client %s ?"
-
-#, python-format
-#~ msgid "Do you really want to delete the folder %s?"
-#~ msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
 
 #, python-format
 #~ msgid "Do you really want to delete the host <tt>%s</tt>?"
@@ -78749,9 +78778,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #~ msgid "Adminstrator name:"
 #~ msgstr "Nom de l'administrateur :"
-
-#~ msgid "All changes have been activated."
-#~ msgstr "Toutes les modifications ont été activées."
 
 #~ msgid "All rules that contain '%s' in their name"
 #~ msgstr "Toutes les règles ayant '%s' dans leur nom"

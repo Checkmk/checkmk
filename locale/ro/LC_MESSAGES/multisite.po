@@ -9852,6 +9852,9 @@ msgstr "Certificat pentru semnarea cererilor (PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "Certificate pentru verificarea HTTPS"
 
+msgid "Change"
+msgstr "Schimbare"
+
 msgid "Change CRITICAL State to"
 msgstr "Schimbați starea CRITICAL în"
 
@@ -17808,6 +17811,10 @@ msgstr "Faceți acest lucru în mod recursiv"
 msgid "Do transfer context"
 msgstr "Transferați contextul"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "O agregare legată de un singur element"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "Chiar vrei să %s"
@@ -25090,6 +25097,10 @@ msgstr "Gazda are nevoie de o actualizare a agentului"
 
 msgid "Host network"
 msgstr "Rețea gazdă"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "Comandă de verificare a gazdei extinsă"
 
 msgid "Host notification number"
 msgstr "Numărul de notificare a gazdei"
@@ -36703,6 +36714,10 @@ msgstr ""
 msgid "No pending changes"
 msgstr "Nu există modificări în curs de desfășurare"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "Nu există modificări în curs de desfășurare"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
@@ -36762,6 +36777,10 @@ msgstr "Fără căutare"
 
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "Nu există informații disponibile"
 
 msgid "No status host"
 msgstr "Nici o gazdă de stare"
@@ -37284,6 +37303,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "Note"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "Note URL pentru servicii"
 
 msgid "Notes URL for Hosts"
 msgstr "Note URL pentru gazde"
@@ -40304,8 +40327,8 @@ msgstr "Leasing DHCP în așteptare"
 msgid "Pending Services of Site"
 msgstr "Servicii în așteptare ale site-ului"
 
-#, fuzzy, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "Modificări în așteptare (%s)"
 
 msgid "Pending create"
@@ -44961,8 +44984,8 @@ msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 
 #, fuzzy
-msgid "Revert all pending changes"
-msgstr "Renunță la toate modificările în așteptare"
+msgid "Revert changes"
+msgstr "Modificări ale stocurilor"
 
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
@@ -47231,6 +47254,10 @@ msgstr "Intervalul de verificare normală a serviciului"
 
 msgid "Service normal/retry check interval"
 msgstr "Intervalul de verificare normală de service/retry check"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "Comandă de verificare a serviciului extinsă"
 
 msgid "Service notification number"
 msgstr "Numărul de notificare a serviciului"
@@ -57984,6 +58011,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "Această modificare a fost făcută de un alt utilizator"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "Acest ID de regulă este deja utilizat."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -73391,6 +73422,11 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#, fuzzy
+#~| msgid "Discard all pending changes"
+#~ msgid "Revert all pending changes"
+#~ msgstr "Renunță la toate modificările în așteptare"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(depreciat) Kube-state-metrics"
 
@@ -73410,9 +73446,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid "Cannot update timeperiod information for %s: %s"
 #~ msgstr ""
 #~ "Nu se pot actualiza informațiile privind perioada de timp pentru %s: %s."
-
-#~ msgid "Change"
-#~ msgstr "Schimbare"
 
 #~ msgid "Cluster IP"
 #~ msgstr "Cluster IP"
@@ -74257,10 +74290,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #, fuzzy, python-format
 #~ msgid "Do you really want to delete the connection <b>%s</b>?"
-#~ msgstr "O agregare legată de un singur element"
-
-#, fuzzy, python-format
-#~ msgid "Do you really want to delete the custom %s?"
 #~ msgstr "O agregare legată de un singur element"
 
 #, fuzzy, python-format

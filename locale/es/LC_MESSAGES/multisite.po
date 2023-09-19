@@ -9844,6 +9844,9 @@ msgstr "Certificado para firmar solicitudes (PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "Certificados para la verificación de HTTPS"
 
+msgid "Change"
+msgstr "Cambiar"
+
 msgid "Change CRITICAL State to"
 msgstr "Cambie el estado crítico a"
 
@@ -17799,6 +17802,10 @@ msgstr "Haga esto recursivamente"
 msgid "Do transfer context"
 msgstr "Transfiera el contexto"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "¿Realmente quieres borrar la carpeta %s?"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "¿Realmente quieres %s"
@@ -25075,6 +25082,10 @@ msgstr "El host necesita una actualización del agente"
 
 msgid "Host network"
 msgstr "Red de host"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "Comando de comprobación de host ampliado"
 
 msgid "Host notification number"
 msgstr "Número de notificación del host"
@@ -36675,6 +36686,10 @@ msgstr ""
 msgid "No pending changes"
 msgstr "No hay cambios pendientes"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "No hay cambios pendientes"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "No hay datos de rendimiento: %s"
@@ -36734,6 +36749,10 @@ msgstr "No hay búsqueda"
 
 msgid "No search, specify list of arguments"
 msgstr "No buscar, especificar lista de argumentos"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "No hay información disponible"
 
 msgid "No status host"
 msgstr "No hay estado de host"
@@ -37252,6 +37271,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "Notas"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "Notas URL para los servicios"
 
 msgid "Notes URL for Hosts"
 msgstr "Notas URL para Hosts"
@@ -40267,8 +40290,8 @@ msgstr "Arrendamientos DHCP pendientes"
 msgid "Pending Services of Site"
 msgstr "Servicios pendientes del sitio"
 
-#, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "Cambios pendientes (%s)"
 
 msgid "Pending create"
@@ -44931,8 +44954,8 @@ msgstr ""
 "Los tiempos del proceso de devolución dentro de los datos de rendimiento"
 
 #, fuzzy
-msgid "Revert all pending changes"
-msgstr "Descartar todos los cambios pendientes"
+msgid "Revert changes"
+msgstr "Cambios en el inventario"
 
 msgid "Revolutions per minute"
 msgstr "Revoluciones por minuto"
@@ -47185,6 +47208,10 @@ msgstr "Intervalo de revisión normal del servicio"
 
 msgid "Service normal/retry check interval"
 msgstr "Servicio normal/intervalo de comprobación de reintentos"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "Comando de comprobación de servicio ampliado"
 
 msgid "Service notification number"
 msgstr "Número de notificación de servicio"
@@ -57926,6 +57953,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "Este cambio ha sido realizado por otro usuario"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "Este ID de regla ya está utilizado."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -73291,6 +73322,11 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
+#, fuzzy
+#~| msgid "Discard all pending changes"
+#~ msgid "Revert all pending changes"
+#~ msgstr "Descartar todos los cambios pendientes"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(obsoleto) Kube-state-metrics"
 
@@ -73310,9 +73346,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #~ msgid "Cannot update timeperiod information for %s: %s"
 #~ msgstr ""
 #~ "No se puede actualizar la información del periodo de tiempo para %s: %s"
-
-#~ msgid "Change"
-#~ msgstr "Cambiar"
 
 #~ msgid "Cluster IP"
 #~ msgstr "IP del clúster"
@@ -74720,10 +74753,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #, python-format
 #~ msgid "Do you really want to delete the customer %s?"
 #~ msgstr "¿Realmente quieres borrar el cliente %s?"
-
-#, python-format
-#~ msgid "Do you really want to delete the folder %s?"
-#~ msgstr "¿Realmente quieres borrar la carpeta %s?"
 
 #, python-format
 #~ msgid "Do you really want to delete the host <tt>%s</tt>?"

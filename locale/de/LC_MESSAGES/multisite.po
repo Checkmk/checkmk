@@ -9786,6 +9786,9 @@ msgstr "Zertifikat zum Signieren von Anfragen (PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "Zertifikate für HTTPS-Verifizierung"
 
+msgid "Change"
+msgstr "Änderung"
+
 msgid "Change CRITICAL State to"
 msgstr "Kritischen-Status ändern zu"
 
@@ -17688,6 +17691,10 @@ msgstr "Führe rekursiv aus"
 msgid "Do transfer context"
 msgstr "Kontext übermitteln"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "<b>Wollen Sie folgende Hosts wirklich umbenennen?</b>"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "Wollen Sie wirklich %s"
@@ -24956,6 +24963,10 @@ msgstr "Host benötigt Agentenupdate"
 
 msgid "Host network"
 msgstr "Host-Netzwerk"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "Hostcheckbefehl erweitert"
 
 msgid "Host notification number"
 msgstr "Host Notifikationsnummer"
@@ -36439,6 +36450,10 @@ msgstr "Kein Passwort eingegeben. Bitte geben Sie ein Passwort ein."
 msgid "No pending changes"
 msgstr "Keine anstehenden Änderungen"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "Keine anstehenden Änderungen"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
@@ -36498,6 +36513,10 @@ msgstr "Keine Suche"
 
 msgid "No search, specify list of arguments"
 msgstr "Keine Suche, Liste der Argumente angeben"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "Keine Informationen vorhanden"
 
 msgid "No status host"
 msgstr "Kein Status-Host"
@@ -37013,6 +37032,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "Anmerkungen"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "Anmerkungs-URLs für Services"
 
 msgid "Notes URL for Hosts"
 msgstr "Anmerkungs-URLs für Hosts"
@@ -39994,8 +40017,8 @@ msgstr "Ausstehende DHCP-Leases"
 msgid "Pending Services of Site"
 msgstr "Ausstehende Services einer Instanz"
 
-#, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "Ausstehende Änderungen (%s)"
 
 msgid "Pending create"
@@ -44620,8 +44643,9 @@ msgstr "Rückgabecode Klasse 5xx (Server-Fehler)"
 msgid "Return process times within performance data"
 msgstr "Zeige Ausführungszeiten innerhalb der Leistungsdaten"
 
-msgid "Revert all pending changes"
-msgstr "Alle aufgelaufenen Änderungen rückgängig machen"
+#, fuzzy
+msgid "Revert changes"
+msgstr "Änderungen in der Inventur"
 
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"
@@ -46851,6 +46875,10 @@ msgstr "normales Checkintervall für Services"
 
 msgid "Service normal/retry check interval"
 msgstr "Checkintervall für normale/wiederholte Checks von Services"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "Servicecheck Befehl erweitert"
 
 msgid "Service notification number"
 msgstr "Service-Alarmnummer"
@@ -57493,6 +57521,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "Diese Änderung wurde von einem anderen Benutzer gemacht"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "Diese Regel-ID wird bereits verwendet."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -72793,6 +72825,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Revert all pending changes"
+#~ msgstr "Alle aufgelaufenen Änderungen rückgängig machen"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(veraltet) Kube-Status-Metriken"
 
@@ -72814,9 +72849,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Capacity"
 #~ msgstr "Kapazität"
-
-#~ msgid "Change"
-#~ msgstr "Änderung"
 
 #~ msgid "Cluster IP"
 #~ msgstr "Cluster-IP"
@@ -82631,9 +82663,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "open events"
 #~ msgstr "offene Ereignisse"
-
-#~ msgid "<b>Do you really want to rename to following hosts?</b>"
-#~ msgstr "<b>Wollen Sie folgende Hosts wirklich umbenennen?</b>"
 
 #~ msgid "<a href='%s'>%s</a> (%s)"
 #~ msgstr "<a href='%s'>%s</a> (%s)"

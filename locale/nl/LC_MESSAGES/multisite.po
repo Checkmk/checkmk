@@ -9768,6 +9768,9 @@ msgstr "Certificaat om verzoeken te ondertekenen (PEM)"
 msgid "Certificates for HTTPS verification"
 msgstr "Certificaten voor HTTPS-verificatie"
 
+msgid "Change"
+msgstr "Verander"
+
 msgid "Change CRITICAL State to"
 msgstr "Verander CRITICAL State in"
 
@@ -17649,6 +17652,10 @@ msgstr "Doe dit recursief"
 msgid "Do transfer context"
 msgstr "Draag context over"
 
+#, fuzzy
+msgid "Do you really want revert the following changes?"
+msgstr "Wilt u echt de map %s verwijderen?"
+
 #, python-format
 msgid "Do you really want to %s"
 msgstr "Wil je echt %s"
@@ -24879,6 +24886,10 @@ msgstr "Host heeft agent update nodig"
 
 msgid "Host network"
 msgstr "Hostnetwerk"
+
+#, fuzzy
+msgid "Host notes URL expanded"
+msgstr "Commando gastheercontrole uitgebreid"
 
 msgid "Host notification number"
 msgstr "Kennisgevingsnummer van de gastheer"
@@ -36388,6 +36399,10 @@ msgstr ""
 msgid "No pending changes"
 msgstr "Geen hangende wijzigingen"
 
+#, fuzzy
+msgid "No pending changes."
+msgstr "Geen hangende wijzigingen"
+
 #, python-format
 msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
@@ -36446,6 +36461,10 @@ msgstr "Geen zoekopdracht"
 
 msgid "No search, specify list of arguments"
 msgstr "Geen zoekfunctie, geef een lijst met argumenten"
+
+#, fuzzy
+msgid "No snapshot to restore available."
+msgstr "Geen informatie beschikbaar"
 
 msgid "No status host"
 msgstr "Geen status host"
@@ -36962,6 +36981,10 @@ msgstr ""
 
 msgid "Notes"
 msgstr "Opmerkingen"
+
+#, fuzzy
+msgid "Notes URL expanded"
+msgstr "Opmerkingen URL voor diensten"
 
 msgid "Notes URL for Hosts"
 msgstr "Opmerkingen URL voor hosts"
@@ -39952,8 +39975,8 @@ msgstr "In afwachting van DHCP leases"
 msgid "Pending Services of Site"
 msgstr "In afwachting van diensten van site"
 
-#, python-format
-msgid "Pending changes (%s)"
+#, fuzzy
+msgid "Pending changes"
 msgstr "Hangende wijzigingen (%s)"
 
 msgid "Pending create"
@@ -44544,8 +44567,8 @@ msgid "Return process times within performance data"
 msgstr "Terugkeren procestijden binnen prestatiegegevens"
 
 #, fuzzy
-msgid "Revert all pending changes"
-msgstr "Vernietig alle hangende wijzigingen"
+msgid "Revert changes"
+msgstr "Inventariswijzigingen"
 
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
@@ -46779,6 +46802,10 @@ msgstr "Service normaal controle-interval"
 
 msgid "Service normal/retry check interval"
 msgstr "Service normaal/herhaling controle-interval"
+
+#, fuzzy
+msgid "Service notes URL expanded"
+msgstr "Service check commando uitgebreid"
 
 msgid "Service notification number"
 msgstr "Nummer dienstmededeling"
@@ -57437,6 +57464,10 @@ msgstr ""
 
 msgid "This change has been made by another user"
 msgstr "Deze wijziging is aangebracht door een andere gebruiker"
+
+#, fuzzy
+msgid "This change is already activated"
+msgstr "Deze regel ID wordt al gebruikt."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -72700,6 +72731,11 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#, fuzzy
+#~| msgid "Discard all pending changes"
+#~ msgid "Revert all pending changes"
+#~ msgstr "Vernietig alle hangende wijzigingen"
+
 #~ msgid "(deprecated) Kube-state-metrics"
 #~ msgstr "(verouderd) Kube-state-metrics"
 
@@ -72718,9 +72754,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, python-format
 #~ msgid "Cannot update timeperiod information for %s: %s"
 #~ msgstr "Kan de informatie over de periode voor %s niet bijwerken: %s"
-
-#~ msgid "Change"
-#~ msgstr "Verander"
 
 #~ msgid "Cluster IP"
 #~ msgstr "Cluster IP"
@@ -74130,10 +74163,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, python-format
 #~ msgid "Do you really want to delete the customer %s?"
 #~ msgstr "Wil je echt de klant %s verwijderen?"
-
-#, python-format
-#~ msgid "Do you really want to delete the folder %s?"
-#~ msgstr "Wilt u echt de map %s verwijderen?"
 
 #, python-format
 #~ msgid "Do you really want to delete the host <tt>%s</tt>?"

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-
 import pytest
 
 from livestatus import SiteId
@@ -13,6 +11,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
+from cmk.gui.graphing._expression import parse_expression
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     MetricDefinition,
@@ -21,36 +20,8 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._type_defs import GraphConsoldiationFunction
 from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
 from cmk.gui.metrics import translate_perf_data
-
-
-@pytest.mark.parametrize(
-    "expression, enforced_consolidation_function, result",
-    [
-        ("user", "max", [("user", "max")]),
-        ("user.min", None, [("user", "min")]),
-        ("user.min,sys,+", None, [("user", "min"), ("sys", None), ("+", None)]),
-        ("user.min,sys.max,+", None, [("user", "min"), ("sys", "max"), ("+", None)]),
-    ],
-)
-def test_rpn_consolidation(
-    expression: str,
-    enforced_consolidation_function: GraphConsoldiationFunction | None,
-    result: Sequence[tuple[str, GraphConsoldiationFunction | None]],
-) -> None:
-    assert list(gt.iter_rpn_expression(expression, enforced_consolidation_function)) == result
-
-
-@pytest.mark.parametrize(
-    "expression, enforced_consolidation_function", [("user.min", "max"), ("user.min,sys,+", "avg")]
-)
-def test_rpn_consolidation_exception(
-    expression: str, enforced_consolidation_function: GraphConsoldiationFunction | None
-) -> None:
-    with pytest.raises(MKGeneralException):
-        list(gt.iter_rpn_expression(expression, enforced_consolidation_function))
 
 
 @pytest.mark.parametrize(
@@ -112,7 +83,7 @@ def test_rpn_stack(expression: str, result: MetricOperation) -> None:
     lq_row = {"site": "", "host_name": "", "service_description": ""}
     assert (
         gt.metric_expression_to_graph_recipe_expression(
-            expression, translated_metrics, lq_row, None
+            parse_expression(expression, translated_metrics), translated_metrics, lq_row, None
         )
         == result
     )
@@ -243,7 +214,12 @@ def test_metric_unit_color(
         "color": result_color,
         "unit": unit_id,
     }
-    assert gt.metric_unit_color(expression, translated_metrics, ["test"]) == reference
+    assert (
+        gt.metric_unit_color(
+            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
+        )
+        == reference
+    )
 
 
 @pytest.mark.parametrize(
@@ -256,18 +232,25 @@ def test_metric_unit_color_skip(
     expression: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
-    assert gt.metric_unit_color(expression, translated_metrics, ["test"]) is None
+    assert (
+        gt.metric_unit_color(
+            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
-    "metric, perf_string, check_command",
+    "expression, perf_string, check_command",
     [
         ("level,altitude,+", "test=5;5;10;0;20", "check_mk-local"),
     ],
 )
 def test_metric_unit_color_exception(
-    metric: str, perf_string: str, check_command: str | None
+    expression: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
     with pytest.raises(MKGeneralException):
-        gt.metric_unit_color(metric, translated_metrics, ["test"])
+        gt.metric_unit_color(
+            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
+        )

@@ -18,25 +18,11 @@ from cmk.gui.graphing._expression import (
     parse_expression,
     Percent,
     Product,
-    split_expression,
     WarningOf,
 )
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import graph_info, metric_info, parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
-
-
-@pytest.mark.parametrize(
-    "text, out",
-    [
-        ("fs_size", ("fs_size", "", "")),
-        ("if_in_octets,8,*@bits/s", ("if_in_octets,8,*", "bits/s", "")),
-        ("fs_size,fs_used,-#e3fff9", ("fs_size,fs_used,-", "", "e3fff9")),
-        ("fs_size,fs_used,-@kb#e3fff9", ("fs_size,fs_used,-", "kb", "e3fff9")),
-    ],
-)
-def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None:
-    assert split_expression(text) == out
 
 
 @pytest.mark.parametrize(

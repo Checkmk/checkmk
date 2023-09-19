@@ -11,8 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from itertools import chain
-from typing import Any, get_args, Literal, NamedTuple, NewType
+from typing import Any, Literal, NamedTuple, NewType
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -58,7 +57,7 @@ from ._color import (
     get_palette_color_by_index,
     parse_color_into_hexrgb,
 )
-from ._expression import parse_expression, RPNOperators, split_expression
+from ._expression import parse_expression
 from ._graph_specification import (
     GraphMetric,
     GraphSpecification,
@@ -807,7 +806,12 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
     yield from explicit_templates
     yield from _get_implicit_graph_templates(
         translated_metrics,
-        _get_graphed_metrics(explicit_templates),
+        set(
+            m.name
+            for gt in explicit_templates
+            for md in gt.metrics
+            for m in parse_expression(md.expression, translated_metrics).metrics()
+        ),
     )
 
 
@@ -832,10 +836,6 @@ def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iter
             )
 
 
-def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> set[str]:
-    return set(chain.from_iterable(map(_metrics_used_by_graph, graph_templates)))
-
-
 def _get_implicit_graph_templates(
     translated_metrics: TranslatedMetrics,
     already_graphed_metrics: Container[str],
@@ -843,24 +843,6 @@ def _get_implicit_graph_templates(
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
             yield _generic_graph_template(metric_name)
-
-
-def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
-    for metric_definition in graph_template.metrics:
-        yield from metrics_used_in_expression(metric_definition.expression)
-
-
-def metrics_used_in_expression(expression: str) -> Iterator[str]:
-    for part in split_expression(expression)[0].split(","):
-        metric_or_operator = _drop_metric_consolidation_advice(part)
-        if metric_or_operator not in get_args(RPNOperators):
-            yield metric_or_operator
-
-
-def _drop_metric_consolidation_advice(expression: str) -> str:
-    if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
-        return expression.rsplit(".", 1)[0]
-    return expression
 
 
 def applicable_metrics(

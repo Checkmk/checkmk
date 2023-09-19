@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Sequence
 from typing import Final
 
 from livestatus import SiteId
@@ -27,6 +27,7 @@ from ._expression import (
     Maximum,
     Merge,
     Metric,
+    MetricExpression,
     Minimum,
     parse_expression,
     Product,
@@ -50,7 +51,6 @@ from ._utils import (
     GraphRecipeBase,
     GraphTemplate,
     horizontal_rules_from_thresholds,
-    metrics_used_in_expression,
     MetricUnitColor,
     replace_expressions,
     translated_metrics_from_row,
@@ -172,12 +172,17 @@ def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
+        metric_expression = parse_expression(
+            metric_definition.expression,
+            translated_metrics,
+            graph_template.consolidation_function or "max",
+        )
+        unit_color = metric_unit_color(metric_expression, translated_metrics)
         return GraphMetric(
-            title=metric_line_title(metric_definition, translated_metrics),
+            title=metric_line_title(metric_definition, metric_expression, translated_metrics),
             line_type=metric_definition.line_type,
             expression=metric_expression_to_graph_recipe_expression(
-                metric_definition.expression,
+                metric_expression,
                 translated_metrics,
                 row,
                 graph_template.consolidation_function or "max",
@@ -215,45 +220,11 @@ def create_graph_recipe_from_template(
     )
 
 
-def iter_rpn_expression(
-    expression: str,
-    enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> Iterator[tuple[str, GraphConsoldiationFunction | None]]:
-    for part in expression.split(","):  # var names, operators
-        if any(part.endswith(cf) for cf in [".max", ".min", ".average"]):
-            part, raw_consolidation_function = part.rsplit(".", 1)
-            if (
-                enforced_consolidation_function is not None
-                and raw_consolidation_function != enforced_consolidation_function
-            ):
-                raise MKGeneralException(
-                    _(
-                        'The expression "%s" uses a different consolidation '
-                        "function as the graph (%s). This is not allowed."
-                    )
-                    % (expression, enforced_consolidation_function)
-                )
-
-            # A bit verbose here, but we want to keep the Literal type. Find a better way, please.
-            consolidation_function: GraphConsoldiationFunction
-            if raw_consolidation_function == "max":
-                consolidation_function = "max"
-            elif raw_consolidation_function == "min":
-                consolidation_function = "min"
-            elif raw_consolidation_function == "average":
-                consolidation_function = "average"
-            else:
-                raise ValueError()
-
-            yield part, consolidation_function
-        else:
-            yield part, enforced_consolidation_function
-
-
 def _to_metric_operation(
     operation: ABCMetricOperation,
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
+    enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     if isinstance(operation, (ConstantInt, ConstantFloat)):
         return MetricOpConstant(value=operation.value)
@@ -263,103 +234,159 @@ def _to_metric_operation(
             host_name=lq_row["host_name"],
             service_name=lq_row.get("service_description", "_HOST_"),
             metric_name=pnp_cleanup(translated_metrics[operation.name]["orig_name"][0]),
-            consolidation_func_name=operation.consolidation_func_name,
+            consolidation_func_name=(
+                operation.consolidation_func_name or enforced_consolidation_function
+            ),
             scale=translated_metrics[operation.name]["scale"][0],
         )
     if isinstance(operation, Sum):
         return MetricOpOperator(
             operator_name="+",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.summands
+                _to_metric_operation(
+                    s,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for s in operation.summands
             ],
         )
     if isinstance(operation, Product):
         return MetricOpOperator(
             operator_name="*",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.factors
+                _to_metric_operation(
+                    f,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for f in operation.factors
             ],
         )
     if isinstance(operation, Difference):
         return MetricOpOperator(
             operator_name="-",
             operands=[
-                _to_metric_operation(operation.minuend, translated_metrics, lq_row),
-                _to_metric_operation(operation.subtrahend, translated_metrics, lq_row),
+                _to_metric_operation(
+                    operation.minuend,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                ),
+                _to_metric_operation(
+                    operation.subtrahend,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                ),
             ],
         )
     if isinstance(operation, Fraction):
         return MetricOpOperator(
             operator_name="/",
             operands=[
-                _to_metric_operation(operation.dividend, translated_metrics, lq_row),
-                _to_metric_operation(operation.divisor, translated_metrics, lq_row),
+                _to_metric_operation(
+                    operation.dividend,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                ),
+                _to_metric_operation(
+                    operation.divisor,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                ),
             ],
         )
     if isinstance(operation, Maximum):
         return MetricOpOperator(
             operator_name="MAX",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+                _to_metric_operation(
+                    o,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for o in operation.operands
             ],
         )
     if isinstance(operation, Minimum):
         return MetricOpOperator(
             operator_name="MIN",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+                _to_metric_operation(
+                    o,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for o in operation.operands
             ],
         )
     if isinstance(operation, Average):
         return MetricOpOperator(
             operator_name="AVERAGE",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+                _to_metric_operation(
+                    o,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for o in operation.operands
             ],
         )
     if isinstance(operation, Merge):
         return MetricOpOperator(
             operator_name="MERGE",
             operands=[
-                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+                _to_metric_operation(
+                    o,
+                    translated_metrics,
+                    lq_row,
+                    enforced_consolidation_function,
+                )
+                for o in operation.operands
             ],
         )
     raise TypeError(operation)
 
 
 def metric_expression_to_graph_recipe_expression(
-    expression: str,
+    metric_expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
-        parse_expression(
-            expression,
-            translated_metrics,
-            enforced_consolidation_function,
-        ).operation,
+        metric_expression.operation,
         translated_metrics,
         lq_row,
+        enforced_consolidation_function,
     )
 
 
 def metric_line_title(
-    metric_definition: MetricDefinition, translated_metrics: TranslatedMetrics
+    metric_definition: MetricDefinition,
+    metric_expression: MetricExpression,
+    translated_metrics: TranslatedMetrics,
 ) -> str:
     if metric_definition.title:
         return metric_definition.title
-    metric_name = next(metrics_used_in_expression(metric_definition.expression))
-    return translated_metrics[metric_name]["title"]
+    return translated_metrics[next(metric_expression.metrics()).name]["title"]
 
 
 def metric_unit_color(
-    expression: str,
+    metric_expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:
-        result = parse_expression(expression, translated_metrics).evaluate(translated_metrics)
+        result = metric_expression.evaluate(translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
@@ -367,7 +394,7 @@ def metric_unit_color(
         raise MKGeneralException(
             _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
             % (
-                expression,
+                metric_expression,
                 metric_name,
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )

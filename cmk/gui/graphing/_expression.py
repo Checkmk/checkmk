@@ -19,18 +19,6 @@ from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
 
 
-def split_expression(expression: str) -> tuple[str, str, str]:
-    explicit_color = ""
-    if "#" in expression:
-        expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
-
-    explicit_unit_name = ""
-    if "@" in expression:
-        expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
-
-    return expression, explicit_unit_name, explicit_color
-
-
 # TODO: real unit computation!
 def _unit_mult(u1: UnitInfo, u2: UnitInfo) -> UnitInfo:
     return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
@@ -586,7 +574,13 @@ def parse_expression(
     if isinstance(expression, float):
         return MetricExpression(ConstantFloat(expression))
 
-    expression, explicit_unit_name, explicit_color = split_expression(expression)
+    explicit_color = ""
+    if "#" in expression:
+        expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
+
+    explicit_unit_name = ""
+    if "@" in expression:
+        expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
 
     if len(parts := expression.split(",")) == 1:
         return MetricExpression(

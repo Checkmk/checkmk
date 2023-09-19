@@ -83,7 +83,7 @@ def parse_syslog_message(tokens: Tokens) -> ParseResult[bytes]:
     return msg, rest2
 
 
-def parse_syslog_messages(data: bytes) -> tuple[Iterable[bytes], bytes]:
+def parse_bytes_into_syslog_messages(data: bytes) -> tuple[Iterable[bytes], bytes]:
     """
     Parse a bunch of bytes into separate syslog messages and an unparsed rest.
 

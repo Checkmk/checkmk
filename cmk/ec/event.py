@@ -81,7 +81,7 @@ def create_event_from_syslog_message(
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
     try:
-        event = parse_message(scrub_string(data.decode("utf-8")), ipaddress)
+        event = parse_syslog_message_into_event(scrub_string(data.decode("utf-8")), ipaddress)
     except Exception:
         if logger:
             logger.info(f"could not parse message {data!r}")
@@ -95,7 +95,9 @@ def create_event_from_syslog_message(
     return event
 
 
-def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-many-branches
+def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
+    line: str, ipaddress: str
+) -> Event:
     """
     Variant 1: plain syslog message without priority/facility:
     May 26 13:45:01 Klapprechner CRON[8046]:  message....

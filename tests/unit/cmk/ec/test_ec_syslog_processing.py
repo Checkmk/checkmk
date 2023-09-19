@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.ec.helpers import Failure, parse_syslog_message, parse_syslog_messages, ParseResult
+from cmk.ec.helpers import (
+    Failure,
+    parse_bytes_into_syslog_messages,
+    parse_syslog_message,
+    ParseResult,
+)
 
 
 @pytest.mark.parametrize(
@@ -107,7 +112,7 @@ def test_return_unprocessed(data: bytes, unprocessed: bytes) -> None:
     """
     Unprocessed bytes returned correctly
     """
-    assert parse_syslog_messages(data)[1] == unprocessed
+    assert parse_bytes_into_syslog_messages(data)[1] == unprocessed
 
 
 def test_process_spool_file() -> None:
@@ -116,4 +121,4 @@ def test_process_spool_file() -> None:
     """
     file_to_process = b""""May 26 13:45:01 Klapprechner CRON[8046]:  message\n55 May 26 13:45:01 Klapprechner CRON[8046]: octet message\n"""
     for data in file_to_process.splitlines(keepends=True):
-        assert parse_syslog_messages(data)[1] == b""
+        assert parse_bytes_into_syslog_messages(data)[1] == b""

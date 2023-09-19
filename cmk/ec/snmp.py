@@ -35,9 +35,9 @@ VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
 
 
-class SNMPTrapEngine:
+class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
-    class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
+    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
@@ -50,8 +50,8 @@ class SNMPTrapEngine:
         # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
         # receiver instance is kept alive by the registration itself, so there is no need to store
         # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
-        # parse_snmptrap() is called.
-        SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        # parse() is called.
+        SNMPTrapParser._ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
@@ -151,7 +151,7 @@ class SNMPTrapEngine:
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id),
                 )
 
-    def parse_snmptrap(
+    def parse(
         self, data: bytes, sender_address: tuple[str, int]
     ) -> tuple[Iterable[tuple[str, str]], str] | None:
         """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""

@@ -56,7 +56,7 @@ from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_syslog_message, Event, scrub_string
-from .helpers import ECLock, parse_syslog_messages
+from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
@@ -65,7 +65,7 @@ from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchS
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
-from .snmp import SNMPTrapEngine
+from .snmp import SNMPTrapParser
 
 
 class PackedEventStatus(TypedDict):
@@ -431,7 +431,7 @@ class EventServer(ECServerThread):
         )
         self._syslog_udp: socket.socket | None = None
         self._syslog_tcp: socket.socket | None = None
-        self._snmptrap: socket.socket | None = None
+        self._snmp_trap_socket: socket.socket | None = None
 
         self._rules: list[Rule] = []
         self._rule_by_id: dict[str | None, Rule] = {}
@@ -464,9 +464,9 @@ class EventServer(ECServerThread):
         self.open_syslog_udp()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        self._snmp_trap_engine = SNMPTrapEngine(
+        self._snmp_trap_parser = SNMPTrapParser(
             self.settings, self._config, self._logger.getChild("snmp")
-        )
+        ).parse
 
     @classmethod
     def status_columns(cls) -> Columns:
@@ -645,12 +645,12 @@ class EventServer(ECServerThread):
             if isinstance(endpoint, FileDescriptor):
                 try:
                     self._logger.info("Trying to use ipv6 for snmptrap from file descriptor")
-                    self._snmptrap = socket.fromfd(
+                    self._snmp_trap_socket = socket.fromfd(
                         endpoint.value, socket.AF_INET6, socket.SOCK_DGRAM
                     )
                 except OSError:
                     self._logger.info("Binding ipv6 failed. Falling back to ipv4 for snmptrap")
-                    self._snmptrap = socket.fromfd(
+                    self._snmp_trap_socket = socket.fromfd(
                         endpoint.value, socket.AF_INET, socket.SOCK_DGRAM
                     )
                 os.close(endpoint.value)
@@ -660,21 +660,23 @@ class EventServer(ECServerThread):
             if isinstance(endpoint, PortNumber):
                 try:
                     self._logger.info("Trying to use ipv6 for snmptrap")
-                    self._snmptrap = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._snmp_trap_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                    self._snmp_trap_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for snmptrap...")
-                        self._snmptrap.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                        self._snmp_trap_socket.setsockopt(
+                            socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0
+                        )
                     except (AttributeError, OSError):
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for snmptrap"
                         )
-                    self._snmptrap.bind(("::", endpoint.value))
+                    self._snmp_trap_socket.bind(("::", endpoint.value))
                 except OSError:
                     self._logger.info("Binding ipv6 failed. Falling back to ipv4 for snmptrap")
-                    self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._snmptrap.bind(("0.0.0.0", endpoint.value))
+                    self._snmp_trap_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    self._snmp_trap_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._snmp_trap_socket.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin snmptrap server on UDP port %d", endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin snmptrap server") from e
@@ -702,7 +704,13 @@ class EventServer(ECServerThread):
         pipe = self.open_pipe()
         listen_list = [
             f
-            for f in (pipe, self._syslog_udp, self._syslog_tcp, self._eventsocket, self._snmptrap)
+            for f in (
+                pipe,
+                self._syslog_udp,
+                self._syslog_tcp,
+                self._eventsocket,
+                self._snmp_trap_socket,
+            )
             if f is not None
         ]
         client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
@@ -753,7 +761,7 @@ class EventServer(ECServerThread):
                         cs.close()
                         del client_sockets[fd]
 
-                    messages, unprocessed = parse_syslog_messages(data)
+                    messages, unprocessed = parse_bytes_into_syslog_messages(data)
                     for message in messages:
                         self.process_syslog_message(message, address)
                     if unprocessed:
@@ -772,7 +780,7 @@ class EventServer(ECServerThread):
                     listen_list.remove(pipe)
                     listen_list.append(self.open_pipe())
 
-                messages, unprocessed = parse_syslog_messages(data)
+                messages, unprocessed = parse_bytes_into_syslog_messages(data)
                 for message in messages:
                     self.process_syslog_message(message, None)
                 if unprocessed:
@@ -784,14 +792,16 @@ class EventServer(ECServerThread):
                 self.process_syslog_message(message, parse_address("syslog socket (UDP)", address))
 
             # Read events from builtin snmptrap server
-            if self._snmptrap is not None and self._snmptrap in readable:
+            if self._snmp_trap_socket is not None and self._snmp_trap_socket in readable:
                 try:
-                    message, address = self._snmptrap.recvfrom(65535)
-                    if varbinds_and_ipaddress := self._snmp_trap_engine.parse_snmptrap(
+                    message, address = self._snmp_trap_socket.recvfrom(65535)
+                    if varbinds_and_ipaddress := self._snmp_trap_parser(
                         message, parse_address("SNMP trap", address)
                     ):
                         varbinds, ipaddress_ = varbinds_and_ipaddress
-                        self.process_raw_data(lambda: create_event_from_trap(varbinds, ipaddress_))
+                        self.process_potential_event_instrumented(
+                            lambda: create_event_from_trap(varbinds, ipaddress_)
+                        )
                 except Exception:
                     self._logger.exception(
                         "exception while handling an SNMP trap, skipping this one"
@@ -807,7 +817,7 @@ class EventServer(ECServerThread):
             else:
                 select_timeout = 1  # restore default select timeout
 
-    def process_raw_data(self, produce_event: Callable[[], Event]) -> None:
+    def process_potential_event_instrumented(self, produce_event: Callable[[], Event]) -> None:
         """
         Processes incoming data, just a wrapper between the real data and the
         handler function to record some statistics etc.
@@ -816,7 +826,7 @@ class EventServer(ECServerThread):
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
-            self.process_event(produce_event())
+            self.process_potential_event(produce_event())
         elif self.settings.options.debug:
             self._logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
@@ -824,7 +834,7 @@ class EventServer(ECServerThread):
 
     def process_syslog_message(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes one line message, handles encoding and processes it."""
-        self.process_raw_data(
+        self.process_potential_event_instrumented(
             lambda: create_event_from_syslog_message(
                 data, address, self._logger if self._config["debug_rules"] else None
             )
@@ -1157,9 +1167,9 @@ class EventServer(ECServerThread):
 
     def reload_configuration(self, config: Config) -> None:
         self._config = config
-        self._snmp_trap_engine = SNMPTrapEngine(
+        self._snmp_trap_parser = SNMPTrapParser(
             self.settings, self._config, self._logger.getChild("snmp")
-        )
+        ).parse
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
         self._rule_matcher = RuleMatcher(
@@ -1294,7 +1304,7 @@ class EventServer(ECServerThread):
                 (100.0 * count / float(total_count)),
             )
 
-    def process_event(self, event: Event) -> None:  # pylint: disable=too-many-branches
+    def process_potential_event(self, event: Event) -> None:  # pylint: disable=too-many-branches
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled

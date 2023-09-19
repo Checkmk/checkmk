@@ -36,7 +36,7 @@ URL_CHAR_REGEX: Final = f"^[{URL_CHAR_REGEX_CHARS}]+$"
 # chars. In the UI nearly everything is allowed. So these Regex(es) are only
 # for the names on disk
 WATO_FOLDER_PATH_NAME_CHARS: Final = r"-\w"
-WATO_FOLDER_PATH_NAME_REGEX: Final = f"^[{WATO_FOLDER_PATH_NAME_CHARS}]*$"
+WATO_FOLDER_PATH_NAME_REGEX: Final = f"^[{WATO_FOLDER_PATH_NAME_CHARS}]*\\Z"
 
 GROUP_NAME_PATTERN: Final = r"^[-a-z0-9A-Z_\.]*\Z"
 

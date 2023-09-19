@@ -883,3 +883,29 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         "This endpoint only allows 1 action (set/update/remove) per call, you specified"
         in resp1.json["fields"]["_schema"][0]
     )
+
+
+invalid_folder_names = (
+    "folderA\\n",
+    "folderB\n",
+    "folder\nC",
+    "\nfolderD",
+)
+
+
+@pytest.mark.parametrize("folder_name", invalid_folder_names)
+def test_create_folder_name_with_newline(
+    clients: ClientRegistry,
+    folder_name: str,
+) -> None:
+    resp = clients.Folder.create(
+        title="not_important",
+        parent="/",
+        folder_name=folder_name,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{folder_name!r} does not match pattern '^[-\\\\w]*\\\\Z'."
+    )

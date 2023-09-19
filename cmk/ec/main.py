@@ -55,7 +55,7 @@ from .actions import do_event_action, do_event_actions, do_notify, event_has_ope
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
-from .event import create_event_from_syslog_message, Event, scrub_string
+from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
 from .host_config import HostConfig
@@ -762,8 +762,7 @@ class EventServer(ECServerThread):
                         del client_sockets[fd]
 
                     messages, unprocessed = parse_bytes_into_syslog_messages(data)
-                    for message in messages:
-                        self.process_syslog_message(message, address)
+                    self.process_syslog_messages(messages, address)
                     if unprocessed:
                         client_sockets[fd] = (cs, address, unprocessed)
 
@@ -781,62 +780,62 @@ class EventServer(ECServerThread):
                     listen_list.append(self.open_pipe())
 
                 messages, unprocessed = parse_bytes_into_syslog_messages(data)
-                for message in messages:
-                    self.process_syslog_message(message, None)
+                self.process_syslog_messages(messages, None)
                 if unprocessed:
                     self._logger.warning("Ignoring incomplete message '%r' from pipe", data)
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
                 message, address = self._syslog_udp.recvfrom(4096)
-                self.process_syslog_message(message, parse_address("syslog socket (UDP)", address))
+                self.process_syslog_messages(
+                    [message], parse_address("syslog socket (UDP)", address)
+                )
 
             # Read events from builtin snmptrap server
             if self._snmp_trap_socket is not None and self._snmp_trap_socket in readable:
-                try:
-                    message, address = self._snmp_trap_socket.recvfrom(65535)
-                    if varbinds_and_ipaddress := self._snmp_trap_parser(
-                        message, parse_address("SNMP trap", address)
-                    ):
-                        varbinds, ipaddress_ = varbinds_and_ipaddress
-                        self.process_potential_event_instrumented(
-                            lambda: create_event_from_trap(varbinds, ipaddress_)
-                        )
-                except Exception:
-                    self._logger.exception(
-                        "exception while handling an SNMP trap, skipping this one"
-                    )
+                message, address = self._snmp_trap_socket.recvfrom(65535)
+                self.process_potential_event_instrumented(
+                    self.create_events_from_trap(message, parse_address("SNMP trap", address))
+                )
 
             if spool_files := sorted(
                 self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
             ):
-                for line_bytes in spool_files[0].read_bytes().splitlines():
-                    self.process_syslog_message(line_bytes, None)
+                self.process_syslog_messages(spool_files[0].read_bytes().splitlines(), None)
                 spool_files[0].unlink()
                 select_timeout = 0  # enable fast processing to process further files
             else:
                 select_timeout = 1  # restore default select timeout
 
-    def process_potential_event_instrumented(self, produce_event: Callable[[], Event]) -> None:
+    def create_events_from_trap(self, data: bytes, address: tuple[str, int]) -> Iterator[Event]:
+        try:
+            if varbinds_and_ipaddress := self._snmp_trap_parser(data, address):
+                yield create_event_from_trap(varbinds_and_ipaddress[0], varbinds_and_ipaddress[1])
+        except Exception:
+            self._logger.exception("exception while handling an SNMP trap, skipping this one")
+
+    def process_potential_event_instrumented(self, events: Iterable[Event]) -> None:
         """
         Processes incoming data, just a wrapper between the real data and the
         handler function to record some statistics etc.
         """
-        self._perfcounters.count("messages")
-        before = time.time()
-        # In replication slave mode (when not took over), ignore all events
-        if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
-            self.process_potential_event(produce_event())
-        elif self.settings.options.debug:
-            self._logger.info("Replication: we are in slave mode, ignoring event")
-        elapsed = time.time() - before
-        self._perfcounters.count_time("processing", elapsed)
+        for event in events:
+            self._perfcounters.count("messages")
+            before = time.time()
+            # In replication slave mode (when not took over), ignore all events
+            if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
+                self.process_potential_event(event)
+            elif self.settings.options.debug:
+                self._logger.info("Replication: we are in slave mode, ignoring event")
+            elapsed = time.time() - before
+            self._perfcounters.count_time("processing", elapsed)
 
-    def process_syslog_message(self, data: bytes, address: tuple[str, int] | None) -> None:
-        """Takes one line message, handles encoding and processes it."""
+    def process_syslog_messages(
+        self, messages: Iterable[bytes], address: tuple[str, int] | None
+    ) -> None:
         self.process_potential_event_instrumented(
-            lambda: create_event_from_syslog_message(
-                data, address, self._logger if self._config["debug_rules"] else None
+            create_events_from_syslog_messages(
+                messages, address, self._logger if self._config["debug_rules"] else None
             )
         )
 
@@ -1817,17 +1816,17 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
     trapOIDs, other = partition(
         lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
     )
-    return {
-        "time": time.time(),
-        "host": HostAddress(scrub_string(ipaddress_)),
-        "ipaddress": scrub_string(ipaddress_),
-        "priority": 5,  # notice
-        "facility": 31,  # not used by syslog -> we use this for all traps
-        "application": scrub_string(trapOIDs[0][1] if trapOIDs else ""),
-        "text": scrub_string(", ".join(f"{oid}: {value}" for oid, value in other)),
-        "core_host": None,
-        "host_in_downtime": False,
-    }
+    return Event(
+        time=time.time(),
+        host=HostAddress(scrub_string(ipaddress_)),
+        ipaddress=scrub_string(ipaddress_),
+        priority=5,  # notice
+        facility=31,  # not used by syslog -> we use this for all traps
+        application=scrub_string(trapOIDs[0][1] if trapOIDs else ""),
+        text=scrub_string(", ".join(f"{oid}: {value}" for oid, value in other)),
+        core_host=None,
+        host_in_downtime=False,
+    )
 
 
 # .
@@ -2396,11 +2395,9 @@ class StatusServer(ECServerThread):
             self._history.add(event, "UPDATE", user)
 
     def handle_command_create(self, arguments: list[str]) -> None:
-        # Would rather use process_syslog_message(), but we are already
+        # Would rather use process_syslog_messages(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
-        # TODO: Change the lock type in future?
-        # process_syslog_messages("%s" % ";".join(arguments))
         with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
             pipe.write(f'{";".join(arguments)}\n'.encode())
 

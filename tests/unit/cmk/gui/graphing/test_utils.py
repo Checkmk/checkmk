@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 import pytest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 
 import cmk.gui.graphing._utils as utils
@@ -696,89 +695,6 @@ def test_replace_expression() -> None:
         utils.replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
         == "CPU Load - 25  CPU Cores"
     )
-
-
-def test_stack_resolver_str_to_nested() -> None:
-    def apply_operator(op: str, f: Sequence[object], s: Sequence[object]) -> Sequence[object]:
-        return (op, [f, s])
-
-    assert utils.stack_resolver(
-        ["1", "2", "+"],
-        lambda x: x == "+",
-        apply_operator,
-        lambda x: x,
-    ) == ("+", ["1", "2"])
-
-
-def test_stack_resolver_str_to_str() -> None:
-    assert (
-        utils.stack_resolver(
-            ["1", "2", "+"],
-            lambda x: x == "+",
-            lambda op, f, s: " ".join((op, f, s)),
-            lambda x: x,
-        )
-        == "+ 1 2"
-    )
-
-
-@pytest.mark.parametrize(
-    "elements, is_operator, apply_operator, apply_element, result",
-    [
-        pytest.param(
-            ["1", "2", "+"],
-            lambda x: x == "+",
-            lambda op, f, s: f + s,
-            int,
-            3,
-            id="Reduce",
-        ),
-        pytest.param(
-            ["1", "2", "+", "3", "+"],
-            lambda x: x == "+",
-            lambda op, f, s: f + s,
-            int,
-            6,
-            id="Reduce coupled",
-        ),
-    ],
-)
-def test_stack_resolver_str_to_int(
-    elements: list[str],
-    is_operator: Callable[[str], bool],
-    apply_operator: Callable[[str, int, int], int],
-    apply_element: Callable[[str], int],
-    result: int,
-) -> None:
-    assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
-
-
-def test_stack_resolver_exception() -> None:
-    def apply_operator(op: str, f: int, s: int) -> int:
-        return f + s
-
-    with pytest.raises(MKGeneralException, match="too many operands left"):
-        utils.stack_resolver(
-            "1 2 3 +".split(),
-            lambda x: x == "+",
-            apply_operator,
-            int,
-        )
-
-
-def test_stack_resolver_exception_missing_operator_arguments() -> None:
-    def apply_operator(op: str, f: int, s: int) -> int:
-        return f + s
-
-    with pytest.raises(
-        MKGeneralException, match="Syntax error in expression '3, T': too few operands"
-    ):
-        utils.stack_resolver(
-            "3 T".split(),
-            lambda x: x == "T",
-            apply_operator,
-            int,
-        )
 
 
 def test_graph_titles() -> None:

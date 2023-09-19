@@ -12,7 +12,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, get_args, Literal, NamedTuple, NewType, TypeVar
+from typing import Any, get_args, Literal, NamedTuple, NewType
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -630,39 +630,6 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 #   +----------------------------------------------------------------------+
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
-
-
-_TAtom = TypeVar("_TAtom")
-_TStackElement = TypeVar("_TStackElement")
-
-
-def stack_resolver(
-    elements: Sequence[_TAtom],
-    is_operator: Callable[[_TAtom], bool],
-    apply_operator: Callable[[_TAtom, _TStackElement, _TStackElement], _TStackElement],
-    apply_element: Callable[[_TAtom], _TStackElement],
-) -> _TStackElement:
-    stack: list[_TStackElement] = []
-    for element in elements:
-        if is_operator(element):
-            if len(stack) < 2:
-                raise MKGeneralException(
-                    "Syntax error in expression '%s': too few operands"
-                    % ", ".join(map(str, elements))
-                )
-            op2 = stack.pop()
-            op1 = stack.pop()
-            stack.append(apply_operator(element, op1, op2))
-        else:
-            stack.append(apply_element(element))
-
-    if len(stack) != 1:
-        raise MKGeneralException(
-            "Syntax error in expression '%s': too many operands left"
-            % ", ".join(map(str, elements))
-        )
-
-    return stack[0]
 
 
 @dataclass(frozen=True)

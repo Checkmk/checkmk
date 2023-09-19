@@ -48,8 +48,7 @@ class MetricOpScalar(BaseModel, frozen=True):
 class MetricOpOperator(BaseModel, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators
-    # TODO Should be a sequence
-    operands: list[MetricOperation] = []
+    operands: Sequence[MetricOperation] = []
 
 
 # TODO transformation is not part of cre but we first have to fix all types

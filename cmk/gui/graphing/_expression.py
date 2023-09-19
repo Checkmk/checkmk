@@ -351,7 +351,38 @@ class Percent(ABCMetricOperation):
         )
 
 
-RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX"]
+# Special metric operations for custom graphs
+
+
+@dataclass(frozen=True)
+class Average(ABCMetricOperation):
+    operands: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        if len(self.operands) == 0:
+            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+
+        result = Sum(self.operands).evaluate(translated_metrics)
+        return MetricExpressionResult(
+            result.value / len(self.operands),
+            result.unit_info,
+            result.color,
+        )
+
+
+@dataclass(frozen=True)
+class Merge(ABCMetricOperation):
+    operands: Sequence[ABCMetricOperation]
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        # TODO None?
+        for operand in self.operands:
+            if (result := operand.evaluate(translated_metrics)).value is not None:
+                return result
+        return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+
+
+RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX", "AVERAGE", "MERGE"]
 
 
 def _apply_operator(
@@ -380,6 +411,10 @@ def _apply_operator(
             return Minimum([left, right])
         case "MAX":
             return Maximum([left, right])
+        case "AVERAGE":
+            return Average([left, right])
+        case "MERGE":
+            return Merge([left, right])
     assert_never(operator)
 
 
@@ -513,6 +548,10 @@ def parse_expression(
                 operators.append("MIN")
             case "MAX":
                 operators.append("MAX")
+            case "AVERAGE":
+                operators.append("AVERAGE")
+            case "MERGE":
+                operators.append("MERGE")
             case _:
                 operands.append(p)
 

@@ -17,7 +17,21 @@ from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, TranslatedMetrics
 
-from ._expression import parse_expression, split_expression
+from ._expression import (
+    ABCMetricOperation,
+    Average,
+    ConstantFloat,
+    ConstantInt,
+    Difference,
+    Fraction,
+    Maximum,
+    Merge,
+    Metric,
+    Minimum,
+    parse_expression,
+    Product,
+    Sum,
+)
 from ._graph_specification import (
     GraphMetric,
     MetricDefinition,
@@ -39,7 +53,6 @@ from ._utils import (
     metrics_used_in_expression,
     MetricUnitColor,
     replace_expressions,
-    stack_resolver,
     translated_metrics_from_row,
 )
 
@@ -237,84 +250,97 @@ def iter_rpn_expression(
             yield part, enforced_consolidation_function
 
 
+def _to_metric_operation(
+    operation: ABCMetricOperation,
+    translated_metrics: TranslatedMetrics,
+    lq_row: Row,
+) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+    if isinstance(operation, (ConstantInt, ConstantFloat)):
+        return MetricOpConstant(value=operation.value)
+    if isinstance(operation, Metric):
+        return MetricOpRRDSource(
+            site_id=lq_row["site"],
+            host_name=lq_row["host_name"],
+            service_name=lq_row.get("service_description", "_HOST_"),
+            metric_name=pnp_cleanup(translated_metrics[operation.name]["orig_name"][0]),
+            consolidation_func_name=operation.consolidation_func_name,
+            scale=translated_metrics[operation.name]["scale"][0],
+        )
+    if isinstance(operation, Sum):
+        return MetricOpOperator(
+            operator_name="+",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.summands
+            ],
+        )
+    if isinstance(operation, Product):
+        return MetricOpOperator(
+            operator_name="*",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.factors
+            ],
+        )
+    if isinstance(operation, Difference):
+        return MetricOpOperator(
+            operator_name="-",
+            operands=[
+                _to_metric_operation(operation.minuend, translated_metrics, lq_row),
+                _to_metric_operation(operation.subtrahend, translated_metrics, lq_row),
+            ],
+        )
+    if isinstance(operation, Fraction):
+        return MetricOpOperator(
+            operator_name="/",
+            operands=[
+                _to_metric_operation(operation.dividend, translated_metrics, lq_row),
+                _to_metric_operation(operation.divisor, translated_metrics, lq_row),
+            ],
+        )
+    if isinstance(operation, Maximum):
+        return MetricOpOperator(
+            operator_name="MAX",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+            ],
+        )
+    if isinstance(operation, Minimum):
+        return MetricOpOperator(
+            operator_name="MIN",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+            ],
+        )
+    if isinstance(operation, Average):
+        return MetricOpOperator(
+            operator_name="AVERAGE",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+            ],
+        )
+    if isinstance(operation, Merge):
+        return MetricOpOperator(
+            operator_name="MERGE",
+            operands=[
+                _to_metric_operation(o, translated_metrics, lq_row) for o in operation.operands
+            ],
+        )
+    raise TypeError(operation)
+
+
 def metric_expression_to_graph_recipe_expression(
     expression: str,
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    site_id = lq_row["site"]
-    host_name = lq_row["host_name"]
-    service_name = lq_row.get("service_description", "_HOST_")
-
-    def _parse_operator(part: str) -> MetricOpOperator:
-        if part == "+":
-            return MetricOpOperator(operator_name="+")
-        if part == "*":
-            return MetricOpOperator(operator_name="*")
-        if part == "-":
-            return MetricOpOperator(operator_name="-")
-        if part == "/":
-            return MetricOpOperator(operator_name="/")
-        if part == "MAX":
-            return MetricOpOperator(operator_name="MAX")
-        if part == "MIN":
-            return MetricOpOperator(operator_name="MIN")
-        if part == "AVERAGE":
-            return MetricOpOperator(operator_name="AVERAGE")
-        if part == "MERGE":
-            return MetricOpOperator(operator_name="MERGE")
-        raise ValueError(part)
-
-    expression = split_expression(expression)[0]
-    atoms: list[MetricOpRRDSource | MetricOpOperator | MetricOpConstant] = []
-    # Break the RPN into parts and translate each part separately
-    for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
-        # Some parts are operators. We leave them. We are just interested in
-        # names of metrics.
-        if part in translated_metrics:  # name of a variable that we know
-            tme = translated_metrics[part]
-            metric_names = tme.get("orig_name", [part])  # original name before translation
-            # We do the replacement of special characters with _ right here.
-            # Normally it should be a task of the core. But: We have variables
-            # named "/" - which is very silly, but is due to the bogus perf names
-            # of the df check. So the CMC could not really distinguish this from
-            # the RPN operator /.
-            for metric_name, scale in zip(metric_names, tme["scale"]):
-                atoms.append(
-                    MetricOpRRDSource(
-                        site_id=site_id,
-                        host_name=host_name,
-                        service_name=service_name,
-                        metric_name=pnp_cleanup(metric_name),
-                        consolidation_func_name=cf,
-                        scale=scale,
-                    )
-                )
-            if len(metric_names) > 1:
-                atoms.append(MetricOpOperator(operator_name="MERGE"))
-
-        else:
-            try:
-                atoms.append(MetricOpConstant(value=float(part)))
-            except ValueError:
-                atoms.append(_parse_operator(part))
-
-    def _apply_operator(
-        expression: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
-        left: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
-        right: MetricOpRRDSource | MetricOpOperator | MetricOpConstant,
-    ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-        if not isinstance(expression, MetricOpOperator):
-            raise TypeError(expression)
-        expression.operands.extend([left, right])
-        return expression
-
-    return stack_resolver(
-        atoms,
-        is_operator=lambda x: isinstance(x, MetricOpOperator),
-        apply_operator=_apply_operator,
-        apply_element=lambda x: x,
+    return _to_metric_operation(
+        parse_expression(
+            expression,
+            translated_metrics,
+            enforced_consolidation_function,
+        ).operation,
+        translated_metrics,
+        lq_row,
     )
 
 

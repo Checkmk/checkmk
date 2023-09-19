@@ -11,11 +11,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RoleName
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from ._helpers import snapin_site_choice
 
 
-@snapin_registry.register
 class Performance(SidebarSnapin):
     @staticmethod
     def type_name():

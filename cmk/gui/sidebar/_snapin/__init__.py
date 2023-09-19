@@ -17,6 +17,7 @@ from .snapins import heading as heading
 from .snapins import iconlink as iconlink
 from .snapins import link as link
 from .snapins import make_topic_menu as make_topic_menu
+from .snapins import register as register
 from .snapins import render_link as render_link
 from .snapins import show_topic_menu as show_topic_menu
 from .snapins import snapin_site_choice as snapin_site_choice

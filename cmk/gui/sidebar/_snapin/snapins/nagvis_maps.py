@@ -8,11 +8,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from ._helpers import footnotelinks
 
 
-@snapin_registry.register
 class NagVisMaps(SidebarSnapin):
     @staticmethod
     def type_name():

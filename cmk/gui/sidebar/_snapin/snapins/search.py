@@ -58,7 +58,7 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
-from .. import PageHandlers, SidebarSnapin, snapin_registry
+from .. import PageHandlers, SidebarSnapin
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -698,7 +698,6 @@ def _maybe_strip(param: str | None) -> str | None:
     return param.strip()
 
 
-@snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
     def __init__(self) -> None:
         self._quicksearch_manager = QuicksearchManager()

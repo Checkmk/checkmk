@@ -12,11 +12,10 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.theme import theme
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from ._helpers import snapin_width
 
 
-@snapin_registry.register
 class Speedometer(SidebarSnapin):
     @staticmethod
     def type_name():

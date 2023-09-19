@@ -21,7 +21,7 @@ from cmk.gui.node_visualization import ParentChildTopologyPage
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from . import search
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
 
@@ -31,7 +31,6 @@ else:
     reporting = None  # type: ignore[assignment]
 
 
-@snapin_registry.register
 class Views(SidebarSnapin):
     @staticmethod
     def type_name():

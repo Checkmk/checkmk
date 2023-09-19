@@ -19,11 +19,10 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeuri_contextless
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
 
-@snapin_registry.register
 class SiteStatus(SidebarSnapin):
     @staticmethod
     def type_name():

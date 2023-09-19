@@ -10,7 +10,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
 
-from .. import SidebarSnapin, snapin_registry
+from .. import SidebarSnapin
 from ._helpers import bulletlink
 
 
@@ -32,7 +32,6 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
         return True
 
 
-@snapin_registry.register
 class HostGroups(GroupSnapin):
     def _group_type_ident(self):
         return "hostgroup"
@@ -50,7 +49,6 @@ class HostGroups(GroupSnapin):
         return _("Directs links to all host groups")
 
 
-@snapin_registry.register
 class ServiceGroups(GroupSnapin):
     def _group_type_ident(self):
         return "servicegroup"

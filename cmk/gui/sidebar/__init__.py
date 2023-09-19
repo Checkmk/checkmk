@@ -46,6 +46,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
+from . import _snapin
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
@@ -77,7 +78,9 @@ sidebar_snapins: dict[str, dict] = {}
 
 
 def register(
-    page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
+    page_registry: PageRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    snapin_registry_: SnapinRegistry,
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -93,6 +96,7 @@ def register(
         PageAjaxSidebarGetUnackIncompWerks
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
+    _snapin.register(snapin_registry_)
 
 
 def load_plugins() -> None:

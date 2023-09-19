@@ -33,7 +33,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
             permission_registry.register(
                 Permission(
                     section=PermissionSectionSidebarSnapins,
-                    name="sidesnap.%s" % self.plugin_name(instance),
+                    name=self.plugin_name(instance),
                     title=instance.title(),
                     description=instance.description(),
                     defaults=instance.allowed_roles(),

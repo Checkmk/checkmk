@@ -70,8 +70,6 @@ class CloudPublisher(abc.ABC):
 class AWSPublisher(CloudPublisher):
     ENTITY_TYPE_WITH_VERSION = "AmiProduct@1.0"
     CATALOG = "AWSMarketplace"
-    # TODO: switch to self.production_id
-    NON_PRODUCTION_ID = "970042f0-764f-4753-96dc-a043d71b2d71"
 
     def __init__(self, version, build_tag, image_name):
         super().__init__(version, build_tag, image_name)

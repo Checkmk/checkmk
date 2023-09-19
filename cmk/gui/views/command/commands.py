@@ -644,7 +644,11 @@ class CommandCustomNotification(Command):
 
     @property
     def title(self) -> str:
-        return _("Custom notification")
+        return _("Send custom notification")
+
+    @property
+    def confirm_title(self) -> str:
+        return "%s?" % self.title
 
     @property
     def confirm_button(self) -> LazyString:
@@ -670,22 +674,35 @@ class CommandCustomNotification(Command):
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
-            "TEST",
             id_="cusnot_comment",
             size=60,
             submit="_customnotification",
             label=_("Comment"),
+            placeholder=_("Enter your message here"),
         )
         html.close_div()
 
         html.open_div(class_="group")
-        html.checkbox("_cusnot_forced", False, label=_("forced"))
-        html.checkbox("_cusnot_broadcast", False, label=_("broadcast"))
+        html.checkbox(
+            "_cusnot_forced",
+            False,
+            label=_(
+                "Send regardless of restrictions, e.g. notification period or disabled notifications (forced)"
+            ),
+        )
+        html.close_div()
+        html.open_div(class_="group")
+        html.checkbox(
+            "_cusnot_broadcast",
+            False,
+            label=_("Send to all contacts of the selected hosts/services (broadcast)"),
+        )
         html.close_div()
 
-        html.div(
-            html.render_button("_customnotification", _("Send"), cssclass="hot"), class_="group"
-        )
+        html.open_div(class_="group")
+        html.button("_customnotification", _("Send"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

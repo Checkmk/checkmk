@@ -215,7 +215,7 @@ def test_registered_commands() -> None:
         "send_custom_notification": {
             "permission": "action.customnotification",
             "tables": ["host", "service"],
-            "title": "Custom notification",
+            "title": "Send custom notification",
         },
         "ec_archive_event": {
             "permission": "mkeventd.delete",

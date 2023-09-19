@@ -1314,7 +1314,6 @@ class CommandECUpdateEvent(ECCommand):
                     comment,
                     contact,
                 ),
-                _("update"),
                 self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None
@@ -1386,7 +1385,6 @@ class CommandECChangeState(ECCommand):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return (
                 f"CHANGESTATE;{events};{user.id};{state}",
-                _("change the state"),
                 self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None
@@ -1437,12 +1435,10 @@ class CommandECCustomAction(ECCommand):
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        for action_id, title in action_choices(omit_hidden=True):
+        for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
-                title = _('execute the action "%s"') % title
                 return (
                     "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
-                    title,
                     self.confirm_dialog_options(len(action_rows), cmdtag),
                 )
         return None
@@ -1495,8 +1491,7 @@ class CommandECArchiveEvent(ECCommand):
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             command = f"DELETE;{events};{user.id}"
-            title = _("<b>archive</b>")
-            return command, title, self.confirm_dialog_options(len(action_rows), cmdtag)
+            return command, self.confirm_dialog_options(len(action_rows), cmdtag)
         return None
 
 
@@ -1564,7 +1559,6 @@ class CommandECArchiveEventsOfHost(ECCommand):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
             return (
                 commands,
-                "<b>archive all events</b> of",
                 self.confirm_dialog_options(len(action_rows), cmdtag),
             )
         return None

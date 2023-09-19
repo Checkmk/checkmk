@@ -28,11 +28,11 @@ from .registry import command_registry
 def core_command(
     what: str, row: Row, row_nr: int, action_rows: Rows
 ) -> tuple[
-    Sequence[CommandSpec], list[tuple[str, str]], str, CommandConfirmDialogOptions, CommandExecutor
+    Sequence[CommandSpec], list[tuple[str, str]], CommandConfirmDialogOptions, CommandExecutor
 ]:
     """Examine the current HTML variables in order determine, which command the user has selected.
     The fetch ids from a data row (host name, service description, downtime/commands id) and
-    construct one or several core command lines and a descriptive title."""
+    construct one or several core command lines and a descriptive confirm dialog."""
     host = row.get("host_name")
     descr = row.get("service_description")
 
@@ -53,10 +53,9 @@ def core_command(
         cmdtag = "SVC" if descr else "HOST"
 
     commands: Sequence[CommandSpec] | None = None
-    title: str | None = None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
-    # will return a command to execute and a title for the
+    # will return a command to execute and confirm dialog options for the
     # confirmation dialog.
     for cmd_class in command_registry.values():
         cmd = cmd_class()
@@ -65,10 +64,10 @@ def core_command(
             confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
             if result:
                 executor = cmd.executor
-                commands, title, confirm_dialog_options = result
+                commands, confirm_dialog_options = result
                 break
 
-    if commands is None or title is None:
+    if commands is None or not confirm_dialog_options:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others
@@ -76,7 +75,7 @@ def core_command(
     if isinstance(commands, str):
         commands = [commands]
 
-    return commands, confirm_options, title, confirm_dialog_options, executor
+    return commands, confirm_options, confirm_dialog_options, executor
 
 
 def should_show_command_form(
@@ -147,11 +146,11 @@ def do_actions(  # pylint: disable=too-many-branches
         return False  # no actions done
 
     command = None
-    confirm_options, _command_title, confirm_dialog_options, executor = core_command(
+    confirm_options, confirm_dialog_options, executor = core_command(
         what, action_rows[0], 0, action_rows
     )[
-        1:5
-    ]  # just get confirm_options, title, confirm_dialog_options and executor
+        1:4
+    ]  # just get confirm_options, confirm_dialog_options and executor
 
     if not command_confirm_dialog(
         confirm_options,
@@ -169,7 +168,7 @@ def do_actions(  # pylint: disable=too-many-branches
     count = 0
     already_executed = set()
     for nr, row in enumerate(action_rows):
-        core_commands, _confirm_options, _title, _confirm_dialog_options, executor = core_command(
+        core_commands, _confirm_options, _confirm_dialog_options, executor = core_command(
             what,
             row,
             nr,

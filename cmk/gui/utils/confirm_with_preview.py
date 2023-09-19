@@ -84,10 +84,19 @@ def command_confirm_dialog(
         html.hidden_field(varname, title)
     html.end_form()
 
-    cancel_url = makeuri(
-        request=request,
-        addvars=[("_do_actions", "no")],
-        delvars=["_transid"],
+    # return to commands page on mobile
+    cancel_url = (
+        makeuri(
+            request,
+            addvars=[("page", "commands")],
+            delvars=["filled_in", "_transid", "_do_actions", "actions"],
+        )
+        if mobile
+        else makeuri(
+            request=request,
+            addvars=[("_do_actions", "no")],
+            delvars=["_transid"],
+        )
     )
     html.javascript(
         "cmk.forms.confirm_dialog(%s, () => {const form = document.getElementById('form_confirm');form.submit()}, %s)"

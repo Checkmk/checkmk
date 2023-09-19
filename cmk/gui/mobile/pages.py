@@ -25,7 +25,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import active_connections_by_type
-from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
@@ -482,21 +482,24 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    confirm_options, title, _confirm_dialog_options, executor = core_command(
-        what, rows[0], 0, rows
-    )[
-        1:5
-    ]  # just get confirm_options, title and executor
+    confirm_options, confirm_dialog_options, executor = core_command(what, rows[0], 0, rows)[
+        1:4
+    ]  # just get confirm_options, confirm_dialog_options and executor
 
-    confirm_title = _("Do you really want to %s") % title
-    r = confirm_with_preview(confirm_title, confirm_options)
-    if r is not True:
-        return r is None  # Show commands on negative answer
+    if not command_confirm_dialog(
+        confirm_options,
+        confirm_dialog_options.confirm_title,
+        confirm_dialog_options.affected + confirm_dialog_options.additions
+        if confirm_dialog_options.additions
+        else confirm_dialog_options.affected,
+        confirm_dialog_options.confirm_button,
+    ):
+        return False
 
     count = 0
     already_executed: set[CommandSpec] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, _confirm_options, title, _confirm_dialog_options, executor = core_command(
+        nagios_commands, _confirm_options, _confirm_dialog_options, executor = core_command(
             what,
             row,
             nr,

@@ -34,7 +34,7 @@ class CommandConfirmDialogOptions:
 
 
 CommandActionResult = (
-    tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str, CommandConfirmDialogOptions] | None
+    tuple[CommandSpecWithoutSite | Sequence[CommandSpec], CommandConfirmDialogOptions] | None
 )
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
@@ -118,8 +118,8 @@ class Command(abc.ABC):
     ) -> CommandActionResult:
         result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
-            commands, title, confirm_dialog_options = result
-            return commands, title, confirm_dialog_options
+            commands, confirm_dialog_options = result
+            return commands, confirm_dialog_options
         return None
 
     @abc.abstractmethod

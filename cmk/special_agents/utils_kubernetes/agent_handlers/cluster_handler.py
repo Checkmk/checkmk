@@ -38,7 +38,7 @@ def create_api_sections(api_cluster: Cluster, cluster_name: str) -> Iterator[Wri
         WriteableSection(
             piggyback_name="",
             section_name=SectionName("kube_cluster_details_v1"),
-            section=section.ClusterDetails.model_validate(api_cluster.cluster_details.model_dump()),
+            section=section.ClusterDetails.parse_obj(api_cluster.cluster_details),
         ),
         WriteableSection(
             piggyback_name="",

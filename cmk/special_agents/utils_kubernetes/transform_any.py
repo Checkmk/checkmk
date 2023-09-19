@@ -27,8 +27,8 @@ def parse_open_metric_samples(
             continue
 
         open_metric_sample = _parse_metric_sample_with_labels(raw_open_metric)
-        if not isinstance(open_metric_sample.root, api.UnusedKubeletMetricSample):
-            yield open_metric_sample.root
+        if not isinstance(open_metric_sample.__root__, api.UnusedKubeletMetricSample):
+            yield open_metric_sample.__root__
 
 
 def _parse_metric_sample_with_labels(

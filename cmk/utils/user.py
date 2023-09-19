@@ -7,10 +7,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any
-
-from pydantic import GetCoreSchemaHandler
-from pydantic_core import core_schema
 
 
 class UserId(str):
@@ -56,18 +52,6 @@ class UserId(str):
 
     # Note: livestatus.py duplicates the regex to validate incoming UserIds!
     USER_ID_REGEX = re.compile(r"^[\w$][-@.\w$]*$", re.UNICODE)
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type: Any, _handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
-        return core_schema.no_info_after_validator_function(
-            cls.validate_userid,
-            core_schema.union_schema(
-                [core_schema.str_schema(), core_schema.is_instance_schema(cls)]
-            ),
-            serialization=core_schema.to_string_ser_schema(),
-        )
 
     @classmethod
     def validate(cls, text: str) -> None:
@@ -128,13 +112,9 @@ class UserId(str):
                 ...
                 ValueError: Username too long: '𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈…'
         """
-        cls.validate_userid(text)
-
-    @classmethod
-    def validate_userid(cls, text: str) -> str:
         if not text:
             # see UserId.builtin
-            return ""
+            return
 
         if len(bytes(text, encoding="utf-8")) > 255:
             # ext4 and others allow filenames of up to 255 bytes
@@ -142,8 +122,6 @@ class UserId(str):
 
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")
-
-        return text
 
     @classmethod
     def builtin(cls) -> UserId:

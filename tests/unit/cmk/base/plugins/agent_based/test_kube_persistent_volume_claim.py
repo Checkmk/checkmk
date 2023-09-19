@@ -6,7 +6,7 @@ from collections.abc import MutableMapping
 from typing import Any
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
 from cmk.base.plugins.agent_based.kube_persistent_volume_claim import (

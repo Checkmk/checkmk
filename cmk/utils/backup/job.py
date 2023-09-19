@@ -43,7 +43,7 @@ class Job:
     id: str
 
 
-class JobState(BaseModel):
+class JobState(BaseModel, frozen=True):
     state: str | None
     started: float | None
     output: str

@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NewType, TypeVar
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, parse_raw_as, ValidationError
 
 import cmk.utils
 
@@ -92,8 +92,7 @@ _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
-    adapter = TypeAdapter(list[_AllSamples])
-    return adapter.validate_json(cluster_collector_metrics)
+    return parse_raw_as(list[_AllSamples], cluster_collector_metrics)
 
 
 def create_selectors(
@@ -202,7 +201,7 @@ def _determine_cpu_rate_metrics(
 def _calculate_rate(counter_metric: CPUSample, old_counter_metric: CPUSample) -> float:
     """Calculate the rate value based on two counter metric values
     Examples:
-        >>> from polyfactory.factories.pydantic_factory import ModelFactory
+        >>> from pydantic_factories import ModelFactory
         >>> class SampleFactory(ModelFactory):
         ...    __model__ = CPUSample
         >>> _calculate_rate(SampleFactory.build(metric_value_string="40", timestamp=60),

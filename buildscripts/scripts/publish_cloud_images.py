@@ -14,7 +14,7 @@ from typing import Final
 import boto3  # type: ignore[import]
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from cmk.utils.version import Version
+from cmk.utils.version import _PatchVersion, Version
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -221,13 +221,38 @@ class AWSPublisher(CloudPublisher):
                     return
 
 
+class AzurePublisher(CloudPublisher):
+    @staticmethod
+    def azure_compatible_version(version: _PatchVersion) -> str:
+        """
+        Yea, this is great... but azure doesn't accept our versioning schema
+        >>> AzurePublisher.azure_compatible_version(Version("2.2.0p5").version)
+        '2.2.5'
+        """
+        return f"{version.major}.{version.minor}.{version.patch}"
+
+    async def publish(self):
+        pass
+
+
+def ensure_using_official_release(version: str) -> Version:
+    parsed_version = Version(version)
+    if not isinstance(parsed_version.version, _PatchVersion):
+        raise RuntimeError(
+            f"We only want to publish official patch releases, got {parsed_version} instead."
+        )
+    return parsed_version
+
+
 if __name__ == "__main__":
     args = parse_arguments()
+
+    new_version = ensure_using_official_release(args.new_version)
     match args.cloud_type:
         case "aws":
             asyncio.run(
                 AWSPublisher(
-                    Version(args.new_version),
+                    new_version,
                     args.build_tag,
                     args.image_name,
                     args.marketplace_scanner_arn,

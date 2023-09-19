@@ -160,7 +160,6 @@ def _register_pre_21_plugin_api() -> None:
 def transform_old_dict_based_snapins() -> None:
     for snapin_id, snapin in sidebar_snapins.items():
 
-        @snapin_registry.register
         class LegacySnapin(SidebarSnapin):
             _type_name = snapin_id
             _spec = snapin
@@ -195,8 +194,7 @@ def transform_old_dict_based_snapins() -> None:
             def styles(self):
                 return self._spec.get("styles")
 
-        # Help pylint a little bit, it doesn't know that the registry remembers the class above.
-        _it_is_really_used = LegacySnapin  # noqa: F841
+        snapin_registry.register(LegacySnapin)
 
 
 class UserSidebarConfig:

@@ -6,7 +6,6 @@
 from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 
 
-@snapin_registry.register
 class CurrentTime(SidebarSnapin):
     @staticmethod
     def type_name():
@@ -26,3 +25,6 @@ class CurrentTime(SidebarSnapin):
 
     def show(self):
         pass
+
+
+snapin_registry.register(CurrentTime)

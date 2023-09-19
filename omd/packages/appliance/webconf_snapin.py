@@ -24,7 +24,6 @@ def nav_modules_path() -> Path:
     return Path("/usr/share/cma/webconf/nav_modules")
 
 
-@snapin_registry.register
 class SidebarSnapinCMAWebconf(SidebarSnapin):
     @staticmethod
     def type_name() -> str:
@@ -116,3 +115,6 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         html.write_text(text)
         html.close_a()
         html.br()
+
+
+snapin_registry.register(SidebarSnapinCMAWebconf)

@@ -7,7 +7,6 @@ import argparse
 import asyncio
 import enum
 import json
-import os
 from typing import Final
 
 import boto3  # type: ignore[import]
@@ -43,6 +42,18 @@ def parse_arguments() -> argparse.Namespace:
         action="store",
         required=True,
     )
+    parser.add_argument(
+        "--marketplace-scanner-arn",
+        help="The arn of an aws role which can access our ami images",
+        action="store",
+        required=True,
+    )
+    parser.add_argument(
+        "--product-id",
+        help="The product id of the product which should receive a new version",
+        action="store",
+        required=True,
+    )
     return parser.parse_args()
 
 
@@ -71,14 +82,19 @@ class AWSPublisher(CloudPublisher):
     ENTITY_TYPE_WITH_VERSION = "AmiProduct@1.0"
     CATALOG = "AWSMarketplace"
 
-    def __init__(self, version, build_tag, image_name):
+    def __init__(
+        self,
+        version,
+        build_tag,
+        image_name,
+        marketplace_scanner_arn,
+        product_id,
+    ):
         super().__init__(version, build_tag, image_name)
         self.client_ec2 = boto3.client("ec2")
         self.client_market = boto3.client("marketplace-catalog")
-        # The following envs are expeceted to be a Jenkins env variable
-        self.aws_marketplace_scanner_arn = os.environ["AWS_MARKETPLACE_SCANNER_ARN"]
-        # Our aws marketplace product ID
-        self.production_id = os.environ["AWS_AMI_IMAGE_PRODUCT_ID"]
+        self.aws_marketplace_scanner_arn = marketplace_scanner_arn
+        self.production_id = product_id
 
     class ChangeTypes(enum.StrEnum):
         ADD_DELIVERY_OPTIONS = "AddDeliveryOptions"  # for updating the version
@@ -200,6 +216,8 @@ if __name__ == "__main__":
                     args.new_version,
                     args.build_tag,
                     args.image_name,
+                    args.marketplace_scanner_arn,
+                    args.product_id,
                 ).publish()
             )
         case "azure":

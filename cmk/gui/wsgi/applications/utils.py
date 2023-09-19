@@ -181,9 +181,7 @@ def _handle_not_authenticated() -> Response:
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
     if cmk_version.edition() == cmk_version.Edition.CSE:
-        from cmk.gui.cse.userdb.cognito.pages import SingleSignOn
-
-        saas_login_page = SingleSignOn()
+        saas_login_page = login.SaasLoginPage()
         saas_login_page.handle_page()
     else:
         login_page = login.LoginPage()

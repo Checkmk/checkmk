@@ -188,13 +188,11 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
 
     @app.route("/<string:site>/check_mk/themes/<string:theme>/<string:file_name>")
     def css_file(site: str, theme: str, file_name: str) -> flask.Response:
-        main_file_name, rest = file_name.split("-", 1)
-        _, ext = rest.rsplit(".", 1)
         path = safe_join(paths.web_dir, "htdocs/themes", theme)
         if path is None:
             raise BadRequest("Unknown path")
 
-        return flask.send_from_directory(path, f"{main_file_name}.{ext}")
+        return flask.send_from_directory(path, f"{file_name}")
 
     @app.route("/")
     def index() -> ResponseTypes:
@@ -234,8 +232,12 @@ def main() -> None:
         paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")
 
         # We need this to be able to automatically create a new user
-        store.makedirs(paths.profile_dir)
-        store.makedirs(paths.log_dir)
+        for path_name in dir(paths):
+            if path_name.endswith("_dir"):
+                store.makedirs(path_name)
+
+        store.makedirs(paths._omd_path("local/lib/check_mk/gui/plugins/views"))
+        store.makedirs(paths._omd_path("local/lib/check_mk/gui/plugins/dashboard"))
 
         logger.warning("NOTE: If the design looks like it's missing CSS files, run 'make css'")
         # Note we import and prepare everything within this context manager, because imports will

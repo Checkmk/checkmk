@@ -48,6 +48,7 @@ import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
+import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry
@@ -423,7 +424,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(mkeventd, "get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 

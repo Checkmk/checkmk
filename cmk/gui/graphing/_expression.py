@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Callable, Literal
 
@@ -60,6 +61,10 @@ class ABCMetricOperation(abc.ABC):
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def metrics(self) -> Iterator[Metric]:
+        raise NotImplementedError()
+
 
 @dataclass(frozen=True)
 class ConstantInt(ABCMetricOperation):
@@ -68,6 +73,9 @@ class ConstantInt(ABCMetricOperation):
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(float(self.value), unit_info["count"], "#000000")
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from ()
+
 
 @dataclass(frozen=True)
 class ConstantFloat(ABCMetricOperation):
@@ -75,6 +83,9 @@ class ConstantFloat(ABCMetricOperation):
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(self.value, unit_info[""], "#000000")
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from ()
 
 
 @dataclass(frozen=True)
@@ -89,6 +100,9 @@ class Metric(ABCMetricOperation):
             translated_metrics[self.name]["color"],
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield self
+
 
 @dataclass(frozen=True)
 class WarningOf(ABCMetricOperation):
@@ -100,6 +114,9 @@ class WarningOf(ABCMetricOperation):
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("warn", "#808080"),
         )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.metric.metrics()
 
 
 @dataclass(frozen=True)
@@ -113,6 +130,9 @@ class CriticalOf(ABCMetricOperation):
             scalar_colors.get("crit", "#808080"),
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.metric.metrics()
+
 
 @dataclass(frozen=True)
 class MinimumOf(ABCMetricOperation):
@@ -125,6 +145,9 @@ class MinimumOf(ABCMetricOperation):
             scalar_colors.get("min", "#808080"),
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.metric.metrics()
+
 
 @dataclass(frozen=True)
 class MaximumOf(ABCMetricOperation):
@@ -136,6 +159,9 @@ class MaximumOf(ABCMetricOperation):
             self.metric.evaluate(translated_metrics).unit_info,
             scalar_colors.get("max", "#808080"),
         )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.metric.metrics()
 
 
 @dataclass(frozen=True)
@@ -158,6 +184,9 @@ class Sum(ABCMetricOperation):
 
         return MetricExpressionResult(sum(values), unit_info_, color)
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for s in self.summands for m in s.metrics())
+
 
 @dataclass(frozen=True)
 class Product(ABCMetricOperation):
@@ -178,6 +207,9 @@ class Product(ABCMetricOperation):
             color = _choose_operator_color(color, successor_result.color)
 
         return MetricExpressionResult(product, unit_info_, color)
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for f in self.factors for m in f.metrics())
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -200,6 +232,10 @@ class Difference(ABCMetricOperation):
             _choose_operator_color(minuend_result.color, subtrahend_result.color),
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.minuend.metrics()
+        yield from self.subtrahend.metrics()
+
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction(ABCMetricOperation):
@@ -221,6 +257,10 @@ class Fraction(ABCMetricOperation):
             _choose_operator_color(dividend_result.color, divisor_result.color),
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.dividend.metrics()
+        yield from self.divisor.metrics()
+
 
 @dataclass(frozen=True, kw_only=True)
 class GreaterThan(ABCMetricOperation):
@@ -238,6 +278,10 @@ class GreaterThan(ABCMetricOperation):
             unit_info[""],
             "#000000",
         )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.left.metrics()
+        yield from self.right.metrics()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -257,6 +301,10 @@ class GreaterEqualThan(ABCMetricOperation):
             "#000000",
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.left.metrics()
+        yield from self.right.metrics()
+
 
 @dataclass(frozen=True, kw_only=True)
 class LessThan(ABCMetricOperation):
@@ -274,6 +322,10 @@ class LessThan(ABCMetricOperation):
             unit_info[""],
             "#000000",
         )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.left.metrics()
+        yield from self.right.metrics()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -293,6 +345,10 @@ class LessEqualThan(ABCMetricOperation):
             "#000000",
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.left.metrics()
+        yield from self.right.metrics()
+
 
 @dataclass(frozen=True)
 class Minimum(ABCMetricOperation):
@@ -310,6 +366,9 @@ class Minimum(ABCMetricOperation):
 
         return minimum
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for o in self.operands for m in o.metrics())
+
 
 @dataclass(frozen=True)
 class Maximum(ABCMetricOperation):
@@ -326,6 +385,9 @@ class Maximum(ABCMetricOperation):
                 maximum = operand_result
 
         return maximum
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for o in self.operands for m in o.metrics())
 
 
 # Composed metric operations:
@@ -350,6 +412,10 @@ class Percent(ABCMetricOperation):
             self.reference.evaluate(translated_metrics).color,
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.reference.metrics()
+        yield from self.metric.metrics()
+
 
 # Special metric operations for custom graphs
 
@@ -369,6 +435,9 @@ class Average(ABCMetricOperation):
             result.color,
         )
 
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for o in self.operands for m in o.metrics())
+
 
 @dataclass(frozen=True)
 class Merge(ABCMetricOperation):
@@ -380,6 +449,9 @@ class Merge(ABCMetricOperation):
             if (result := operand.evaluate(translated_metrics)).value is not None:
                 return result
         return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from (m for o in self.operands for m in o.metrics())
 
 
 RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX", "AVERAGE", "MERGE"]
@@ -488,6 +560,9 @@ class MetricExpression:
             unit_info[self.explicit_unit_name] if self.explicit_unit_name else result.unit_info,
             "#" + self.explicit_color if self.explicit_color else result.color,
         )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.operation.metrics()
 
 
 # Evaluates an expression, returns a triple of value, unit and color.

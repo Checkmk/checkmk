@@ -35,6 +35,9 @@ VARIABLES:
     - NAME: CHANGED_AGENT_CONTROLLER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
+    - NAME: CHANGED_CHECK_CERT_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/' || true"
+
     - NAME: CHANGED_SQL_CHECK_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/database_checks/sql_check/' || true"
 
@@ -369,6 +372,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/agent-controller.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller.txt"
+
+    - NAME: 'check-cert'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CHECK_CERT_FILES
+      DIR: 'packages/check-cert'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
+      TEXT_ON_SKIP: 'No check-cert files changes'
+      RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
     - NAME: 'SQL Check'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SQL_CHECK_FILES

@@ -613,6 +613,11 @@ class Ruleset:
         # Temporary needed during search result processing
         self.search_matching_rules: list[Rule] = []
 
+        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
+        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
+            tag_to_group_map=tag_to_group_map
+        )
+
     def clone(self):
         cloned = Ruleset(self.name, self.tag_to_group_map, self.rulespec)
         for folder, _rule_index, rule in self.get_rules():
@@ -718,6 +723,12 @@ class Ruleset:
 
         # Resets the rules of this ruleset for this folder!
         self._rules[folder.path()] = []
+
+        self.tuple_transformer.transform_in_place(
+            rules_config,
+            is_service=self.rulespec.is_for_services,
+            is_binary=self.rulespec.is_binary_ruleset,
+        )
 
         for rule_config in rules_config:
             rule = Rule.from_config(folder, self, rule_config)
@@ -1289,10 +1300,20 @@ class Rule:
         ruleset = [rule_dict]
 
         if match_service_conditions:
-            if list(matcher.get_service_ruleset_values(match_object, ruleset)):
+            if list(
+                matcher.get_service_ruleset_values(
+                    match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset
+                )
+            ):
                 return
         else:
-            if list(matcher.get_host_values(match_object.host_name, ruleset)):
+            if list(
+                matcher.get_host_values(
+                    match_object.host_name,
+                    ruleset,
+                    is_binary=self.ruleset.rulespec.is_binary_ruleset,
+                )
+            ):
                 return
 
         yield _("The rule does not match")

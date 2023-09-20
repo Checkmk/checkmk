@@ -323,7 +323,7 @@ class Rulespec(abc.ABC):
         is_deprecated: bool,
         is_cloud_edition_only: bool,
         is_for_services: bool,
-        is_binary_ruleset: bool,  # unused
+        is_binary_ruleset: bool,
         factory_default: Any,
         help_func: Callable[[], str] | None,
         doc_references: dict[DocReference, str] | None,

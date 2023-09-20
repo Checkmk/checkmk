@@ -130,6 +130,7 @@ def test_ruleset_matcher_get_host_values_labels(
     hostname_str: str, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={HostName("host1"): {}, HostName("host2"): {}},
         host_paths={},
         labels=LabelManager(
@@ -147,7 +148,11 @@ def test_ruleset_matcher_get_host_values_labels(
     )
 
     assert (
-        list(matcher.get_host_values(HostName(hostname_str), ruleset=host_label_ruleset))
+        list(
+            matcher.get_host_values(
+                HostName(hostname_str), ruleset=host_label_ruleset, is_binary=False
+            )
+        )
         == expected_result
     )
 
@@ -156,6 +161,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
     ruleset_matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
         host_paths={},
         labels=LabelManager(
@@ -202,6 +208,7 @@ def test_labels_of_service_discovered_labels() -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
     ruleset_matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={test_host: {}},
         host_paths={},
         labels=LabelManager(
@@ -230,6 +237,7 @@ def test_labels_of_service_discovered_labels() -> None:
 
 def test_basic_get_host_values() -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={
             HostName("abc"): {},
             HostName("xyz"): {},
@@ -253,17 +261,20 @@ def test_basic_get_host_values() -> None:
         nodes_of={},
     )
 
-    assert not list(matcher.get_host_values(HostName("abc"), ruleset=ruleset))
-    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset))
-    assert list(matcher.get_host_values(HostName("host1"), ruleset=ruleset)) == [
+    assert not list(matcher.get_host_values(HostName("abc"), ruleset=ruleset, is_binary=False))
+    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset, is_binary=False))
+    assert list(matcher.get_host_values(HostName("host1"), ruleset=ruleset, is_binary=False)) == [
         "BLA",
         "BLUB",
     ]
-    assert list(matcher.get_host_values(HostName("host2"), ruleset=ruleset)) == ["BLUB"]
+    assert list(matcher.get_host_values(HostName("host2"), ruleset=ruleset, is_binary=False)) == [
+        "BLUB"
+    ]
 
 
 def test_basic_get_host_values_subfolders() -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={
             HostName("abc"): {},
             HostName("xyz"): {},
@@ -293,13 +304,15 @@ def test_basic_get_host_values_subfolders() -> None:
         nodes_of={},
     )
 
-    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset))
-    assert list(matcher.get_host_values(HostName("lvl1"), ruleset=ruleset)) == ["LEVEL1"]
-    assert list(matcher.get_host_values(HostName("lvl2"), ruleset=ruleset)) == [
+    assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset, is_binary=False))
+    assert list(matcher.get_host_values(HostName("lvl1"), ruleset=ruleset, is_binary=False)) == [
+        "LEVEL1"
+    ]
+    assert list(matcher.get_host_values(HostName("lvl2"), ruleset=ruleset, is_binary=False)) == [
         "LEVEL1",
         "LEVEL2",
     ]
-    assert not list(matcher.get_host_values(HostName("lvl1a"), ruleset=ruleset))
+    assert not list(matcher.get_host_values(HostName("lvl1a"), ruleset=ruleset, is_binary=False))
 
 
 dict_ruleset: Sequence[RuleSpec[Mapping[str, str]]] = [
@@ -345,6 +358,7 @@ dict_ruleset: Sequence[RuleSpec[Mapping[str, str]]] = [
 
 def test_basic_host_ruleset_get_merged_dict_values() -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={
             HostName("abc"): {},
             HostName("xyz"): {},
@@ -420,6 +434,7 @@ binary_ruleset: list[RuleSpec] = [
 
 def test_basic_host_ruleset_get_host_bool_value() -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={
             HostName("abc"): {},
             HostName("xyz"): {},
@@ -534,6 +549,7 @@ def test_ruleset_matcher_get_host_values_tags(
     hostname: HostName, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
+        tag_to_group_map={},
         host_tags={
             HostName("host1"): {
                 TagGroupID("criticality"): TagID("prod"),
@@ -564,7 +580,10 @@ def test_ruleset_matcher_get_host_values_tags(
         clusters_of={},
         nodes_of={},
     )
-    assert list(matcher.get_host_values(hostname, ruleset=tag_ruleset)) == expected_result
+    assert (
+        list(matcher.get_host_values(hostname, ruleset=tag_ruleset, is_binary=False))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -645,7 +664,9 @@ def test_ruleset_matcher_get_host_values_tags_duplicate_ids(
 
     assert (
         list(
-            matcher.get_host_values(HostName("host"), ruleset=[rule_spec])  # type: ignore[arg-type]
+            matcher.get_host_values(
+                HostName("host"), ruleset=[rule_spec], is_binary=False  # type: ignore[arg-type]
+            )
         )
         == expected_result
     )
@@ -747,6 +768,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
             matcher.get_service_ruleset_values(
                 matcher._service_match_object(hostname, ServiceName(service_description)),
                 ruleset=service_label_ruleset,
+                is_binary=False,
             )
         )
         == expected_result
@@ -757,7 +779,7 @@ def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch: MonkeyPatch) -> Non
     config_cache = Scenario().apply(monkeypatch)
     ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
     ruleset_optimizer.get_service_ruleset(ruleset, False)
-    ruleset_optimizer.get_host_ruleset(ruleset, False)
+    ruleset_optimizer.get_host_ruleset(ruleset, False, False)
     assert ruleset_optimizer._host_ruleset_cache
     assert ruleset_optimizer._service_ruleset_cache
     ruleset_optimizer.clear_ruleset_caches()

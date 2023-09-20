@@ -28,7 +28,7 @@ from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypeVar
 import boto3
 import botocore
 from botocore.client import BaseClient
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 import cmk.utils.password_store
@@ -361,7 +361,7 @@ def _get_ec2_piggyback_hostname(
     # instance is no longer visible in the console.
     # In this case we do not deliever any data for this piggybacked host such that
     # the services go stable and Check_MK service reports "CRIT - Got not information".
-    parsed_instance = Instance.model_validate(inst)
+    parsed_instance = Instance.parse_obj(inst)
     match piggyback_naming_convention:
         case NamingConvention.private_dns_name:
             return parsed_instance.private_dns_name
@@ -1094,7 +1094,7 @@ class EC2Limits(AWSSectionLimits):
 
     def get_live_data(self, *args):
         quota_list = list(self._iter_service_quotas("ec2"))
-        quota_dicts = [q.model_dump() for q in quota_list]
+        quota_dicts = [q.dict() for q in quota_list]
 
         response = self._client.describe_instances()  # type: ignore[attr-defined]
         reservations = self._get_response_content(response, "Reservations")
@@ -5641,10 +5641,11 @@ class StatusEnum(StrEnum):
 
 
 class Tag(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     Key: str = Field(..., alias="key")
     Value: str = Field(..., alias="value")
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class Cluster(BaseModel):
@@ -5689,10 +5690,10 @@ class ECSLimits(AWSSectionLimits):
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[object], Sequence[object]]:
         quota_list = list(self._iter_service_quotas("ecs"))
-        quota_dicts = [q.model_dump() for q in quota_list]
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_ids = list(get_ecs_cluster_arns(self._client))
-        cluster_dicts = [c.model_dump() for c in get_ecs_clusters(self._client, cluster_ids)]
+        cluster_dicts = [c.dict() for c in get_ecs_clusters(self._client, cluster_ids)]
 
         return quota_dicts, cluster_dicts
 
@@ -5811,8 +5812,8 @@ class ECSSummary(AWSSection):
     ) -> Iterable[Mapping[str, object]]:
         for cluster in clusters:
             for cluster_tag in cluster.tags:
-                if self._tags and cluster_tag.model_dump() in self._tags:
-                    yield cluster.model_dump()
+                if self._tags and cluster_tag.dict() in self._tags:
+                    yield cluster.dict()
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
@@ -5821,7 +5822,7 @@ class ECSSummary(AWSSection):
         if self._tags is not None:
             return list(self._filter_clusters_by_tags(clusters))
 
-        return [c.model_dump() for c in clusters]
+        return [c.dict() for c in clusters]
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -5914,20 +5915,22 @@ class ECS(AWSSectionCloudwatch):
 # The following fields are renamed so we can use the UI nomenclature consistently
 # in the Checkmk
 class ElastiCacheNode(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     NodeId: str = Field(..., alias="CacheClusterId")
     Engine: str
     ARN: str
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class ElastiCacheCluster(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     ClusterId: str = Field(..., alias="ReplicationGroupId")
     Status: str
     MemberNodes: Sequence[str] = Field(..., alias="MemberClusters")
     ARN: str
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class SubnetGroup(BaseModel):
@@ -5974,17 +5977,17 @@ class ElastiCacheLimits(AWSSectionLimits):
         int,
     ]:
         quota_list = list(self._iter_service_quotas("elasticache"))
-        quota_dicts = [q.model_dump() for q in quota_list]
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_dicts = [
-            c.model_dump()
+            c.dict()
             for c in get_paginated_resources(
                 self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
             )
         ]
 
         node_dicts = [
-            n.model_dump()
+            n.dict()
             for n in get_paginated_resources(
                 self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
             )
@@ -6157,7 +6160,7 @@ class ElastiCacheSummary(AWSSection):
         for node in nodes:
             for cluster in clusters:
                 if node.NodeId in cluster.MemberNodes:
-                    yield node.model_dump()
+                    yield node.dict()
                     break
 
     def get_live_data(
@@ -6169,7 +6172,7 @@ class ElastiCacheSummary(AWSSection):
         filtered_clusters = list(self._filter_clusters(clusters))
         filtered_node_dicts = list(self._filter_nodes(nodes, filtered_clusters))
 
-        return [c.model_dump() for c in filtered_clusters], filtered_node_dicts
+        return [c.dict() for c in filtered_clusters], filtered_node_dicts
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents

@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Mapping, Sequence
 from typing import assert_never, Literal, NewType, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
@@ -128,7 +128,8 @@ class ConcurrencyPolicy(enum.Enum):
 
 
 class Section(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    class Config:
+        allow_mutation = False
 
 
 class Controller(BaseModel):
@@ -261,7 +262,7 @@ class AccessMode(enum.Enum):
 class CollectorHandlerLog(BaseModel):
     status: CollectorState
     title: str
-    detail: str | None = None
+    detail: str | None
 
 
 class PlatformMetadata(BaseModel):
@@ -294,8 +295,8 @@ class CollectorType(enum.Enum):
 
 
 class Components(BaseModel):
-    cadvisor_version: Version | None = None
-    checkmk_agent_version: Version | None = None
+    cadvisor_version: Version | None
+    checkmk_agent_version: Version | None
 
 
 class NodeComponent(BaseModel):
@@ -314,8 +315,8 @@ class CollectorComponentsMetadata(Section):
     """section: kube_collector_metadata_v1"""
 
     processing_log: CollectorHandlerLog
-    cluster_collector: ClusterCollectorMetadata | None = None
-    nodes: Sequence[NodeMetadata] | None = None
+    cluster_collector: ClusterCollectorMetadata | None
+    nodes: Sequence[NodeMetadata] | None
 
 
 class CollectorProcessingLogs(Section):
@@ -360,17 +361,27 @@ class NodeCount(Section):
 
 class NodeCondition(BaseModel):
     status: NodeConditionStatus
-    reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = None
+    reason: str | None
+    detail: str | None
+    last_transition_time: int | None
 
 
-TruthyNodeCondition = NodeCondition
-FalsyNodeCondition = NodeCondition
+class TruthyNodeCondition(NodeCondition):
+    """TruthyNodeCondition has an "OK" state when its status is True"""
+
+    def is_ok(self) -> bool:
+        return self.status == NodeConditionStatus.TRUE
 
 
-class NodeCustomCondition(NodeCondition):
-    """NodeCustomCondition mainly come from Node Problem Detector.
+class FalsyNodeCondition(NodeCondition):
+    """FalsyNodeCondition has an "OK" state when its status is False"""
+
+    def is_ok(self) -> bool:
+        return self.status == NodeConditionStatus.FALSE
+
+
+class FalsyNodeCustomCondition(FalsyNodeCondition):
+    """FalsyNodeCustomCondition mainly come from Node Problem Detector.
     Its type can be user-defined, hence it being a string."""
 
     type_: str
@@ -383,28 +394,19 @@ class NodeConditions(Section):
     memorypressure: FalsyNodeCondition
     diskpressure: FalsyNodeCondition
     pidpressure: FalsyNodeCondition
-    networkunavailable: FalsyNodeCondition | None = None
+    networkunavailable: FalsyNodeCondition | None
 
 
 class NodeCustomConditions(Section):
     """section: kube_node_custom_conditions_v1"""
 
-    custom_conditions: Sequence[NodeCustomCondition]
+    custom_conditions: Sequence[FalsyNodeCustomCondition]
 
 
 class ConditionStatus(enum.StrEnum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
-
-
-EXPECTED_CONDITION_STATES = {
-    "ready": NodeConditionStatus.TRUE,
-    "memorypressure": NodeConditionStatus.FALSE,
-    "diskpressure": NodeConditionStatus.FALSE,
-    "pidpressure": NodeConditionStatus.FALSE,
-    "networkunavailable": NodeConditionStatus.FALSE,
-}
 
 
 class DeploymentCondition(BaseModel):
@@ -417,9 +419,9 @@ class DeploymentCondition(BaseModel):
 class DeploymentConditions(Section):
     """section: kube_deployment_conditions_v1"""
 
-    available: DeploymentCondition | None = None
-    progressing: DeploymentCondition | None = None
-    replicafailure: DeploymentCondition | None = None
+    available: DeploymentCondition | None
+    progressing: DeploymentCondition | None
+    replicafailure: DeploymentCondition | None
 
 
 class ClusterInfo(Section):
@@ -457,12 +459,13 @@ def get_age_levels_for(params: Mapping[str, VSResultAge], key: str) -> tuple[int
 
 
 class NodeAddress(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     address: IpAddress
     # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
     # "InternalDNS" and "ExternalDNS" on an eks cluster
     type_: str = Field(..., alias="type")
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 NodeAddresses = Sequence[NodeAddress]
@@ -506,18 +509,18 @@ class APIHealth(BaseModel):
 class PodInfo(Section):
     """section: kube_pod_info_v1"""
 
-    namespace: NamespaceName | None = None
+    namespace: NamespaceName | None
     name: str
-    creation_timestamp: Timestamp | None = None
+    creation_timestamp: Timestamp | None
     labels: Labels  # used for host labels
     annotations: FilteredAnnotations  # used for host labels
-    node: NodeName | None = None  # this is optional, because there may be pods, which are not
+    node: NodeName | None  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
-    host_network: str | None = None
-    dns_policy: str | None = None
-    host_ip: IpAddress | None = None
-    pod_ip: IpAddress | None = None
-    qos_class: QosClass | None = None  # can be None, if the Pod was evicted.
+    host_network: str | None
+    dns_policy: str | None
+    host_ip: IpAddress | None
+    pod_ip: IpAddress | None
+    qos_class: QosClass | None  # can be None, if the Pod was evicted.
     restart_policy: RestartPolicy
     uid: PodUID
     # TODO: see CMK-9901
@@ -558,12 +561,12 @@ class ContainerCount(Section):
 
 
 class Memory(BaseModel):
-    type_: Literal["memory"] = Field("memory")
+    type_: Literal["memory"] = Field("memory", const=True)
     usage: float
 
 
 class Cpu(BaseModel):
-    type_: Literal["cpu"] = Field("cpu")
+    type_: Literal["cpu"] = Field("cpu", const=True)
     usage: float
 
 
@@ -581,19 +584,19 @@ class StartTime(Section):
 
 class PodCondition(BaseModel):
     status: bool
-    reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = None
+    reason: str | None
+    detail: str | None
+    last_transition_time: int | None
 
 
 class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
-    initialized: PodCondition | None = None
+    initialized: PodCondition | None
     hasnetwork: PodCondition | None = None
     scheduled: PodCondition
-    containersready: PodCondition | None = None
-    ready: PodCondition | None = None
+    containersready: PodCondition | None
+    ready: PodCondition | None
     disruptiontarget: PodCondition | None = None
 
 
@@ -605,27 +608,27 @@ class ContainerStateType(str, enum.Enum):
 
 
 class ContainerRunningState(BaseModel):
-    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running)
+    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running, const=True)
     start_time: int
 
 
 class ContainerWaitingState(BaseModel):
-    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting)
+    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
     reason: str
-    detail: str | None = None
+    detail: str | None
 
 
 class ContainerTerminatedState(BaseModel):
-    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated)
+    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
-    start_time: int | None = None
-    end_time: int | None = None
-    reason: str | None = None
-    detail: str | None = None
+    start_time: int | None
+    end_time: int | None
+    reason: str | None
+    detail: str | None
 
 
 class ContainerStatus(BaseModel):
-    container_id: str | None = None  # container_id of non-ready container is None
+    container_id: str | None  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
@@ -671,9 +674,6 @@ MatchExpressions = Sequence[MatchExpression]
 
 
 class Selector(BaseModel):
-    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     match_labels: MatchLabels
     match_expressions: MatchExpressions
 
@@ -744,17 +744,17 @@ class RollingUpdate(BaseModel):
     the update.
     """
 
-    type_: Literal["RollingUpdate"] = Field("RollingUpdate")
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
     max_surge: str  # This field was introduced in Kubernetes v1.21.
     max_unavailable: str
 
 
 class Recreate(BaseModel):
-    type_: Literal["Recreate"] = Field("Recreate")
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
 class OnDelete(BaseModel):
-    type_: Literal["OnDelete"] = Field("OnDelete")
+    type_: Literal["OnDelete"] = Field("OnDelete", const=True)
 
 
 class StatefulSetRollingUpdate(BaseModel):
@@ -772,9 +772,9 @@ class StatefulSetRollingUpdate(BaseModel):
 
     """
 
-    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate")
+    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
     partition: int
-    max_unavailable: str | None = None
+    max_unavailable: str | None
 
 
 DisplayableStrategy = OnDelete | Recreate | RollingUpdate | StatefulSetRollingUpdate
@@ -884,7 +884,7 @@ class NamespaceInfo(Section):
     """section: kube_namespace_info_v1"""
 
     name: NamespaceName
-    creation_timestamp: Timestamp | None = None
+    creation_timestamp: Timestamp | None
     labels: Labels
     annotations: FilteredAnnotations
     cluster: str
@@ -896,7 +896,7 @@ class CronJobInfo(Section):
 
     name: str
     namespace: NamespaceName
-    creation_timestamp: Timestamp | None = None
+    creation_timestamp: Timestamp | None
     labels: Labels
     annotations: FilteredAnnotations
     schedule: str
@@ -936,17 +936,17 @@ class JobPod(BaseModel):
 
 class JobStatus(BaseModel):
     conditions: Sequence[JobCondition]
-    start_time: Timestamp | None = None
-    completion_time: Timestamp | None = None
+    start_time: Timestamp | None
+    completion_time: Timestamp | None
 
 
 class CronJobStatus(Section):
     """section: kube_cron_job_status_v1"""
 
-    active_jobs_count: int | None = None
-    last_duration: float | None = None
-    last_successful_time: Timestamp | None = None
-    last_schedule_time: Timestamp | None = None
+    active_jobs_count: int | None
+    last_duration: float | None
+    last_successful_time: Timestamp | None
+    last_schedule_time: Timestamp | None
 
 
 class CronJobLatestJob(Section):
@@ -977,8 +977,8 @@ class StorageRequirement(BaseModel):
 
 
 class PersistentVolumeClaimStatus(BaseModel):
-    phase: PersistentVolumeClaimPhase | None = None
-    capacity: StorageRequirement | None = None
+    phase: PersistentVolumeClaimPhase | None
+    capacity: StorageRequirement | None
 
 
 class PersistentVolumeClaimMetaData(BaseModel):
@@ -1056,8 +1056,8 @@ class CollectorDaemons(Section):
     corresponding DaemonSet is not among the API data.
     """
 
-    machine: NodeCollectorReplica | None = None
-    container: NodeCollectorReplica | None = None
+    machine: NodeCollectorReplica | None
+    container: NodeCollectorReplica | None
     errors: IdentificationError
 
 
@@ -1130,7 +1130,7 @@ class PrometheusResult(BaseModel):
 
     query_: str
     type_: ResultType
-    details: str | None = None
+    details: str | None
 
     def summary(self) -> str:
         match self.type_:

@@ -507,15 +507,13 @@ def test_calculate_data_for_prediction(
     ]
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
-    expected_reference = _prediction.PredictionData.model_validate_json(
+    expected_reference = _prediction.PredictionData.parse_raw(
         (
             repo_path() / "tests/integration/cmk/base/test-files" / str(timezone) / str(timegroup)
         ).read_text()
     )
 
-    assert expected_reference.model_dump(exclude={"points"}) == data_for_pred.model_dump(
-        exclude={"points"}
-    )
+    assert expected_reference.dict(exclude={"points"}) == data_for_pred.dict(exclude={"points"})
     assert len(expected_reference.points) == len(data_for_pred.points)
     for cal, ref in zip(data_for_pred.points, expected_reference.points):
         if cal is None or ref is None:

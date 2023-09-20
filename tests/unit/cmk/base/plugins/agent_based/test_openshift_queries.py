@@ -5,7 +5,7 @@
 import random
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based import openshift_queries as plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State

@@ -445,6 +445,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
+        check_interval = config_cache.check_mk_check_interval(hostname)
 
         output = []
         # Show errors of problematic data sources
@@ -456,7 +457,10 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(),
+            file_cache_max_age=config.max_cachefile_age(
+                discovery=90 * check_interval,
+                inventory=90 * check_interval,
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1505,10 +1509,6 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        # autodiscovery is run every 5 minutes (see
-        # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
     discovery.discover_marked_hosts(
         create_core(config.monitoring_core),
@@ -1559,9 +1559,10 @@ def mode_check_discovery(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
-    discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    check_interval = config_cache.check_mk_check_interval(hostname)
+    discovery_file_cache_max_age = 90 * check_interval if file_cache_options.use_outdated else 0
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1570,7 +1571,10 @@ def mode_check_discovery(
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
+        max_cachefile_age=config.max_cachefile_age(
+            discovery=discovery_file_cache_max_age,
+            inventory=90 * check_interval,
+        ),
     )
     parser = ConfiguredParser(
         config_cache,
@@ -1838,7 +1842,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         on_error=on_error,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(),
     )
     discovery.commandline_discovery(
         set(hostnames),

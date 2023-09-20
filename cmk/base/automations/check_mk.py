@@ -198,7 +198,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             on_error=on_error,
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
-            max_cachefile_age=config.max_cachefile_age(),
         )
         for hostname in hostnames:
             results[hostname] = discovery.automation_discovery(
@@ -352,7 +351,6 @@ def _execute_discovery(
         on_error=on_error,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(),
     )
     return discovery.get_check_preview(
         host_name,
@@ -1492,6 +1490,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: float | None,
         file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
+        check_interval = config_cache.check_mk_check_interval(host_name)
         state, output = 0, ""
         for source in sources.make_sources(
             host_name,
@@ -1500,7 +1499,10 @@ class AutomationDiagHost(Automation):
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(),
+            file_cache_max_age=config.max_cachefile_age(
+                discovery=90 * check_interval,
+                inventory=90 * check_interval,
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1850,6 +1852,7 @@ class AutomationGetAgentOutput(Automation):
 
         try:
             ipaddress = config.lookup_ip_address(config_cache, hostname)
+            check_interval = config_cache.check_mk_check_interval(hostname)
             if ty == "agent":
                 for source in sources.make_sources(
                     hostname,
@@ -1858,7 +1861,10 @@ class AutomationGetAgentOutput(Automation):
                     config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
-                    file_cache_max_age=config.max_cachefile_age(),
+                    file_cache_max_age=config.max_cachefile_age(
+                        discovery=90 * check_interval,
+                        inventory=90 * check_interval,
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

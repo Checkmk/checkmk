@@ -1,0 +1,30 @@
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+known_first_party = "werks"
+order_by_type = "False"
+
+[tool.mypy]
+strict="True"
+disallow_untyped_defs = "True"
+disallow_any_unimported = "True"
+no_implicit_optional = "True"
+check_untyped_defs = "True"
+warn_return_any = "True"
+warn_unused_ignores = "True"
+show_error_codes = "True"
+plugins = "pydantic.mypy"
+incremental = "False"
+
+[tool.pylint]
+jobs = 0
+
+[tool.pytest.ini_options]
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = """
+missing-docstring,
+line-too-long
+"""

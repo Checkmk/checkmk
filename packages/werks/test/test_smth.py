@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from werks.cli import main
 
-if __name__ == "__main__":
-    main()
+def test_true() -> None:
+    # make sure pytest finds one test so it returns 0
+    pass

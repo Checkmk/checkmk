@@ -1,0 +1,38 @@
+#!/bin/bash
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
+echo "run: install dependencies from Pipfile.lock"
+pipenv sync --dev
+
+echo "run: black"
+pipenv run black --check --diff werks test
+
+echo "run: isort"
+pipenv run isort --check --diff werks test
+
+echo "run: tests"
+pipenv run pytest test
+
+echo "run: mypy"
+pipenv run mypy werks test
+
+echo "run: pylint"
+pipenv run pylint werks test
+
+echo "run: bandit"
+pipenv run bandit -c ../../bandit.yaml -ll -r .
+
+echo "run: license-header"
+mapfile -t FILES <<<"$(find . -path "./run" -o -name '*.py' -type f -not -path "./build/*")"
+FOUND_PROBLEMS=$(grep -L '^# Copyright .C. 20.. Checkmk GmbH - License: GNU General Public License v2$' "${FILES[@]}") || true
+if [ -n "$FOUND_PROBLEMS" ]; then
+    echo -e "found no license headers in the following files:\n$FOUND_PROBLEMS"
+else
+    echo "  all files seem ok"
+fi

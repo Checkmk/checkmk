@@ -1,0 +1,16 @@
+[[source]]
+url = "https://devpi.lan.tribe29.com/root/pypi"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+black = "*"
+isort = "*"
+flake8 = "*"
+pytest = "*"
+mypy = "*"
+pylint = "*"
+bandit = "*"
+
+[packages]
+pydantic = "*"

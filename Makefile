@@ -494,6 +494,9 @@ Pipfile.lock: Pipfile
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
+# SETUPTOOLS_ENABLE_FEATURES="legacy-editable" is needed for mypy being able to
+# type check a package that's installed editable:
+# https://github.com/python/mypy/issues/13392
 .venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
 	@( \
 	    echo "Creating .venv..." ; \
@@ -503,5 +506,5 @@ Pipfile.lock: Pipfile
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)

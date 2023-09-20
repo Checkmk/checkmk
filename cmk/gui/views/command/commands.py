@@ -299,7 +299,15 @@ class CommandToggleActiveChecks(Command):
 
     @property
     def title(self) -> str:
-        return _("Active checks")
+        return _("Enable/Disable active checks")
+
+    @property
+    def confirm_title(self) -> str:
+        return (
+            _("Enable active checks")
+            if request.var("_enable_checks")
+            else _("Disable active checks")
+        )
 
     @property
     def confirm_button(self) -> LazyString:
@@ -313,13 +321,19 @@ class CommandToggleActiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
+    def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
+        return "warning"
+
     @property
     def show_command_form(self):
         return False
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_enable_checks", _("Enable"))
-        html.button("_disable_checks", _("Disable"))
+        html.open_div(class_="group")
+        html.button("_enable_checks", _("Enable"), cssclass="border_hot")
+        html.button("_disable_checks", _("Disable"), cssclass="border_hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

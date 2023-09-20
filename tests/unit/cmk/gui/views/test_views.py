@@ -235,7 +235,7 @@ def test_registered_commands() -> None:
         "toggle_active_checks": {
             "permission": "action.enablechecks",
             "tables": ["host", "service"],
-            "title": "Active checks",
+            "title": "Enable/Disable active checks",
         },
         "fake_check_result": {
             "group": "fake_check",

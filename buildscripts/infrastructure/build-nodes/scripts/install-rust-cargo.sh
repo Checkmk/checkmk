@@ -29,7 +29,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=10
+BUILD_ID=8
 
 build_package() {
     WORK_DIR=$(mktemp -d)

@@ -8,6 +8,7 @@ use openssl::asn1::{Asn1Time, Asn1TimeRef};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::X509;
 use std::net::TcpStream;
+use std::time::Duration;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -37,8 +38,14 @@ struct Args {
     disable_sni: bool,
 }
 
-fn fetch_server_cert(server: &str, port: &u16, use_sni: bool) -> Result<X509> {
+fn fetch_server_cert(
+    server: &str,
+    port: &u16,
+    timeout: Option<Duration>,
+    use_sni: bool,
+) -> Result<X509> {
     let stream = TcpStream::connect(format!("{server}:{port}"))?;
+    stream.set_read_timeout(timeout)?;
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
     connector_builder.set_verify(SslVerifyMode::NONE);
     let connector = connector_builder.build();
@@ -88,7 +95,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
 
-    let cert = fetch_server_cert(&args.url, &args.port, !args.disable_sni)?;
+    let cert = fetch_server_cert(
+        &args.url,
+        &args.port,
+        if args.timeout == 0 {
+            None
+        } else {
+            Some(Duration::new(args.timeout, 0))
+        },
+        !args.disable_sni,
+    )?;
     match check_validity(cert.not_after(), &warn_time, &crit_time) {
         Validity::OK => println!("OK!"),
         Validity::Warn => println!("WARN!"),

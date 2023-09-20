@@ -112,25 +112,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     match check_validity(cert.not_after(), &warn_time, &crit_time) {
-        Validity::OK => println!(
-            "OK - Certificate '{}' will expire on {}",
-            args.url,
-            cert.not_after()
-        ),
-        Validity::Warn => println!(
-            "WARNING - Certificate '{}' expires in {} day(s) ({})",
-            args.url,
-            diff_to_now(cert.not_after()),
-            cert.not_after()
-        ),
-        Validity::Crit => println!(
-            "CRITICAL - Certificate '{}' expires in {} day(s) ({})",
-            args.url,
-            diff_to_now(cert.not_after()),
-            cert.not_after()
-        ),
+        Validity::OK => {
+            println!(
+                "OK - Certificate '{}' will expire on {}",
+                args.url,
+                cert.not_after()
+            );
+            std::process::exit(0)
+        }
+        Validity::Warn => {
+            println!(
+                "WARNING - Certificate '{}' expires in {} day(s) ({})",
+                args.url,
+                diff_to_now(cert.not_after()),
+                cert.not_after()
+            );
+            std::process::exit(1)
+        }
+        Validity::Crit => {
+            println!(
+                "CRITICAL - Certificate '{}' expires in {} day(s) ({})",
+                args.url,
+                diff_to_now(cert.not_after()),
+                cert.not_after()
+            );
+            std::process::exit(2)
+        }
     }
-    Ok(())
 }
 
 #[cfg(test)]

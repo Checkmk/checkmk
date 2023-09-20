@@ -288,22 +288,19 @@ def load_config() -> None:
     }
 
 
-g_werks: dict[int, Werk] = {}
-
-
-def load_werks() -> None:
-    global g_werks
-    g_werks = {}
+def load_werks() -> dict[int, Werk]:
+    werks = {}
     check_modified()
     for entry in os.listdir("."):
         try:
             werkid = int(entry)
             try:
-                g_werks[werkid] = load_werk(werkid)
+                werks[werkid] = load_werk(werkid)
             except Exception as e:
                 sys.stderr.write("ERROR: Skipping invalid werk %d: %s\n" % (werkid, e))
         except Exception:
             continue
+    return werks
 
 
 def save_last_werkid(wid: int) -> None:
@@ -369,7 +366,6 @@ def load_werk(werkid: int) -> Werk:
 
     validate_werk(werk)
 
-    versions.add(werk["version"])
     return werk
 
 
@@ -393,7 +389,7 @@ def save_werk(werk: Werk) -> None:
 
 
 def change_werk_version(werk_id: int, new_version: str) -> None:
-    werk = g_werks[werk_id]
+    werk = load_werk(werk_id)
     werk["version"] = new_version
     save_werk(werk)
     git_add(werk)
@@ -527,6 +523,10 @@ def show_werk(werk: Werk) -> None:
 def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
+
+    werks = list(load_werks().values())
+    versions = set(werk["version"] for werk in werks)
+
     filters: dict[str, list[str]] = {}
 
     for a in args.filter:
@@ -561,7 +561,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 
     # Filter
     newwerks = []
-    for werk in g_werks.values():
+    for werk in werks:
         skip = False
         for tp, entries in filters.items():
             if werk[tp] not in entries:
@@ -628,7 +628,7 @@ def werk_effort(werk: Werk) -> int:
 
 def main_show(args: argparse.Namespace) -> None:
     if "all" in args.ids:
-        ids = [wid for (wid, _werk) in g_werks.items()]
+        ids = list(load_werks().keys())
     else:
         ids = args.ids or [get_last_werk()]
 
@@ -638,7 +638,7 @@ def main_show(args: argparse.Namespace) -> None:
                 "-------------------------------------------------------------------------------\n"
             )
         try:
-            show_werk(g_werks[int(wid)])
+            show_werk(load_werk(int(wid)))
         except Exception:
             sys.stderr.write("Skipping invalid werk id '%s'\n" % wid)
     save_last_werkid(ids[-1])
@@ -758,7 +758,6 @@ def main_new(args: argparse.Namespace) -> None:
     werk["compatible"] = input_choice("Compatible", compatible)
     werk["description"] = "\n"
 
-    g_werks[int(werk["id"])] = werk
     save_werk(werk)
     invalidate_my_werkid(int(werk["id"]))
     edit_werk(int(werk["id"]), args.custom_files)
@@ -769,7 +768,7 @@ def main_new(args: argparse.Namespace) -> None:
 def get_werk_arg(arg: str | int | None) -> int:
     wid = get_last_werk() if arg is None else int(arg)
 
-    werk = g_werks.get(wid)
+    werk = load_werk(wid)
     if not werk:
         bail_out("No such werk.\n")
     save_last_werkid(wid)
@@ -793,11 +792,10 @@ def main_delete(args: argparse.Namespace) -> None:
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
 
+        werk_to_be_removed_title = load_werk(int(werk_id))["title"]
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
-                "Deleted werk {} ({}).\n".format(
-                    format_werk_id(werk_id), g_werks[int(werk_id)]["title"]
-                )
+                "Deleted werk {} ({}).\n".format(format_werk_id(werk_id), werk_to_be_removed_title)
             )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)
@@ -817,7 +815,7 @@ def grep(line: str, kw: str, n: int) -> str | None:
 
 
 def main_grep(args: argparse.Namespace) -> None:
-    for werk in g_werks.values():
+    for werk in load_werks().values():
         one_kw_didnt_match = False
         title = werk["title"]
         lines = werk["description"].split("\n")
@@ -876,9 +874,8 @@ def edit_werk(werkid: int, custom_files: list[str] | None = None, commit: bool =
         bail_out("No editor available (please set EDITOR).\n")
 
     if os.system(f"bash -c '{editor} +11 {werkid}'") == 0:  # nosec
-        load_werks()
-        werk = g_werks[werkid]
-        git_add(g_werks[werkid])
+        werk = load_werk(werkid)
+        git_add(werk)
         if commit:
             git_commit(werk, custom_files)
 
@@ -914,7 +911,6 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
     # Find werks that have been cherry-picked and change their version
     # to our current version
-    load_werks()  # might have changed
     if werk_id is not None:
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
@@ -1041,7 +1037,6 @@ valid_choices: dict[str, set[str]]
 online_url = ""
 current_version = None
 
-versions: set[str] = set()
 g_current_version = None
 
 
@@ -1049,7 +1044,6 @@ def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
     try_migrate_werk_ids()
     load_config()
-    load_werks()
     global g_current_version
     g_current_version = current_version or load_current_version()
     if not g_current_version:

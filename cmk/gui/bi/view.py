@@ -28,7 +28,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
@@ -1099,7 +1099,7 @@ class CommandFreezeAggregation(Command):
 
     @property
     def confirm_title(self) -> str:
-        return _("Freeze aggregations?")
+        return _("Freeze aggregation?")
 
     @property
     def confirm_button(self) -> LazyString:
@@ -1135,9 +1135,24 @@ class CommandFreezeAggregation(Command):
         return "aggr_frozen_diff"
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.div(
-            html.render_button(self._button_name, _("Freeze selected"), cssclass="hot"),
-            class_="group",
+        html.open_div(class_="group")
+        html.button(self._button_name, _("Freeze selected"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
+
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "aggregation",
+                    "aggregations",
+                    len_action_rows,
+                ),
+                len_action_rows,
+            )
         )
 
     @property

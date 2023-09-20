@@ -1365,6 +1365,7 @@ class SiteFactory:
 
         site = self.get_existing_site(site.id)
         site.start()
+        restart_httpd()
 
         return site
 

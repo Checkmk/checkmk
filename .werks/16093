@@ -6,7 +6,7 @@ Date: 1694501202
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0p10
+Version: 2.2.0p11
 
 When using <a href="https://docs.checkmk.com/latest/en/predictive_monitoring.html">predictive monitoring</a>,
 Checkmk offers the option to

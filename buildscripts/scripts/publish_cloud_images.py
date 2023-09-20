@@ -58,9 +58,10 @@ def parse_arguments() -> argparse.Namespace:
 
 
 class CloudPublisher(abc.ABC):
-    TIMEOUT_UPDATE: Final = 60 * 20
+    # Currently, both AWS and Azure should long be finished after that time
+    SECONDS_TO_TIMEOUT_PUBLISH_PROCESS: Final = 3 * 60 * 60
     CLOUD_TYPES: Final = ["aws", "azure"]
-    WAIT_SECONDS_FOR_NEXT_UPDATE: Final = 20
+    SECONDS_TO_WAIT_FOR_NEXT_STATUS: Final = 20
 
     def __init__(self, version: str, build_tag: str, image_name: str):
         self.version = version
@@ -169,7 +170,9 @@ class AWSPublisher(CloudPublisher):
             ],
             ChangeSetName=f"Add new version {self.version} by {self.build_tag}",
         )
-        await asyncio.wait_for(self.update_successful(response["ChangeSetId"]), self.TIMEOUT_UPDATE)
+        await asyncio.wait_for(
+            self.update_successful(response["ChangeSetId"]), self.SECONDS_TO_TIMEOUT_PUBLISH_PROCESS
+        )
 
     def get_ami_image_id(self) -> str:
         images = self.client_ec2.describe_images(
@@ -194,8 +197,11 @@ class AWSPublisher(CloudPublisher):
             status = response["Status"]
             match status:
                 case "PREPARING" | "APPLYING":
-                    print(f"Got {status=}... sleeping for {self.WAIT_SECONDS_FOR_NEXT_UPDATE}")
-                    await asyncio.sleep(self.WAIT_SECONDS_FOR_NEXT_UPDATE)
+                    print(
+                        f"Got {status=}... "
+                        f"sleeping for {self.SECONDS_TO_WAIT_FOR_NEXT_STATUS} seconds..."
+                    )
+                    await asyncio.sleep(self.SECONDS_TO_WAIT_FOR_NEXT_STATUS)
                 case "CANCELLED" | "FAILED":
                     raise RuntimeError(
                         f"The changeset {change_set_id} returned {status=}.\n"

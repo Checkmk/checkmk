@@ -502,7 +502,7 @@ class Document:
         self.set_font_zoom(zoom)
         self.set_font_bold()
         self.advance(self.lineskip())
-        self._canvas.drawString(self._left, self._linepos, heading)
+        self.add_paragraph(heading)
         self._heading_entries.append((heading, self.page_number()))
         self.advance(self.lineskip() / 2.0)
         self.restore_state()

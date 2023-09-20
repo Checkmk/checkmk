@@ -72,10 +72,15 @@ class CloudPublisher(abc.ABC):
     async def publish(self):
         ...
 
-    def build_release_notes_url(self) -> str:
+    @staticmethod
+    def build_release_notes_url(version: str) -> str:
+        """
+        >>> CloudPublisher.build_release_notes_url("2.2.0p5")
+        'https://forum.checkmk.com/t/release-checkmk-stable-release-2-2-0p5/'
+        """
         return (
             f"https://forum.checkmk.com/t/release-checkmk-stable-release-"
-            f"{self.version.replace('.','-')}/"
+            f"{version.replace('.','-')}/"
         )
 
 
@@ -105,7 +110,7 @@ class AWSPublisher(CloudPublisher):
         update_details = {
             "Version": {
                 "VersionTitle": self.version,
-                "ReleaseNotes": self.build_release_notes_url(),
+                "ReleaseNotes": self.build_release_notes_url(self.version),
             },
             "DeliveryOptions": [
                 {

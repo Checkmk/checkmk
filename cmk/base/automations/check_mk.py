@@ -259,7 +259,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             on_error=on_error,
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
-            max_cachefile_age=config.max_cachefile_age(),
         )
         for hostname in hostnames:
 
@@ -479,7 +478,6 @@ def _execute_discovery(
         on_error=on_error,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(),
     )
     ip_address = (
         None
@@ -588,9 +586,6 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        # autodiscovery is run every 5 minutes
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
@@ -1871,6 +1866,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: float | None,
         file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
+        check_interval = config_cache.check_mk_check_interval(host_name)
         state, output = 0, ""
         for source in sources.make_sources(
             host_name,
@@ -1879,7 +1875,10 @@ class AutomationDiagHost(Automation):
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(),
+            file_cache_max_age=config.max_cachefile_age(
+                discovery=90 * check_interval,
+                inventory=90 * check_interval,
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2234,6 +2233,7 @@ class AutomationGetAgentOutput(Automation):
 
         try:
             ipaddress = config.lookup_ip_address(config_cache, hostname)
+            check_interval = config_cache.check_mk_check_interval(hostname)
             if ty == "agent":
                 for source in sources.make_sources(
                     hostname,
@@ -2242,7 +2242,10 @@ class AutomationGetAgentOutput(Automation):
                     config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
-                    file_cache_max_age=config.max_cachefile_age(),
+                    file_cache_max_age=config.max_cachefile_age(
+                        discovery=90 * check_interval,
+                        inventory=90 * check_interval,
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

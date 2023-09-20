@@ -477,6 +477,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
+        check_interval = config_cache.check_mk_check_interval(hostname)
 
         output = []
         # Show errors of problematic data sources
@@ -488,7 +489,10 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(),
+            file_cache_max_age=config.max_cachefile_age(
+                discovery=90 * check_interval,
+                inventory=90 * check_interval,
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1639,10 +1643,11 @@ def mode_check_discovery(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
-    discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    check_interval = config_cache.check_mk_check_interval(hostname)
+    discovery_file_cache_max_age = 90 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1651,7 +1656,10 @@ def mode_check_discovery(
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
+        max_cachefile_age=config.max_cachefile_age(
+            discovery=discovery_file_cache_max_age,
+            inventory=90 * check_interval,
+        ),
     )
     parser = CMKParser(
         config_cache,
@@ -1963,7 +1971,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         on_error=on_error,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(),
     )
     for hostname in sorted(
         _preprocess_hostnames(

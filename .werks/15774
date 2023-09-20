@@ -1,0 +1,20 @@
+Title: checking: Prevent data loss on hosts with longer check intervals
+Class: fix
+Compatible: compat
+Component: core
+Date: 1695217743
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, the validity of agent data for discovery and HW/SW inventory checks was 2 minutes.
+When checking is performed with a longer interval, the discovery would re-trigger fetching of the agent data.
+
+In some checks this leads to data loss, because the checking fetches the data again and the data
+fetched by the discovery is lost.
+
+The cache interval for discovery and HW/SW inventory checks is now 1.5 * checking interval.
+
+

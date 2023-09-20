@@ -6,12 +6,11 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import cast
 
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
@@ -27,27 +26,6 @@ from cmk.gui.watolib.user_scripts import (
     user_script_choices,
     user_script_title,
 )
-
-if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
-        ConfigDomainDCD,
-        used_dcd_rest_api_user,
-    )
-
-    def _add_dcd_change(affected_user: str) -> None:
-        add_change(
-            "edit-dcd-user",
-            _l("User %s of DCD connection was modified") % affected_user,
-            domains=[ConfigDomainDCD],
-        )
-
-else:
-    # Stub needed for non enterprise edition
-    def used_dcd_rest_api_user() -> str | None:
-        return None
-
-    def _add_dcd_change(affected_user: str) -> None:
-        return None
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -119,10 +97,7 @@ def edit_users(changed_users: UserObject) -> None:
             "edit-users",
             _l("Modified users: %s") % ", ".join(modified_users_info),
         )
-        if (
-            affected_user := used_dcd_rest_api_user()
-        ) is not None and affected_user in modified_users_info:
-            _add_dcd_change(affected_user)
+        hooks.call("users-changed", modified_users_info)
 
     userdb.save_users(all_users, datetime.now())
 

@@ -30,7 +30,6 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.mark.skip(reason="Currently failing on Centos and Sles distros. Investigate.")
 @pytest.mark.enable_socket
 def test_checks_sanity(site: Site, agent_ctl: Path) -> None:
     """Assert sanity of the discovered checks."""
@@ -49,3 +48,4 @@ def test_checks_sanity(site: Site, agent_ctl: Path) -> None:
 
     err_msg = f"The following services are not in state 0: {not_ok_services}"
     assert len(found_services) == len(get_services_with_status(found_services, 0)) > 0, err_msg
+    site.openapi.delete_host(hostname)

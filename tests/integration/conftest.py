@@ -25,7 +25,7 @@ def get_site() -> Iterator[Site]:
         # mount
         raise Exception
 
-    yield from get_site_factory(prefix="int_").get_test_site(name="test")
+    yield from get_site_factory(prefix="int_").get_test_site(name="test", auto_restart_httpd=True)
 
 
 @pytest.fixture(scope="session", name="web")

@@ -112,7 +112,6 @@ cmc_service_rrd_config: _List = []
 # Inventory and inventory checks
 inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
-inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 inv_retention_intervals: Ruleset = []
 # TODO: Remove this already deprecated option
@@ -272,6 +271,7 @@ folder_attributes: dict[str, FolderAttributes] = {}
 extra_summary_host_conf: _Dict = {}
 extra_summary_service_conf: _Dict = {}
 summary_host_groups: _List = []
+inventory_max_cachefile_age = 120
 # service groups for aggregated services
 summary_service_groups: _List = []
 # service contact groups for aggregated services

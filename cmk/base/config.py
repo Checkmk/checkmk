@@ -1486,15 +1486,13 @@ service_rule_groups = {"temperature"}
 def max_cachefile_age(
     *,
     checking: Optional[int] = None,
-    discovery: Optional[int] = None,
-    inventory: Optional[int] = None,
+    discovery: int,
+    inventory: int,
 ) -> cache_file.MaxAge:
     return cache_file.MaxAge(
         checking=check_max_cachefile_age if checking is None else checking,
-        # next line: inventory_max_cachefile_age is *not a typo*, old name for discovery!
-        discovery=inventory_max_cachefile_age if discovery is None else discovery,
-        # next line: hard coded default, not configurable.
-        inventory=120 if inventory is None else inventory,
+        discovery=discovery,
+        inventory=inventory,
     )
 
 
@@ -3325,6 +3323,8 @@ class HostConfig:
     def max_cachefile_age(self) -> cache_file.MaxAge:
         return max_cachefile_age(
             checking=None if self.nodes is None else cluster_max_cachefile_age,
+            discovery=int(90 * self.check_mk_check_interval),
+            inventory=int(90 * self.check_mk_check_interval),
         )
 
     @property

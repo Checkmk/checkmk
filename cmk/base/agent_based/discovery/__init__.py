@@ -175,7 +175,10 @@ def commandline_discovery(
                 ip_address=config.lookup_ip_address(host_config),
                 mode=mode,
                 selected_sections=selected_sections,
-                file_cache_max_age=config.max_cachefile_age(),
+                file_cache_max_age=config.max_cachefile_age(
+                    discovery=int(90 * host_config.check_mk_check_interval),
+                    inventory=int(90 * host_config.check_mk_check_interval),
+                ),
                 fetcher_messages=(),
                 force_snmp_cache_refresh=False,
                 on_scan_error=on_error,
@@ -565,7 +568,10 @@ def active_check_discovery(
         fetcher_messages=fetcher_messages,
         selected_sections=NO_SELECTION,
         file_cache_max_age=config.max_cachefile_age(
-            discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
+            discovery=int(90 * host_config.check_mk_check_interval)
+            if cmk.core_helpers.cache.FileCacheFactory.maybe
+            else 0,
+            inventory=int(90 * host_config.check_mk_check_interval),
         ),
         force_snmp_cache_refresh=False,
         on_scan_error=OnError.RAISE,
@@ -901,7 +907,10 @@ def _discover_marked_host(
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
         # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
+        max_cachefile_age=config.max_cachefile_age(
+            discovery=int(90 * host_config.check_mk_check_interval),
+            inventory=int(90 * host_config.check_mk_check_interval),
+        ),
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain

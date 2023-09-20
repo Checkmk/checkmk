@@ -1550,7 +1550,10 @@ class CommandECArchiveEventsOfHost(ECCommand):
                 "configured."
             )
         )
+        html.open_div(class_="group")
         html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

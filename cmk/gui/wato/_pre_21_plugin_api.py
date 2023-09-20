@@ -5,10 +5,9 @@
 
 import cmk.utils.paths
 
-# Needs to be here to stay compatible with 3rd party plugins
-import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.plugins.wato.datasource_programs as datasource_programs  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato as api_module
+import cmk.gui.plugins.wato.datasource_programs as datasource_programs
+import cmk.gui.plugins.wato.utils as wato_utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
@@ -24,9 +23,7 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui.hooks import register_hook
-
-# Needs to be here as long as we want to stay compatible with old plugins
-from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,

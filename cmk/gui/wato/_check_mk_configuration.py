@@ -22,14 +22,15 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.config_variable_groups import (
+from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-)
-from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
-from cmk.gui.watolib.rulespec_groups import (
+    get_section_information,
+    HTTPProxyInput,
+    PluginCommandLine,
     RulespecGroupAgentSNMP,
+    RulespecGroupDiscoveryCheckParameters,
     RulespecGroupHostsMonitoringRulesHostChecks,
     RulespecGroupHostsMonitoringRulesNotifications,
     RulespecGroupHostsMonitoringRulesVarious,
@@ -37,11 +38,6 @@ from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupMonitoringConfigurationNotifications,
     RulespecGroupMonitoringConfigurationServiceChecks,
     RulespecGroupMonitoringConfigurationVarious,
-)
-from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
-    get_section_information,
-    HTTPProxyInput,
-    PluginCommandLine,
     UserIconOrAction,
 )
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url

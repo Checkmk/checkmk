@@ -32,16 +32,12 @@ from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
-
-# Temporary suppression which will be cleaned up soon, like the other plugin namespaces
-from cmk.gui.plugins.openapi.restful_objects import (  # pylint: disable=cmk-module-layer-violation
-    Endpoint,
-)
-from cmk.gui.plugins.openapi.restful_objects.parameters import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.openapi.restful_objects import Endpoint
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.plugins.openapi.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.openapi.utils import (
     EXT,
     GeneralRestAPIException,
     problem,
@@ -58,9 +54,7 @@ if TYPE_CHECKING:
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
     from cmk.gui.http import HTTPMethod
-    from cmk.gui.plugins.openapi.restful_objects.type_defs import (  # # pylint: disable=cmk-module-layer-violation
-        EndpointTarget,
-    )
+    from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
 
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"

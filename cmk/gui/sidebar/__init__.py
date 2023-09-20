@@ -120,9 +120,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    # Needs to be here to stay compatible with 3rd party plugins
-    import cmk.gui.plugins.sidebar as api_module  # pylint: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.sidebar.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.sidebar as api_module
+    import cmk.gui.plugins.sidebar.utils as plugin_utils
 
     for name, value in [
         ("SidebarSnapin", SidebarSnapin),

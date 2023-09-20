@@ -5,7 +5,7 @@
 
 import re
 
-from cmk.gui.cee.plugins.wato.alert_handling import register_alert_handler_parameters
+from cmk.gui.cee.alert_handling import register_alert_handler_parameters
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, TextInput
 from cmk.gui.wato import IndividualOrStoredPassword

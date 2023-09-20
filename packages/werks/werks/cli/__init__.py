@@ -1019,6 +1019,17 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         bail_out("Cannot commit.")
 
 
+def use_markdown() -> bool:
+    """
+    as long as there is a single markdown file,
+    we assume we should create and pick markdown werks.
+    """
+    for path in Path(".").iterdir():
+        if path.name.endswith(".md"):
+            return True
+    return False
+
+
 #                    _
 #    _ __ ___   __ _(_)_ __
 #   | '_ ` _ \ / _` | | '_ \

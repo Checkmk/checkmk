@@ -127,7 +127,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_export.add_argument(
         "filter",
         nargs="*",
-        help="filter for edition, component, state, class, knowledge state or target version",
+        help="filter for edition, component, state, class, or target version",
     )
     parser_export.set_defaults(func=lambda args: main_list(args, "csv"))
 
@@ -157,22 +157,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_ids.set_defaults(func=main_fetch_ids)
 
-    # KNOWNLEDGE
-    parser_knowledge = subparsers.add_parser(
-        "knowledge",
-        aliases=["knw"],
-        help="Change the knowlege state of a werk",
-    )
-    parser_knowledge.add_argument("id", type=int, help="werk ID")
-    parser_knowledge.add_argument(
-        "state",
-        choices=[c[0] for c in knowledge],
-        help=(
-            "knowlege state of werk. Allowed are %s." % ", ".join("%s (%s)" % c for c in knowledge)
-        ),
-    )
-    parser_knowledge.set_defaults(func=main_knowledge)
-
     # LIST
     parser_list = subparsers.add_parser("list", help="List werks")
     parser_list.add_argument(
@@ -184,7 +168,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_list.add_argument(
         "filter",
         nargs="*",
-        help="filter for edition, component, state, class, knowledge state or target version",
+        help="filter for edition, component, state, class, or target version",
     )
     parser_list.set_defaults(func=lambda args: main_list(args, "console"))
 
@@ -301,7 +285,6 @@ def load_config() -> None:
         "edition": {e[0] for e in editions},
         "component": {e[0] for e in all_components()},
         "level": {e[0] for e in levels},
-        "knowledge": {e[0] for e in knowledge},
     }
 
 
@@ -372,7 +355,6 @@ def load_werk(werkid: int) -> Werk:
         "component": "general",
         "compatible": "compat",
         "edition": "cre",
-        "knowledge": "undoc",
     }
 
     with open(str(werkid)) as f:
@@ -508,12 +490,11 @@ def list_werk(werk: Werk) -> None:
     _lines, cols = get_tty_size()
     title = werk["title"][: cols - 45]
     sys.stdout.write(
-        "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
+        "%s %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
         % (
             format_werk_id(werk["id"]),
             time.strftime("%F", time.localtime(int(werk["date"]))),
             colored_class(werk["class"], 8),
-            format_knw_state(werk["knowledge"]) if werk["class"] == "feature" else "   ",
             werk["edition"],
             werk["component"],
             werk["compatible"],
@@ -530,14 +511,6 @@ def list_werk(werk: Werk) -> None:
 
 def format_werk_id(werk_id: int | str) -> str:
     return tty_bgwhite + tty_blue + ("#%05d" % int(werk_id)) + tty_normal
-
-
-def format_knw_state(knw_state: str) -> str:
-    return {
-        "undoc": tty_bgblue + tty_white + tty_bold + "?D?" + tty_normal,
-        "todoc": tty_bgred + tty_white + tty_bold + "!D!" + tty_normal,
-        "doc": tty_bggreen + tty_white + tty_bold + " D " + tty_normal,
-    }.get(knw_state, knw_state)
 
 
 def colored_class(classname: str, digits: int) -> str:
@@ -568,7 +541,6 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
             ("class", classes),
             ("version", versions),
             ("compatible", compatible),
-            ("knowledge", knowledge),
         ]:
             for v in values:  # type: ignore[attr-defined] # all of them are iterable.
                 if isinstance(v, tuple):
@@ -583,8 +555,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
                 break
         if not hit:
             bail_out(
-                "No such edition, component, state, class, knowledge state or target version: %s"
-                % a,
+                "No such edition, component, state, class, or target version: %s" % a,
                 0,
             )
 
@@ -785,10 +756,6 @@ def main_new(args: argparse.Namespace) -> None:
     werk["component"] = input_choice("Component", get_edition_components(werk["edition"]))
     werk["level"] = input_choice("Level", levels)
     werk["compatible"] = input_choice("Compatible", compatible)
-    if werk["class"] == "feature":
-        werk["knowledge"] = "undoc"  # Don't ask. Developers must not deal with this
-    else:
-        werk["knowledge"] = "doc"  # Bug and security fixes never get documented in user manual
     werk["description"] = "\n"
 
     g_werks[int(werk["id"])] = werk
@@ -886,16 +853,6 @@ def main_grep(args: argparse.Namespace) -> None:
             if args.verbose:
                 for x in sorted(list(bodylines)):
                     sys.stdout.write("  %s\n" % lines[x])
-
-
-def main_knowledge(args: argparse.Namespace) -> None:
-    if not werk_exists(args.id):
-        bail_out("No such werk.")
-    save_last_werkid(args.id)
-
-    werk = load_werk(args.id)
-    werk["knowledge"] = args.state
-    save_werk(werk)
 
 
 def main_edit(args: argparse.Namespace) -> None:
@@ -1080,7 +1037,6 @@ edition_components: dict[str, list[tuple[str, str]]] = {}
 classes: list[tuple[str, str, str]] = []
 levels: list[tuple[str, str]] = []
 compatible: list[tuple[str, str]] = []
-knowledge: list[tuple[str, str]] = []
 valid_choices: dict[str, set[str]]
 online_url = ""
 current_version = None

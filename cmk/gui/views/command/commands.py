@@ -1622,11 +1622,11 @@ class CommandRemoveComments(Command):
 
     @property
     def title(self) -> str:
-        return _("Remove comments")
+        return _("Delete comments")
 
     @property
     def confirm_title(self) -> str:
-        return _("Delete comment?")
+        return "%s?" % self.title
 
     @property
     def confirm_button(self) -> LazyString:
@@ -1648,22 +1648,26 @@ class CommandRemoveComments(Command):
     def tables(self):
         return ["comment"]
 
-    # TODO Will be used later for the new confirm dialogs
-    # def user_dialog_suffix(
-    #    self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    # ) -> str:
-    #    return _("remove the following %d %s?") % (
-    #        len_action_rows,
-    #        ungettext("comment", "comments", len_action_rows),
-    #    )
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML("")
+
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+        if len_action_rows > 1:
+            return HTML(_("Total comments: %d") % len_action_rows)
+        return HTML(_("Author: %s") % row["comment_author"])
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_remove_comments", _("Remove"))
+        html.open_div(class_="group")
+        html.button("_delete_comments", _("Delete"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        if not request.has_var("_remove_comments"):
+        if not request.has_var("_delete_comments"):
             return None
         # NOTE: To remove an acknowledgement, we have to use the specialized command, not only the
         # general one. The latter one only removes the comment itself, not the "acknowledged" state.

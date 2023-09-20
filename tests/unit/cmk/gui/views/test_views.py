@@ -185,7 +185,7 @@ def test_registered_commands() -> None:
         "remove_comments": {
             "permission": "action.addcomment",
             "tables": ["comment"],
-            "title": "Remove comments",
+            "title": "Delete comments",
         },
         "remove_downtimes": {
             "permission": "action.downtimes",

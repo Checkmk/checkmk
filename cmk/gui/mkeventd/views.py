@@ -1314,7 +1314,7 @@ class CommandECUpdateEvent(ECCommand):
                     comment,
                     contact,
                 ),
-                self.confirm_dialog_options(len(action_rows), cmdtag),
+                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
             )
         return None
 
@@ -1360,7 +1360,7 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def confirm_dialog_additions(self) -> HTML:
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML(
             "<br><br>"
             + request.get_str_input_mandatory("_mkeventd_changestate")
@@ -1385,7 +1385,7 @@ class CommandECChangeState(ECCommand):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return (
                 f"CHANGESTATE;{events};{user.id};{state}",
-                self.confirm_dialog_options(len(action_rows), cmdtag),
+                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
             )
         return None
 
@@ -1439,7 +1439,7 @@ class CommandECCustomAction(ECCommand):
             if request.var("_action_" + action_id):
                 return (
                     "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
-                    self.confirm_dialog_options(len(action_rows), cmdtag),
+                    self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
                 )
         return None
 
@@ -1491,7 +1491,7 @@ class CommandECArchiveEvent(ECCommand):
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             command = f"DELETE;{events};{user.id}"
-            return command, self.confirm_dialog_options(len(action_rows), cmdtag)
+            return command, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
         return None
 
 
@@ -1529,7 +1529,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def tables(self):
         return ["service"]
 
-    def confirm_dialog_additions(self) -> HTML:
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML(
             _(
                 "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
@@ -1559,7 +1559,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
             return (
                 commands,
-                self.confirm_dialog_options(len(action_rows), cmdtag),
+                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
             )
         return None
 

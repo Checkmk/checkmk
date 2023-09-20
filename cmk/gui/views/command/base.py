@@ -71,16 +71,16 @@ class Command(abc.ABC):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
-    def confirm_dialog_additions(self) -> HTML:
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML("")
 
     def confirm_dialog_options(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             self.confirm_title,
-            self.affected_hosts_or_services(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(),
+            self.affected_hosts_or_services(len(action_rows), cmdtag),
+            self.confirm_dialog_additions(row, len(action_rows)),
             self.confirm_button,
         )
 

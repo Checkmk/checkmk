@@ -2121,7 +2121,6 @@ class ConfigCache:
         self._collect_hosttags(tag_to_group_map)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            tag_to_group_map=tag_to_group_map,
             host_tags=host_tags,
             host_paths=self._host_paths,
             labels=LabelManager(

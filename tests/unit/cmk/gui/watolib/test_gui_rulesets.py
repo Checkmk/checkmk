@@ -29,7 +29,6 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
-from cmk.gui.watolib.utils import NEGATE
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -106,52 +105,6 @@ def test_rule_from_config_unhandled_format(
             ruleset,
             (None,),
         )
-
-
-@pytest.mark.parametrize(
-    "ruleset_name,rule_spec",
-    [
-        # non-binary host ruleset
-        (
-            "inventory_processes_rules",
-            ("VAL", ["HOSTLIST"]),
-        ),
-        (
-            "inventory_processes_rules",
-            ("VAL", ["tag", "specs"], ["HOSTLIST"]),
-        ),
-        # binary host ruleset
-        (
-            "only_hosts",
-            (["HOSTLIST"],),
-        ),
-        (
-            "only_hosts",
-            (NEGATE, ["HOSTLIST"]),
-        ),
-        # non-binary service ruleset
-        (
-            RuleGroup.CheckgroupParameters("local"),
-            ("VAL", ["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-        # binary service ruleset
-        (
-            "clustered_services",
-            (["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-        (
-            "clustered_services",
-            (NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-    ],
-)
-def test_rule_from_config_tuple(ruleset_name, rule_spec):
-    ruleset = rulesets.Ruleset(
-        ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags)
-    )
-    error = "Found old style tuple ruleset"
-    with pytest.raises(MKGeneralException, match=error):
-        ruleset.replace_folder_config(folder_tree().root_folder(), [rule_spec])
 
 
 @pytest.mark.parametrize(

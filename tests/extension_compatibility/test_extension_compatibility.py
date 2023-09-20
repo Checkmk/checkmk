@@ -27,11 +27,6 @@ _EXPECTED_GUI_IMPORT_ERRORS: Mapping[_ExtensionName, frozenset[str]] = {
             "wato/msteams: name 'socket' is not defined",
         }
     ),
-    _ExtensionName("cve_2021_44228_log4j"): frozenset(
-        {
-            "views/inv_cve_2021_22448_log4j: No module named 'cmk.gui.plugins.views.inventory'",
-        }
-    ),
 }
 
 

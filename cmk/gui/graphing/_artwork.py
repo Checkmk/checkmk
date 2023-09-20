@@ -26,7 +26,12 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-from ._graph_specification import GraphMetric, HorizontalRule, MetricOpTransformation
+from ._graph_specification import (
+    GraphMetric,
+    HorizontalRule,
+    MetricOpTransformation,
+    TransformationParametersForecast,
+)
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
 from ._type_defs import LineType
@@ -261,8 +266,8 @@ def compute_graph_artwork(
         step=step,
         explicit_vertical_range=graph_recipe.explicit_vertical_range,
         requested_vrange=graph_data_range.get("vertical_range"),
-        requested_start_time=graph_data_range["time_range"][0],
-        requested_end_time=graph_data_range["time_range"][1],
+        requested_start_time=int(graph_data_range["time_range"][0]),
+        requested_end_time=int(graph_data_range["time_range"][1]),
         requested_step=graph_data_range["step"],
         pin_time=pin_time,
         # Definition itself, for reproducing the graph
@@ -427,7 +432,7 @@ def _compute_graph_curves(
             color = ts.metadata.color or metric.color
             if i % 2 == 1 and not (
                 isinstance(expression, MetricOpTransformation)
-                and expression.parameters[0] == "forecast"
+                and isinstance(expression.parameters, TransformationParametersForecast)
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 

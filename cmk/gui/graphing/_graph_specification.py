@@ -51,23 +51,32 @@ class MetricOpOperator(BaseModel, frozen=True):
     operands: Sequence[MetricOperation] = []
 
 
+class TransformationParametersPercentile(BaseModel, frozen=True):
+    percentile: int
+
+
+class TransformationParametersForecast(BaseModel, frozen=True):
+    past: (
+        Literal["m1", "m3", "m6", "y0", "y1"]
+        | tuple[Literal["age"], int]
+        | tuple[Literal["date"], tuple[float, float]]
+    )
+    future: (
+        Literal["m-1", "m-3", "m-6", "y-1"]
+        | tuple[Literal["next"], int]
+        | tuple[Literal["until"], float]
+    )
+    changepoint_prior_scale: Literal["0.001", "0.01", "0.05", "0.1", "0.2"]
+    seasonality_mode: Literal["additive", "multiplicative"]
+    interval_width: Literal["0.68", "0.86", "0.95"]
+    display_past: int
+    display_model_parametrization: bool
+
+
 # TODO transformation is not part of cre but we first have to fix all types
 class MetricOpTransformation(BaseModel, frozen=True):
-    # "percentile", {"percentile": INT}
-    # "forecast", {
-    #     "past": ...,
-    #     "future": ...,
-    #     "changepoint_prior_scale": CHOICE::[0.001, 0.01, 0.05, 0.1, 0.2,],
-    #     "seasonality_mode": CHOICE::["additive", "multiplicative"],
-    #     ""interval_width: CHOICE::[0.68, 0.86, 0.95],
-    #     "display_past": INT,
-    #     "display_model_parametrization": CHECKBOX,  # TODO
-    # }
-    # TODO Check params
     ident: Literal["transformation"] = "transformation"
-    parameters: tuple[Literal["percentile"], int] | tuple[
-        Literal["forecast", "filter_top", "value_sort"], Mapping[str, object]
-    ]
+    parameters: TransformationParametersPercentile | TransformationParametersForecast
     operands: Sequence[MetricOperation]
 
 

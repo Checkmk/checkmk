@@ -22,6 +22,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
     MetricOpTransformation,
     TemplateGraphSpecification,
+    TransformationParametersPercentile,
 )
 from cmk.gui.graphing._rrd_fetch import (
     _needed_elements_of_expression,
@@ -37,7 +38,7 @@ def test_needed_elements_of_expression() -> None:
     assert set(
         _needed_elements_of_expression(
             MetricOpTransformation(
-                parameters=("percentile", 95),
+                parameters=TransformationParametersPercentile(percentile=95),
                 operands=[
                     MetricOpRRDChoice(
                         host_name=HostName("heute"),

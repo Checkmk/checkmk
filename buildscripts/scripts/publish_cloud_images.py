@@ -7,9 +7,14 @@ import argparse
 import asyncio
 import enum
 import json
+import os
+import sys
 from typing import Final
 
 import boto3  # type: ignore[import]
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+from cmk.utils.version import Version
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -63,7 +68,7 @@ class CloudPublisher(abc.ABC):
     CLOUD_TYPES: Final = ["aws", "azure"]
     SECONDS_TO_WAIT_FOR_NEXT_STATUS: Final = 20
 
-    def __init__(self, version: str, build_tag: str, image_name: str):
+    def __init__(self, version: Version, build_tag: str, image_name: str):
         self.version = version
         self.build_tag = build_tag
         self.image_name = image_name
@@ -90,7 +95,7 @@ class AWSPublisher(CloudPublisher):
 
     def __init__(
         self,
-        version: str,
+        version: Version,
         build_tag: str,
         image_name: str,
         marketplace_scanner_arn: str,
@@ -110,7 +115,7 @@ class AWSPublisher(CloudPublisher):
         update_details = {
             "Version": {
                 "VersionTitle": self.version,
-                "ReleaseNotes": self.build_release_notes_url(self.version),
+                "ReleaseNotes": self.build_release_notes_url(str(self.version)),
             },
             "DeliveryOptions": [
                 {
@@ -222,7 +227,7 @@ if __name__ == "__main__":
         case "aws":
             asyncio.run(
                 AWSPublisher(
-                    args.new_version,
+                    Version(args.new_version),
                     args.build_tag,
                     args.image_name,
                     args.marketplace_scanner_arn,

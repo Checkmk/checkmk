@@ -921,9 +921,8 @@ def process_vm(mgmt_client, vmach, args):
     inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
     vmach.info["specific_info"] = filter_keys(inst_view, use_keys)
 
-    if args.piggyback_vms not in ("grouphost",):
+    if args.piggyback_vms == "self":
         vmach.piggytargets.remove(vmach.info["group"])
-    if args.piggyback_vms in ("self",):
         vmach.piggytargets.append(vmach.info["name"])
 
 

@@ -85,6 +85,11 @@ fn check_validity(x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> Validity
     }
 }
 
+fn diff_to_now(x: &Asn1TimeRef) -> i32 {
+    let exp = Asn1Time::days_from_now(0).unwrap().diff(x).unwrap();
+    exp.days
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
@@ -105,10 +110,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         !args.disable_sni,
     )?;
+
     match check_validity(cert.not_after(), &warn_time, &crit_time) {
-        Validity::OK => println!("OK!"),
-        Validity::Warn => println!("WARN!"),
-        Validity::Crit => println!("CRIT!"),
+        Validity::OK => println!(
+            "OK - Certificate '{}' will expire on {}",
+            args.url,
+            cert.not_after()
+        ),
+        Validity::Warn => println!(
+            "WARNING - Certificate '{}' expires in {} day(s) ({})",
+            args.url,
+            diff_to_now(cert.not_after()),
+            cert.not_after()
+        ),
+        Validity::Crit => println!(
+            "CRITICAL - Certificate '{}' expires in {} day(s) ({})",
+            args.url,
+            diff_to_now(cert.not_after()),
+            cert.not_after()
+        ),
     }
     Ok(())
 }
@@ -167,5 +187,25 @@ mod test_check_validity {
                 &days_from_now(15),
             ) == Validity::Crit
         );
+    }
+}
+
+#[cfg(test)]
+mod test_diff_to_now {
+    use crate::diff_to_now;
+    use openssl::asn1::Asn1Time;
+
+    fn days_from_now(days: u32) -> Asn1Time {
+        Asn1Time::days_from_now(days).unwrap()
+    }
+
+    #[test]
+    fn test_diff_to_today() {
+        assert!(diff_to_now(days_from_now(0).as_ref()) == 0);
+    }
+
+    #[test]
+    fn test_diff_to_tomorrow() {
+        assert!(diff_to_now(days_from_now(1).as_ref()) == 1);
     }
 }

@@ -5,6 +5,7 @@
 
 
 import json
+from typing import Literal
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -68,6 +69,7 @@ def command_confirm_dialog(
     confirm_options: list[tuple[str, str]],
     command_title: str,
     command_html: HTML,
+    icon_class: Literal["question", "warning"],
     confirm_button: LazyString = _l("Confirm"),
     cancel_button: LazyString = _l("Cancel"),
 ) -> bool | None:
@@ -107,11 +109,10 @@ def command_confirm_dialog(
                     "html": command_html,
                     "confirmButtonText": str(confirm_button),
                     "cancelButtonText": str(cancel_button),
-                    "icon": "question",
+                    "icon": icon_class,
                     "customClass": {
-                        "confirmButton": "confirm_question",
-                        "footer": "confirm_footer",
-                        "icon": "confirm_icon confirm_question",
+                        "confirmButton": "confirm_%s" % icon_class,
+                        "icon": "confirm_icon confirm_%s" % icon_class,
                     },
                 },
             ),

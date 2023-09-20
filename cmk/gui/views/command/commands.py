@@ -205,12 +205,14 @@ class CommandNotifications(Command):
 
     @property
     def title(self) -> str:
-        return _("Notifications")
+        return _("Enable/disable notifications")
 
     @property
     def confirm_title(self) -> str:
-        return _("%s notifications") % (
-            _("Enable") if request.var("_enable_notifications") else _("Disable")
+        return (
+            _("Enable notifications?")
+            if request.var("_enable_notifications")
+            else _("Disable notifications?")
         )
 
     @property
@@ -235,9 +237,17 @@ class CommandNotifications(Command):
             )
         )
 
+    def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
+        if request.var("_enable_notifications"):
+            return "question"
+        return "warning"
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_enable_notifications", _("Enable"))
-        html.button("_disable_notifications", _("Disable"))
+        html.open_div(class_="group")
+        html.button("_enable_notifications", _("Enable"), cssclass="border_hot")
+        html.button("_disable_notifications", _("Disable"), cssclass="border_hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -1261,6 +1271,7 @@ class CommandScheduleDowntimes(Command):
             title,
             self.affected_hosts_or_services(len_action_rows, cmdtag),
             self.confirm_dialog_additions(row, len_action_rows),
+            self.confirm_dialog_icon_class(),
             self.confirm_button,
         )
 

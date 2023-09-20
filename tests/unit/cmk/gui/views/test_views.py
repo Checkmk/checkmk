@@ -246,7 +246,7 @@ def test_registered_commands() -> None:
         "notifications": {
             "permission": "action.notifications",
             "tables": ["host", "service"],
-            "title": "Notifications",
+            "title": "Enable/disable notifications",
         },
         "reschedule": {
             "permission": "action.reschedule",

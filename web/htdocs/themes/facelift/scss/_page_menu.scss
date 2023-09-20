@@ -679,6 +679,10 @@ div.page_menu_popup {
 
     .button {
       margin: 0px 20px 0px 0px;
+
+      &.border_hot {
+        border: 1px solid $success-dimmed;
+      }
     }
   }
 

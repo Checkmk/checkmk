@@ -30,6 +30,7 @@ class CommandConfirmDialogOptions:
     confirm_title: str
     affected: HTML
     additions: HTML
+    icon_class: Literal["question", "warning"]
     confirm_button: LazyString
 
 
@@ -74,6 +75,9 @@ class Command(abc.ABC):
     def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML("")
 
+    def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
+        return "question"
+
     def confirm_dialog_options(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandConfirmDialogOptions:
@@ -81,6 +85,7 @@ class Command(abc.ABC):
             self.confirm_title,
             self.affected_hosts_or_services(len(action_rows), cmdtag),
             self.confirm_dialog_additions(row, len(action_rows)),
+            self.confirm_dialog_icon_class(),
             self.confirm_button,
         )
 

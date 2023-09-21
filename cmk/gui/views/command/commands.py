@@ -167,7 +167,11 @@ class CommandReschedule(Command):
                 t += spread * 60.0 * row_index / len(action_rows)
 
             command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
-            return command, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return command, self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            )
         return None
 
 
@@ -255,12 +259,20 @@ class CommandNotifications(Command):
         if request.var("_enable_notifications"):
             return (
                 "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         if request.var("_disable_notifications"):
             return (
                 "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return None
 
@@ -341,12 +353,20 @@ class CommandToggleActiveChecks(Command):
         if request.var("_enable_checks"):
             return (
                 "ENABLE_" + cmdtag + "_CHECK;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         if request.var("_disable_checks"):
             return (
                 "DISABLE_" + cmdtag + "_CHECK;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return None
 
@@ -413,12 +433,20 @@ class CommandTogglePassiveChecks(Command):
         if request.var("_enable_passive_checks"):
             return (
                 "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         if request.var("_disable_passive_checks"):
             return (
                 "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return None
 
@@ -497,7 +525,11 @@ class CommandClearModifiedAttributes(Command):
         if request.var("_clear_modattr"):
             return (
                 "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return None
 
@@ -642,7 +674,9 @@ class CommandFakeCheckResult(Command):
                     livestatus.lqencode(pluginoutput),
                 )
                 return command, self.confirm_dialog_options(
-                    cmdtag, spec, row, row_index, action_rows
+                    cmdtag,
+                    row,
+                    len(action_rows),
                 )
         return None
 
@@ -758,7 +792,11 @@ class CommandCustomNotification(Command):
                 user.id,
                 livestatus.lqencode(comment),
             )
-            return command, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return command, self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            )
         return None
 
 
@@ -933,7 +971,11 @@ class CommandAcknowledge(Command):
             else:
                 commands = [make_command_ack(spec, cmdtag)]
 
-            return commands, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return commands, self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            )
 
         if request.var("_remove_ack"):
 
@@ -946,7 +988,7 @@ class CommandAcknowledge(Command):
                 ]
             else:
                 commands = [make_command_rem(spec, cmdtag)]
-            return commands, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
 
         return None
 
@@ -1037,7 +1079,7 @@ class CommandAddComment(Command):
                 + f"_COMMENT;{spec};1;{user.id}"
                 + (";%s" % livestatus.lqencode(comment))
             )
-            return command, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return command, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None
 
 
@@ -1294,15 +1336,28 @@ class CommandScheduleDowntimes(Command):
             node = row["aggr_tree"]
             return (
                 _bi_commands(downtime, node),
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return (
             [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
-            self._confirm_dialog_options(row, len(action_rows), cmdtag, title),
+            self._confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+                title,
+            ),
         )
 
     def _confirm_dialog_options(
-        self, row: Row, len_action_rows: int, cmdtag: Literal["HOST", "SVC"], title: str
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+        title: str,
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             title,
@@ -1334,7 +1389,12 @@ class CommandScheduleDowntimes(Command):
         for dtid in downtime_ids:
             commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
         title = _("Remove all scheduled downtimes?")
-        return commands, self._confirm_dialog_options(row, len(action_rows), cmdtag, title)
+        return commands, self._confirm_dialog_options(
+            cmdtag,
+            row,
+            len(action_rows),
+            title,
+        )
 
     def _flexible_option(self) -> int:
         if request.var("_down_flexible"):
@@ -1614,7 +1674,11 @@ class CommandRemoveDowntime(Command):
         if request.has_var("_remove_downtimes"):
             return (
                 f"DEL_{cmdtag}_DOWNTIME;{spec}",
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(
+                    cmdtag,
+                    row,
+                    len(action_rows),
+                ),
             )
         return None
 
@@ -1687,5 +1751,7 @@ class CommandRemoveComments(Command):
         # comment is via DEL_FOO_COMMENT.
         del_cmt = [f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"]
         return (rm_ack + del_cmt), self.confirm_dialog_options(
-            cmdtag, spec, row, row_index, action_rows
+            cmdtag,
+            row,
+            len(action_rows),
         )

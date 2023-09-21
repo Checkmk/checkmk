@@ -352,5 +352,5 @@ class CommandDeleteCrashReports(Command):
     ) -> CommandActionResult:
         if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
-            return commands, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None

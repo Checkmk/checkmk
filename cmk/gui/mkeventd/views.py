@@ -1324,7 +1324,7 @@ class CommandECUpdateEvent(ECCommand):
                     comment,
                     contact,
                 ),
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None
 
@@ -1391,7 +1391,7 @@ class CommandECChangeState(ECCommand):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return (
                 f"CHANGESTATE;{events};{user.id};{state}",
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None
 
@@ -1445,7 +1445,7 @@ class CommandECCustomAction(ECCommand):
             if request.var("_action_" + action_id):
                 return (
                     "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
-                    self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
                 )
         return None
 
@@ -1492,7 +1492,7 @@ class CommandECArchiveEvent(ECCommand):
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             command = f"DELETE;{events};{user.id}"
-            return command, self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows)
+            return command, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None
 
 
@@ -1561,7 +1561,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
             return (
                 commands,
-                self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None
 

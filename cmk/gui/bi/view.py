@@ -1167,7 +1167,7 @@ class CommandFreezeAggregation(Command):
             if compiled_aggregation.frozen_info:
                 return (
                     [compiled_aggregation.frozen_info.based_on_branch_title],
-                    self.confirm_dialog_options(cmdtag, spec, row, row_index, action_rows),
+                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
                 )
 
         return None

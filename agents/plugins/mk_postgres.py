@@ -1211,17 +1211,18 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         if key == "PG_BINARY_PATH":
             pg_binary_path = value.rstrip()
         if key == "INSTANCE":
-            env_file, pg_user, pg_passfile, instance_name = value.split(config_separator)
+            keys = value.split(config_separator)
+            if len(keys) == 3:
+                # Old format (deprecated in Werk 16016), but we don't force updates unless there is
+                # a substantial benefit.
+                env_file, pg_user, pg_passfile = keys
+            else:
+                env_file, pg_user, pg_passfile, instance_name = keys
             env_file = env_file.strip()
-            instance_name = instance_name or env_file.split(os.sep)[-1].split(".")[0]
-            if not instance_name:
-                raise ValueError(
-                    "Instance name can not be inferred from .env file, instance name should be specified explicitly"
-                )
             pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
-                    "name": instance_name,
+                    "name": instance_name or env_file.split(os.sep)[-1].split(".")[0],
                     "pg_user": pg_user.strip(),
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,

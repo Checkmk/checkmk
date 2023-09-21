@@ -1179,13 +1179,6 @@ class CommandFreezeAggregation(Command):
         assert isinstance(command, CommandSpecWithoutSite)
         (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        if len_action_rows == 1:
-            return _("freeze the following aggregation?")
-        return _("freeze the following %d aggregations?") % len_action_rows
-
 
 command_group_registry.register(CommandGroupAggregations)
 command_registry.register(CommandFreezeAggregation)

@@ -1272,14 +1272,6 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
@@ -1371,14 +1363,6 @@ class CommandECChangeState(ECCommand):
     @property
     def permission(self) -> Permission:
         return PermissionECChangeEventState
-
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" of the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
 
     def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML(
@@ -1488,7 +1472,7 @@ class CommandECArchiveEvent(ECCommand):
 
     @property
     def confirm_title(self) -> str:
-        return _("Archive event")
+        return "%s?" % self.title
 
     @property
     def confirm_button(self) -> LazyString:
@@ -1498,16 +1482,11 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_delete_event", _("Archive Event"))
+        html.open_div(class_="group")
+        html.button("_delete_event", _("Archive Event"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

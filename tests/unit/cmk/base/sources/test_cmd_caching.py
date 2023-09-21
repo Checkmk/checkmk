@@ -20,6 +20,7 @@ import cmk.utils.paths
 from cmk.utils.log import logger
 from cmk.utils.type_defs import HostName
 
+import cmk.core_helpers.cache as cache_file
 from cmk.core_helpers.agent import NoCache
 from cmk.core_helpers.cache import MaxAge
 
@@ -35,7 +36,11 @@ from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
 
-CACHE_FILE_AGE = config.max_cachefile_age(discovery=90, inventory=90)
+CACHE_FILE_AGE = cache_file.MaxAge(
+    checking=config.check_max_cachefile_age,
+    discovery=90,
+    inventory=90,
+)
 
 
 @pytest.fixture(autouse=True)

@@ -1482,20 +1482,6 @@ _all_checks_loaded = False
 #   the item is None
 service_rule_groups = {"temperature"}
 
-
-def max_cachefile_age(
-    *,
-    checking: Optional[int] = None,
-    discovery: int,
-    inventory: int,
-) -> cache_file.MaxAge:
-    return cache_file.MaxAge(
-        checking=check_max_cachefile_age if checking is None else checking,
-        discovery=discovery,
-        inventory=inventory,
-    )
-
-
 # .
 #   .--Loading-------------------------------------------------------------.
 #   |                _                    _ _                              |
@@ -3321,8 +3307,8 @@ class HostConfig:
 
     @property
     def max_cachefile_age(self) -> cache_file.MaxAge:
-        return max_cachefile_age(
-            checking=None if self.nodes is None else cluster_max_cachefile_age,
+        return cache_file.MaxAge(
+            checking=check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age,
             discovery=int(90 * self.check_mk_check_interval),
             inventory=int(90 * self.check_mk_check_interval),
         )

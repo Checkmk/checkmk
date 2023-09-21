@@ -164,7 +164,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters=None,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
-                max_cachefile_age=config.max_cachefile_age(
+                max_cachefile_age=cmk.core_helpers.cache.MaxAge(
+                    checking=config.check_max_cachefile_age,
                     discovery=int(90 * host_config.check_mk_check_interval),
                     inventory=int(90 * host_config.check_mk_check_interval),
                 ),
@@ -262,7 +263,8 @@ class AutomationTryDiscovery(Automation):
                 host_config = config_cache.get_host_config(host_name)
                 return discovery.get_check_preview(
                     host_name=host_name,
-                    max_cachefile_age=config.max_cachefile_age(
+                    max_cachefile_age=cmk.core_helpers.cache.MaxAge(
+                        checking=config.check_max_cachefile_age,
                         discovery=int(90 * host_config.check_mk_check_interval),
                         inventory=int(90 * host_config.check_mk_check_interval),
                     ),
@@ -1397,7 +1399,8 @@ class AutomationDiagHost(Automation):
     ) -> Tuple[int, str]:
         state, output = 0, ""
         for source in sources.make_sources(host_config, ipaddress):
-            source.file_cache_max_age = config.max_cachefile_age(
+            source.file_cache_max_age = cmk.core_helpers.cache.MaxAge(
+                checking=config.check_max_cachefile_age,
                 discovery=int(90 * host_config.check_mk_check_interval),
                 inventory=int(90 * host_config.check_mk_check_interval),
             )
@@ -1732,7 +1735,8 @@ class AutomationGetAgentOutput(Automation):
                     not cmk.core_helpers.cache.FileCacheFactory.disabled
                 )
                 for source in sources.make_sources(host_config, ipaddress):
-                    source.file_cache_max_age = config.max_cachefile_age(
+                    source.file_cache_max_age = cmk.core_helpers.cache.MaxAge(
+                        checking=config.check_max_cachefile_age,
                         discovery=int(90 * host_config.check_mk_check_interval),
                         inventory=int(90 * host_config.check_mk_check_interval),
                     )

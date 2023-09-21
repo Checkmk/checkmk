@@ -12,8 +12,9 @@ from cmk.utils.type_defs import HostAddress
 import cmk.core_helpers.cache as cache_file
 from cmk.core_helpers import FetcherType
 
+import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig, max_cachefile_age
+from cmk.base.config import HostConfig
 
 from ._abstract import Source
 from ._checkers import make_sources
@@ -44,7 +45,8 @@ def _fixup_caching_info(source: Source, file_cache_max_age: cache_file.MaxAge) -
 
 def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     ipaddress = get_ip_address(host_config)
-    file_cache_max_age = max_cachefile_age(
+    file_cache_max_age = cache_file.MaxAge(
+        checking=config.check_max_cachefile_age,
         discovery=int(90 * host_config.check_mk_check_interval),
         inventory=int(90 * host_config.check_mk_check_interval),
     )

@@ -44,6 +44,10 @@ def repo_path() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
+def qa_test_data_path() -> Path:
+    return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
+
+
 def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
     return str(repo_path())
 

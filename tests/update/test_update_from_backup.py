@@ -13,7 +13,11 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, get_services_with_status
+from tests.testlib.utils import (
+    current_base_branch_name,
+    get_services_with_status,
+    qa_test_data_path,
+)
 from tests.testlib.version import CMKVersion
 from tests.update.conftest import BaseVersions
 
@@ -55,8 +59,9 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
     "This will be fixed starting from base-version 2.2.0p8",
 )
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
-    qa_data_path = Path(__file__).parent.resolve() / Path("../qa-test-data/")
-    backup_path = qa_data_path / Path("update/backups/update_central_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
+    assert backup_path.exists()
+    
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 

@@ -1,0 +1,21 @@
+Title: nvidia_smi: Show Use full PCI bus ID
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1695304807
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p11
+
+This change affects users of the following checks:
+* nvidia_smi_memory_util
+* nvidia_smi_gpu_util
+* nvidia_smi_en_de_coder_util
+* nvidia_smi_power
+* nvidia_smi_temperature
+
+Previously, the PCI bus ID of NVIDIA GPUs would be incorrectly removed. This caused GPUs to be
+omitted, which should have been discovered. With this Werk, the full PCI bus ID is used as a service
+item. Users must rediscover the services.

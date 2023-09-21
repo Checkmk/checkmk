@@ -220,7 +220,7 @@ SECTION = nvidia_smi.Section(
     cuda_version="11.7",
     attached_gpus=1,
     gpus={
-        "0B:00.0": nvidia_smi.GPU(
+        "00000000:0B:00.0": nvidia_smi.GPU(
             id="00000000:0B:00.0",
             product_name="NVIDIA GeForce RTX 2070 SUPER",
             product_brand="GeForce",
@@ -285,7 +285,7 @@ def test_parse_nvidia_smi(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -301,7 +301,7 @@ def test_discover_nvidia_smi_temperature(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -329,7 +329,7 @@ def test_check_nvidia_smi_temperature(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -344,7 +344,7 @@ def test_discover_nvidia_smi_gpu_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -353,7 +353,7 @@ def test_discover_nvidia_smi_gpu_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.GenericLevelsParam(levels=(2.0, 4.0)),
             SECTION,
             [
@@ -377,7 +377,7 @@ def test_check_nvidia_smi_gpu_util(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -392,7 +392,7 @@ def test_discover_nvidia_smi_en_de_coder_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -403,7 +403,7 @@ def test_discover_nvidia_smi_en_de_coder_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.DeEnCoderParams(encoder_levels=(2.5, 3.5), decoder_levels=(5.0, 10.0)),
             SECTION,
             [
@@ -431,7 +431,7 @@ def test_check_nvidia_smi_en_de_coder_util(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -446,7 +446,7 @@ def test_discover_nvidia_smi_power(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -458,7 +458,7 @@ def test_discover_nvidia_smi_power(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.GenericLevelsParam(levels=(30.0, 40.0)),
             SECTION,
             [
@@ -487,7 +487,7 @@ def test_check_nvidia_smi_power(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -502,7 +502,7 @@ def test_discover_nvidia_smi_memory_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -519,7 +519,7 @@ def test_discover_nvidia_smi_memory_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.MemoryParams(
                 levels_total=(10.0, 20.0),
                 levels_bar1=(0.5, 1.0),

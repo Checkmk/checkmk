@@ -1225,6 +1225,21 @@ class ECCommand(Command):
     def tables(self):
         return ["event"]
 
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "event",
+                    "events",
+                    len_action_rows,
+                ),
+                len_action_rows,
+            )
+        )
+
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
@@ -1292,21 +1307,6 @@ class CommandECUpdateEvent(ECCommand):
         html.button("_mkeventd_update", _("Update"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
         html.close_div()
-
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
-        return HTML(
-            _("Affected %s: %s")
-            % (
-                ungettext(
-                    "event",
-                    "events",
-                    len_action_rows,
-                ),
-                len_action_rows,
-            )
-        )
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -1383,8 +1383,8 @@ class CommandECChangeState(ECCommand):
     def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
         return HTML(
             "<br><br>"
-            + request.get_str_input_mandatory("_mkeventd_changestate")
-            + {
+            + _("New state: %s")
+            % {
                 0: _("OK"),
                 1: _("WARN"),
                 2: _("CRIT"),
@@ -1393,9 +1393,13 @@ class CommandECChangeState(ECCommand):
         )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_mkeventd_changestate", _("New event state:"))
-        html.nbsp()
-        MonitoringState().render_input("_mkeventd_state", 2)
+        MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
+        html.br()
+        html.br()
+        html.open_div(class_="group")
+        html.button("_mkeventd_changestate", _("Change state"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

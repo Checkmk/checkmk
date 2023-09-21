@@ -119,7 +119,7 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         sys.stdout.write("POST request to server failed: %s\n" % api_url)
         return 1
 
-    if response.status_code != 200:
+    if response.status_code not in [200, 204]:
         sys.stdout.write(
             "Failed to send notification. Status: %s, Response: %s\n"
             % (response.status_code, response.text)

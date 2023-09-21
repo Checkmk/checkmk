@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata.section import (

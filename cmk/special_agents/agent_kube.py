@@ -29,7 +29,7 @@ from typing import TypeVar
 
 import requests
 import urllib3
-from pydantic import TypeAdapter
+from pydantic import parse_raw_as
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -442,8 +442,7 @@ Model = TypeVar("Model")
 
 
 def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
-    adapter = TypeAdapter(list[RawMetrics])
-    return adapter.validate_json(content)
+    return parse_raw_as(list[RawMetrics], content)
 
 
 def request_cluster_collector(
@@ -840,11 +839,9 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     f"at URL {e.url}"
                 ) from e
             except requests.RequestException as e:
-                if e.request is not None:
-                    raise ClusterConnectionError(
-                        f"Failed to establish a connection at URL {e.request.url} "
-                    ) from e
-                raise ClusterConnectionError("Failed to establish a connection.") from e
+                raise ClusterConnectionError(
+                    f"Failed to establish a connection at URL {e.request.url} "
+                ) from e
 
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object

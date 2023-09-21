@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 
-from polyfactory.factories.pydantic_factory import ModelFactory
+from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 

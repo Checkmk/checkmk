@@ -23,6 +23,7 @@ pydantic-factories = "*"  # used for pydantic model testing;
 pymongo = "*"  # used by mk_mongodb agent plugin
 pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
+pytest-html = "*"  # used to generate HTML reports for test suites
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
 preprocess = "*" # implicit dependency of pytest-testmon, might be removed when testmon is updated
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml

@@ -839,9 +839,11 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     f"at URL {e.url}"
                 ) from e
             except requests.RequestException as e:
-                raise ClusterConnectionError(
-                    f"Failed to establish a connection at URL {e.request.url} "
-                ) from e
+                if e.request is not None:
+                    raise ClusterConnectionError(
+                        f"Failed to establish a connection at URL {e.request.url} "
+                    ) from e
+                raise ClusterConnectionError("Failed to establish a connection.") from e
 
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object

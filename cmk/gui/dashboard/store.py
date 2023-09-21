@@ -22,7 +22,7 @@ from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 
 
-# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
+# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore and ReportStore, centralize implementation?
 class DashboardStore:
     @classmethod
     @request_memoize()

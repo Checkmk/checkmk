@@ -151,7 +151,7 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
         cuda_version=get_text_from_element(xml.find("cuda_version")),
         attached_gpus=get_int_from_element(xml.find("attached_gpus")),
         gpus={
-            ":".join(gpu.get("id", "").split(":")[-2:]): GPU(
+            gpu.get("id", ""): GPU(
                 id=_let_pydantic_check_none(gpu.get("id")),
                 product_name=get_text_from_element(gpu.find("product_name")),
                 product_brand=get_text_from_element(gpu.find("product_brand")),

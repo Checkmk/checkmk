@@ -14,8 +14,8 @@ Example for postgres.cfg file:
 -----postgres.cfg-----------------------------------------
 DBUSER=postgres
 PG_BINARY_PATH=/usr/bin/psql
-INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
-INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
+INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass:
+INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:
 ----------------------------------------------------------
 """
 

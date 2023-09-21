@@ -1,0 +1,15 @@
+Title: New global option to configure maximum long output size
+Class: feature
+Compatible: compat
+Component: core
+Date: 1695302837
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p35
+
+You can now configure a maximum long output size. If this size is reached, a
+warning  about truncated long output will be shown in the details section of
+the related service.
+

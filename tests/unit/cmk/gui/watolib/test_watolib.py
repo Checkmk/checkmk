@@ -249,6 +249,7 @@ def test_registered_configvars():
             "liveproxyd_log_levels",
             "notification_spooler_config",
             "notification_spooling",
+            "max_long_output_size",
             "reporting_date_format",
             "reporting_email_options",
             "reporting_filename",

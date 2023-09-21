@@ -44,7 +44,7 @@ class MetricExpressionResult:
     color: str
 
 
-class ABCMetricOperation(abc.ABC):
+class MetricDeclaration(abc.ABC):
     @abc.abstractmethod
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         raise NotImplementedError()
@@ -55,7 +55,7 @@ class ABCMetricOperation(abc.ABC):
 
 
 @dataclass(frozen=True)
-class ConstantInt(ABCMetricOperation):
+class ConstantInt(MetricDeclaration):
     value: int
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -66,7 +66,7 @@ class ConstantInt(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class ConstantFloat(ABCMetricOperation):
+class ConstantFloat(MetricDeclaration):
     value: float
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -77,7 +77,7 @@ class ConstantFloat(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Metric(ABCMetricOperation):
+class Metric(MetricDeclaration):
     name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None = None
 
@@ -93,7 +93,7 @@ class Metric(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class WarningOf(ABCMetricOperation):
+class WarningOf(MetricDeclaration):
     metric: Metric
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -108,7 +108,7 @@ class WarningOf(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class CriticalOf(ABCMetricOperation):
+class CriticalOf(MetricDeclaration):
     metric: Metric
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -123,7 +123,7 @@ class CriticalOf(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class MinimumOf(ABCMetricOperation):
+class MinimumOf(MetricDeclaration):
     metric: Metric
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -138,7 +138,7 @@ class MinimumOf(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class MaximumOf(ABCMetricOperation):
+class MaximumOf(MetricDeclaration):
     metric: Metric
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -153,8 +153,8 @@ class MaximumOf(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Sum(ABCMetricOperation):
-    summands: Sequence[ABCMetricOperation]
+class Sum(MetricDeclaration):
+    summands: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.summands) == 0:
@@ -177,8 +177,8 @@ class Sum(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Product(ABCMetricOperation):
-    factors: Sequence[ABCMetricOperation]
+class Product(MetricDeclaration):
+    factors: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.factors) == 0:
@@ -201,9 +201,9 @@ class Product(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Difference(ABCMetricOperation):
-    minuend: ABCMetricOperation
-    subtrahend: ABCMetricOperation
+class Difference(MetricDeclaration):
+    minuend: MetricDeclaration
+    subtrahend: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         minuend_result = self.minuend.evaluate(translated_metrics)
@@ -226,9 +226,9 @@ class Difference(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Fraction(ABCMetricOperation):
-    dividend: ABCMetricOperation
-    divisor: ABCMetricOperation
+class Fraction(MetricDeclaration):
+    dividend: MetricDeclaration
+    divisor: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         dividend_result = self.dividend.evaluate(translated_metrics)
@@ -251,9 +251,9 @@ class Fraction(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class GreaterThan(ABCMetricOperation):
-    left: ABCMetricOperation
-    right: ABCMetricOperation
+class GreaterThan(MetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
@@ -273,9 +273,9 @@ class GreaterThan(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class GreaterEqualThan(ABCMetricOperation):
-    left: ABCMetricOperation
-    right: ABCMetricOperation
+class GreaterEqualThan(MetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
@@ -295,9 +295,9 @@ class GreaterEqualThan(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class LessThan(ABCMetricOperation):
-    left: ABCMetricOperation
-    right: ABCMetricOperation
+class LessThan(MetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
@@ -317,9 +317,9 @@ class LessThan(ABCMetricOperation):
 
 
 @dataclass(frozen=True, kw_only=True)
-class LessEqualThan(ABCMetricOperation):
-    left: ABCMetricOperation
-    right: ABCMetricOperation
+class LessEqualThan(MetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
@@ -339,8 +339,8 @@ class LessEqualThan(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Minimum(ABCMetricOperation):
-    operands: Sequence[ABCMetricOperation]
+class Minimum(MetricDeclaration):
+    operands: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.operands) == 0:
@@ -359,8 +359,8 @@ class Minimum(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Maximum(ABCMetricOperation):
-    operands: Sequence[ABCMetricOperation]
+class Maximum(MetricDeclaration):
+    operands: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.operands) == 0:
@@ -378,12 +378,12 @@ class Maximum(ABCMetricOperation):
         yield from (m for o in self.operands for m in o.metrics())
 
 
-# Composed metric operations:
+# Composed metric declarations:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Percent(ABCMetricOperation):
-    reference: ABCMetricOperation
+class Percent(MetricDeclaration):
+    reference: MetricDeclaration
     metric: Metric
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
@@ -405,12 +405,12 @@ class Percent(ABCMetricOperation):
         yield from self.metric.metrics()
 
 
-# Special metric operations for custom graphs
+# Special metric declarations for custom graphs
 
 
 @dataclass(frozen=True)
-class Average(ABCMetricOperation):
-    operands: Sequence[ABCMetricOperation]
+class Average(MetricDeclaration):
+    operands: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         if len(self.operands) == 0:
@@ -428,8 +428,8 @@ class Average(ABCMetricOperation):
 
 
 @dataclass(frozen=True)
-class Merge(ABCMetricOperation):
-    operands: Sequence[ABCMetricOperation]
+class Merge(MetricDeclaration):
+    operands: Sequence[MetricDeclaration]
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         # TODO None?
@@ -446,8 +446,8 @@ RPNOperators = Literal["+", "*", "-", "/", ">", ">=", "<", "<=", "MIN", "MAX", "
 
 
 def _apply_operator(
-    operator: RPNOperators, left: ABCMetricOperation, right: ABCMetricOperation
-) -> ABCMetricOperation:
+    operator: RPNOperators, left: MetricDeclaration, right: MetricDeclaration
+) -> MetricDeclaration:
     # TODO: Do real unit computation, detect non-matching units
     match operator:
         case "+":
@@ -509,7 +509,7 @@ def _parse_single_expression(
     expression: str,
     translated_metrics: TranslatedMetrics,
     enforced_consolidation_func_name: GraphConsoldiationFunction | None,
-) -> ABCMetricOperation:
+) -> MetricDeclaration:
     if expression not in translated_metrics:
         try:
             return ConstantInt(int(expression))
@@ -537,12 +537,12 @@ def _parse_single_expression(
 
 @dataclass(frozen=True)
 class MetricExpression:
-    operation: ABCMetricOperation
+    declaration: MetricDeclaration
     explicit_unit_name: str = ""
     explicit_color: str = ""
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        result = self.operation.evaluate(translated_metrics)
+        result = self.declaration.evaluate(translated_metrics)
         return MetricExpressionResult(
             result.value,
             unit_info[self.explicit_unit_name] if self.explicit_unit_name else result.unit_info,
@@ -550,7 +550,7 @@ class MetricExpression:
         )
 
     def metrics(self) -> Iterator[Metric]:
-        yield from self.operation.metrics()
+        yield from self.declaration.metrics()
 
 
 # Evaluates an expression, returns a triple of value, unit and color.

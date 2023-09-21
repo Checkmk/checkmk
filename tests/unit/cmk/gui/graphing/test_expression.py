@@ -80,7 +80,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
             MetricExpression(
-                operation=Product(factors=[Metric(name="if_in_octets"), ConstantInt(value=8)]),
+                declaration=Product(factors=[Metric(name="if_in_octets"), ConstantInt(value=8)]),
                 explicit_unit_name="bits/s",
             ),
             16.0,
@@ -93,7 +93,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-df",
             "fs_size,fs_used,-#e3fff9",
             MetricExpression(
-                operation=Difference(
+                declaration=Difference(
                     minuend=Metric(name="fs_size"),
                     subtrahend=Metric(name="fs_used"),
                 ),
@@ -112,7 +112,7 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("127.0.0.1pl=5%;80;100;;")[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
-            MetricExpression(operation=Metric(name="127.0.0.1pl")),
+            MetricExpression(declaration=Metric(name="127.0.0.1pl")),
             5,
             "",
             "#cc00ff",
@@ -124,7 +124,7 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("10.172=6")[0],
             "check_mk-local",
             "10.172",
-            MetricExpression(operation=Metric(name="10.172")),
+            MetricExpression(declaration=Metric(name="10.172")),
             6,
             "",
             "#cc00ff",
@@ -134,7 +134,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97",
-            MetricExpression(operation=ConstantInt(value=97)),
+            MetricExpression(declaration=ConstantInt(value=97)),
             97.0,
             "count",
             "#000000",
@@ -144,7 +144,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97,
-            MetricExpression(operation=ConstantInt(value=97)),
+            MetricExpression(declaration=ConstantInt(value=97)),
             97.0,
             "count",
             "#000000",
@@ -154,7 +154,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0",
-            MetricExpression(operation=ConstantFloat(value=97.0)),
+            MetricExpression(declaration=ConstantFloat(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -164,7 +164,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97.0,
-            MetricExpression(operation=ConstantFloat(value=97.0)),
+            MetricExpression(declaration=ConstantFloat(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -174,7 +174,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            MetricExpression(operation=ConstantFloat(value=97.0), explicit_unit_name="bytes"),
+            MetricExpression(declaration=ConstantFloat(value=97.0), explicit_unit_name="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -184,7 +184,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0#123456",
-            MetricExpression(operation=ConstantFloat(value=97.0), explicit_color="123456"),
+            MetricExpression(declaration=ConstantFloat(value=97.0), explicit_color="123456"),
             97.0,
             "",
             "#123456",
@@ -195,7 +195,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name(%)",
             MetricExpression(
-                operation=Percent(
+                declaration=Percent(
                     reference=Metric(name="metric_name"),
                     metric=Metric(name="metric_name"),
                 )
@@ -209,7 +209,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
-            MetricExpression(operation=WarningOf(metric=Metric(name="metric_name"))),
+            MetricExpression(declaration=WarningOf(metric=Metric(name="metric_name"))),
             20.0,
             "",
             "#ffd000",
@@ -220,7 +220,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name:warn(%)",
             MetricExpression(
-                operation=Percent(
+                declaration=Percent(
                     reference=WarningOf(metric=Metric(name="metric_name")),
                     metric=Metric(name="metric_name"),
                 )
@@ -234,7 +234,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
-            MetricExpression(operation=CriticalOf(metric=Metric(name="metric_name"))),
+            MetricExpression(declaration=CriticalOf(metric=Metric(name="metric_name"))),
             30.0,
             "",
             "#ff3232",
@@ -245,7 +245,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name:crit(%)",
             MetricExpression(
-                operation=Percent(
+                declaration=Percent(
                     reference=CriticalOf(metric=Metric(name="metric_name")),
                     metric=Metric(name="metric_name"),
                 )
@@ -259,7 +259,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
-            MetricExpression(operation=MinimumOf(metric=Metric(name="metric_name"))),
+            MetricExpression(declaration=MinimumOf(metric=Metric(name="metric_name"))),
             0.0,
             "",
             "#808080",
@@ -270,7 +270,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name:min(%)",
             MetricExpression(
-                operation=Percent(
+                declaration=Percent(
                     reference=MinimumOf(metric=Metric(name="metric_name")),
                     metric=Metric(name="metric_name"),
                 )
@@ -284,7 +284,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
-            MetricExpression(operation=MaximumOf(metric=Metric(name="metric_name"))),
+            MetricExpression(declaration=MaximumOf(metric=Metric(name="metric_name"))),
             50.0,
             "",
             "#808080",
@@ -295,7 +295,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name:max(%)",
             MetricExpression(
-                operation=Percent(
+                declaration=Percent(
                     reference=MaximumOf(metric=Metric(name="metric_name")),
                     metric=Metric(name="metric_name"),
                 )
@@ -309,7 +309,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.max",
-            MetricExpression(operation=Metric(name="metric_name", consolidation_func_name="max")),
+            MetricExpression(declaration=Metric(name="metric_name", consolidation_func_name="max")),
             10.0,
             "",
             "#cc00ff",
@@ -319,7 +319,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.min",
-            MetricExpression(operation=Metric(name="metric_name", consolidation_func_name="min")),
+            MetricExpression(declaration=Metric(name="metric_name", consolidation_func_name="min")),
             10.0,
             "",
             "#cc00ff",
@@ -330,7 +330,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-foo",
             "metric_name.average",
             MetricExpression(
-                operation=Metric(name="metric_name", consolidation_func_name="average")
+                declaration=Metric(name="metric_name", consolidation_func_name="average")
             ),
             10.0,
             "",

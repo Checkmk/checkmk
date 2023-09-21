@@ -1140,9 +1140,7 @@ class CommandFreezeAggregation(Command):
         html.button("_cancel", _("Cancel"))
         html.close_div()
 
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(
             _("Affected %s: %s")
             % (

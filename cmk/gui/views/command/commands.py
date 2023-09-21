@@ -1306,7 +1306,7 @@ class CommandScheduleDowntimes(Command):
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             title,
-            self.affected_hosts_or_services(len_action_rows, cmdtag),
+            self.affected(len_action_rows, cmdtag),
             self.confirm_dialog_additions(row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
@@ -1652,9 +1652,7 @@ class CommandRemoveComments(Command):
     def tables(self):
         return ["comment"]
 
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")
 
     def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:

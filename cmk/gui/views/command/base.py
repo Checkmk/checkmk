@@ -83,15 +83,13 @@ class Command(abc.ABC):
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             self.confirm_title,
-            self.affected_hosts_or_services(len(action_rows), cmdtag),
+            self.affected(len(action_rows), cmdtag),
             self.confirm_dialog_additions(row, len(action_rows)),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
         )
 
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(
             _("Affected %s: %s")
             % (

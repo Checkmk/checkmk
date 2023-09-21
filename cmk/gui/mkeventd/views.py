@@ -1225,9 +1225,7 @@ class ECCommand(Command):
     def tables(self):
         return ["event"]
 
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(
             _("Affected %s: %s")
             % (
@@ -1540,9 +1538,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
             % request.var("host")
         )
 
-    def affected_hosts_or_services(
-        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> HTML:
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]

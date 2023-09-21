@@ -1436,6 +1436,10 @@ class CommandECCustomAction(ECCommand):
         return _("Custom action")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Execute custom action '%s'?") % list(request.itervars(prefix="_action_"))[0][1]
+
+    @property
     def confirm_button(self) -> LazyString:
         return _l("Execute")
 
@@ -1443,18 +1447,14 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" for the following %d Event Console  %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        html.open_div(class_="group")
         for action_id, title in action_choices(omit_hidden=True):
-            html.button("_action_" + action_id, title)
+            html.button("_action_" + action_id, title, cssclass="border_hot")
             html.br()
+            html.br()
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

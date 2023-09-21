@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 import livestatus
 
@@ -28,7 +28,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import AbsoluteDate, Age
@@ -1086,73 +1086,30 @@ class CommandGroupDowntimes(CommandGroup):
         return 10
 
 
-class RecurringDowntimes:
+class RecurringDowntimes(Protocol):
     def show_input_elements(self) -> None:
-        if self._has_recurring_downtimes():
-            html.open_div(class_="group")
-            html.checkbox(
-                "_down_do_recur", False, label=_("Repeat this downtime on a regular basis every")
-            )
-
-            # pylint: disable=no-name-in-module
-            from cmk.gui.cee.plugins.wato.cmc import (
-                recurring_downtimes_types,  # pylint: disable=import-outside-toplevel
-            )
-
-            recurring_selections: Choices = [
-                (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
-            ]
-            html.dropdown("_down_recurring", recurring_selections, deflt="3")
-            html.write_text(" " + _("(only works with the microcore)"))
-            html.close_div()
+        ...
 
     def number(self) -> int:
-        """Retrieve integer value for repeat downtime option
-
-        Retrieve the integer value which corresponds to the selected option in the "Repeat this downtime"
-        dropdown menu. The values are mapped as follows:
-            <hour> : 1
-            <day> : 2
-            <week> : 3
-            <second week> : 4
-            <fourth week>: 5
-            <same nth weekday (from beginning)> : 6
-            <same nth weekday (from end)> : 7
-            <same day of the month> : 8
-        """
-        if self._has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
-            recurring_type = request.get_integer_input_mandatory("_down_recurring")
-        else:
-            recurring_type = 0
-        return recurring_type
+        ...
 
     def title_prefix(self, recurring_number: int) -> str:
-        if recurring_number:
-            # pylint: disable=no-name-in-module
-            from cmk.gui.cee.plugins.wato.cmc import (
-                recurring_downtimes_types,  # pylint: disable=import-outside-toplevel
-            )
+        ...
 
-            description = (
-                _("Schedule a periodic downtime every %s")
-                % recurring_downtimes_types()[recurring_number]
-            )
-        else:
-            description = _("Schedule an immediate downtime")
-        return description
 
-    def _has_recurring_downtimes(self) -> bool:
-        try:
-            # TODO(ml): Import cycle
-            import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import,import-outside-toplevel
+class NoRecurringDowntimes:
+    def show_input_elements(self) -> None:
+        pass
 
-            return True
-        except ImportError:
-            return False
+    def number(self) -> int:
+        return 0
+
+    def title_prefix(self, recurring_number: int) -> str:
+        return _("Schedule an immediate downtime")
 
 
 class CommandScheduleDowntimes(Command):
-    recurring_downtimes = RecurringDowntimes()
+    recurring_downtimes: RecurringDowntimes = NoRecurringDowntimes()
 
     @property
     def ident(self) -> str:

@@ -1243,8 +1243,10 @@ class CommandECUpdateEvent(ECCommand):
 
     @property
     def confirm_title(self) -> str:
-        return _("%s event") % (
-            _("Update & acknowledge") if request.var("_mkeventd_acknowledge") else _("Update")
+        return (
+            _("Update & acknowledge event?")
+            if request.var("_mkeventd_acknowledge")
+            else _("Update event?")
         )
 
     @property
@@ -1286,7 +1288,25 @@ class CommandECUpdateEvent(ECCommand):
         html.close_td()
         html.close_tr()
         html.close_table()
-        html.button("_mkeventd_update", _("Update"))
+        html.open_div(class_="group")
+        html.button("_mkeventd_update", _("Update"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
+
+    def affected_hosts_or_services(
+        self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "event",
+                    "events",
+                    len_action_rows,
+                ),
+                len_action_rows,
+            )
+        )
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

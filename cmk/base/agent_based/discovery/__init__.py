@@ -177,8 +177,8 @@ def commandline_discovery(
                 selected_sections=selected_sections,
                 file_cache_max_age=cmk.core_helpers.cache.MaxAge(
                     checking=config.check_max_cachefile_age,
-                    discovery=int(90 * host_config.check_mk_check_interval),
-                    inventory=int(90 * host_config.check_mk_check_interval),
+                    discovery=int(1.5 * host_config.check_mk_check_interval),
+                    inventory=int(1.5 * host_config.check_mk_check_interval),
                 ),
                 fetcher_messages=(),
                 force_snmp_cache_refresh=False,
@@ -570,10 +570,10 @@ def active_check_discovery(
         selected_sections=NO_SELECTION,
         file_cache_max_age=cmk.core_helpers.cache.MaxAge(
             checking=config.check_max_cachefile_age,
-            discovery=int(90 * host_config.check_mk_check_interval)
+            discovery=int(1.5 * host_config.check_mk_check_interval)
             if cmk.core_helpers.cache.FileCacheFactory.maybe
             else 0,
-            inventory=int(90 * host_config.check_mk_check_interval),
+            inventory=int(1.5 * host_config.check_mk_check_interval),
         ),
         force_snmp_cache_refresh=False,
         on_scan_error=OnError.RAISE,
@@ -911,8 +911,8 @@ def _discover_marked_host(
         # make sure we may use the file the active discovery check left behind:
         max_cachefile_age=cmk.core_helpers.cache.MaxAge(
             checking=config.check_max_cachefile_age,
-            discovery=int(90 * host_config.check_mk_check_interval),
-            inventory=int(90 * host_config.check_mk_check_interval),
+            discovery=int(1.5 * host_config.check_mk_check_interval),
+            inventory=int(1.5 * host_config.check_mk_check_interval),
         ),
     )
     if result.error_text is not None:

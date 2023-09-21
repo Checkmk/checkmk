@@ -439,8 +439,8 @@ def mode_dump_agent(hostname: HostName) -> None:
         for source in sources.make_sources(host_config, ipaddress):
             source.file_cache_max_age = cmk.core_helpers.cache.MaxAge(
                 checking=config.check_max_cachefile_age,
-                discovery=int(90 * host_config.check_mk_check_interval),
-                inventory=int(90 * host_config.check_mk_check_interval),
+                discovery=int(1.5 * host_config.check_mk_check_interval),
+                inventory=int(1.5 * host_config.check_mk_check_interval),
             )
             if not isinstance(source, sources.agent.AgentSource):
                 continue

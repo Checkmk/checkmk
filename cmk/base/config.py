@@ -2552,10 +2552,13 @@ class HostConfig:
         return flat_rule
 
     @property
-    def check_mk_check_interval(self) -> int:
-        return self._config_cache.extra_attributes_of_service(self.hostname, "Check_MK")[
-            "check_interval"
-        ]
+    def check_mk_check_interval(self) -> float:
+        return (
+            self._config_cache.extra_attributes_of_service(self.hostname, "Check_MK")[
+                "check_interval"
+            ]
+            * 60
+        )
 
     def _primary_ip_address_family_of(self) -> str:
         rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
@@ -3309,8 +3312,8 @@ class HostConfig:
     def max_cachefile_age(self) -> cache_file.MaxAge:
         return cache_file.MaxAge(
             checking=check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age,
-            discovery=int(90 * self.check_mk_check_interval),
-            inventory=int(90 * self.check_mk_check_interval),
+            discovery=int(1.5 * self.check_mk_check_interval),
+            inventory=int(1.5 * self.check_mk_check_interval),
         )
 
     @property

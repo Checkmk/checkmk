@@ -47,8 +47,8 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     ipaddress = get_ip_address(host_config)
     file_cache_max_age = cache_file.MaxAge(
         checking=config.check_max_cachefile_age,
-        discovery=int(90 * host_config.check_mk_check_interval),
-        inventory=int(90 * host_config.check_mk_check_interval),
+        discovery=int(1.5 * host_config.check_mk_check_interval),
+        inventory=int(1.5 * host_config.check_mk_check_interval),
     )
     return {
         "fetchers": [

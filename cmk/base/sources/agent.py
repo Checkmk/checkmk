@@ -63,7 +63,9 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.main_data_source: Final[bool] = main_data_source
 
     def _make_parser(self) -> AgentParser:
-        check_interval = config.HostConfig.make_host_config(self.hostname).check_mk_check_interval
+        check_interval = int(
+            config.HostConfig.make_host_config(self.hostname).check_mk_check_interval / 60
+        )
         return AgentParser(
             self.hostname,
             SectionStore[AgentRawDataSection](

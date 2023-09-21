@@ -166,8 +166,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                 use_cached_snmp_data=use_cached_snmp_data,
                 max_cachefile_age=cmk.core_helpers.cache.MaxAge(
                     checking=config.check_max_cachefile_age,
-                    discovery=int(90 * host_config.check_mk_check_interval),
-                    inventory=int(90 * host_config.check_mk_check_interval),
+                    discovery=int(1.5 * host_config.check_mk_check_interval),
+                    inventory=int(1.5 * host_config.check_mk_check_interval),
                 ),
             )
 
@@ -265,8 +265,8 @@ class AutomationTryDiscovery(Automation):
                     host_name=host_name,
                     max_cachefile_age=cmk.core_helpers.cache.MaxAge(
                         checking=config.check_max_cachefile_age,
-                        discovery=int(90 * host_config.check_mk_check_interval),
-                        inventory=int(90 * host_config.check_mk_check_interval),
+                        discovery=int(1.5 * host_config.check_mk_check_interval),
+                        inventory=int(1.5 * host_config.check_mk_check_interval),
                     ),
                     use_cached_snmp_data=use_cached_snmp_data,
                     on_error=on_error,
@@ -1401,8 +1401,8 @@ class AutomationDiagHost(Automation):
         for source in sources.make_sources(host_config, ipaddress):
             source.file_cache_max_age = cmk.core_helpers.cache.MaxAge(
                 checking=config.check_max_cachefile_age,
-                discovery=int(90 * host_config.check_mk_check_interval),
-                inventory=int(90 * host_config.check_mk_check_interval),
+                discovery=int(1.5 * host_config.check_mk_check_interval),
+                inventory=int(1.5 * host_config.check_mk_check_interval),
             )
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = source.ds(source.hostname, ipaddress, template=cmd)
@@ -1737,8 +1737,8 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources.make_sources(host_config, ipaddress):
                     source.file_cache_max_age = cmk.core_helpers.cache.MaxAge(
                         checking=config.check_max_cachefile_age,
-                        discovery=int(90 * host_config.check_mk_check_interval),
-                        inventory=int(90 * host_config.check_mk_check_interval),
+                        discovery=int(1.5 * host_config.check_mk_check_interval),
+                        inventory=int(1.5 * host_config.check_mk_check_interval),
                     )
                     if not isinstance(source, sources.agent.AgentSource):
                         continue

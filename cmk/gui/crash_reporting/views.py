@@ -15,7 +15,7 @@ from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
@@ -338,14 +338,6 @@ class CommandDeleteCrashReports(Command):
     @property
     def tables(self):
         return ["crash"]
-
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" the following %d crash %s") % (
-            len_action_rows,
-            ungettext("report", "reports", len_action_rows),
-        )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_delete_crash_reports", _("Delete"))

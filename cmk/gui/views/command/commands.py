@@ -1151,7 +1151,8 @@ class CommandScheduleDowntimes(Command):
     def tables(self):
         return ["host", "service", "aggr"]
 
-    # TODO Will be used later for the new confirm dialogs
+    # TODO Logic is possibly needed for using the new confirm dialog, keep this
+    # until implementation, remove it afterwards
     # def user_dialog_suffix(
     #    self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
     # ) -> str:

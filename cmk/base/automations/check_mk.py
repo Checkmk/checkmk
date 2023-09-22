@@ -5,6 +5,7 @@
 
 import abc
 import ast
+import functools
 import glob
 import io
 import logging
@@ -240,6 +241,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
+        ruleset_matcher = config_cache.ruleset_matcher
 
         results: dict[HostName, DiscoveryResult] = {}
 
@@ -280,7 +282,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     is_cluster=config_cache.is_cluster(hostname),
                     cluster_nodes=config_cache.nodes_of(hostname) or (),
                     active_hosts=config_cache.all_active_hosts(),
-                    ruleset_matcher=config_cache.ruleset_matcher,
+                    ruleset_matcher=ruleset_matcher,
                     parser=parser,
                     fetcher=fetcher,
                     summarizer=CMKSummarizer(
@@ -290,14 +292,14 @@ class AutomationDiscovery(DiscoveryAutomation):
                     ),
                     section_plugins=SectionPluginMapper(),
                     section_error_handling=section_error_handling,
-                    host_label_plugins=HostLabelPluginMapper(
-                        ruleset_matcher=config_cache.ruleset_matcher
-                    ),
-                    plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+                    host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+                    plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
                     ignore_service=config_cache.service_ignored,
                     ignore_plugin=config_cache.check_plugin_ignored,
                     get_effective_host=config_cache.effective_host,
-                    get_service_description=config.service_description,
+                    get_service_description=functools.partial(
+                        config.service_description, ruleset_matcher
+                    ),
                     mode=mode,
                     keep_clustered_vanished_services=True,
                     service_filters=None,
@@ -462,6 +464,7 @@ def _execute_discovery(
     )
 
     config_cache = config.get_config_cache()
+    ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
@@ -515,22 +518,22 @@ def _execute_discovery(
                 host_name=host_name,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
             check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
-                    config_cache.ruleset_matcher,
+                    ruleset_matcher,
                     host_name,
                     entry.check_plugin_name,
                     entry.item,
                     entry.parameters,
                 )
             ),
-            discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
             ignore_service=config_cache.service_ignored,
             ignore_plugin=config_cache.check_plugin_ignored,
             get_effective_host=config_cache.effective_host,
-            find_service_description=config.service_description,
+            find_service_description=functools.partial(config.service_description, ruleset_matcher),
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
         )
@@ -590,9 +593,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
     section_plugins = SectionPluginMapper()
-    host_label_plugins = HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
-    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
-    get_service_description = config.service_description
+    host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
+    plugins = DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher)
+    get_service_description = functools.partial(config.service_description, ruleset_matcher)
     on_error = OnError.IGNORE
 
     for host_name in autodiscovery_queue:
@@ -658,7 +661,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             is_cluster=config_cache.is_cluster(host_name),
                             cluster_nodes=config_cache.nodes_of(host_name) or (),
                             active_hosts=config_cache.all_active_hosts(),
-                            ruleset_matcher=config_cache.ruleset_matcher,
+                            ruleset_matcher=ruleset_matcher,
                             parser=parser,
                             fetcher=fetcher,
                             summarizer=CMKSummarizer(
@@ -671,7 +674,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             ignore_service=config_cache.service_ignored,
                             ignore_plugin=config_cache.check_plugin_ignored,
                             get_effective_host=config_cache.effective_host,
-                            get_service_description=get_service_description,
+                            get_service_description=(
+                                functools.partial(get_service_description, ruleset_matcher)
+                            ),
                             schedule_discovery_check=_schedule_discovery_check,
                             rediscovery_parameters=params.rediscovery,
                             invalidate_host_config=config_cache.invalidate_host_config,
@@ -773,7 +778,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 hostname,
                 new_services,
                 config_cache.effective_host,
-                config.service_description,
+                functools.partial(config.service_description, config_cache.ruleset_matcher),
             )
         else:
             set_autochecks_of_real_hosts(hostname, new_services)
@@ -1185,8 +1190,7 @@ class AutomationGetServicesLabels(Automation):
     def execute(self, args: list[str]) -> GetServicesLabelsResult:
         host_name, services = HostName(args[0]), args[1:]
         ruleset_matcher = config.get_config_cache().ruleset_matcher
-        config_cache = config.get_config_cache()
-        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return GetServicesLabelsResult(
             {service: ruleset_matcher.labels_of_service(host_name, service) for service in services}
         )

@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import functools
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from typing import NamedTuple
@@ -1505,17 +1506,19 @@ def test__discover_services_on_cluster(
         return
 
     scenario = cluster_scenario
-    nodes = scenario.config_cache.nodes_of(scenario.parent)
+    config_cache = scenario.config_cache
+    ruleset_matcher = config_cache.ruleset_matcher
+    nodes = config_cache.nodes_of(scenario.parent)
     assert nodes is not None
 
     discovered_services = _get_cluster_services(
         scenario.parent,
         cluster_nodes=nodes,
         providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
+        plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
         ignore_plugin=lambda *args, **kw: False,
         get_effective_host=lambda *args, **kw: scenario.parent,
-        get_service_description=config.service_description,
+        get_service_description=functools.partial(config.service_description, ruleset_matcher),
         on_error=OnError.RAISE,
     )
 

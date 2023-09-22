@@ -531,7 +531,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             description = config.get_final_service_description(
-                hostname, entry["service_description"]
+                config_cache.ruleset_matcher, hostname, entry["service_description"]
             )
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

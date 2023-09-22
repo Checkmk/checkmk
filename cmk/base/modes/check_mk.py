@@ -1195,6 +1195,7 @@ modes.register(
 
 def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
+    ruleset_matcher = config_cache.ruleset_matcher
 
     if not hosts:
         hosts = sorted(config_cache.all_active_hosts())
@@ -1251,7 +1252,10 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
         # autochecks
         count = sum(
             remove_autochecks_of_host(
-                node, host, config_cache.effective_host, config.service_description
+                node,
+                host,
+                config_cache.effective_host,
+                partial(config.service_description, ruleset_matcher),
             )
             for node in config_cache.nodes_of(host) or [host]
         )
@@ -1630,7 +1634,8 @@ def mode_check_discovery(
     file_cache_options = _handle_fetcher_options(options)
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    ruleset_matcher = config_cache.ruleset_matcher
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1681,14 +1686,12 @@ def mode_check_discovery(
                     host_name=hostname,
                     rtc_package=None,
                 ),
-                host_label_plugins=HostLabelPluginMapper(
-                    ruleset_matcher=config_cache.ruleset_matcher
-                ),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+                host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
                 ignore_service=config_cache.service_ignored,
                 ignore_plugin=config_cache.check_plugin_ignored,
                 get_effective_host=config_cache.effective_host,
-                find_service_description=config.service_description,
+                find_service_description=partial(config.service_description, ruleset_matcher),
                 enforced_services=config_cache.enforced_services_table(hostname),
             )
 

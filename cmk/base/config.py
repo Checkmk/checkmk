@@ -1199,11 +1199,11 @@ def get_plugin_parameters(
 
 
 def service_description(
+    matcher: RulesetMatcher,
     hostname: HostName,
     check_plugin_name: CheckPluginName,
     item: Item,
 ) -> ServiceName:
-    config_cache = get_config_cache()
     check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if check_plugin is None:
         if item:
@@ -1230,7 +1230,7 @@ def service_description(
         function=__discovery_function,
         parameters=functools.partial(
             get_plugin_parameters,
-            matcher=config_cache.ruleset_matcher,
+            matcher=matcher,
             default_parameters=check_plugin.discovery_default_parameters,
             ruleset_name=check_plugin.discovery_ruleset_name,
             ruleset_type=check_plugin.discovery_ruleset_type,
@@ -1239,6 +1239,7 @@ def service_description(
     )
 
     return get_final_service_description(
+        matcher,
         hostname,
         _format_item_with_template(
             *_get_service_description_template_and_item(check_plugin_name, plugin, item)
@@ -1278,8 +1279,10 @@ def _format_item_with_template(template: str, item: Item) -> str:
         return f"{template} {item or ''}".strip()
 
 
-def get_final_service_description(hostname: HostName, description: ServiceName) -> ServiceName:
-    translations = get_service_translations(hostname)
+def get_final_service_description(
+    matcher: RulesetMatcher, hostname: HostName, description: ServiceName
+) -> ServiceName:
+    translations = get_service_translations(matcher, hostname)
     # Note: at least strip the service description.
     # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
     # and trailing spaces in the configuration file.
@@ -1367,15 +1370,14 @@ def get_piggyback_translations(
     return translations
 
 
-def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
+def get_service_translations(
+    matcher: RulesetMatcher, hostname: HostName
+) -> cmk.utils.translations.TranslationOptions:
     translations_cache = cache_manager.obtain_cache("service_description_translations")
     with contextlib.suppress(KeyError):
         return translations_cache[hostname]
 
-    rules = get_config_cache().ruleset_matcher.get_host_values(
-        hostname, service_description_translation
-    )
-    rule: cmk.utils.translations.TranslationOptionsSpec
+    rules = matcher.get_host_values(hostname, service_description_translation)
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         if "case" in rule:
@@ -1953,7 +1955,7 @@ def _get_configured_parameters(
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
-    descr = service_description(host, plugin_name, item)
+    descr = service_description(matcher, host, plugin_name, item)
 
     # parameters configured via check_parameters
     extra = [
@@ -2307,7 +2309,7 @@ class ConfigCache:
             for label in self._autochecks_manager.discovered_labels_of(
                 hostname,
                 service_desc,
-                functools.partial(service_description),
+                functools.partial(service_description, self.ruleset_matcher),
             ).values()
         }
 
@@ -2527,7 +2529,11 @@ class ConfigCache:
                     ConfigCache._sanitize_enforced_entry(*entry)
                     for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
                 )
-                if (descr := service_description(hostname, check_plugin_name, item))
+                if (
+                    descr := service_description(
+                        self.ruleset_matcher, hostname, check_plugin_name, item
+                    )
+                )
             },
         )
 
@@ -3567,7 +3573,7 @@ class ConfigCache:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             functools.partial(compute_check_parameters, self.ruleset_matcher),
-            functools.partial(service_description),
+            functools.partial(service_description, self.ruleset_matcher),
             self.effective_host,
         )
 

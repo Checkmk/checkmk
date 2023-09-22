@@ -37,8 +37,9 @@ def reset_config() -> None:
 def service_description(
     hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
 ) -> str:
-    _load_config()
-    return config.service_description(hostname, CheckPluginName(check_plugin_name), item)
+    return config.service_description(
+        get_ruleset_matcher(), hostname, CheckPluginName(check_plugin_name), item
+    )
 
 
 def get_ruleset_matcher() -> RulesetMatcher:

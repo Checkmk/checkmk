@@ -165,8 +165,10 @@ def _get_effective_service_level(
     """Get the service level that applies to the current service."""
 
     host = HostName(host_name())
-    service_description = cmk.base.config.service_description(host, plugin_name, item)
     config_cache = cmk.base.config.get_config_cache()
+    service_description = cmk.base.config.service_description(
+        config_cache.ruleset_matcher, host, plugin_name, item
+    )
     service_level = config_cache.service_level_of_service(host, service_description)
     if service_level is not None:
         return service_level

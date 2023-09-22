@@ -202,7 +202,8 @@ class ActiveCheckConfig:
             "$HOSTALIAS$", self.host_alias
         )
 
-        return base_config.get_final_service_description(self.host_name, description)
+        matcher = base_config.get_config_cache().ruleset_matcher
+        return base_config.get_final_service_description(matcher, self.host_name, description)
 
     def _iter_active_check_services(
         self,

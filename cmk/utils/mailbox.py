@@ -306,7 +306,7 @@ class Mailbox:
             self._connection = connection
 
         def _connect_ews() -> None:
-            if self._args.no_cert_check:
+            if self._args.fetch_no_cert_check:
                 protocol.BaseProtocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
 
             primary_smtp_address = self._args.fetch_email_address or self._args.fetch_username
@@ -667,7 +667,7 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         help="Use TLS/SSL for feching the mailbox (disabled by default)",
     )
     parser.add_argument(
-        "--no-cert-check",
+        "--fetch-no-cert-check",
         "--fetch-disable-cert-validation",
         action="store_true",
         help="Don't enforce SSL/TLS certificate validation",

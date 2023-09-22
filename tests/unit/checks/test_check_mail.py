@@ -18,7 +18,7 @@ pytestmark = pytest.mark.checks
                 "fetch": (
                     "IMAP",
                     {
-                        "connection": {"disable_tls": False, "tcp_port": 143},
+                        "connection": {"disable_tls": False, "port": 143},
                         "auth": ("basic", ("foo", "bar")),
                     },
                 ),
@@ -40,7 +40,7 @@ pytestmark = pytest.mark.checks
                 "fetch": (
                     "EWS",
                     {
-                        "connection": {"disable_tls": True, "tcp_port": 143},
+                        "connection": {"disable_tls": True, "port": 143},
                         "auth": ("basic", ("foo", "bar")),
                     },
                 ),
@@ -62,7 +62,7 @@ pytestmark = pytest.mark.checks
                     "EWS",
                     {
                         "server": "$HOSTNAME$",
-                        "connection": {"disable_tls": True, "tcp_port": 143},
+                        "connection": {"disable_tls": True, "port": 143},
                         "auth": (
                             "oauth2",
                             ("client_id", ("password", "client_secret"), "tenant_id"),
@@ -92,7 +92,7 @@ pytestmark = pytest.mark.checks
                     {
                         "server": "imap.gmx.de",
                         "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
-                        "connection": {"disable_tls": True, "tcp_port": 123},
+                        "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
                 "forward": {

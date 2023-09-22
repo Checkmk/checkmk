@@ -34,25 +34,25 @@ MailDict = Dict[str, MailID]
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--smtp-server",
+        "--send-server",
         type=str,
         required=True,
         metavar="ADDRESS",
         help="Host address of the SMTP server to send the mail to",
     )
+    parser.add_argument("--send-tls", action="store_true", help="Use TLS over SMTP")
     parser.add_argument(
-        "--smtp-port", type=int, metavar="PORT", help="Port to use for SMTP (defaults to 25)"
+        "--send-port", type=int, metavar="PORT", help="Port to use for SMTP (defaults to 25)"
     )
     parser.add_argument(
-        "--smtp-username",
+        "--send-username",
         type=str,
         metavar="USER",
         help="Username to use for SMTP communictation " "(leave empty for anonymous SMTP)",
     )
     parser.add_argument(
-        "--smtp-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP"
+        "--send-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP"
     )
-    parser.add_argument("--smtp-tls", action="store_true", help="Use TLS over SMTP")
 
     parser.add_argument(
         "--mail-from", type=str, required=True, help="Use this mail address as sender address"
@@ -146,11 +146,11 @@ def _send_mail(args: Args) -> Tuple[str, MailID]:
     mail["Subject"] = "%s %d %d" % (args.subject, now, key)
     mail["Date"] = email.utils.formatdate(localtime=True)
 
-    with smtplib.SMTP(args.smtp_server, args.smtp_port, timeout=args.connect_timeout) as connection:
-        if args.smtp_tls:
+    with smtplib.SMTP(args.send_server, args.send_port, timeout=args.connect_timeout) as connection:
+        if args.send_tls:
             connection.starttls()
-        if args.smtp_username:
-            connection.login(args.smtp_username, args.smtp_password)
+        if args.send_username:
+            connection.login(args.send_username, args.send_password)
         connection.sendmail(args.mail_from, args.mail_to, mail.as_string())
         connection.quit()
         return "%d-%d" % (now, key), (now, key)

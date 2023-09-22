@@ -1925,7 +1925,8 @@ def _preprocess_hostnames(
 
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
-    hostnames = modes.parse_hostname_list(args)
+    config_cache = config.get_config_cache()
+    hostnames = modes.parse_hostname_list(config_cache, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -1936,7 +1937,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
 
     file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
-    hostnames = modes.parse_hostname_list(args)
+    hostnames = modes.parse_hostname_list(config_cache, args)
     config_cache = config.get_config_cache()
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
@@ -2297,7 +2298,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
 
     if args:
-        hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        hostnames = modes.parse_hostname_list(config_cache, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:

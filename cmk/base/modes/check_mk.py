@@ -44,6 +44,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnErr
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console, section
 from cmk.utils.resulttype import Result
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -270,22 +271,28 @@ _FETCHER_OPTIONS: Final = [
 
 
 def mode_list_hosts(options: dict, args: list[str]) -> None:
-    hosts = _list_all_hosts(args, options)
+    config_cache = config.get_config_cache()
+    hosts = _list_all_hosts(
+        config_cache,
+        config_cache.ruleset_matcher,
+        args,
+        options,
+    )
     out.output("\n".join(hosts))
     if hosts:
         out.output("\n")
 
 
 # TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(hostgroups: list[str], options: dict) -> list[HostName]:
-    config_cache = config.get_config_cache()
-
+def _list_all_hosts(
+    config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
+) -> list[HostName]:
     hostnames = set()
 
     if options.get("all-sites"):
         hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
         if "include-offline" not in options:
-            hostnames -= config.all_configured_offline_hosts()
+            hostnames -= config.all_configured_offline_hosts(config_cache, ruleset_matcher)
     else:
         hostnames.update(config_cache.all_active_hosts())
         if "include-offline" in options:

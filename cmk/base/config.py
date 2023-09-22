@@ -1017,9 +1017,9 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
     }
 
 
-def all_configured_offline_hosts() -> set[HostName]:
-    config_cache = get_config_cache()
-    matcher = config_cache.ruleset_matcher
+def all_configured_offline_hosts(
+    config_cache: ConfigCache, matcher: RulesetMatcher
+) -> set[HostName]:
     hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
 
     if only_hosts is None:

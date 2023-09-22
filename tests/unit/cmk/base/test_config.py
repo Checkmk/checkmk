@@ -1641,7 +1641,7 @@ def test_get_sorted_check_table_no_cmc(
     monkeypatch.setattr(
         config,
         "service_depends_on",
-        lambda _hn, descr: {
+        lambda _cc, _hn, descr: {
             "description A": ["description C"],
             "description B": ["description D"],
             "description D": ["description A", "description F"],
@@ -1672,7 +1672,7 @@ def test_resolve_service_dependencies_cyclic(
     monkeypatch.setattr(
         config,
         "service_depends_on",
-        lambda _, descr: {
+        lambda _cc, _hn, descr: {
             "description A": ["description B"],
             "description B": ["description D"],
             "description D": ["description A"],
@@ -1691,8 +1691,9 @@ def test_resolve_service_dependencies_cyclic(
         config_cache.configured_services(HostName("MyHost"))
 
 
-def test_service_depends_on_unknown_host() -> None:
-    assert not config.service_depends_on(HostName("test-host"), "svc")
+def test_service_depends_on_unknown_host(monkeypatch: MonkeyPatch) -> None:
+    config_cache = Scenario().apply(monkeypatch)
+    assert not config.service_depends_on(config_cache, HostName("test-host"), "svc")
 
 
 def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
@@ -1707,11 +1708,11 @@ def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
             ("dep-disabled", [], config.ALL_HOSTS, ["svc1"], {"disabled": True}),
         ],
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert not config.service_depends_on(test_host, "svc2")
-    assert config.service_depends_on(test_host, "svc1") == ["dep1"]
-    assert config.service_depends_on(test_host, "svc1-abc") == ["dep1", "dep2-abc"]
+    assert not config.service_depends_on(config_cache, test_host, "svc2")
+    assert config.service_depends_on(config_cache, test_host, "svc1") == ["dep1"]
+    assert config.service_depends_on(config_cache, test_host, "svc1-abc") == ["dep1", "dep2-abc"]
 
 
 @pytest.fixture(name="cluster_config")

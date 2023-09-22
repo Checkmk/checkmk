@@ -1306,10 +1306,11 @@ def get_final_service_description(
 # b) It only affects the Nagios core - CMC does not implement service dependencies
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
-def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
+def service_depends_on(
+    config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
+) -> list[ServiceName]:
     """Return a list of services this services depends upon"""
     deps = []
-    config_cache = get_config_cache()
     for entry in service_dependencies:
         entry, rule_options = tuple_rulesets.get_rule_options(entry)
         if rule_options.get("disabled"):
@@ -2463,7 +2464,7 @@ class ConfigCache:
         if is_cmc():
             return services
 
-        unresolved = [(s, set(service_depends_on(hostname, s.description))) for s in services]
+        unresolved = [(s, set(service_depends_on(self, hostname, s.description))) for s in services]
 
         resolved: list[ConfiguredService] = []
         while unresolved:

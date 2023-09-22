@@ -383,7 +383,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     def get_dependencies(hostname: HostName, servicedesc: ServiceName) -> str:
         result = ""
-        for dep in config.service_depends_on(hostname, servicedesc):
+        for dep in config.service_depends_on(config_cache, hostname, servicedesc):
             result += _format_nagios_object(
                 "servicedependency",
                 {

@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 INSTALL_PREFIX=""
 CLANG_VERSION=""
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 
 failure() {
     echo "$(basename "$0"):" "$@" >&2

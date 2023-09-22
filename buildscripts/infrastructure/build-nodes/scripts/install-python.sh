@@ -35,14 +35,14 @@ OPENSSL_VERSION=1.1.1t
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=5
 
 build_package() {
-    mkdir -p /opt/src
-    cd /opt/src
+    mkdir -p "$TARGET_DIR/src"
+    cd "$TARGET_DIR/src"
 
     # Get the sources from nexus or upstream
     mirrored_download "${ARCHIVE_NAME}" "https://www.python.org/ftp/python/${PYTHON_VERSION}/${ARCHIVE_NAME}"
@@ -62,8 +62,8 @@ build_package() {
     make -j2
     make install
 
-    cd /opt
-    rm -rf /opt/src
+    cd "$TARGET_DIR"
+    rm -rf "$TARGET_DIR/src"
 }
 
 if [ "$1" != "link-only" ]; then

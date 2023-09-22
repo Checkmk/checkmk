@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 OPENSSL_VERSION=1.1.1t
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 
 # OpenSSL "config" seems to have problems with detecting 32bit architecture in some cases
 CONFIG_COMMAND=config
@@ -21,8 +21,8 @@ CONFIG_COMMAND=config
 BUILD_ID=4
 
 build_package() {
-    mkdir -p /opt/src
-    cd /opt/src
+    mkdir -p "$TARGET_DIR/src"
+    cd "$TARGET_DIR/src"
 
     # Get the sources from nexus or upstream
     mirrored_download "${ARCHIVE_NAME}" "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
@@ -34,8 +34,8 @@ build_package() {
     make -j6
     make install
 
-    cd /opt
-    rm -rf /opt/src
+    cd "$TARGET_DIR"
+    rm -rf "$TARGET_DIR/src"
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

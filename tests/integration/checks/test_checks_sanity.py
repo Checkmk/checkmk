@@ -18,6 +18,8 @@ from cmk.utils.hostaddress import HostName
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(site: Site, tmp_path: Path) -> Path:
+    if site.version.is_raw_edition():
+        pytest.skip("Downloading the agent in raw edition currently broken")  # TODO: investigate
     return download_and_install_agent_package(site, tmp_path)
 
 
@@ -33,9 +35,6 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 @pytest.mark.enable_socket
 def test_checks_sanity(site: Site, agent_ctl: Path) -> None:
     """Assert sanity of the discovered checks."""
-    if site.version.is_raw_edition():
-        pytest.skip("Downloading the agent in raw edition currently broken")  # TODO: investigate
-
     hostname = HostName("host-0")
     site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
     site.activate_changes_and_wait_for_core_reload()

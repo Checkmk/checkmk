@@ -29,16 +29,28 @@ def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> Non
             if sender_full_name:
                 cmd += ["-F", sender_full_name]
             cmd += ["-f", sender_address]
-            # Also skip empty target addresses, nullmailer would fail
-            target = ",".join(list(filter(None, target.split(","))))
         else:
             cmd += ["-F", from_address, "-f", from_address]
+
+    # Skip empty target addresses, nullmailer would fail on appliances and in
+    # docker container
+    if cmk_version.is_cma() or _is_containerized():
+        target = ",".join(list(filter(None, target.split(","))))
     cmd += ["-i", target]
 
     completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
 
     if completed_process.returncode:
         raise RuntimeError("sendmail returned with exit code: %d" % completed_process.returncode)
+
+
+# duplicate from omdlib
+def _is_containerized() -> bool:
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.exists("/run/.containerenv")
+        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
+    )
 
 
 def _sendmail_path() -> str:

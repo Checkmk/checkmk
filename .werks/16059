@@ -1,0 +1,18 @@
+Title: Fix possible failed notifications running in docker environment
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1695386294
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p11
+
+Werk #15941 already fixed failed notifications on appliances if one recipient had
+no Email address configured.
+
+We have now seen the same behaviour when running Checkmk in a docker container
+because Nullmailer can not handle such recipients.
+
+

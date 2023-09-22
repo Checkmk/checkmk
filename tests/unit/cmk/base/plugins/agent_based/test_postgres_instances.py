@@ -13,6 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.postgres_instances import (
     check_postgres_instances,
+    check_postgres_processes,
     discover_postgres_instances,
     parse_postgres_instances,
     parse_postgres_version,
@@ -186,3 +187,36 @@ def test_check_postgres_instances(
         )
         == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    ["instances_string_table", "expected_results"],
+    [
+        pytest.param(
+            STRING_TABLE_instance2,
+            [
+                Result(state=State.CRIT, summary="0", details="No process matched"),
+            ],
+        ),
+        pytest.param(
+            STRING_TABLE_instance1 + STRING_TABLE_instance2,
+            [
+                Result(state=State.OK, summary="1", details="PIDs"),
+                Result(state=State.OK, notice="30611"),
+            ],
+        ),
+        pytest.param(
+            STRING_TABLE_legacy,
+            [
+                Result(state=State.OK, summary="1", details="PIDs"),
+                Result(state=State.OK, notice="14278"),
+            ],
+        ),
+    ],
+)
+def test_check_postgres_processes(
+    instances_string_table: StringTable, expected_results: CheckResult
+) -> None:
+    section = parse_postgres_instances(instances_string_table)
+    results = list(check_postgres_processes(section))
+    assert results == expected_results

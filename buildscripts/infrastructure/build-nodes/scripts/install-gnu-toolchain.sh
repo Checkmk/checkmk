@@ -27,9 +27,9 @@ GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
 DIR_NAME=gcc-${GCC_VERSION}
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
-BUILD_DIR=/opt/src
+BUILD_DIR="${TARGET_DIR}/src"
 
 # Increase this to enforce a recreation of the build cache
 # NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
@@ -61,7 +61,7 @@ download_sources() {
 
 build_binutils() {
     log "Build binutils-${BINUTILS_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
@@ -88,7 +88,7 @@ build_binutils() {
 
 build_gcc() {
     log "Build gcc-${GCC_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
     mkdir "gcc-${GCC_VERSION}-build"
     cd "gcc-${GCC_VERSION}-build"
@@ -104,7 +104,7 @@ build_gcc() {
 
 build_gdb() {
     log "Build gdb-${GDB_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf gdb-${GDB_VERSION}.tar.gz
     mkdir gdb-${GDB_VERSION}-build
     cd gdb-${GDB_VERSION}-build
@@ -136,16 +136,16 @@ set_symlinks() {
 }
 
 build_package() {
-    mkdir -p /opt/src
-    cd /opt/src
+    mkdir -p "$TARGET_DIR/src"
+    cd "$TARGET_DIR/src"
 
     download_sources
     build_binutils
     build_gcc
     build_gdb
 
-    cd /opt
-    rm -rf /opt/src
+    cd "$TARGET_DIR"
+    rm -rf "$TARGET_DIR/src"
 }
 
 if [ "$1" != "link-only" ]; then

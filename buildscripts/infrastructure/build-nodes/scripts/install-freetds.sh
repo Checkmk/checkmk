@@ -12,14 +12,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 FREETDS_VERSION=0.95.95
 DIR_NAME=freetds-${FREETDS_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=1
 
 build_package() {
-    mkdir -p /opt/src
-    cd /opt/src
+    mkdir -p "$TARGET_DIR/src"
+    cd "$TARGET_DIR/src"
 
     # Get the sources from nexus or upstream
     mirrored_download "${ARCHIVE_NAME}" "https://www.freetds.org/files/stable/freetds-${FREETDS_VERSION}.tar.gz"
@@ -39,8 +39,8 @@ build_package() {
     make -j4
     make install
 
-    cd /opt
-    rm -rf /opt/src
+    cd "$TARGET_DIR"
+    rm -rf "$TARGET_DIR/src"
 }
 
 register_library() {

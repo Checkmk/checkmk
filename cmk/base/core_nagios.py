@@ -473,7 +473,9 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     active_checks = config_cache.active_checks(hostname)
     actchecks = [name for name, params in active_checks if params]
-    for service_data in active_check_config.get_active_service_data(active_checks):
+    for service_data in active_check_config.get_active_service_data(
+        config_cache.ruleset_matcher, active_checks
+    ):
         if do_omit_service(hostname, service_data.description):
             continue
 

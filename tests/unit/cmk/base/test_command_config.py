@@ -259,7 +259,9 @@ def test_get_active_service_data(
         hostname, host_attrs, macros, stored_passwords=password_store.load()
     )
 
-    services = list(active_check_config.get_active_service_data(active_checks))
+    services = list(
+        active_check_config.get_active_service_data(cache.ruleset_matcher, active_checks)
+    )
     assert services == expected_result
 
 
@@ -333,7 +335,9 @@ def test_get_active_service_data_warnings(
         hostname, host_attrs, stored_passwords=password_store.load()
     )
 
-    services = list(active_check_config.get_active_service_data(active_checks))
+    services = list(
+        active_check_config.get_active_service_data(cache.ruleset_matcher, active_checks)
+    )
     assert services == expected_result
 
     captured = capsys.readouterr()
@@ -463,7 +467,9 @@ def test_get_active_service_descriptions(
 
     active_check_config = ActiveCheckConfig(hostname, host_attrs)
 
-    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
+    descriptions = list(
+        active_check_config.get_active_service_descriptions(cache.ruleset_matcher, active_checks)
+    )
     assert descriptions == expected_result
 
 
@@ -512,7 +518,9 @@ def test_get_active_service_descriptions_warnings(
 
     active_check_config = ActiveCheckConfig(hostname, host_attrs)
 
-    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
+    descriptions = list(
+        active_check_config.get_active_service_descriptions(cache.ruleset_matcher, active_checks)
+    )
     assert descriptions == expected_result
 
     captured = capsys.readouterr()

@@ -9,6 +9,7 @@ from typing import Literal
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.servicename import ServiceName
 
 import cmk.base.config as base_config
@@ -99,7 +100,9 @@ class ActiveCheckConfig:
         self.escape_func = escape_func
 
     def get_active_service_data(
-        self, active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        self,
+        matcher: RulesetMatcher,
+        active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -114,7 +117,7 @@ class ActiveCheckConfig:
                     )
                     try:
                         yield from self._get_legacy_service_data(
-                            plugin_name, plugin_params, plugin_info
+                            matcher, plugin_name, plugin_params, plugin_info
                         )
                     except InvalidPluginInfoError:
                         config_warnings.warn(
@@ -125,6 +128,7 @@ class ActiveCheckConfig:
 
     def _get_legacy_service_data(
         self,
+        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
         plugin_info: PluginInfo,
@@ -133,7 +137,7 @@ class ActiveCheckConfig:
 
         for params in plugin_params:
             for description, args in self._iter_active_check_services(
-                plugin_name, plugin_info, params
+                matcher, plugin_name, plugin_info, params
             ):
                 if not description:
                     config_warnings.warn(
@@ -188,7 +192,11 @@ class ActiveCheckConfig:
         return name[1:] if name.startswith("^") else "HTTP %s" % name
 
     def _active_check_service_description(
-        self, plugin_name: str, plugin_info: PluginInfo, params: Mapping[str, object]
+        self,
+        matcher: RulesetMatcher,
+        plugin_name: str,
+        plugin_info: PluginInfo,
+        params: Mapping[str, object],
     ) -> ServiceName:
         if not plugin_info.service_description:
             raise InvalidPluginInfoError
@@ -202,11 +210,11 @@ class ActiveCheckConfig:
             "$HOSTALIAS$", self.host_alias
         )
 
-        matcher = base_config.get_config_cache().ruleset_matcher
         return base_config.get_final_service_description(matcher, self.host_name, description)
 
     def _iter_active_check_services(
         self,
+        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_info: PluginInfo,
         params: Mapping[str, object],
@@ -218,7 +226,9 @@ class ActiveCheckConfig:
                 yield str(desc), str(args)
             return
 
-        description = self._active_check_service_description(plugin_name, plugin_info, params)
+        description = self._active_check_service_description(
+            matcher, plugin_name, plugin_info, params
+        )
 
         if not plugin_info.argument_function:
             raise InvalidPluginInfoError
@@ -232,7 +242,9 @@ class ActiveCheckConfig:
         yield description, arguments
 
     def get_active_service_descriptions(
-        self, active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        self,
+        matcher: RulesetMatcher,
+        active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -247,7 +259,7 @@ class ActiveCheckConfig:
                     )
                     try:
                         yield from self._get_legacy_service_descriptions(
-                            plugin_name, plugin_params, plugin_info
+                            matcher, plugin_name, plugin_params, plugin_info
                         )
                     except InvalidPluginInfoError:
                         config_warnings.warn(
@@ -258,6 +270,7 @@ class ActiveCheckConfig:
 
     def _get_legacy_service_descriptions(
         self,
+        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
         plugin_info: PluginInfo,
@@ -270,5 +283,7 @@ class ActiveCheckConfig:
                     yield ActiveServiceDescription(plugin_name, str(description), params)
                 return
 
-            description = self._active_check_service_description(plugin_name, plugin_info, params)
+            description = self._active_check_service_description(
+                matcher, plugin_name, plugin_info, params
+            )
             yield ActiveServiceDescription(plugin_name, str(description), params)

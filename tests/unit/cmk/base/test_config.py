@@ -70,8 +70,8 @@ def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == set()
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == set()
 
 
 def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) -> None:
@@ -91,8 +91,8 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
         tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
     )
     ts.add_host(HostName("bla"))
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == {"blub1"}
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
 
 
 def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -114,8 +114,8 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
         HostName("blub2"),
         tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
     )
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == {"blub1"}
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
 
 
 def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:

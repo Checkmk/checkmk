@@ -289,7 +289,7 @@ def _list_all_hosts(hostgroups: list[str], options: dict) -> list[HostName]:
     else:
         hostnames.update(config_cache.all_active_hosts())
         if "include-offline" in options:
-            hostnames.update(config.all_offline_hosts())
+            hostnames.update(config.all_offline_hosts(config_cache, config_cache.ruleset_matcher))
 
     if not hostgroups:
         return sorted(hostnames)
@@ -354,7 +354,7 @@ def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
     hosts = []
 
     if "offline" in tags:
-        hostlist = config.all_offline_hosts()
+        hostlist = config.all_offline_hosts(config_cache, config_cache.ruleset_matcher)
     else:
         hostlist = config_cache.all_active_hosts()
 

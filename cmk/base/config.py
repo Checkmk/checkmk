@@ -1000,10 +1000,7 @@ def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
 # are the hosts which have the tag "offline".
 #
 # This is not optimized for performance, so use in specific situations.
-def all_offline_hosts() -> set[HostName]:
-    config_cache = get_config_cache()
-    matcher = config_cache.ruleset_matcher
-
+def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set[HostName]:
     hostlist = set(
         _filter_active_hosts(
             matcher,

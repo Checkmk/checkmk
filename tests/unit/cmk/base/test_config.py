@@ -47,11 +47,23 @@ from cmk.base.ip_lookup import AddressFamily
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
+    hostnames = (
+        HostName("un"),
+        HostName("deux"),
+        HostName("deux"),
+        HostName("trois"),
+        HostName("trois"),
+        HostName("trois"),
+    )
     ts = Scenario()
-    for hostname in map(HostName, ["bla1", "bla1", "zzz", "zzz", "yyy"]):
+    for hostname in hostnames:
         ts.add_host(hostname)
-    ts.apply(monkeypatch)
-    assert config.duplicate_hosts() == ["bla1", "zzz"]
+    config_cache = ts.apply(monkeypatch)
+
+    # Routine uses global variables `cmk.base.config.all_hosts`
+    # and `cmk.base.config.clusters` so we have to obtain the
+    # `RulesetMatcher` from the `ConfigCache`.
+    assert config.duplicate_hosts(config_cache.ruleset_matcher) == ["deux", "trois"]
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

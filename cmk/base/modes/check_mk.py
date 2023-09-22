@@ -1345,12 +1345,13 @@ modes.register(
 def mode_update() -> None:
     from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
 
+    config_cache = config.get_config_cache()
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
-                config_cache=config.get_config_cache(),
-                duplicates=config.duplicate_hosts(),
+                config_cache=config_cache,
+                duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
             )
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)
@@ -1388,11 +1389,13 @@ modes.register(
 
 
 def mode_restart(args: Sequence[HostName]) -> None:
+    config_cache = config.get_config_cache()
     cmk.base.core.do_restart(
+        config_cache,
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        duplicates=config.duplicate_hosts(),
+        duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
     )
 
 
@@ -1425,11 +1428,13 @@ modes.register(
 
 
 def mode_reload(args: Sequence[HostName]) -> None:
+    config_cache = config.get_config_cache()
     cmk.base.core.do_reload(
+        config_cache,
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        duplicates=config.duplicate_hosts(),
+        duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
     )
 
 

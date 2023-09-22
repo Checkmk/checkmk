@@ -570,6 +570,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
+    ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
@@ -702,15 +703,17 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
             # reset these to their original value to create a correct config
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
+                    config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
+                    duplicates=config.duplicate_hosts(ruleset_matcher),
                 )
             else:
                 cmk.base.core.do_restart(
+                    config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
+                    duplicates=config.duplicate_hosts(ruleset_matcher),
                 )
         finally:
             cache_manager.clear_all()
@@ -887,7 +890,10 @@ class AutomationRenameHosts(Automation):
                 # In this case the configuration is already locked by the caller of the automation.
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
-                _execute_silently(CoreAction.START, skip_config_locking_for_bakery=True)
+                config_cache = config.get_config_cache()
+                _execute_silently(
+                    config_cache, CoreAction.START, skip_config_locking_for_bakery=True
+                )
 
                 for hostname in config.failed_ip_lookups():
                     actions.append("dnsfail-" + hostname)
@@ -1492,7 +1498,8 @@ class AutomationRestart(Automation):
             nodes = {HostName(hn) for hn in args}
         else:
             nodes = None
-        return _execute_silently(self._mode(), nodes)
+        config_cache = config.get_config_cache()
+        return _execute_silently(config_cache, self._mode(), nodes)
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1544,6 +1551,7 @@ automations.register(AutomationReload())
 
 
 def _execute_silently(
+    config_cache: ConfigCache,
     action: CoreAction,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
@@ -1552,11 +1560,12 @@ def _execute_silently(
         log.setup_console_logging()
         try:
             do_restart(
+                config_cache,
                 create_core(config.monitoring_core),
                 action,
                 hosts_to_update=hosts_to_update,
                 locking_mode=config.restart_locking,
-                duplicates=config.duplicate_hosts(),
+                duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:

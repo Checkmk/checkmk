@@ -506,7 +506,7 @@ def load(
     _perform_post_config_loading_actions()
 
     if validate_hosts:
-        _verify_non_duplicate_hosts()
+        _verify_non_duplicate_hosts(get_config_cache().ruleset_matcher)
 
 
 def load_packed_config(config_path: ConfigPath) -> None:
@@ -736,8 +736,8 @@ def get_derived_config_variable_names() -> set[str]:
     return {"service_service_levels", "host_service_levels"}
 
 
-def _verify_non_duplicate_hosts() -> None:
-    if duplicates := duplicate_hosts():
+def _verify_non_duplicate_hosts(matcher: RulesetMatcher) -> None:
+    if duplicates := duplicate_hosts(matcher):
         # TODO: Raise an exception
         console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
         sys.exit(3)
@@ -980,14 +980,14 @@ def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     )
 
 
-def duplicate_hosts() -> Sequence[HostName]:
+def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
     return sorted(
         hostname
         for hostname, count in Counter(
             # This function should only be used during duplicate host check! It has to work like
             # all_active_hosts() but with the difference that duplicates are not removed.
             _filter_active_hosts(
-                get_config_cache().ruleset_matcher,
+                matcher,
                 strip_tags(list(all_hosts) + list(clusters) + list(get_shadow_hosts())),
             )
         ).items()

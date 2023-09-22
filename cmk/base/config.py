@@ -1356,9 +1356,11 @@ def is_cmc() -> bool:
     return monitoring_core == "cmc"
 
 
-def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
+def get_piggyback_translations(
+    matcher: RulesetMatcher, hostname: HostName
+) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
-    rules = get_config_cache().ruleset_matcher.get_host_values(hostname, piggyback_translation)
+    rules = matcher.get_host_values(hostname, piggyback_translation)
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         translations.update(rule)
@@ -2289,7 +2291,7 @@ class ConfigCache:
             section_store,
             keep_outdated=keep_outdated,
             check_interval=self.check_mk_check_interval(host_name),
-            translation=get_piggyback_translations(host_name),
+            translation=get_piggyback_translations(self.ruleset_matcher, host_name),
             encoding_fallback=fallback_agent_output_encoding,
             simulation=agent_simulator,  # name mismatch
             logger=logger,

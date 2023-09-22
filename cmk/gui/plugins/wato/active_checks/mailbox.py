@@ -118,7 +118,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                             ),
                         ),
                         (
-                            "tcp_port",
+                            "port",
                             Integer(
                                 title=_("TCP Port"),
                                 label=_("(default is %r for %s/TLS)") % (port_defaults, protocol),
@@ -198,41 +198,42 @@ def is_typed_auth(auth: tuple[str, tuple]) -> bool:
     return isinstance(auth[1][1], tuple)
 
 
-def update_fetch(old_fetch):
+def update_fetch_params(fetch_params):
     """Create a new 'fetch' element out of an old one.
     Older `fetch` structures might have contained an `ssl` element with a tuple
-    (use_ssl: optional[bool], tcp_port: optional[str]), which is being semantially
-    inverted and merged into the new `connection` elment:
+    (use_ssl: optional[bool], tcp_port: optional[str]), which is being semantically
+    inverted and merged into the new `connection` element:
     "connection": {
         "disable_tls": not <prior-value>  # only if prior-value was not None
-        "tcp_port": <prior-value>  # only if prior-value was not None
+        "port": <prior-value>  # only if prior-value was not None
     }
     The `auth` element had been a tuple `(<username>, (<pw-type>, <pw-or-id>))`
-    and contains a type now, which is being inserted by `update_auth()`
+    and contains a type now, which is being inserted by `update_auth()`.
+    Also, the connection param 'tcp_port' is renamed to 'port'.
     """
-    # pylint 2.15 has a problem with the statement below, newer versions don't
-    # pylint: disable=used-before-assignment
-    return {
-        **old_fetch,
-        "auth": auth if is_typed_auth(auth := old_fetch["auth"]) else ("basic", auth),
-    }
+    if not is_typed_auth(auth := fetch_params["auth"]):
+        fetch_params["auth"] = ("basic", auth)
+
+    if (port := fetch_params.get("connection", {}).get("tcp_port")) is not None:
+        fetch_params["connection"]["port"] = port
+        del fetch_params["connection"]["tcp_port"]
+
+    return fetch_params
 
 
 def migrate_check_mail_loop_params(params):
     """Migrates rule sets from 2.1 and below format to current (2.2 and up)"""
     fetch_protocol, fetch_params = params["fetch"]
 
-    # since v2.0.0 `fetch_protocol` is one of {"IMAP", "POP3"}
-    # - but cannot be "EWS" for check_mail_loop yet
+    for key in ["server", "auth", "port", "tls"]:
+        if (param := params.get(f"smtp_{key}")) is not None:
+            params[f"send_{key}"] = param
+            del params[f"smtp_{key}"]
 
-    if not is_typed_auth(fetch_params["auth"]):
-        # Up to 2.1.0p24 we only had the basic auth tuple
-        return {
-            **params,
-            "fetch": (fetch_protocol, update_fetch(fetch_params)),
-        }
-    # newest schema (2.1 and up) - return the unmodified argument
-    return params
+    return {
+        **params,
+        "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
+    }
 
 
 def _valuespec_active_checks_mail_loop() -> Migrate:
@@ -247,10 +248,10 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
             ),
             optional_keys=[
                 "subject",
-                "smtp_server",
-                "smtp_tls",
-                "smtp_port",
-                "smtp_auth",
+                "send_server",
+                "send_tls",
+                "send_port",
+                "send_auth",
                 "connect_timeout",
                 "delete_messages",
                 "duration",
@@ -276,9 +277,9 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
                     ),
                 ),
                 (
-                    "smtp_server",
+                    "send_server",
                     TextInput(
-                        title=_("SMTP Server"),
+                        title=_("SMTP server"),
                         allow_empty=False,
                         help=_(
                             "You can specify a hostname or IP address different from the IP address "
@@ -287,7 +288,7 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
                     ),
                 ),
                 (
-                    "smtp_tls",
+                    "send_tls",
                     FixedValue(
                         value=True,
                         title=_("Use TLS over SMTP"),
@@ -295,7 +296,7 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
                     ),
                 ),
                 (
-                    "smtp_port",
+                    "send_port",
                     Integer(
                         title=_("SMTP TCP Port to connect to"),
                         help=_(
@@ -305,7 +306,7 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
                     ),
                 ),
                 (
-                    "smtp_auth",
+                    "send_auth",
                     Tuple(
                         title=_("SMTP Authentication"),
                         elements=[
@@ -388,15 +389,10 @@ def migrate_check_mail_params(params):
         raise ValueError(f"{params.keys()}")
 
     fetch_protocol, fetch_params = params["fetch"]
-
-    if not is_typed_auth(fetch_params["auth"]):
-        # Up to 2.1.0p24 we only had the basic auth tuple
-        return {
-            **params,
-            "fetch": (fetch_protocol, update_fetch(fetch_params)),
-        }
-    # newest schema (2.1 and up) - do nothing
-    return params
+    return {
+        **params,
+        "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
+    }
 
 
 def _valuespec_active_checks_mail() -> Migrate:
@@ -629,14 +625,10 @@ rulespec_registry.register(
 def migrate_check_mailboxes_params(params):
     """Transforms rule sets from 2.0 and below format to current (2.1 and up)"""
     fetch_protocol, fetch_params = params["fetch"]
-    if not is_typed_auth(fetch_params["auth"]):
-        # Up to 2.1.0p24 we only had the basic auth tuple
-        return {
-            **params,
-            "fetch": (fetch_protocol, update_fetch(fetch_params)),
-        }
-    # newest schema (2.1 and up) - do nothing
-    return params
+    return {
+        **params,
+        "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
+    }
 
 
 def _valuespec_active_checks_mailboxes() -> Migrate:

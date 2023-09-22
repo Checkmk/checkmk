@@ -17,7 +17,7 @@ def check_mail_arguments(params):
     ...     'fetch': ('IMAP', {
     ...       'server': 'imap.gmx.de',
     ...       'auth': ('basic', ('me@gmx.de', ('password', 'p4ssw0rd'))),
-    ...       'connection': {'disable_tls': True, 'tcp_port': 123}}),
+    ...       'connection': {'disable_tls': True, 'port': 123}}),
     ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@checkmk.com',
     ...     'cleanup': True}}):
     ...   print(a)

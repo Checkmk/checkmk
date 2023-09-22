@@ -15,16 +15,16 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     ...         {
     ...             "item": "MailLoop_imap",
     ...             "subject": "Some subject",
-    ...             "smtp_server": "smtp.gmx.de",
-    ...             "smtp_tls": True,
-    ...             "smtp_port": 42,
-    ...             "smtp_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+    ...             "send_server": "smtp.gmx.de",
+    ...             "send_tls": True,
+    ...             "send_port": 42,
+    ...             "send_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
     ...             "fetch": (
     ...                 "IMAP",
     ...                 {
     ...                     "server": "imap.gmx.de",
     ...                     "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
-    ...                     "connection": {"disable_tls": False, "tcp_port": 123},
+    ...                     "connection": {"disable_tls": False, "port": 123},
     ...                 },
     ...             ),
     ...             "mail_from": "me_from@gmx.de",
@@ -41,11 +41,11 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     --fetch-username=me@gmx.de
     --fetch-password=p4ssw0rd
     --connect-timeout=23
-    --smtp-server=smtp.gmx.de
-    --smtp-tls
-    --smtp-port=42
-    --smtp-username=me@gmx.de
-    --smtp-password=p4ssw0rd
+    --send-server=smtp.gmx.de
+    --send-tls
+    --send-port=42
+    --send-username=me@gmx.de
+    --send-password=p4ssw0rd
     --mail-from=me_from@gmx.de
     --mail-to=me_to@gmx.de
     --status-suffix=hurz-MailLoop_imap
@@ -75,7 +75,7 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     if connection_params.get("disable_cert_validation"):
         args.append("--fetch-disable-cert-validation")
 
-    if (fetch_port := connection_params.get("tcp_port")) is not None:
+    if (fetch_port := connection_params.get("port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
     if auth_type == "basic":
@@ -90,18 +90,18 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     if "connect_timeout" in params:
         args.append(f"--connect-timeout={params['connect_timeout']}")
 
-    args.append(f"--smtp-server={params.get('smtp_server', '$HOSTADDRESS$')}")
+    args.append(f"--send-server={params.get('send_server', '$HOSTADDRESS$')}")
 
-    if "smtp_tls" in params:
-        args.append("--smtp-tls")
+    if "send_tls" in params:
+        args.append("--send-tls")
 
-    if "smtp_port" in params:
-        args.append(f"--smtp-port={params['smtp_port']}")
+    if "send_port" in params:
+        args.append(f"--send-port={params['send_port']}")
 
-    if "smtp_auth" in params:
-        username, password = params["smtp_auth"]
-        args.append(f"--smtp-username={username}")
-        args.append(passwordstore_get_cmdline("--smtp-password=%s", password))
+    if "send_auth" in params:
+        username, password = params["send_auth"]
+        args.append(f"--send-username={username}")
+        args.append(passwordstore_get_cmdline("--send-password=%s", password))
 
     args.append(f"--mail-from={params['mail_from']}")
     args.append(f"--mail-to={params['mail_to']}")

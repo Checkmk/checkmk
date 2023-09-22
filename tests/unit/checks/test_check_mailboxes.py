@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
                         "server": "foo",
                         "connection": {
                             "disable_tls": True,
-                            "tcp_port": 143,
+                            "port": 143,
                         },
                         "auth": ("basic", ("hans", "wurst")),
                     },

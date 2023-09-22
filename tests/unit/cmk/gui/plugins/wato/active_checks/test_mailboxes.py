@@ -20,11 +20,7 @@ from cmk.gui.plugins.wato.active_checks.mailbox import migrate_check_mailboxes_p
                     {
                         "server": "srv",
                         "auth": ("usr", ("password", "pw")),
-                        "connection": {
-                            "disable_tls": False,
-                            "disable_cert_validation": False,
-                            "tcp_port": 123,
-                        },
+                        "connection": {},
                     },
                 ),
                 "age": (1, 2),
@@ -39,11 +35,7 @@ from cmk.gui.plugins.wato.active_checks.mailbox import migrate_check_mailboxes_p
                     {
                         "server": "srv",
                         "auth": ("basic", ("usr", ("password", "pw"))),
-                        "connection": {
-                            "disable_tls": False,
-                            "disable_cert_validation": False,
-                            "tcp_port": 123,
-                        },
+                        "connection": {},
                     },
                 ),
                 "age": (1, 2),
@@ -59,24 +51,7 @@ from cmk.gui.plugins.wato.active_checks.mailbox import migrate_check_mailboxes_p
                 "fetch": (
                     "EWS",
                     {
-                        "auth": ("usr", ("password", "pw")),
-                        "connection": {
-                            "disable_tls": False,
-                            "disable_cert_validation": False,
-                            "tcp_port": 123,
-                        },
-                    },
-                ),
-                "age": (1, 2),
-                "age_newest": (3, 4),
-                "count": (5, 6),
-                "mailboxes": ["abc", "def"],
-            },
-            {
-                "service_description": "SD1",
-                "fetch": (
-                    "EWS",
-                    {
+                        "server": "srv",
                         "auth": ("basic", ("usr", ("password", "pw"))),
                         "connection": {
                             "disable_tls": False,
@@ -85,12 +60,23 @@ from cmk.gui.plugins.wato.active_checks.mailbox import migrate_check_mailboxes_p
                         },
                     },
                 ),
-                "age": (1, 2),
-                "age_newest": (3, 4),
-                "count": (5, 6),
-                "mailboxes": ["abc", "def"],
             },
-            id="no `server` element",
+            {
+                "service_description": "SD1",
+                "fetch": (
+                    "EWS",
+                    {
+                        "server": "srv",
+                        "auth": ("basic", ("usr", ("password", "pw"))),
+                        "connection": {
+                            "disable_tls": False,
+                            "disable_cert_validation": False,
+                            "port": 123,  # new param name "port"
+                        },
+                    },
+                ),
+            },
+            id="old param name 'tcp_port'",
         ),
     ],
 )

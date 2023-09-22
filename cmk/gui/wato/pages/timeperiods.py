@@ -357,15 +357,8 @@ class ModeTimeperiodImportICal(WatoMode):
                 ),
             )
 
-        if not content.startswith(b"BEGIN:VCALENDAR\r\n"):
-            raise MKUserError(
-                varprefix, _("The file does not seem to be a valid iCalendar file.AAA")
-            )
-
-        if not content.endswith(b"END:VCALENDAR\r\n"):
-            raise MKUserError(
-                varprefix, _("The file does not seem to be a valid iCalendar file.BBB")
-            )
+        if not content.startswith(b"BEGIN:VCALENDAR") or not content.endswith(b"END:VCALENDAR"):
+            raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
 
     def page(self) -> None:
         if not request.var("upload"):

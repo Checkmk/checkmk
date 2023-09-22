@@ -585,7 +585,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     for hostname in sorted(hosts - all_hosts):
         sys.stderr.write(f"unknown host: {hostname}\n")
     for hostname in sorted(hosts & all_hosts):
-        cmk.base.dump_host.dump_host(hostname)
+        cmk.base.dump_host.dump_host(config_cache, hostname)
 
 
 modes.register(

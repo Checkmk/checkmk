@@ -98,9 +98,8 @@ def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
     return "No agent"
 
 
-def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
-    config_cache = config.get_config_cache()
-
+def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
+    # pylint: disable=too-many-branches
     out.output("\n")
     if config_cache.is_cluster(hostname):
         nodes = config_cache.nodes_of(hostname)
@@ -114,7 +113,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        hostname, family=config_cache.default_address_family(hostname)
+        config_cache, hostname, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
@@ -124,6 +123,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         try:
             secondary = str(
                 _ip_address_for_dump_host(
+                    config_cache,
                     hostname,
                     family=config_cache.default_address_family(hostname),
                 )
@@ -236,11 +236,11 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
 
 
 def _ip_address_for_dump_host(
+    config_cache: ConfigCache,
     host_name: HostName,
     *,
     family: socket.AddressFamily,
 ) -> HostAddress | None:
-    config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception:

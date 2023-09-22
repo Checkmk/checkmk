@@ -11,8 +11,8 @@ import hypothesis
 import schemathesis
 from requests import Response
 
-from tests.openapi import settings
-from tests.openapi.hooks import hook_after_call
+from tests.schemathesis_openapi import settings
+from tests.schemathesis_openapi.hooks import hook_after_call
 
 logger = logging.getLogger(__name__)
 

@@ -8,15 +8,15 @@ from typing import Any
 import pytest
 from hypothesis import given, strategies
 
-from tests.openapi import settings
-from tests.openapi.runners import run_crud_test, run_state_machine_test
-from tests.openapi.schema import get_schema, parametrize_crud_endpoints
+from tests.schemathesis_openapi import settings
+from tests.schemathesis_openapi.runners import run_crud_test, run_state_machine_test
+from tests.schemathesis_openapi.schema import get_schema, parametrize_crud_endpoints
 
 logger = logging.getLogger(__name__)
 schema = get_schema()
 
 
-@pytest.mark.type("openapi")
+@pytest.mark.type("schemathesis_openapi")
 @schema.parametrize(endpoint="")
 def test_openapi_stateless(case):
     """Run default, stateless schemathesis testing."""
@@ -29,13 +29,13 @@ def test_openapi_stateless(case):
 
 
 @pytest.mark.skip(reason="Currently fails due to recursive schema references")
-@pytest.mark.type("openapi")
+@pytest.mark.type("schemathesis_openapi")
 def test_openapi_stateful():
     """Run stateful schemathesis testing."""
     run_state_machine_test(schema)
 
 
-@pytest.mark.type("openapi")
+@pytest.mark.type("schemathesis_openapi")
 @given(data=strategies.data())
 @pytest.mark.parametrize(
     "endpoint", **parametrize_crud_endpoints(schema, ignore="site_connection|rule")

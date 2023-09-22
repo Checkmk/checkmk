@@ -9,9 +9,13 @@ from typing import Any
 import schemathesis
 from requests.structures import CaseInsensitiveDict
 
-from tests.openapi import settings
-from tests.openapi.response import fix_response, problem_response
-from tests.openapi.schema import add_formats_and_patterns, require_properties, update_property
+from tests.schemathesis_openapi import settings
+from tests.schemathesis_openapi.response import fix_response, problem_response
+from tests.schemathesis_openapi.schema import (
+    add_formats_and_patterns,
+    require_properties,
+    update_property,
+)
 
 logger = logging.getLogger(__name__)
 

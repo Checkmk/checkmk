@@ -12,7 +12,7 @@ from schemathesis import DataGenerationMethod  # type: ignore[attr-defined]
 
 from tests.testlib.site import get_site_factory, Site
 
-from tests.openapi import settings
+from tests.schemathesis_openapi import settings
 
 logger = logging.getLogger(__name__)
 

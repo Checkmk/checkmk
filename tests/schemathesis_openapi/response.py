@@ -10,7 +10,7 @@ from typing import Any
 
 import schemathesis
 
-from tests.openapi import settings
+from tests.schemathesis_openapi import settings
 
 logger = logging.getLogger(__name__)
 

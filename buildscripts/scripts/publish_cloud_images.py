@@ -9,9 +9,21 @@ import enum
 import json
 import os
 import sys
-from typing import Final
+from typing import Final, Iterator
 
 import boto3  # type: ignore[import]
+from azure.identity import DefaultAzureCredential
+from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.compute.models import (
+    GalleryArtifactVersionSource,
+    GalleryImageVersion,
+    GalleryImageVersionPublishingProfile,
+    GalleryImageVersionStorageProfile,
+    GalleryOSDiskImage,
+    TargetRegion,
+)
+from azure.mgmt.resource import ResourceManagementClient
+from msrest.polling import LROPoller
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from cmk.utils.version import _PatchVersion, Version
@@ -56,6 +68,18 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--product-id",
         help="The product id of the product which should receive a new version",
+        action="store",
+        required=True,
+    )
+    parser.add_argument(
+        "--azure-subscription-id",
+        help="Azure's subscription id",
+        action="store",
+        required=True,
+    )
+    parser.add_argument(
+        "--azure-resource-group",
+        help="Azure's resource group",
         action="store",
         required=True,
     )
@@ -222,6 +246,47 @@ class AWSPublisher(CloudPublisher):
 
 
 class AzurePublisher(CloudPublisher):
+    LOCATION = "westeurope"
+    STORAGE_ACCOUNT_TYPE = "Standard_LRS"
+    GALLERY_NAME = "Marketplace_Publishing_Gallery"
+
+    def __init__(
+        self,
+        version: Version,
+        build_tag: str,
+        image_name: str,
+        subscription_id: str,
+        resource_group: str,
+    ):
+        super().__init__(version, build_tag, image_name)
+        credentials = DefaultAzureCredential()
+        self.subscription_id = subscription_id
+        self.resource_group = resource_group
+        # Use Checkmk_Cloud_Edition_2.2b5 for e.g. testing
+        self.gallery_image_name = (
+            f"Checkmk_Cloud_Edition_{self.version.version.major}.{self.version.version.minor}"
+        )
+        self.compute_client = ComputeManagementClient(
+            credentials,
+            self.subscription_id,
+        )
+        self.resource_client = ResourceManagementClient(
+            credentials,
+            self.subscription_id,
+        )
+
+    def get_azure_image_id(self) -> Iterator[str]:
+        resource_list = self.resource_client.resources.list_by_resource_group(
+            self.resource_group,
+            filter=f"name eq '{self.image_name}'",
+        )
+        yield next(resource_list).id
+        if another_match := next(resource_list, None):
+            raise RuntimeError(
+                f"Cannot identify a unique azure image by using {self.image_name=}. "
+                f"Found also: {another_match}"
+            )
+
     @staticmethod
     def azure_compatible_version(version: _PatchVersion) -> str:
         """
@@ -231,8 +296,67 @@ class AzurePublisher(CloudPublisher):
         """
         return f"{version.major}.{version.minor}.{version.patch}"
 
+    async def build_gallery_image(self):
+        image_id = list(self.get_azure_image_id())[0]
+        print(f"Creating new gallery image from {self.version=} by using {image_id=}")
+        assert isinstance(self.version.version, _PatchVersion)
+        self.update_succesful(
+            self.compute_client.gallery_image_versions.begin_create_or_update(
+                resource_group_name=self.resource_group,
+                gallery_name=self.GALLERY_NAME,
+                gallery_image_name=self.gallery_image_name,
+                gallery_image_version_name=self.azure_compatible_version(self.version.version),
+                gallery_image_version=GalleryImageVersion(
+                    location=self.LOCATION,
+                    publishing_profile=GalleryImageVersionPublishingProfile(
+                        target_regions=[
+                            TargetRegion(name=self.LOCATION),
+                        ],
+                        storage_account_type=self.STORAGE_ACCOUNT_TYPE,
+                    ),
+                    storage_profile=GalleryImageVersionStorageProfile(
+                        source=GalleryArtifactVersionSource(
+                            id=image_id,
+                        ),
+                        os_disk_image=GalleryOSDiskImage(
+                            # Taken from previous images
+                            host_caching="ReadWrite",
+                        ),
+                    ),
+                ),
+            ),
+        )
+
     async def publish(self):
-        pass
+        """
+        Azure's update process has 2 steps:
+        * first, we need to create a gallery image from the VM image which was pushed by packer
+        * second, we need to add the new gallery image as technical configuration to our marketplace
+        offer
+        """
+
+        await asyncio.wait_for(
+            self.build_gallery_image(),
+            self.SECONDS_TO_TIMEOUT_PUBLISH_PROCESS,
+        )
+
+        # TODO: Implement step #2
+
+    def update_succesful(self, poller: LROPoller) -> None:
+        while True:
+            result = poller.result(self.SECONDS_TO_WAIT_FOR_NEXT_STATUS)
+            assert isinstance(result, GalleryImageVersion)
+            if provisioning_state := result.provisioning_state:
+                print(f"{provisioning_state=}")
+                match provisioning_state:
+                    case "Succeeded":
+                        return
+                    case _:
+                        raise RuntimeError(f"Poller returned {provisioning_state=}")
+            print(
+                f"Got no result yet... "
+                f"sleeping for {self.SECONDS_TO_WAIT_FOR_NEXT_STATUS} seconds..."
+            )
 
 
 def ensure_using_official_release(version: str) -> Version:
@@ -260,4 +384,12 @@ if __name__ == "__main__":
                 ).publish()
             )
         case "azure":
-            print("TO BE IMPLEMENTED")
+            asyncio.run(
+                AzurePublisher(
+                    new_version,
+                    args.build_tag,
+                    args.image_name,
+                    args.azure_subscription_id,
+                    args.azure_resource_group,
+                ).publish()
+            )

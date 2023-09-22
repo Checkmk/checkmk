@@ -156,7 +156,7 @@ def create_publish_stages(targets_names, version, publish) {
                 condition: publish,
                 raiseOnError: true
             ) {
-                withEnv(["AWS_DEFAULT_REGION=us-east-1", "PYTHONUNBUFFERED=1"]) {
+                withEnv(["AWS_DEFAULT_REGION=us-east-1", "PYTHONUNBUFFERED=1", "AZURE_RESOURCE_GROUP=rg-packer-dev-weu"]) {
                     withCredentials([
                         string(
                             credentialsId: 'aws_publisher_secret_key',
@@ -164,6 +164,16 @@ def create_publish_stages(targets_names, version, publish) {
                         string(
                             credentialsId: 'aws_publisher_access_key',
                             variable: 'AWS_ACCESS_KEY_ID'),
+                        usernamePassword(
+                            credentialsId: 'azure_client',
+                            passwordVariable: 'AZURE_CLIENT_SECRET',
+                            usernameVariable: 'AZURE_CLIENT_ID'),
+                        string(
+                            credentialsId: 'azure_subscription_id',
+                            variable: 'SUBSCRIPTION_ID'),
+                        string(
+                            credentialsId: 'azure_tenant_id',
+                            variable: 'AZURE_TENANT_ID'),
                     ]) {
                         // Used global env variable from jenkins:
                         // AWS_MARKETPLACE_SCANNER_ARN and AWS_AMI_IMAGE_PRODUCT_ID
@@ -172,7 +182,9 @@ def create_publish_stages(targets_names, version, publish) {
                             --cloud-type ${target} --new-version ${version} \
                             --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}' --image-name ${name} \
                             --marketplace-scanner-arn '${AWS_MARKETPLACE_SCANNER_ARN}' \
-                            --product-id '${AWS_AMI_IMAGE_PRODUCT_ID}';
+                            --product-id '${AWS_AMI_IMAGE_PRODUCT_ID}' \
+                            --azure-subscription-id '${SUBSCRIPTION_ID}' \
+                            --azure-resource-group '${AZURE_RESOURCE_GROUP}';
                         """)
                         }
                     }

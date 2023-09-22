@@ -18,7 +18,7 @@ from typing import Any
 import yaml
 
 from tests.testlib.site import Site
-from tests.testlib.utils import execute
+from tests.testlib.utils import execute, qa_test_data_path
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,9 @@ class CheckConfig:
     api_services_cols: list | None = None
 
     def load(self):
-        self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", os.path.dirname(__file__)))
+        self.data_dir = str(
+            self.data_dir or os.getenv("DATA_DIR", str(qa_test_data_path() / "plugins_integration"))
+        )
         self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", f"{self.data_dir}/dumps"))
         self.response_dir = str(
             self.response_dir or os.getenv("RESPONSE_DIR", f"{self.data_dir}/responses")

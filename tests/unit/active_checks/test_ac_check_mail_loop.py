@@ -25,7 +25,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
         [
-            "--smtp-server",
+            "--send-server",
             "foo",
             "--fetch-server",
             "bar",

@@ -33,7 +33,7 @@ def general_check_mail_args_from_params(
     if connection_params.get("disable_cert_validation"):
         args.append("--fetch-disable-cert-validation")
 
-    if (fetch_port := connection_params.get("tcp_port")) is not None:
+    if (fetch_port := connection_params.get("port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
     if auth_type == "basic":

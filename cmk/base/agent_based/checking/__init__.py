@@ -95,7 +95,6 @@ def active_check_checking(
     dry_run: bool = False,
     show_perfdata: bool = False,
 ) -> ActiveCheckResult:
-    config.load()
     return _execute_checkmk_checks(
         hostname=hostname,
         ipaddress=ipaddress,

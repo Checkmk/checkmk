@@ -18,82 +18,76 @@ from cmk.base.plugins.agent_based.postgres_instances import (
     parse_postgres_version,
 )
 
+STRING_TABLE_instance1 = [
+    ["[[[instance1]]]"],
+    [
+        "30611",
+        "/usr/lib/postgresql/10/bin/postgres",
+        "-D",
+        "/var/lib/postgresql/10/main",
+        "-c",
+        "config_file=/etc/postgresql/10/main/postgresql.conf",
+    ],
+]
+
+STRING_TABLE_instance2 = [
+    ["[[[instance2]]]"],
+    [
+        "psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)",
+    ],
+]
+
+STRING_TABLE_legacy = [
+    [
+        "14278",
+        "/postgres/9.3.15/bin/postgres",
+        "-D",
+        "/postgres/JIRAAPP",
+    ],
+]
+
+STRING_TABLE_VERSION = [
+    ["[[[jiraapp]]]"],
+    [
+        "PostgreSQL",
+        "9.3.15",
+        "on",
+        "x86_64-unknown-linux-gnu,",
+        "compiled",
+        "by",
+        "gcc",
+        "(GCC)",
+        "4.1.2",
+        "20080704",
+        "(Red",
+        "Hat",
+        "4.1.2-55),",
+        "64-bit",
+    ],
+]
+
 
 @pytest.mark.parametrize(
     ["instances_string_table", "version_string_table", "expected_result"],
     [
         pytest.param(
-            [
-                ["[[[instance1]]]"],
-                [
-                    "30611",
-                    "/usr/lib/postgresql/10/bin/postgres",
-                    "-D",
-                    "/var/lib/postgresql/10/main",
-                    "-c",
-                    "config_file=/etc/postgresql/10/main/postgresql.conf",
-                ],
-            ],
+            STRING_TABLE_instance1,
             [],
             [Service(item="INSTANCE1")],
         ),
         pytest.param(
-            [
-                ["[[[instance2]]]"],
-                [
-                    "psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)",
-                ],
-            ],
+            STRING_TABLE_instance2,
             [],
             [Service(item="INSTANCE2")],
         ),
         pytest.param(
-            [
-                ["[[[instance1]]]"],
-                [
-                    "30611",
-                    "/usr/lib/postgresql/10/bin/postgres",
-                    "-D",
-                    "/var/lib/postgresql/10/main",
-                    "-c",
-                    "config_file=/etc/postgresql/10/main/postgresql.conf",
-                ],
-                ["[[[instance2]]]"],
-                [
-                    "psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)",
-                ],
-            ],
+            STRING_TABLE_instance1 + STRING_TABLE_instance2,
             [],
             [Service(item="INSTANCE1"), Service(item="INSTANCE2")],
         ),
         pytest.param(
-            [
-                [
-                    "14278",
-                    "/postgres/9.3.15/bin/postgres",
-                    "-D",
-                    "/postgres/JIRAAPP",
-                ],
-            ],
-            [
-                ["[[[jiraapp]]]"],
-                [
-                    "PostgreSQL",
-                    "9.3.15",
-                    "on",
-                    "x86_64-unknown-linux-gnu,",
-                    "compiled",
-                    "by",
-                    "gcc",
-                    "(GCC)",
-                    "4.1.2",
-                    "20080704",
-                    "Red",
-                    "at",
-                    ".1.2-55),",
-                    "4-bit",
-                ],
-            ],
+            STRING_TABLE_legacy,
+            STRING_TABLE_VERSION,
             [Service(item="JIRAAPP")],
         ),
     ],
@@ -119,17 +113,7 @@ def test_discover_postgres_instances(
     [
         pytest.param(
             "INSTANCE1",
-            [
-                ["[[[instance1]]]"],
-                [
-                    "30611",
-                    "/usr/lib/postgresql/10/bin/postgres",
-                    "-D",
-                    "/var/lib/postgresql/10/main",
-                    "-c",
-                    "config_file=/etc/postgresql/10/main/postgresql.conf",
-                ],
-            ],
+            STRING_TABLE_instance1,
             [],
             [
                 Result(
@@ -141,12 +125,7 @@ def test_discover_postgres_instances(
         ),
         pytest.param(
             "INSTANCE2",
-            [
-                ["[[[instance2]]]"],
-                [
-                    "psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)",
-                ],
-            ],
+            STRING_TABLE_instance2,
             [],
             [
                 Result(
@@ -161,21 +140,7 @@ def test_discover_postgres_instances(
         ),
         pytest.param(
             "INSTANCE3",
-            [
-                ["[[[instance1]]]"],
-                [
-                    "30611",
-                    "/usr/lib/postgresql/10/bin/postgres",
-                    "-D",
-                    "/var/lib/postgresql/10/main",
-                    "-c",
-                    "config_file=/etc/postgresql/10/main/postgresql.conf",
-                ],
-                ["[[[instance2]]]"],
-                [
-                    "psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)",
-                ],
-            ],
+            STRING_TABLE_instance1 + STRING_TABLE_instance2,
             [],
             [
                 Result(
@@ -190,33 +155,8 @@ def test_discover_postgres_instances(
         ),
         pytest.param(
             "JIRAAPP",
-            [
-                [
-                    "14278",
-                    "/postgres/9.3.15/bin/postgres",
-                    "-D",
-                    "/postgres/JIRAAPP",
-                ],
-            ],
-            [
-                ["[[[jiraapp]]]"],
-                [
-                    "PostgreSQL",
-                    "9.3.15",
-                    "on",
-                    "x86_64-unknown-linux-gnu,",
-                    "compiled",
-                    "by",
-                    "gcc",
-                    "(GCC)",
-                    "4.1.2",
-                    "20080704",
-                    "(Red",
-                    "Hat",
-                    "4.1.2-55),",
-                    "64-bit",
-                ],
-            ],
+            STRING_TABLE_legacy,
+            STRING_TABLE_VERSION,
             [
                 Result(state=State.OK, summary="Status: running with PID 14278"),
                 Result(

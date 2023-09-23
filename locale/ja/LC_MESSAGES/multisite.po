@@ -142,20 +142,12 @@ msgstr " および %s '%s'."
 msgid " for %d of %d recipients."
 msgstr " 受信者%dのうち%dに対して。"
 
-#, python-format
-msgid " for a period of %s"
-msgstr " %s の期間"
-
 msgid " for all recipients."
 msgstr " すべての接続に使用。"
 
 #, python-format
 msgid " for host %s"
 msgstr " ホスト %s　のため"
-
-#, python-format
-msgid " for the following %d Event Console  %s"
-msgstr " 次の %d イベントコンソール %s の場合"
 
 #, python-format
 msgid " in %d days"
@@ -174,34 +166,15 @@ msgstr ""
 msgid " next week"
 msgstr " 来週"
 
-msgid " of"
-msgstr " の"
-
 #, python-format
 msgid " of service %s on host %s"
 msgstr " ホスト %s のサービス%s"
-
-#, python-format
-msgid " of the following %d Event Console %s"
-msgstr " 次の %d イベントコンソール %s の"
 
 msgid " or "
 msgstr " または "
 
 msgid " or int"
 msgstr " またはint"
-
-#, python-format
-msgid " spread over %d minutes "
-msgstr " %d分にスプレッド "
-
-#, python-format
-msgid " the following %d Event Console %s"
-msgstr " 次の %d イベントコンソール %s"
-
-#, python-format
-msgid " the following %d crash %s"
-msgstr " 次の %d クラッシュ %s"
 
 msgid " to:"
 msgstr " へ:"
@@ -338,9 +311,9 @@ msgstr "% 最大アイドル接続"
 msgid "% of port speed"
 msgstr "ポート速度の%"
 
-#, fuzzy, python-format
-msgid "% of the time"
-msgstr "ツリーのタイトル"
+#, python-format
+msgid "% of the specified time via GET request"
+msgstr ""
 
 #, no-python-format
 msgid "% time"
@@ -1193,28 +1166,28 @@ msgid ""
 "if containers with the same name exist on more than one Docker Node."
 msgstr ""
 
-#, python-format
-msgid "<b>%%s of %s length</b>"
+#, fuzzy, python-format
+msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%sの長さの%%s </b>"
 
-#, python-format
-msgid "<b>%s for the next %d minutes</b>"
+#, fuzzy, python-format
+msgid "<b>%s for the next %d minutes</b>?"
 msgstr "<b>次の %s 分間の%d </b>"
 
-#, python-format
-msgid "<b>%s until 24:00:00</b>"
+#, fuzzy, python-format
+msgid "<b>%s until 24:00:00</b>?"
 msgstr "<b>%s から24:00:00まで</b>"
 
-#, python-format
-msgid "<b>%s until end of month</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of month</b>?"
 msgstr "<b>月末までの %s </b>"
 
-#, python-format
-msgid "<b>%s until end of year</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of year</b>?"
 msgstr "<b>年末までの%s </b>"
 
-#, python-format
-msgid "<b>%s until sunday night</b>"
+#, fuzzy, python-format
+msgid "<b>%s until sunday night</b>?"
 msgstr "<b>日曜日の夜まで%s </b>"
 
 msgid ""
@@ -1342,54 +1315,6 @@ msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>あなたには役割がありません。</b>"
-
-#, python-format
-msgid "<b>acknowledge the problems%s</b> of"
-msgstr "<b>問題%sを確認する</b>"
-
-msgid "<b>add a comment to</b>"
-msgstr "<b>コメントを追加</b>"
-
-msgid "<b>archive</b>"
-msgstr "<b>アーカイブ</b>"
-
-msgid "<b>clear the modified attributes</b> of"
-msgstr "の<b>変更された属性をクリアする</b>"
-
-msgid "<b>disable active checks</b> for"
-msgstr "<b>アクティブチェックを無効にする</b>"
-
-msgid "<b>disable notifications</b> for"
-msgstr "<b>通知を無効にする</b>"
-
-msgid "<b>disable passive checks</b> for"
-msgstr "<b>パッシブチェックを無効にする</b>"
-
-msgid "<b>enable active checks</b> for"
-msgstr "<b>アクティブチェックを有効にする</b>"
-
-msgid "<b>enable notifications</b> for"
-msgstr "<b>通知を有効にする</b>"
-
-msgid "<b>enable passive checks</b> for"
-msgstr "<b>パッシブチェックを有効にする</b>"
-
-#, python-format
-msgid "<b>manually set check results to %s</b> for"
-msgstr "<b>手動でチェック結果を %s に設定</b>"
-
-msgid "<b>remove acknowledgements</b> from"
-msgstr "<b>承認を削除</b>"
-
-msgid "<b>remove all scheduled downtimes</b> of "
-msgstr "<b>予定されているすべてのダウンタイムを削除</b> "
-
-#, python-format
-msgid "<b>schedule a downtime from %s to %s</b>"
-msgstr "<b>ダウンタイムを %s から %s にスケジュールする</b>"
-
-msgid "<b>send a custom notification</b> regarding"
-msgstr "<b>カスタム通知を送信</b>"
 
 msgid ""
 "<br> HINT: The individual program is called from the current working "
@@ -3032,6 +2957,10 @@ msgstr "最後の %s 結果を確認する"
 msgid "Acknowledge problems"
 msgstr "問題を認知"
 
+#, fuzzy
+msgid "Acknowledge problems?"
+msgstr "問題を認知"
+
 #, python-format
 msgid "Acknowledge this test result for site %s"
 msgstr "サイト%sに対するこのテスト結果を確認します"
@@ -3561,6 +3490,10 @@ msgid "Add column"
 msgstr "列を追加"
 
 msgid "Add comment"
+msgstr "コメントを追加する"
+
+#, fuzzy
+msgid "Add comment?"
 msgstr "コメントを追加する"
 
 #, fuzzy
@@ -4270,6 +4203,10 @@ msgstr "Aerohive HiveManager"
 
 msgid "Aerohive HiveManager NG"
 msgstr "Aerohive HiveManager NG"
+
+#, fuzzy, python-format
+msgid "Affected %s: %s"
+msgstr "影響を受けるサイト"
 
 msgid "Affected by service"
 msgstr "サービスの影響を受ける"
@@ -5078,6 +5015,12 @@ msgstr "タプルのすべての要素はint型である必要があり、%sが�
 
 msgid "All even pages"
 msgstr "すべての偶数ページ"
+
+#, python-format
+msgid ""
+"All events of the host '%s' will be removed from the open events list. You "
+"can still access them in the archive."
+msgstr ""
 
 msgid "All flows"
 msgstr "すべてのフロー"
@@ -6227,8 +6170,16 @@ msgstr "4月"
 msgid "Architecture"
 msgstr "アーキテクチャ"
 
+#, fuzzy
+msgid "Archive"
+msgstr "アーカイブイベント"
+
 msgid "Archive Event"
 msgstr "アーカイブイベント"
+
+#, fuzzy
+msgid "Archive all events of this host?"
+msgstr "ホストのイベントをアーカイブする"
 
 #, fuzzy
 msgid "Archive all open events of all hosts shown in host views"
@@ -6639,6 +6590,10 @@ msgstr "オーサー"
 #, fuzzy
 msgid "Author comment (regex)"
 msgstr "アドホックコメント"
+
+#, fuzzy, python-format
+msgid "Author: %s"
+msgstr "オーサー"
 
 #, fuzzy
 msgid "Authority"
@@ -9607,9 +9562,6 @@ msgstr "CRITICAL状態をに変更します"
 msgid "Change Context Info to"
 msgstr "コンテキスト情報をに変更"
 
-msgid "Change Event state to:"
-msgstr "イベントの状態を次のように変更します。"
-
 msgid "Change OK State to"
 msgstr "OK状態をに変更します"
 
@@ -9646,6 +9598,10 @@ msgstr "ダウンタイム開始の変更"
 
 #, fuzzy
 msgid "Change event state"
+msgstr "イベントの状態を次のように変更します。"
+
+#, fuzzy
+msgid "Change event state?"
 msgstr "イベントの状態を次のように変更します。"
 
 #, python-format
@@ -10940,9 +10896,6 @@ msgstr "ログをクリアする"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "保存メッセージをすべて削除しログをクリアする"
-
-msgid "Clear modified attributes"
-msgstr "変更された属性をクリアする"
 
 msgid ""
 "Clear the entries of the audit log. To be able to clear the audit log a user "
@@ -13881,9 +13834,6 @@ msgstr "カスタムローカリゼーション"
 msgid "Custom logos"
 msgstr "カスタムロゴ"
 
-msgid "Custom notification"
-msgstr "カスタム通知"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "ユーザー %s のカスタム通知テーブル"
@@ -15017,6 +14967,11 @@ msgstr ""
 "た'Origin Domain'と同じ名前のピギーバックホストに割り当てることができます - "
 "後者のオプションを選択した場合、ピギーバックホストを作成する必要があります。"
 
+msgid ""
+"Define the maximum session duration. If reached, the user has to re-"
+"authenticate."
+msgstr ""
+
 msgid "Define upper levels for number of running containers"
 msgstr "稼働中コンテナ数の上位レベル定義"
 
@@ -15190,6 +15145,10 @@ msgstr "バックアップを削除"
 msgid "Delete backup key #%d"
 msgstr "バックアップキー #%dを削除"
 
+#, fuzzy
+msgid "Delete comments"
+msgstr "イベントコメント"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "接続 #%dを削除"
@@ -15202,6 +15161,10 @@ msgstr "クラッシュレポートを削除する"
 
 #, fuzzy
 msgid "Delete crash reports created by Checkmk"
+msgstr "クラッシュレポートを削除する"
+
+#, fuzzy
+msgid "Delete crash reports?"
 msgstr "クラッシュレポートを削除する"
 
 #, python-format
@@ -16293,6 +16256,14 @@ msgstr "監視対象サービスを無効にする"
 
 msgid "Disable notifications"
 msgstr "通知を無効にする"
+
+#, fuzzy
+msgid "Disable notifications?"
+msgstr "通知を無効にする"
+
+#, fuzzy
+msgid "Disable passive checks"
+msgstr "アクティブチェックを無効にする"
 
 msgid "Disable password"
 msgstr "パスワードを無効にする"
@@ -17403,10 +17374,6 @@ msgstr "コンテキストを転送する"
 msgid "Do you really want revert the following changes?"
 msgstr "本当にフォルダ %s を削除しますか?"
 
-#, python-format
-msgid "Do you really want to %s"
-msgstr "本当に %s したいですか"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "選択した集計を本当に移動しますか？"
 
@@ -18115,6 +18082,10 @@ msgstr "BIパック %s を編集する"
 msgid "Edit Downtimes"
 msgstr "ダウンタイムの編集"
 
+#, fuzzy
+msgid "Edit Downtimes?"
+msgstr "ダウンタイムの編集"
+
 msgid "Edit GUI design for this customer"
 msgstr "この顧客のGUIデザインを編集する"
 
@@ -18774,6 +18745,14 @@ msgstr "GETリクエストによるログイン有効化"
 msgid "Enable notification logging"
 msgstr "通知ログを有効にする"
 
+#, fuzzy
+msgid "Enable notifications?"
+msgstr "通知を有効にします"
+
+#, fuzzy
+msgid "Enable passive checks"
+msgstr "アクティブチェックを有効にする"
+
 msgid "Enable per-process details"
 msgstr "プロセスごとの詳細を有効にする"
 
@@ -18840,6 +18819,14 @@ msgstr "時間固有のパラメータを有効にする"
 
 msgid "Enable trend computation"
 msgstr "トレンド計算を有効にする"
+
+#, fuzzy
+msgid "Enable/Disable active checks"
+msgstr "アクティブチェックを無効にする"
+
+#, fuzzy
+msgid "Enable/Disable passive checks"
+msgstr "アクティブチェックを有効にする"
 
 msgid "Enable/disable active checks for services"
 msgstr "サービスのアクティブチェックを有効/無効にする"
@@ -19203,6 +19190,10 @@ msgstr "ユーザーネームを入力してください"
 
 msgid "Enter user password"
 msgstr "ユーザーパスワードを入力"
+
+#, fuzzy
+msgid "Enter your message here"
+msgstr "メッセージレートの下位レベル"
 
 msgid "Enterasys LSNAT Bindings"
 msgstr "Enterasys LSNAT バインディング"
@@ -19827,6 +19818,10 @@ msgstr "実行可能フォーマット(Linux)"
 msgid "Executable:"
 msgstr "実行可能ファイル:"
 
+#, fuzzy
+msgid "Execute"
+msgstr "エグゼクティブ"
+
 msgid "Execute MRPE checks"
 msgstr "MRPEチェックを実行します"
 
@@ -19843,6 +19838,10 @@ msgstr "エグゼクティブ"
 #, fuzzy
 msgid "Execute as another user"
 msgstr "他のユーザーの変更をアクティブ化する"
+
+#, fuzzy, python-format
+msgid "Execute custom action '%s'?"
+msgstr "アクション \"%s\"を実行します"
 
 msgid "Execute legacy monitoring plugins"
 msgstr "従来の監視プラグインを実行する"
@@ -21820,6 +21819,14 @@ msgstr "空きスワップスペース"
 
 msgid "Free tapes"
 msgstr "フリーのテープ"
+
+#, fuzzy
+msgid "Freeze"
+msgstr "空き"
+
+#, fuzzy
+msgid "Freeze aggregation?"
+msgstr "凍結したアグリゲーション"
 
 msgid "Freeze aggregations"
 msgstr "凍結したアグリゲーション"
@@ -32529,6 +32536,10 @@ msgid ""
 "test if notifications are setup correctly"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Manually set check results to %s?"
+msgstr "<b>手動でチェック結果を %s に設定</b>"
+
 #, python-format
 msgid "Manually set to %s by %s"
 msgstr "手動で %s に、 %sによって設定"
@@ -34097,9 +34108,6 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr "パラメータ \"%s\" がありません。"
 
-msgid "Missing prediction data."
-msgstr "予測データがありません。"
-
 msgid "Missing render parameter"
 msgstr "レンダリングパラメータがありません"
 
@@ -34249,9 +34257,6 @@ msgstr "変更されたBIルール%s"
 
 msgid "Modified NFS data"
 msgstr "変更されたNFSデータ"
-
-msgid "Modified attributes"
-msgstr "変更された属性"
 
 #, python-format
 msgid "Modified event correlation rule %s"
@@ -35600,6 +35605,10 @@ msgstr "新しい名前"
 msgid "New passwords don't match."
 msgstr "両方のパスワードが一致しません。"
 
+#, fuzzy, python-format
+msgid "New state: %s"
+msgstr "ジョブの状態: %s"
+
 msgid "New view"
 msgstr "新しいビュー"
 
@@ -36652,6 +36661,10 @@ msgstr "ホストの通知"
 
 msgid "Notifications of host & services"
 msgstr "ホストとサービスの通知"
+
+#, fuzzy
+msgid "Notifications will be sent according to the notification rules"
+msgstr "一括通知の通知の並べ替え順序"
 
 msgid "Notified events for hosts"
 msgstr "ホストに通知されたイベント"
@@ -41146,8 +41159,9 @@ msgstr "イベントコンソールの設定ファイルにプリティプリン
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "キャッシュファイルを使用してDNSルックアップを防止する"
 
-msgid "Prevent data loss of forms by forcing re-authentication after"
-msgstr ""
+#, fuzzy
+msgid "Prevent data loss of forms by forcing re-authentification after"
+msgstr "ローカル認証データ"
 
 msgid "Prevent host deletion after initialization"
 msgstr "初期化後のホストの削除を防ぐ"
@@ -42997,6 +43011,10 @@ msgstr "存在する場合は、Windowsファイアウォール構成を削除�
 msgid "Remove acknowledgement"
 msgstr "承認を削除する"
 
+#, fuzzy
+msgid "Remove acknowledgement?"
+msgstr "承認を削除する"
+
 msgid "Remove all"
 msgstr "すべて削除する"
 
@@ -43010,10 +43028,15 @@ msgstr "ダウンタイムを除く"
 msgid "Remove all files and subdirectories"
 msgstr "すべてのファイルとサブディレクトリを削除します"
 
-msgid "Remove comments"
-msgstr "コメントを削除する"
+#, fuzzy
+msgid "Remove all scheduled downtimes?"
+msgstr "<b>予定されているすべてのダウンタイムを削除</b> "
 
 msgid "Remove downtimes"
+msgstr "ダウンタイムを除く"
+
+#, fuzzy
+msgid "Remove downtimes?"
 msgstr "ダウンタイムを除く"
 
 msgid "Remove explicit attribute settings"
@@ -43645,6 +43668,10 @@ msgstr "'Check_mk'サービスのスケジュールを変更します"
 msgid "Reschedule active checks"
 msgstr "アクティブなチェックを再スケジュールする"
 
+#, fuzzy
+msgid "Reschedule active checks immediately?"
+msgstr "アクティブなチェックを再スケジュールする"
+
 msgid "Reschedule check"
 msgstr "再スケジュールチェック"
 
@@ -43683,6 +43710,10 @@ msgstr ""
 msgid "Reset all rule hit counters to zero"
 msgstr "すべてのルールヒットカウンターをゼロにリセット"
 
+#, fuzzy
+msgid "Reset attributes"
+msgstr "役割属性"
+
 msgid "Reset configuration variable to default value"
 msgstr "設定変数をデフォルト値にリセット"
 
@@ -43705,6 +43736,10 @@ msgstr "ルールパック %s のルールをMKP経由で提供されたもの�
 
 msgid "Reset to default"
 msgstr "デフォルトにリセット"
+
+#, python-format
+msgid "Resets the commands '%s', '%s' and '%s' to the default state"
+msgstr ""
 
 #, python-format
 msgid "Resetted configuration variable %s to its default."
@@ -45058,6 +45093,18 @@ msgstr "スキャン間隔"
 msgid "Schedule"
 msgstr "スケジュール"
 
+#, fuzzy, python-format
+msgid "Schedule a downtime from %s to %s?"
+msgstr "<b>ダウンタイムを %s から %s にスケジュールする</b>"
+
+#, fuzzy, python-format
+msgid "Schedule a periodic downtime every %s"
+msgstr "%sごとに定期的なダウンタイムをスケジュールする"
+
+#, fuzzy
+msgid "Schedule an immediate downtime"
+msgstr "即時のダウンタイムをスケジュールする"
+
 #, fuzzy
 msgid "Schedule and remove downtimes on hosts and services"
 msgstr "ホストとサービスのすべての歴史的なスケジュールされたダウンタイム"
@@ -45068,6 +45115,10 @@ msgstr "%d%sのダウンタイムをスケジュールする"
 
 msgid "Schedule downtime on host"
 msgstr "ホストでのダウンタイムのスケジュール"
+
+#, fuzzy
+msgid "Schedule downtime?"
+msgstr "ダウンタイムをスケジュールする"
 
 msgid "Schedule downtimes"
 msgstr "ダウンタイムをスケジュールする"
@@ -45831,6 +45882,11 @@ msgstr "イベントコンソールに通知を送信する"
 msgid "Send notifications to remote Event Console"
 msgstr "リモートイベントコンソールに通知を送信する"
 
+msgid ""
+"Send regardless of restrictions, e.g. notification period or disabled "
+"notifications (forced)"
+msgstr ""
+
 msgid "Send request"
 msgstr "リクエストを送信"
 
@@ -45843,6 +45899,10 @@ msgstr "メトリックをGraphiteに送信する"
 
 msgid "Send that many PINGs in one bulk:"
 msgstr "PINGを一度に送信します。"
+
+#, fuzzy
+msgid "Send to all contacts of the selected hosts/services (broadcast)"
+msgstr "通知されたホストまたはサービスのすべての連絡先に通知します。"
 
 msgid "Send to remote Event Console via syslog"
 msgstr "syslog経由でリモートイベントコンソールに送信"
@@ -46542,6 +46602,10 @@ msgstr "セッションタイムアウト:"
 
 msgid "Session type"
 msgstr "セッションタイプ"
+
+#, fuzzy
+msgid "Set"
+msgstr "送信済み"
 
 msgid "Set IPv4 address"
 msgstr "IPv4アドレスを設定する"
@@ -48772,7 +48836,7 @@ msgstr "ここでこの接続の任意の名前を指定します"
 #, fuzzy
 msgid ""
 "Specify an explicit IP address or resolvable DNS name here, if the hostname "
-"is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set this "
+"is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
 "configuration to speed up the activation process. The cache is normally "
@@ -48796,7 +48860,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set "
+"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -49318,6 +49382,10 @@ msgstr "スポットインスタンスリクエスト"
 
 msgid "Spread over"
 msgstr "Spread over"
+
+#, fuzzy, python-format
+msgid "Spreading: %s minutes"
+msgstr " %d分にスプレッド "
 
 msgid "Sproc Latency"
 msgstr "Sprocレイテンシ"
@@ -51066,9 +51134,6 @@ msgstr "Systemdソケットの概要"
 
 msgid "Systems larger than"
 msgstr "より大きいシステム"
-
-msgid "TBA"
-msgstr ""
 
 msgid "TCP"
 msgstr "TCP"
@@ -53347,11 +53412,9 @@ msgstr "ファイルにXMLテキストが含まれていません"
 msgid "The file does not look like a valid key file."
 msgstr "ファイルは有効なキーファイルのようには見えません。"
 
-msgid "The file does not seem to be a valid iCalendar file.AAA"
+#, fuzzy
+msgid "The file does not seem to be a valid iCalendar file."
 msgstr "このファイルは有効なiCalendarファイルAAAではないようです"
-
-msgid "The file does not seem to be a valid iCalendar file.BBB"
-msgstr "このファイルは有効なiCalendarファイルBBBではないようです"
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "ファイル拡張子は<tt> .pdf </tt>である必要があります"
@@ -60065,6 +60128,10 @@ msgstr ""
 "<b>イベントコンソールに通知を送信</b>が有効になっていることを確認してくださ"
 "い。"
 
+#, fuzzy
+msgid "This will suppress all notifications"
+msgstr "ホスト通知を無効にする"
+
 msgid "This year"
 msgstr "今年"
 
@@ -61003,6 +61070,10 @@ msgstr "総帯域幅(入力と出力の合計)"
 
 msgid "Total cache usage"
 msgstr "キャッシュの合計使用量"
+
+#, fuzzy, python-format
+msgid "Total comments: %d"
+msgstr "総ドキュメント"
 
 msgid "Total containers"
 msgstr "コンテナ合計"
@@ -62401,6 +62472,10 @@ msgstr "アップデート"
 msgid "Update & acknowledge"
 msgstr "更新と確認"
 
+#, fuzzy
+msgid "Update & acknowledge event?"
+msgstr "更新と確認"
+
 msgid "Update DNS cache"
 msgstr "DNSキャッシュを更新する"
 
@@ -62429,6 +62504,10 @@ msgstr "PNPメタ情報の更新遅延"
 
 msgid "Update duration"
 msgstr "更新時間"
+
+#, fuzzy
+msgid "Update event?"
+msgstr "プレビューを更新"
 
 msgid "Update host labels"
 msgstr "ホストラベルを更新する"
@@ -69427,9 +69506,6 @@ msgstr "ビット/秒"
 msgid "blocks/s"
 msgstr "ブロック/秒"
 
-msgid "broadcast"
-msgstr "ブロードキャスト"
-
 #, fuzzy
 msgid "built-in"
 msgstr "ビルトイン"
@@ -69459,9 +69535,6 @@ msgstr "ケース"
 msgid "cases"
 msgstr "ケース"
 
-msgid "change the state"
-msgstr "状態を変更します"
-
 msgid "check plugins"
 msgstr "プラグインを確認する"
 
@@ -69485,10 +69558,6 @@ msgstr "崩壊した"
 
 msgid "command"
 msgstr "コマンド"
-
-msgid "comment"
-msgid_plural "comments"
-msgstr[0] "コメント"
 
 msgid "complete"
 msgstr "コンプリート"
@@ -69528,6 +69597,11 @@ msgstr "カウント"
 
 msgid "cp437"
 msgstr "cp437"
+
+#, fuzzy
+msgid "crash report"
+msgid_plural "crash reports"
+msgstr[0] "クラッシュレポート"
 
 msgid "critical at"
 msgstr "クリティカル"
@@ -69776,10 +69850,6 @@ msgstr "完全に一致"
 msgid "excluded"
 msgstr "除外"
 
-#, python-format
-msgid "execute the action \"%s\""
-msgstr "アクション \"%s\"を実行します"
-
 msgid "execution count"
 msgstr "実行回数"
 
@@ -69852,9 +69922,6 @@ msgstr "ために"
 msgid "force"
 msgstr "フォース"
 
-msgid "forced"
-msgstr "強制"
-
 msgid "forced-commands-only"
 msgstr "強制コマンドのみ"
 
@@ -69872,13 +69939,6 @@ msgstr "フリーリース"
 
 msgid "free space"
 msgstr "空き容量"
-
-#, python-format
-msgid "freeze the following %d aggregations?"
-msgstr "次の %d 個のアグリゲーションを凍結しますか？"
-
-msgid "freeze the following aggregation?"
-msgstr "次のアグリゲーションを凍結しますか?"
 
 msgid "from the beginning"
 msgstr "最初から"
@@ -70351,9 +70411,6 @@ msgstr ""
 msgid "mm"
 msgstr "mm"
 
-msgid "modify"
-msgstr "変更する"
-
 msgid "monitor"
 msgstr "モニター"
 
@@ -70747,22 +70804,15 @@ msgstr ""
 "リモートエンドポイントがシャットダウンしました。カーネルは、アプリケーション"
 "がソケットを閉じるのを待っています"
 
-msgid "remove"
-msgstr "削除する"
-
-#, python-format
-msgid "remove the following %d %s?"
-msgstr "次の %d%sを削除しますか？"
-
 msgid "repeat every 20'th row"
 msgstr "20行ごとに繰り返す"
 
 msgid "repeat:"
 msgstr "繰り返す:"
 
+#, fuzzy
 msgid "report"
-msgid_plural "reports"
-msgstr[0] "レポート"
+msgstr "レポート"
 
 msgid "report element"
 msgstr "レポート要素"
@@ -70785,9 +70835,6 @@ msgstr "アルファベット順に最も低くソートするインターフェ
 
 msgid "require primary interface to be active"
 msgstr "プライマリインターフェイスがアクティブである必要があります"
-
-msgid "reschedule an immediate check"
-msgstr "即時チェックのスケジュールを変更する"
 
 msgid "reset"
 msgstr "リセット"
@@ -70850,13 +70897,6 @@ msgstr "同じn番目の平日(最初から)"
 
 msgid "same nth weekday (from end)"
 msgstr "同じn番目の平日(終わりから)"
-
-#, python-format
-msgid "schedule a periodic downtime every %s"
-msgstr "%sごとに定期的なダウンタイムをスケジュールする"
-
-msgid "schedule an immediate downtime"
-msgstr "即時のダウンタイムをスケジュールする"
 
 msgid "sec"
 msgstr "秒"
@@ -71089,9 +71129,6 @@ msgstr "未使用のライセンス"
 msgid "up"
 msgstr "アップ"
 
-msgid "update"
-msgstr "更新"
-
 msgid "upload insecure snapshots"
 msgstr "安全でないスナップショットをアップロードする"
 
@@ -71279,6 +71316,148 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "The file does not seem to be a valid iCalendar file.BBB"
+#~ msgstr "このファイルは有効なiCalendarファイルBBBではないようです"
+
+#, python-format
+#~ msgid " for the following %d Event Console  %s"
+#~ msgstr " 次の %d イベントコンソール %s の場合"
+
+#, python-format
+#~ msgid " of the following %d Event Console %s"
+#~ msgstr " 次の %d イベントコンソール %s の"
+
+#, python-format
+#~ msgid " the following %d Event Console %s"
+#~ msgstr " 次の %d イベントコンソール %s"
+
+#, python-format
+#~ msgid " the following %d crash %s"
+#~ msgstr " 次の %d クラッシュ %s"
+
+#, fuzzy, python-format
+#~| msgid "event"
+#~| msgid_plural "events"
+#~ msgid "%s event"
+#~ msgstr "イベント"
+
+#, fuzzy
+#~| msgid "New event created"
+#~ msgid "New event state:"
+#~ msgstr "新しいイベントが作成されました"
+
+#, python-format
+#~ msgid "freeze the following %d aggregations?"
+#~ msgstr "次の %d 個のアグリゲーションを凍結しますか？"
+
+#~ msgid "freeze the following aggregation?"
+#~ msgstr "次のアグリゲーションを凍結しますか?"
+
+#, fuzzy, python-format
+#~| msgid "User notifications"
+#~ msgid "%s notifications"
+#~ msgstr "ユーザー通知"
+
+#~ msgid "Clear modified attributes"
+#~ msgstr "変更された属性をクリアする"
+
+#~ msgid "Custom notification"
+#~ msgstr "カスタム通知"
+
+#~ msgid "Modified attributes"
+#~ msgstr "変更された属性"
+
+#~ msgid "Remove comments"
+#~ msgstr "コメントを削除する"
+
+#~ msgid "broadcast"
+#~ msgstr "ブロードキャスト"
+
+#~ msgid "forced"
+#~ msgstr "強制"
+
+#, python-format
+#~ msgid " for a period of %s"
+#~ msgstr " %s の期間"
+
+#~ msgid " of"
+#~ msgstr " の"
+
+#, fuzzy, python-format
+#~| msgid "Title of the tree"
+#~ msgid "% of the time"
+#~ msgstr "ツリーのタイトル"
+
+#, python-format
+#~ msgid "<b>acknowledge the problems%s</b> of"
+#~ msgstr "<b>問題%sを確認する</b>"
+
+#~ msgid "<b>add a comment to</b>"
+#~ msgstr "<b>コメントを追加</b>"
+
+#~ msgid "<b>archive</b>"
+#~ msgstr "<b>アーカイブ</b>"
+
+#~ msgid "<b>clear the modified attributes</b> of"
+#~ msgstr "の<b>変更された属性をクリアする</b>"
+
+#~ msgid "<b>disable active checks</b> for"
+#~ msgstr "<b>アクティブチェックを無効にする</b>"
+
+#~ msgid "<b>disable notifications</b> for"
+#~ msgstr "<b>通知を無効にする</b>"
+
+#~ msgid "<b>disable passive checks</b> for"
+#~ msgstr "<b>パッシブチェックを無効にする</b>"
+
+#~ msgid "<b>enable active checks</b> for"
+#~ msgstr "<b>アクティブチェックを有効にする</b>"
+
+#~ msgid "<b>enable notifications</b> for"
+#~ msgstr "<b>通知を有効にする</b>"
+
+#~ msgid "<b>enable passive checks</b> for"
+#~ msgstr "<b>パッシブチェックを有効にする</b>"
+
+#~ msgid "<b>remove acknowledgements</b> from"
+#~ msgstr "<b>承認を削除</b>"
+
+#~ msgid "<b>send a custom notification</b> regarding"
+#~ msgstr "<b>カスタム通知を送信</b>"
+
+#~ msgid "Change Event state to:"
+#~ msgstr "イベントの状態を次のように変更します。"
+
+#, python-format
+#~ msgid "Do you really want to %s"
+#~ msgstr "本当に %s したいですか"
+
+#~ msgid "Missing prediction data."
+#~ msgstr "予測データがありません。"
+
+#~ msgid "change the state"
+#~ msgstr "状態を変更します"
+
+#~ msgid "comment"
+#~ msgid_plural "comments"
+#~ msgstr[0] "コメント"
+
+#~ msgid "modify"
+#~ msgstr "変更する"
+
+#~ msgid "remove"
+#~ msgstr "削除する"
+
+#, python-format
+#~ msgid "remove the following %d %s?"
+#~ msgstr "次の %d%sを削除しますか？"
+
+#~ msgid "reschedule an immediate check"
+#~ msgstr "即時チェックのスケジュールを変更する"
+
+#~ msgid "update"
+#~ msgstr "更新"
 
 #, fuzzy
 #~| msgid "Discard all pending changes"
@@ -73100,9 +73279,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "all events disabled"
 #~ msgstr "すべてのイベントが無効になりました"
 
-#~ msgid "enable notifications"
-#~ msgstr "通知を有効にします"
-
 #~ msgid "end"
 #~ msgstr "終わり"
 
@@ -74802,9 +74978,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~| msgid "<p>Sent notification to: %s</p>"
 #~ msgid "Sent notification to: %s"
 #~ msgstr "<p>通知の送信先:%s </p>"
-
-#~ msgid "User notifications"
-#~ msgstr "ユーザー通知"
 
 #~ msgid "You are not allowed to use the notification module."
 #~ msgstr "通知モジュールの使用は許可されていません。"

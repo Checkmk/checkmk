@@ -139,20 +139,12 @@ msgstr " și %s '%s'."
 msgid " for %d of %d recipients."
 msgstr " pentru %d din %d destinatari."
 
-#, python-format
-msgid " for a period of %s"
-msgstr " pentru o perioadâ de %s"
-
 msgid " for all recipients."
 msgstr " pentru toți destinatarii."
 
 #, python-format
 msgid " for host %s"
 msgstr " pentru elementul %s"
-
-#, python-format
-msgid " for the following %d Event Console  %s"
-msgstr " pentru următoarea consolă de evenimente %d Consola de evenimente %s."
 
 #, python-format
 msgid " in %d days"
@@ -171,34 +163,15 @@ msgstr " rămasă în procesul gratuit"
 msgid " next week"
 msgstr " săptămâna viitoare"
 
-msgid " of"
-msgstr " de"
-
 #, fuzzy, python-format
 msgid " of service %s on host %s"
 msgstr " a serviciului %s pe gazda %s."
-
-#, python-format
-msgid " of the following %d Event Console %s"
-msgstr " din următoarele %d Consola de evenimente %s."
 
 msgid " or "
 msgstr " sau "
 
 msgid " or int"
 msgstr " sau int"
-
-#, python-format
-msgid " spread over %d minutes "
-msgstr " peste următoarele %d minute "
-
-#, python-format
-msgid " the following %d Event Console %s"
-msgstr " următorul %d Event Console %s."
-
-#, python-format
-msgid " the following %d crash %s"
-msgstr " următoarele %d crash %s"
 
 msgid " to:"
 msgstr " către:"
@@ -322,9 +295,9 @@ msgstr "% din numărul maxim de conexiuni inactive"
 msgid "% of port speed"
 msgstr "% din viteza portului"
 
-#, fuzzy, python-format
-msgid "% of the time"
-msgstr "Titlul copacului"
+#, python-format
+msgid "% of the specified time via GET request"
+msgstr ""
 
 #, no-python-format
 msgid "% time"
@@ -1194,28 +1167,28 @@ msgstr ""
 "contrar, pot apărea coliziuni de nume dacă există containere cu același nume "
 "pe mai multe noduri Docker."
 
-#, python-format
-msgid "<b>%%s of %s length</b>"
+#, fuzzy, python-format
+msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s de %s lungime</b>."
 
-#, python-format
-msgid "<b>%s for the next %d minutes</b>"
+#, fuzzy, python-format
+msgid "<b>%s for the next %d minutes</b>?"
 msgstr "<b>%s pentru următoarele %d minute</b>."
 
-#, python-format
-msgid "<b>%s until 24:00:00</b>"
+#, fuzzy, python-format
+msgid "<b>%s until 24:00:00</b>?"
 msgstr "<b>%s până la 24:00:00</b>"
 
-#, python-format
-msgid "<b>%s until end of month</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of month</b>?"
 msgstr "<b>%s până la sfârșitul lunii</b>"
 
-#, python-format
-msgid "<b>%s until end of year</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of year</b>?"
 msgstr "<b>%s până la sfârșitul anului</b>"
 
-#, python-format
-msgid "<b>%s until sunday night</b>"
+#, fuzzy, python-format
+msgid "<b>%s until sunday night</b>?"
 msgstr "<b>%s până duminică seara</b>"
 
 msgid ""
@@ -1352,54 +1325,6 @@ msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Nu aveți niciun rol.</b>"
-
-#, python-format
-msgid "<b>acknowledge the problems%s</b> of"
-msgstr "<b>confirmă problemele%s</b> lui"
-
-msgid "<b>add a comment to</b>"
-msgstr "adaugă un comentariu la"
-
-msgid "<b>archive</b>"
-msgstr "<b>arhivează</b>"
-
-msgid "<b>clear the modified attributes</b> of"
-msgstr "<b>șterge atributele modificate</b> ale"
-
-msgid "<b>disable active checks</b> for"
-msgstr "<b>dezactivează verificările active</b> pentru"
-
-msgid "<b>disable notifications</b> for"
-msgstr "<b>dezactivează notificările</b> pentru"
-
-msgid "<b>disable passive checks</b> for"
-msgstr "<b>dezactivează verificările pasive</b> pentru"
-
-msgid "<b>enable active checks</b> for"
-msgstr "<b>activează verificările active</b> pentru"
-
-msgid "<b>enable notifications</b> for"
-msgstr "<b>activează notficările</b> pentru"
-
-msgid "<b>enable passive checks</b> for"
-msgstr "<b>activează verificările pasive</b> pentru"
-
-#, python-format
-msgid "<b>manually set check results to %s</b> for"
-msgstr "<b>setează manual rezultatele verificării la %s</b> pentru"
-
-msgid "<b>remove acknowledgements</b> from"
-msgstr "<b>șterge confirmările</b> de la"
-
-msgid "<b>remove all scheduled downtimes</b> of "
-msgstr "<b>șterge toți timpii morți programați</b> pentru "
-
-#, python-format
-msgid "<b>schedule a downtime from %s to %s</b>"
-msgstr "<b>programează o perioadă de întrerupere de la %s la %s</b>."
-
-msgid "<b>send a custom notification</b> regarding"
-msgstr "<b>trimite o notificare personalizată</b> cu privire la"
 
 msgid ""
 "<br> HINT: The individual program is called from the current working "
@@ -3118,6 +3043,10 @@ msgstr "Recunoașterea ultimului rezultat %s."
 msgid "Acknowledge problems"
 msgstr "Recunoașteți problemele"
 
+#, fuzzy
+msgid "Acknowledge problems?"
+msgstr "Recunoașteți problemele"
+
 #, python-format
 msgid "Acknowledge this test result for site %s"
 msgstr "Confirmați acest rezultat al testului pentru site-ul %s."
@@ -3644,6 +3573,10 @@ msgid "Add column"
 msgstr "Adaugă coloanâ"
 
 msgid "Add comment"
+msgstr "Adaugă comentariu"
+
+#, fuzzy
+msgid "Add comment?"
 msgstr "Adaugă comentariu"
 
 msgid "Add comments"
@@ -4359,6 +4292,10 @@ msgstr "Aerohive HiveManager"
 
 msgid "Aerohive HiveManager NG"
 msgstr "Aerohive HiveManager NG"
+
+#, fuzzy, python-format
+msgid "Affected %s: %s"
+msgstr "Situri afectate"
 
 msgid "Affected by service"
 msgstr "Afectat de serviciu"
@@ -5189,6 +5126,12 @@ msgstr "Toate elementele din tuple trebuie să fie de tip int, aveți %s."
 
 msgid "All even pages"
 msgstr "Toate paginile pare"
+
+#, python-format
+msgid ""
+"All events of the host '%s' will be removed from the open events list. You "
+"can still access them in the archive."
+msgstr ""
 
 msgid "All flows"
 msgstr "Toate fluxurile"
@@ -6402,8 +6345,16 @@ msgstr "Aprilie"
 msgid "Architecture"
 msgstr "Arhitectură"
 
+#, fuzzy
+msgid "Archive"
+msgstr "Eveniment de arhivă"
+
 msgid "Archive Event"
 msgstr "Eveniment de arhivă"
+
+#, fuzzy
+msgid "Archive all events of this host?"
+msgstr "Arhiva evenimentelor de gazde"
 
 msgid "Archive all open events of all hosts shown in host views"
 msgstr ""
@@ -6823,6 +6774,10 @@ msgstr "Autor"
 #, fuzzy
 msgid "Author comment (regex)"
 msgstr "Comentariul autorului"
+
+#, fuzzy, python-format
+msgid "Author: %s"
+msgstr "Autor"
 
 #, fuzzy
 msgid "Authority"
@@ -9861,9 +9816,6 @@ msgstr "Schimbați starea CRITICAL în"
 msgid "Change Context Info to"
 msgstr "Schimbați Context Info în"
 
-msgid "Change Event state to:"
-msgstr "Schimbați starea evenimentului în:"
-
 msgid "Change OK State to"
 msgstr "Schimbați starea OK în"
 
@@ -9898,6 +9850,10 @@ msgid "Change downtime start"
 msgstr "Schimbarea timpului de oprire începe"
 
 msgid "Change event state"
+msgstr "Schimbarea stării evenimentului"
+
+#, fuzzy
+msgid "Change event state?"
 msgstr "Schimbarea stării evenimentului"
 
 #, python-format
@@ -11228,9 +11184,6 @@ msgstr "Ștergeți jurnalele"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
-
-msgid "Clear modified attributes"
-msgstr "Ștergeți atributele modificate"
 
 msgid ""
 "Clear the entries of the audit log. To be able to clear the audit log a user "
@@ -14231,9 +14184,6 @@ msgstr "Localizări personalizate"
 msgid "Custom logos"
 msgstr "Logouri personalizate"
 
-msgid "Custom notification"
-msgstr "Notificare personalizată"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Tabel de notificare personalizat pentru utilizator %s"
@@ -15396,6 +15346,11 @@ msgstr ""
 "în cazul în care selectați a doua opțiune, va trebui să creați gazda "
 "(gazdele) piggyback"
 
+msgid ""
+"Define the maximum session duration. If reached, the user has to re-"
+"authenticate."
+msgstr ""
+
 msgid "Define upper levels for number of running containers"
 msgstr ""
 "Definirea nivelurilor superioare pentru numărul de containere care rulează"
@@ -15572,6 +15527,10 @@ msgstr "Ștergeți copia de rezervă"
 msgid "Delete backup key #%d"
 msgstr "Ștergeți cheia de rezervă #%d"
 
+#, fuzzy
+msgid "Delete comments"
+msgstr "Comentariu la eveniment"
+
 #, fuzzy, python-format
 msgid "Delete connection #%d"
 msgstr "Ștergeți conexiunea #%d"
@@ -15584,6 +15543,10 @@ msgstr "Ștergeți rapoartele de accident"
 
 msgid "Delete crash reports created by Checkmk"
 msgstr "Ștergeți rapoartele de accident create de Checkmk"
+
+#, fuzzy
+msgid "Delete crash reports?"
+msgstr "Ștergeți rapoartele de accident"
 
 #, fuzzy, python-format
 msgid "Delete custom attribute #%d"
@@ -16681,6 +16644,14 @@ msgstr "Dezactivarea serviciilor monitorizate"
 
 msgid "Disable notifications"
 msgstr "Dezactivați notificările"
+
+#, fuzzy
+msgid "Disable notifications?"
+msgstr "Dezactivați notificările"
+
+#, fuzzy
+msgid "Disable passive checks"
+msgstr "Dezactivarea verificărilor active"
 
 msgid "Disable password"
 msgstr "Dezactivați parola"
@@ -17815,10 +17786,6 @@ msgstr "Transferați contextul"
 msgid "Do you really want revert the following changes?"
 msgstr "O agregare legată de un singur element"
 
-#, python-format
-msgid "Do you really want to %s"
-msgstr "Chiar vrei să %s"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Chiar doriți să mutați agregările selectate?"
 
@@ -18538,6 +18505,10 @@ msgstr "Editați BI Pack %s"
 msgid "Edit Downtimes"
 msgstr "Editarea timpilor de întrerupere"
 
+#, fuzzy
+msgid "Edit Downtimes?"
+msgstr "Editarea timpilor de întrerupere"
+
 msgid "Edit GUI design for this customer"
 msgstr "Editați designul GUI pentru acest client"
 
@@ -19193,6 +19164,14 @@ msgstr "Activați autentificarea prin cereri GET"
 msgid "Enable notification logging"
 msgstr "Activați jurnalizarea notificărilor"
 
+#, fuzzy
+msgid "Enable notifications?"
+msgstr "Activați notificările gazdă"
+
+#, fuzzy
+msgid "Enable passive checks"
+msgstr "Activarea verificărilor active"
+
 msgid "Enable per-process details"
 msgstr "Activați detaliile pe proces"
 
@@ -19260,6 +19239,14 @@ msgstr "Activați parametrii temporali specifici"
 
 msgid "Enable trend computation"
 msgstr "Activați calculul tendințelor"
+
+#, fuzzy
+msgid "Enable/Disable active checks"
+msgstr "Dezactivarea verificărilor active"
+
+#, fuzzy
+msgid "Enable/Disable passive checks"
+msgstr "Activarea/dezactivarea verificărilor"
 
 msgid "Enable/disable active checks for services"
 msgstr "Activarea/dezactivarea verificărilor active pentru servicii"
@@ -19637,6 +19624,10 @@ msgstr "Introduceți numele de utilizator"
 
 msgid "Enter user password"
 msgstr "Introduceți parola de utilizator"
+
+#, fuzzy
+msgid "Enter your message here"
+msgstr "Nivelul inferior pentru rata mesajelor"
 
 msgid "Enterasys LSNAT Bindings"
 msgstr "Enterasys LSNAT Bindings"
@@ -20284,6 +20275,10 @@ msgstr "Format executabil (Linux)"
 msgid "Executable:"
 msgstr "Executabil:"
 
+#, fuzzy
+msgid "Execute"
+msgstr "Executiv"
+
 msgid "Execute MRPE checks"
 msgstr "Executarea verificărilor MRPE"
 
@@ -20300,6 +20295,10 @@ msgstr "Executiv"
 #, fuzzy
 msgid "Execute as another user"
 msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy, python-format
+msgid "Execute custom action '%s'?"
+msgstr "executați acțiunea \"%s\""
 
 msgid "Execute legacy monitoring plugins"
 msgstr "Executarea plugin-urilor de monitorizare moștenite"
@@ -22319,6 +22318,14 @@ msgstr "Spațiu swap liber"
 
 msgid "Free tapes"
 msgstr "Casete gratuite"
+
+#, fuzzy
+msgid "Freeze"
+msgstr "Gratuit"
+
+#, fuzzy
+msgid "Freeze aggregation?"
+msgstr "Înghețarea agregărilor"
 
 msgid "Freeze aggregations"
 msgstr "Înghețarea agregărilor"
@@ -33280,6 +33287,10 @@ msgstr ""
 "Permiteți manual nucleului să trimită o notificare către o gazdă sau un "
 "serviciu pentru a testa dacă notificările sunt configurate corect."
 
+#, fuzzy, python-format
+msgid "Manually set check results to %s?"
+msgstr "<b>setează manual rezultatele verificării la %s</b> pentru"
+
 #, python-format
 msgid "Manually set to %s by %s"
 msgstr "Setat manual la %s de către %s."
@@ -34857,9 +34868,6 @@ msgstr "Mod lipsă sau invalid. Permise sunt 'agent' și 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Lipsește parametrul \"%s\"."
 
-msgid "Missing prediction data."
-msgstr "Date de predicție lipsă."
-
 msgid "Missing render parameter"
 msgstr "Parametru de redare lipsă"
 
@@ -35005,9 +35013,6 @@ msgstr "Regula BI modificată %s."
 
 msgid "Modified NFS data"
 msgstr "Date NFS modificate"
-
-msgid "Modified attributes"
-msgstr "Atribute modificate"
 
 #, python-format
 msgid "Modified event correlation rule %s"
@@ -36390,6 +36395,10 @@ msgstr "Nume nou"
 msgid "New passwords don't match."
 msgstr "Cele două parole nu se potrivesc."
 
+#, fuzzy, python-format
+msgid "New state: %s"
+msgstr "Statul de muncă: %s"
+
 msgid "New view"
 msgstr "Vedere nouă"
 
@@ -37461,6 +37470,10 @@ msgstr "Notificări ale gazdei"
 
 msgid "Notifications of host & services"
 msgstr "Notificări ale gazdei & servicii"
+
+#, fuzzy
+msgid "Notifications will be sent according to the notification rules"
+msgstr "Ordinea de sortare a notificărilor pentru notificările în masă"
 
 msgid "Notified events for hosts"
 msgstr "Evenimente notificate pentru gazde"
@@ -42054,8 +42067,9 @@ msgstr ""
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Prevenirea căutărilor DNS prin utilizarea unui fișier cache"
 
-msgid "Prevent data loss of forms by forcing re-authentication after"
-msgstr ""
+#, fuzzy
+msgid "Prevent data loss of forms by forcing re-authentification after"
+msgstr "Date de autentificare locală"
 
 msgid "Prevent host deletion after initialization"
 msgstr "Împiedicați ștergerea gazdei după inițializare"
@@ -43903,6 +43917,10 @@ msgstr "Îndepărtați configurația Windows Firewall, dacă este prezentă"
 msgid "Remove acknowledgement"
 msgstr "Eliminarea confirmării"
 
+#, fuzzy
+msgid "Remove acknowledgement?"
+msgstr "Eliminarea confirmării"
+
 msgid "Remove all"
 msgstr "Eliminați toate"
 
@@ -43915,10 +43933,15 @@ msgstr "Eliminați toate timpii de nefuncționare"
 msgid "Remove all files and subdirectories"
 msgstr "Îndepărtați toate fișierele și subdirectoarele"
 
-msgid "Remove comments"
-msgstr "Eliminați comentariile"
+#, fuzzy
+msgid "Remove all scheduled downtimes?"
+msgstr "<b>șterge toți timpii morți programați</b> pentru "
 
 msgid "Remove downtimes"
+msgstr "Eliminați timpii de nefuncționare"
+
+#, fuzzy
+msgid "Remove downtimes?"
 msgstr "Eliminați timpii de nefuncționare"
 
 msgid "Remove explicit attribute settings"
@@ -44556,6 +44579,10 @@ msgstr "Reprogramați 'Check_MK' serviciul"
 msgid "Reschedule active checks"
 msgstr "Reprogramarea controalelor active"
 
+#, fuzzy
+msgid "Reschedule active checks immediately?"
+msgstr "Reprogramarea controalelor active"
+
 msgid "Reschedule check"
 msgstr "Reprogramare verificare"
 
@@ -44593,6 +44620,10 @@ msgstr ""
 msgid "Reset all rule hit counters to zero"
 msgstr "Resetarea la zero a tuturor contoarelor de succese ale regulilor"
 
+#, fuzzy
+msgid "Reset attributes"
+msgstr "Atributul rolului"
+
 msgid "Reset configuration variable to default value"
 msgstr "Resetarea variabilei de configurare la valoarea implicită"
 
@@ -44615,6 +44646,10 @@ msgstr ""
 
 msgid "Reset to default"
 msgstr "Resetare la valorile implicite"
+
+#, python-format
+msgid "Resets the commands '%s', '%s' and '%s' to the default state"
+msgstr ""
 
 #, python-format
 msgid "Resetted configuration variable %s to its default."
@@ -45978,6 +46013,18 @@ msgstr "Interval de scanare"
 msgid "Schedule"
 msgstr "Programare"
 
+#, fuzzy, python-format
+msgid "Schedule a downtime from %s to %s?"
+msgstr "<b>programează o perioadă de întrerupere de la %s la %s</b>."
+
+#, fuzzy, python-format
+msgid "Schedule a periodic downtime every %s"
+msgstr "programați o oprire periodică la fiecare %s."
+
+#, fuzzy
+msgid "Schedule an immediate downtime"
+msgstr "programați o oprire imediată"
+
 msgid "Schedule and remove downtimes on hosts and services"
 msgstr ""
 "Programarea și eliminarea perioadelor de oprire a gazdelor și serviciilor"
@@ -45988,6 +46035,10 @@ msgstr "Programarea timpului de oprire pentru %d %s"
 
 msgid "Schedule downtime on host"
 msgstr "Programarea timpului de oprire pe gazdă"
+
+#, fuzzy
+msgid "Schedule downtime?"
+msgstr "Programarea perioadelor de oprire"
 
 msgid "Schedule downtimes"
 msgstr "Programarea perioadelor de oprire"
@@ -46777,6 +46828,11 @@ msgstr "Trimiteți notificări către Consola de evenimente"
 msgid "Send notifications to remote Event Console"
 msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
+msgid ""
+"Send regardless of restrictions, e.g. notification period or disabled "
+"notifications (forced)"
+msgstr ""
+
 msgid "Send request"
 msgstr "Trimiteți o cerere"
 
@@ -46788,6 +46844,11 @@ msgstr "Trimiteți parametrii serviciului către Graphite"
 
 msgid "Send that many PINGs in one bulk:"
 msgstr "Trimiteți atât de multe PING-uri într-un singur pachet:"
+
+#, fuzzy
+msgid "Send to all contacts of the selected hosts/services (broadcast)"
+msgstr ""
+"Notifică toate persoanele de contact ale gazdei sau serviciului notificat."
 
 msgid "Send to remote Event Console via syslog"
 msgstr "Trimiteți la consola de evenimente la distanță prin syslog"
@@ -47492,6 +47553,10 @@ msgstr "Sesiune timeout:"
 
 msgid "Session type"
 msgstr "Tipul de sesiune"
+
+#, fuzzy
+msgid "Set"
+msgstr "Trimis"
 
 msgid "Set IPv4 address"
 msgstr "Setați adresa IPv4"
@@ -49795,9 +49860,10 @@ msgstr ""
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Specificați aici un nume arbitrar al acestei conexiuni"
 
+#, fuzzy
 msgid ""
 "Specify an explicit IP address or resolvable DNS name here, if the hostname "
-"is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set this "
+"is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
 "configuration to speed up the activation process. The cache is normally "
@@ -49818,9 +49884,10 @@ msgstr ""
 "introduceți un nume DNS aici, rezoluția DNS va fi efectuată de fiecare dată "
 "când este verificată gazda. Checkmk's DNS cache is <b>NOT</b> queried."
 
+#, fuzzy
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set "
+"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -50397,6 +50464,10 @@ msgstr "Cereri de instanță la fața locului"
 
 msgid "Spread over"
 msgstr "Se întinde peste"
+
+#, fuzzy, python-format
+msgid "Spreading: %s minutes"
+msgstr " peste următoarele %d minute "
 
 msgid "Sproc Latency"
 msgstr "Latență Sproc"
@@ -52170,9 +52241,6 @@ msgstr "Rezumatul socket-urilor Systemd"
 
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
-
-msgid "TBA"
-msgstr ""
 
 msgid "TCP"
 msgstr "TCP"
@@ -54602,11 +54670,9 @@ msgstr "Fișierul nu conține text XML"
 msgid "The file does not look like a valid key file."
 msgstr "Fișierul nu pare a fi un fișier cheie valid."
 
-msgid "The file does not seem to be a valid iCalendar file.AAA"
+#, fuzzy
+msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Fișierul nu pare a fi un fișier iCalendar valid.AAA"
-
-msgid "The file does not seem to be a valid iCalendar file.BBB"
-msgstr "Fișierul nu pare a fi un fișier iCalendar valid.BBB"
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "Extensia fișierului trebuie să fie <tt>.pdf</tt>."
@@ -61826,6 +61892,10 @@ msgstr ""
 "Asigurați-vă, de asemenea, că <b>Send notifications to Event Console</b> "
 "este activată."
 
+#, fuzzy
+msgid "This will suppress all notifications"
+msgstr "Dezactivați toate notificările personale"
+
 msgid "This year"
 msgstr "În acest an"
 
@@ -62782,6 +62852,10 @@ msgstr "Lățimea de bandă totală (suma dintre intrare și ieșire)"
 
 msgid "Total cache usage"
 msgstr "Utilizarea totală a cache-ului"
+
+#, fuzzy, python-format
+msgid "Total comments: %d"
+msgstr "Total documente"
 
 msgid "Total containers"
 msgstr "Total containere"
@@ -64180,6 +64254,10 @@ msgstr "Actualizare"
 msgid "Update & acknowledge"
 msgstr "Actualizare & confirmați"
 
+#, fuzzy
+msgid "Update & acknowledge event?"
+msgstr "Actualizare & confirmați"
+
 msgid "Update DNS cache"
 msgstr "Actualizarea cache-ului DNS"
 
@@ -64206,6 +64284,10 @@ msgstr "Întârzierea de actualizare a meta-informațiilor PNP"
 
 msgid "Update duration"
 msgstr "Durata de actualizare"
+
+#, fuzzy
+msgid "Update event?"
+msgstr "Actualizarea unui eveniment"
 
 msgid "Update host labels"
 msgstr "Actualizarea etichetelor gazdă"
@@ -71552,9 +71634,6 @@ msgstr "biți/s"
 msgid "blocks/s"
 msgstr "blocuri/s"
 
-msgid "broadcast"
-msgstr "difuzare"
-
 #, fuzzy
 msgid "built-in"
 msgstr "built-in"
@@ -71584,9 +71663,6 @@ msgstr "cazul"
 msgid "cases"
 msgstr "cazuri"
 
-msgid "change the state"
-msgstr "schimba starea"
-
 msgid "check plugins"
 msgstr "verificați plugin-urile"
 
@@ -71610,12 +71686,6 @@ msgstr "prăbușit"
 
 msgid "command"
 msgstr "comanda"
-
-msgid "comment"
-msgid_plural "comments"
-msgstr[0] "comentariu"
-msgstr[1] ""
-msgstr[2] ""
 
 msgid "complete"
 msgstr "complet"
@@ -71655,6 +71725,13 @@ msgstr "numărare"
 
 msgid "cp437"
 msgstr "cp437"
+
+#, fuzzy
+msgid "crash report"
+msgid_plural "crash reports"
+msgstr[0] "Raport de accident"
+msgstr[1] "Raport de accident"
+msgstr[2] "Raport de accident"
 
 msgid "critical at"
 msgstr "critică la"
@@ -71905,10 +71982,6 @@ msgstr "potrivire exactă"
 msgid "excluded"
 msgstr "exclus"
 
-#, python-format
-msgid "execute the action \"%s\""
-msgstr "executați acțiunea \"%s\""
-
 msgid "execution count"
 msgstr "numărul de execuție"
 
@@ -71981,9 +72054,6 @@ msgstr "pentru"
 msgid "force"
 msgstr "forță"
 
-msgid "forced"
-msgstr "forțat"
-
 msgid "forced-commands-only"
 msgstr "forced-commands-only"
 
@@ -72001,15 +72071,6 @@ msgstr "contracte de leasing gratuit"
 
 msgid "free space"
 msgstr "spațiu liber"
-
-# georgem ##############
-#, fuzzy, python-format
-msgid "freeze the following %d aggregations?"
-msgstr "îngheață următoarele agregări %d?"
-
-# georgem ##############
-msgid "freeze the following aggregation?"
-msgstr "îngheață următoarea agregare?"
 
 msgid "from the beginning"
 msgstr "de la început"
@@ -72486,9 +72547,6 @@ msgstr ""
 msgid "mm"
 msgstr "mm"
 
-msgid "modify"
-msgstr "modificați"
-
 msgid "monitor"
 msgstr "monitor"
 
@@ -72881,24 +72939,15 @@ msgstr ""
 "endpoint-ul de la distanță s-a închis; kernel-ul așteaptă ca aplicația să "
 "închidă socket-ul"
 
-msgid "remove"
-msgstr "eliminați"
-
-#, python-format
-msgid "remove the following %d %s?"
-msgstr "eliminați următoarele %d %s?"
-
 msgid "repeat every 20'th row"
 msgstr "se repetă la fiecare 20'th rând"
 
 msgid "repeat:"
 msgstr "repetați:"
 
+#, fuzzy
 msgid "report"
-msgid_plural "reports"
-msgstr[0] "raport"
-msgstr[1] ""
-msgstr[2] ""
+msgstr "raport"
 
 msgid "report element"
 msgstr "element de raport"
@@ -72924,9 +72973,6 @@ msgstr ""
 
 msgid "require primary interface to be active"
 msgstr "necesită ca interfața principală să fie activă"
-
-msgid "reschedule an immediate check"
-msgstr "reprogramați un control imediat"
 
 msgid "reset"
 msgstr "resetare"
@@ -72991,13 +73037,6 @@ msgstr "aceeași a n-a zi a săptămânii (de la început)"
 
 msgid "same nth weekday (from end)"
 msgstr "aceeași a n-a zi a săptămânii (de la sfârșit)"
-
-#, python-format
-msgid "schedule a periodic downtime every %s"
-msgstr "programați o oprire periodică la fiecare %s."
-
-msgid "schedule an immediate downtime"
-msgstr "programați o oprire imediată"
 
 msgid "sec"
 msgstr "sec"
@@ -73230,9 +73269,6 @@ msgstr "licente nefolosite"
 msgid "up"
 msgstr "sus"
 
-msgid "update"
-msgstr "actualizare"
-
 msgid "upload insecure snapshots"
 msgstr "urca snapshot-uri nesigure"
 
@@ -73421,6 +73457,153 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "The file does not seem to be a valid iCalendar file.BBB"
+#~ msgstr "Fișierul nu pare a fi un fișier iCalendar valid.BBB"
+
+#, python-format
+#~ msgid " for the following %d Event Console  %s"
+#~ msgstr ""
+#~ " pentru următoarea consolă de evenimente %d Consola de evenimente %s."
+
+#, python-format
+#~ msgid " of the following %d Event Console %s"
+#~ msgstr " din următoarele %d Consola de evenimente %s."
+
+#, python-format
+#~ msgid " the following %d Event Console %s"
+#~ msgstr " următorul %d Event Console %s."
+
+#, python-format
+#~ msgid " the following %d crash %s"
+#~ msgstr " următoarele %d crash %s"
+
+#, fuzzy, python-format
+#~| msgid "event"
+#~| msgid_plural "events"
+#~ msgid "%s event"
+#~ msgstr "eveniment"
+
+#, fuzzy
+#~| msgid "New event created"
+#~ msgid "New event state:"
+#~ msgstr "Eveniment nou creat"
+
+# georgem ##############
+#, fuzzy, python-format
+#~ msgid "freeze the following %d aggregations?"
+#~ msgstr "îngheață următoarele agregări %d?"
+
+# georgem ##############
+#~ msgid "freeze the following aggregation?"
+#~ msgstr "îngheață următoarea agregare?"
+
+#, fuzzy, python-format
+#~| msgid "User notification"
+#~ msgid "%s notifications"
+#~ msgstr "Notificarea utilizatorului"
+
+#~ msgid "Clear modified attributes"
+#~ msgstr "Ștergeți atributele modificate"
+
+#~ msgid "Custom notification"
+#~ msgstr "Notificare personalizată"
+
+#~ msgid "Modified attributes"
+#~ msgstr "Atribute modificate"
+
+#~ msgid "Remove comments"
+#~ msgstr "Eliminați comentariile"
+
+#~ msgid "broadcast"
+#~ msgstr "difuzare"
+
+#~ msgid "forced"
+#~ msgstr "forțat"
+
+#, python-format
+#~ msgid " for a period of %s"
+#~ msgstr " pentru o perioadâ de %s"
+
+#~ msgid " of"
+#~ msgstr " de"
+
+#, fuzzy, python-format
+#~| msgid "Title of the tree"
+#~ msgid "% of the time"
+#~ msgstr "Titlul copacului"
+
+#, python-format
+#~ msgid "<b>acknowledge the problems%s</b> of"
+#~ msgstr "<b>confirmă problemele%s</b> lui"
+
+#~ msgid "<b>add a comment to</b>"
+#~ msgstr "adaugă un comentariu la"
+
+#~ msgid "<b>archive</b>"
+#~ msgstr "<b>arhivează</b>"
+
+#~ msgid "<b>clear the modified attributes</b> of"
+#~ msgstr "<b>șterge atributele modificate</b> ale"
+
+#~ msgid "<b>disable active checks</b> for"
+#~ msgstr "<b>dezactivează verificările active</b> pentru"
+
+#~ msgid "<b>disable notifications</b> for"
+#~ msgstr "<b>dezactivează notificările</b> pentru"
+
+#~ msgid "<b>disable passive checks</b> for"
+#~ msgstr "<b>dezactivează verificările pasive</b> pentru"
+
+#~ msgid "<b>enable active checks</b> for"
+#~ msgstr "<b>activează verificările active</b> pentru"
+
+#~ msgid "<b>enable notifications</b> for"
+#~ msgstr "<b>activează notficările</b> pentru"
+
+#~ msgid "<b>enable passive checks</b> for"
+#~ msgstr "<b>activează verificările pasive</b> pentru"
+
+#~ msgid "<b>remove acknowledgements</b> from"
+#~ msgstr "<b>șterge confirmările</b> de la"
+
+#~ msgid "<b>send a custom notification</b> regarding"
+#~ msgstr "<b>trimite o notificare personalizată</b> cu privire la"
+
+#~ msgid "Change Event state to:"
+#~ msgstr "Schimbați starea evenimentului în:"
+
+#, python-format
+#~ msgid "Do you really want to %s"
+#~ msgstr "Chiar vrei să %s"
+
+#~ msgid "Missing prediction data."
+#~ msgstr "Date de predicție lipsă."
+
+#~ msgid "change the state"
+#~ msgstr "schimba starea"
+
+#~ msgid "comment"
+#~ msgid_plural "comments"
+#~ msgstr[0] "comentariu"
+#~ msgstr[1] ""
+#~ msgstr[2] ""
+
+#~ msgid "modify"
+#~ msgstr "modificați"
+
+#~ msgid "remove"
+#~ msgstr "eliminați"
+
+#, python-format
+#~ msgid "remove the following %d %s?"
+#~ msgstr "eliminați următoarele %d %s?"
+
+#~ msgid "reschedule an immediate check"
+#~ msgstr "reprogramați un control imediat"
+
+#~ msgid "update"
+#~ msgstr "actualizare"
 
 #, fuzzy
 #~| msgid "Discard all pending changes"

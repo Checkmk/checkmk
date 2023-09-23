@@ -140,20 +140,12 @@ msgstr " y el %s '%s'."
 msgid " for %d of %d recipients."
 msgstr " para %d o %d destinatarios."
 
-#, python-format
-msgid " for a period of %s"
-msgstr " por un período de f %s"
-
 msgid " for all recipients."
 msgstr " para todos los destinatarios."
 
 #, python-format
 msgid " for host %s"
 msgstr " para el host %s"
-
-#, python-format
-msgid " for the following %d Event Console  %s"
-msgstr " para el siguiente %d evento %s"
 
 #, python-format
 msgid " in %d days"
@@ -172,34 +164,15 @@ msgstr " a la izquierda en su prueba gratuita"
 msgid " next week"
 msgstr " próxima semana"
 
-msgid " of"
-msgstr " de"
-
 #, python-format
 msgid " of service %s on host %s"
 msgstr " del servicio %s en el host %s"
-
-#, python-format
-msgid " of the following %d Event Console %s"
-msgstr " del siguiente %d consola de eventos %s"
 
 msgid " or "
 msgstr " o "
 
 msgid " or int"
 msgstr " o int"
-
-#, python-format
-msgid " spread over %d minutes "
-msgstr " repartidos en %d minutos "
-
-#, python-format
-msgid " the following %d Event Console %s"
-msgstr " el siguiente %d consola de eventos %s"
-
-#, python-format
-msgid " the following %d crash %s"
-msgstr " el siguiente %d falla %s"
 
 msgid " to:"
 msgstr " a:"
@@ -323,9 +296,9 @@ msgstr "% de conexiones inactivas máximas"
 msgid "% of port speed"
 msgstr "% de velocidad del puerto"
 
-#, fuzzy, python-format
-msgid "% of the time"
-msgstr "Título del árbol"
+#, python-format
+msgid "% of the specified time via GET request"
+msgstr ""
 
 #, no-python-format
 msgid "% time"
@@ -1190,28 +1163,28 @@ msgstr ""
 "correspondiente. De lo contrario, pueden producirse colisiones de nombres si "
 "existen contenedores con el mismo nombre en más de un nodo Docker."
 
-#, python-format
-msgid "<b>%%s of %s length</b>"
+#, fuzzy, python-format
+msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s de %s longitud</b>"
 
-#, python-format
-msgid "<b>%s for the next %d minutes</b>"
+#, fuzzy, python-format
+msgid "<b>%s for the next %d minutes</b>?"
 msgstr "<b>%s en los próximos %d minutos</b>"
 
-#, python-format
-msgid "<b>%s until 24:00:00</b>"
+#, fuzzy, python-format
+msgid "<b>%s until 24:00:00</b>?"
 msgstr "<b>%s hasta 24:00:00</b>"
 
-#, python-format
-msgid "<b>%s until end of month</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of month</b>?"
 msgstr "<b>%s hasta fin de mes</b>"
 
-#, python-format
-msgid "<b>%s until end of year</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of year</b>?"
 msgstr "<b>%s hasta fin de año</b>"
 
-#, python-format
-msgid "<b>%s until sunday night</b>"
+#, fuzzy, python-format
+msgid "<b>%s until sunday night</b>?"
 msgstr "<b>%s hasta domingo a la noche</b>"
 
 msgid ""
@@ -1351,55 +1324,6 @@ msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Usted no tiene ningún rol.</b>"
-
-#, python-format
-msgid "<b>acknowledge the problems%s</b> of"
-msgstr "<b>identifique los problemas%s</b> de"
-
-msgid "<b>add a comment to</b>"
-msgstr "<b>Agregar un comentario a</b>"
-
-msgid "<b>archive</b>"
-msgstr "<b>archivar</b>"
-
-msgid "<b>clear the modified attributes</b> of"
-msgstr "<b>borrar los atributos modificados</b> de"
-
-msgid "<b>disable active checks</b> for"
-msgstr "<b>deshabilitar comprobaciones activas</b> para"
-
-msgid "<b>disable notifications</b> for"
-msgstr "<b>deshabilitar notificaciones</b> para"
-
-msgid "<b>disable passive checks</b> for"
-msgstr "<b>desactivar las comprobaciones pasivas</b> para"
-
-msgid "<b>enable active checks</b> for"
-msgstr "<b>habilitar las comprobaciones activas</b> para"
-
-msgid "<b>enable notifications</b> for"
-msgstr "<b>habilitar notificaciones</b> para"
-
-msgid "<b>enable passive checks</b> for"
-msgstr "<b>habilitar las comprobaciones pasivas</b> para"
-
-#, python-format
-msgid "<b>manually set check results to %s</b> for"
-msgstr ""
-"<b>establecer manualmente los resultados de la comprobación en%s</b> para"
-
-msgid "<b>remove acknowledgements</b> from"
-msgstr "<b>eliminar reconocimientos</b> de"
-
-msgid "<b>remove all scheduled downtimes</b> of "
-msgstr "<b>eliminar todos los tiempos de inactividad programados</b> de "
-
-#, python-format
-msgid "<b>schedule a downtime from %s to %s</b>"
-msgstr "<b>programar un tiempo de inactividad de%s a%s</b>"
-
-msgid "<b>send a custom notification</b> regarding"
-msgstr "<b>enviar una notificación personalizada</b> acerca de"
 
 msgid ""
 "<br> HINT: The individual program is called from the current working "
@@ -3123,6 +3047,10 @@ msgstr "Acuse de recibo del último resultado de %s"
 msgid "Acknowledge problems"
 msgstr "Reconocer los problemas"
 
+#, fuzzy
+msgid "Acknowledge problems?"
+msgstr "Reconocer los problemas"
+
 #, python-format
 msgid "Acknowledge this test result for site %s"
 msgstr "Acuse de recibo de este resultado de la prueba para el sitio %s"
@@ -3649,6 +3577,10 @@ msgid "Add column"
 msgstr "Añadir columna"
 
 msgid "Add comment"
+msgstr "Añadir un comentario"
+
+#, fuzzy
+msgid "Add comment?"
 msgstr "Añadir un comentario"
 
 msgid "Add comments"
@@ -4361,6 +4293,10 @@ msgstr "HiveManager de Aerohive"
 
 msgid "Aerohive HiveManager NG"
 msgstr "Aerohive HiveManager NG"
+
+#, fuzzy, python-format
+msgid "Affected %s: %s"
+msgstr "Lugares afectados"
 
 msgid "Affected by service"
 msgstr "Afectados por el servicio"
@@ -5195,6 +5131,12 @@ msgstr "Todos los elementos de la tupla deben ser de tipo int, tienes %s"
 
 msgid "All even pages"
 msgstr "Todas las páginas pares"
+
+#, python-format
+msgid ""
+"All events of the host '%s' will be removed from the open events list. You "
+"can still access them in the archive."
+msgstr ""
 
 msgid "All flows"
 msgstr "Todos los flujos"
@@ -6404,8 +6346,16 @@ msgstr "Abril"
 msgid "Architecture"
 msgstr "Arquitectura"
 
+#, fuzzy
+msgid "Archive"
+msgstr "Evento archivado"
+
 msgid "Archive Event"
 msgstr "Evento archivado"
+
+#, fuzzy
+msgid "Archive all events of this host?"
+msgstr "Archivo de eventos de los hosts"
 
 msgid "Archive all open events of all hosts shown in host views"
 msgstr ""
@@ -6826,6 +6776,10 @@ msgstr "Autor"
 #, fuzzy
 msgid "Author comment (regex)"
 msgstr "Comentario del autor"
+
+#, fuzzy, python-format
+msgid "Author: %s"
+msgstr "Autor"
 
 #, fuzzy
 msgid "Authority"
@@ -9853,9 +9807,6 @@ msgstr "Cambie el estado crítico a"
 msgid "Change Context Info to"
 msgstr "Cambiar la información de contexto a"
 
-msgid "Change Event state to:"
-msgstr "Cambia el estado del evento a:"
-
 msgid "Change OK State to"
 msgstr "Cambiar el estado de OK a"
 
@@ -9890,6 +9841,10 @@ msgid "Change downtime start"
 msgstr "Cambiar el inicio del tiempo de inactividad"
 
 msgid "Change event state"
+msgstr "Cambiar el estado del evento"
+
+#, fuzzy
+msgid "Change event state?"
 msgstr "Cambiar el estado del evento"
 
 #, python-format
@@ -11220,9 +11175,6 @@ msgstr "Limpiar los registros"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "Borrar los registros eliminando todos los mensajes almacenados"
-
-msgid "Clear modified attributes"
-msgstr "Borrar los atributos modificados"
 
 msgid ""
 "Clear the entries of the audit log. To be able to clear the audit log a user "
@@ -14217,9 +14169,6 @@ msgstr "Localizaciones personalizadas"
 msgid "Custom logos"
 msgstr "Logotipos personalizados"
 
-msgid "Custom notification"
-msgstr "Notificación personalizada"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Tabla de notificaciones personalizada para el usuario %s"
@@ -15378,6 +15327,11 @@ msgstr ""
 "distribución de CloudFront - en caso de que seleccione la segunda opción, "
 "tendrá que crear el/los host piggyback"
 
+msgid ""
+"Define the maximum session duration. If reached, the user has to re-"
+"authenticate."
+msgstr ""
+
 msgid "Define upper levels for number of running containers"
 msgstr ""
 "Definir niveles superiores para el número de contenedores en funcionamiento"
@@ -15552,6 +15506,10 @@ msgstr "Eliminar copia de seguridad"
 msgid "Delete backup key #%d"
 msgstr "Borrar clave de seguridad #%d"
 
+#, fuzzy
+msgid "Delete comments"
+msgstr "Comentario del evento"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Borrar conexión #%d"
@@ -15564,6 +15522,10 @@ msgstr "Borrar los informes de accidentes"
 
 msgid "Delete crash reports created by Checkmk"
 msgstr "Eliminar informes de accidentes creados por Checkmk"
+
+#, fuzzy
+msgid "Delete crash reports?"
+msgstr "Borrar los informes de accidentes"
 
 #, python-format
 msgid "Delete custom attribute #%d"
@@ -16675,6 +16637,14 @@ msgstr "Desactivar los servicios supervisados"
 
 msgid "Disable notifications"
 msgstr "activar las notificaciones"
+
+#, fuzzy
+msgid "Disable notifications?"
+msgstr "activar las notificaciones"
+
+#, fuzzy
+msgid "Disable passive checks"
+msgstr "Desactivar las comprobaciones activas"
 
 msgid "Disable password"
 msgstr "Desactivar contraseña"
@@ -17806,10 +17776,6 @@ msgstr "Transfiera el contexto"
 msgid "Do you really want revert the following changes?"
 msgstr "¿Realmente quieres borrar la carpeta %s?"
 
-#, python-format
-msgid "Do you really want to %s"
-msgstr "¿Realmente quieres %s"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "¿Realmente quiere mover las agregaciones seleccionadas?"
 
@@ -18525,6 +18491,10 @@ msgstr "Editar Pack BI %s"
 msgid "Edit Downtimes"
 msgstr "Editar los tiempos de inactividad"
 
+#, fuzzy
+msgid "Edit Downtimes?"
+msgstr "Editar los tiempos de inactividad"
+
 msgid "Edit GUI design for this customer"
 msgstr "Editar el diseño de la interfaz gráfica de usuario para este cliente"
 
@@ -19185,6 +19155,14 @@ msgstr "Habilitar el inicio de sesión mediante peticiones GET"
 msgid "Enable notification logging"
 msgstr "Activar el registro de notificaciones"
 
+#, fuzzy
+msgid "Enable notifications?"
+msgstr "activar las notificaciones"
+
+#, fuzzy
+msgid "Enable passive checks"
+msgstr "Habilitar los controles activos"
+
 msgid "Enable per-process details"
 msgstr "Activar los detalles por proceso"
 
@@ -19254,6 +19232,14 @@ msgstr "Habilitar parámetros específicos de tiempo"
 
 msgid "Enable trend computation"
 msgstr "Activar el cálculo de la tendencia"
+
+#, fuzzy
+msgid "Enable/Disable active checks"
+msgstr "Desactivar las comprobaciones activas"
+
+#, fuzzy
+msgid "Enable/Disable passive checks"
+msgstr "Activar/desactivar controles"
 
 msgid "Enable/disable active checks for services"
 msgstr "Activar/desactivar las comprobaciones activas de los servicios"
@@ -19628,6 +19614,10 @@ msgstr "Introduzca el nombre de usuario"
 
 msgid "Enter user password"
 msgstr "Introduzca la contraseña del usuario"
+
+#, fuzzy
+msgid "Enter your message here"
+msgstr "Nivel inferior para la tasa de mensajes"
 
 msgid "Enterasys LSNAT Bindings"
 msgstr "Enlaces LSNAT de Enterasys"
@@ -20269,6 +20259,10 @@ msgstr "Formato del ejecutable (Linux)"
 msgid "Executable:"
 msgstr "Ejecutables:"
 
+#, fuzzy
+msgid "Execute"
+msgstr "Ejecutivo"
+
 msgid "Execute MRPE checks"
 msgstr "Ejecutar las comprobaciones del MRPE"
 
@@ -20285,6 +20279,10 @@ msgstr "Ejecutivo"
 #, fuzzy
 msgid "Execute as another user"
 msgstr "Activar los cambios de otros usuarios"
+
+#, fuzzy, python-format
+msgid "Execute custom action '%s'?"
+msgstr "ejecutar la acción \"%s\""
 
 msgid "Execute legacy monitoring plugins"
 msgstr "Ejecutar plugins de monitorización heredados"
@@ -22307,6 +22305,14 @@ msgstr "Espacio de intercambio libre"
 
 msgid "Free tapes"
 msgstr "Cintas gratis"
+
+#, fuzzy
+msgid "Freeze"
+msgstr "Gratis"
+
+#, fuzzy
+msgid "Freeze aggregation?"
+msgstr "Congelar agregaciones"
 
 msgid "Freeze aggregations"
 msgstr "Congelar agregaciones"
@@ -33264,6 +33270,11 @@ msgstr ""
 "servicio para comprobar si las notificaciones están configuradas "
 "correctamente"
 
+#, fuzzy, python-format
+msgid "Manually set check results to %s?"
+msgstr ""
+"<b>establecer manualmente los resultados de la comprobación en%s</b> para"
+
 #, python-format
 msgid "Manually set to %s by %s"
 msgstr "Ajustado manualmente a %s por %s"
@@ -34840,9 +34851,6 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr "Falta el parámetro \"%s\"."
 
-msgid "Missing prediction data."
-msgstr "Datos de predicción que faltan."
-
 msgid "Missing render parameter"
 msgstr "Falta el parámetro de renderización"
 
@@ -34988,9 +34996,6 @@ msgstr "Regla de BI modificada %s"
 
 msgid "Modified NFS data"
 msgstr "Datos NFS modificados"
-
-msgid "Modified attributes"
-msgstr "Atributos modificados"
 
 #, python-format
 msgid "Modified event correlation rule %s"
@@ -36361,6 +36366,10 @@ msgstr "Nuevo nombre"
 msgid "New passwords don't match."
 msgstr "Las dos contraseñas no coinciden."
 
+#, fuzzy, python-format
+msgid "New state: %s"
+msgstr "Estado del trabajo: %s"
+
 msgid "New view"
 msgstr "Nueva vista"
 
@@ -37432,6 +37441,10 @@ msgstr "Notificaciones del host"
 
 msgid "Notifications of host & services"
 msgstr "Notificaciones de host y servicios"
+
+#, fuzzy
+msgid "Notifications will be sent according to the notification rules"
+msgstr "Ordenación de las notificaciones masivas"
 
 msgid "Notified events for hosts"
 msgstr "Eventos notificados para los hosts"
@@ -42011,8 +42024,9 @@ msgstr ""
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Evitar las búsquedas de DNS mediante el uso de un archivo de caché"
 
-msgid "Prevent data loss of forms by forcing re-authentication after"
-msgstr ""
+#, fuzzy
+msgid "Prevent data loss of forms by forcing re-authentification after"
+msgstr "Datos de autentificación local"
 
 msgid "Prevent host deletion after initialization"
 msgstr "Evitar el borrado de hosts tras la inicialización"
@@ -43863,6 +43877,10 @@ msgstr "Eliminar la configuración del Firewall de Windows si está presente"
 msgid "Remove acknowledgement"
 msgstr "Eliminar el acuse de recibo"
 
+#, fuzzy
+msgid "Remove acknowledgement?"
+msgstr "Eliminar el acuse de recibo"
+
 msgid "Remove all"
 msgstr "Eliminar todo"
 
@@ -43875,10 +43893,15 @@ msgstr "Eliminar todos los tiempos de inactividad"
 msgid "Remove all files and subdirectories"
 msgstr "Eliminar todos los archivos y subdirectorios"
 
-msgid "Remove comments"
-msgstr "Eliminar comentarios"
+#, fuzzy
+msgid "Remove all scheduled downtimes?"
+msgstr "<b>eliminar todos los tiempos de inactividad programados</b> de "
 
 msgid "Remove downtimes"
+msgstr "Eliminar los tiempos de inactividad"
+
+#, fuzzy
+msgid "Remove downtimes?"
 msgstr "Eliminar los tiempos de inactividad"
 
 msgid "Remove explicit attribute settings"
@@ -44526,6 +44549,10 @@ msgstr "Reprogramar el servicio 'Check_MK'"
 msgid "Reschedule active checks"
 msgstr "Reprogramar los controles activos"
 
+#, fuzzy
+msgid "Reschedule active checks immediately?"
+msgstr "Reprogramar los controles activos"
+
 msgid "Reschedule check"
 msgstr "Actualizar servicio"
 
@@ -44564,6 +44591,10 @@ msgstr ""
 msgid "Reset all rule hit counters to zero"
 msgstr "Poner a cero todos los contadores de aciertos de las reglas"
 
+#, fuzzy
+msgid "Reset attributes"
+msgstr "Atributo de función"
+
 msgid "Reset configuration variable to default value"
 msgstr "Restablecer el valor por defecto de la variable de configuración"
 
@@ -44587,6 +44618,10 @@ msgstr ""
 
 msgid "Reset to default"
 msgstr "Restablecer los valores por defecto"
+
+#, python-format
+msgid "Resets the commands '%s', '%s' and '%s' to the default state"
+msgstr ""
 
 #, python-format
 msgid "Resetted configuration variable %s to its default."
@@ -45952,6 +45987,18 @@ msgstr "Intervalo de exploración"
 msgid "Schedule"
 msgstr "Programar"
 
+#, fuzzy, python-format
+msgid "Schedule a downtime from %s to %s?"
+msgstr "<b>programar un tiempo de inactividad de%s a%s</b>"
+
+#, fuzzy, python-format
+msgid "Schedule a periodic downtime every %s"
+msgstr "programar una parada periódica cada %s"
+
+#, fuzzy
+msgid "Schedule an immediate downtime"
+msgstr "programar un tiempo de inactividad inmediato"
+
 msgid "Schedule and remove downtimes on hosts and services"
 msgstr "Programar y eliminar tiempos de inactividad en hosts y servicios"
 
@@ -45961,6 +46008,10 @@ msgstr "Programar el tiempo de inactividad para %d %s"
 
 msgid "Schedule downtime on host"
 msgstr "Programar el tiempo de inactividad en el host"
+
+#, fuzzy
+msgid "Schedule downtime?"
+msgstr "Programar los tiempos de inactividad"
 
 msgid "Schedule downtimes"
 msgstr "Programar los tiempos de inactividad"
@@ -46743,6 +46794,11 @@ msgstr "Enviar notificaciones a la consola de eventos"
 msgid "Send notifications to remote Event Console"
 msgstr "Enviar notificaciones a la Consola de Eventos remota"
 
+msgid ""
+"Send regardless of restrictions, e.g. notification period or disabled "
+"notifications (forced)"
+msgstr ""
+
 msgid "Send request"
 msgstr "Enviar solicitud"
 
@@ -46754,6 +46810,10 @@ msgstr "Enviar métricas de servicio a Graphite"
 
 msgid "Send that many PINGs in one bulk:"
 msgstr "Envía tantos PINGs en un solo paquete:"
+
+#, fuzzy
+msgid "Send to all contacts of the selected hosts/services (broadcast)"
+msgstr "Notificar a todos los contactos del host o servicio notificado."
 
 msgid "Send to remote Event Console via syslog"
 msgstr "Enviar a la Consola de Eventos remota vía syslog"
@@ -47436,6 +47496,10 @@ msgstr "Tiempo de espera de la sesión:"
 
 msgid "Session type"
 msgstr "Tipo de sesión"
+
+#, fuzzy
+msgid "Set"
+msgstr "Enviado"
 
 msgid "Set IPv4 address"
 msgstr "Establecer la dirección IPv4"
@@ -49743,9 +49807,10 @@ msgstr ""
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Especifique aquí un nombre arbitrario para esta conexión"
 
+#, fuzzy
 msgid ""
 "Specify an explicit IP address or resolvable DNS name here, if the hostname "
-"is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set this "
+"is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
 "configuration to speed up the activation process. The cache is normally "
@@ -49766,9 +49831,10 @@ msgstr ""
 "se realizará cada vez que se compruebe el host. La caché DNS de Checkmk'NO "
 "se consulta</b>."
 
+#, fuzzy
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set "
+"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -50350,6 +50416,10 @@ msgstr "Solicitudes de instancias puntuales"
 
 msgid "Spread over"
 msgstr "Repartidos en"
+
+#, fuzzy, python-format
+msgid "Spreading: %s minutes"
+msgstr " repartidos en %d minutos "
 
 msgid "Sproc Latency"
 msgstr "Latencia Sproc"
@@ -52117,9 +52187,6 @@ msgstr "Resumen de sockets Systemd"
 
 msgid "Systems larger than"
 msgstr "Sistemas mayores que"
-
-msgid "TBA"
-msgstr ""
 
 msgid "TCP"
 msgstr "TCP"
@@ -54541,11 +54608,9 @@ msgstr "El fichero no contiene texto XML"
 msgid "The file does not look like a valid key file."
 msgstr "El archivo no parece un archivo de claves válido."
 
-msgid "The file does not seem to be a valid iCalendar file.AAA"
+#, fuzzy
+msgid "The file does not seem to be a valid iCalendar file."
 msgstr "El archivo no parece ser un archivo válido de iCalendar.AAA"
-
-msgid "The file does not seem to be a valid iCalendar file.BBB"
-msgstr "El archivo no parece ser un archivo válido de iCalendar.BBB"
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "La extensión del archivo tiene que ser <tt>.pdf</tt>"
@@ -61745,6 +61810,10 @@ msgstr ""
 "fácil. Asegúrese también de que <b>Enviar notificaciones a la Consola de "
 "eventos</b> está activado."
 
+#, fuzzy
+msgid "This will suppress all notifications"
+msgstr "Desactivar todas las notificaciones personales"
+
 msgid "This year"
 msgstr "Este año"
 
@@ -62697,6 +62766,10 @@ msgstr "Ancho de banda total (suma de entrada y salida)"
 
 msgid "Total cache usage"
 msgstr "Uso total de la caché"
+
+#, fuzzy, python-format
+msgid "Total comments: %d"
+msgstr "Total de documentos"
 
 msgid "Total containers"
 msgstr "Total de contenedores"
@@ -64101,6 +64174,10 @@ msgstr "Actualización"
 msgid "Update & acknowledge"
 msgstr "Actualizar & reconocer"
 
+#, fuzzy
+msgid "Update & acknowledge event?"
+msgstr "Actualizar & reconocer"
+
 msgid "Update DNS cache"
 msgstr "Actualizar la caché DNS"
 
@@ -64127,6 +64204,10 @@ msgstr "Retraso en la actualización de la metainformación PNP"
 
 msgid "Update duration"
 msgstr "Duración de la actualización"
+
+#, fuzzy
+msgid "Update event?"
+msgstr "Actualizar un evento"
 
 msgid "Update host labels"
 msgstr "Actualizar las etiquetas de los hosts"
@@ -71459,9 +71540,6 @@ msgstr "bits/s"
 msgid "blocks/s"
 msgstr "bloques/s"
 
-msgid "broadcast"
-msgstr "emitir"
-
 #, fuzzy
 msgid "built-in"
 msgstr "incorporado"
@@ -71491,9 +71569,6 @@ msgstr "caso"
 msgid "cases"
 msgstr "casos"
 
-msgid "change the state"
-msgstr "cambiar el estado"
-
 msgid "check plugins"
 msgstr "comprobar los plugins"
 
@@ -71517,11 +71592,6 @@ msgstr "colapsado"
 
 msgid "command"
 msgstr "comando"
-
-msgid "comment"
-msgid_plural "comments"
-msgstr[0] "Comentario"
-msgstr[1] "Comentarios"
 
 msgid "complete"
 msgstr "completa"
@@ -71561,6 +71631,12 @@ msgstr "contando"
 
 msgid "cp437"
 msgstr "cp437"
+
+#, fuzzy
+msgid "crash report"
+msgid_plural "crash reports"
+msgstr[0] "Informe sobre el accidente"
+msgstr[1] "Informe sobre el accidente"
 
 msgid "critical at"
 msgstr "crítico en"
@@ -71810,10 +71886,6 @@ msgstr "coincidencia exacta"
 msgid "excluded"
 msgstr "excluido"
 
-#, python-format
-msgid "execute the action \"%s\""
-msgstr "ejecutar la acción \"%s\""
-
 msgid "execution count"
 msgstr "recuento de ejecuciones"
 
@@ -71886,9 +71958,6 @@ msgstr "para"
 msgid "force"
 msgstr "fuerza"
 
-msgid "forced"
-msgstr "forzado"
-
 msgid "forced-commands-only"
 msgstr "Sólo comandos forzados"
 
@@ -71906,13 +71975,6 @@ msgstr "arrendamientos gratuitos"
 
 msgid "free space"
 msgstr "espacio libre"
-
-#, python-format
-msgid "freeze the following %d aggregations?"
-msgstr "congelar las siguientes agregaciones %d?"
-
-msgid "freeze the following aggregation?"
-msgstr "congelar la siguiente agregación?"
 
 msgid "from the beginning"
 msgstr "desde el principio"
@@ -72389,9 +72451,6 @@ msgstr ""
 msgid "mm"
 msgstr "mm"
 
-msgid "modify"
-msgstr "modificar"
-
 msgid "monitor"
 msgstr "monitor"
 
@@ -72786,23 +72845,15 @@ msgstr ""
 "el punto final remoto se ha cerrado; el núcleo está esperando que la "
 "aplicación cierre el socket"
 
-msgid "remove"
-msgstr "eliminar"
-
-#, python-format
-msgid "remove the following %d %s?"
-msgstr "eliminar lo siguiente %d %s?"
-
 msgid "repeat every 20'th row"
 msgstr "repetir cada 20's filas"
 
 msgid "repeat:"
 msgstr "repite:"
 
+#, fuzzy
 msgid "report"
-msgid_plural "reports"
-msgstr[0] "informe"
-msgstr[1] "informes"
+msgstr "informe"
 
 msgid "report element"
 msgstr "elemento de informe"
@@ -72827,9 +72878,6 @@ msgstr "requieren una interfaz que ordene los mínimos por orden alfabético"
 
 msgid "require primary interface to be active"
 msgstr "requieren que la interfaz principal esté activa"
-
-msgid "reschedule an immediate check"
-msgstr "reprogramar un control inmediato"
 
 msgid "reset"
 msgstr "reiniciar"
@@ -72893,13 +72941,6 @@ msgstr "el mismo enésimo día de la semana (desde el principio)"
 
 msgid "same nth weekday (from end)"
 msgstr "el mismo enésimo día de la semana (desde el final)"
-
-#, python-format
-msgid "schedule a periodic downtime every %s"
-msgstr "programar una parada periódica cada %s"
-
-msgid "schedule an immediate downtime"
-msgstr "programar un tiempo de inactividad inmediato"
 
 msgid "sec"
 msgstr "sec"
@@ -73131,9 +73172,6 @@ msgstr "licencias no utilizadas"
 msgid "up"
 msgstr "Ok"
 
-msgid "update"
-msgstr "actualización"
-
 msgid "upload insecure snapshots"
 msgstr "cargar instantáneas inseguras"
 
@@ -73321,6 +73359,149 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "The file does not seem to be a valid iCalendar file.BBB"
+#~ msgstr "El archivo no parece ser un archivo válido de iCalendar.BBB"
+
+#, python-format
+#~ msgid " for the following %d Event Console  %s"
+#~ msgstr " para el siguiente %d evento %s"
+
+#, python-format
+#~ msgid " of the following %d Event Console %s"
+#~ msgstr " del siguiente %d consola de eventos %s"
+
+#, python-format
+#~ msgid " the following %d Event Console %s"
+#~ msgstr " el siguiente %d consola de eventos %s"
+
+#, python-format
+#~ msgid " the following %d crash %s"
+#~ msgstr " el siguiente %d falla %s"
+
+#, fuzzy, python-format
+#~| msgid "event"
+#~| msgid_plural "events"
+#~ msgid "%s event"
+#~ msgstr "evento"
+
+#, fuzzy
+#~| msgid "New event created"
+#~ msgid "New event state:"
+#~ msgstr "Nuevo evento creado"
+
+#, python-format
+#~ msgid "freeze the following %d aggregations?"
+#~ msgstr "congelar las siguientes agregaciones %d?"
+
+#~ msgid "freeze the following aggregation?"
+#~ msgstr "congelar la siguiente agregación?"
+
+#, fuzzy, python-format
+#~| msgid "User notifications"
+#~ msgid "%s notifications"
+#~ msgstr "Notificaciones a los usuarios"
+
+#~ msgid "Clear modified attributes"
+#~ msgstr "Borrar los atributos modificados"
+
+#~ msgid "Custom notification"
+#~ msgstr "Notificación personalizada"
+
+#~ msgid "Modified attributes"
+#~ msgstr "Atributos modificados"
+
+#~ msgid "Remove comments"
+#~ msgstr "Eliminar comentarios"
+
+#~ msgid "broadcast"
+#~ msgstr "emitir"
+
+#~ msgid "forced"
+#~ msgstr "forzado"
+
+#, python-format
+#~ msgid " for a period of %s"
+#~ msgstr " por un período de f %s"
+
+#~ msgid " of"
+#~ msgstr " de"
+
+#, fuzzy, python-format
+#~| msgid "Title of the tree"
+#~ msgid "% of the time"
+#~ msgstr "Título del árbol"
+
+#, python-format
+#~ msgid "<b>acknowledge the problems%s</b> of"
+#~ msgstr "<b>identifique los problemas%s</b> de"
+
+#~ msgid "<b>add a comment to</b>"
+#~ msgstr "<b>Agregar un comentario a</b>"
+
+#~ msgid "<b>archive</b>"
+#~ msgstr "<b>archivar</b>"
+
+#~ msgid "<b>clear the modified attributes</b> of"
+#~ msgstr "<b>borrar los atributos modificados</b> de"
+
+#~ msgid "<b>disable active checks</b> for"
+#~ msgstr "<b>deshabilitar comprobaciones activas</b> para"
+
+#~ msgid "<b>disable notifications</b> for"
+#~ msgstr "<b>deshabilitar notificaciones</b> para"
+
+#~ msgid "<b>disable passive checks</b> for"
+#~ msgstr "<b>desactivar las comprobaciones pasivas</b> para"
+
+#~ msgid "<b>enable active checks</b> for"
+#~ msgstr "<b>habilitar las comprobaciones activas</b> para"
+
+#~ msgid "<b>enable notifications</b> for"
+#~ msgstr "<b>habilitar notificaciones</b> para"
+
+#~ msgid "<b>enable passive checks</b> for"
+#~ msgstr "<b>habilitar las comprobaciones pasivas</b> para"
+
+#~ msgid "<b>remove acknowledgements</b> from"
+#~ msgstr "<b>eliminar reconocimientos</b> de"
+
+#~ msgid "<b>send a custom notification</b> regarding"
+#~ msgstr "<b>enviar una notificación personalizada</b> acerca de"
+
+#~ msgid "Change Event state to:"
+#~ msgstr "Cambia el estado del evento a:"
+
+#, python-format
+#~ msgid "Do you really want to %s"
+#~ msgstr "¿Realmente quieres %s"
+
+#~ msgid "Missing prediction data."
+#~ msgstr "Datos de predicción que faltan."
+
+#~ msgid "change the state"
+#~ msgstr "cambiar el estado"
+
+#~ msgid "comment"
+#~ msgid_plural "comments"
+#~ msgstr[0] "Comentario"
+#~ msgstr[1] "Comentarios"
+
+#~ msgid "modify"
+#~ msgstr "modificar"
+
+#~ msgid "remove"
+#~ msgstr "eliminar"
+
+#, python-format
+#~ msgid "remove the following %d %s?"
+#~ msgstr "eliminar lo siguiente %d %s?"
+
+#~ msgid "reschedule an immediate check"
+#~ msgstr "reprogramar un control inmediato"
+
+#~ msgid "update"
+#~ msgstr "actualización"
 
 #, fuzzy
 #~| msgid "Discard all pending changes"
@@ -75395,9 +75576,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #~ msgid "all events disabled"
 #~ msgstr "todos los eventos desactivados"
 
-#~ msgid "enable notifications"
-#~ msgstr "activar las notificaciones"
-
 #~ msgid "end"
 #~ msgstr "fin"
 
@@ -77344,9 +77522,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "User guide"
 #~ msgstr "Guía del usuario"
-
-#~ msgid "User notifications"
-#~ msgstr "Notificaciones a los usuarios"
 
 #~ msgid "You are not allowed to use the notification module."
 #~ msgstr "No está permitido utilizar el módulo de notificación."

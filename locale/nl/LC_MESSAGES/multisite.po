@@ -140,20 +140,12 @@ msgstr " en de %s '%s'."
 msgid " for %d of %d recipients."
 msgstr " voor %d van %d ontvangers."
 
-#, python-format
-msgid " for a period of %s"
-msgstr " gedurende %s"
-
 msgid " for all recipients."
 msgstr " voor alle ontvangers."
 
 #, python-format
 msgid " for host %s"
 msgstr " voor host %s"
-
-#, python-format
-msgid " for the following %d Event Console  %s"
-msgstr " voor het volgende %d Event Console  %s"
 
 #, python-format
 msgid " in %d days"
@@ -172,34 +164,15 @@ msgstr " links in uw gratis proefperiode"
 msgid " next week"
 msgstr " volgende week"
 
-msgid " of"
-msgstr " van"
-
 #, python-format
 msgid " of service %s on host %s"
 msgstr " van service %s op host %s"
-
-#, python-format
-msgid " of the following %d Event Console %s"
-msgstr " van de volgende %d Event Console %s"
 
 msgid " or "
 msgstr " of "
 
 msgid " or int"
 msgstr " of int"
-
-#, python-format
-msgid " spread over %d minutes "
-msgstr " verspreid over %d minuten "
-
-#, python-format
-msgid " the following %d Event Console %s"
-msgstr " de volgende %d Event Console %s"
-
-#, python-format
-msgid " the following %d crash %s"
-msgstr " de volgende %d crash %s"
 
 msgid " to:"
 msgstr " naar:"
@@ -323,9 +296,9 @@ msgstr "% van maximum vrije connecties"
 msgid "% of port speed"
 msgstr "% van poort snelheid"
 
-#, fuzzy, python-format
-msgid "% of the time"
-msgstr "Titel van de boom"
+#, python-format
+msgid "% of the specified time via GET request"
+msgstr ""
 
 #, no-python-format
 msgid "% time"
@@ -1189,28 +1162,28 @@ msgstr ""
 "naambotsingen optreden als containers met dezelfde naam op meer dan één "
 "Docker Node bestaan."
 
-#, python-format
-msgid "<b>%%s of %s length</b>"
+#, fuzzy, python-format
+msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s van %s lengte</b>"
 
-#, python-format
-msgid "<b>%s for the next %d minutes</b>"
+#, fuzzy, python-format
+msgid "<b>%s for the next %d minutes</b>?"
 msgstr "<b>%s voor de volgende %d minuten</b>"
 
-#, python-format
-msgid "<b>%s until 24:00:00</b>"
+#, fuzzy, python-format
+msgid "<b>%s until 24:00:00</b>?"
 msgstr "<b>%s tot 24:00:00</b>"
 
-#, python-format
-msgid "<b>%s until end of month</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of month</b>?"
 msgstr "<b>%s tot einde van de maand</b>"
 
-#, python-format
-msgid "<b>%s until end of year</b>"
+#, fuzzy, python-format
+msgid "<b>%s until end of year</b>?"
 msgstr "<b>%s tot einde van het jaar</b>"
 
-#, python-format
-msgid "<b>%s until sunday night</b>"
+#, fuzzy, python-format
+msgid "<b>%s until sunday night</b>?"
 msgstr "<b>%s tot zondag nacht</b>"
 
 msgid ""
@@ -1347,54 +1320,6 @@ msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>U heeft geen rollen.</b>"
-
-#, python-format
-msgid "<b>acknowledge the problems%s</b> of"
-msgstr "<b>ken de problemen%s</b> van"
-
-msgid "<b>add a comment to</b>"
-msgstr "<b>een reactie toevoegen aan</b>"
-
-msgid "<b>archive</b>"
-msgstr "<b>archief</b>"
-
-msgid "<b>clear the modified attributes</b> of"
-msgstr "<b>de gewijzigde attributen</b> van"
-
-msgid "<b>disable active checks</b> for"
-msgstr "<b>actieve controles uitschakelen</b> voor"
-
-msgid "<b>disable notifications</b> for"
-msgstr "<b>meldingen</b> uitschakelen voor"
-
-msgid "<b>disable passive checks</b> for"
-msgstr "<b>de passieve controles uitschakelen</b> voor"
-
-msgid "<b>enable active checks</b> for"
-msgstr "<b>actieve controles</b> inschakelen voor"
-
-msgid "<b>enable notifications</b> for"
-msgstr "<b>meldingen</b> inschakelen voor"
-
-msgid "<b>enable passive checks</b> for"
-msgstr "<b>passieve controles</b> inschakelen voor"
-
-#, python-format
-msgid "<b>manually set check results to %s</b> for"
-msgstr "<b>controleerresultaten handmatig instellen op %s</b> voor"
-
-msgid "<b>remove acknowledgements</b> from"
-msgstr "<b>bevestigingen</b> verwijderen uit"
-
-msgid "<b>remove all scheduled downtimes</b> of "
-msgstr "<b>verwijder alle geplande downtimes</b> van "
-
-#, python-format
-msgid "<b>schedule a downtime from %s to %s</b>"
-msgstr "<b>plan een downtime van %s tot %s</b>"
-
-msgid "<b>send a custom notification</b> regarding"
-msgstr "<b>een aangepaste kennisgeving</b> verzenden betreffende"
 
 msgid ""
 "<br> HINT: The individual program is called from the current working "
@@ -3098,6 +3023,10 @@ msgstr "Bevestig laatste %s resultaat"
 msgid "Acknowledge problems"
 msgstr "Erken problemen"
 
+#, fuzzy
+msgid "Acknowledge problems?"
+msgstr "Erken problemen"
+
 #, python-format
 msgid "Acknowledge this test result for site %s"
 msgstr "Bevestig dit testresultaat voor site %s"
@@ -3623,6 +3552,10 @@ msgid "Add column"
 msgstr "Kolom toevoegen"
 
 msgid "Add comment"
+msgstr "Commentaar toevoegen"
+
+#, fuzzy
+msgid "Add comment?"
 msgstr "Commentaar toevoegen"
 
 msgid "Add comments"
@@ -4335,6 +4268,10 @@ msgstr "Aerohive Hive Beheerder"
 
 msgid "Aerohive HiveManager NG"
 msgstr "Aerohive HiveManager NG"
+
+#, fuzzy, python-format
+msgid "Affected %s: %s"
+msgstr "Betrokken sites"
 
 msgid "Affected by service"
 msgstr "Beïnvloed door dienst"
@@ -5157,6 +5094,12 @@ msgstr "Alle elementen van de tuple moeten van het type int zijn, je hebt %s"
 
 msgid "All even pages"
 msgstr "Alle even pagina's"
+
+#, python-format
+msgid ""
+"All events of the host '%s' will be removed from the open events list. You "
+"can still access them in the archive."
+msgstr ""
 
 msgid "All flows"
 msgstr "Alle stromen"
@@ -6351,8 +6294,16 @@ msgstr "April"
 msgid "Architecture"
 msgstr "Architectuur"
 
+#, fuzzy
+msgid "Archive"
+msgstr "Archief evenement"
+
 msgid "Archive Event"
 msgstr "Archief evenement"
+
+#, fuzzy
+msgid "Archive all events of this host?"
+msgstr "Archief gebeurtenissen van gastheren"
 
 msgid "Archive all open events of all hosts shown in host views"
 msgstr ""
@@ -6768,6 +6719,10 @@ msgstr "Auteur"
 #, fuzzy
 msgid "Author comment (regex)"
 msgstr "Commentaar van de auteur"
+
+#, fuzzy, python-format
+msgid "Author: %s"
+msgstr "Auteur"
 
 #, fuzzy
 msgid "Authority"
@@ -9777,9 +9732,6 @@ msgstr "Verander CRITICAL State in"
 msgid "Change Context Info to"
 msgstr "Verander Context Info in"
 
-msgid "Change Event state to:"
-msgstr "Verander de status van de gebeurtenis in:"
-
 msgid "Change OK State to"
 msgstr "Verander OK-status in"
 
@@ -9814,6 +9766,10 @@ msgid "Change downtime start"
 msgstr "Verander uitvaltijd start"
 
 msgid "Change event state"
+msgstr "Gebeurtenistoestand wijzigen"
+
+#, fuzzy
+msgid "Change event state?"
 msgstr "Gebeurtenistoestand wijzigen"
 
 #, python-format
@@ -11132,9 +11088,6 @@ msgstr "Logboeken wissen"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "Logboeken wissen door alle opgeslagen berichten te verwijderen"
-
-msgid "Clear modified attributes"
-msgstr "Wis gewijzigde attributen"
 
 msgid ""
 "Clear the entries of the audit log. To be able to clear the audit log a user "
@@ -14107,9 +14060,6 @@ msgstr "Aangepaste lokalisaties"
 msgid "Custom logos"
 msgstr "Aangepaste logo's"
 
-msgid "Custom notification"
-msgstr "Aangepaste kennisgeving"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Aangepaste meldingentabel voor gebruiker %s"
@@ -15262,6 +15212,11 @@ msgstr ""
 "in de CloudFront distributie - in het geval u de tweede optie selecteert, "
 "zult u de piggyback host(s) moeten creëren"
 
+msgid ""
+"Define the maximum session duration. If reached, the user has to re-"
+"authenticate."
+msgstr ""
+
 msgid "Define upper levels for number of running containers"
 msgstr "Definieer bovengrenzen voor aantal draaiende containers"
 
@@ -15434,6 +15389,10 @@ msgstr "Back-up verwijderen"
 msgid "Delete backup key #%d"
 msgstr "Delete backup key #%d"
 
+#, fuzzy
+msgid "Delete comments"
+msgstr "Evenement commentaar"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Verbinding verwijderen #%d"
@@ -15446,6 +15405,10 @@ msgstr "Crash rapporten verwijderen"
 
 msgid "Delete crash reports created by Checkmk"
 msgstr "Door Checkmk aangemaakte crashrapporten verwijderen"
+
+#, fuzzy
+msgid "Delete crash reports?"
+msgstr "Crash rapporten verwijderen"
 
 #, python-format
 msgid "Delete custom attribute #%d"
@@ -16542,6 +16505,14 @@ msgstr "Schakel bewaakte diensten uit"
 
 msgid "Disable notifications"
 msgstr "Meldingen uitschakelen"
+
+#, fuzzy
+msgid "Disable notifications?"
+msgstr "Meldingen uitschakelen"
+
+#, fuzzy
+msgid "Disable passive checks"
+msgstr "Actieve controles uitschakelen"
 
 msgid "Disable password"
 msgstr "Wachtwoord uitschakelen"
@@ -17656,10 +17627,6 @@ msgstr "Draag context over"
 msgid "Do you really want revert the following changes?"
 msgstr "Wilt u echt de map %s verwijderen?"
 
-#, python-format
-msgid "Do you really want to %s"
-msgstr "Wil je echt %s"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 
@@ -18377,6 +18344,10 @@ msgstr "BI-pakket %s bewerken"
 msgid "Edit Downtimes"
 msgstr "Downtimes bewerken"
 
+#, fuzzy
+msgid "Edit Downtimes?"
+msgstr "Downtimes bewerken"
+
 msgid "Edit GUI design for this customer"
 msgstr "Bewerk GUI ontwerp voor deze klant"
 
@@ -19028,6 +18999,14 @@ msgstr "Inloggen via GET-verzoeken mogelijk maken"
 msgid "Enable notification logging"
 msgstr "Meldingen loggen inschakelen"
 
+#, fuzzy
+msgid "Enable notifications?"
+msgstr "meldingen inschakelen"
+
+#, fuzzy
+msgid "Enable passive checks"
+msgstr "Actieve controles inschakelen"
+
 msgid "Enable per-process details"
 msgstr "Schakel details per proces in"
 
@@ -19094,6 +19073,14 @@ msgstr "Tijdspecifieke parameters inschakelen"
 
 msgid "Enable trend computation"
 msgstr "Trendberekening inschakelen"
+
+#, fuzzy
+msgid "Enable/Disable active checks"
+msgstr "Actieve controles uitschakelen"
+
+#, fuzzy
+msgid "Enable/Disable passive checks"
+msgstr "Controles in- en uitschakelen"
 
 msgid "Enable/disable active checks for services"
 msgstr "Inschakelen/uitschakelen van actieve controles voor diensten"
@@ -19468,6 +19455,10 @@ msgstr "Voer gebruikersnaam in"
 
 msgid "Enter user password"
 msgstr "Voer gebruikerswachtwoord in"
+
+#, fuzzy
+msgid "Enter your message here"
+msgstr "Lager niveau voor berichtensnelheid"
 
 msgid "Enterasys LSNAT Bindings"
 msgstr "Enterasys LSNAT Bindingen"
@@ -20104,6 +20095,10 @@ msgstr "Uitvoerbaar formaat (Linux)"
 msgid "Executable:"
 msgstr "Uit te voeren:"
 
+#, fuzzy
+msgid "Execute"
+msgstr "Executive"
+
 msgid "Execute MRPE checks"
 msgstr "MRPE-controles uitvoeren"
 
@@ -20120,6 +20115,10 @@ msgstr "Executive"
 #, fuzzy
 msgid "Execute as another user"
 msgstr "Activeer wijzigingen van andere gebruikers"
+
+#, fuzzy, python-format
+msgid "Execute custom action '%s'?"
+msgstr "voer de actie \"%s\" uit"
 
 msgid "Execute legacy monitoring plugins"
 msgstr "Uitvoeren van legacy monitoring plugins"
@@ -22127,6 +22126,14 @@ msgstr "Vrije swap ruimte"
 
 msgid "Free tapes"
 msgstr "Gratis tapes"
+
+#, fuzzy
+msgid "Freeze"
+msgstr "Gratis"
+
+#, fuzzy
+msgid "Freeze aggregation?"
+msgstr "Bevries aggregaties"
 
 msgid "Freeze aggregations"
 msgstr "Bevries aggregaties"
@@ -33004,6 +33011,10 @@ msgstr ""
 "Laat de kern handmatig een melding sturen naar een host of dienst om te "
 "testen of meldingen correct zijn ingesteld"
 
+#, fuzzy, python-format
+msgid "Manually set check results to %s?"
+msgstr "<b>controleerresultaten handmatig instellen op %s</b> voor"
+
 #, python-format
 msgid "Manually set to %s by %s"
 msgstr "Handmatig ingesteld op %s door %s"
@@ -34573,9 +34584,6 @@ msgstr "Ontbrekende of ongeldige modus. Toegestaan zijn 'agent' en 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Ontbrekende parameter \"%s\"."
 
-msgid "Missing prediction data."
-msgstr "Ontbrekende voorspellingsgegevens."
-
 msgid "Missing render parameter"
 msgstr "Ontbrekende render parameter"
 
@@ -34721,9 +34729,6 @@ msgstr "Gewijzigde BI-regel %s"
 
 msgid "Modified NFS data"
 msgstr "Gewijzigde NFS gegevens"
-
-msgid "Modified attributes"
-msgstr "Gewijzigde attributen"
 
 #, python-format
 msgid "Modified event correlation rule %s"
@@ -36076,6 +36081,10 @@ msgstr "Nieuwe naam"
 msgid "New passwords don't match."
 msgstr "Beide wachtwoorden komen niet overeen."
 
+#, fuzzy, python-format
+msgid "New state: %s"
+msgstr "Job staat: %s"
+
 msgid "New view"
 msgstr "Nieuw uitzicht"
 
@@ -37139,6 +37148,10 @@ msgstr "Kennisgevingen van gastheer"
 
 msgid "Notifications of host & services"
 msgstr "Kennisgevingen van host & diensten"
+
+#, fuzzy
+msgid "Notifications will be sent according to the notification rules"
+msgstr "Sorteervolgorde voor bulkmeldingen"
 
 msgid "Notified events for hosts"
 msgstr "Aangemelde gebeurtenissen voor hosts"
@@ -41675,8 +41688,9 @@ msgstr "Pretty-Print regels in config bestand van Event Console"
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Voorkom DNS lookups door gebruik van een cache bestand"
 
-msgid "Prevent data loss of forms by forcing re-authentication after"
-msgstr ""
+#, fuzzy
+msgid "Prevent data loss of forms by forcing re-authentification after"
+msgstr "Lokale authentificatiegegevens"
 
 msgid "Prevent host deletion after initialization"
 msgstr "Voorkom verwijderen van host na initialisatie"
@@ -43512,6 +43526,10 @@ msgstr "Verwijder Windows Firewall configuratie indien aanwezig"
 msgid "Remove acknowledgement"
 msgstr "Bevestiging verwijderen"
 
+#, fuzzy
+msgid "Remove acknowledgement?"
+msgstr "Bevestiging verwijderen"
+
 msgid "Remove all"
 msgstr "Verwijder alle"
 
@@ -43524,10 +43542,15 @@ msgstr "Verwijder alle stilstandtijden"
 msgid "Remove all files and subdirectories"
 msgstr "Verwijder alle bestanden en subdirectories"
 
-msgid "Remove comments"
-msgstr "Opmerkingen verwijderen"
+#, fuzzy
+msgid "Remove all scheduled downtimes?"
+msgstr "<b>verwijder alle geplande downtimes</b> van "
 
 msgid "Remove downtimes"
+msgstr "Uitvaltijd verwijderen"
+
+#, fuzzy
+msgid "Remove downtimes?"
 msgstr "Uitvaltijd verwijderen"
 
 msgid "Remove explicit attribute settings"
@@ -44151,6 +44174,10 @@ msgstr "Dienst 'Check_MK' opnieuw inplannen"
 msgid "Reschedule active checks"
 msgstr "Opnieuw plannen van actieve controles"
 
+#, fuzzy
+msgid "Reschedule active checks immediately?"
+msgstr "Opnieuw plannen van actieve controles"
+
 msgid "Reschedule check"
 msgstr "Opnieuw plannen controle"
 
@@ -44189,6 +44216,10 @@ msgstr ""
 msgid "Reset all rule hit counters to zero"
 msgstr "Reset alle regel hit counters naar nul"
 
+#, fuzzy
+msgid "Reset attributes"
+msgstr "Rolkenmerk"
+
 msgid "Reset configuration variable to default value"
 msgstr "Configuratievariabele terugzetten op standaardwaarde"
 
@@ -44211,6 +44242,10 @@ msgstr ""
 
 msgid "Reset to default"
 msgstr "Terugzetten naar standaard"
+
+#, python-format
+msgid "Resets the commands '%s', '%s' and '%s' to the default state"
+msgstr ""
 
 #, python-format
 msgid "Resetted configuration variable %s to its default."
@@ -45555,6 +45590,18 @@ msgstr "Scan interval"
 msgid "Schedule"
 msgstr "Schema"
 
+#, fuzzy, python-format
+msgid "Schedule a downtime from %s to %s?"
+msgstr "<b>plan een downtime van %s tot %s</b>"
+
+#, fuzzy, python-format
+msgid "Schedule a periodic downtime every %s"
+msgstr "plan een periodieke downtime om de %s"
+
+#, fuzzy
+msgid "Schedule an immediate downtime"
+msgstr "plan een onmiddellijke onderbreking"
+
 msgid "Schedule and remove downtimes on hosts and services"
 msgstr "Plan en verwijder downtimes op hosts en diensten"
 
@@ -45564,6 +45611,10 @@ msgstr "Geplande uitvaltijd voor %d %s"
 
 msgid "Schedule downtime on host"
 msgstr "Plan downtime op host"
+
+#, fuzzy
+msgid "Schedule downtime?"
+msgstr "Uitvaltijden plannen"
 
 msgid "Schedule downtimes"
 msgstr "Uitvaltijden plannen"
@@ -46344,6 +46395,11 @@ msgstr "Meldingen naar gebeurtenissen Console sturen"
 msgid "Send notifications to remote Event Console"
 msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
+msgid ""
+"Send regardless of restrictions, e.g. notification period or disabled "
+"notifications (forced)"
+msgstr ""
+
 msgid "Send request"
 msgstr "Aanvraag verzenden"
 
@@ -46355,6 +46411,11 @@ msgstr "Dienstgegevens naar Graphite sturen"
 
 msgid "Send that many PINGs in one bulk:"
 msgstr "Stuur zoveel PING's in één keer:"
+
+#, fuzzy
+msgid "Send to all contacts of the selected hosts/services (broadcast)"
+msgstr ""
+"Breng alle contactpersonen van de host of dienst in kwestie op de hoogte."
 
 msgid "Send to remote Event Console via syslog"
 msgstr "Verzenden naar externe gebeurtenissenconsole via syslog"
@@ -47031,6 +47092,10 @@ msgstr "Sessie timeout:"
 
 msgid "Session type"
 msgstr "Sessie type"
+
+#, fuzzy
+msgid "Set"
+msgstr "Verzonden"
 
 msgid "Set IPv4 address"
 msgstr "IPv4-adres instellen"
@@ -49300,9 +49365,10 @@ msgstr ""
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Geef hier een willekeurige naam voor deze verbinding"
 
+#, fuzzy
 msgid ""
 "Specify an explicit IP address or resolvable DNS name here, if the hostname "
-"is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set this "
+"is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
 "configuration to speed up the activation process. The cache is normally "
@@ -49323,9 +49389,10 @@ msgstr ""
 "invoert, zal de DNS-resolutie elke keer dat de host wordt gecontroleerd "
 "worden uitgevoerd. Checkmk's DNS cache wordt <b>NOT</b> bevraagd."
 
+#, fuzzy
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set "
+"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -49900,6 +49967,10 @@ msgstr "Spot Instance Verzoeken"
 
 msgid "Spread over"
 msgstr "Verspreiden over"
+
+#, fuzzy, python-format
+msgid "Spreading: %s minutes"
+msgstr " verspreid over %d minuten "
 
 msgid "Sproc Latency"
 msgstr "Sproc latentie"
@@ -51652,9 +51723,6 @@ msgstr "Systemd sockets samenvatting"
 
 msgid "Systems larger than"
 msgstr "Systemen groter dan"
-
-msgid "TBA"
-msgstr ""
 
 msgid "TCP"
 msgstr "TCP"
@@ -54070,11 +54138,9 @@ msgstr "Het bestand bevat geen XML-tekst"
 msgid "The file does not look like a valid key file."
 msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
 
-msgid "The file does not seem to be a valid iCalendar file.AAA"
+#, fuzzy
+msgid "The file does not seem to be a valid iCalendar file."
 msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn.AAA"
-
-msgid "The file does not seem to be a valid iCalendar file.BBB"
-msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn. BBB"
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "De bestandsextensie moet <tt>.pdf</tt> zijn"
@@ -61218,6 +61284,10 @@ msgstr ""
 "er ook voor dat <b>Meldingen versturen naar Event Console</b> is "
 "ingeschakeld."
 
+#, fuzzy
+msgid "This will suppress all notifications"
+msgstr "Alle persoonlijke meldingen uitschakelen"
+
 msgid "This year"
 msgstr "Dit jaar"
 
@@ -62175,6 +62245,10 @@ msgstr "Totale bandbreedte (som van in en uit)"
 
 msgid "Total cache usage"
 msgstr "Totaal cache gebruik"
+
+#, fuzzy, python-format
+msgid "Total comments: %d"
+msgstr "Totaal documenten"
 
 msgid "Total containers"
 msgstr "Totaal containers"
@@ -63570,6 +63644,10 @@ msgstr "Update"
 msgid "Update & acknowledge"
 msgstr "Bijwerken en bevestigen"
 
+#, fuzzy
+msgid "Update & acknowledge event?"
+msgstr "Bijwerken en bevestigen"
+
 msgid "Update DNS cache"
 msgstr "DNS-cache bijwerken"
 
@@ -63596,6 +63674,10 @@ msgstr "Bijwerkvertraging voor PNP meta-informatie"
 
 msgid "Update duration"
 msgstr "Duur bijwerken"
+
+#, fuzzy
+msgid "Update event?"
+msgstr "Een gebeurtenis bijwerken"
 
 msgid "Update host labels"
 msgstr "Bijwerken hostlabels"
@@ -70872,9 +70954,6 @@ msgstr "bits/s"
 msgid "blocks/s"
 msgstr "blokken/s"
 
-msgid "broadcast"
-msgstr "uitzending"
-
 #, fuzzy
 msgid "built-in"
 msgstr "ingebouwd"
@@ -70904,9 +70983,6 @@ msgstr "zaak"
 msgid "cases"
 msgstr "gevallen"
 
-msgid "change the state"
-msgstr "de toestand veranderen"
-
 msgid "check plugins"
 msgstr "plugins controleren"
 
@@ -70930,11 +71006,6 @@ msgstr "ingestort"
 
 msgid "command"
 msgstr "commando"
-
-msgid "comment"
-msgid_plural "comments"
-msgstr[0] "opmerking"
-msgstr[1] "opmerkingen"
 
 msgid "complete"
 msgstr "volledig"
@@ -70974,6 +71045,12 @@ msgstr "tellen"
 
 msgid "cp437"
 msgstr "cp437"
+
+#, fuzzy
+msgid "crash report"
+msgid_plural "crash reports"
+msgstr[0] "Crash rapport"
+msgstr[1] "Crash rapport"
 
 msgid "critical at"
 msgstr "kritisch op"
@@ -71223,10 +71300,6 @@ msgstr "exacte overeenkomst"
 msgid "excluded"
 msgstr "uitgesloten"
 
-#, python-format
-msgid "execute the action \"%s\""
-msgstr "voer de actie \"%s\" uit"
-
 msgid "execution count"
 msgstr "uitvoering telling"
 
@@ -71299,9 +71372,6 @@ msgstr "voor"
 msgid "force"
 msgstr "kracht"
 
-msgid "forced"
-msgstr "gedwongen"
-
 msgid "forced-commands-only"
 msgstr "forced-commands-only"
 
@@ -71319,13 +71389,6 @@ msgstr "gratis huurcontracten"
 
 msgid "free space"
 msgstr "vrije ruimte"
-
-#, python-format
-msgid "freeze the following %d aggregations?"
-msgstr "de volgende %d aggregaties bevriezen?"
-
-msgid "freeze the following aggregation?"
-msgstr "de volgende aggregatie bevriezen?"
 
 msgid "from the beginning"
 msgstr "vanaf het begin"
@@ -71799,9 +71862,6 @@ msgstr ""
 msgid "mm"
 msgstr "mm"
 
-msgid "modify"
-msgstr "wijzigen"
-
 msgid "monitor"
 msgstr "monitor"
 
@@ -72195,23 +72255,15 @@ msgstr ""
 "remote endpoint heeft zich afgesloten; de kernel wacht op de toepassing om "
 "de socket te sluiten"
 
-msgid "remove"
-msgstr "verwijder"
-
-#, python-format
-msgid "remove the following %d %s?"
-msgstr "de volgende %d %s verwijderen?"
-
 msgid "repeat every 20'th row"
 msgstr "herhaal elke 20ste rij"
 
 msgid "repeat:"
 msgstr "herhalen:"
 
+#, fuzzy
 msgid "report"
-msgid_plural "reports"
-msgstr[0] "verslag"
-msgstr[1] "verslag"
+msgstr "verslag"
 
 msgid "report element"
 msgstr "rapportelement"
@@ -72235,9 +72287,6 @@ msgstr "interface nodig die laagste alfabetisch sorteert"
 
 msgid "require primary interface to be active"
 msgstr "vereisen dat de primaire interface actief is"
-
-msgid "reschedule an immediate check"
-msgstr "een onmiddellijke controle opnieuw inplannen"
 
 msgid "reset"
 msgstr "reset"
@@ -72301,13 +72350,6 @@ msgstr "dezelfde n-de weekdag (vanaf het begin)"
 
 msgid "same nth weekday (from end)"
 msgstr "dezelfde n-de weekdag (vanaf einde)"
-
-#, python-format
-msgid "schedule a periodic downtime every %s"
-msgstr "plan een periodieke downtime om de %s"
-
-msgid "schedule an immediate downtime"
-msgstr "plan een onmiddellijke onderbreking"
 
 msgid "sec"
 msgstr "sec"
@@ -72540,9 +72582,6 @@ msgstr "ongebruikte licenties"
 msgid "up"
 msgstr "omhoog"
 
-msgid "update"
-msgstr "update"
-
 msgid "upload insecure snapshots"
 msgstr "onveilige snapshots uploaden"
 
@@ -72730,6 +72769,149 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "The file does not seem to be a valid iCalendar file.BBB"
+#~ msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn. BBB"
+
+#, python-format
+#~ msgid " for the following %d Event Console  %s"
+#~ msgstr " voor het volgende %d Event Console  %s"
+
+#, python-format
+#~ msgid " of the following %d Event Console %s"
+#~ msgstr " van de volgende %d Event Console %s"
+
+#, python-format
+#~ msgid " the following %d Event Console %s"
+#~ msgstr " de volgende %d Event Console %s"
+
+#, python-format
+#~ msgid " the following %d crash %s"
+#~ msgstr " de volgende %d crash %s"
+
+#, fuzzy, python-format
+#~| msgid "event"
+#~| msgid_plural "events"
+#~ msgid "%s event"
+#~ msgstr "evenement"
+
+#, fuzzy
+#~| msgid "New event created"
+#~ msgid "New event state:"
+#~ msgstr "Nieuw evenement gecreëerd"
+
+#, python-format
+#~ msgid "freeze the following %d aggregations?"
+#~ msgstr "de volgende %d aggregaties bevriezen?"
+
+#~ msgid "freeze the following aggregation?"
+#~ msgstr "de volgende aggregatie bevriezen?"
+
+#, fuzzy, python-format
+#~| msgid "User notifications"
+#~ msgid "%s notifications"
+#~ msgstr "Gebruikersmeldingen"
+
+#~ msgid "Clear modified attributes"
+#~ msgstr "Wis gewijzigde attributen"
+
+#~ msgid "Custom notification"
+#~ msgstr "Aangepaste kennisgeving"
+
+#~ msgid "Modified attributes"
+#~ msgstr "Gewijzigde attributen"
+
+#~ msgid "Remove comments"
+#~ msgstr "Opmerkingen verwijderen"
+
+#~ msgid "broadcast"
+#~ msgstr "uitzending"
+
+#~ msgid "forced"
+#~ msgstr "gedwongen"
+
+#, python-format
+#~ msgid " for a period of %s"
+#~ msgstr " gedurende %s"
+
+#~ msgid " of"
+#~ msgstr " van"
+
+#, fuzzy, python-format
+#~| msgid "Title of the tree"
+#~ msgid "% of the time"
+#~ msgstr "Titel van de boom"
+
+#, python-format
+#~ msgid "<b>acknowledge the problems%s</b> of"
+#~ msgstr "<b>ken de problemen%s</b> van"
+
+#~ msgid "<b>add a comment to</b>"
+#~ msgstr "<b>een reactie toevoegen aan</b>"
+
+#~ msgid "<b>archive</b>"
+#~ msgstr "<b>archief</b>"
+
+#~ msgid "<b>clear the modified attributes</b> of"
+#~ msgstr "<b>de gewijzigde attributen</b> van"
+
+#~ msgid "<b>disable active checks</b> for"
+#~ msgstr "<b>actieve controles uitschakelen</b> voor"
+
+#~ msgid "<b>disable notifications</b> for"
+#~ msgstr "<b>meldingen</b> uitschakelen voor"
+
+#~ msgid "<b>disable passive checks</b> for"
+#~ msgstr "<b>de passieve controles uitschakelen</b> voor"
+
+#~ msgid "<b>enable active checks</b> for"
+#~ msgstr "<b>actieve controles</b> inschakelen voor"
+
+#~ msgid "<b>enable notifications</b> for"
+#~ msgstr "<b>meldingen</b> inschakelen voor"
+
+#~ msgid "<b>enable passive checks</b> for"
+#~ msgstr "<b>passieve controles</b> inschakelen voor"
+
+#~ msgid "<b>remove acknowledgements</b> from"
+#~ msgstr "<b>bevestigingen</b> verwijderen uit"
+
+#~ msgid "<b>send a custom notification</b> regarding"
+#~ msgstr "<b>een aangepaste kennisgeving</b> verzenden betreffende"
+
+#~ msgid "Change Event state to:"
+#~ msgstr "Verander de status van de gebeurtenis in:"
+
+#, python-format
+#~ msgid "Do you really want to %s"
+#~ msgstr "Wil je echt %s"
+
+#~ msgid "Missing prediction data."
+#~ msgstr "Ontbrekende voorspellingsgegevens."
+
+#~ msgid "change the state"
+#~ msgstr "de toestand veranderen"
+
+#~ msgid "comment"
+#~ msgid_plural "comments"
+#~ msgstr[0] "opmerking"
+#~ msgstr[1] "opmerkingen"
+
+#~ msgid "modify"
+#~ msgstr "wijzigen"
+
+#~ msgid "remove"
+#~ msgstr "verwijder"
+
+#, python-format
+#~ msgid "remove the following %d %s?"
+#~ msgstr "de volgende %d %s verwijderen?"
+
+#~ msgid "reschedule an immediate check"
+#~ msgstr "een onmiddellijke controle opnieuw inplannen"
+
+#~ msgid "update"
+#~ msgstr "update"
 
 #, fuzzy
 #~| msgid "Discard all pending changes"
@@ -74800,9 +74982,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~ msgid "all events disabled"
 #~ msgstr "alle gebeurtenissen uitgeschakeld"
 
-#~ msgid "enable notifications"
-#~ msgstr "meldingen inschakelen"
-
 #~ msgid "end"
 #~ msgstr "einde"
 
@@ -76720,9 +76899,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "User guide"
 #~ msgstr "Gebruikershandleiding"
-
-#~ msgid "User notifications"
-#~ msgstr "Gebruikersmeldingen"
 
 #~ msgid "You are not allowed to use the notification module."
 #~ msgstr "U mag de kennisgevingsmodule niet gebruiken."

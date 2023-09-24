@@ -53,14 +53,16 @@ if "%~1"=="--sign"          (set worker_arg_sign_file=%~2) & (set worker_arg_sig
 )
 if "%worker_arg_all%"=="1" (set worker_arg_clippy=1) & (set worker_arg_build=1) & (set worker_arg_test=1) & (set worker_arg_check_format=1)
 
+:: Configure environment variables
 set worker_cur_dir=%cd%
+call setup_config.cmd
+if ERRORLEVEL 1 powershell Write-Host "Failed to configure" -Foreground Red &&  exit /b 99
 set worker_arte=%worker_root_dir%\artefacts
 
+:: Setup shortcut call for CI(to make names shorter than 255 chars)
 set ci_root_dir=workdir\workspace
 set ci_junction_to_root_dir=x
 set script_to_run=.\scripts\cargo_build_core.cmd
-call setup_config.cmd
-if ERRORLEVEL 1 powershell Write-Host "Failed to configure" -Foreground Red &&  exit /b 99
 powershell -ExecutionPolicy ByPass -File %worker_root_dir%/scripts/windows/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
 GOTO :EOF
 

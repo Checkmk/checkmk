@@ -32,7 +32,7 @@ rustup target add %worker_target%
 :: 64-bit
 ::set target=x86_64-pc-windows-mscvc
 :: 32-bit
-set exe=target\%target%\release\%worker_exe_name%
+set exe=target\%worker_target%\release\%worker_exe_name%
 @echo RUST versions:
 cargo -V
 rustc -V
@@ -132,6 +132,10 @@ if "%worker_arg_sign%" == "1" (
 if "%worker_arg_build%" == "1" (
     powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
     copy %exe% %worker_arte%\%worker_exe_name%
+    if ERRORLEVEL 1 (
+        powershell Write-Host "Failed to copy %exe%" -Foreground Red
+        exit /b 22
+    )
     powershell Write-Host "Done." -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust upload" -Foreground Yellow

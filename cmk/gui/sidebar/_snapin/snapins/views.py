@@ -6,7 +6,6 @@
 import pprint
 from collections.abc import Sequence
 
-import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
@@ -25,11 +24,6 @@ from cmk.gui.views.store import get_permitted_views
 
 from .. import SidebarSnapin
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
-
-if cmk_version.edition() is not cmk_version.Edition.CRE:
-    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
-else:
-    reporting = None  # type: ignore[assignment]
 
 
 class Views(SidebarSnapin):
@@ -104,14 +98,15 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 
-    if reporting and include_reports:
+    if include_reports:
         visuals_to_show += report_menu_items()
 
     return visuals_to_show
 
 
 def report_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
-    return [("reports", (k, v)) for k, v in reporting.permitted_reports().items()]
+    """Is replaced by cmk.gui.reporting.registration"""
+    return []
 
 
 class MonitoringSearch(ABCMegaMenuSearch):

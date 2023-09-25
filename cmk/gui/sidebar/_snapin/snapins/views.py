@@ -105,9 +105,13 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
     visuals_to_show += page_type_items
 
     if reporting and include_reports:
-        visuals_to_show += [("reports", (k, v)) for k, v in reporting.permitted_reports().items()]
+        visuals_to_show += report_menu_items()
 
     return visuals_to_show
+
+
+def report_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
+    return [("reports", (k, v)) for k, v in reporting.permitted_reports().items()]
 
 
 class MonitoringSearch(ABCMegaMenuSearch):

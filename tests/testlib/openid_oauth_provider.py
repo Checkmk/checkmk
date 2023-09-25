@@ -13,6 +13,8 @@ import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import BaseModel
 
+from cmk.gui.cse.userdb.cognito.oauth2 import load_config, TenantInfo, UserRoleAnswer
+
 application = fapi.FastAPI()
 
 
@@ -97,6 +99,7 @@ class TokenResponse(BaseModel):
 class TokenPayload(BaseModel):
     email: str
     aud: str
+    sub: str = "1234567"
 
 
 @application.post("/token", response_model=TokenResponse)
@@ -113,3 +116,12 @@ def authorize(state: str, redirect_uri: str) -> fapi.responses.RedirectResponse:
     params = {"state": state, "code": "fake"}
     url = f"{redirect_uri}?{urlencode(params)}"
     return fapi.responses.RedirectResponse(url)
+
+
+# this endpoint is used by checkmk to authorize the user on a site
+# given he belongs to the right tenant
+@application.get("/api/users/{user_id}/tenants")
+def tenant_role_mapping(user_id: str) -> UserRoleAnswer:
+    config = load_config()
+    tenant_info = TenantInfo(user_role="admin")
+    return UserRoleAnswer(tenants={config.tenant_id: tenant_info})

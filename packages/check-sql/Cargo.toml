@@ -1,5 +1,5 @@
 [package]
-name = "sql_check"
+name = "check-sql"
 version = "0.1.0"
 edition = "2021"
 

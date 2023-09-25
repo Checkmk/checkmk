@@ -38,8 +38,8 @@ VARIABLES:
     - NAME: CHANGED_CHECK_CERT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/' || true"
 
-    - NAME: CHANGED_SQL_CHECK_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/database_checks/sql_check/' || true"
+    - NAME: CHANGED_CHECK_SQL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-sql/' || true"
 
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' - || true"
@@ -380,9 +380,9 @@ STAGES:
       TEXT_ON_SKIP: 'No check-cert files changes'
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
-    - NAME: 'SQL Check'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SQL_CHECK_FILES
-      DIR: 'packages/database_checks/sql_check'
-      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/sql_check.txt"
-      TEXT_ON_SKIP: 'No SQL check files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/sql_check.txt"
+    - NAME: 'Check SQL'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_SQL_FILES
+      DIR: 'packages/check-sql'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-sql.txt"
+      TEXT_ON_SKIP: 'No check SQL files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/check-sql.txt"

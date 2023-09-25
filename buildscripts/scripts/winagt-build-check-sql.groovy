@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: winagt-build-sql-check.groovy
+/// file: winagt-build-check-sql.groovy
 
 def main() {
     check_job_parameters(["VERSION"]);
@@ -17,7 +17,7 @@ def main() {
         }
 
         windows.build(
-            TARGET: 'sql_check_no_sign',
+            TARGET: 'check_sql_no_sign',
         )
     }
 }

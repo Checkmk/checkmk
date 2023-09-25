@@ -72,7 +72,7 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
     FileSpec::default()
         .directory(log_dir.to_owned())
         .suppress_timestamp()
-        .basename("sql_check")
+        .basename("check-sql")
 }
 
 #[cfg(test)]
@@ -85,7 +85,7 @@ mod tests {
         let spec = make_log_file_spec(&PathBuf::from("_"));
         assert_eq!(
             spec.as_pathbuf(None),
-            PathBuf::from("_").join("sql_check.log")
+            PathBuf::from("_").join("check-sql.log")
         );
     }
 }

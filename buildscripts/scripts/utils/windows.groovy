@@ -45,10 +45,10 @@ def build(Map args) {
                 "packages/cmk-agent-ctl",
                 "call run.cmd --all",
                  ""] :
-            (args.TARGET == "sql_check_no_sign") ? [
-                "packages/database_checks/sql_check",
+            (args.TARGET == "check_sql_no_sign") ? [
+                "packages/check-sql",
                 "call run.cmd --all",
-                 "sql_check.exe"] :
+                 "check-sql.exe"] :
             (args.TARGET == "test_unit") ? [
                  "agents/wnx",
                  "call run.cmd --test",

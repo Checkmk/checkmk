@@ -63,8 +63,8 @@ if "%~1"=="--msi"           (set arg_msi=1)          & shift & goto CheckOpts
 if "%~1"=="-O"              (set arg_ohm=1)          & shift & goto CheckOpts
 if "%~1"=="--ohm"           (set arg_ohm=1)          & shift & goto CheckOpts
 
-if "%~1"=="-S"              (set arg_sql_check=1)   & shift & goto CheckOpts
-if "%~1"=="--sql-check"     (set arg_sql_check=1)   & shift & goto CheckOpts
+if "%~1"=="-Q"              (set arg_check_sql=1)   & shift & goto CheckOpts
+if "%~1"=="--check-sql"     (set arg_check_sql=1)   & shift & goto CheckOpts
 
 if "%~1"=="-E"              (set arg_ext=1)          & shift & goto CheckOpts
 if "%~1"=="--extensions"    (set arg_ext=1)          & shift & goto CheckOpts
@@ -81,8 +81,7 @@ if "%~1"=="--var"           (set arg_var_name=%~2) & (set arg_var_value=%~3) & s
 
 if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
-if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_sql_check=1) & (set arg_ext=1) & (set arg_msi=1)
-
+if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_check_sql=1) & (set arg_ext=1) & (set arg_msi=1)
 
 @echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
 
@@ -113,30 +112,30 @@ call :set_wnx_version
 if "%arg_build%" == "1" call %cur_dir%\scripts\clean_artifacts.cmd
 if "%arg_build%" == "1" call scripts\unpack_packs.cmd
 if "%arg_build%" == "1" make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
-call :build_windows_agent
+call :build_windows_agent  || call :halt 81
 
 :: arg_test
-call :unit_test
+call :unit_test  || call :halt 81
 
 :: arg_ctl
-call :build_agent_controller
+call :build_agent_controller || call :halt 81
 
-:: arg_sql_check
-call :build_sql_check
+:: arg_check_sql
+call :build_check_sql || call :halt 81
 
 :: arg_ohm
-call :build_ohm
+call :build_ohm  || call :halt 81
 
 :: arg_ext
-call :build_ext
+call :build_ext  || call :halt 81
 
 :: arg_sign
-call :sign_binaries
+call :sign_binaries  || call :halt 81
 
 :: arg_msi
-call :build_msi
-call :set_msi_version
-call :deploy_to_artifacts
+call :build_msi  || call :halt 81
+call :set_msi_version  || call :halt 81
+call :deploy_to_artifacts  || call :halt 81
 
 ::Get end time:
 for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
@@ -247,10 +246,10 @@ if not %errorlevel% == 0 powershell Write-Host "Failed Controller Build" -Foregr
 popd
 goto :eof
 
-:build_sql_check
-if not "%arg_sql_check%" == "1" powershell Write-Host "Skipped Sql Check Build" -Foreground Yellow & goto :eof
-powershell Write-Host "run:Building Agent Controller..." -Foreground White
-pushd ..\..\packages\database_checks\sql_check
+:build_check_sql
+if not "%arg_check_sql%" == "1" powershell Write-Host "Skipped Sql Check Build"  -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building Check-SQL..." -Foreground White
+pushd ..\..\packages\check-sql
 call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
 popd
@@ -365,7 +364,7 @@ goto :eof
 
 :: Sets the errorlevel and stops the batch immediately
 :halt
-call scripts\detach_usb_token.cmd %usbip_exe%
+if exist %usbip_exe% call scripts\detach_usb_token.cmd %usbip_exe%
 call :__SetErrorLevel %1
 call :__ErrorExit 2> nul
 goto :eof

@@ -12,7 +12,7 @@ import pytest
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.werks import load_werk
 from cmk.utils.werks.werk import Werk, WerkError
-from cmk.utils.werks.werkv2 import load_werk_v2, parse_werk_v2
+from cmk.utils.werks.werkv2 import format_as_werk_v2, load_werk_v2, parse_werk_v2
 
 WERK_V1 = {
     "class": "fix",
@@ -327,3 +327,49 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
         assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
+
+
+def test_markdown_parse_roundtrip() -> None:
+    md = """[//]: # (werk v2)
+# test < werk
+
+key        | value
+---------- | ---
+class      | fix
+component  | core
+date       | 2022-12-12T11:08:08+00:00
+level      | 1
+version    | 2.0.0p7
+compatible | yes
+edition    | cre
+
+this is the `description` with some *italic* and __bold__ ***formatting***.
+"""
+    parsed = parse_werk_v2(md, "123")
+
+    # change version and expect another version in result
+    parsed.metadata["version"] = "99.99.99p99"
+    content, werk_id = format_as_werk_v2(parsed)
+    assert werk_id == "123"
+    assert (
+        content
+        == """[//]: # (werk v2)
+# test < werk
+
+key        | value
+---------- | ---
+class      | fix
+component  | core
+date       | 2022-12-12T11:08:08+00:00
+level      | 1
+version    | 99.99.99p99
+compatible | yes
+edition    | cre
+
+this is the `description` with some *italic* and __bold__ ***formatting***.
+"""
+    )
+
+    # change version back, expect exactly the same result as the input
+    parsed.metadata["version"] = "2.0.0p7"
+    assert format_as_werk_v2(parsed)[0] == md

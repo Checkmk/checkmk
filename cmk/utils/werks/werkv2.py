@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from typing import NamedTuple
 
 import lxml.html
@@ -68,6 +69,28 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
         metadata[key.text] = value.text
 
     return WerkV2ParseResult(metadata, md_description)
+
+
+def format_as_werk_v2(werk: WerkV2ParseResult) -> tuple[str, str]:
+    metadata = werk.metadata.copy()
+
+    werk_id = metadata.pop("id")
+    title = metadata.pop("title")
+
+    len_key = max(len(key) for key in metadata.keys())
+
+    def _content() -> Iterator[str]:
+        yield "[//]: # (werk v2)"
+        yield f"# {title}"
+        yield ""
+        yield f"{'key': <{len_key}} | value"
+        yield f"{'':-<{len_key}} | ---"
+        for key, value in metadata.items():
+            yield f"{key: <{len_key}} | {value}"
+        yield ""
+        yield werk.description
+
+    return "\n".join(_content()), werk_id
 
 
 def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:

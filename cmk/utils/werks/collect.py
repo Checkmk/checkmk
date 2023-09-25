@@ -154,14 +154,17 @@ def main(flavor: Literal["cma", "cmk", "checkmk_kube_agent"], repo_path: Path) -
                 parsed = parse_werk(werk_string, werk_filename)
             except Exception as e:
                 raise RuntimeError(
-                    f"could not parse werk {werk_filename} from branch {branch}"
+                    f"could not parse werk {werk_filename} from branch {branch} of flavor {flavor}"
                 ) from e
             versions[c.cleanup_branch_name(branch)] = parsed.metadata["version"]
 
-        # and here we simply access variables of the latest werk iteration above.
-        werk = load_werk(
-            file_content=werk_string, file_name=werk_filename
-        )  # this could be optimized, as we now parse the werk twice.
+        try:
+            # and here we simply access variables of the latest werk iteration above.
+            werk = load_werk(
+                file_content=werk_string, file_name=werk_filename
+            )  # this could be optimized, as we now parse the werk twice.
+        except Exception as e:
+            raise RuntimeError(f"could not load werk {werk_filename} from flavor {flavor}") from e
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
         werk_dict.pop("version")

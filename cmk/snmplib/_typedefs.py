@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
 SNMPContextName = str
-SNMPContext = str | None
+SNMPContext = str
 SNMPValueEncoding = Literal["string", "binary"]
 OID = str
 OIDRange = tuple[int, int]
@@ -79,7 +79,7 @@ class SNMPHostConfig(NamedTuple):
     bulk_walk_size_of: int
     timing: SNMPTiming
     oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
-    snmpv3_contexts: list
+    snmpv3_contexts: Sequence[tuple[str | None, SNMPContext]]
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
 
@@ -90,14 +90,14 @@ class SNMPHostConfig(NamedTuple):
     def snmpv3_contexts_of(
         self,
         section_name: SectionName | None,
-    ) -> Sequence[SNMPContext]:
+    ) -> Sequence[SNMPContext] | tuple[None]:
         if not section_name or not self.is_snmpv3_host:
-            return [None]
+            return (None,)
         section_name_str = str(section_name)
         for ty, rules in self.snmpv3_contexts:
             if ty is None or ty == section_name_str:
                 return rules
-        return [None]
+        return (None,)
 
     def serialize(self):
         serialized = self._asdict()

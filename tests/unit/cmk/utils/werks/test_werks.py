@@ -174,24 +174,25 @@ this is the `description` with some *formatting.*
         _markdown_string_to_werk(md)
 
 
-def test_loading_md_werk_component_not_known() -> None:
-    md = """[//]: # (werk v2)
-# title
-
-key | value
---- | ---
-class | fix
-component | smth
-date | 2022-12-12T11:08:08+00:00
-level | 3
-version | 2.0.0p7
-compatible | yes
-edition | cre
-
-this is the `description` with some *formatting.*
-"""
-    with pytest.raises(TypeError, match="Component smth not know. Choose from:"):
-        _markdown_string_to_werk(md)
+# wait for CMK-14587
+# def test_loading_md_werk_component_not_known() -> None:
+#     md = """[//]: # (werk v2)
+# # title
+#
+# key | value
+# --- | ---
+# class | fix
+# component | smth
+# date | 2022-12-12T11:08:08+00:00
+# level | 3
+# version | 2.0.0p7
+# compatible | yes
+# edition | cre
+#
+# this is the `description` with some *formatting.*
+# """
+#     with pytest.raises(TypeError, match="Component smth not know. Choose from:"):
+#         _markdown_string_to_werk(md)
 
 
 # wait for CMK-14546

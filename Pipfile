@@ -7,6 +7,8 @@ name = "pypi"
 
 [dev-packages]
 astroid = "==2.13.5"  # used by testlib.pylint_checker_localization
+azure-mgmt-resource = "*"  # used by the release process to publish the azure image to the marketplace
+azure-mgmt-compute = "*"  # used by the release process to add a new image version
 bandit = "==1.7.4"  # used by test/Makefile's test-bandit target
 beautifulsoup4 = "==4.11.2"  # used by the GUI crawler and various tests
 bson = "==0.5.10"  # used by test_mk_mongodb unit test

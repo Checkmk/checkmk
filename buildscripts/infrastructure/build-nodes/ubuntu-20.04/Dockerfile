@@ -13,12 +13,8 @@ RUN apt-get update \
     git \
     graphviz \
     libenchant1c2a \
-    libkrb5-dev \
-    libldap2-dev \
-    libmysqlclient-dev \
     librrd-dev \
     libsasl2-dev \
-    libssl-dev \
     libxml2 \
     make \
     nullmailer \
@@ -51,6 +47,7 @@ RUN apt-get update \
     gtk-doc-tools \
     iputils-ping \
     joe \
+    libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -75,6 +72,7 @@ RUN apt-get update \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    msitools \
     openssh-client \
     patch \
     rpcbind \
@@ -84,10 +82,7 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    vim \
-    libc6-dbg \
     upx-ucl \
-    msitools \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building in seperate container

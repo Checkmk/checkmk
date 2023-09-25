@@ -13,16 +13,15 @@ RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
     && yum -y --enablerepo=powertools --allowerasing install \
     bison \
-    curl \
     enchant \
     gcc \
     gcc-c++ \
     git \
+    graphviz-gd \
     krb5-devel \
     make \
     openldap-devel \
     postfix \
-    graphviz-gd \
     rrdtool-devel \
     strace \
     sudo \
@@ -39,8 +38,6 @@ RUN yum -y makecache \
     flex \
     flex-devel \
     freeradius-devel \
-    gcc \
-    gcc-c++ \
     gd-devel \
     gettext \
     gtk-doc \
@@ -88,7 +85,6 @@ RUN yum -y makecache \
     texinfo \
     tk-devel \
     wget \
-    which \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
     && yum clean all

@@ -14,12 +14,11 @@ RUN zypper -n --no-gpg-checks in --replacefiles \
     cyrus-sasl-devel \
     enchant-devel \
     git \
-    krb5-devel \
     make \
-    openldap2-devel \
     python \
     rrdtool-devel \
     sudo \
+    vim \
     && zypper clean -a
 
 RUN zypper ref -s \
@@ -27,14 +26,12 @@ RUN zypper ref -s \
     apache2-devel \
     bind-utils \
     bison \
-    curl \
     flex \
     freeradius-client-devel \
     freetype2-devel \
     gcc \
     gcc-c++ \
     gd-devel \
-    git \
     glib2-devel \
     groff \
     gtk-doc \
@@ -63,7 +60,6 @@ RUN zypper ref -s \
     libxmlsec1-1 \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
-    make \
     mariadb-client \
     openldap2-devel \
     openssh \
@@ -82,7 +78,6 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
-    vim \
     && zypper clean -a
 
 # krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced

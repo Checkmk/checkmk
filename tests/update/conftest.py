@@ -38,6 +38,12 @@ def pytest_addoption(parser):
         default=False,
         help="Use the latest base-version only.",
     )
+    parser.addoption(
+        "--store-lost-services",
+        action="store_true",
+        default=False,
+        help="Store list of lost services in a json reference.",
+    )
 
 
 @dataclasses.dataclass

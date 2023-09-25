@@ -1316,7 +1316,9 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(self, name: str, init_livestatus: bool = True) -> Site:
+    def get_site(
+        self, name: str, init_livestatus: bool = True, activate_changes: bool = True
+    ) -> Site:
         site = self._site_obj(name)
 
         site.create()
@@ -1330,8 +1332,9 @@ class SiteFactory:
         site.start()
         site.prepare_for_tests()
 
-        # There seem to be still some changes that want to be activated
-        site.activate_changes_and_wait_for_core_reload()
+        if activate_changes:
+            # There seem to be still some changes that want to be activated
+            site.activate_changes_and_wait_for_core_reload()
 
         logger.debug("Created site %s", site.id)
         return site

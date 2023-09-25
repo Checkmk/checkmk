@@ -3,6 +3,7 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
+import json
 import pytest
 
 from tests.testlib.agent import (
@@ -53,6 +54,19 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
+@pytest.fixture(name="site_factory_demo", scope="function")
+def _site_factory_demo():
+    base_version = CMKVersion("2.2.0p4", Edition.CCE, current_base_branch_name())
+    return SiteFactory(version=base_version, prefix="")
+
+
+@pytest.fixture(name="base_site_demo", scope="function")
+def _base_site_demo(site_factory_demo):
+    # Note: to access the UI of the "play" site go to http://localhost/play/check_mk/login.py?_admin
+    site_name = "play"
+    yield from site_factory_demo.get_test_site(site_name, save_results=False)
+
+
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
     reason="Test currently failing for missing `php7`. "
@@ -61,7 +75,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()
-    
+
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
@@ -120,3 +134,95 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
             f"{not_ok_services}"
         )
         assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+
+
+def test_update_from_backup_demo(
+    site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
+) -> None:
+    store_lost_services = request.config.getoption(name="--store-lost-services")
+    lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
+
+    # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
+    backup_path = qa_test_data_path() / Path("update/backups/play.checkmk.com.tar.gz")
+    assert backup_path.exists()
+
+    base_site = site_factory_demo.restore_site_from_backup(
+        backup_path, base_site_demo.id, reuse=True
+    )
+
+    base_hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
+
+    base_services = {}
+    base_ok_services = {}
+    for hostname in base_hostnames:
+        base_services[hostname] = base_site.get_host_services(hostname)
+        base_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
+
+        assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
+
+    target_version = CMKVersion(CMKVersion.DAILY, Edition.CCE, current_base_branch_name())
+
+    site_factory_demo = SiteFactory(
+        version=target_version,
+        prefix="",
+        update_from_git=False,
+        update=True,
+        update_conflict_mode="keepold",
+        enforce_english_gui=False,
+    )
+
+    base_site.stop()
+    target_site = site_factory_demo.get_site(  # perform update via CLI
+        base_site.id, init_livestatus=False, activate_changes=False
+    )
+    target_site.openapi.activate_changes_and_wait_for_completion()
+
+    assert target_site.is_running()
+    assert target_site.version.version == target_version.version, "Version mismatch during update!"
+
+    target_hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
+
+    target_services = {}
+    current_lost_services = {}
+    missed_services = {}
+
+    with open(lost_services_path, "r") as json_file:
+        known_lost_services = json.load(json_file)
+
+    for hostname in target_hostnames:
+        target_services[hostname] = target_site.get_host_services(hostname)
+
+        current_lost_services[hostname] = [
+            service
+            for service in base_services[hostname]
+            if service not in target_services[hostname]
+        ]
+
+        if current_lost_services[hostname]:
+            logger.warning(
+                "In the %s host the following services were found in base-version "
+                "but not in target-version: %s",
+                hostname,
+                current_lost_services[hostname],
+            )
+
+        if store_lost_services:
+            # skip assertion if flag given
+            continue
+
+        missed_services[hostname] = [
+            service
+            for service in current_lost_services[hostname]
+            if service not in known_lost_services[hostname]
+        ]
+
+        err_msg = (
+            f"In the {hostname} host the following services were not expected to be missing "
+            f"{missed_services[hostname]}"
+        )
+        assert not missed_services[hostname], err_msg
+
+    if store_lost_services:
+        logger.info("Storing lost services as JSON reference...")
+        with open(lost_services_path, "w") as file:
+            json.dump(current_lost_services, file, indent=4)

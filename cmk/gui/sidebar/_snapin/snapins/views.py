@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pprint
+from collections.abc import Sequence
 
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
@@ -45,7 +46,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=get_view_menu_items(include_reports=False))
+        show_topic_menu(treename="views", menu=view_menu_topics(include_reports=False))
 
         links = []
         if user.may("general.edit_views"):
@@ -64,7 +65,11 @@ def ajax_export_views() -> None:
 
 
 @request_memoize()
-def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
+def view_menu_topics(include_reports: bool) -> list[TopicMenuTopic]:
+    return make_topic_menu(view_menu_items(include_reports))
+
+
+def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Visual]]]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
@@ -102,7 +107,7 @@ def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
     if reporting and include_reports:
         visuals_to_show += [("reports", (k, v)) for k, v in reporting.permitted_reports().items()]
 
-    return make_topic_menu(visuals_to_show)
+    return visuals_to_show
 
 
 class MonitoringSearch(ABCMegaMenuSearch):
@@ -154,7 +159,7 @@ mega_menu_registry.register(
         title=_l("Monitor"),
         icon="main_monitoring",
         sort_index=5,
-        topics=lambda: get_view_menu_items(include_reports=True),
+        topics=lambda: view_menu_topics(include_reports=True),
         search=MonitoringSearch("monitoring_search"),
     )
 )

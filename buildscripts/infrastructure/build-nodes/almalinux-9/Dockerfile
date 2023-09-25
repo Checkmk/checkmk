@@ -8,17 +8,16 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 RUN yum -y --enablerepo=crb  makecache && yum repolist --enablerepo=crb \
     && yum -y --allowerasing --enablerepo=crb install \
     bison \
-    curl \
     enchant \
     gcc \
     gcc-c++ \
     git \
+    graphviz-gd \
     krb5-devel \
     make \
     openldap-devel \
     openldap-compat \
     postfix \
-    graphviz-gd \
     strace \
     sudo \
     vim \
@@ -34,8 +33,6 @@ RUN yum -y makecache \
     flex \
     flex-devel \
     freeradius-devel \
-    gcc \
-    gcc-c++ \
     gd-devel \
     gettext \
     gtk-doc \
@@ -57,7 +54,6 @@ RUN yum -y makecache \
     libuuid-devel \
     libxml2-devel \
     libxcrypt-compat \
-    xmlsec1-devel \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
@@ -85,7 +81,6 @@ RUN yum -y makecache \
     texinfo \
     tk-devel \
     wget \
-    which \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
     && yum clean all

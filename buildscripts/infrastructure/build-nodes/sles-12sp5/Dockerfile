@@ -12,20 +12,17 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
-    curl \
     cyrus-sasl-devel \
     enchant-devel \
     git \
-    krb5-devel \
-    libmysqlclient-devel \
     make \
-    openldap2-devel \
     python \
     python-devel \
     python-pyOpenSSL \
     python-xml \
     rrdtool-devel \
     sudo \
+    vim \
     && zypper clean -a
 
 RUN zypper ref -s \
@@ -40,9 +37,11 @@ RUN zypper ref -s \
     gcc \
     gcc-c++ \
     gd-devel \
-    git \
     glib2-devel \
     groff \
+    gtk-doc \
+    iputils \
+    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -86,10 +85,6 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
-    joe \
-    gtk-doc \
-    iputils \
-    vim \
     && zypper clean -a
 
 # krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced

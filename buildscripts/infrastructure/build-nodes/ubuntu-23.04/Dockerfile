@@ -11,12 +11,8 @@ RUN apt-get update \
     gdebi \
     git \
     graphviz \
-    libkrb5-dev \
-    libldap2-dev \
-    libmysqlclient-dev \
     librrd-dev \
     libsasl2-dev \
-    libssl-dev \
     libxml2 \
     make \
     nullmailer \
@@ -46,6 +42,7 @@ RUN apt-get update \
     gtk-doc-tools \
     iputils-ping \
     joe \
+    libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -79,8 +76,6 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    vim \
-    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

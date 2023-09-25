@@ -99,6 +99,10 @@ def test_loading_md_werk_missing_header() -> None:
 def test_loading_md_werk_missing_title() -> None:
     md = """[//]: # (werk v2)
 this is the `description` with some *formatting.*
+
+table
+
+body
 """
     with pytest.raises(
         WerkError, match="First element after the header needs to be the title as a h1 headline."
@@ -110,6 +114,8 @@ def test_loading_md_werk_missing_table() -> None:
     with pytest.raises(WerkError, match="Expected a table after the title, found 'p'"):
         md = """[//]: # (werk v2)
 # title
+
+table
 
 this is the `description` with some *formatting.*
 """
@@ -193,6 +199,24 @@ this is the `description` with some *formatting.*
 # """
 #     with pytest.raises(TypeError, match="Component smth not know. Choose from:"):
 #         _markdown_string_to_werk(md)
+
+
+def test_loading_md_werk_missing_newline() -> None:
+    md = """[//]: # (werk v2)
+# title
+key | value
+--- | ---
+class | fix
+component | smth
+date | 2022-12-12T11:08:08+00:00
+level | 3
+version | 2.0.0p7
+compatible | yes
+edition | cre
+this is the `description` with some *formatting.*
+"""
+    with pytest.raises(WerkError, match="Structure of markdown werk could not be detected"):
+        _markdown_string_to_werk(md)
 
 
 # wait for CMK-14546

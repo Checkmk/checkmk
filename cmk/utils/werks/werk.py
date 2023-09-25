@@ -85,12 +85,13 @@ class WerkV2Base(BaseModel):
         except ValueError:
             raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead")
 
-    @field_validator("component")
-    def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        components = {k for k, _ in WerkTranslator().components()}
-        if v not in components:
-            raise TypeError(f"Component {v} not know. Choose from: {components}")
-        return v
+    # TODO: CMK-14587
+    # @field_validator("component")
+    # def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
+    #     components = {k for k, _ in WerkTranslator().components()}
+    #     if v not in components:
+    #         raise TypeError(f"Component {v} not know. Choose from: {components}")
+    #     return v
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True, mode="json")

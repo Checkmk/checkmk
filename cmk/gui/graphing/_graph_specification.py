@@ -116,8 +116,8 @@ MetricOperation = (
 )
 
 
-MetricOpOperator.update_forward_refs()
-MetricOpTransformation.update_forward_refs()
+MetricOpOperator.model_rebuild()
+MetricOpTransformation.model_rebuild()
 
 
 class GraphMetric(BaseModel, frozen=True):

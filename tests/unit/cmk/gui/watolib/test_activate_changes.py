@@ -67,6 +67,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="var/check_mk/topology",
             excludes=[],
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="apache_proccess_tuning",
+            site_path="etc/check_mk/apache.d/wato",
+            excludes=[],
+        ),
     ]
 
     if edition is not cmk_version.Edition.CRE:

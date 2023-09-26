@@ -279,6 +279,12 @@ def get_replication_paths() -> list[ReplicationPath]:
             site_path=os.path.relpath(topology_dir, cmk.utils.paths.omd_root),
             excludes=[],
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="apache_proccess_tuning",
+            site_path="etc/check_mk/apache.d/wato",
+            excludes=[],
+        ),
     ]
 
     # Include rule configuration into backup/restore/replication. Current

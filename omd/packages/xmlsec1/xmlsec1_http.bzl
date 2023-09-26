@@ -6,7 +6,7 @@ def xmlsec1(version_str, sha256):
     http_archive(
         name = "xmlsec1",
         urls = [
-            "https://www.aleksey.com/xmlsec/download/" + filename,
+            "https://www.aleksey.com/xmlsec/download/older-releases/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,

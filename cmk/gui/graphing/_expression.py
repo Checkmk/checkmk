@@ -593,63 +593,60 @@ def parse_expression(
             explicit_color,
         )
 
-    operators: list[RPNOperators] = []
-    operands = []
+    raw_operators: list[RPNOperators] = []
+    raw_operands = []
     for p in parts:
         match p:
             case "+":
-                operators.append("+")
+                raw_operators.append("+")
             case "-":
-                operators.append("-")
+                raw_operators.append("-")
             case "*":
-                operators.append("*")
+                raw_operators.append("*")
             case "/":
-                operators.append("/")
+                raw_operators.append("/")
             case ">":
-                operators.append(">")
+                raw_operators.append(">")
             case ">=":
-                operators.append(">=")
+                raw_operators.append(">=")
             case "<":
-                operators.append("<")
+                raw_operators.append("<")
             case "<=":
-                operators.append("<=")
+                raw_operators.append("<=")
             case "MIN":
-                operators.append("MIN")
+                raw_operators.append("MIN")
             case "MAX":
-                operators.append("MAX")
+                raw_operators.append("MAX")
             case "AVERAGE":
-                operators.append("AVERAGE")
+                raw_operators.append("AVERAGE")
             case "MERGE":
-                operators.append("MERGE")
+                raw_operators.append("MERGE")
             case _:
-                operands.append(p)
+                raw_operands.append(p)
 
-    if len(operators) != (len(operands) - 1):
-        # "a,b,+,c,-,..." -> operators = ["+", "-", ...], operands = ["a", "b", "c", ...]
-        raise ValueError(f"Too few or many operators {operators!r} for {operands!r}")
+    if len(raw_operators) != (len(raw_operands) - 1):
+        # "a,b,+,c,-,..." -> raw_operators = ["+", "-", ...], raw_operands = ["a", "b", "c", ...]
+        raise ValueError(f"Too few or many operators {raw_operators!r} for {raw_operands!r}")
+
+    operands = [
+        _parse_single_expression(
+            ro,
+            translated_metrics,
+            enforced_consolidation_func_name,
+        )
+        for ro in raw_operands
+    ]
 
     operand = _apply_operator(
-        operators.pop(0),
-        _parse_single_expression(
-            operands.pop(0),
-            translated_metrics,
-            enforced_consolidation_func_name,
-        ),
-        _parse_single_expression(
-            operands.pop(0),
-            translated_metrics,
-            enforced_consolidation_func_name,
-        ),
+        raw_operators.pop(0),
+        operands.pop(0),
+        operands.pop(0),
     )
     while operands:
         operand = _apply_operator(
-            operators.pop(0),
+            raw_operators.pop(0),
             operand,
-            _parse_single_expression(
-                operands.pop(0),
-                translated_metrics,
-                enforced_consolidation_func_name,
-            ),
+            operands.pop(0),
         )
 
     return MetricExpression(operand, explicit_unit_name, explicit_color)

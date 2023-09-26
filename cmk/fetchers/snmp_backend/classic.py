@@ -5,6 +5,7 @@
 
 import subprocess
 from collections.abc import Iterable
+from typing import Literal, TypeAlias
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
@@ -17,12 +18,14 @@ from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
+CommandType: TypeAlias = Literal["get", "getnext", "walk"]
+
 
 class ClassicSNMPBackend(SNMPBackend):
     def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
-            commandtype = "getnext"
+            commandtype: CommandType = "getnext"
         else:
             oid_prefix = oid
             commandtype = "get"
@@ -98,7 +101,7 @@ class ClassicSNMPBackend(SNMPBackend):
             ipaddress = "[" + ipaddress + "]"
 
         portspec = self._snmp_port_spec()
-        command = self._snmp_walk_command(context_name)
+        command = self._snmp_base_command("walk", context_name) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -185,13 +188,6 @@ class ClassicSNMPBackend(SNMPBackend):
             return ""
         return ":%d" % self.config.port
 
-    def _snmp_walk_command(self, context_name: SNMPContextName | None) -> list[str]:
-        """Returns command lines for snmpwalk and snmpget
-
-        Including options for authentication. This handles communities and
-        authentication for SNMP V3. Also bulkwalk hosts"""
-        return self._snmp_base_command("walk", context_name) + ["-Cc"]
-
     # if the credentials are a string, we use that as community,
     # if it is a four-tuple, we use it as V3 auth parameters:
     # (1) security level (-l)
@@ -201,16 +197,17 @@ class ClassicSNMPBackend(SNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(  # pylint: disable=too-many-branches
+    def _snmp_base_command(
         self,
-        what: str,
+        cmd: CommandType,
         context_name: SNMPContextName | None,
     ) -> list[str]:
+        # pylint: disable=too-many-branches
         options = []
 
-        if what == "get":
+        if cmd == "get":
             command = ["snmpget"]
-        elif what == "getnext":
+        elif cmd == "getnext":
             command = ["snmpgetnext", "-Cf"]
         elif self.config.is_bulkwalk_host:
             command = ["snmpbulkwalk"]
@@ -224,7 +221,7 @@ class ClassicSNMPBackend(SNMPBackend):
             if self.config.is_bulkwalk_host:
                 options.append("-v2c")
             else:
-                if what == "walk":
+                if cmd == "walk":
                     command = ["snmpwalk"]
                 if self.config.is_snmpv2or3_without_bulkwalk_host:
                     options.append("-v2c")

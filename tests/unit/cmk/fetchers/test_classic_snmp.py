@@ -282,7 +282,7 @@ class SNMPSettings(NamedTuple):
 )
 def test_snmp_walk_command(settings: SNMPSettings, expected: Sequence[str]) -> None:
     backend = ClassicSNMPBackend(settings.snmp_config, logger)
-    assert backend._snmp_walk_command(settings.context_name) == expected
+    assert backend._snmp_base_command("walk", settings.context_name) + ["-Cc"] == expected
 
 
 @pytest.mark.parametrize(

@@ -6,18 +6,25 @@
 import pytest
 
 from cmk.gui.graphing._expression import (
+    ConditionalMetricDeclaration,
     ConstantFloat,
     ConstantInt,
     CriticalOf,
     Difference,
+    GreaterEqualThan,
+    GreaterThan,
+    LessEqualThan,
+    LessThan,
     MaximumOf,
     Metric,
     MetricExpression,
     MetricExpressionResult,
     MinimumOf,
+    parse_conditional_expression,
     parse_expression,
     Percent,
     Product,
+    Sum,
     WarningOf,
 )
 from cmk.gui.graphing._unit_info import unit_info
@@ -354,3 +361,80 @@ def test_parse_and_evaluate(
     assert metric_expression.evaluate(translated_metrics) == MetricExpressionResult(
         value, unit_info[unit_name], color
     )
+
+
+@pytest.mark.parametrize(
+    "perf_data, check_command, raw_expression, expected_conditional_metric_declaration, value",
+    [
+        pytest.param(
+            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name,100,>",
+            GreaterThan(
+                left=Metric(name="metric_name"),
+                right=ConstantInt(100),
+            ),
+            False,
+            id="conditional greater than",
+        ),
+        pytest.param(
+            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name,100,>=",
+            GreaterEqualThan(
+                left=Metric(name="metric_name"),
+                right=ConstantInt(100),
+            ),
+            True,
+            id="conditional greater equal than",
+        ),
+        pytest.param(
+            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name,100,<",
+            LessThan(
+                left=Metric(name="metric_name"),
+                right=ConstantInt(100),
+            ),
+            False,
+            id="conditional less than",
+        ),
+        pytest.param(
+            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            "check_mk-foo",
+            "metric_name,100,<=",
+            LessEqualThan(
+                left=Metric(name="metric_name"),
+                right=ConstantInt(100),
+            ),
+            True,
+            id="conditional less equal than",
+        ),
+        pytest.param(
+            [
+                PerfDataTuple("used", 50, "", 20, 30, 0, 50),
+                PerfDataTuple("uncommitted", 50, "", 20, 30, 0, 50),
+                PerfDataTuple("size", 100, "", 20, 30, 0, 100),
+            ],
+            "check_mk-foo",
+            "used,uncommitted,+,size,>",
+            GreaterThan(
+                left=Sum([Metric(name="used"), Metric(name="uncommitted")]),
+                right=Metric(name="size"),
+            ),
+            False,
+            id="conditional greater than nested",
+        ),
+    ],
+)
+def test_parse_and_evaluate_conditional(
+    perf_data: Perfdata,
+    check_command: str,
+    raw_expression: str,
+    expected_conditional_metric_declaration: ConditionalMetricDeclaration,
+    value: bool,
+) -> None:
+    translated_metrics = translate_metrics(perf_data, check_command)
+    metric_declaration = parse_conditional_expression(raw_expression, translated_metrics)
+    assert metric_declaration == expected_conditional_metric_declaration
+    assert metric_declaration.evaluate(translated_metrics) == value

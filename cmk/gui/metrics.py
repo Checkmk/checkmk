@@ -31,7 +31,7 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing._expression import parse_expression
+from cmk.gui.graphing._expression import parse_conditional_expression, parse_expression
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
@@ -364,13 +364,9 @@ class Perfometers:
 
         if "condition" in perfometer:
             try:
-                if (
-                    parse_expression(perfometer["condition"], translated_metrics)
-                    .evaluate(translated_metrics)
-                    .value
-                    == 0.0
-                ):
-                    return False
+                return parse_conditional_expression(
+                    perfometer["condition"], translated_metrics
+                ).evaluate(translated_metrics)
             except Exception:
                 return False
 

@@ -8,7 +8,7 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i1
 
-{{mk_inventory}} now writes a section {{<<<lnx_block_devices>>>}} block device
+{{mk_inventory}} now writes a section `<<<lnx_block_devices>>>` block device
 information collected from system device tree.
 {{lnx_block_devices}} inventory plugin extends the sites inventory section
 {{Hardware/Storage/Block Devices}} with the collected information.

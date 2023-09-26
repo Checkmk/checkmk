@@ -13,4 +13,4 @@ You will have to update the agent to get this improvement. In case you use
 the old agent with the new check, you will get no image label information.
 
 The agent is not processing all images anymore. It skips the intermediate
-images (were shown as "<none>:<none>" before).
+images (were shown as `<none>:<none>` before).

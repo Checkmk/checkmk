@@ -12,6 +12,4 @@ A postgres instance will be detected as running
 if a process is found that contains a postgres commandline
 which contains the name of the env-file.
 Otherwise the check "SQL Instance" will show the
-following error message "Instance <INSTANCE_NAME> not running or postgres DATADIR name is not identical with instance name.".
-
-
+following error message `"Instance <INSTANCE_NAME> not running or postgres DATADIR name is not identical with instance name."`.

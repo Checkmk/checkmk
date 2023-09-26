@@ -10,7 +10,7 @@ State: unknown
 Version: 2.1.0p28
 
 Prior to this Werk it was possible for a user to read a hosts configuration
-(using GET on '/objects/host_config/<host_name>') even if that user was not
+(using GET on `/objects/host_config/<host_name>`) even if that user was not
 in the contact group of that host.
 
 The REST-API will correctly check a users permissions before serving a response

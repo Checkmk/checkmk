@@ -12,10 +12,8 @@ Introducing separate oracle uptime service as a subcheck of the oracle_instance 
 
 The uptime information and metric is no longer part of the oracle_instance check.
 
-You have to rediscover services to monitor the new 'ORA <ORACLE_SID> Uptime' services.
+You have to rediscover services to monitor the new `ORA <ORACLE_SID> Uptime` services.
 
 The <i>Minimum required uptime</i> parameter that was part of WATO rule <i>Oracle instance</i> does no longer exist.
 
 Uptime levels can now be configured with the new WATO rule <i>Uptime since last reboot of devices with modules</i>.
-
-

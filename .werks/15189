@@ -26,7 +26,7 @@ LI: 2.0.0
 Users are advised to change the secret of the user "automation" via the User Management UI.
 
 If this is not an option for you, delete or manually sanitize the Apache access log file and any backup of the file.
-Remove any line that contains a <tt>POST</tt> to <tt><your site URL>/report.py?_username=automation&_secret=<...></tt>.
+Remove any line that contains a <tt>POST</tt> to `<your site URL>/report.py?_username=automation&_secret=<...>`.
 
 Refrain from using the affected functionality before applying this patch or manually sanitize the file afterwards.
 

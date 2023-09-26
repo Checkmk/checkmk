@@ -35,8 +35,8 @@ Client from Oracle for 64bit on Linux.
 <tt>REMOTE_INSTANCE_1=check_mk:check_mk::dbhost:1521:piggybackhost:XE:11.2</tt>
 <tt>REMOTE_INSTANCE_2=check_mk:check_mk::dbhost:1521:piggybackhost:XE2:11.2</tt>
 
-Definition of a REMOTE_INSTANCE:
-<tt>REMOTE_INSTANCE_<Number>=<Configuration String></tt>
+Definition of a `REMOTE_INSTANCE`:
+`REMOTE_INSTANCE_<Number>=<Configuration String>`
 
 The definition of the database connection is as follows.
 <tt>username:password:sysdba:Database hostname:Listener Port:piggyback Hostname:ORACLE_SID:ORACLE-Release</tt>
@@ -62,4 +62,4 @@ remove an exiting sqlplus.sh and configure
 the <tt>mk_oracle.cfg</tt>. This change is a requirement for the
 new remote monitoring option and the only reason for this
 change.
-There is nothing to do when <tr>sqlplus.sh</tr> was not used before this Werk.
+There is nothing to do when <tt>sqlplus.sh</tt> was not used before this Werk.

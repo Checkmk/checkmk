@@ -16,6 +16,8 @@ In case the rule was used previously, the default connection type for PostgreSQL
 
 <b>Note:</b> As this WATO rule was applicable as well for MongoDB, this change will be incompatible to previously existing MongoDB rules set with "Database Connections (PostgreSQL/MongoDB)". If this is applicable for your setup, perform the following steps:
 
+<ul>
 <li> If you're monitoring both PostgreSQL <b>and</b> MongoDB: keep the old rule "Database Connections (PostgreSQL/MongoDB)" before updating to this werk.</li>
 <li> If you're monitoring MongoDB <b>only</b>: delete the old rule "Database Connections (PostgreSQL/MongoDB)" before updating to this werk</li>
 <li> Create a new rule with your previous settings for MongoDB with the new rule "Database Connections (MongoDB)" </li>
+</ul>

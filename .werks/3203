@@ -10,6 +10,7 @@ Date: 1455540745
 Fixed an exception which could occur during automation calls between distributed
 sites:
 
+```
 2016-02-15 13:49:14 [3] [13761] /heute/check_mk/wato.py Internal error: Traceback (most recent call last):
   File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 131, in handler
     handler()
@@ -33,3 +34,4 @@ MKAutomationException: <pre>%d format: a number is required, not dictTraceback (
   File &quot;/omd/sites/slave/share/check_mk/web/htdocs/watolib.py&quot;, line 3883, in check_mk_local_automation
     args = [ &quot;--timeout&quot;, &quot;%d&quot; % timeout ] + args
 TypeError: %d format: a number is required, not dic
+```

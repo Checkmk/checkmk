@@ -8,7 +8,7 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0i1
 
-A space character in a mailbox name provided via {--mailbox=<NAME>}, e.g. "My Inbox"
+A space character in a mailbox name provided via `--mailbox=<NAME>`, e.g. "My Inbox"
 would lead to a known exception:
 
 imaplib.IMAP4.error: SELECT command error: BAD [b"parse error: wrong character; expected '(' but got 'I'"]

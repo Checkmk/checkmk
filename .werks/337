@@ -23,7 +23,9 @@ F-:
 Please note, that <tt>Limit:</tt> and <tt>Timelimit:</tt> have
 a different behaviour when the limit is reached:
 
+<ul>
 <li class=list><tt>Limit:</tt> end the query, output all rows that
 have been found so far.</li>
 <li class=list><tt>Timelimit:</tt> abort the query with an error,
 do not output any lines.</li>
+</ul>

@@ -6,4 +6,4 @@ Date: 1392034080
 Class: fix
 
 The previous version always looked for the xntpd.
-If it wasn't present, no <<<ntp>>> section got created.
+If it wasn't present, no `<<<ntp>>>` section got created.

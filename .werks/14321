@@ -9,5 +9,5 @@ Level: 1
 Version: 2.1.0p1
 
 Opening of views with group painters (Option "Grouping" on view edit page)
-could result in the error "TypeError: <lambda>() takes 2 positional arguments
-but 3 were given".
+could result in the error `TypeError: <lambda>() takes 2 positional arguments
+but 3 were given`.

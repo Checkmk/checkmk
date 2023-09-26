@@ -31,4 +31,4 @@ two regular custom host attributes. This is fully compatible and will not result
 loss of data. The exact procedure is described here:
 https://kb.checkmk.com/display/KB/Geo+coordinates+from+Checkmk+in+NagVis+maps.
 After creating the custom attributes, users must remove their local copy of
-<tt>wato_geo_fields.py</tt> from <tt>local/share/check_mk/web/plugins/wato/<tt>.
+<tt>wato_geo_fields.py</tt> from <tt>local/share/check_mk/web/plugins/wato/</tt>.

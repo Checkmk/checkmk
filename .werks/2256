@@ -15,7 +15,7 @@ difference that the configuration file needs to be placed in
 the directory of the <tt>check_mk_agent.exe</tt> and named
 <tt>mysql.ini</tt>. In case you have multiple instances running
 on a single host and need different credentials, you can create
-multiple files named <tt>mysql_<instance>.ini</tt> while you need
+multiple files named `mysql_<instance>.ini` while you need
 to replace instance with the ident of the mysql process.
 
 For further details take a look at the

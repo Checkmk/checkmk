@@ -12,7 +12,9 @@ Version: 2.1.0p7
 Attempts to flush the DB when the path to the RRD database is
 missing would produce the rather unhelpful error
 
-"Error flushing RRD: Usage: rrdtool flushcached [--daemon|-d <addr>] <file> [<file> ...]"
+```
+Error flushing RRD: Usage: rrdtool flushcached [--daemon|-d <addr>] <file> [<file> ...]
+```
 
 This fix removes the flushing attempt and silences the
 corresponding error in the log.

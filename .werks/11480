@@ -10,6 +10,7 @@ Version: 2.0.0i1
 
 From now on, the sysDescr is parsed for the following strings:
 
+<ul>
 <li>appliance</li>
 <li>firewall</li>
 <li>printer</li>
@@ -17,7 +18,8 @@ From now on, the sysDescr is parsed for the following strings:
 <li>sensor</li>
 <li>switch</li>
 <li>ups</li>
-<li>wlc</li><br>
+<li>wlc</li>
+</ul>
 
 If one string (foo in this example) is found, the host will discover the host
 label <b>"cmk/device_type:foo"</b>.

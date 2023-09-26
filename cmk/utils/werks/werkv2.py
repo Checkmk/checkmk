@@ -92,7 +92,7 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
         extensions=["tables", "fenced_code"],
         output_format="html",
     )
-    raise_if_contains_unknown_tags(werk["description"])
+    _check_html(werk["description"])
 
     try:
         return Werk.model_validate(werk)
@@ -119,7 +119,7 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
 #         )
 
 
-def raise_if_contains_unknown_tags(string: str) -> None:
+def _check_html(string: str) -> None:
     tags_allowed = {
         "code",
         "em",
@@ -154,3 +154,8 @@ def raise_if_contains_unknown_tags(string: str) -> None:
     if tags_unknown:
         tag_list = ", ".join(f"<{tag}>" for tag in tags_unknown)
         raise WerkError(f"Found tag {tag_list} which is not in the list of allowed tags.")
+
+    li_parents_found = {e.getparent().tag for e in tree.xpath("./body//li")}
+    li_illegal_parents = li_parents_found.difference({"ul", "ol"})
+    if li_illegal_parents:
+        raise WerkError("Found li tags which are not inside <ul> or <ol>. This breaks the html.")

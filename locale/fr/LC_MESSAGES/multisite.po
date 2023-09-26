@@ -21012,10 +21012,6 @@ msgid "Failed to load legacy host attribute from local plugins: %r"
 msgstr "Impossible de charger l'attribut d'hôte hérité des plugins locaux : %r"
 
 #, python-format
-msgid "Failed to load werk \"%s\": %s"
-msgstr "Impossible de charger le travail \"%s\" : %s"
-
-#, python-format
 msgid "Failed to parse JSON request: '%s': %s"
 msgstr "Échec de l'analyse de la requête JSON : '%s' : %s"
 
@@ -73754,6 +73750,10 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, python-format
+#~ msgid "Failed to load werk \"%s\": %s"
+#~ msgstr "Impossible de charger le travail \"%s\" : %s"
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "Le fichier ne semble pas être un fichier iCalendar valide.BBB"

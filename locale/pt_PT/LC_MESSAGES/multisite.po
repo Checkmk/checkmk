@@ -20798,10 +20798,6 @@ msgstr ""
 "%r"
 
 #, python-format
-msgid "Failed to load werk \"%s\": %s"
-msgstr "Falha no carregamento não foi \"%s\": %s"
-
-#, python-format
 msgid "Failed to parse JSON request: '%s': %s"
 msgstr "Falha em analisar o pedido do JSON: '%s': %s"
 
@@ -72844,6 +72840,10 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid "Failed to load werk \"%s\": %s"
+#~ msgstr "Falha no carregamento não foi \"%s\": %s"
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "O ficheiro não parece ser um ficheiro iCalendar válido.BBB"

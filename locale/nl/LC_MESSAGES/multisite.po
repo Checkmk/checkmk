@@ -20750,10 +20750,6 @@ msgid "Failed to load legacy host attribute from local plugins: %r"
 msgstr "Mislukt om legacy host attribuut van lokale plugins te laden: %r"
 
 #, python-format
-msgid "Failed to load werk \"%s\": %s"
-msgstr "Het laden van werk \"%s\" is mislukt: %s"
-
-#, python-format
 msgid "Failed to parse JSON request: '%s': %s"
 msgstr "Mislukt om JSON verzoek te parsen: '%s': %s"
 
@@ -72769,6 +72765,10 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid "Failed to load werk \"%s\": %s"
+#~ msgstr "Het laden van werk \"%s\" is mislukt: %s"
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn. BBB"

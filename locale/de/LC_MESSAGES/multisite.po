@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-09-15 06:00+0000\n"
+"PO-Revision-Date: 2023-09-25 23:09+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -2236,17 +2236,17 @@ msgid ""
 "available service levels is configured via a <a href='%s'>global option.</a>"
 msgstr ""
 "Eine Service-Ebene ist eine Zahl, die beschreibt, wie geschäftskritisch ein "
-"Host oder Service ist. Dieses Level können Sie für Benachrichtigungen, als "
-"Filter in Tabellenansichten und als Kriterium für Regeln in der Event "
-"Console verwenden. Eine höhere Service-Ebene gilt als geschäftskritischer. "
-"Dieser Regelsatz erlaubt das Zuweisen von Service-Ebenen zu Hosts und/oder "
-"Services. Hinweis: Wenn Sie einem Host mit dem Regelsatz <i>Service-Ebene "
-"von Hosts</i> eine Service-Ebene zuweisen, dann wird diese Ebene an alle "
-"Services vererbt, denen <b>nicht</b> explizit ein Service mit dem Regelsatz "
-"<i>Service-Ebene von Services</i> zugewiesen wurde. Wenn keine Service-Ebene "
-"zugewiesen ist, wird das Servicelevel 0 gesetzt.<br><br>Die Liste aller "
-"verfügbaren Service-Ebenen wird über eine <a href='%s'>globale Einstellung</"
-"a> festgelegt."
+"Host oder Service ist. Diese Ebene kann in Regeln für Benachrichtigungen, "
+"als Filter in Ansichten oder als Kriterium in Regeln für die Event Console "
+"verwendet werden. Eine höhere Service-Ebene wird als geschäftskritischer "
+"angesehen. Dieser Regelsatz erlaubt es, Hosts und/oder Services Service-"
+"Ebenen zuzuweisen. Hinweis: Weisen Sie einem Host mit Hilfe des Regelsatzes "
+"<i>Service-Ebene der Hosts</i> eine Service-Ebene zu, so wird diese Ebene an "
+"alle Services vererbt, die <b>nicht</b> explizit mit dem Regelsatz "
+"<i>Service-Ebene des Services</i> einem Service zugewiesen wurden. Keine "
+"Service-Ebene zuzuweisen ist gleichbedeutend mit der Definition eines Levels "
+"von 0.<br><br>Die Liste der verfügbaren Dienstebenen wird über eine <a "
+"href='%s'>globale Option</a> konfiguriert."
 
 msgid "A service or host in this aggregation is in downtime."
 msgstr "Ein Service oder Host in dieser Aggregation ist in Wartungszeit."
@@ -20806,10 +20806,6 @@ msgstr ""
 "Legacy-Host-Attribut aus lokalen Plugins konnte nicht geladen werden: %r"
 
 #, python-format
-msgid "Failed to load werk \"%s\": %s"
-msgstr "Werk \"%s\" kann nicht geladen werden: %s"
-
-#, python-format
 msgid "Failed to parse JSON request: '%s': %s"
 msgstr "JSON-Anfrage konnte nicht verarbeitet werden: '%s': %s"
 
@@ -25173,7 +25169,7 @@ msgid "Hostname (exact match)"
 msgstr "Hostname (exakte Übereinstimmung)"
 
 msgid "Hostname (regex)"
-msgstr "Host-Kontakt (regex)"
+msgstr "Host-Name (regex)"
 
 msgid "Hostname / IP address"
 msgstr "Hostname / IP-Adresse"
@@ -37946,13 +37942,13 @@ msgid "Nutanix Prism Alerts"
 msgstr "Nutanix Prism-Alarme"
 
 msgid "Nutanix Prism MetroAvail Sync State"
-msgstr "Nutanix Prism MetroAvail Sync State"
+msgstr "Nutanix Prism MetroAvail Sync Status"
 
 msgid "Nutanix Prism Support State"
-msgstr "Nutanix Prism Support State"
+msgstr "Nutanix Prism Support Status"
 
 msgid "Nutanix Prism VM Tools"
-msgstr "Nutanix Prism VM Tools"
+msgstr "Nutanix Prism VM Werkzeuge"
 
 msgid "Nutanix VM CPU utilization"
 msgstr "Nutanix VM CPU-Auslastung"
@@ -37964,7 +37960,7 @@ msgid "Nutanix VM memory usage"
 msgstr "Nutanix VM-Speicherverbrauch"
 
 msgid "Nutanix single VM State"
-msgstr "Nutanix single VM State"
+msgstr "Nutanix single VM Status"
 
 msgid "Nvidia"
 msgstr "Nvidia"
@@ -66662,14 +66658,14 @@ msgid "Wanted Host State"
 msgstr "Gastgeberland"
 
 msgid "Wanted Host State for defined Nutanix Host"
-msgstr "Wanted Host State for defined Nutanix Host"
+msgstr "Gewünschter Host-Status für den definierten Nutanix Host"
 
 #, fuzzy
 msgid "Wanted VM State"
 msgstr "Updatestatus"
 
 msgid "Wanted VM State for defined Nutanix VMs"
-msgstr "Wanted VM State for defined Nutanix VMs"
+msgstr "Gewünschter VM Status für die definierten Nutanix VMs"
 
 msgid "Warn"
 msgstr "Warn"
@@ -72862,6 +72858,10 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#, python-format
+#~ msgid "Failed to load werk \"%s\": %s"
+#~ msgstr "Werk \"%s\" kann nicht geladen werden: %s"
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "Die Datei scheint keine gültige iCalendar-Datei zu sein.BBB"

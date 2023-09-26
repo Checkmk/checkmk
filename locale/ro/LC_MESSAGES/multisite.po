@@ -20937,10 +20937,6 @@ msgstr ""
 "%r."
 
 #, python-format
-msgid "Failed to load werk \"%s\": %s"
-msgstr "Nu a reușit să încarce werk \"%s\": %s."
-
-#, python-format
 msgid "Failed to parse JSON request: '%s': %s"
 msgstr "Nu s-a reușit analizarea cererii JSON: '%s': %s."
 
@@ -73457,6 +73453,10 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, python-format
+#~ msgid "Failed to load werk \"%s\": %s"
+#~ msgstr "Nu a reușit să încarce werk \"%s\": %s."
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "Fișierul nu pare a fi un fișier iCalendar valid.BBB"

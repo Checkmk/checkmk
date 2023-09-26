@@ -10,6 +10,7 @@ Date: 1504006790
 
 Fixes exceptions like this:
 
+```
   File "/omd/sites/heute/bin/cmk", line 96, in <module>
     exit_status = modes.call(o, a, opts, args)
   File "/omd/sites/heute/lib/python/cmk_base/modes/__init__.py", line 80, in call
@@ -29,3 +30,4 @@ Fixes exceptions like this:
   File "/omd/sites/heute/share/check_mk/checks/quantum_libsmall_door", line 49, in <lambda>
     and "library" in oid(".1.3.6.1.2.1.1.6.0").lower(),
 AttributeError: 'NoneType' object has no attribute 'lower'
+```

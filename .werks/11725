@@ -19,7 +19,7 @@ E.g.:
 <li><tt>RAID Virtual Drive 0/0</tt> would become <tt>RAID Virtual Drive C0.0/0</tt>
 for controller 0</li>
 <li><tt>RAID PDisk EID:Slot-Device 13:9-19</tt> would become
-<tt>RAID PDisk EID:Slot-Device C1.13:9-19</tt> for controller 1</tt></li>
+<tt>RAID PDisk EID:Slot-Device C1.13:9-19</tt> for controller 1</li>
 </ul>
 As this Werk changes the item name, this is an incompatible change and will
 require re-discovering the services.

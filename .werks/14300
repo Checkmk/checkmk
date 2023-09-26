@@ -12,11 +12,16 @@ Version: 2.2.0b1
 When Checkmk is used on on the Checkmk Appliance 1.6 or newer, it is necessary
 to update the appliance sidebar snapin.
 
-Previous Checkmk versions displayed the error message 'Failed to render navigation:
+Previous Checkmk versions displayed the error message
+
+```
+Failed to render navigation:
 Traceback (most recent call last): File: "[stdin]", line 2, in <module>
-IOError: [Errno 2] No such file or directory' in the sidebar snapin.
+IOError: [Errno 2] No such file or directory
+```
+
+in the sidebar snapin.
 
 Background: The Checkmk Appliance firmware 1.6 migrates the internal software
 stack to Python 3.7 which makes it incompatible with the previous snapin. This
 change makes it possible to use Checkmk on older and newer appliance firmware.
-

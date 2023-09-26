@@ -19,7 +19,5 @@ in a graph.
 Currently we only support conversion of degrees from Celsius to
 Fahrenheit or Kelvin but this can be extended in the future.
 
-To convert a unit you can use the <i>Convert unit to<i> option in
-<i>Graph Tunings<i>.
-
-
+To convert a unit you can use the <i>Convert unit to</i> option in
+<i>Graph Tunings</i>.

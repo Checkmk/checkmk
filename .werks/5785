@@ -8,7 +8,7 @@ Date: 1520264909
 Class: fix
 
 If a user gets a restriction to authorized sites, it will also restrict the notifications to these sites.
-Previously, if no </i>Match site</i> filter was set as specific condition, the user rule matched on all sites.
+Previously, if no <i>Match site</i> filter was set as specific condition, the user rule matched on all sites.
 
 
 With this change a user notification rule is only checked on the users authorized sites.

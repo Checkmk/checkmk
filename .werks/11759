@@ -10,5 +10,5 @@ State: unknown
 Version: 2.1.0b1
 
 After editing a view containing the filter "Discovery state", subsequent edits
-of the view created the crash report: "TypeError (Only str and unicode values
-are allowed, got <class 'bool'>)".
+of the view created the crash report: `TypeError (Only str and unicode values
+are allowed, got <class 'bool'>)`.

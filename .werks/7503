@@ -23,6 +23,8 @@ a) Enable and configure HTTPS
 b) Redirecting all HTTP requests to HTTPS
 c) Set the request headers X-Forwarded-Proto, e.g.
 
+```
 <Location /[sitename]>
     RequestHeader set X-Forwarded-Proto "https"
 </Location>
+```

@@ -7,4 +7,4 @@ Class: fix
 
 This fixes problems when display settings the contain characters
 like <tt>&lt;</tt> and <tt>&gt;</tt>. One example is the setting
-for the email command, which might contain strings like <tt>-r '<Hirni Baldi> hirni@baldi'</tt>.
+for the email command, which might contain strings like `-r '<Hirni Baldi> hirni@baldi'`.

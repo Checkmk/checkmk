@@ -6,6 +6,6 @@ Version: 1.2.7i4
 Date: 1446381757
 Class: fix
 
-Any <i>!</i> character configured in the WATO rule </i>Classical active and passive Monitoring checks</i>
+Any <i>!</i> character configured in the WATO rule <i>Classical active and passive Monitoring checks</i>
 or through the command line via custom_checks was incorrectly quoted. Nagios truncated the command
 at the !, which lead to unwanted results.

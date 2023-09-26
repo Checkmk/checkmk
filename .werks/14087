@@ -15,7 +15,7 @@ With this Werk the agent now always calls one of the shipped <tt>unixcat</tt>s b
 
 All maintained versions (>=1.6) are subject to this vulnerability. It is likely that also previous versions were vulnerable.
 
-To check against possible exploitation make sure that the sites directory <tt>~MySite/bin</tt> points to <tt>/omd/versions/MySitesVersion/bin<tt>.
+To check against possible exploitation make sure that the sites directory <tt>~MySite/bin</tt> points to <tt>/omd/versions/MySitesVersion/bin</tt>.
 
 CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H 8.8
 

@@ -7,10 +7,9 @@ Date: 1408973618
 Class: fix
 
 The fixes the execution of the levels for <i>Time left on battery</i>. These
-levels where internally compared against the <t>Time running on battery</i>
+levels where internally compared against the <i>Time running on battery</i>
 - which is obviously quite the opposite.
 
 Example: If you configure a warning level of <tt>50</tt> minutes for <i>Time
 left on battery</i> then the check gets critical if the estimated remaining
 battery time is 50 minutes or less.
-

@@ -12,7 +12,7 @@ In rare cases a `cmk-update-config` could silently drop the service of a plugin 
 It would then appear as stale in the service view.
 A rediscovery would fix the issue (and usually report one or more new services).
 
-Now the affected service will go to UNKNOWN, and include "<missing an item>" in the service description.
+Now the affected service will go to UNKNOWN, and include `<missing an item>` in the service description.
 However the required action remains the same: Perform a rediscovery.
 It will now report the affected service as being vanished (and usually one or more new services).
 

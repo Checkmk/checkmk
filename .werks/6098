@@ -12,7 +12,9 @@ In case a host named "cmk" is being monitored, the "Check_MK" services of all ho
 terminate with an output of "(null)". When executing a precompiled host check file (var/check_mk/precompiled/[host]) manually
 it terminates with an error message like this:
 
+```
 Traceback (most recent call last):
   File "/omd/sites/beta/var/check_mk/precompiled/beta", line 7, in <module>
-    
+
 ImportError: No module named cmk.log
+```

@@ -13,5 +13,4 @@ We introduce two new permissions that let administrators allow/disallow users to
 LI: "Discard changes" lets a user discard their own pending changes; defaults to "yes" for the role "normal monitoring user".
 LI: "Discard foreign changes" lets a user discard other users' pending changes (foreign changes); defaults to "no" for the role "normal monitoring user".
 
-You can find the two permissions for any role under <ii>Setup > Users > Roles & permissions</tt> in the section "Setup".
-
+You can find the two permissions for any role under <tt>Setup > Users > Roles & permissions</tt> in the section "Setup".

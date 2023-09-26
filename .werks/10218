@@ -19,6 +19,6 @@ Because the status is remember during discovery you have to perform a
 re-discovery.
 
 Details:
-Let the output of {{ip address}} be {{1: IFNAME: <UP> state UNKNOWN}}. The
+Let the output of {{ip address}} be {{1: IFNAME: `<UP>` state UNKNOWN}}. The
 state {{UNKNOWN}} was used instead of the {{real}} interface status in the
 angle brackets.

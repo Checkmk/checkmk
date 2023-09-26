@@ -10,8 +10,8 @@ Version: 2.1.0b1
 
 Since this release it is possible to log messages from winperf.
 
-To get log you have to edit check_mk.user.yml file and set in the  
+To get log you have to edit check_mk.user.yml file and set in the
 section <tt>winperf</tt> the key <tt>trace</tt> to <tt>yes</tt>.
 
-Restart of the service is mandatory. The log will be provided in the file 
-<log/winperf.log</tt>
+Restart of the service is mandatory. The log will be provided in the file
+<tt>log/winperf.log</tt>

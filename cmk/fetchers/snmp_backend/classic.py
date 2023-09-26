@@ -12,7 +12,7 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -22,7 +22,7 @@ CommandType: TypeAlias = Literal["get", "getnext", "walk"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
-    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype: CommandType = "getnext"
@@ -91,7 +91,7 @@ class ClassicSNMPBackend(SNMPBackend):
         /,
         oid: str,
         *,
-        context: str | None,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: str | None = None,
     ) -> SNMPRowInfo:
@@ -198,11 +198,7 @@ class ClassicSNMPBackend(SNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(
-        self,
-        cmd: CommandType,
-        context: SNMPContextName | None,
-    ) -> list[str]:
+    def _snmp_base_command(self, cmd: CommandType, context: SNMPContext) -> list[str]:
         # pylint: disable=too-many-branches
         options = []
 
@@ -298,7 +294,7 @@ class ClassicSNMPBackend(SNMPBackend):
         if "retries" in settings:
             options += ["-r", "%d" % settings["retries"]]
 
-        if context is not None:
+        if context:
             options += ["-n", context]
 
         return command + options

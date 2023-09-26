@@ -48,4 +48,4 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(repr(walk_for_export(backend(config, logger).walk(oid, context=None))))
+print(repr(walk_for_export(backend(config, logger).walk(oid, context=""))))

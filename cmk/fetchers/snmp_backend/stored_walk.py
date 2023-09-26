@@ -16,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPContextName, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -34,7 +34,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         if not self.path.exists():
             raise MKSNMPError(f"No snmpwalk file {self.path}")
 
-    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         walk = self.walk(oid, context=context)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -49,7 +49,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         /,
         oid: OID,
         *,
-        context: SNMPContextName | None,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
     ) -> SNMPRowInfo:

@@ -13,7 +13,6 @@ from typing import Any, Literal, NamedTuple
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
-SNMPContextName = str
 SNMPContext = str
 SNMPValueEncoding = Literal["string", "binary"]
 OID = str
@@ -90,13 +89,13 @@ class SNMPHostConfig(NamedTuple):
     def snmpv3_contexts_of(
         self,
         section_name: SectionName | None,
-    ) -> Sequence[SNMPContext] | tuple[None]:
+    ) -> Sequence[SNMPContext]:
         if not section_name or not self.is_snmpv3_host:
-            return (None,)
+            return [""]
         for sn, contexts in self.snmpv3_contexts:
             if sn is None or sn == section_name:
                 return contexts
-        return (None,)
+        return [""]
 
     def serialize(self):
         serialized = self._asdict()
@@ -146,7 +145,7 @@ class SNMPBackend(abc.ABC):
         self.config = self.config._replace(port=new_port)
 
     @abc.abstractmethod
-    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         """Fetch a single OID from the given host in the given SNMP context
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
         request is sent to the given host.
@@ -159,7 +158,7 @@ class SNMPBackend(abc.ABC):
         /,
         oid: OID,
         *,
-        context: SNMPContextName | None,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
     ) -> SNMPRowInfo:

@@ -194,7 +194,7 @@ class SNMPTrapParser:
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(
                 VERBOSE,
-                'Trap accepted from %s (ContextEngineId "%s", SNMPContextName "%s")',
+                'Trap accepted from %s (ContextEngineId "%s", SNMPContext "%s")',
                 ipaddress,
                 context_engine_id.prettyPrint(),
                 context_name.prettyPrint(),

@@ -2297,7 +2297,7 @@ class AutomationGetAgentOutput(Automation):
                 lines = []
                 for walk_oid in oids_to_walk():
                     try:
-                        for oid, value in walk_for_export(backend.walk(walk_oid, context=None)):
+                        for oid, value in walk_for_export(backend.walk(walk_oid, context="")):
                             raw_oid_value = f"{oid} {value}\n"
                             lines.append(raw_oid_value.encode())
                     except Exception as e:

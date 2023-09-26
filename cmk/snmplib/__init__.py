@@ -21,7 +21,7 @@ from ._typedefs import OIDRange as OIDRange
 from ._typedefs import RangeLimit as RangeLimit
 from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
-from ._typedefs import SNMPContextName as SNMPContextName
+from ._typedefs import SNMPContext as SNMPContext
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawValue as SNMPRawValue

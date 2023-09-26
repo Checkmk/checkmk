@@ -73,7 +73,7 @@ def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
 
 class SNMPSettings(NamedTuple):
     snmp_config: SNMPHostConfig
-    context_name: str | None
+    context_name: str
 
 
 @pytest.mark.usefixtures("monkeypatch")
@@ -97,7 +97,7 @@ class SNMPSettings(NamedTuple):
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
-                context_name=None,
+                context_name="",
             ),
             [
                 "snmpbulkwalk",
@@ -213,7 +213,7 @@ class SNMPSettings(NamedTuple):
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
-                context_name=None,
+                context_name="",
             ),
             [
                 "snmpwalk",
@@ -250,7 +250,7 @@ class SNMPSettings(NamedTuple):
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
-                context_name=None,
+                context_name="",
             ),
             [
                 "snmpwalk",

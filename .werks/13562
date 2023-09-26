@@ -36,8 +36,8 @@ May 2003). Enterprise environments with many DHCP servers can adopt this option
 into a parsing script feeding a SQL Server database.
 <br>
 1. Open a command shell by clicking the Start menu. Click Run, type cmd and click OK.
-2. Type the netsh command: Netsh DHCP Server `\\<servername>` show mibinfo where
-you replace `<servername>` with the name of an authorized DHCP server.
+2. Type the netsh command: Netsh DHCP Server \\<servername> show mibinfo where
+you replace <servername> with the name of an authorized DHCP server.
 3. Open the month’s csv log using WordPad and manually record the data as follows:
 <br>
 “DATE TIME”,”DHCPServer Name”,”Scope IP”,”Total Addresses”,”IPs in Use”, “IPs Available”

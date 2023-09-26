@@ -14,7 +14,7 @@ following soon.
 H2: Agent setup
 This agent does not run out of the box, because it depends on some files
 from the <i>Netapp Manageability SDK</i> from NetApp. You can download it
-<a href="http://mysupport.netapp.com/NOW/cgi-bin/software/?product=NetApp+Manageability+SDK&amp;platform=All+Platforms">here (customer/partner login required)</a>
+<a href="http://mysupport.netapp.com/NOW/cgi-bin/software/?product=NetApp+Manageability+SDK&platform=All+Platforms">here (customer/partner login required)</a>
 In this package you will find a python API binding. The agent_netapp requires
 the two python files (<tt>NaElement.py</tt> / <tt>NaServer.py</tt>) to be put into
 the sites local directory <tt>~/local/lib/python</tt>.

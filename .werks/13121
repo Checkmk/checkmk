@@ -9,8 +9,8 @@ Level: 1
 Version: 2.1.0b1
 
 Before producing the <tt>ntp</tt> section, the linux agent checks if a corresponding
-<tt>systemd</tt> service or a deamon under <tt>/etc/init.d/</tt> exits. Hence, on
-systems without <tt>systemd</tt> and <tt>init.d</tt>, such as Slackware, the
+<tt>systemd<tt> service or a deamon under <tt>/etc/init.d/</tt> exits. Hence, on
+systems without <tt>systemd<tt> and <tt>init.d</tt>, such as Slackware, the
 <tt>ntp</tt> section was never produced.
 
 The agent now additionally checks if <tt>/etc/rc.d/rc.ntpd</tt> is found and

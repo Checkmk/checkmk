@@ -301,7 +301,7 @@ def send_mail(
     translator: WerkTranslator,
     args: Args,
 ) -> None:
-    werk = load_werk(file_content=change.file.content, file_name=change.file.name)
+    werk = load_werk(change.file.name, change.file.content)
 
     base_version = str(Version.from_str(werk.version).base)
 

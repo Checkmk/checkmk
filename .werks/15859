@@ -18,4 +18,4 @@ Powered off FRUs in the following state have not been discovered before, but are
 
 FRUs disabled administratively are no longer discovered:
 
-<tt>offAdmin(3)</tt>: Administratively off.
+<tt>offAdmin(3): Administratively off.

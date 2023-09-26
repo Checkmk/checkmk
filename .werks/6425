@@ -14,7 +14,7 @@ time period is not used anymore and can be deleted without issues.
 In previous versions this check was checking this places:
 
 <ul>
-<li>Host & service rules like service / host notification and check periods</li>
+<li>Host &amp; service rules like service / host notification and check periods</li>
 <li>Notification period in user profiles</li>
 <li>Timeperiod exclusions in other timeperiods</li>
 </ul>
@@ -25,7 +25,7 @@ These missing validations have been added now:
 <li>Timeperiod condition in notification and alerting rules</li>
 <li>Bulk operation in notification rules</li>
 <li>Timeperiod condition in Event Console rules</li>
-<li>Host & service rules: time specific parameters</li>
+<li>Host &amp; service rules: time specific parameters</li>
 </ul>
 
 CMK-669

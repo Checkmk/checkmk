@@ -8,6 +8,6 @@ State: unknown
 Version: 1.6.0b1
 Date: 1547802040
 
-When persisted sections of Check_MK in <tt>var/check_mk/persisted/*</tt> and
-<tt>var/check_mk/persisted_sections/*</tt> vanished during the backup, the backup
+When persisted sections of Check_MK in `var/check_mk/persisted/*` and
+`var/check_mk/persisted_sections/*` vanished during the backup, the backup
 job could fail in previous versions.

@@ -196,7 +196,7 @@ class ABCPackageManager(abc.ABC):
     def _install_package(self, package_path: Path) -> None:
         raise NotImplementedError()
 
-    def _execute(self, cmd: list[str]) -> None:
+    def _execute(self, cmd: list[str | Path]) -> None:
         logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
 
         # Workaround to fix package installation issues
@@ -229,11 +229,11 @@ class PackageManagerDEB(ABCPackageManager):
     def _package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
 
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         # As long as we do not have all dependencies preinstalled, we need to ensure that the
         # package mirror information are up-to-date
         self._execute(["apt-get", "update"])
-        self._execute(["/usr/bin/gdebi", "--non-interactive", package_path])
+        self._execute(["apt", "install", "-y", package_path])
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
@@ -242,12 +242,12 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         self._execute(["zypper", "in", "-y", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         self._execute(["/usr/bin/yum", "-y", "install", package_path])
 
 

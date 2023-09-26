@@ -10,10 +10,9 @@ from typing import Any
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.werks import load_werk, parse_werk
-from cmk.utils.werks.convert import format_as_werk_v1
+from cmk.utils.werks import load_werk
 from cmk.utils.werks.werk import Werk, WerkError
-from cmk.utils.werks.werkv2 import format_as_werk_v2, load_werk_v2, parse_werk_v2
+from cmk.utils.werks.werkv2 import load_werk_v2, parse_werk_v2
 
 WERK_V1 = {
     "class": "fix",
@@ -328,114 +327,3 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
         assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
-
-
-def test_markdown_parse_roundtrip() -> None:
-    md = """[//]: # (werk v2)
-# test < werk
-
-key        | value
----------- | ---
-class      | fix
-component  | core
-date       | 2022-12-12T11:08:08+00:00
-level      | 1
-version    | 2.0.0p7
-compatible | yes
-edition    | cre
-
-this is the `description` with some *italic* and __bold__ ***formatting***.
-"""
-    parsed = parse_werk_v2(md, "123")
-
-    # change version and expect another version in result
-    parsed.metadata["version"] = "99.99.99p99"
-    content, werk_id = format_as_werk_v2(parsed)
-    assert werk_id == "123"
-    assert (
-        content
-        == """[//]: # (werk v2)
-# test < werk
-
-key        | value
----------- | ---
-class      | fix
-component  | core
-date       | 2022-12-12T11:08:08+00:00
-level      | 1
-version    | 99.99.99p99
-compatible | yes
-edition    | cre
-
-this is the `description` with some *italic* and __bold__ ***formatting***.
-"""
-    )
-
-    # change version back, expect exactly the same result as the input
-    parsed.metadata["version"] = "2.0.0p7"
-    assert format_as_werk_v2(parsed)[0] == md
-
-
-def test_nowiki_parse_roundtrip() -> None:
-    """
-    for picking werks from master branch to older branches, we need the ability to write v1 werks
-    """
-    text = """Title: APT: Fix service discovery when getting unexpected output from apt
-Level: 1
-Component: checks
-Compatible: compat
-Edition: cre
-State: unknown
-Class: fix
-Version: 2.0.0i1
-Date: 1569225628
-
-some description and
-
-LI: a list...
-LI: ...with...
-LI: ...entries!
-
-"""
-    parsed = parse_werk(text, "1234")
-    assert parsed.metadata == {
-        "id": "1234",
-        "class": "fix",
-        "compatible": "yes",
-        "component": "checks",
-        "date": "2019-09-23T08:00:28+00:00",
-        "edition": "cre",
-        "level": "1",
-        "title": "APT: Fix service discovery when getting unexpected output from apt",
-        "version": "2.0.0i1",
-    }
-    assert (
-        parsed.description
-        == """some description and
-
-* a list...
-* ...with...
-* ...entries!"""
-    )
-
-    parsed.metadata["version"] = "77.77.77p77"
-
-    content = format_as_werk_v1(parsed)
-    assert (
-        content
-        == """Title: APT: Fix service discovery when getting unexpected output from apt
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1569225628
-Edition: cre
-Level: 1
-Version: 77.77.77p77
-
-some description and
-
-LI: a list...
-LI: ...with...
-LI: ...entries!
-"""
-    )

@@ -9,9 +9,7 @@ from collections.abc import Iterator
 
 import markdown
 
-from .werk import Compatibility
 from .werkv1 import parse_werk_v1
-from .werkv2 import load_werk_v2, WerkV2ParseResult
 
 
 def nowiki_to_markdown(description: list[str]) -> str:
@@ -157,27 +155,3 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
         yield nowiki_to_markdown(parsed.description)
 
     return "\n".join(generator()), werk_id
-
-
-def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
-    werk = load_werk_v2(parsed)
-
-    def generator() -> Iterator[str]:
-        yield f"Title: {werk.title}"
-        yield f"Class: {werk.class_.value}"
-        if werk.compatible == Compatibility.COMPATIBLE:
-            compatible = "compat"
-        elif werk.compatible == Compatibility.NOT_COMPATIBLE:
-            compatible = "incomp"
-        else:
-            raise NotImplementedError()
-        yield f"Compatible: {compatible}"
-        yield f"Component: {werk.component}"
-        yield f"Date: {int(werk.date.timestamp())}"
-        yield f"Edition: {werk.edition.value}"
-        yield f"Level: {werk.level.value}"
-        yield f"Version: {werk.version}"
-        yield ""
-        yield markdown_to_nowiki(werk.description)
-
-    return "\n".join(generator())

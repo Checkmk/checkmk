@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.werks.convert import format_as_werk_v1, werkv1_to_werkv2
+from cmk.utils.werks.convert import werkv1_to_werkv2
+from cmk.utils.werks.format import format_as_werk_v1
 from cmk.utils.werks.werkv2 import parse_werk_v2
 
 WERK_V1_SIMPLE = """Title: Simple Title

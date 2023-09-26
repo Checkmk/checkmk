@@ -121,12 +121,12 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     """Enable or disable tests based on their bulk mode"""
-    BULK_MODE = config.getoption(name="--bulk-mode")
-    items[:] = [_ for _ in items if _.name.startswith("test_bulk") == BULK_MODE]
-    if BULK_MODE:
+    if config.getoption(name="--bulk-mode"):
         chunk_index = config.getoption(name="--chunk-index")
         chunk_size = config.getoption(name="--chunk-size")
         items[:] = items[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
+        for item in items:
+            item.fixturenames.append("bulk_setup")
     print(f"selected {len(items)} items")
 
 
@@ -186,7 +186,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 @pytest.fixture(name="bulk_setup", scope="session")
 def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     """Setup multiple test hosts."""
-    logger.info("Getting host names...")
+    logger.info("Running bulk setup...")
     chunk_index = pytestconfig.getoption(name="--chunk-index")
     chunk_size = pytestconfig.getoption(name="--chunk-size")
     host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]

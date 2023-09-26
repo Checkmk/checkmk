@@ -173,11 +173,11 @@ class Comparable(Protocol):
 class Bounds(Generic[C]):
     def __init__(self, lower: C | None, upper: C | None) -> None:
         super().__init__()
-        self.__lower = lower
-        self.__upper = upper
+        self._lower = lower
+        self._upper = upper
 
     def lower(self, default: C) -> C:
-        return default if self.__lower is None else self.__lower
+        return default if self._lower is None else self._lower
 
     def validate_value(
         self,
@@ -188,23 +188,23 @@ class Bounds(Generic[C]):
         message_upper: str | None = None,
         formatter: Callable[[C], ValueSpecText] = str,
     ) -> None:
-        if self.__lower is not None and value < self.__lower:
+        if self._lower is not None and value < self._lower:
             raise MKUserError(
                 varprefix,
                 (
                     _("{actual} is too low. The minimum allowed value is {bound}.")
                     if message_lower is None
                     else message_lower
-                ).format(actual=formatter(value), bound=formatter(self.__lower)),
+                ).format(actual=formatter(value), bound=formatter(self._lower)),
             )
-        if self.__upper is not None and self.__upper < value:
+        if self._upper is not None and self._upper < value:
             raise MKUserError(
                 varprefix,
                 (
                     _("{actual} is too high. The maximum allowed value is {bound}.")
                     if message_upper is None
                     else message_upper
-                ).format(actual=formatter(value), bound=formatter(self.__upper)),
+                ).format(actual=formatter(value), bound=formatter(self._upper)),
             )
 
 

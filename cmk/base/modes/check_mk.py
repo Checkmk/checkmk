@@ -1071,7 +1071,7 @@ def _execute_walks_for_dump(
     for oid in oids:
         try:
             console.verbose('Walk on "%s"...\n' % oid)
-            yield walk_for_export(backend.walk(oid=oid))
+            yield walk_for_export(backend.walk(oid, context=None))
         except Exception as e:
             console.error("Error: %s\n" % e)
             if cmk.utils.debug.enabled():

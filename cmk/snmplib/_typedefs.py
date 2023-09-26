@@ -140,7 +140,7 @@ class SNMPBackend(abc.ABC):
         self.config = self.config._replace(port=new_port)
 
     @abc.abstractmethod
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
         """Fetch a single OID from the given host in the given SNMP context
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
         request is sent to the given host.
@@ -150,10 +150,12 @@ class SNMPBackend(abc.ABC):
     @abc.abstractmethod
     def walk(
         self,
+        /,
         oid: OID,
+        *,
+        context: SNMPContextName | None,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
-        context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:
         return []
 

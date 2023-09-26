@@ -194,12 +194,12 @@ def _perform_snmpwalk(
     added_oids: set[OID] = set()
     rowinfo: SNMPRowInfo = []
 
-    for context_name in backend.config.snmpv3_contexts_of(section_name):
+    for context in backend.config.snmpv3_contexts_of(section_name):
         rows = backend.walk(
-            oid=fetchoid,
+            fetchoid,
             section_name=section_name,
             table_base_oid=base_oid,
-            context_name=context_name,
+            context=context,
         )
 
         # I've seen a broken device (Mikrotik Router), that broke after an

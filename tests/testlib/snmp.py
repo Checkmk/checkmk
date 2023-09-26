@@ -48,7 +48,7 @@ def snmp_is_detected(section_name: SectionName, snmp_walk: Path) -> bool:
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
 
     def oid_value_getter(oid: str) -> str | None:
-        value = backend.get(oid)
+        value = backend.get(oid, context=None)
         if value is None:
             return None
         return ensure_str(value, encoding=backend.config.character_encoding)

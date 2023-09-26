@@ -22,7 +22,7 @@ CommandType: TypeAlias = Literal["get", "getnext", "walk"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype: CommandType = "getnext"
@@ -35,7 +35,7 @@ class ClassicSNMPBackend(SNMPBackend):
         if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
         portspec = self._snmp_port_spec()
-        command = self._snmp_base_command(commandtype, context_name) + [
+        command = self._snmp_base_command(commandtype, context) + [
             "-On",
             "-OQ",
             "-Oe",
@@ -88,10 +88,12 @@ class ClassicSNMPBackend(SNMPBackend):
 
     def walk(
         self,
+        /,
         oid: str,
+        *,
+        context: str | None,
         section_name: SectionName | None = None,
         table_base_oid: str | None = None,
-        context_name: str | None = None,
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
@@ -100,7 +102,7 @@ class ClassicSNMPBackend(SNMPBackend):
             ipaddress = "[" + ipaddress + "]"
 
         portspec = self._snmp_port_spec()
-        command = self._snmp_base_command("walk", context_name) + ["-Cc"]
+        command = self._snmp_base_command("walk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
         self._logger.debug("Running %r", subprocess.list2cmdline(command))
 
@@ -199,7 +201,7 @@ class ClassicSNMPBackend(SNMPBackend):
     def _snmp_base_command(
         self,
         cmd: CommandType,
-        context_name: SNMPContextName | None,
+        context: SNMPContextName | None,
     ) -> list[str]:
         # pylint: disable=too-many-branches
         options = []
@@ -296,8 +298,8 @@ class ClassicSNMPBackend(SNMPBackend):
         if "retries" in settings:
             options += ["-r", "%d" % settings["retries"]]
 
-        if context_name is not None:
-            options += ["-n", context_name]
+        if context is not None:
+            options += ["-n", context]
 
         return command + options
 

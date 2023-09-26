@@ -144,11 +144,11 @@ SNMPConfig = SNMPHostConfig(
 
 # Adapted from `test_snmplib_snmp_table`.
 class SNMPTestBackend(SNMPBackend):
-    def get(self, oid, context_name=None):
+    def get(self, /, oid, *, context):
         # See also: `snmp_mode.get_single_oid()`
         return None
 
-    def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
+    def walk(self, /, oid, *, context, **kw):
         raise NotImplementedError("walk")
 
 

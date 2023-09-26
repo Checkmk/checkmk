@@ -34,8 +34,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
         if not self.path.exists():
             raise MKSNMPError(f"No snmpwalk file {self.path}")
 
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
-        walk = self.walk(oid)
+    def get(self, /, oid: OID, *, context: SNMPContextName | None) -> SNMPRawValue | None:
+        walk = self.walk(oid, context=context)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
@@ -46,10 +46,12 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     def walk(
         self,
+        /,
         oid: OID,
+        *,
+        context: SNMPContextName | None,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
-        context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]

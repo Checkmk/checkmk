@@ -8,7 +8,7 @@ Date: 1551703334
 Class: feature
 
 The new check jolokia_jvm_threading is introduced. It creates the services
-"JVM <instance> Threading" and optionally "JVM <instance> ThreadPool <pool name>",
+`JVM <instance> Threading` and optionally `JVM <instance> ThreadPool <pool name>`,
 replacing the former checks jolokia_metrics.threads and jolokia_metrics.tp.
 
 The new "JVM Threading" check now allows to set rules on the thread count as well as on

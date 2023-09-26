@@ -8,7 +8,7 @@ Class: feature
 
 For each WATO folder a new attribute <i>Network Scan</i> can now be configured.
 This network scan will ping all IP addresses in all configured IP ranges in the
-configured interval for new reachable hosts / IP addresses. 
+configured interval for new reachable hosts / IP addresses.
 
 When such a network scan of a folder discovers a new host, the discovery mechanism
 tries to resolve the host name via DNS. If found, it uses the DNS name as hostname.
@@ -23,7 +23,7 @@ of this host before adding it to your regular monitoring.
 If you want to exclude a found host from your monitoring, add the IP address to the
 list of excluded IP addresses and then delete the found host from this folder.
 
-The result of a network scan is written to the <i>Last Scan Result<i> attribute
+The result of a network scan is written to the <i>Last Scan Result</i> attribute
 of a folder. So if you like to know when the last scan for a folder was performed,
 take a look at that folders properties.
 

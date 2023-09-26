@@ -9,6 +9,7 @@ Date: 1456129237
 
 This fixes the exception:
 
+```
 Traceback (most recent call last):
   File "/omd/sites/stable/share/check_mk/modules/check_mk.py", line 5065, in <module>
     discover_marked_hosts()
@@ -17,4 +18,5 @@ Traceback (most recent call last):
   File "/omd/sites/stable/share/check_mk/modules/discovery.py", line 389, in may_rediscover
     now = datetime.datetime.utcfromtimestamp(now_ts)
 NameError: global name 'datetime' is not defined
+```
 

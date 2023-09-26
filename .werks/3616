@@ -7,7 +7,7 @@ State: unknown
 Version: 1.4.0i1
 Date: 1464776061
 
-When you use <tt>cmk --cache -I myhost123<tt> on the command line in order
+When you use <tt>cmk --cache -I myhost123</tt> on the command line in order
 to discovery services on a specific host then the option <tt>--cache</tt> was ignored
 and always fresh data had been fetched from the target host. This has been
 fixed.

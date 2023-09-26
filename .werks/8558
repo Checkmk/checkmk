@@ -9,6 +9,7 @@ Class: fix
 
 This error has been fixed:
 
+```
 2016-10-19 09:04:52 [0] FATAL ERROR: 'concurrency'
 2016-10-19 09:04:52 [0] Traceback (most recent call last):
   File "/omd/sites/heute/bin/mknotifyd", line 1453, in <module>
@@ -16,4 +17,5 @@ This error has been fixed:
   File "/omd/sites/heute/bin/mknotifyd", line 265, in load_configuration
     g_config["concurrency"] = dict(g_config["concurrency"])
 KeyError: 'concurrency'
+```
 

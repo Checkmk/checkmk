@@ -6,7 +6,7 @@ Version: 1.2.6b1
 Date: 1417444189
 Class: fix
 
-If you create a new host in WATO, then go to the command line, do a <tt>cmk -I<tt>
+If you create a new host in WATO, then go to the command line, do a <tt>cmk -I</tt>
 and then <tt>cmk -O</tt> or <tt>cmk -R</tt> then your changes would not be activated.
 This is due the CMC Rushead Daemon. It had created a valid configuration after the
 last WATO operation. Check_MK used that configuration on the next reload. Now a

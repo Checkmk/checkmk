@@ -25,5 +25,5 @@ like "Show me all problems on my favourite hosts in host group X".
 The advantage of favourites as opposed to host- and service groups are:
 <ul>
 <li>No change to the monitoring configuration is neccessary and thus no restart of the core.</li>
-<li>Each user can manage his indiviual list.</li.
+<li>Each user can manage his indiviual list.</li>
 </ul>

@@ -11,7 +11,6 @@ a known issue from Oracle regarding deleted objects in the controlfile of
 the database. See Note 465378.1 in MyOracleSupport for details.
 
 Another solution is adding a hint in the SQL statement. This werk adds the
-function to insert the hint with a variable in <tr>mk_oracle.cfg</tr>. Please
+function to insert the hint with a variable in <tt>mk_oracle.cfg</tt>. Please
 add the following entry:
-<tr>HINT_RMAN="+RULE"</tr>
-
+<tt>HINT_RMAN="+RULE"</tt>

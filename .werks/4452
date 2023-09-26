@@ -14,7 +14,7 @@ whenever a text is entered in the quicksearch field. The default behaviour is
 <li>al: Hostalias</li>
 <li>ad: Hostaddress</li>
 <li>s: Service description</li>
-</ul
+</ul>
 
 Results for each filter are now shown in separate topics, when there are matches
 for multiple filters. You can also enable filters which are currently not used
@@ -23,7 +23,7 @@ in the default search
 <li>tg: Hosttag</li>
 <li>hg: Hostgroup</li>
 <li>sg: Servicegroup</li>
-</ul
+</ul>
 
 Additionally, you can modify the matching behaviour for a specific filter.
 When a match is found you can continue the search, abort the search and show all results
@@ -34,4 +34,3 @@ Search (magnifying glass) behaviour: If there are multiple topics shown in the
 dropdown result, the topmost topic is shown in the resulting page, since not
 all topics can be combined effectiviely.
 Keep in mind that you can configure the topic ordering in the global settings.
-

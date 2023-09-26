@@ -28,7 +28,7 @@ def test_registered_jobs() -> None:
             "cmk.gui.cce.agent_registration._background_jobs.execute_host_registration_background_job",
             "cmk.gui.cce.agent_registration._background_jobs.execute_discover_registered_hosts_background_job",
             "cmk.gui.cee.reporting._stored_reports.cleanup_stored_reports",
-            "cmk.gui.cee.reporting.do_scheduled_reports",
+            "cmk.gui.cee.reporting._scheduler.do_scheduled_reports",
             "cmk.gui.cee.ntop.connector.ntop_instance_check",
             "cmk.gui.cee.licensing._background_jobs.execute_licensing_online_verification_background_job",
             "cmk.gui.watolib.host_label_sync.execute_host_label_sync_job",

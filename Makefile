@@ -359,10 +359,7 @@ setup:
 	    doxygen \
 	    figlet \
 	    gawk \
-	    gdebi \
 	    git \
-	    git-svn \
-	    gitk \
 	    ksh \
 	    libclang-$(CLANG_VERSION)-dev \
 	    libjpeg-dev \

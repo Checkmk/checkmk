@@ -475,7 +475,6 @@ class ActivateChangesClient(RestApiClient):
 class UserClient(RestApiClient):
     domain: API_DOMAIN = "user_config"
 
-    # TODO: add optional parameters
     def create(
         self,
         username: str,
@@ -483,29 +482,44 @@ class UserClient(RestApiClient):
         customer: str = "provider",
         authorized_sites: Sequence[str] | None = None,
         contactgroups: Sequence[str] | None = None,
-        auth_option: dict[str, str] | None = None,
+        auth_option: dict[str, Any] | None = None,
         roles: list[str] | None = None,
+        idle_timeout: dict[str, Any] | None = None,
+        interface_options: dict[str, str] | None = None,
+        disable_notifications: dict[str, Any] | None = None,
+        disable_login: bool | None = None,
+        pager_address: str | None = None,
+        language: str | None = None,
+        temperature_unit: str | None = None,
+        contact_options: dict[str, Any] | None = None,
+        extra: dict[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        if extra is None:
+            extra = {}
+
         body: dict[str, Any] = {
-            "username": username,
-            "fullname": fullname,
+            k: v
+            for k, v in {
+                **extra,
+                "username": username,
+                "fullname": fullname,
+                "authorized_sites": authorized_sites,
+                "contactgroups": contactgroups,
+                "auth_option": auth_option,
+                "roles": roles,
+                "customer": customer,
+                "idle_timeout": idle_timeout,
+                "interface_options": interface_options,
+                "disable_notifications": disable_notifications,
+                "disable_login": disable_login,
+                "pager_address": pager_address,
+                "language": language,
+                "temperature_unit": temperature_unit,
+                "contact_options": contact_options,
+            }.items()
+            if v is not None
         }
-
-        if authorized_sites is not None:
-            body["authorized_sites"] = authorized_sites
-
-        if contactgroups is not None:
-            body["contactgroups"] = contactgroups
-
-        if auth_option is not None:
-            body["auth_option"] = auth_option
-
-        if roles is not None:
-            body["roles"] = roles
-
-        if version.is_managed_edition():
-            body["customer"] = customer
 
         return self.request(
             "post",
@@ -521,28 +535,52 @@ class UserClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    # TODO: add additional parameters
     def edit(
         self,
         username: str,
         fullname: str | None = None,
+        customer: str = "provider",
         contactgroups: list[str] | None = None,
         authorized_sites: Sequence[str] | None = None,
+        idle_timeout: dict[str, Any] | None = None,
+        interface_options: dict[str, str] | None = None,
+        auth_option: dict[str, Any] | None = None,
+        disable_notifications: dict[str, bool] | None = None,
+        disable_login: bool | None = None,
+        contact_options: dict[str, Any] | None = None,
+        pager_address: str | None = None,
+        extra: dict[str, Any] | None = None,
+        roles: list[str] | None = None,
         expect_ok: bool = True,
         etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        body: dict[str, str | Sequence[str] | None] = {
-            "fullname": fullname,
-            "contactgroups": contactgroups,
-        }
+        if extra is None:
+            extra = {}
 
-        if authorized_sites is not None:
-            body["authorized_sites"] = authorized_sites
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                **extra,
+                "fullname": fullname,
+                "contactgroups": contactgroups,
+                "authorized_sites": authorized_sites,
+                "idle_timeout": idle_timeout,
+                "customer": customer,
+                "roles": roles,
+                "interface_options": interface_options,
+                "auth_option": auth_option,
+                "disable_notifications": disable_notifications,
+                "contact_options": contact_options,
+                "disable_login": disable_login,
+                "pager_address": pager_address,
+            }.items()
+            if v is not None
+        }
 
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{username}",
-            body={k: v for k, v in body.items() if v is not None},
+            body=body,
             headers=self._set_etag_header(username, etag),
             expect_ok=expect_ok,
         )

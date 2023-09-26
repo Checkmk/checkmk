@@ -108,9 +108,9 @@ code
 ```
 
 
-*  check_mk_agent.aix
-*  check_mk_agent.freebsd
-*  check_mk_agent.macosx"""
+* check_mk_agent.aix
+* check_mk_agent.freebsd
+* check_mk_agent.macosx"""
 
 
 def test_convert_werk_simple():

@@ -19,16 +19,16 @@ def nowiki_to_markdown(description: list[str]) -> str:
     # the .werks folder.
     def generator() -> Iterator[str]:
         for line in description:
-            if line.startswith("LI:"):
-                yield "* " + line.removeprefix("LI:")
+            if line.startswith("LI: "):
+                yield "* " + line.removeprefix("LI:").lstrip()
             elif line.startswith("NL:"):
-                yield "1. " + line.removeprefix("NL:")
+                yield "1. " + line.removeprefix("NL:").lstrip()
             elif line.startswith("H2:"):
-                yield "## " + line.removeprefix("H2:")
+                yield "## " + line.removeprefix("H2:").lstrip()
             elif line.startswith("C+:"):
                 yield "```"
             elif line.startswith("F+:"):
-                filename = line.removeprefix("F+:")
+                filename = line.removeprefix("F+:").lstrip()
                 if filename:
                     yield "`" + filename + "`"
                 yield "```"

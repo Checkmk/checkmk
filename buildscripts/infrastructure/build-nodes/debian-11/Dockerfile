@@ -7,7 +7,6 @@ ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${
 
 RUN apt-get update \
     && apt-get install -y \
-    gdebi \
     git \
     librrd-dev \
     libsasl2-dev \

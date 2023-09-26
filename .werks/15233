@@ -17,4 +17,4 @@ In that case the message shown was
 Your request timed out after 110 seconds.
 This issue may be related to a local configuration problem or a request which works with a too large number of objects.
 But if you think this issue is a bug, please send a crash report
-<i>.
+</i>.

@@ -11,10 +11,9 @@ In case of the agent section showing extra information before the "Status(...)" 
 
 Example agent section showing extra information in the first line:
 
-###
+```
 <<<aix_hacmp_services>>>
 clshowsrv is a tracked alias for /usr/es/sbin/cluster/utilities/clshowsrv
 Status of the RSCT subsystems used by PowerHA SystemMirror:
 (...)
-###
-
+```

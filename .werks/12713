@@ -9,8 +9,8 @@ Level: 1
 State: unknown
 Version: 2.1.0b1
 
-check_ps was not configured to use data from <<<statgrab_mem>>> section which made the total RAM
-unavailable on systems providing <<<statgrab_mem>>> rather than <<<mem>>>, rendering "Process"
+check_ps was not configured to use data from `<<<statgrab_mem>>>` section which made the total RAM
+unavailable on systems providing `<<<statgrab_mem>>>` rather than `<<<mem>>>`, rendering "Process"
 Services UNKNOWN.
-This change makes check_ps use <<<statgrab_mem>>> again, restoring the behavior of version 1.6.0
+This change makes check_ps use `<<<statgrab_mem>>>` again, restoring the behavior of version 1.6.0
 and below.

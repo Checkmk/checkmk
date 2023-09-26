@@ -8,25 +8,26 @@ Class: feature
 
 The CMC now automatically adds all custom variables of hosts, service and
 contacts to the notification context. The variable name is prefixed with
-the word <tt>HOST</tt>, <tt>SERVICE</tt> or <tt>CUSTOM</tt> and - as its
+the word <tt>HOST</tt>, <tt>SERVICE</tt> or `CUSTOM` and - as its
 variable name custom - converted to upper case. So a host variable with
-the name <tt>_foobar</tt> will be available as <tt>HOST_FOOBAR</tt> in the
-notification context. The names will be prefixed with <tt>NOTIFY_</tt> and put
+the name `_foobar` will be available as `HOST_FOOBAR` in the
+notification context. The names will be prefixed with `NOTIFY_` and put
 into the environment of the notification plugin. So at the end the variable
-will be available as <tt>NOTIFY_HOST_FOOBAR</tt>, e.g. in a shell script:
+will be available as `NOTIFY_HOST_FOOBAR`, e.g. in a shell script:
 
-F+:mynotify.sh
+`mynotify.sh`
+```
 echo "Foobar: $NOTIFY_HOST_FOOBAR"
-F-:
+```
 
 H2:Notes
-<ul>
-<li>In the configuration files in <tt>main.mk</tt> or below <tt>conf.d</tt>
-  the variables can be set via <tt>extra_host_conf</tt> or <tt>extra_service_conf</tt>.
+
+
+* In the configuration files in <tt>main.mk</tt> or below <tt>conf.d</tt>
+  the variables can be set via `extra_host_conf` or `extra_service_conf`.
   You need to have the variable names begin with an underscore. So a variable name of <tt>foobar</tt>
-  is not allowed. You have to write either <tt>_foobar</tt> or <tt>_FOOBAR</tt>.</li>
-<li>When you add contact custom variables via WATO (button <i>Custom Attributes</i>
-in the users management</i>) the underscore will <i>automatically</i> be added.</li>
-<li>when using Nagios as monitoring core you have to adapt <tt>check_mk_templates.cfg</tt>
-whenever you add a new custom variable.</li>
-</ul>
+  is not allowed. You have to write either `_foobar` or `_FOOBAR`.
+* When you add contact custom variables via WATO (button <i>Custom Attributes</i>
+  in the users management) the underscore will <i>automatically</i> be added.
+* when using Nagios as monitoring core you have to adapt `check_mk_templates.cfg`
+  whenever you add a new custom variable.

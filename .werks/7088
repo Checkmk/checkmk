@@ -27,7 +27,7 @@ Technical detail:
 <li>The files are copied to the sites <tt>.version_meta</tt> directory.</li>
 <li>The directory <tt>/omd/versions/[version]/skel</tt> is copied.</li>
 <li>The file <tt>/omd/versions/[version]/share/omd/skel.permissions</tt> is copied.</li>
-<li>A file <tt><tt>.version_meta/version</tt> is created.</li>
+<li>A file <tt>.version_meta/version</tt> is created.</li>
 <li>When an update is performed, the meta files are used if they are available
 and up-to-date. In case they don't fit these conditiones, the previous version
 files need to be available as before this werk.</li>

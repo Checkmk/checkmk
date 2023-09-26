@@ -14,8 +14,10 @@ not be used for Windows.
 
 The reasons for that were:
 
-</li> In Python 3 sys.stdout returns \r\n as linebreak for Windows.
+<ul>
+<li> In Python 3 sys.stdout returns `\r\n` as linebreak for Windows.
 Checkmk can't handle this therefore we removed it by replacing
-the default sys.stdout.
-</li> The win32api module could not be imported because pywin32 was not installed.
-Now pywin32 is installed by default.
+the default sys.stdout.</li>
+<li> The win32api module could not be imported because pywin32 was not installed.
+Now pywin32 is installed by default.</li>
+</ul>

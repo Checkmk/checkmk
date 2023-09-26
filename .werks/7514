@@ -21,7 +21,7 @@ certificates were now not verifyable anymore. The error messages were different 
 one example is: "SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed".
 
 The first change is that we have now fixed that to get the old functionality back. Check_MK is
-now searching <tt>/etc/ssl/certs</tt> or </tt>/etc/pki/tls/certs</tt> for system wide trusted
+now searching <tt>/etc/ssl/certs</tt> or <tt>/etc/pki/tls/certs</tt> for system wide trusted
 CAs by default.
 
 The second change is that we have now added a new global setting which you can use to change

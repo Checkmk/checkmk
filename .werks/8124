@@ -39,9 +39,8 @@ immediately up-to-date. At the same time copies (hard links) of the autochecks
 files in <tt>var/check_mk/autochecks</tt> are being created in <tt>var/check_mk/core/autochecks</tt>.
 These files are used during the monitoring.
 
-Note: The <i>Discovery</i> check (formerly known as <i>Inventory<i> check) does <i>not</i>
+Note: The <i>Discovery</i> check (formerly known as <i>Inventory</i> check) does <i>not</i>
 use the activated configuration but still that one that is modified via WATO. That way
 after doing a service discovery the discovery check will immediately be happy - without
 a core restart. This is just as it used to be.
-
 

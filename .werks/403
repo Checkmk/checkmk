@@ -7,5 +7,5 @@ Version: 1.2.5i1
 Date: 1389263935
 Targetversion: future
 
-The <tt>check_mk_agent.freebsd<tt> now first tries to find <tt>statgrab</tt> and prefers
+The <tt>check_mk_agent.freebsd</tt> now first tries to find <tt>statgrab</tt> and prefers
 that if found.

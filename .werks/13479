@@ -8,7 +8,7 @@ Knowledge: undoc
 Level: 1
 Version: 2.1.0b1
 
-This werk only affects users who have implemented their own plugins for active checks or special agents (the ones commonly named <tt>checks/check_*</tt> and <tt>checks/agent_*</tt>).
+This werk only affects users who have implemented their own plugins for active checks or special agents (the ones commonly named `checks/check_*` and `checks/agent_*`).
 
 The functions implemented in those plugins have to a accept the IP address of the host as an argument.
 For hosts without an IP address they used to get passed <tt>"0.0.0.0"</tt> or <tt>"::0"</tt>.

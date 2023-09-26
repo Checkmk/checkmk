@@ -20,13 +20,10 @@ features and changes are as follows:
    CHECK_MK_AGENT_INSTALL_DIR\log\agent.log which will then be rotated
    as agent.log.N, N={1...5}
  * Crash info as subsection [[[Check_MK Agent]]] within the section
-   <<<logwatch>>> was removed. Now that the logs are persistent,
+   `<<<logwatch>>>` was removed. Now that the logs are persistent,
    information about past crashes can be obtained in the logs.
  * Debug log entries are enabled by setting crash_debug = yes in the
    global section of check_mk.ini.
  * The names of the various logfiles no longer appear in the output of
    section Check_MK when crash_debug = yes.
-
-
-
 

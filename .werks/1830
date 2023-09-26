@@ -14,8 +14,9 @@ A positive side effect is the ability to monitor level 0+1 backups in different 
 It is possible to monitor a weekly level 0 and daily level 1 backup with 2 different checks.
 
 H2: Incompatible change:
-This is an incompatible Change when <tt>ORA <DB_NAME>.DB_INCR</tt> are used in the past. The checkname
-has been changed to <tt><DB_NAME>.DB_INCR_0</tt> and <tt><DB_NAME>.DB_INCR_1</tt> when 
+
+This is an incompatible Change when `ORA <DB_NAME>.DB_INCR` are used in the past. The checkname
+has been changed to `<DB_NAME>.DB_INCR_0` and `<DB_NAME>.DB_INCR_1` when
 level 1 backups are used.
 
 This change requires a modification of existing rules due to change names for the checks.
@@ -24,5 +25,4 @@ Please don't forget to rediscover the RMAN checks.
 
 There is a global variable which can be used to switch to the old behavior. Details are
 documented in the manpage.
-
 

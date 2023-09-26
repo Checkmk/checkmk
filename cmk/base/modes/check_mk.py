@@ -491,8 +491,8 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
                 checking=config.check_max_cachefile_age,
-                discovery=90 * check_interval,
-                inventory=90 * check_interval,
+                discovery=1.5 * check_interval,
+                inventory=1.5 * check_interval,
             ),
         ):
             source_info = source.source_info()
@@ -1648,7 +1648,7 @@ def mode_check_discovery(
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     check_interval = config_cache.check_mk_check_interval(hostname)
-    discovery_file_cache_max_age = 90 * check_interval if file_cache_options.use_outdated else 0
+    discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1660,7 +1660,7 @@ def mode_check_discovery(
         max_cachefile_age=MaxAge(
             checking=config.check_max_cachefile_age,
             discovery=discovery_file_cache_max_age,
-            inventory=90 * check_interval,
+            inventory=1.5 * check_interval,
         ),
     )
     parser = CMKParser(

@@ -3161,8 +3161,8 @@ class ConfigCache:
             checking=check_max_cachefile_age
             if self.nodes_of(hostname) is None
             else cluster_max_cachefile_age,
-            discovery=90 * check_interval,
-            inventory=90 * check_interval,
+            discovery=1.5 * check_interval,
+            inventory=1.5 * check_interval,
         )
 
     def exit_code_spec(self, hostname: HostName, data_source_id: str | None = None) -> ExitSpec:
@@ -3307,7 +3307,7 @@ class ConfigCache:
         )
 
     def check_mk_check_interval(self, hostname: HostName) -> int:
-        return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"]
+        return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"] * 60
 
     @staticmethod
     def address_family(host_name: HostName | HostAddress) -> AddressFamily:

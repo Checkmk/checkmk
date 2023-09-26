@@ -1877,8 +1877,8 @@ class AutomationDiagHost(Automation):
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
                 checking=config.check_max_cachefile_age,
-                discovery=90 * check_interval,
-                inventory=90 * check_interval,
+                discovery=1.5 * check_interval,
+                inventory=1.5 * check_interval,
             ),
         ):
             source_info = source.source_info()
@@ -2245,8 +2245,8 @@ class AutomationGetAgentOutput(Automation):
                     file_cache_options=file_cache_options,
                     file_cache_max_age=MaxAge(
                         checking=config.check_max_cachefile_age,
-                        discovery=90 * check_interval,
-                        inventory=90 * check_interval,
+                        discovery=1.5 * check_interval,
+                        inventory=1.5 * check_interval,
                     ),
                 ):
                     source_info = source.source_info()

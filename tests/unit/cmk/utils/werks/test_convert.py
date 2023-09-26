@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.werks.convert import werkv1_to_werkv2, werkv2_to_werkv1
+from cmk.utils.werks.convert import format_as_werk_v1, werkv1_to_werkv2
+from cmk.utils.werks.werkv2 import parse_werk_v2
 
 WERK_V1_SIMPLE = """Title: Simple Title
 Class: fix
@@ -122,6 +123,5 @@ def test_convert_werk_simple():
 def test_roundtrip():
     werk2, werk_id = werkv1_to_werkv2(WERK_V1_SIMPLE, 1234)
     assert werk_id == 1234
-    werk1, werk_id = werkv2_to_werkv1(werk2, 1234)
-    assert werk_id == 1234
+    werk1 = format_as_werk_v1(parse_werk_v2(werk2, "1234"))
     assert werk1 == WERK_V1_SIMPLE

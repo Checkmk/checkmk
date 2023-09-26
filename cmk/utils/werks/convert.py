@@ -7,9 +7,11 @@ import datetime
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 
+import markdown
+
 from .werk import Compatibility
 from .werkv1 import parse_werk_v1
-from .werkv2 import load_werk_v2, parse_werk_v2
+from .werkv2 import load_werk_v2, WerkV2ParseResult
 
 
 def nowiki_to_markdown(description: list[str]) -> str:
@@ -44,10 +46,20 @@ def nowiki_to_markdown(description: list[str]) -> str:
     return "\n".join(generator())
 
 
-def html_to_nowiki(content: str) -> str:
+def markdown_to_nowiki(content: str) -> str:
     # we do have html/xml fragments in content,
     # but the xml parser needs a single root element, so we wrap it in root.
-    root = ET.fromstringlist(["<root>", content, "</root>"])
+
+    # nowiki / werkv1 supports html, so we convert markdown to html, and
+    # replace the most common html elements to nowiki syntax.
+
+    content_html = markdown.markdown(
+        content,
+        extensions=["tables", "fenced_code"],
+        output_format="html",
+    )
+
+    root = ET.fromstringlist(["<root>", content_html, "</root>"])
 
     def generator() -> Iterator[str]:
         for element in root:
@@ -147,8 +159,8 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
     return "\n".join(generator()), werk_id
 
 
-def werkv2_to_werkv1(werkv2_content: str, werk_id: int) -> tuple[str, int]:
-    werk = load_werk_v2(parse_werk_v2(werkv2_content, str(werk_id)))
+def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
+    werk = load_werk_v2(parsed)
 
     def generator() -> Iterator[str]:
         yield f"Title: {werk.title}"
@@ -166,8 +178,6 @@ def werkv2_to_werkv1(werkv2_content: str, werk_id: int) -> tuple[str, int]:
         yield f"Level: {werk.level.value}"
         yield f"Version: {werk.version}"
         yield ""
-        if not isinstance(werk.description, str):
-            raise Exception("expected markdown werk description")
-        yield html_to_nowiki(werk.description)
+        yield markdown_to_nowiki(werk.description)
 
-    return "\n".join(generator()), werk_id
+    return "\n".join(generator())

@@ -357,29 +357,45 @@ class Merge(MetricDeclaration):
         yield from (m for o in self.operands for m in o.metrics())
 
 
-def _apply_operator(
-    raw_operator: RPNOperators, left: MetricDeclaration, right: MetricDeclaration
+def _apply_operators(
+    raw_operators: list[RPNOperators], operands: list[MetricDeclaration]
 ) -> MetricDeclaration:
-    # TODO: Do real unit computation, detect non-matching units
-    match raw_operator:
-        case "+":
-            return Sum([left, right])
-        case "-":
-            return Difference(minuend=left, subtrahend=right)
-        case "*":
-            return Product([left, right])
-        case "/":
-            # Handle zero division by always adding a tiny bit to the divisor
-            return Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)]))
-        case "MIN":
-            return Minimum([left, right])
-        case "MAX":
-            return Maximum([left, right])
-        case "AVERAGE":
-            return Average([left, right])
-        case "MERGE":
-            return Merge([left, right])
-    raise ValueError(raw_operator)
+    def _apply_operator(
+        raw_operator: RPNOperators, left: MetricDeclaration, right: MetricDeclaration
+    ) -> MetricDeclaration:
+        # TODO: Do real unit computation, detect non-matching units
+        match raw_operator:
+            case "+":
+                return Sum([left, right])
+            case "-":
+                return Difference(minuend=left, subtrahend=right)
+            case "*":
+                return Product([left, right])
+            case "/":
+                # Handle zero division by always adding a tiny bit to the divisor
+                return Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)]))
+            case "MIN":
+                return Minimum([left, right])
+            case "MAX":
+                return Maximum([left, right])
+            case "AVERAGE":
+                return Average([left, right])
+            case "MERGE":
+                return Merge([left, right])
+        raise ValueError(raw_operator)
+
+    operand = _apply_operator(
+        raw_operators.pop(0),
+        operands.pop(0),
+        operands.pop(0),
+    )
+    while operands:
+        operand = _apply_operator(
+            raw_operators.pop(0),
+            operand,
+            operands.pop(0),
+        )
+    return operand
 
 
 def _extract_consolidation_func_name(
@@ -437,24 +453,6 @@ def _parse_single_expression(
 
     metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
     return Percent(reference=metric, metric=metric) if percent else metric
-
-
-@dataclass(frozen=True)
-class MetricExpression:
-    declaration: MetricDeclaration
-    explicit_unit_name: str = ""
-    explicit_color: str = ""
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        result = self.declaration.evaluate(translated_metrics)
-        return MetricExpressionResult(
-            result.value,
-            unit_info[self.explicit_unit_name] if self.explicit_unit_name else result.unit_info,
-            "#" + self.explicit_color if self.explicit_color else result.color,
-        )
-
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.declaration.metrics()
 
 
 # Evaluates an expression, returns a triple of value, unit and color.
@@ -530,6 +528,24 @@ def _parse_expression(
     )
 
 
+@dataclass(frozen=True)
+class MetricExpression:
+    declaration: MetricDeclaration
+    explicit_unit_name: str = ""
+    explicit_color: str = ""
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+        result = self.declaration.evaluate(translated_metrics)
+        return MetricExpressionResult(
+            result.value,
+            unit_info[self.explicit_unit_name] if self.explicit_unit_name else result.unit_info,
+            "#" + self.explicit_color if self.explicit_color else result.color,
+        )
+
+    def metrics(self) -> Iterator[Metric]:
+        yield from self.declaration.metrics()
+
+
 def parse_expression(
     expression: str | int | float,
     translated_metrics: TranslatedMetrics,
@@ -555,19 +571,11 @@ def parse_expression(
     if len(operands) == 1:
         return MetricExpression(operands[0], explicit_unit_name, explicit_color)
 
-    operand = _apply_operator(
-        raw_operators.pop(0),
-        operands.pop(0),
-        operands.pop(0),
+    return MetricExpression(
+        _apply_operators(raw_operators, operands),
+        explicit_unit_name,
+        explicit_color,
     )
-    while operands:
-        operand = _apply_operator(
-            raw_operators.pop(0),
-            operand,
-            operands.pop(0),
-        )
-
-    return MetricExpression(operand, explicit_unit_name, explicit_color)
 
 
 class ConditionalMetricDeclaration(abc.ABC):
@@ -658,19 +666,8 @@ def parse_conditional_expression(
     if len(raw_operators) == 1:
         return _apply_conditional_operator(raw_operators[0], operands[0], operands[1])
 
-    last_raw_operator, raw_operators = raw_operators[-1], raw_operators[:-1]
-    last_operand, operands = operands[-1], operands[:-1]
-
-    operand = _apply_operator(
-        raw_operators.pop(0),
-        operands.pop(0),
-        operands.pop(0),
+    return _apply_conditional_operator(
+        raw_operators[-1],
+        _apply_operators(raw_operators[:-1], operands[:-1]),
+        operands[-1],
     )
-    while operands:
-        operand = _apply_operator(
-            raw_operators.pop(0),
-            operand,
-            operands.pop(0),
-        )
-
-    return _apply_conditional_operator(last_raw_operator, operand, last_operand)

@@ -87,7 +87,7 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
 from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
-from cmk.fetchers.filecache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkers import parse_raw_data, plugin_contexts, SourceType
@@ -1499,7 +1499,8 @@ class AutomationDiagHost(Automation):
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(
+            file_cache_max_age=MaxAge(
+                checking=config.check_max_cachefile_age,
                 discovery=90 * check_interval,
                 inventory=90 * check_interval,
             ),
@@ -1861,7 +1862,8 @@ class AutomationGetAgentOutput(Automation):
                     config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
-                    file_cache_max_age=config.max_cachefile_age(
+                    file_cache_max_age=MaxAge(
+                        checking=config.check_max_cachefile_age,
                         discovery=90 * check_interval,
                         inventory=90 * check_interval,
                     ),

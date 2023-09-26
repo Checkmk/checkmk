@@ -1634,19 +1634,6 @@ _all_checks_loaded = False
 service_rule_groups = {"temperature"}
 
 
-def max_cachefile_age(
-    *,
-    checking: int | None = None,
-    discovery: int,
-    inventory: int,
-) -> MaxAge:
-    return MaxAge(
-        checking=check_max_cachefile_age if checking is None else checking,
-        discovery=discovery,
-        inventory=inventory,
-    )
-
-
 # .
 #   .--Loading-------------------------------------------------------------.
 #   |                _                    _ _                              |
@@ -3689,8 +3676,10 @@ class ConfigCache:
 
     def max_cachefile_age(self, hostname: HostName) -> MaxAge:
         check_interval = self.check_mk_check_interval(hostname)
-        return max_cachefile_age(
-            checking=None if self.nodes_of(hostname) is None else cluster_max_cachefile_age,
+        return MaxAge(
+            checking=check_max_cachefile_age
+            if self.nodes_of(hostname) is None
+            else cluster_max_cachefile_age,
             discovery=90 * check_interval,
             inventory=90 * check_interval,
         )

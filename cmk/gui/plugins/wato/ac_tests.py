@@ -1252,8 +1252,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
     def help(self) -> str:
         return _(
             "This check returns CRIT if the parameter <b>State in case of restricted address missmatch</b> "
-            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from default "
-            "state <b>WARN</b>. "
+            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from "
+            "states <b>WARN</b> (default) or <b>CRIT</b>. "
             "With the above setting you can overwrite the default service state. This will help "
             "you to reduce above warnings during the update process of your Checkmk sites "
             "and agents. "
@@ -1287,7 +1287,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return [
             (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])
             for folder, _rule_index, rule in ruleset.get_rules()
-            if rule.value.get("restricted_address_mismatch") != 1
+            if rule.value.get("restricted_address_mismatch", 1) not in (1, 2)
         ]
 
 

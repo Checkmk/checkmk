@@ -290,8 +290,8 @@ class _Builder:
         connection_mode = self.config_cache.agent_connection_mode(self.host_name)
         match connection_mode:
             case HostAgentConnectionMode.PUSH:
-                # convert to seconds and add grace period
-                interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
+                # add grace period
+                interval = int(1.5 * self.config_cache.check_mk_check_interval(self.host_name))
                 self._add(
                     source=PushAgentSource(
                         self.host_name,

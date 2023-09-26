@@ -77,12 +77,7 @@ _TRawData = TypeVar("_TRawData", bound=Sized)
 
 
 class MaxAge(NamedTuple):
-    """Maximum age allowed for the cached data, in seconds.
-
-    See Also:
-        cmk.base.config.max_cachefile_age() for the default values configured.
-
-    """
+    """Maximum age allowed for the cached data, in seconds"""
 
     checking: float
     discovery: float

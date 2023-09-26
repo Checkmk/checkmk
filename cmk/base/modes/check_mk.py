@@ -62,7 +62,7 @@ from cmk.snmplib import get_single_oid, OID, oids_to_walk, SNMPBackend, SNMPRawD
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers.filecache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 import cmk.checkengine.inventory as inventory
 from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
@@ -489,7 +489,8 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
-            file_cache_max_age=config.max_cachefile_age(
+            file_cache_max_age=MaxAge(
+                checking=config.check_max_cachefile_age,
                 discovery=90 * check_interval,
                 inventory=90 * check_interval,
             ),
@@ -1656,7 +1657,8 @@ def mode_check_discovery(
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
-        max_cachefile_age=config.max_cachefile_age(
+        max_cachefile_age=MaxAge(
+            checking=config.check_max_cachefile_age,
             discovery=discovery_file_cache_max_age,
             inventory=90 * check_interval,
         ),

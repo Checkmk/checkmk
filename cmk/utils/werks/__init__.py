@@ -66,10 +66,7 @@ def load_raw_files(werks_dir: Path) -> list[Werk]:
         werks_dir = _compiled_werks_dir()
     werks: list[Werk] = []
     for file_name in werks_dir.glob("[0-9]*"):
-        try:
-            werks.append(load_werk(file_content=file_name.read_text(), file_name=file_name.name))
-        except Exception as e:
-            raise RuntimeError(f"Could not parse werk {file_name.name}") from e
+        werks.append(load_werk(file_content=file_name.read_text(), file_name=file_name.name))
     return werks
 
 

@@ -18,17 +18,17 @@ from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
-CommandType: TypeAlias = Literal["get", "getnext", "walk"]
+CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk", "snmpbulkwalk"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
-            commandtype: CommandType = "getnext"
+            commandtype: CommandType = "snmpgetnext"
         else:
             oid_prefix = oid
-            commandtype = "get"
+            commandtype = "snmpget"
 
         protospec = self._snmp_proto_spec()
         ipaddress = self.config.ipaddress or "0.0.0.0"
@@ -81,7 +81,7 @@ class ClassicSNMPBackend(SNMPBackend):
             return None
 
         # In case of .*, check if prefix is the one we are looking for
-        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
+        if commandtype == "snmpgetnext" and not item.startswith(oid_prefix + "."):
             return None
 
         return strip_snmp_value(value)
@@ -102,7 +102,7 @@ class ClassicSNMPBackend(SNMPBackend):
             ipaddress = "[" + ipaddress + "]"
 
         portspec = self._snmp_port_spec()
-        command = self._snmp_base_command("walk", context) + ["-Cc"]
+        command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
         self._logger.debug("Running %r", subprocess.list2cmdline(command))
 
@@ -202,9 +202,9 @@ class ClassicSNMPBackend(SNMPBackend):
         # pylint: disable=too-many-branches
         options = []
 
-        if cmd == "get":
+        if cmd == "snmpget":
             command = ["snmpget"]
-        elif cmd == "getnext":
+        elif cmd == "snmpgetnext":
             command = ["snmpgetnext", "-Cf"]
         elif self.config.is_bulkwalk_host:
             command = ["snmpbulkwalk"]
@@ -218,7 +218,7 @@ class ClassicSNMPBackend(SNMPBackend):
             if self.config.is_bulkwalk_host:
                 options.append("-v2c")
             else:
-                if cmd == "walk":
+                if cmd == "snmpwalk":
                     command = ["snmpwalk"]
                 if self.config.is_snmpv2or3_without_bulkwalk_host:
                     options.append("-v2c")

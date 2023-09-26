@@ -9,8 +9,7 @@ Version: 1.5.0i1
 Date: 1495456395
 
 Adapted levels to be more user friendly:
-<ul>
- <li>ok: <= 3%</li>
- <li>warn: > 3% and <= 5%</li>
- <li>crit: > 5%</li>
-</ul>
+
+* ok: <= 3%
+* warn: > 3% and <= 5%
+* crit: > 5%

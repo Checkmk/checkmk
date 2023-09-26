@@ -9,7 +9,7 @@ Level: 1
 State: unknown
 Version: 2.0.0i1
 
-This is a regression since Werk <a href=https://checkmk.com/check_mk-werks.php?werk_id=6711>#6711</a>.
+This is a regression since Werk <a href="https://checkmk.com/check_mk-werks.php?werk_id=6711">#6711</a>.
 
 When unpacking as root (as it is normally done), the .tar.gz agent packages from agent bakery
 would modify access rights on existing directories like /etc and /usr/lib to have an access level of

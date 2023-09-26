@@ -285,13 +285,13 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
         "var/check_mk/stored_passwords",
+        "etc/check_mk/apache.d/wato",
+        "etc/check_mk/apache.d",
     ]
 
     # The new sync directories create all needed files on the central site now
     if not is_pre_17_site:
         expected_paths += [
-            "etc/check_mk/apache.d",
-            "etc/check_mk/apache.d/wato",
             "etc/check_mk/apache.d/wato/sitespecific.mk",
             "etc/check_mk/conf.d/distributed_wato.mk",
             "etc/check_mk/conf.d/wato/sitespecific.mk",
@@ -469,6 +469,7 @@ def test_generate_pre_17_site_snapshot(
         "sitespecific.tar",
         "stored_passwords.tar",
         "usersettings.tar",
+        "apache_proccess_tuning.tar",
     ]
 
     if is_enterprise_repo():
@@ -521,6 +522,7 @@ def test_generate_pre_17_site_snapshot(
         "mknotify.tar": [],
         "diskspace.tar": [],
         "omd.tar": [] if is_pre_17_site else ["sitespecific.mk", "global.mk"],
+        "apache_proccess_tuning.tar": [],
     }
 
     if config.sites[remote_site].get("replicate_mkps", False):

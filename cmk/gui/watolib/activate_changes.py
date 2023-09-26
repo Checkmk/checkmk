@@ -259,6 +259,12 @@ def get_replication_paths() -> List[ReplicationPath]:
             "local",
             [],
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="apache_proccess_tuning",
+            site_path="etc/check_mk/apache.d/wato",
+            excludes=[],
+        ),
     ]
 
     # TODO: Move this to CEE specific code again

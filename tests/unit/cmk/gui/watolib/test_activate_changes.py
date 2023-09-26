@@ -49,6 +49,7 @@ def _expected_replication_paths():
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
+        ReplicationPath("dir", "apache_proccess_tuning", "etc/check_mk/apache.d/wato", []),
     ]
 
     if not cmk_version.is_raw_edition():

@@ -57,7 +57,7 @@ from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as _store
-from cmk.utils.exceptions import MKFetcherError, MKGeneralException
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKTimeout
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 
@@ -266,12 +266,16 @@ class FileCache(Generic[_TRawData], abc.ABC):
         path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
+        except MKTimeout:
+            raise
         except Exception as e:
             raise MKGeneralException(f"Cannot create directory {path.parent!r}: {e}")
 
         self._logger.debug("Write data to cache file %s", path)
         try:
             _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
+        except MKTimeout:
+            raise
         except Exception as e:
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 

@@ -8,7 +8,7 @@ from functools import partial
 from typing import TypeVar
 
 import cmk.utils.resulttype as result
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 from .filecache import FileCache
@@ -36,6 +36,9 @@ def get_raw_data(
             fetched = fetcher.fetch(mode)
         fetched.map(partial(file_cache.write, mode=mode))
         return fetched
+
+    except MKTimeout:
+        raise
 
     except Exception as exc:
         return result.Error(exc)

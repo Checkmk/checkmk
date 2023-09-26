@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any, final, Generic, Literal, TypeVar
 
 import cmk.utils.resulttype as result
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.log import VERBOSE
 
 __all__ = ["Fetcher", "Mode"]
@@ -78,6 +78,8 @@ class Fetcher(Generic[_TRawData], abc.ABC):
         """Return the data from the source, either cached or from IO."""
         try:
             return result.OK(self._fetch(mode))
+        except MKTimeout:
+            raise
         except Exception as exc:
             return result.Error(exc)
 
@@ -87,6 +89,8 @@ class Fetcher(Generic[_TRawData], abc.ABC):
         try:
             self.open()
             raw_data = self._fetch_from_io(mode)
+        except MKTimeout:
+            raise
         except MKFetcherError:
             raise
         except Exception as exc:

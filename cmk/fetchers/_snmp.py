@@ -13,7 +13,7 @@ from typing import Any, Final
 
 import cmk.utils.debug
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKFetcherError, OnError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -117,6 +117,8 @@ class WalkCache(
             console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
             try:
                 read_walk = self._read_row(path)
+            except MKTimeout:
+                raise
             except Exception:
                 console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
                 if cmk.utils.debug.enabled():

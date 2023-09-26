@@ -12,7 +12,7 @@ from typing import Final
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError
+from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
@@ -127,6 +127,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def _to_bin_string(oid: OID) -> tuple[int, ...]:
         try:
             return tuple(map(int, oid.strip(".").split(".")))
+        except MKException:
+            raise
         except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 

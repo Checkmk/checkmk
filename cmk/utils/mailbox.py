@@ -620,7 +620,7 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-email-address",
         required=False,
         metavar="EMAIL-ADDRESS",
-        help="Email address (default: same as username, only effects EWS protocol)",
+        help="Email address (default: same as username, only affects EWS protocol)",
     )
     parser.add_argument(
         "--fetch-password",
@@ -650,7 +650,7 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-protocol",
         type=str.upper,
         choices=protocols,
-        help="Protocol used for fetching mail (default=IMAP)",
+        help="Protocol used for fetching mails (default=IMAP)",
     )
     parser.add_argument(
         "--fetch-port",
@@ -663,7 +663,7 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-tls",
         "--fetch-ssl",
         action="store_true",
-        help="Use TLS/SSL for feching the mailbox (disabled by default)",
+        help="Use TLS/SSL for fetching the mailbox (disabled by default)",
     )
     parser.add_argument(
         "--fetch-no-cert-check",

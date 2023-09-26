@@ -15,7 +15,10 @@ import re
 import smtplib
 import time
 from contextlib import suppress
+from email.message import Message as POPIMAPMessage
 from typing import Dict, Tuple
+
+from exchangelib import Message as EWSMessage  # type: ignore[import]
 
 from cmk.utils.mailbox import (
     active_check_main,
@@ -23,7 +26,8 @@ from cmk.utils.mailbox import (
     CheckResult,
     FetchMailsError,
     Mailbox,
-    POPIMAPMailMessages,
+    MailMessages,
+    Message,
     SendMailError,
 )
 
@@ -130,6 +134,8 @@ def load_expected_mails(status_path: str) -> MailDict:
 
 
 def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
+    if not expected_mails:
+        return
     with open(status_path, "w") as file:
         file.write("\n".join("%d %s" % (ts, key) for ts, key in expected_mails.values()))
         file.write("\n")
@@ -183,10 +189,38 @@ def _regex_pattern(subject: str) -> re.Pattern:
     return re.compile(r"(?i)(?:re: |wg: )?%s ([^\s]+) ([^\s]+)" % subject)
 
 
+def subject_and_received_timestamp_from_msg(
+    msg: Message, inbox_protocol: str, now: int
+) -> tuple[str, int]:
+    if inbox_protocol in {"POP3", "IMAP"}:
+        assert isinstance(msg, POPIMAPMessage)
+        subject = msg.get("Subject", "")
+
+        if "Received" in msg:
+            parsed = email.utils.parsedate_tz(msg["Received"].split(";")[-1])
+            rx_ts = email.utils.mktime_tz(parsed) if parsed else now
+        else:
+            # use current time as fallback where no Received header could be found
+            rx_ts = now
+    elif inbox_protocol == "EWS":
+        assert isinstance(msg, EWSMessage)
+        subject = msg.subject
+
+        try:
+            rx_ts = int(msg.datetime_received.timestamp())  # cast float to int
+        except Exception:
+            rx_ts = now
+    else:
+        raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
+
+    return subject, rx_ts
+
+
 def fetch_mail_timestamps(
     args: Args,
-    mails: POPIMAPMailMessages,
+    mails: MailMessages,
     expected_mails: MailDict,
+    inbox_protocol: str,
     now: int = int(time.time()),
 ) -> Tuple[MailDict, MailDict]:
     """Fetch mails and return tuples of dicts containing timestamps of mails which have been
@@ -195,27 +229,23 @@ def fetch_mail_timestamps(
         return {}, {}
 
     try:
-        obsolete_mails, fetched_mails = {}, {}
+        obsolete_mails: MailDict = {}
+        fetched_mails: MailDict = {}
         # Now filter out the messages for this check
         pattern = _regex_pattern(args.subject)
 
         for index, msg in mails.items():
-            matches = pattern.match(msg.get("Subject", ""))
+            msg_subject, rx_ts = subject_and_received_timestamp_from_msg(msg, inbox_protocol, now)
+
+            matches = pattern.match(msg_subject)
             if not matches:
-                logging.debug("Skip mail with subject %r", msg.get("Subject", ""))
+                logging.debug("Skip mail with subject %r", msg_subject)
                 continue
 
             ts = matches.group(1).strip()
             key = matches.group(2).strip()
 
-            if "Received" in msg:
-                parsed = email.utils.parsedate_tz(msg["Received"].split(";")[-1])
-                rx_ts = email.utils.mktime_tz(parsed) if parsed else now
-            else:
-                # use current time as fallback where no Received header could be found
-                rx_ts = now
-
-            ts_key = "%s-%s" % (ts, key)
+            ts_key = f"{ts}-{key}"
             if ts_key not in expected_mails:
                 # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
                 # they are not in our list
@@ -225,7 +255,6 @@ def fetch_mail_timestamps(
 
             fetched_mails[ts_key] = index, rx_ts
         return obsolete_mails, fetched_mails
-
     except Exception as exc:
         raise FetchMailsError("Failed to fetch mails: %r" % exc) from exc
 
@@ -312,11 +341,12 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
     with Mailbox(args) as mailbox:
         mailbox.connect()
-        fetched_mail_messages: POPIMAPMailMessages = mailbox.fetch_mails()
+        fetched_mail_messages: MailMessages = mailbox.fetch_mails()
         obsolete_mails, fetched_mails = fetch_mail_timestamps(
             args,
             fetched_mail_messages,
             expected_mails,
+            mailbox.inbox_protocol(),
         )
         logging.debug("obsolete_mails: %r", obsolete_mails)
         logging.debug("fetched_mails: %r", fetched_mails)
@@ -340,4 +370,4 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
 if __name__ == "__main__":
     logging.getLogger().name = "check_mail_loop"
-    active_check_main(create_argument_parser(), check_mail_roundtrip, allow_ews=False)
+    active_check_main(create_argument_parser(), check_mail_roundtrip)

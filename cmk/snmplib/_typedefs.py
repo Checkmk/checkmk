@@ -79,7 +79,7 @@ class SNMPHostConfig(NamedTuple):
     bulk_walk_size_of: int
     timing: SNMPTiming
     oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
-    snmpv3_contexts: Sequence[tuple[str | None, SNMPContext]]
+    snmpv3_contexts: Sequence[tuple[SectionName | None, Sequence[SNMPContext]]]
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
 
@@ -93,10 +93,9 @@ class SNMPHostConfig(NamedTuple):
     ) -> Sequence[SNMPContext] | tuple[None]:
         if not section_name or not self.is_snmpv3_host:
             return (None,)
-        section_name_str = str(section_name)
-        for ty, rules in self.snmpv3_contexts:
-            if ty is None or ty == section_name_str:
-                return rules
+        for sn, contexts in self.snmpv3_contexts:
+            if sn is None or sn == section_name:
+                return contexts
         return (None,)
 
     def serialize(self):
@@ -105,6 +104,9 @@ class SNMPHostConfig(NamedTuple):
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
+        serialized["snmpv3_contexts"] = [
+            (str(sn) if sn is not None else None, rl) for sn, rl in serialized["snmpv3_contexts"]
+        ]
         return serialized
 
     @classmethod
@@ -114,6 +116,10 @@ class SNMPHostConfig(NamedTuple):
         serialized_["oid_range_limits"] = {
             SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
+        serialized_["snmpv3_contexts"] = [
+            (SectionName(sn) if sn is not None else None, rl)
+            for sn, rl in serialized_["snmpv3_contexts"]
+        ]
         return cls(**serialized_)
 
 

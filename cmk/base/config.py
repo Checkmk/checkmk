@@ -2364,7 +2364,12 @@ class ConfigCache:
                         self.ruleset_matcher.get_host_values(host_name, snmp_limit_oid_range)
                     )
                 },
-                snmpv3_contexts=self.ruleset_matcher.get_host_values(host_name, snmpv3_contexts),
+                snmpv3_contexts=[
+                    (SectionName(name) if name is not None else None, rule)
+                    for name, rule in self.ruleset_matcher.get_host_values(
+                        host_name, snmpv3_contexts
+                    )
+                ],
                 character_encoding=self._snmp_character_encoding(host_name),
                 snmp_backend=self.get_snmp_backend(host_name),
             ),

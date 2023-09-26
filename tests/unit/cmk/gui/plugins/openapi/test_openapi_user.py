@@ -1009,6 +1009,46 @@ def test_openapi_custom_attributes_of_user(
 
 
 @managedtest
+def test_edit_custom_attributes_of_user(clients: ClientRegistry) -> None:
+    username = "rob_halford"
+
+    attr: Mapping[str, str | bool] = {
+        "name": "judas",
+        "title": "judas",
+        "help": "help",
+        "topic": "basic",
+        "type": "TextAscii",
+        "user_editable": True,
+    }
+
+    with custom_user_attributes_ctx([attr]):
+        clients.User.create(
+            username=username,
+            fullname="Mathias Kettner",
+            customer="provider",
+            interface_options={
+                "interface_theme": "dark",
+                "sidebar_position": "left",
+                "navigation_bar_icons": "show",
+                "mega_menu_icons": "entry",
+                "show_mode": "enforce_show_more",
+            },
+            extra={
+                "judas": "priest",
+            },
+        )
+
+        resp = clients.User.get(username=username)
+        assert resp.json["extensions"]["judas"] == "priest"
+
+        resp2 = clients.User.edit(
+            username=username,
+            extra={"judas": "Iscariot"},
+        )
+        assert resp2.json["extensions"]["judas"] == "Iscariot"
+
+
+@managedtest
 def test_create_user_with_non_existing_custom_attribute(
     clients: ClientRegistry, monkeypatch: MonkeyPatch
 ) -> None:

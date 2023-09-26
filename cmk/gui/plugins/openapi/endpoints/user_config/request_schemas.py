@@ -208,11 +208,37 @@ class UserInterfaceAttributes(BaseSchema):
     )
 
 
-class CreateUser(BaseSchema):
+class CustomUserAttributes(BaseSchema):
     class Meta:
         ordered = True
         unknown = marshmallow.INCLUDE
 
+    @marshmallow.post_load(pass_original=True)
+    def validate_custom_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: MutableMapping[str, Any],
+        **_unused_args: Any,
+    ) -> dict[str, Any]:
+        register_custom_user_attributes(load_custom_attrs_from_mk_file(lock=False)["user"])
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        for name, value in original_data.items():
+            attribute = user_attribute_registry.get(name)
+            if attribute is None:
+                raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
+            if not attribute.is_custom():
+                raise MKInternalError(
+                    f"A non custom attribute is not in the CreateUser Schema: {name!r}"
+                )
+            valuespec = attribute().valuespec()
+            valuespec.validate_value(value, "")
+            result_data[name] = value
+        return result_data
+
+
+class CreateUser(CustomUserAttributes):
     username = Username(
         required=True,
         should_exist=False,
@@ -338,31 +364,6 @@ class CreateUser(BaseSchema):
         description="",
     )
 
-    @marshmallow.post_load(pass_original=True)
-    def validate_custom_attributes(
-        self,
-        result_data: dict[str, Any],
-        original_data: MutableMapping[str, Any],
-        **_unused_args: Any,
-    ) -> dict[str, Any]:
-        register_custom_user_attributes(load_custom_attrs_from_mk_file(lock=False)["user"])
-
-        for field in self.fields:
-            original_data.pop(field, None)
-
-        for name, value in original_data.items():
-            attribute = user_attribute_registry.get(name)
-            if attribute is None:
-                raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
-            if not attribute.is_custom():
-                raise MKInternalError(
-                    f"A non custom attribute is not in the CreateUser Schema: {name!r}"
-                )
-            valuespec = attribute().valuespec()
-            valuespec.validate_value(value, "")
-            result_data[name] = value
-        return result_data
-
 
 class UserInterfaceUpdateAttributes(BaseSchema):
     interface_theme = fields.String(
@@ -396,7 +397,7 @@ class UserInterfaceUpdateAttributes(BaseSchema):
     )
 
 
-class UpdateUser(BaseSchema):
+class UpdateUser(CustomUserAttributes):
     fullname = fields.String(
         required=False,
         description="The alias or full name of the user",

@@ -168,7 +168,10 @@ def delete_user(params: Mapping[str, Any]) -> Response:
     permissions_required=RW_PERMISSIONS,
 )
 def edit_user(params: Mapping[str, Any]) -> Response:
-    """Edit a user"""
+    """Edit a user
+
+    You can pass custom attributes you defined directly in the top level JSON object of the request.
+    """
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]

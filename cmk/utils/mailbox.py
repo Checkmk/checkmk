@@ -23,7 +23,6 @@ import imaplib
 import logging
 import poplib
 import re
-import socket
 import sys
 import time
 import warnings
@@ -290,6 +289,7 @@ class Mailbox:
             connection = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
                 self._args.fetch_server,
                 self._args.fetch_port,
+                timeout=self._args.connect_timeout,
             )
             verified_result(connection.user(self._args.fetch_username))
             verified_result(connection.pass_(self._args.fetch_password))
@@ -299,15 +299,13 @@ class Mailbox:
             connection = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
                 self._args.fetch_server,
                 self._args.fetch_port,
+                timeout=self._args.connect_timeout,
             )
             verified_result(connection.login(self._args.fetch_username, self._args.fetch_password))
             verified_result(connection.select("INBOX", readonly=False))
             self._connection = connection
 
         def _connect_ews() -> None:
-            if self._args.fetch_no_cert_check:
-                protocol.BaseProtocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
-
             primary_smtp_address = self._args.fetch_email_address or self._args.fetch_username
 
             # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
@@ -353,9 +351,12 @@ class Mailbox:
                 )
             )
 
+            if self._args.fetch_no_cert_check:
+                self._connection._account.protocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
+            self._connection._account.protocol.TIMEOUT = self._args.connect_timeout
+
         assert self._connection is None
         try:
-            socket.setdefaulttimeout(self._args.connect_timeout)
             {
                 "POP3": _connect_pop3,
                 "IMAP": _connect_imap,
@@ -438,10 +439,9 @@ class Mailbox:
                     if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
                 }
             if inbox_protocol == "EWS":
-                ews_mails: EWSMailMessages = _fetch_mails_ews()
                 return {
                     num: msg
-                    for num, msg in ews_mails.items()
+                    for num, msg in _fetch_mails_ews().items()
                     if pattern is None or pattern.match(msg.subject)
                 }
             raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
@@ -588,8 +588,8 @@ class Mailbox:
             self._connection.close()
 
 
-def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_ews: bool) -> Args:
-    protocols = {"IMAP", "POP3", "EWS"} if allow_ews else {"IMAP", "POP3"}
+def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
+    protocols = {"IMAP", "POP3", "EWS"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -632,19 +632,19 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         "--fetch-client-id",
         required=False,
         metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 ClientID for EWS",
     )
     parser.add_argument(
         "--fetch-client-secret",
         required=False,
         metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 ClientSecret for EWS",
     )
     parser.add_argument(
         "--fetch-tenant-id",
         required=False,
         metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 TenantID for EWS",
     )
     parser.add_argument(
         "--fetch-protocol",
@@ -719,11 +719,10 @@ def _active_check_main_core(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
     argv: Sequence[str],
-    allow_ews: bool = True,
 ) -> CheckResult:
     """Main logic for active checks"""
     # todo argparse - exceptions?
-    args = parse_arguments(argument_parser, argv, allow_ews)
+    args = parse_arguments(argument_parser, argv)
     logging.basicConfig(
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
         if args.debug or args.verbose > 0
@@ -780,7 +779,6 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
 def active_check_main(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
-    allow_ews: bool = True,
 ) -> None:
     """Evaluate the check, write output according to Checkmk active checks and terminate the
     program in respect to the check result:
@@ -794,8 +792,6 @@ def active_check_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process."""
     cmk.utils.password_store.replace_passwords()
-    exitcode, status, perfdata = _active_check_main_core(
-        argument_parser, check_fn, sys.argv[1:], allow_ews
-    )
+    exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

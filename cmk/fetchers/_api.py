@@ -5,7 +5,7 @@
 
 from functools import partial
 
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
@@ -34,6 +34,9 @@ def get_raw_data(
             fetched = fetcher.fetch(mode)
         fetched.map(partial(file_cache.write, mode=mode))
         return fetched
+
+    except MKTimeout:
+        raise
 
     except Exception as exc:
         return result.Error(exc)

@@ -7,7 +7,7 @@ import functools
 from collections.abc import Collection, Iterable
 
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
@@ -37,6 +37,8 @@ def gather_available_raw_section_names(
             missing_sys_description=missing_sys_description,
             backend=backend,
         )
+    except MKTimeout:
+        raise
     except Exception as e:
         if on_error is OnError.RAISE:
             raise
@@ -118,6 +120,8 @@ def _find_sections(
                 oid_value_getter=oid_value_getter,
             ):
                 found_sections.add(name)
+        except MKTimeout:
+            raise
         except MKGeneralException:
             # some error messages which we explicitly want to show to the user
             # should be raised through this

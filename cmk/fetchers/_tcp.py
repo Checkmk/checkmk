@@ -19,7 +19,7 @@ from cmk.utils import paths
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.certs import write_cert_store
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
@@ -243,6 +243,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Try to decrypt output")
         try:
             return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
+        except MKTimeout:
+            raise
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 

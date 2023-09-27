@@ -1,0 +1,16 @@
+Title: Fetcher handles timeout correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695807506
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.2.0p11
+
+Previously, a fetcher could miss a timeout, thus 
+creating a problem for monitoring because the number 
+of available fetchers is limited.
+
+With this release the problem has been eliminated.
+

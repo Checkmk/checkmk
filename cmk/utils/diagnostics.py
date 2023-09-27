@@ -41,6 +41,7 @@ class DiagnosticsParameters(TypedDict):
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
+OPT_CHECKMK_CRASH_REPORTS = "checkmk-crashes"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
 OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
@@ -62,6 +63,7 @@ _BOOLEAN_CONFIG_OPTS = [
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CRASH_REPORTS,
 ]
 
 _FILES_OPTS = [

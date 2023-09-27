@@ -1,0 +1,12 @@
+Title: Support Diagnostics: Also add the latest Crash Dumps to the SD Dump
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1695833651
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0p13
+
+For each category of crash dumps (base, check, ec, gui, rest_api, section), add the latest dump
+to the Support Diagnostics dump.

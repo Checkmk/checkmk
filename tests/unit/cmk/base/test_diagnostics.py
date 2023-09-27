@@ -7,6 +7,7 @@ import csv
 import json
 import os
 import shutil
+import uuid
 from pathlib import Path, PurePath
 from typing import NamedTuple, Type
 
@@ -764,3 +765,41 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
         assert content["SELinux status"] == "enabled"
 
         shutil.rmtree(str(test_bin_dir))
+
+
+def test_diagnostics_element_crash_dumps():
+    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
+    assert diagnostics_element.ident == "crashdumps"
+    assert diagnostics_element.title == "The latest crash dumps of each type"
+    assert diagnostics_element.description == (
+        "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
+    )
+
+
+def test_diagnostics_element_crash_dumps_content(tmp_path):
+    test_uuid = str(uuid.uuid4())
+    category = "checks"
+    test_crash_dir = cmk.utils.paths.crash_dir.joinpath(category).joinpath(test_uuid)
+    test_crash_dir.mkdir(parents=True, exist_ok=True)
+    test_crash_filepath = test_crash_dir.joinpath("info.json")
+    with test_crash_filepath.open("w", encoding="utf-8") as f:
+        f.write('{ "testvar": "testvalue"}')
+
+    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
+    tmppath = Path(tmp_path).joinpath("tmp")
+    tmppath.mkdir(parents=True, exist_ok=True)
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+    relative_path = cmk.utils.paths.crash_dir.relative_to(cmk.utils.paths.omd_root)
+    test_filename = f"{test_uuid}.tar.gz"
+    assert filepath == tmppath.joinpath(relative_path).joinpath("%s/%s" % (category, test_filename))
+
+    import tarfile
+
+    assert tarfile.is_tarfile(filepath)
+    with tarfile.open(filepath, "r") as tar:
+        tar.extractall(path=tmp_path)
+        with Path(tmp_path.joinpath("info.json")).open("r", encoding="utf-8") as f:
+            content = f.read()
+
+    assert json.loads(content)["testvar"] == "testvalue"

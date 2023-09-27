@@ -77,8 +77,7 @@ def generate_csr_pair(
     )
 
 
-def generate_private_key(size: int) -> rsa.RSAPrivateKeyWithSerialization:
-    # RSAPrivateKeyWithSerialization is just an RSAPrivateKey, but mypy doesn't always get this.
+def generate_private_key(size: int) -> rsa.RSAPrivateKey:
     return rsa.generate_private_key(
         public_exponent=65537,
         key_size=size,

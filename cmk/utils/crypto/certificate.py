@@ -123,6 +123,7 @@ class CertificateWithPrivateKey(NamedTuple):
         key_size: int = 4096,
         start_date: datetime | None = None,  # defaults to now
         subject_alt_dns_names: list[str] | None = None,
+        is_ca: bool = False,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
@@ -136,6 +137,7 @@ class CertificateWithPrivateKey(NamedTuple):
             start_date=start_date or Certificate._naive_utcnow(),
             organizational_unit_name=organizational_unit_name,
             subject_alt_dns_names=subject_alt_dns_names,
+            is_ca=is_ca,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -291,6 +293,7 @@ class Certificate:
         start_date: datetime,
         organizational_unit_name: str | None = None,
         subject_alt_dns_names: list[str] | None = None,
+        is_ca: bool = False,
     ) -> Certificate:
         """
         Internal method currently only useful for `CertificateWithPrivateKey.generate_self_signed`
@@ -325,7 +328,7 @@ class Certificate:
         )
 
         # RFC 5280 4.2.1.9.  Basic Constraints
-        basic_constraints = x509.BasicConstraints(ca=False, path_length=None)
+        basic_constraints = x509.BasicConstraints(ca=is_ca, path_length=0 if is_ca else None)
         builder = builder.add_extension(basic_constraints, critical=True)
 
         # RFC 5280 4.2.1.2.  Subject Key Identifier
@@ -343,13 +346,13 @@ class Certificate:
         # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
         builder = builder.add_extension(
             x509.KeyUsage(
-                digital_signature=True,  # signing data
+                digital_signature=not is_ca,  # signing data
                 content_commitment=False,  # aka non_repudiation
                 key_encipherment=False,
                 data_encipherment=False,
                 key_agreement=False,
-                key_cert_sign=False,
-                crl_sign=False,
+                key_cert_sign=is_ca,
+                crl_sign=is_ca,
                 encipher_only=False,
                 decipher_only=False,
             ),

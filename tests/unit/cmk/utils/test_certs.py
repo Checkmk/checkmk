@@ -22,8 +22,8 @@ from tests.testlib.certs import (
 from livestatus import SiteId
 
 from cmk.utils.certs import (
+    _generate_root_cert,
     _make_csr,
-    _make_root_certificate,
     _make_subject_name,
     _rsa_public_key_from_cert_or_csr,
     _sign_csr,
@@ -241,7 +241,8 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert filename.exists()
     loaded = RootCA.load(filename)
     assert loaded.cert == ca.cert
-    assert loaded.rsa.private_numbers() == ca.rsa.private_numbers()
+    # RSAPrivateKeyWithSerialization confuses mypy, RSAPrivateKey has private_numbers
+    assert loaded.rsa.private_numbers() == ca.rsa.private_numbers()  # type:ignore[attr-defined]
 
 
 def test_make_csr() -> None:
@@ -257,12 +258,7 @@ def test_make_csr() -> None:
 
 
 def test_sign_csr() -> None:
-    root_key = generate_private_key(1024)
-    root_cert = _make_root_certificate(
-        _make_subject_name("peter"),
-        relativedelta(days=1),
-        root_key,
-    )
+    root_cert, root_key = _generate_root_cert("peter", relativedelta(days=1), key_size=1024)
     key = generate_private_key(1024)
     csr = _make_csr(
         _make_subject_name("from_peter"),
@@ -294,12 +290,7 @@ def test_sign_csr() -> None:
 
 
 def test_sign_csr_with_local_ca() -> None:
-    root_key = generate_private_key(1024)
-    root_cert = _make_root_certificate(
-        _make_subject_name("peter"),
-        relativedelta(days=1),
-        root_key,
-    )
+    root_cert, root_key = _generate_root_cert("peter", relativedelta(days=1), key_size=1024)
     key = generate_private_key(1024)
     csr = _make_csr(
         _make_subject_name("from_peter"),

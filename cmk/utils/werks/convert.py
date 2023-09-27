@@ -5,6 +5,7 @@
 
 import datetime
 import xml.etree.ElementTree as ET
+from collections.abc import Iterator
 
 from .werk import Compatibility
 from .werkv1 import parse_werk_v1
@@ -16,7 +17,7 @@ def nowiki_to_markdown(description: list[str]) -> str:
     # why don't we generate html at this stage?
     # because we can use this function to actually convert werkv1 to werkv2 in
     # the .werks folder.
-    def generator():
+    def generator() -> Iterator[str]:
         for line in description:
             if line.startswith("LI:"):
                 yield "* " + line.removeprefix("LI:")
@@ -48,14 +49,18 @@ def html_to_nowiki(content: str) -> str:
     # but the xml parser needs a single root element, so we wrap it in root.
     root = ET.fromstringlist(["<root>", content, "</root>"])
 
-    def generator():
+    def generator() -> Iterator[str]:
         for element in root:
             if element.tag == "p":
                 if element.text is not None:
                     yield element.text
                     yield ""
                 else:
-                    if len(element) == 1 and element[0].tag == "code":
+                    if (
+                        len(element) == 1
+                        and element[0].tag == "code"
+                        and element[0].text is not None
+                    ):
                         yield "C+:"
                         yield element[0].text
                         yield "C-:\n"
@@ -105,7 +110,7 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
     metadata.pop("state", None)  # removed field
     metadata.pop("targetversion", None)  # removed field
 
-    def generator():
+    def generator() -> Iterator[str]:
         yield "[//]: # (werk v2)"
         if (title := metadata.pop("title", None)) is not None:
             # TODO: wait for CMK-14546: we might need to markdown escape the title
@@ -145,7 +150,7 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
 def werkv2_to_werkv1(werkv2_content: str, werk_id: int) -> tuple[str, int]:
     werk = load_werk_v2(parse_werk_v2(werkv2_content, str(werk_id)))
 
-    def generator():
+    def generator() -> Iterator[str]:
         yield f"Title: {werk.title}"
         yield f"Class: {werk.class_.value}"
         if werk.compatible == Compatibility.COMPATIBLE:

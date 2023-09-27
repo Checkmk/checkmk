@@ -148,7 +148,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep 'buildscripts/docker_image_aliases/IMAGE_TESTING/' || true"
 
     - NAME: CHANGED_WERK_PACKAGE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/checkmk-werk' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/werks' || true"
       REPLACE_NEWLINES: true
 
 STAGES:
@@ -396,7 +396,7 @@ STAGES:
 
     - NAME: 'Werks'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_WERK_PACKAGE_FILES
-      DIR: 'packages/checkmk-werk'
+      DIR: 'packages/werks'
       COMMAND: "../../scripts/run-in-docker.sh ./run &> ${RESULTS}/werk_package.txt"
       TEXT_ON_SKIP: 'No werk package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/werk_package.txt"

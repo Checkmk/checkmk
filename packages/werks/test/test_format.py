@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.werks import parse_werk
-from cmk.utils.werks.format import format_as_werk_v1, format_as_werk_v2
-from cmk.utils.werks.werkv2 import parse_werk_v2
+from werks import parse_werk
+from werks.format import format_as_werk_v1, format_as_werk_v2
+from werks.parse import parse_werk_v2
 
 
 def test_markdown_parse_roundtrip() -> None:
@@ -62,7 +62,7 @@ def test_nowiki_parse_roundtrip() -> None:
     text = """Title: APT: Fix service discovery when getting unexpected output from apt
 Level: 1
 Component: checks
-Compatible: compat
+Compatible: incomp
 Edition: cre
 State: unknown
 Class: fix
@@ -80,7 +80,7 @@ LI: ...entries!
     assert parsed.metadata == {
         "id": "1234",
         "class": "fix",
-        "compatible": "yes",
+        "compatible": "no",
         "component": "checks",
         "date": "2019-09-23T08:00:28+00:00",
         "edition": "cre",
@@ -104,7 +104,7 @@ LI: ...entries!
         content
         == """Title: APT: Fix service discovery when getting unexpected output from apt
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1569225628
 Edition: cre

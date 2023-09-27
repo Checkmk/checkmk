@@ -11,6 +11,10 @@ pytest = "*"
 mypy = "*"
 pylint = "*"
 bandit = "*"
+types-lxml = "*"
+types-markdown = "*"
 
 [packages]
 pydantic = "*"
+lxml = "*"
+markdown = "*"

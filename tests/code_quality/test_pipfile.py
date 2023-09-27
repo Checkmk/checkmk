@@ -36,6 +36,7 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
+    repo_path() / "packages/werks/build",
     repo_path() / "agent-receiver/build",
     repo_path() / "bazel-check_mk",
     repo_path() / "omd/build",
@@ -138,6 +139,7 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
         basepath / "agent-receiver",  # uses setup.py
+        basepath / "packages/werks",  # uses setup.cfg
         basepath / "enterprise/core/src/test",  # test files
         basepath / "omd/license_sources",  # update_licenses.py contains imports
     )
@@ -378,6 +380,7 @@ def test_dependencies_are_declared() -> None:
         "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
         "_typeshed",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
+        "werks",  # can not be found because it is installed editable  # TODO: FIXME!
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

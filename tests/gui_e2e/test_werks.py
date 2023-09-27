@@ -7,6 +7,8 @@ import logging
 
 import pytest
 
+from werks.models import Edition
+
 from tests.testlib import repo_path
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.playwright.pom.werks import Werks
@@ -22,8 +24,8 @@ def test_werks_available(logged_in_page: PPage) -> None:
     # NOTE: We can not use cmk_version to detect the edition due to monkey-patching in the testlib!
     # since the tests are always running in a CEE environment, we do not consider other editions
     werk_editions = {
-        cmk.utils.werks.werk.Edition.CRE,
-        cmk.utils.werks.werk.Edition.CEE,
+        Edition.CRE,
+        Edition.CEE,
     }
     logger.info("Checking for editions: %s", ",".join(str(e.value) for e in werk_editions))
     # get all werks (list is required to retain the order)

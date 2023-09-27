@@ -65,7 +65,6 @@ types-docutils = "*"  # used for type checking
 types-jmespath = "*"  # used for type checking
 types-jsonschema = "*"  # used for type checking
 types-lxml = "*"  # used for type checking
-types-markdown = "*"  # used for type checking
 types-mypy-extensions = "*"  # used for type checking
 types-oauthlib = "*"  # used for type checking
 types-paho-mqtt = "*"  # used for type checking
@@ -200,7 +199,6 @@ feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "~=7.4"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
-markdown = "==3.4.3"  # used for werk parsing
 pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
 GitPython = "~=3.1"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files

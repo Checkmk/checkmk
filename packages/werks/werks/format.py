@@ -5,9 +5,10 @@
 
 from collections.abc import Iterator
 
-from .convert import markdown_to_nowiki
-from .werk import Compatibility
-from .werkv2 import load_werk_v2, WerkV2ParseResult
+from .load import load_werk_v2
+from .markup import markdown_to_nowiki
+from .models import Compatibility
+from .parse import WerkV2ParseResult
 
 
 def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:

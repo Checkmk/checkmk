@@ -9,17 +9,12 @@ from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
+from werks.models import Class, Compatibility, Edition, Werk
+
 from cmk.utils.version import RType, Version
 
 from .. import has_content, load_raw_files
-from ..werk import (
-    Class,
-    Compatibility,
-    Edition,
-    sort_by_version_and_component,
-    Werk,
-    WerkTranslator,
-)
+from ..werk import sort_by_version_and_component, WerkTranslator
 
 
 class SimpleWerk(NamedTuple):

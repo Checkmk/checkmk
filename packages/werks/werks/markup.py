@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 
 import markdown
-
-from .werkv1 import parse_werk_v1
 
 
 def nowiki_to_markdown(description: list[str]) -> str:
@@ -94,10 +91,6 @@ def markdown_to_nowiki(content: str) -> str:
     return "\n".join(generator())
 
 
-def _table_entry(key: str, value: str) -> str:
-    return f"{key} | {value}"
-
-
 # CMK-14546
 # def _escape_markdown(text: str) -> str:
 #     """
@@ -111,47 +104,9 @@ def _table_entry(key: str, value: str) -> str:
 #     return re.sub(r"([\`*_{}\[\]()#+-.!])", r"\\\1", text)
 
 
-def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
-    # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
-    parsed = parse_werk_v1(werkv1_content, werk_id)
-    metadata = parsed.metadata
-    metadata.pop("id", None)  # is the filename
-    metadata.pop("knowledge", None)  # removed field
-    metadata.pop("state", None)  # removed field
-    metadata.pop("targetversion", None)  # removed field
-
-    def generator() -> Iterator[str]:
-        yield "[//]: # (werk v2)"
-        if (title := metadata.pop("title", None)) is not None:
-            # TODO: wait for CMK-14546: we might need to markdown escape the title
-            # yield f"# {_escape_markdown(title)}"
-            yield f"# {title}"
-        yield ""
-        yield _table_entry("key", "value")
-        yield _table_entry("---", "---")
-        if (compatible := metadata.pop("compatible", None)) is not None:
-            compatible = "yes" if compatible == "compat" else "no"
-            yield _table_entry("compatible", compatible)
-        if (version := metadata.pop("version", None)) is not None:
-            yield _table_entry("version", version)
-        if (date := metadata.pop("date", None)) is not None:
-            date = datetime.datetime.fromtimestamp(
-                float(date), tz=datetime.timezone.utc
-            ).isoformat()
-            yield _table_entry("date", date)
-        if (level := metadata.pop("level", None)) is not None:
-            yield _table_entry("level", level)
-        if (class_ := metadata.pop("class", None)) is not None:
-            yield _table_entry("class", class_)
-        if (component := metadata.pop("component", None)) is not None:
-            yield _table_entry("component", component)
-        if (edition := metadata.pop("edition", None)) is not None:
-            yield _table_entry("edition", edition)
-        for key, value in metadata.items():
-            # this should never happen, but will give us a nice error message
-            # when this is parsed as werkv2
-            yield _table_entry(key, value)
-        yield ""
-        yield nowiki_to_markdown(parsed.description)
-
-    return "\n".join(generator()), werk_id
+def markdown_to_html(text: str) -> str:
+    return markdown.markdown(
+        text,
+        extensions=["tables", "fenced_code"],
+        output_format="html",
+    )

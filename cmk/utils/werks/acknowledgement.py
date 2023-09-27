@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Sequence
 from functools import cache
 
+from werks.models import Compatibility, Werk
+
 import cmk.utils.paths
 import cmk.utils.store as store
 
 from . import load
-from .werk import Compatibility, Werk
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 

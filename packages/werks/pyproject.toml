@@ -26,5 +26,6 @@ jobs = 0
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
 missing-docstring,
-line-too-long
+line-too-long,
+fixme
 """

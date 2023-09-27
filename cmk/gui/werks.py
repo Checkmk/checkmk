@@ -16,6 +16,8 @@ from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
+from werks.models import Compatibility, Werk
+
 import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
@@ -24,7 +26,7 @@ from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_
 from cmk.utils.werks.acknowledgement import load_werk_entries
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
 from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
-from cmk.utils.werks.werk import Compatibility, Werk, WerkTranslator
+from cmk.utils.werks.werk import WerkTranslator
 
 from cmk.gui.breadcrumb import (
     Breadcrumb,

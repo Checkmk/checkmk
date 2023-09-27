@@ -6,13 +6,14 @@
 import argparse
 from pathlib import Path
 
+from werks.models import Edition, Werk
+
 from cmk.utils.version import __version__, Version
 
 from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks
 from .announce import main as main_announce
 from .collect import main as collect
 from .mail import main as mail
-from .werk import Edition, Werk
 
 
 def main_changelog(args: argparse.Namespace) -> None:

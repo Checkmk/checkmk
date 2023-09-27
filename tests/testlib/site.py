@@ -762,6 +762,7 @@ class Site:
             cmk_path() + "/.werks",
             cmk_path() + "/agent-receiver",
             cmk_path() + "/active_checks",
+            cmk_path() + "/packages/werks",
         ]
 
         if self.version.is_raw_edition():
@@ -804,6 +805,8 @@ class Site:
                     logger.info("Executing .f12 in '%s' ... FAILED:\n%s", path, exc.output)
                     raise
                 logger.info("Executing .f12 in '%s' ... DONE", path)
+            else:
+                logger.warning("Did not find .f12 in '%s'!", path)
         assert self.is_stopped()
 
         logger.info("Executing cmk-update-config ...")

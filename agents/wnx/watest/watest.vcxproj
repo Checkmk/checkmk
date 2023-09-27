@@ -148,7 +148,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/$(YamlCpp)/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/$(GoogleTest)/googletest;$(ProjectDir)/../extlibs/$(GoogleTest)/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/$(YamlCpp)/include;$(ProjectDir)/../extlibs/$(FmtVersion)/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

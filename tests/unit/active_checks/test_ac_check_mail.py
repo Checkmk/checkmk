@@ -52,7 +52,7 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
         ],
     )
     assert state == 2
-    assert info.startswith("Failed to connect to foo:")
+    assert info.startswith("Failed to connect to fetching server foo:")
     assert perf is None
 
 

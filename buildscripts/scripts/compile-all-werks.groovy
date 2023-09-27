@@ -48,7 +48,7 @@ def main() {
         )
     }
 
-    stage("Update werks on website") {
+    stage("Update werks on web staging") {
         withCredentials([
             sshUserPrivateKey(credentialsId: 'web-staging', keyFileVariable: 'webstaging', usernameVariable: 'user')
         ]) {
@@ -56,7 +56,7 @@ def main() {
                 rsync --verbose \
                     -e "ssh -o StrictHostKeyChecking=no -i ${webstaging} -p ${WEB_STAGING_PORT}" \
                     ${WORKSPACE}/all_werks.json \
-                    ${user}@${WEB_STAGING_WERKS}/all_werks_v2.json
+                    ${user}@${WEB_STAGING_WERKS}all_werks_v2.json
             """
         }
 

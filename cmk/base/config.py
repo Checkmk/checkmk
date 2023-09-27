@@ -2721,6 +2721,7 @@ class ConfigCache:
         self._host_of_clustered_service_cache: dict[
             tuple[HostName, ServiceName, tuple | None], HostName
         ] = {}
+        self._check_mk_check_interval: dict[HostName, float] = {}
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
         ipmi_credentials = self.management_credentials(host_name, "ipmi")
@@ -3878,8 +3879,13 @@ class ConfigCache:
             host_attributes.get(hostname, {}).get("additional_ipv6addresses", []),
         )
 
-    def check_mk_check_interval(self, hostname: HostName) -> int:
-        return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"] * 60
+    def check_mk_check_interval(self, hostname: HostName) -> float:
+        if hostname not in self._check_mk_check_interval:
+            self._check_mk_check_interval[hostname] = (
+                self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"] * 60
+            )
+
+        return self._check_mk_check_interval[hostname]
 
     @staticmethod
     def address_family(host_name: HostName) -> AddressFamily:

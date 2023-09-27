@@ -61,5 +61,33 @@ def main() {
         }
 
     }
+
+    stage("Update werks on checkmk.com") {
+        withCredentials([
+            sshUserPrivateKey(credentialsId: 'checkmk-deploy', keyFileVariable: 'keyfile', usernameVariable: 'user')
+        ]) {
+            sh """
+                rsync --verbose \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p 52022" \
+                    ${WORKSPACE}/all_werks.json \
+                    ${user}@checkmk.com:/home/mkde/all_werks_v2.json
+            """
+        }
+
+    }
+
+    stage("Update werks on customer.checkmk.com") {
+        withCredentials([
+            sshUserPrivateKey(credentialsId: 'customer-deploy', keyFileVariable: 'keyfile', usernameVariable: 'user')
+        ]) {
+            sh """
+                rsync --verbose \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p 52022" \
+                    ${WORKSPACE}/all_werks.json \
+                    ${user}@customer.checkmk.com:/home/mkde/all_werks_v2.json
+            """
+        }
+
+    }
 }
 return this;

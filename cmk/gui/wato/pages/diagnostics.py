@@ -24,6 +24,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_sensitivity_for_humans,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_COMP_BUSINESS_INTELLIGENCE,
@@ -284,6 +285,15 @@ class ModeDiagnostics(WatoMode):
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"
                     ),
+                ),
+            ),
+            (
+                OPT_CHECKMK_CRASH_REPORTS,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("Crash Dumps"),
+                    help=_("The latest crash dumps"),
                 ),
             ),
             (

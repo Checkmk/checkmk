@@ -43,6 +43,7 @@ from cmk.utils.diagnostics import (
     get_local_files_csv,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -171,6 +172,9 @@ class DiagnosticsDump:
 
         if parameters.get(OPT_CHECKMK_OVERVIEW):
             optional_elements.append(CheckmkOverviewDiagnosticsElement())
+
+        if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
+            optional_elements.append(CrashDumpsDiagnosticsElement())
 
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
@@ -933,6 +937,44 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
         with automation_secret_filepath.open("r", encoding="utf-8") as f:
             return f.read().strip()
+
+
+class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "crashdumps"
+
+    @property
+    def title(self) -> str:
+        return _("The latest crash dumps of each type")
+
+    @property
+    def description(self) -> str:
+        return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
+
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
+        for category in cmk.utils.paths.crash_dir.glob("*"):
+            tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+            sorted_dumps = sorted(category.glob("*"), key=lambda path: int(path.stat().st_mtime))
+
+            if sorted_dumps:
+                # Determine the latest file of that category
+                dumpfile_path = sorted_dumps[-1]
+
+                # Pack the dump into a .tar.gz, so it can easily be uploaded
+                # to https://crash.checkmk.com/
+                tarfile_path = tmpdir.joinpath(dumpfile_path.name).with_suffix(".tar.gz")
+
+                with tarfile.open(name=tarfile_path, mode="w:gz") as tar:
+                    for file in dumpfile_path.iterdir():
+                        rel_path = str(file).replace(str(dumpfile_path) + "/", "")
+                        tar.add(str(file), arcname=rel_path)
+
+                yield tarfile_path
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

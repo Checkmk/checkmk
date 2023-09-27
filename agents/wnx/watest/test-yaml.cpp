@@ -478,7 +478,8 @@ TEST(AgentConfig, ReloadWithTimestamp) {
 }
 
 TEST(AgentConfig, GetValueTest) {
-    const std::wstring key_path{L"System\\CurrentControlSet\\services\\Ntfs"};
+    constexpr std::wstring_view key_path{
+        L"System\\CurrentControlSet\\services\\Ntfs"};
     EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Type", 0), 2);
     EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Group", L""),
               L"Boot File System");
@@ -534,18 +535,28 @@ TEST(AgentConfig, FoldersTest) {
 }
 }  // namespace cma::cfg::details
 
-namespace cma::cfg {  // to become friendly for cma::cfg classes
+namespace cma::cfg {
 
-TEST(AgentConfig, LogFile) { EXPECT_TRUE(!GetCurrentLogFileName().empty()); }
+TEST(AgentConfig, LogFile) { EXPECT_FALSE(GetCurrentLogFileName().empty()); }
 
 TEST(AgentConfig, YamlRead) {
     const auto file =
         tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
-
     auto result = LoadAndCheckYamlFile(file.wstring());
-    EXPECT_EQ(result["globalvas"].size(), 0);
     EXPECT_GT(result.size(), 0U);
+    EXPECT_TRUE(result["global"].IsDefined());
+    EXPECT_FALSE(result["globalvas"].IsDefined());
 }
+
+namespace {
+template <typename... Args>
+std::vector<std::string> MakeStringVector(Args &&...args) {
+    std::vector<std::string> v;
+    static_assert((std::is_constructible_v<std::string, Args &&> && ...));
+    (v.emplace_back(std::forward<Args>(args)), ...);
+    return v;
+}
+}  // namespace
 
 TEST(AgentConfig, InternalArray) {
     const std::string key = "sections";
@@ -553,132 +564,57 @@ TEST(AgentConfig, InternalArray) {
         return YAML::Load(key + ": " + text + "\n");
     };
 
-    {
-        auto node = create_yaml("");
-        auto result = GetInternalArray(node, key);
-        ASSERT_TRUE(result.empty());
-    }
-
-    {
-        auto node = create_yaml("df ps");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml("[df, ps]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml(" \n  - [df, ps]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - xx");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 3);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - [xx]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 3);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - "
-            " \n  - [xx]"
-            " \n  - yy zz");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 5);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-        EXPECT_EQ(result[3], "yy");
-        EXPECT_EQ(result[4], "zz");
-    }
+    ASSERT_TRUE(GetInternalArray(create_yaml(""), key).empty());
+    ASSERT_EQ(GetInternalArray(create_yaml("df ps"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml("[df, ps]"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - xx"),
+                               key),
+              MakeStringVector("df", "ps", "xx"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - [xx]"),
+                               key),
+              MakeStringVector("df", "ps", "xx"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - "
+                                           " \n  - [xx]"
+                                           " \n  - yy zz"),
+                               key),
+              MakeStringVector("df", "ps", "xx", "yy", "zz"));
 }
 
 TEST(AgentConfig, FactoryConfig) {
     const auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     const auto cfg = GetLoadedConfig();
-    EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
-
-    EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
-    auto port = GetVal(groups::kGlobal, vars::kPort, -1);
-    EXPECT_TRUE(port != -1);
-
-    auto encrypt = GetVal(groups::kGlobal, vars::kGlobalEncrypt, true);
-    EXPECT_TRUE(!encrypt);
-
-    auto try_kill_mode = GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
-                                std::string("invalid"));
-    EXPECT_EQ(try_kill_mode, defaults::kTryKillPluginProcess);
-
-    auto password =
-        GetVal(groups::kGlobal, vars::kGlobalPassword, std::string("ppp"));
-    EXPECT_TRUE(password == "secret");
-
-    auto name = GetVal(groups::kGlobal, vars::kName, std::string(""));
-    EXPECT_TRUE(name.empty()) << "name should absent";
-
-    auto ipv6 = GetVal(groups::kGlobal, vars::kIpv6, true);
-    EXPECT_TRUE(!ipv6);
-
-    auto async = GetVal(groups::kGlobal, vars::kAsync, false);
-    EXPECT_TRUE(async);
-
-    auto flush = GetVal(groups::kGlobal, vars::kSectionFlush, true);
-    EXPECT_TRUE(flush) << "flush should absent";
-
-    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-    EXPECT_TRUE(execute.size() > 3);
-
-    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-    EXPECT_TRUE(only_from.empty());
-
-    {
-        auto sections_enabled =
-            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        EXPECT_EQ(sections_enabled.size(), 21);
-
-        auto sections_disabled =
-            GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-        EXPECT_EQ(sections_disabled.size(), 0) << "no disabled sections";
-    }
+    EXPECT_NE(GetVal(groups::kGlobal, vars::kPort, -1), -1);
+    EXPECT_FALSE(GetVal(groups::kGlobal, vars::kGlobalEncrypt, true));
+    EXPECT_EQ(GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
+                     std::string("invalid")),
+              defaults::kTryKillPluginProcess);
+    EXPECT_EQ(
+        GetVal(groups::kGlobal, vars::kGlobalPassword, std::string("ppp")),
+        "secret");
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kName, std::string("")).empty());
+    EXPECT_FALSE(GetVal(groups::kGlobal, vars::kIpv6, true));
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kAsync, false));
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kSectionFlush, true));
+    EXPECT_GT(GetInternalArray(groups::kGlobal, vars::kExecute).size(), 3U);
+    EXPECT_TRUE(GetInternalArray(groups::kGlobal, vars::kOnlyFrom).empty());
+    EXPECT_EQ(GetInternalArray(groups::kGlobal, vars::kSectionsEnabled).size(),
+              21U);
+    EXPECT_TRUE(
+        GetInternalArray(groups::kGlobal, vars::kSectionsDisabled).empty());
 
     {
         auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
         EXPECT_TRUE(realtime.size() == 6);
-
-        auto encrypt = GetVal(realtime, vars::kRtEncrypt, true);
-        EXPECT_TRUE(!encrypt);
-
-        auto rt_port = GetVal(realtime, vars::kRtPort, 111);
-        EXPECT_EQ(rt_port, kDefaultRealtimePort);
+        EXPECT_FALSE(GetVal(realtime, vars::kRtEncrypt, true));
+        EXPECT_EQ(GetVal(realtime, vars::kRtPort, 111), kDefaultRealtimePort);
 
         EXPECT_EQ(GetVal(groups::kGlobal, vars::kGlobalWmiTimeout, 1),
                   kDefaultWmiTimeout);
@@ -687,33 +623,24 @@ TEST(AgentConfig, FactoryConfig) {
                          std::string{values::kCpuLoadWmi}),
                   values::kCpuLoadPerf);
 
-        auto passphrase =
-            GetVal(realtime, vars::kGlobalPassword, std::string());
-        EXPECT_TRUE(passphrase == "this is my password");
+        EXPECT_EQ(GetVal(realtime, vars::kGlobalPassword, std::string()),
+                  "this is my password");
 
-        auto run = GetInternalArray(realtime, vars::kRtRun);
-        EXPECT_TRUE(run.size() == 3);
+        EXPECT_EQ(GetInternalArray(realtime, vars::kRtRun).size(), 3U);
     }
     {
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
-        EXPECT_EQ(logging.size(), 7);
-
-        auto log_location =
-            GetVal(logging, vars::kLogLocation, std::string(""));
-
-        EXPECT_TRUE(log_location.empty());
+        EXPECT_EQ(logging.size(), 7U);
+        EXPECT_TRUE(
+            GetVal(logging, vars::kLogLocation, std::string("")).empty());
 
         auto debug = GetVal(logging, vars::kLogDebug, std::string("xxx"));
         EXPECT_TRUE(debug == "yes" || debug == "all");
+        EXPECT_TRUE(GetVal(logging, vars::kLogWinDbg, false));
+        EXPECT_TRUE(GetVal(logging, vars::kLogEvent, false));
 
-        auto windbg = GetVal(logging, vars::kLogWinDbg, false);
-        EXPECT_TRUE(windbg);
-
-        auto event_log = GetVal(logging, vars::kLogEvent, false);
-        EXPECT_TRUE(event_log);
-
-        auto file_log = GetVal(logging, vars::kLogFile, std::string("a.log"));
-        EXPECT_TRUE(file_log.empty());
+        EXPECT_TRUE(
+            GetVal(logging, vars::kLogFile, std::string("a.log")).empty());
         EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileCount, 0),
                   cfg::kLogFileMaxCount);
         EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileSize, 0),
@@ -722,27 +649,21 @@ TEST(AgentConfig, FactoryConfig) {
 
     // winperf
     {
-        auto winperf_on = GetVal(groups::kWinPerf, vars::kEnabled, false);
-        EXPECT_TRUE(winperf_on);
+        EXPECT_TRUE(GetVal(groups::kWinPerf, vars::kEnabled, false));
 
-        auto winperf_counters =
-            GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto &[id, name] : winperf_counters) {
-            EXPECT_TRUE(!id.empty());
-            EXPECT_TRUE(!name.empty());
-        }
+        auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+        EXPECT_EQ(counters.size(), 3);
+        EXPECT_FALSE(rs::any_of(counters, [](auto &&a) {
+            const auto &[counter_id, counter_name] = a;
+            return counter_id.empty() || counter_name.empty();
+        }));
     }
 
     // mrpe
     {
-        auto mrpe_on = GetVal(groups::kMrpe, vars::kEnabled, false);
-        EXPECT_TRUE(mrpe_on);
-
-        auto mrpe_timeout = GetVal(groups::kMrpe, vars::kTimeout, 31);
-        EXPECT_EQ(mrpe_timeout, 60);
-        auto mrpe_parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, true);
-        EXPECT_FALSE(mrpe_parallel);
+        EXPECT_TRUE(GetVal(groups::kMrpe, vars::kEnabled, false));
+        EXPECT_EQ(GetVal(groups::kMrpe, vars::kTimeout, 31), 60);
+        EXPECT_FALSE(GetVal(groups::kMrpe, vars::kMrpeParallel, true));
     }
 
     // extensions

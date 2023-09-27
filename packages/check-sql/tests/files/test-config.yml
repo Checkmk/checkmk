@@ -50,6 +50,6 @@ mssql:
       authentication: # same as above
       connection: # same as above
       alias: "someApplicationName" # has no default
-      piggyback: # has no default
+      piggyback: # has no default, optional
         hostname: "myPiggybackHost"
         sqls: # same as above

@@ -4,19 +4,19 @@
 
 pub mod ms_sql;
 mod yaml;
-use ms_sql::MsSql;
+use ms_sql::Config as MsSqlConfig;
 use std::path::Path;
 
 /// Contains config to check database(MS SQL)
 pub struct CheckConfig {
-    _ms_sql: Option<MsSql>,
+    _ms_sql: Option<MsSqlConfig>,
 }
 
 impl CheckConfig {
     pub fn load_file(file: &Path) -> anyhow::Result<Self> {
         let _ = yaml::load_from_file(file);
         Ok(CheckConfig {
-            _ms_sql: Some(MsSql {}),
+            _ms_sql: Some(MsSqlConfig::default()),
         })
     }
 }

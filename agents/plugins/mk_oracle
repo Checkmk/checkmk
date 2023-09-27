@@ -2124,6 +2124,13 @@ unset_custom_sqls_vars() {
     unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
 }
 
+sid_matches_defined_sids() {
+    # first parameter is a list of coma separated values (SQLS_SIDS)
+    # second parameter is a single value (current sid)
+    sids=${1//,/ }
+    echo "$sids" | "${GREP}" -q "$2"
+}
+
 do_custom_sqls() {
     for section in $custom_sqls_sections; do
         if ! type "$section" >/dev/null 2>&1; then
@@ -2134,11 +2141,8 @@ do_custom_sqls() {
 
         $section
 
-        local sids=${SQLS_SIDS:-$custom_sqls_sids}
-        sids=${sids//,/ }
-
         # If SID is not part of sids we can skip the rest
-        if ! echo "$sids" | "${GREP}" -q "$MK_SID"; then
+        if ! sid_matches_defined_sids "${SQLS_SIDS:-$custom_sqls_sids}" "$MK_SID"; then
             logging -w "[${MK_SID}] [custom_sql] [${section}]" \
                 "Skipping this section, runs only on SIDs '$sids'"
             unset_custom_sqls_vars

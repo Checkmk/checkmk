@@ -1,0 +1,11 @@
+Title: Support Diagnostics: Collect information about installed Python modules
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1695825678
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The support Diagnostics dump now contains information about the Python modules that are
+installed in the site context. It uses the command "pip freeze" to gather that information.

@@ -1,0 +1,137 @@
+#!/bin/bash
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+failure() {
+    test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
+usage() {
+    echo "usage: $(basename "$0") [OPTION]..."
+    echo "Run the CI pipeline or parts of it."
+    echo
+    echo "  -e, --setup-environment  setup environment"
+    echo "  -f, --check-format       check for correct formatting (isort, black, flake8, autoflake)"
+    echo "  -m, --mypy               run mypy"
+    echo "  -p, --pylint             run pylint"
+    echo "  -u, --unit-tests         run unit tests"
+    echo "  -a, --all                shortcut for -f -m -p -u"
+    echo "  -d, --documentation      generate documentation"
+    echo "  -h, --help               show this help"
+}
+
+parse_options() {
+    # Yes, all those option variables are global.
+    RUN_SETUP_ENVIRONMENT=no
+    RUN_CHECK_FORMAT=no
+    RUN_MYPY=no
+    RUN_PYLINT=no
+    RUN_UNIT_TESTS=no
+    RUN_DOCUMENTATION=no
+
+    if ! OPTIONS=$(getopt --options 'efmpuadh' --long 'setup-environment,check-format,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+        usage >&2
+        failure
+    fi
+    eval set -- "$OPTIONS"
+    unset OPTIONS
+
+    while true; do
+        case "$1" in
+            '-e' | '--setup-environment')
+                RUN_SETUP_ENVIRONMENT=yes
+                shift
+                continue
+                ;;
+            '-f' | '--check-format')
+                RUN_CHECK_FORMAT=yes
+                shift
+                continue
+                ;;
+            '-m' | '--mypy')
+                RUN_MYPY=yes
+                shift
+                continue
+                ;;
+            '-p' | '--pylint')
+                RUN_PYLINT=yes
+                shift
+                continue
+                ;;
+            '-u' | '--unit-tests')
+                RUN_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
+            '-a' | '--all')
+                RUN_CHECK_FORMAT=yes
+                RUN_MYPY=yes
+                RUN_PYLINT=yes
+                RUN_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
+            '-d' | '--documentation')
+                RUN_DOCUMENTATION=yes
+                shift
+                continue
+                ;;
+            '-h' | '--help')
+                usage
+                exit 0
+                ;;
+            '--')
+                shift
+                test ${#@} -eq 0 || failure "extra arguments:" "$@"
+                break
+                ;;
+            *) failure "internal error" ;;
+        esac
+    done
+
+    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+}
+
+run_setup_environment() {
+    echo "Run setup environment"
+}
+
+run_check_format() {
+    echo "Run check format"
+}
+
+run_mypy() {
+    echo "Run mypy"
+}
+
+run_pylint() {
+    echo "Run pylint"
+}
+
+run_unit_tests() {
+    echo "Run unit tests"
+}
+
+run_documentation() {
+    echo "Run documentation"
+}
+
+main() {
+    # Change to the directory where this script resides, it makes many things easier
+    # and we can call this script from everywhere.
+    cd -- "${BASH_SOURCE%/*}"
+    parse_options "$@"
+    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
+    test ${RUN_MYPY} = yes && run_mypy
+    test ${RUN_PYLINT} = yes && run_pylint
+    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_DOCUMENTATION} = yes && run_documentation
+    true
+}
+
+main "$@"

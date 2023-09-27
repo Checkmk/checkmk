@@ -2557,7 +2557,10 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                         "Prevent data loss of forms by forcing "
                                         "re-authentification after"
                                     ),
-                                    unit=_("% of the specified time via GET request"),
+                                    unit=_(
+                                        # xgettext: no-python-format
+                                        "% of the specified time via GET request"
+                                    ),
                                     default_value=50.0,
                                 ),
                             ),

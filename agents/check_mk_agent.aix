@@ -117,8 +117,10 @@ set_variable_defaults() {
 preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
-    # shellcheck disable=SC1090,SC1091
-    . "${HOME}/.profile" >/dev/null 2>&1
+    if [ -e "${HOME}/.profile" ]; then
+        # shellcheck disable=SC1090,SC1091
+        . "${HOME}/.profile" >/dev/null 2>&1
+    fi
 
     export MK_LIBDIR
     export MK_CONFDIR

@@ -6,12 +6,8 @@
 from datetime import datetime
 
 import pytest
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
-from cryptography.hazmat.primitives.asymmetric.rsa import (
-    generate_private_key,
-    RSAPrivateKey,
-    RSAPublicKey,
-)
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.x509 import (
     Certificate,
@@ -30,7 +26,7 @@ from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 
 def check_certificate_against_private_key(
     cert: Certificate,
-    private_key: RSAPrivateKey,
+    private_key: rsa.RSAPrivateKey,
 ) -> None:
     # Check if the public key of certificate matches the public key corresponding to the given
     # private one
@@ -42,7 +38,7 @@ def check_certificate_against_private_key(
 
 def check_certificate_against_public_key(
     cert: Certificate,
-    public_key: RSAPublicKey,
+    public_key: rsa.RSAPublicKey,
 ) -> None:
     # Check if the signature of the certificate matches the public key
     public_key.verify(
@@ -62,8 +58,8 @@ def check_cn(
 
 def generate_csr_pair(
     cn: str, private_key_size: int = 2048
-) -> tuple[RSAPrivateKey, CertificateSigningRequest]:
-    private_key = _generate_private_key(private_key_size)
+) -> tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
+    private_key = generate_private_key(private_key_size)
     return (
         private_key,
         CertificateSigningRequestBuilder()
@@ -81,8 +77,9 @@ def generate_csr_pair(
     )
 
 
-def _generate_private_key(size: int) -> RSAPrivateKey:
-    return generate_private_key(
+def generate_private_key(size: int) -> rsa.RSAPrivateKeyWithSerialization:
+    # RSAPrivateKeyWithSerialization is just an RSAPrivateKey, but mypy doesn't always get this.
+    return rsa.generate_private_key(
         public_exponent=65537,
         key_size=size,
     )

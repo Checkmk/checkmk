@@ -5,6 +5,7 @@
 
 from pathlib import Path
 
+import cryptography.x509 as x509
 import pytest
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from dateutil.relativedelta import relativedelta
@@ -15,13 +16,13 @@ from tests.testlib.certs import (
     check_certificate_against_private_key,
     check_certificate_against_public_key,
     check_cn,
+    generate_private_key,
 )
 
 from livestatus import SiteId
 
 from cmk.utils.certs import (
     _make_csr,
-    _make_private_key,
     _make_root_certificate,
     _make_subject_name,
     _rsa_public_key_from_cert_or_csr,
@@ -201,34 +202,52 @@ def test_load_cert_and_private_key(
     )
 
 
-def test_make_private_key() -> None:
-    assert _make_private_key().key_size == 4096
-
-
-def test_make_root_certificate() -> None:
-    key = _make_private_key()
+def test_create_root_ca_and_key(tmp_path: Path) -> None:
+    filename = tmp_path / "test_certs_testCA"
     with on_time(100, "UTC"):
-        cert = _make_root_certificate(
-            _make_subject_name("peter"),
-            relativedelta(days=1),
-            key,
-        )
-    assert check_cn(
-        cert,
-        "peter",
-    )
-    assert str(cert.not_valid_before) == "1970-01-01 00:01:40"
-    assert str(cert.not_valid_after) == "1970-01-02 00:01:40"
-    check_certificate_against_private_key(
-        cert,
-        key,
-    )
+        ca = RootCA.load_or_create(filename, "peter")
+
+    # TODO: this will take too long, reduce key length for the test
+    assert ca.rsa.key_size == 4096
+
+    assert check_cn(ca.cert, "peter")
+    assert str(ca.cert.not_valid_before) == "1970-01-01 00:01:40", "creation time is respected"
+    assert str(ca.cert.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"
+    check_certificate_against_private_key(ca.cert, ca.rsa)
+
+    # check extensions
+    assert ca.cert.extensions.get_extension_for_class(
+        x509.SubjectKeyIdentifier
+    ).value == x509.SubjectKeyIdentifier.from_public_key(
+        ca.cert.public_key()
+    ), "subject key identifier is set and corresponds to the cert's public key"
+
+    assert ca.cert.extensions.get_extension_for_class(
+        x509.BasicConstraints
+    ).value == x509.BasicConstraints(ca=True, path_length=0), "is a CA certificate"
+
+    assert ca.cert.extensions.get_extension_for_class(x509.KeyUsage).value == x509.KeyUsage(
+        digital_signature=False,
+        content_commitment=False,
+        key_encipherment=False,
+        data_encipherment=False,
+        key_agreement=False,
+        key_cert_sign=True,
+        crl_sign=True,
+        encipher_only=False,
+        decipher_only=False,
+    ), "has the expected key usages"
+
+    assert filename.exists()
+    loaded = RootCA.load(filename)
+    assert loaded.cert == ca.cert
+    assert loaded.rsa.private_numbers() == ca.rsa.private_numbers()
 
 
 def test_make_csr() -> None:
     csr = _make_csr(
         _make_subject_name("abc123"),
-        _make_private_key(),
+        generate_private_key(1024),
     )
     assert csr.is_signature_valid
     assert check_cn(
@@ -238,13 +257,13 @@ def test_make_csr() -> None:
 
 
 def test_sign_csr() -> None:
-    root_key = _make_private_key()
+    root_key = generate_private_key(1024)
     root_cert = _make_root_certificate(
         _make_subject_name("peter"),
         relativedelta(days=1),
         root_key,
     )
-    key = _make_private_key()
+    key = generate_private_key(1024)
     csr = _make_csr(
         _make_subject_name("from_peter"),
         key,
@@ -275,13 +294,13 @@ def test_sign_csr() -> None:
 
 
 def test_sign_csr_with_local_ca() -> None:
-    root_key = _make_private_key()
+    root_key = generate_private_key(1024)
     root_cert = _make_root_certificate(
         _make_subject_name("peter"),
         relativedelta(days=1),
         root_key,
     )
-    key = _make_private_key()
+    key = generate_private_key(1024)
     csr = _make_csr(
         _make_subject_name("from_peter"),
         key,

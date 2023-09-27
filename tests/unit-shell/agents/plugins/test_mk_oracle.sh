@@ -867,14 +867,14 @@ test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok_sid_specific_prefix_br
 }
 
 test_mk_oracle_sid_matches_defined_sids() {
-    assertTrue 'sid_matches_defined_sids "prefixed_value" "prefix"' # THIS IS BROKEN! TODO: should not match!
+    assertFalse 'sid_matches_defined_sids "prefixed_value" "prefix"'
     assertTrue 'sid_matches_defined_sids "some,value,here" "value"'
     assertFalse 'sid_matches_defined_sids "some,hello,here" "value"'
     # documentation says, that customer may us "$SIDS" when the section should
     # be executed for all elements, but this variable contains a newline
     # seperated list of sids:
     assertTrue 'sid_matches_defined_sids "some\nvalue\nhere" "value"'
-    assertTrue 'sid_matches_defined_sids "some\nprefixed_value\nhere" "value"' # THIS IS BROKEN! TODO: should not match!
+    assertFalse 'sid_matches_defined_sids "some\nprefixed_value\nhere" "value"'
 }
 
 # shellcheck disable=SC1090 # Can't follow

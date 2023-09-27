@@ -18,11 +18,14 @@ import argparse
 import binascii
 import email
 import email.message
+import email.mime.text
 import email.utils
 import imaplib
 import logging
 import poplib
+import random
 import re
+import smtplib
 import sys
 import time
 import warnings
@@ -61,6 +64,8 @@ Message = Union[POPIMAPMessage, EWSMessage]
 MailMessages = Mapping[MailIndex, Message]  # type: ignore[valid-type]
 POPIMAPMailMessages = Mapping[MailIndex, POPIMAPMessage]
 EWSMailMessages = Mapping[MailIndex, EWSMessage]
+
+MailID = tuple[int, int]
 
 
 class EWS:
@@ -268,17 +273,19 @@ def verified_result(
 
 
 class Mailbox:
-    """Mailbox reader supporting
-    * POP3 / SNMP
+    """Mailbox reader and mail sender supporting
+    * POP3 / SNMP / IMAP4 / EWS
+    * SMTP
     * BasicAuth login
     * TLS (or not)
     * OAuth https://stackoverflow.com/questions/5193707/use-imaplib-and-oauth-for-connection-with-gmail
             https://techcommunity.microsoft.com/t5/exchange-team-blog/improving-security-together/ba-p/805892
     """
 
-    def __init__(self, args: Args) -> None:
+    def __init__(self, args: Args, connection_type: Literal["fetch", "send"] = "fetch") -> None:
         self._connection: Any = None  # TODO: Typing is quite broken below...
         self._args = args
+        self._connection_type = connection_type
 
     def __enter__(self) -> "Mailbox":
         return self
@@ -287,6 +294,12 @@ class Mailbox:
         self._close_mailbox()
 
     def connect(self) -> None:
+        if self._connection_type == "fetch":
+            self._connect_fetcher()
+        else:
+            self._connect_sender()
+
+    def _connect_fetcher(self) -> None:
         def _connect_pop3() -> None:
             connection = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
                 self._args.fetch_server,
@@ -307,67 +320,91 @@ class Mailbox:
             verified_result(connection.select("INBOX", readonly=False))
             self._connection = connection
 
-        def _connect_ews() -> None:
-            primary_smtp_address = self._args.fetch_email_address or self._args.fetch_username
-
-            # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
-
-            self._connection = (
-                (
-                    EWS(
-                        Account(
-                            primary_smtp_address=primary_smtp_address,
-                            autodiscover=False,
-                            access_type=IMPERSONATION,
-                            config=Configuration(
-                                server=self._args.fetch_server,
-                                credentials=OAuth2Credentials(
-                                    client_id=self._args.fetch_client_id,
-                                    client_secret=self._args.fetch_client_secret,
-                                    tenant_id=self._args.fetch_tenant_id,
-                                    identity=Identity(smtp_address=primary_smtp_address),
-                                ),
-                                auth_type=OAUTH2,
-                            ),
-                            default_timezone=EWSTimeZone("Europe/Berlin"),
-                        )
-                    )
+        assert self._connection is None
+        try:
+            if self._args.fetch_protocol == "POP3":
+                _connect_pop3()
+            elif self._args.fetch_protocol == "IMAP":
+                _connect_imap()
+            elif self._args.fetch_protocol == "EWS":
+                self._connect_ews()
+            else:
+                raise NotImplementedError(
+                    f"Fetching mails is not implemented for {self._args.fetch_protocol}"
                 )
-                if self._args.fetch_client_id
-                else (
-                    EWS(
-                        Account(
-                            primary_smtp_address=primary_smtp_address,
-                            autodiscover=False,
-                            access_type=DELEGATE,
-                            config=Configuration(
-                                server=self._args.fetch_server,
-                                credentials=Credentials(
-                                    self._args.fetch_username,
-                                    self._args.fetch_password,
-                                ),
+        except Exception as exc:
+            raise ConnectError(
+                f"Failed to connect to fetching server {self._args.fetch_server}: {exc}"
+            )
+
+    def _connect_sender(self) -> None:
+        assert self._connection is None
+        try:
+            if self._args.send_protocol == "EWS":
+                self._connect_ews()
+            elif self._args.send_protocol == "SMTP":
+                pass
+            else:
+                raise NotImplementedError(
+                    f"Sending mails is not implemented for {self._args.fetch_protocol}"
+                )
+        except Exception as exc:
+            raise ConnectError(
+                f"Failed to connect to sending server {self._args.send_server}: {exc}"
+            )
+
+    def _connect_ews(self) -> None:
+        ctype: Literal["fetch", "send"] = self._connection_type
+        args = vars(self._args)  # Namespace to dict
+
+        primary_smtp_address = args.get(ctype + "_email_address") or args.get(ctype + "_username")
+
+        # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
+
+        self._connection = (
+            (
+                EWS(
+                    Account(
+                        primary_smtp_address=primary_smtp_address,
+                        autodiscover=False,
+                        access_type=IMPERSONATION,
+                        config=Configuration(
+                            server=args.get(ctype + "_server"),
+                            credentials=OAuth2Credentials(
+                                client_id=args.get(ctype + "_client_id"),
+                                client_secret=args.get(ctype + "_client_secret"),
+                                tenant_id=args.get(ctype + "_tenant_id"),
+                                identity=Identity(smtp_address=primary_smtp_address),
                             ),
-                            default_timezone=EWSTimeZone("Europe/Berlin"),
-                        )
+                            auth_type=OAUTH2,
+                        ),
+                        default_timezone=EWSTimeZone("Europe/Berlin"),
                     )
                 )
             )
-
-            if self._args.fetch_no_cert_check:
-                self._connection._account.protocol.HTTP_ADAPTER_CLS = (
-                    ews_protocol.NoVerifyHTTPAdapter
+            if args.get(ctype + "_client_id")
+            else (
+                EWS(
+                    Account(
+                        primary_smtp_address=primary_smtp_address,
+                        autodiscover=False,
+                        access_type=DELEGATE,
+                        config=Configuration(
+                            server=args.get(ctype + "_server"),
+                            credentials=Credentials(
+                                args.get(ctype + "_username"),
+                                args.get(ctype + "_password"),
+                            ),
+                        ),
+                        default_timezone=EWSTimeZone("Europe/Berlin"),
+                    )
                 )
-            self._connection._account.protocol.TIMEOUT = self._args.connect_timeout
+            )
+        )
 
-        assert self._connection is None
-        try:
-            {
-                "POP3": _connect_pop3,
-                "IMAP": _connect_imap,
-                "EWS": _connect_ews,
-            }[self._args.fetch_protocol]()
-        except Exception as exc:
-            raise ConnectError(f"Failed to connect to {self._args.fetch_server}: {exc}")
+        if args.get(ctype + "_no_cert_check"):
+            self._connection._account.protocol.HTTP_ADAPTER_CLS = ews_protocol.NoVerifyHTTPAdapter
+        self._connection._account.protocol.TIMEOUT = args.get("connect_timeout")
 
     def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
@@ -591,6 +628,65 @@ class Mailbox:
         elif self.protocol() == "EWS":
             self._connection.close()
 
+    def _send_mail_smtp(self, args: Args, now: int, key: int) -> tuple[str, MailID]:
+        """Send an email with provided content using SMTP and provided credentials"""
+        mail = email.mime.text.MIMEText("")
+        mail["From"] = args.mail_from
+        mail["To"] = args.mail_to
+        mail["Subject"] = "%s %d %d" % (args.subject, now, key)
+        mail["Date"] = email.utils.formatdate(localtime=True)
+
+        with smtplib.SMTP(
+            args.send_server, args.send_port, timeout=args.connect_timeout
+        ) as connection:
+            if args.send_tls:
+                connection.starttls()
+            if args.send_username:
+                connection.login(args.send_username, args.send_password)
+            connection.sendmail(args.mail_from, args.mail_to, mail.as_string())
+            connection.quit()
+            return "%d-%d" % (now, key), (now, key)
+
+    def _send_mail_ews(self, args: Args, now: int, key: int) -> tuple[str, MailID]:
+        """Send an email with provided content using EWS and provided oauth"""
+        m = EWSMessage(
+            account=self._connection._account,
+            subject="%s %d %d" % (args.subject, now, key),
+            author=args.mail_from,
+            to_recipients=[args.mail_to],
+        )
+        m.send()
+        return "%d-%d" % (now, key), (now, key)
+
+    def send_mail(self, args: Args) -> tuple[str, MailID]:
+        """Send an email with provided content using either SMTP or EWS and provided credentials/oauth.
+        This function just manages exceptions for _send_mail_smtp() or _send_mail_ews()"""
+        now = int(time.time())
+        key = random.randint(1, 1000)
+
+        try:
+            if args.send_protocol == "SMTP":
+                return self._send_mail_smtp(args, now, key)
+            if args.send_protocol == "EWS":
+                return self._send_mail_ews(args, now, key)
+            raise NotImplementedError(f"Sending mails is not implemented for {args.send_protocol}")
+        except smtplib.SMTPAuthenticationError as exc:
+            if exc.smtp_code == 530:
+                raise SendMailError(
+                    "Could not login to SMTP server. Looks like you have to use the --smtp-tls flag."
+                ) from exc
+            if exc.smtp_code == 535:
+                raise SendMailError(
+                    "Could not login to SMTP server. Looks like you provided the wrong credentials."
+                ) from exc
+            raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
+        except smtplib.SMTPRecipientsRefused as exc:
+            raise SendMailError(
+                "Could not send email. Maybe you've sent too many mails? (%r)." % exc
+            ) from exc
+        except Exception as exc:
+            raise SendMailError("Failed to send mail: %r" % exc) from exc
+
 
 def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
     protocols = {"IMAP", "POP3", "EWS"}
@@ -708,6 +804,12 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         if args.fetch_protocol == "IMAP"
         else (443 if args.fetch_tls else 80)  # HTTP / REST (e.g. EWS)
     )
+
+    if "send_protocol" in args:  # if sending is configured
+        args.send_port = args.send_port or (
+            25 if args.send_protocol == "SMTP" else (443 if args.send_tls else 80)
+        )
+
     return args
 
 

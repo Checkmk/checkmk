@@ -5,6 +5,13 @@
 def main() {
     def docker_args = "${mount_reference_repo_dir}";
 
+    def target_path = "/home/mkde/all_werks_v2.json"
+    def targets_credentials = [
+        [env.WEB_STAGING, "web-staging"],
+        ["checkmk.com", "checkmk-deploy"],
+        ["customer.checkmk.com", "customer-deploy"]
+    ]
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -48,46 +55,22 @@ def main() {
         )
     }
 
-    stage("Update werks on web staging") {
-        withCredentials([
-            sshUserPrivateKey(credentialsId: 'web-staging', keyFileVariable: 'webstaging', usernameVariable: 'user')
-        ]) {
-            sh """
+    targets_credentials.each{target_credential ->
+        def target = target_credential[0];
+        def credentials_id = targets_credentials[1];
+
+        stage("Update werks on ${target}") {
+            withCredentials([
+                sshUserPrivateKey(credentialsId: credentials_id, keyFileVariable: 'keyfile', usernameVariable: 'user')
+            ]) {
+                sh """
                 rsync --verbose \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${webstaging} -p ${WEB_STAGING_PORT}" \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p ${WEB_STAGING_PORT}" \
                     ${WORKSPACE}/all_werks.json \
-                    ${user}@${WEB_STAGING_WERKS}all_werks_v2.json
+                    ${user}@${target}:${target_path}
             """
+            }
         }
-
-    }
-
-    stage("Update werks on checkmk.com") {
-        withCredentials([
-            sshUserPrivateKey(credentialsId: 'checkmk-deploy', keyFileVariable: 'keyfile', usernameVariable: 'user')
-        ]) {
-            sh """
-                rsync --verbose \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p 52022" \
-                    ${WORKSPACE}/all_werks.json \
-                    ${user}@checkmk.com:/home/mkde/all_werks_v2.json
-            """
-        }
-
-    }
-
-    stage("Update werks on customer.checkmk.com") {
-        withCredentials([
-            sshUserPrivateKey(credentialsId: 'customer-deploy', keyFileVariable: 'keyfile', usernameVariable: 'user')
-        ]) {
-            sh """
-                rsync --verbose \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p 52022" \
-                    ${WORKSPACE}/all_werks.json \
-                    ${user}@customer.checkmk.com:/home/mkde/all_werks_v2.json
-            """
-        }
-
     }
 }
 return this;

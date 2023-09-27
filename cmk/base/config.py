@@ -4204,27 +4204,160 @@ def _boil_down_agent_rules(
     return boiled_down
 
 
-# TODO(sk): rework hierarchy - inheriting from the concrete class should be avoided. It;s not easy
 class CEEConfigCache(ConfigCache):
-    def _initialize_caches(self) -> None:
-        super()._initialize_caches()
-        self._initialize_host_config()
+    def __init__(self) -> None:
+        self.__rrd_config: dict[HostName, RRDConfig | None] = {}
+        self.__recuring_downtimes: dict[HostName, list[RecurringDowntime]] = {}
+        self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
+        self.__log_long_output: dict[HostName, bool] = {}
+        self.__state_translation: dict[HostName, dict] = {}
+        self.__smartping_settings: dict[HostName, dict] = {}
+        self.__lnx_remote_alert_handlers: dict[HostName, Sequence[Mapping[str, str]]] = {}
+        self.__rtc_secret: dict[HostName, str | None] = {}
+        self.__agent_config: dict[HostName, Mapping[str, Any]] = {}
+        super().__init__()
 
-    def _initialize_host_config(self) -> None:
-        # Keep CEEHostConfig instances created with the current configuration cache
-        # This can be ignored for now -- it only is used privately as a cache, so the
-        # contravariance is not a problem here.
-        self._host_configs: dict[HostName, CEEHostConfig] = {}
+    def invalidate_host_config(self) -> None:
+        super().invalidate_host_config()
+        self.__rrd_config.clear()
+        self.__recuring_downtimes.clear()
+        self.__flap_settings.clear()
+        self.__log_long_output.clear()
+        self.__state_translation.clear()
+        self.__smartping_settings.clear()
+        self.__lnx_remote_alert_handlers.clear()
+        self.__rtc_secret.clear()
+        self.__agent_config.clear()
 
-    def make_cee_host_config(self, hostname: HostName) -> CEEHostConfig:
-        """Returns a CEEHostConfig instance for the given host
+    def rrd_config(self, host_name: HostName) -> RRDConfig | None:
+        def _rrd_config() -> RRDConfig | None:
+            entries = self.ruleset_matcher.get_host_values(host_name, cmc_host_rrd_config)
+            return entries[0] if entries else None
 
-        It lazy initializes the host config object and caches the objects during the livetime
-        of the ConfigCache."""
         with contextlib.suppress(KeyError):
-            return self._host_configs[hostname]
+            return self.__rrd_config[host_name]
 
-        return self._host_configs.setdefault(hostname, CEEHostConfig(self, hostname))
+        return self.__rrd_config.setdefault(host_name, _rrd_config())
+
+    def recurring_downtimes(self, host_name: HostName) -> list[RecurringDowntime]:
+        def _impl() -> list[RecurringDowntime]:
+            return self.ruleset_matcher.get_host_values(
+                host_name,
+                host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+
+        with contextlib.suppress(KeyError):
+            return self.__recuring_downtimes[host_name]
+
+        return self.__recuring_downtimes.setdefault(host_name, _impl())
+
+    def flap_settings(self, host_name: HostName) -> tuple[float, float, float]:
+        def _impl() -> tuple[float, float, float]:
+            values = self.ruleset_matcher.get_host_values(
+                host_name,
+                cmc_host_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+            return (
+                values[0] if values else cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+
+        with contextlib.suppress(KeyError):
+            return self.__flap_settings[host_name]
+
+        return self.__flap_settings.setdefault(host_name, _impl())
+
+    def log_long_output(self, host_name: HostName) -> bool:
+        def _impl() -> bool:
+            entries = self.ruleset_matcher.get_host_values(
+                host_name,
+                cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+            return entries[0] if entries else False
+
+        with contextlib.suppress(KeyError):
+            return self.__log_long_output[host_name]
+
+        return self.__log_long_output.setdefault(host_name, _impl())
+
+    def state_translation(self, host_name: HostName) -> dict:
+        def _impl() -> dict:
+            entries = self.ruleset_matcher.get_host_values(
+                host_name,
+                host_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+
+            spec: dict[object, object] = {}
+            for entry in entries[::-1]:
+                spec |= entry
+            return spec
+
+        with contextlib.suppress(KeyError):
+            return self.__state_translation[host_name]
+
+        return self.__state_translation.setdefault(host_name, _impl())
+
+    def smartping_settings(self, host_name: HostName) -> dict:
+        def _impl() -> dict:
+            settings = {"timeout": 2.5}
+            settings |= self.ruleset_matcher.get_host_merged_dict(
+                host_name,
+                cmc_smartping_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
+            return settings
+
+        with contextlib.suppress(KeyError):
+            return self.__smartping_settings[host_name]
+
+        return self.__smartping_settings.setdefault(host_name, _impl())
+
+    def lnx_remote_alert_handlers(self, host_name: HostName) -> Sequence[Mapping[str, str]]:
+        def _impl() -> Sequence[Mapping[str, str]]:
+            default: Sequence[RuleSpec[Mapping[str, str]]] = []
+            return self.ruleset_matcher.get_host_values(
+                host_name, agent_config.get("lnx_remote_alert_handlers", default)
+            )
+
+        with contextlib.suppress(KeyError):
+            return self.__lnx_remote_alert_handlers[host_name]
+
+        return self.__lnx_remote_alert_handlers.setdefault(host_name, _impl())
+
+    def rtc_secret(self, host_name: HostName) -> str | None:
+        def _impl() -> str | None:
+            default: Sequence[RuleSpec[object]] = []
+            if not (
+                settings := self.ruleset_matcher.get_host_values(
+                    host_name, agent_config.get("real_time_checks", default)
+                )
+            ):
+                return None
+            match settings[0]["encryption"]:
+                case ("disabled", None):
+                    return None
+                case ("enabled", password_spec):
+                    return password_store.extract(password_spec)
+                case unknown_value:
+                    raise ValueError(unknown_value)
+
+        with contextlib.suppress(KeyError):
+            return self.__rtc_secret[host_name]
+
+        return self.__rtc_secret.setdefault(host_name, _impl())
+
+    def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
+        def _impl() -> Mapping[str, Any]:
+            return {
+                **_boil_down_agent_rules(
+                    defaults=default,
+                    rulesets=self.matched_agent_config_entries(host_name),
+                ),
+                "is_ipv6_primary": (self.default_address_family(host_name) is socket.AF_INET6),
+            }
+
+        with contextlib.suppress(KeyError):
+            return self.__agent_config[host_name]
+
+        return self.__agent_config.setdefault(host_name, _impl())
 
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4355,97 +4488,3 @@ class CEEConfigCache(ConfigCache):
             ("agent_encryption", agent_encryption),
             ("agent_exclude_sections", agent_exclude_sections),
         ]
-
-
-class CEEHostConfig:
-    def __init__(self, config_cache: CEEConfigCache, hostname: HostName) -> None:
-        self.hostname: Final = hostname
-        self._config_cache: Final = config_cache
-
-    @property
-    def rrd_config(self) -> RRDConfig | None:
-        entries = self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname, cmc_host_rrd_config
-        )
-        return entries[0] if entries else None
-
-    @property
-    def recurring_downtimes(self) -> list[RecurringDowntime]:
-        return self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname,
-            host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-
-    @property
-    def flap_settings(self) -> tuple[float, float, float]:
-        values = self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname,
-            cmc_host_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-        return (
-            values[0] if values else cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-
-    @property
-    def log_long_output(self) -> bool:
-        entries = self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname,
-            cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-        return entries[0] if entries else False
-
-    @property
-    def state_translation(self) -> dict:
-        entries = self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname,
-            host_state_translation,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-
-        spec: dict[object, object] = {}
-        for entry in entries[::-1]:
-            spec |= entry
-        return spec
-
-    @property
-    def smartping_settings(self) -> dict:
-        settings = {"timeout": 2.5}
-        settings |= self._config_cache.ruleset_matcher.get_host_merged_dict(
-            self.hostname,
-            cmc_smartping_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        )
-        return settings
-
-    @property
-    def lnx_remote_alert_handlers(self) -> Sequence[Mapping[str, str]]:
-        default: Sequence[RuleSpec[Mapping[str, str]]] = []
-        return self._config_cache.ruleset_matcher.get_host_values(
-            self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
-        )
-
-    def rtc_secret(self) -> str | None:
-        default: Sequence[RuleSpec[object]] = []
-        if not (
-            settings := self._config_cache.ruleset_matcher.get_host_values(
-                self.hostname, agent_config.get("real_time_checks", default)
-            )
-        ):
-            return None
-        match settings[0]["encryption"]:
-            case ("disabled", None):
-                return None
-            case ("enabled", password_spec):
-                return password_store.extract(password_spec)
-            case unknown_value:
-                raise ValueError(unknown_value)
-
-    def agent_config(self, default: Mapping[str, Any]) -> Mapping[str, Any]:
-        assert isinstance(self._config_cache, CEEConfigCache)
-        return {
-            **_boil_down_agent_rules(
-                defaults=default,
-                rulesets=self._config_cache.matched_agent_config_entries(self.hostname),
-            ),
-            "is_ipv6_primary": (
-                self._config_cache.default_address_family(self.hostname) is socket.AF_INET6
-            ),
-        }

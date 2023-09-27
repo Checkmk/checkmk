@@ -44,10 +44,15 @@ class CheckParams(TypedDict):
 
 
 def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:
+    def _sanitize_last_sync(last_sync: str) -> float:
+        # Some agent outputs may provide lines like:
+        # ['"JOB-NAME"', '1695809510,31277', 'Running']
+        return float(last_sync.replace(",", "."))
+
     return {
         name: CDPJob(
             name,
-            None if last_sync == "null" else time.time() - float(last_sync),
+            None if last_sync == "null" else time.time() - _sanitize_last_sync(last_sync),
             CDPState(state),
         )
         for name, last_sync, state in string_table

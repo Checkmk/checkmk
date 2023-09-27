@@ -572,7 +572,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         hostname: HostName,
         section_store: SectionStore[AgentRawDataSection],
         *,
-        check_interval: int,
+        check_interval: float,
         keep_outdated: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
@@ -582,7 +582,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         super().__init__()
         self.hostname: Final = hostname
         # Transform to seconds and give the piggybacked host a little bit more time
-        self.cache_piggybacked_data_for: Final = int(1.5 * 60 * check_interval)
+        self.cache_piggybacked_data_for: Final = int(1.5 * check_interval)
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation

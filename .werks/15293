@@ -1,0 +1,19 @@
+Title: mk_oracle: fix custom sql sid matching
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1695821082
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Configuration variable `$SQLS_SIDS` can be used to define a comma seperated
+list of sids for which the custom sql is executed.
+
+Before this werk the custom sql was executed if the sid was a substring of one
+of the elements of the list in `$SQLS_SIDS`.
+
+Now custom sql is only executed if the sid is equal to the whole element
+provided in `$SQLS_SIDS`.
+

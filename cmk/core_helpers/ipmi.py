@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from six import ensure_binary
 
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
@@ -193,6 +193,8 @@ class IPMIFetcher(AgentFetcher):
         self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:
             firmware_entries = self._command.get_firmware()
+        except MKTimeout:
+            raise
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
@@ -216,6 +218,8 @@ class IPMIFetcher(AgentFetcher):
         self._logger.debug("Fetching inventory information via UDP from %s:623", self._command.bmc)
         try:
             inventory_entries = self._command.get_inventory_descriptions()
+        except MKTimeout:
+            raise
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch inventory information: %r", e)
             self._logger.debug("Exception", exc_info=True)

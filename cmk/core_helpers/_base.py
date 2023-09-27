@@ -91,6 +91,8 @@ class Fetcher(Generic[TRawData], abc.ABC):
         """Return the data from the source, either cached or from IO."""
         try:
             return result.OK(self._fetch(mode))
+        except MKTimeout:
+            raise
         except Exception as exc:
             return result.Error(exc)
 
@@ -113,6 +115,8 @@ class Fetcher(Generic[TRawData], abc.ABC):
         try:
             self.open()
             raw_data = self._fetch_from_io(mode)
+        except MKTimeout:
+            raise
         except MKFetcherError:
             raise
         except Exception as exc:

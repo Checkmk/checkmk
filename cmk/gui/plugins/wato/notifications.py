@@ -1668,7 +1668,7 @@ class NotificationParameterPushover(NotificationParameter):
                         ),
                         size=40,
                         allow_empty=False,
-                        regex="[a-zA-Z0-9]{30}",
+                        regex="^[a-zA-Z0-9]{30,40}$",
                     ),
                 ),
                 (
@@ -1682,7 +1682,7 @@ class NotificationParameterPushover(NotificationParameter):
                         ),
                         size=40,
                         allow_empty=False,
-                        regex="[a-zA-Z0-9]{30}",
+                        regex="^[a-zA-Z0-9]{30,40}$",
                     ),
                 ),
                 (

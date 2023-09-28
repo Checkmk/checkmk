@@ -27,7 +27,6 @@ RUN yum -y --enablerepo=crb  makecache && yum repolist --enablerepo=crb \
 RUN yum -y makecache \
     && yum -y --enablerepo=crb install \
     bind-utils \
-    curl \
     curl-devel \
     expat-devel \
     flex \

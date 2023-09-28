@@ -190,9 +190,9 @@ def _regex_pattern(subject: str) -> re.Pattern:
 
 
 def subject_and_received_timestamp_from_msg(
-    msg: Message, inbox_protocol: str, now: int
+    msg: Message, protocol: str, now: int
 ) -> tuple[str, int]:
-    if inbox_protocol in {"POP3", "IMAP"}:
+    if protocol in {"POP3", "IMAP"}:
         assert isinstance(msg, POPIMAPMessage)
         subject = msg.get("Subject", "")
 
@@ -202,7 +202,7 @@ def subject_and_received_timestamp_from_msg(
         else:
             # use current time as fallback where no Received header could be found
             rx_ts = now
-    elif inbox_protocol == "EWS":
+    elif protocol == "EWS":
         assert isinstance(msg, EWSMessage)
         subject = msg.subject
 
@@ -211,7 +211,7 @@ def subject_and_received_timestamp_from_msg(
         except Exception:
             rx_ts = now
     else:
-        raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
+        raise NotImplementedError(f"Fetching mails is not implemented for {protocol}")
 
     return subject, rx_ts
 
@@ -220,7 +220,7 @@ def fetch_mail_timestamps(
     args: Args,
     mails: MailMessages,
     expected_mails: MailDict,
-    inbox_protocol: str,
+    protocol: str,
     now: int = int(time.time()),
 ) -> Tuple[MailDict, MailDict]:
     """Fetch mails and return tuples of dicts containing timestamps of mails which have been
@@ -235,7 +235,7 @@ def fetch_mail_timestamps(
         pattern = _regex_pattern(args.subject)
 
         for index, msg in mails.items():
-            msg_subject, rx_ts = subject_and_received_timestamp_from_msg(msg, inbox_protocol, now)
+            msg_subject, rx_ts = subject_and_received_timestamp_from_msg(msg, protocol, now)
 
             matches = pattern.match(msg_subject)
             if not matches:
@@ -346,7 +346,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             args,
             fetched_mail_messages,
             expected_mails,
-            mailbox.inbox_protocol(),
+            mailbox.protocol(),
         )
         logging.debug("obsolete_mails: %r", obsolete_mails)
         logging.debug("fetched_mails: %r", fetched_mails)

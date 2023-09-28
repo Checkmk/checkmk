@@ -26,10 +26,7 @@ def instance_method_lru_cache(
     def wrap(f: Callable[P, R]) -> Callable[P, R]:
         @wraps(f)
         def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
-            # We can use the following when https://github.com/python/mypy/pull/13459 is release (mypy 0.980)
-            # self, *rest = args
-            self = args[0]
-            rest = args[1:]
+            self, *rest = args
             cache_orig = lru_cache(maxsize, typed)(f)
             instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined] # pylint: disable=unnecessary-dunder-call
             setattr(self, f.__name__, instance_cache)

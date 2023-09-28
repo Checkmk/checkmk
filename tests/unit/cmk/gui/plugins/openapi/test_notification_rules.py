@@ -21,6 +21,7 @@ from cmk.gui.plugins.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    API_PushOverData,
     API_ServiceNowData,
     APIConditions,
     APIContactSelection,
@@ -1331,6 +1332,57 @@ def test_update_notification_method(
         rule_config=config,
     )
     assert r2.json["extensions"] == {"rule_config": config}
+
+
+invalid_pushover_keys = [
+    "TwentyNineCharacters123456789",
+    "FortyOneCharacters12345678901234567899012",
+    "Between30&40But_Not_all_Letters/Numbers",
+]
+
+
+@managedtest
+@pytest.mark.parametrize("invalid_key", invalid_pushover_keys)
+def test_pushover_key_regex(
+    clients: ClientRegistry,
+    invalid_key: str,
+) -> None:
+    push_over_plugin: API_PushOverData = {
+        "plugin_name": "pushover",
+        "api_key": invalid_key,
+        "user_group_key": invalid_key,
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": "http://http_proxy_test_url/here",
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "environment"},
+        },
+        "priority": {
+            "state": "enabled",
+            "value": "high",
+        },
+        "sound": {
+            "state": "enabled",
+            "value": "cosmic",
+        },
+    }
+
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": "create_notification_with_the_following_parameters",
+        "plugin_params": push_over_plugin,
+    }
+
+    r = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+    r.assert_status_code(400)
+    assert r.json["fields"]["rule_config"]["notification_method"]["notify_plugin"][
+        "plugin_params"
+    ] == {
+        "api_key": [f"'{invalid_key}' does not match pattern '^[a-zA-Z0-9]{{30,40}}$'."],
+        "user_group_key": [f"'{invalid_key}' does not match pattern '^[a-zA-Z0-9]{{30,40}}$'."],
+    }
 
 
 service_now: API_ServiceNowData = {

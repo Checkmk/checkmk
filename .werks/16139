@@ -1,0 +1,27 @@
+Title: notifications: adjust regex pattern
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1695917741
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issues found by the QA team with regards to
+the regex pattern we use to match valid PushOverPlugin api_keys
+and also the user group key. Previously we used
+
+[a-zA-Z0-9]{30}
+
+which will match any string that has 30 or more characters and
+numbers. This is partial match.
+
+We now do the following
+
+^[a-zA-Z0-9]{30,40}$
+
+which will match the whole string.  We only allow characters
+and numbers with the whole string having to be of length min
+30 and max 40 characters.
+

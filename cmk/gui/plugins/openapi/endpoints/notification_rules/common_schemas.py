@@ -1948,13 +1948,13 @@ class PushOverPluginBase(PluginName):
         required=True,
         example="azGDORePK8gMaC0QOYAMyEEuzJnyUi",
         description="You need to provide a valid API key to be able to send push notifications using Pushover. Register and login to Pushover, thn create your Check_MK installation as application and obtain your API key",
-        pattern="[a-zA-Z0-9]{30}",
+        pattern="^[a-zA-Z0-9]{30,40}$",
     )
     user_group_key = fields.String(
         required=True,
         example="azGDORePK8gMaC0QOYAMyEEuzJnyUi",
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
-        pattern="[a-zA-Z0-9]{30}",
+        pattern="^[a-zA-Z0-9]{30,40}$",
     )
 
 

@@ -100,6 +100,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 
 COPY scripts/.bazelversion /opt/
 COPY scripts/install-iwyu.sh /opt/
+COPY scripts/Check_MK-pubkey.gpg /opt/
 
 # used by lots of scripts (has to be copied to `scripts/` before)
 COPY scripts/defines.make /opt/

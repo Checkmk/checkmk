@@ -245,7 +245,7 @@ def _aggregate_check_table_services(
         yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
-    if config_cache.is_cluster(host_name):
+    if host_name in config_cache.all_configured_clusters():
         yield from (s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s))
 
     yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
@@ -428,7 +428,7 @@ def ip_address_of(
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
-        if config_cache.is_cluster(host_name):
+        if host_name in config_cache.all_configured_clusters():
             return HostAddress("")
 
         _failed_ip_lookups.append(host_name)
@@ -2109,9 +2109,6 @@ class ConfigCache:
         ] = {}
         self.initialize()
 
-    def is_cluster(self, host_name: HostName) -> bool:
-        return host_name in self.all_configured_clusters()
-
     def initialize(self) -> ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
@@ -2557,7 +2554,7 @@ class ConfigCache:
 
     def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
         def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
-            if self.is_cluster(host_name):
+            if host_name in self.all_configured_clusters():
                 return HWSWInventoryParameters.from_raw({})
 
             # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
@@ -2726,7 +2723,10 @@ class ConfigCache:
                 return False
 
             # for clusters with an auto-piggyback tag check if nodes have piggyback data
-            if self.is_cluster(host_name) and (nodes := self.nodes_of(host_name)) is not None:
+            if (
+                host_name in self.all_configured_clusters()
+                and (nodes := self.nodes_of(host_name)) is not None
+            ):
                 return any(self._has_piggyback_data(node) for node in nodes)
 
             # Legacy automatic detection
@@ -3833,7 +3833,7 @@ class ConfigCache:
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
             attrs = self.get_host_attributes(host_name)
-            if self.is_cluster(host_name):
+            if host_name in self.all_configured_clusters():
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
                 attrs.setdefault("alias", f'cluster of {", ".join(parents_list)}')

@@ -123,7 +123,7 @@ class _Builder:
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
 
-        assert not self.config_cache.is_cluster(self.host_name)
+        assert host_name not in self.config_cache.all_configured_clusters()
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
@@ -346,7 +346,7 @@ def make_sources(
     file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    if config_cache.is_cluster(host_name):
+    if host_name in config_cache.all_configured_clusters():
         # Cluster hosts do not have any actual data sources
         # Instead all data is provided by the nodes
         return ()

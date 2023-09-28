@@ -473,7 +473,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
     try:
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-        if config_cache.is_cluster(hostname):
+        if hostname in config_cache.all_configured_clusters():
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
@@ -1669,7 +1669,7 @@ def mode_check_discovery(
         host_name=hostname,
         service_name="Check_MK Discovery",
         plugin_name="discover",
-        is_cluster=config_cache.is_cluster(hostname),
+        is_cluster=hostname in config_cache.all_configured_clusters(),
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
@@ -1679,7 +1679,7 @@ def mode_check_discovery(
         with plugin_contexts.current_host(hostname):
             check_result = execute_check_discovery(
                 hostname,
-                is_cluster=config_cache.is_cluster(hostname),
+                is_cluster=hostname in config_cache.all_configured_clusters(),
                 cluster_nodes=config_cache.nodes_of(hostname) or (),
                 params=config_cache.discovery_check_parameters(hostname),
                 fetched=((f[0], f[1]) for f in fetched),
@@ -1968,7 +1968,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     for hostname in sorted(
         _preprocess_hostnames(
             frozenset(hostnames),
-            is_cluster=config_cache.is_cluster,
+            is_cluster=lambda hn: hn in config_cache.all_configured_clusters(),
             resolve_nodes=lambda hn: config_cache.nodes_of(hn) or (),
             config_cache=config_cache,
             only_host_labels="only-host-labels" in options,
@@ -2134,7 +2134,7 @@ def mode_check(
         host_name=hostname,
         service_name="Check_MK",
         plugin_name="mk",
-        is_cluster=config_cache.is_cluster(hostname),
+        is_cluster=hostname in config_cache.all_configured_clusters(),
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
@@ -2359,7 +2359,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         section.section_step("Inventorizing")
         try:
             previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
-            if config_cache.is_cluster(hostname):
+            if hostname in config_cache.all_configured_clusters():
                 check_result = inventory.inventorize_cluster(
                     config_cache.nodes_of(hostname) or (),
                     parameters=parameters,
@@ -2451,7 +2451,7 @@ def _execute_active_check_inventory(
     )
     previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
 
-    if config_cache.is_cluster(host_name):
+    if host_name in config_cache.all_configured_clusters():
         result = inventory.inventorize_cluster(
             config_cache.nodes_of(host_name) or (),
             parameters=parameters,
@@ -2566,7 +2566,7 @@ def mode_inventory_as_check(
         host_name=hostname,
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",
-        is_cluster=config_cache.is_cluster(hostname),
+        is_cluster=hostname in config_cache.all_configured_clusters(),
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )

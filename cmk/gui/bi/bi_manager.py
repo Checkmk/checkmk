@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-import cmk.gui.watolib.utils as watolib_utils
+from cmk.utils.paths import default_config_dir
+
 from cmk.gui import sites
 from cmk.gui.i18n import _
 
@@ -26,7 +27,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib_utils.multisite_dir()) / "bi_config.bi")
+        return str(Path(default_config_dir) / "multisite.d" / "wato" / "bi_config.bi")
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
@@ -42,7 +43,6 @@ def bi_livestatus_query(
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,
 ) -> LivestatusResponse:
-
     with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
         try:
             auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"

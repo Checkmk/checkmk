@@ -1,0 +1,18 @@
+Title: Check plugin logwatch_ec: Improve detection of missing log files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682275414
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously the Logwatch Event Console Forwarding service would not report log files as missing that are marked as such in the agent output:
+F+:
+<<<logwatch>>>
+[[[logfile:missing]]]
+F-:
+This affected logfiles that were explicitly configured to be monitored, as opposed to configurations that capture multiple logfiles at once.
+With this werk this has been fixed.
+

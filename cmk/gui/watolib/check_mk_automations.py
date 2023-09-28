@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,11 +10,16 @@ from livestatus import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import HostLabel
+from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import DiscoveredHostLabelsDict, SetAutochecksTable
+from cmk.automations.results import SetAutochecksTable
 
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
@@ -115,39 +120,77 @@ def _deserialize(
         )
 
 
-def discovery(
-    site_id: SiteId,
+def local_discovery(
     mode: str,
-    flags: Iterable[str],
     host_names: Iterable[HostName],
     *,
+    scan: bool,
+    raise_errors: bool,
     timeout: int | None = None,
     non_blocking_http: bool = False,
-) -> results.DiscoveryResult:
-    return _deserialize(
-        _automation_serialized(
-            "inventory",
-            siteid=site_id,
-            args=[*flags, mode, *host_names],
-            timeout=timeout,
-            non_blocking_http=non_blocking_http,
-        ),
-        results.DiscoveryResult,
+) -> results.ServiceDiscoveryResult:
+    return discovery(
+        None,
+        mode,
+        host_names,
+        scan=scan,
+        raise_errors=raise_errors,
+        timeout=timeout,
+        non_blocking_http=non_blocking_http,
     )
 
 
-def try_discovery(
-    site_id: SiteId,
-    flags: Iterable[str],
-    host_name: HostName,
-) -> results.TryDiscoveryResult:
+def discovery(
+    site_id: SiteId | None,
+    mode: str,
+    host_names: Iterable[HostName],
+    *,
+    scan: bool,
+    raise_errors: bool,
+    timeout: int | None = None,
+    non_blocking_http: bool = False,
+) -> results.ServiceDiscoveryResult:
     return _deserialize(
         _automation_serialized(
-            "try-inventory",
+            "service-discovery",
             siteid=site_id,
-            args=[*flags, host_name],
+            args=[
+                *(("@scan",) if scan else ()),
+                *(("@raiseerrors",) if raise_errors else ()),
+                mode,
+                *host_names,
+            ],
+            timeout=timeout,
+            non_blocking_http=non_blocking_http,
         ),
-        results.TryDiscoveryResult,
+        results.ServiceDiscoveryResult,
+    )
+
+
+def local_discovery_preview(
+    host_name: HostName,
+    *,
+    prevent_fetching: bool,
+    raise_errors: bool,
+) -> results.ServiceDiscoveryPreviewResult:
+    return _deserialize(
+        _automation_serialized(
+            "service-discovery-preview",
+            siteid=None,
+            args=[
+                *(("@nofetch",) if prevent_fetching else ()),
+                *(("@raiseerrors",) if raise_errors else ()),
+                host_name,
+            ],
+        ),
+        results.ServiceDiscoveryPreviewResult,
+    )
+
+
+def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
+    return _deserialize(
+        _automation_serialized("autodiscovery", siteid=site_id),
+        results.AutodiscoveryResult,
     )
 
 
@@ -170,14 +213,14 @@ def set_autochecks(
 def update_host_labels(
     site_id: SiteId,
     host_name: HostName,
-    host_labels: DiscoveredHostLabelsDict,
+    host_labels: Sequence[HostLabel],
 ) -> results.UpdateHostLabelsResult:
     return _deserialize(
         _automation_serialized(
             "update-host-labels",
             siteid=site_id,
             args=[host_name],
-            indata=host_labels,
+            indata={label.name: label.to_dict() for label in host_labels},
         ),
         results.UpdateHostLabelsResult,
     )
@@ -285,6 +328,12 @@ def get_check_information() -> results.GetCheckInformationResult:
         _automation_serialized("get-check-information"),
         results.GetCheckInformationResult,
     )
+
+
+@request_memoize()
+def get_check_information_cached() -> Mapping[CheckPluginName, Mapping[str, str]]:
+    raw_check_dict = get_check_information().plugin_infos
+    return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
 def get_section_information() -> results.GetSectionInformationResult:

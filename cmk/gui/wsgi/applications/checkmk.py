@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -17,8 +17,9 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
+from cmk.utils.exceptions import MKException
 
-from cmk.gui import http, pages, sites
+from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
@@ -26,7 +27,6 @@ from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
     MKConfigError,
-    MKGeneralException,
     MKNotFound,
     MKUnauthenticatedException,
     MKUserError,
@@ -81,31 +81,6 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     return _call_noauth
 
 
-def get_and_wrap_page(script_name: str | None) -> Callable[[], Response]:
-    """Get the page handler and wrap authentication logic when needed.
-
-    For all "noauth" page handlers the wrapping part is skipped. In the `ensure_authentication`
-    wrapper everything needed to make a logged-in request is listed.
-    """
-    if script_name is None:
-        return _page_not_found
-
-    _handler = pages.get_page_handler(script_name)
-    if _handler is None:
-        # Some pages do skip authentication. This is done by adding
-        # noauth: to the page handler, e.g. "noauth:run_cron" : ...
-        # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
-        #       the now existing default automation user.
-        _handler = pages.get_page_handler("noauth:" + script_name)
-        if _handler is not None:
-            return _noauth(_handler)
-
-    if _handler is None:
-        return _page_not_found
-
-    return ensure_authentication(_handler)
-
-
 def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
@@ -153,15 +128,6 @@ def _render_exception(e: Exception, title: str) -> Response:
     return response
 
 
-def default_response_headers(req: http.Request) -> dict[str, str]:
-    headers = {
-        # Disable caching for all our pages as they are mostly dynamically generated,
-        # user related and are required to be up-to-date on every refresh
-        "Cache-Control": "no-cache",
-    }
-    return headers
-
-
 _OUTPUT_FORMAT_MIME_TYPES = {
     "json": "application/json",
     "json_export": "application/json",
@@ -188,7 +154,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 
 
 class CheckmkApp(AbstractWSGIApp):
-    """The Check_MK GUI WSGI entry point"""
+    """The Checkmk GUI WSGI entry point"""
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
@@ -196,25 +162,30 @@ class CheckmkApp(AbstractWSGIApp):
             return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(
+def _process_request(  # pylint: disable=too-many-branches
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
-) -> WSGIResponse:  # pylint: disable=too-many-branches
+) -> WSGIResponse:
     resp: Response
     try:
         file_name = requested_file_name(request, on_error="raise")
-        page_handler = get_and_wrap_page(file_name)
+
+        if file_name is None:
+            page_handler = _page_not_found
+        elif _handler := pages.get_page_handler(file_name):
+            page_handler = ensure_authentication(_handler)
+        elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
+            page_handler = _noauth(_handler)
+        else:
+            page_handler = _page_not_found
+
         resp = page_handler()
 
     except MKNotFound:
         resp = _page_not_found()
 
     except HTTPRedirect as exc:
-        # This can't be a new Response as it can have already cookies set/deleted by the pages.
-        # We can't return the response because the Exception has been raised instead.
-        # TODO: Remove all HTTPRedirect exceptions from all pages. Making the Exception a subclass
-        #       of Response may also work as it can then be directly returned from here.
         return flask.redirect(exc.url)(environ, start_response)
 
     except FinalizeRequest as exc:
@@ -231,6 +202,9 @@ def _process_request(
     except MKUserError as e:
         resp = _render_exception(e, title=_("Invalid user input"))
 
+    except MKUnauthenticatedException as e:
+        resp = _render_exception(e, title=_("Not authenticated"))
+
     except MKAuthException as e:
         resp = _render_exception(e, title=_("Permission denied"))
 
@@ -238,15 +212,11 @@ def _process_request(
         resp = _render_exception(e, title=_("Livestatus problem"))
         resp.status_code = http_client.BAD_GATEWAY
 
-    except MKUnauthenticatedException as e:
-        resp = _render_exception(e, title=_("Not authenticated"))
-        resp.status_code = http_client.UNAUTHORIZED
-
     except MKConfigError as e:
         resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except (MKGeneralException, cmk.utils.store.MKConfigLockTimeout) as e:
+    except MKException as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 
@@ -255,4 +225,5 @@ def _process_request(
         if debug:
             raise
 
+    resp.set_caching_headers()
     return resp(environ, start_response)

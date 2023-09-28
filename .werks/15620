@@ -1,0 +1,18 @@
+Title: <tt>check_http</tt>: Don't Crash with TypeError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685515100
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes a regression introduced in 2.2.0.
+
+If a user configured the option <tt>IP address family > Primary address family</tt> via the rule
+<tt>Check HTTP service</tt>, then the check would crash with
+
+C+:
+TypeError: 'NoneType' object is not subscriptable
+C-:

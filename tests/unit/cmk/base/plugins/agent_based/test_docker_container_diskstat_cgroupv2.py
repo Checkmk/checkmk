@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.diskstat import check_diskstat
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
@@ -97,6 +101,7 @@ def _split(string: str) -> StringTable:
     return [line.split(" ") for line in string.split("\n")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_docker_container_diskstat_cgroupv2() -> None:
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
@@ -132,32 +137,32 @@ def test_docker_container_diskstat_cgroupv2() -> None:
 def test_parse_docker_container_diskstat_cgroupv2() -> None:
     string_table = _split(AGENT_OUTPUT)
     assert parse_docker_container_diskstat_cgroupv2(string_table) == {
-        "dm-0": dict(
-            read_ios=353,
-            read_throughput=7094272,
-            write_ios=2166,
-            write_throughput=95592448,
-            timestamp=1614786439,
-        ),
-        "dm-1": dict(
-            read_ios=352,
-            read_throughput=7090176,
-            write_ios=2122,
-            write_throughput=95543296,
-            timestamp=1614786439,
-        ),
-        "dm-2": dict(
-            read_ios=1,
-            read_throughput=4096,
-            write_ios=12,
-            write_throughput=49152,
-            timestamp=1614786439,
-        ),
-        "nvme0n1": dict(
-            read_ios=353,
-            read_throughput=7094272,
-            write_ios=1,
-            write_throughput=0,
-            timestamp=1614786439,
-        ),
+        "dm-0": {
+            "read_ios": 353,
+            "read_throughput": 7094272,
+            "write_ios": 2166,
+            "write_throughput": 95592448,
+            "timestamp": 1614786439,
+        },
+        "dm-1": {
+            "read_ios": 352,
+            "read_throughput": 7090176,
+            "write_ios": 2122,
+            "write_throughput": 95543296,
+            "timestamp": 1614786439,
+        },
+        "dm-2": {
+            "read_ios": 1,
+            "read_throughput": 4096,
+            "write_ios": 12,
+            "write_throughput": 49152,
+            "timestamp": 1614786439,
+        },
+        "nvme0n1": {
+            "read_ios": 353,
+            "read_throughput": 7094272,
+            "write_ios": 1,
+            "write_throughput": 0,
+            "timestamp": 1614786439,
+        },
     }

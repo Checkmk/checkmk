@@ -1,4 +1,4 @@
-Title: checkpoint_vsx, checkpoint_vsx_connections, checkpoint_vsx.packets, checkpoint_vsx.status, checkpoint_vsx.traffic: New checks to monitor Checkpoint virtual systems
+Title: checkpoint_vsx, checkpoint_vsx_connections, checkpoint_vsx.packets, checkpoint_vsx.status, checkpoint_vsx.traffic: New checks to monitor Check Point virtual systems
 Class: feature
 Compatible: compat
 Component: checks
@@ -9,4 +9,4 @@ Level: 1
 Version: 2.0.0i1
 
 It is now possible to monitor connection usage, packet and byte rates, HA and
-SIC states and policy states of Checkpoint virtual systems.
+SIC states and policy states of Check Point virtual systems.

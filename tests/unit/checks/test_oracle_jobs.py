@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ import pytest
 from tests.testlib import Check
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 pytestmark = pytest.mark.checks
 
@@ -30,7 +30,7 @@ _broken_info = [
 )
 def test_oracle_jobs_discovery_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
-    assert list(check.run_discovery(info)) == []
+    assert not list(check.run_discovery(info))
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ def test_oracle_jobs_discovery_error(info: StringTable) -> None:
 )
 def test_oracle_jobs_check_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         check.run_check("DB19.SYS.JOB1", {}, info)
 
 

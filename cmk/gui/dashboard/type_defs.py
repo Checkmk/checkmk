@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, TypedDict
+from typing import Literal
 
-from cmk.gui.plugins.metrics.utils import GraphRenderOptions
-from cmk.gui.type_defs import FilterName, SingleInfos, VisualContext
+from typing_extensions import TypedDict
+
+from cmk.gui.type_defs import FilterName, GraphRenderOptions, SingleInfos, Visual, VisualContext
 from cmk.gui.valuespec import TimerangeValue
-from cmk.gui.visuals import Visual
 
 DashboardName = str
 DashletId = int

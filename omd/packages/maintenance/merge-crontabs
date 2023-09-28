@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 omd_config: dict[str, str] = {}
-exec(
+exec(  # nosec B102 # BNS:aee528
     Path(os.environ["OMD_ROOT"], "etc/omd/site.conf").read_text(),
     {},
     omd_config,

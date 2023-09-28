@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,31 +9,54 @@ import pytest
 
 from cmk.special_agents import agent_cisco_meraki
 
+_ORGANISATIONS = [
+    agent_cisco_meraki._Organisation(id_="123", name="org-name1"),
+    agent_cisco_meraki._Organisation(id_="456", name="org-name2"),
+    agent_cisco_meraki._Organisation(id_="789", name="org-name3"),
+]
 
-class FakeGetOrganisationIDsCache:
-    def get_live_data(self) -> Sequence[str]:
-        return ["123", "456", "789"]
+
+class FakeGetOrganisationsByIDCache:
+    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+        return _ORGANISATIONS
+
+
+class FakeGetOrganisationsCache:
+    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+        return _ORGANISATIONS
 
 
 class FakeOrganisations:
     def getOrganizations(self) -> Sequence[Mapping]:
         return [
-            {"organizationId": "123"},
-            {"organizationId": "456"},
+            {"id": "123"},
+            {"id": "456"},
         ]
 
     def getOrganizationLicensesOverview(self, organisation_id: str) -> Mapping | None:
-        return None if organisation_id == "789" else {"organizationId": organisation_id}
+        if organisation_id == "123":
+            return {
+                "status": "OK",
+                "expirationDate": "Jan 1, 2020 UTC",
+                "licensedDeviceCounts": {"MS": 100},
+            }
+        if organisation_id == "456":
+            return {
+                "status": "OK",
+                "expirationDate": "Jan 2, 2020 UTC",
+                "licensedDeviceCounts": {"MS": 200},
+            }
+        return None
 
     def getOrganizationDevices(self, organisation_id: str, total_pages: str) -> Sequence[Mapping]:
         if organisation_id == "123":
             return [
-                {"serial": "S123-1", "lanIp": "1.2.3.4"},
-                {"serial": "S123-2", "lanIp": "1.2.3.4"},
+                {"serial": "S123-1", "lanIp": "1.2.3.4", "name": "dev1"},
+                {"serial": "S123-2", "lanIp": "1.2.3.5", "name": "dev2"},
             ]
 
         if organisation_id == "456":
-            return [{"serial": "S456", "lanIp": "4.5.6.7"}]
+            return [{"serial": "S456", "lanIp": "1.2.3.6"}]
 
         return []
 
@@ -42,12 +65,12 @@ class FakeOrganisations:
     ) -> Sequence[Mapping]:
         if organisation_id == "123":
             return [
-                {"serial": "S123-1", "lanIp": "1.2.3.4", "status": "online"},
-                {"serial": "S123-2", "lanIp": "1.2.3.4", "status": "online"},
+                {"serial": "S123-1", "lanIp": "1.2.3.4", "name": "dev1", "status": "online"},
+                {"serial": "S123-2", "lanIp": "1.2.3.5", "name": "dev2", "status": "online"},
             ]
 
         if organisation_id == "456":
-            return [{"serial": "S456", "lanIp": "4.5.6.7", "status": "online"}]
+            return [{"serial": "S456", "lanIp": "1.2.3.6", "name": "dev3", "status": "online"}]
 
         return []
 
@@ -76,7 +99,34 @@ class FakeDashboard:
 @pytest.mark.parametrize(
     "args, expected_output_lines",
     [
-        ([], [""]),
+        (
+            [],
+            [
+                "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
+                '[{"expirationDate": "Jan 1, 2020 UTC", "licensedDeviceCounts": {"MS": 100}, '
+                '"organisation_id": "123", "organisation_name": "org-name1", "status": "OK"}, '
+                '{"expirationDate": "Jan 2, 2020 UTC", "licensedDeviceCounts": {"MS": 200}, '
+                '"organisation_id": "456", "organisation_name": "org-name2", "status": "OK"}]',
+                "<<<<dev1>>>>",
+                "<<<cisco_meraki_org_device_info:sep(0)>>>",
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
+                "<<<cisco_meraki_org_device_status:sep(0)>>>",
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
+                "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
+                '[{"readings": [], "serial": "S123-1"}]',
+                "<<<<>>>>",
+                "<<<<dev2>>>>",
+                "<<<cisco_meraki_org_device_info:sep(0)>>>",
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
+                "<<<cisco_meraki_org_device_status:sep(0)>>>",
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
+                "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
+                '[{"readings": [], "serial": "S123-2"}]',
+                "<<<<>>>>",
+            ],
+        ),
         (
             [
                 "--sections",
@@ -84,7 +134,10 @@ class FakeDashboard:
             ],
             [
                 "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
-                '[{"organizationId": "123"}, {"organizationId": "456"}]',
+                '[{"expirationDate": "Jan 1, 2020 UTC", "licensedDeviceCounts": {"MS": 100}, '
+                '"organisation_id": "123", "organisation_name": "org-name1", "status": "OK"}, '
+                '{"expirationDate": "Jan 2, 2020 UTC", "licensedDeviceCounts": {"MS": 200}, '
+                '"organisation_id": "456", "organisation_name": "org-name2", "status": "OK"}]',
             ],
         ),
         (
@@ -93,23 +146,19 @@ class FakeDashboard:
                 "device-statuses",
             ],
             [
-                "<<<<1.2.3.4>>>>",
+                "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1", "status": "online"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2", "status": "online"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
                 "<<<<>>>>",
-                "<<<<4.5.6.7>>>>",
+                "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456", "status": "online"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
                 "<<<<>>>>",
             ],
         ),
@@ -119,20 +168,19 @@ class FakeDashboard:
                 "sensor-readings",
             ],
             [
-                "<<<<1.2.3.4>>>>",
+                "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S123-1"}, {"readings": [], "serial": "S123-2"}]',
+                '[{"readings": [], "serial": "S123-1"}]',
                 "<<<<>>>>",
-                "<<<<4.5.6.7>>>>",
+                "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S456"}]',
+                '[{"readings": [], "serial": "S123-2"}]',
                 "<<<<>>>>",
             ],
         ),
@@ -164,8 +212,13 @@ def test_agent_cisco_meraki_main(
     )
     monkeypatch.setattr(
         agent_cisco_meraki,
-        "GetOrganisationIDsCache",
-        lambda a: FakeGetOrganisationIDsCache(),
+        "GetOrganisationsByIDCache",
+        lambda *args, **kwargs: FakeGetOrganisationsByIDCache(),
+    )
+    monkeypatch.setattr(
+        agent_cisco_meraki,
+        "GetOrganisationsCache",
+        lambda *args, **kwargs: FakeGetOrganisationsCache(),
     )
 
     agent_cisco_meraki.agent_cisco_meraki_main(

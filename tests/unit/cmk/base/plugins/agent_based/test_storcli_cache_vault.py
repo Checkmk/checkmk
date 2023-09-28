@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
@@ -133,13 +133,11 @@ def _get_section_no_cv() -> mcv.Section:
 
 
 def test_storcli_cache_vault_no_cv(section_no_cv: mcv.Section) -> None:
-
     assert not list(mcv.discover_storcli_cache_vault(section_no_cv))
     assert not list(mcv.check_storcli_cache_vault("/c0", section_no_cv))
 
 
 def test_storcli_cache_vault_discovery(section: mcv.Section) -> None:
-
     assert list(mcv.discover_storcli_cache_vault(section)) == [
         Service(item="/c0"),
     ]

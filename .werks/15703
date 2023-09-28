@@ -1,0 +1,25 @@
+Title: Linux agent updater - Fix missing libcrypt.so.1
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1689254463
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, when running the agent updater, either manually or automatically, it may crash immediately with error message:
+C+:
+Error loading Python lib '/tmp/_MEIc9TJOz/libpython3.7m.so.1.0': dlopen: libcrypt.so.1: cannot open shared object file: No such file or directory
+C-:
+
+Future versions of the agent updater will include the missing library.
+
+Technical background:<br>
+This happens on Linux systems that don't come with a <tt>libcrypt.so.1</tt> any longer.<br>
+The <tt>cmk-update-agent</tt> executable is supposed to include all needed libraries.<br>
+However, in this case, the build mechanism failed to find the linked library.
+
+If you ran into this problem, you will have to reinstall the Checkmk agent (including the agent updater)
+on affected hosts after updating your Checkmk site and baking agents.<br>
+

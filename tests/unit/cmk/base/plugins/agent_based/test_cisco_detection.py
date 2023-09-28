@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,9 +9,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.utils import evaluate_snmp_detection
+from cmk.snmplib import evaluate_snmp_detection
 
 
 @pytest.mark.parametrize(
@@ -79,7 +79,6 @@ def test_cisco_related_snmp_detection(
     detected: set[str],
     not_detected: set[str],
 ) -> None:
-
     for name in detected | not_detected:
         section = fix_register.snmp_sections.get(SectionName(name))
 

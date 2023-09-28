@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence
+from typing import Any, Literal
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import bonding, interfaces
+from .utils.interfaces import InterfaceWithCounters
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
-from .utils.lnx_if import InterfaceWithCounters
 
 # Example output from agent:
 
@@ -68,12 +69,12 @@ class EthtoolInterface:
 class IPLinkInterface:
     state_infos: Sequence[str]
     link_ether: str = ""
-    inet: list[str] = field(default_factory=list)
-    inet6: list[str] = field(default_factory=list)
+    inet: MutableSequence[str] = field(default_factory=list)
+    inet6: MutableSequence[str] = field(default_factory=list)
 
 
 EthtoolSection = Mapping[str, EthtoolInterface]
-SectionInventory = dict[str, IPLinkInterface]
+SectionInventory = MutableMapping[str, IPLinkInterface]
 Section = tuple[Sequence[InterfaceWithCounters], SectionInventory]
 
 
@@ -116,8 +117,8 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
 def _parse_lnx_if_sections(
     string_table: type_defs.StringTable,
 ) -> tuple[SectionInventory, EthtoolSection]:
-    ip_stats = {}
-    ethtool_stats: Dict[str, EthtoolInterface] = {}
+    ip_stats: dict[str, IPLinkInterface] = {}
+    ethtool_stats: dict[str, EthtoolInterface] = {}
     iface = None
     lines = iter(string_table)
     ethtool_index = 0
@@ -250,8 +251,8 @@ register.agent_section(
 
 def discover_lnx_if(
     params: Sequence[Mapping[str, Any]],
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> type_defs.DiscoveryResult:
     if section_lnx_if is None:
         return
@@ -284,8 +285,8 @@ def _fix_bonded_mac(
 
 def _get_fixed_bonded_if_table(
     section_lnx_if: Section,
-    section_bonding: Optional[bonding.Section],
-) -> interfaces.Section:
+    section_bonding: bonding.Section | None,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not section_bonding:
         return section_lnx_if[0]
     mac_map = bonding.get_mac_map(section_bonding)
@@ -295,8 +296,8 @@ def _get_fixed_bonded_if_table(
 def check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> type_defs.CheckResult:
     if section_lnx_if is None:
         return
@@ -311,8 +312,8 @@ def check_lnx_if(
 def cluster_check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section_lnx_if: Mapping[str, Optional[Section]],
-    section_bonding: Mapping[str, Optional[bonding.Section]],
+    section_lnx_if: Mapping[str, Section | None],
+    section_bonding: Mapping[str, bonding.Section | None],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
@@ -344,7 +345,7 @@ def _make_inventory_interface(
     interface: interfaces.InterfaceWithCounters,
     mac_map: Mapping[str, str],
     bond_map: Mapping[str, str],
-) -> Optional[InterfaceInv]:
+) -> InterfaceInv | None:
     # Always exclude dockers veth* interfaces on docker nodes.
     # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
     # Ignore useless half-empty tables (e.g. Viprinet-Router).
@@ -363,15 +364,17 @@ def _make_inventory_interface(
         alias=interface.attributes.alias,
         type=interface.attributes.type,
         speed=int(interface.attributes.speed),
-        oper_status=int(interface.attributes.oper_status),
+        oper_status=int(interface.attributes.oper_status)
+        if isinstance(interface.attributes.oper_status, str)
+        else None,
         phys_address=mac,
         bond=bond_map.get(mac),
     )
 
 
 def inventory_lnx_if(
-    section_lnx_if: Optional[Section],
-    section_bonding: Optional[bonding.Section],
+    section_lnx_if: Section | None,
+    section_bonding: bonding.Section | None,
 ) -> InventoryResult:
     if section_lnx_if is None:
         return

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -54,7 +54,6 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
     section: dict = {}
 
     for (word,) in string_table:
-
         streams = json.loads(word)
 
         stream_data = streams.get("streams")
@@ -62,7 +61,6 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
             continue
 
         for stream in stream_data:
-
             stream_title = stream.get("title")
             if stream_title is None:
                 continue
@@ -97,7 +95,6 @@ def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
     )
 
     for stream, values in sorted(section.items()):
-
         if values["is_default"]:
             yield Result(state=State.OK, summary=f"Stream: {stream} (default)")
         elif values["disabled"]:

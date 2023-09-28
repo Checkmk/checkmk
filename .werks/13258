@@ -1,0 +1,16 @@
+Title: Add failover information to NetApp interface checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649755735
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+The NetApp plugin now processes ports (and their associated link-status) of monitored interfaces and
+takes provided failover information into account.
+
+If any of a given virtual interface failover ports is not 'up' the `netapp_api_if` check now
+returns CRIT if it's part of the home node, WARN otherwise.
+

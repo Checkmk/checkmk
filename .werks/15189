@@ -1,0 +1,34 @@
+Title: Don't log automation user credentials when generating performance graph diagnostics
+Class: security
+Compatible: incomp
+Component: reporting
+Date: 1682350171
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk, creating a Support Diagnostic report including the option "<b>Performance Graphs of Checkmk Server</b>" caused the automation secret of the user "automation" to be logged to the site Apache access log file (<tt>var/log/apache/access_log</tt>).
+This affected both creating the diagnostic report via the GUI (<tt>Setup > Maintenance > Support diagnostics</tt>) and via the command line (<tt>cmk --create-diagnostics-dump --performance-graphs</tt>).
+
+With this Werk the credentials are no longer written to the log file.
+Note that no automatic sanitization of the log file is attempted by applying this patch.
+
+This issue was discovered during internal review.
+
+<b>Affected Versions</b>:
+LI: 2.2.0 (beta)
+LI: 2.1.0
+LI: 2.0.0
+
+<b>Mitigations</b>:
+Users are advised to change the secret of the user "automation" via the User Management UI.
+
+If this is not an option for you, delete or manually sanitize the Apache access log file and any backup of the file.
+Remove any line that contains a <tt>POST</tt> to `<your site URL>/report.py?_username=automation&_secret=<...>`.
+
+Refrain from using the affected functionality before applying this patch or manually sanitize the file afterwards.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 4.4 (Medium) with the following CVSS vector: <tt>CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N</tt>.
+We have assigned CVE-2023-31207.

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -37,6 +37,18 @@ metric_info["process_resident_size"] = {
     "title": _("Resident size"),
     "unit": "bytes",
     "color": "14/a",
+}
+
+metric_info["process_virtual_size_avg"] = {
+    "title": _("Virtual size") + " (" + _("average") + ")",
+    "unit": "bytes",
+    "color": "26/a",
+}
+
+metric_info["process_resident_size_avg"] = {
+    "title": _("Resident size") + " (" + _("average") + ")",
+    "unit": "bytes",
+    "color": "24/a",
 }
 
 metric_info["process_mapped_size"] = {
@@ -79,11 +91,17 @@ graph_info["number_of_processes"] = {
 graph_info["size_of_processes"] = {
     "title": _("Size of processes"),
     "metrics": [
-        ("process_virtual_size", "stack"),
-        ("process_mapped_size", "stack"),
+        ("process_virtual_size_avg", "line"),
+        ("process_virtual_size", "area"),
+        ("process_mapped_size", "area"),
+        ("process_resident_size_avg", "line"),
         ("process_resident_size", "area"),
     ],
-    "optional_metrics": ["process_mapped_size"],
+    "optional_metrics": [
+        "process_mapped_size",
+        "process_virtual_size_avg",
+        "process_resident_size_avg",
+    ],
 }
 
 graph_info["size_per_process"] = {

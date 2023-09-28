@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
 
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     api_request_connection_elements,
     RulespecGroupVMCloudContainer,
-    ssl_verification,
 )
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -20,6 +24,10 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     TextInput,
 )
+
+
+def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
+    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
 
 
 def _valuespec_generic_metrics_alertmanager():
@@ -40,7 +48,7 @@ def _valuespec_generic_metrics_alertmanager():
                     choices=[
                         (
                             "ip_address",
-                            _("IP Address"),
+                            _("(deprecated) IP Address"),
                             Dictionary(
                                 elements=api_request_connection_elements(
                                     help_text=_(
@@ -51,11 +59,12 @@ def _valuespec_generic_metrics_alertmanager():
                                     default_port=9091,
                                 ),
                                 help=_("Use IP address of assigned host"),
+                                validate=_deprecate_dynamic_host_adress,
                             ),
                         ),
                         (
                             "host_name",
-                            _("Host name"),
+                            _("(deprecated) Host name"),
                             Dictionary(
                                 elements=api_request_connection_elements(
                                     help_text=_(
@@ -66,6 +75,7 @@ def _valuespec_generic_metrics_alertmanager():
                                     default_port=9091,
                                 ),
                                 help=_("Use host name of assigned host"),
+                                validate=_deprecate_dynamic_host_adress,
                             ),
                         ),
                         (
@@ -95,7 +105,7 @@ def _valuespec_generic_metrics_alertmanager():
                     title=_("Prometheus connection option"),
                 ),
             ),
-            ssl_verification(),
+            tls_verify_flag_default_no(),
             api_request_authentication(),
             (
                 "protocol",
@@ -155,7 +165,7 @@ def _valuespec_generic_metrics_alertmanager():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:alertmanager",
+        name=RuleGroup.SpecialAgents("alertmanager"),
         valuespec=_valuespec_generic_metrics_alertmanager,
     )
 )

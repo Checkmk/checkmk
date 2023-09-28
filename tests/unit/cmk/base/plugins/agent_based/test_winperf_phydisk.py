@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any
 
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_phydisk
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    IgnoreResultsError,
-    Metric,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric
+from cmk.base.plugins.agent_based.utils import diskstat
 
 STRING_TABLE = [
     ["1435670669.29", "234", "2", "3"],
@@ -48,6 +47,88 @@ STRING_TABLE = [
     ["1250", "7908", "7908", "counter"],
 ]
 
+# Real life output of dev machine with one HDD without name
+STRING_TABLE_REAL_LIFE = [
+    ["1675941082.71", "234", "10000000"],
+    ["6", "instances:", "0_C:", "1_E:", "2", "3", "4_D:", "_Total"],
+    ["-36", "0", "0", "0", "0", "0", "0", "rawcount"],
+    ["-34", "8820269983", "3493613", "31486710", "0", "303326048", "1831715270", "type(20570500)"],
+    [
+        "-34",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "type(40030500)",
+    ],
+    ["1166", "8820269983", "3493613", "31486710", "0", "303326048", "9158576354", "type(550500)"],
+    ["-32", "7739282824", "3082020", "31399290", "0", "187437819", "1592240390", "type(20570500)"],
+    [
+        "-32",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "type(40030500)",
+    ],
+    ["1168", "7739282824", "3082020", "31399290", "0", "187437819", "7961201953", "type(550500)"],
+    ["-30", "1080987159", "411593", "87420", "0", "115888229", "239474880", "type(20570500)"],
+    [
+        "-30",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "type(40030500)",
+    ],
+    ["1170", "1080987159", "411593", "87420", "0", "115888229", "1197374401", "type(550500)"],
+    ["-28", "230335391", "3493613", "31486710", "0", "303326048", "568641762", "average_timer"],
+    ["-28", "1795703", "281", "77", "0", "1159", "1797220", "average_base"],
+    ["-26", "3444315528", "3082020", "31399290", "0", "187437819", "3666234657", "average_timer"],
+    ["-26", "1129605", "247", "73", "0", "1126", "1131051", "average_base"],
+    ["-24", "1080987159", "411593", "87420", "0", "115888229", "1197374401", "average_timer"],
+    ["-24", "666098", "34", "4", "0", "33", "666169", "average_base"],
+    ["-22", "1795703", "281", "77", "0", "1159", "1797220", "counter"],
+    ["-20", "1129605", "247", "73", "0", "1126", "1131051", "counter"],
+    ["-18", "666098", "34", "4", "0", "33", "666169", "counter"],
+    ["-16", "50957724160", "698368", "428032", "0", "72771072", "51031621632", "bulk_count"],
+    ["-14", "38661747712", "543744", "418816", "0", "72635904", "38735346176", "bulk_count"],
+    ["-12", "12295976448", "154624", "9216", "0", "135168", "12296275456", "bulk_count"],
+    ["-10", "50957724160", "698368", "428032", "0", "72771072", "51031621632", "average_bulk"],
+    ["-10", "1795703", "281", "77", "0", "1159", "1797220", "average_base"],
+    ["-8", "38661747712", "543744", "418816", "0", "72635904", "38735346176", "average_bulk"],
+    ["-8", "1129605", "247", "73", "0", "1126", "1131051", "average_base"],
+    ["-6", "12295976448", "154624", "9216", "0", "135168", "12296275456", "average_bulk"],
+    ["-6", "666098", "34", "4", "0", "33", "666169", "average_base"],
+    [
+        "1248",
+        "38909643649",
+        "41016778403",
+        "40989478952",
+        "39359629046",
+        "39056304273",
+        "39866366864",
+        "type(20570500)",
+    ],
+    [
+        "1248",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "133204146826974937",
+        "type(40030500)",
+    ],
+    ["1250", "3058", "0", "0", "0", "0", "3058", "counter"],
+]
+
 DISK_WO_FREQUENCY = {
     "timestamp": 1435670669.29,
     "read_ql": 1552698000,
@@ -65,19 +146,39 @@ DISK = DISK_WO_FREQUENCY.copy()
 DISK["frequency"] = 2
 
 
-def _increment_time_and_frequency(disk):
-    disk_inc = {
-        **disk,
-        "timestamp": disk["timestamp"] + 1,
-    }
-    if "frequency" in disk:
-        disk_inc["frequency"] = disk["frequency"] + 1
+def _advance_time(disk: diskstat.Disk, seconds: int) -> diskstat.Disk:
+    """Fake the passing of time"""
+    disk_inc = {}
+
+    frequency = disk.get("frequency")
+    assert frequency in (None, 2)
+    for metric, value in disk.items():
+        if metric == "frequency":
+            disk_inc["frequency"] = value
+            continue
+        if metric == "timestamp":
+            disk_inc["timestamp"] = value + seconds
+            continue
+        if f"{metric}_base" in disk:
+            if frequency is not None:
+                disk_inc[metric] = value + (seconds * 23)
+            continue
+        if metric.endswith("_base"):
+            if frequency is not None:
+                disk_inc[metric] = value + seconds / frequency
+            continue
+        if metric in ("write_ql", "read_ql"):
+            disk_inc[metric] = value + seconds * 23 * 10_000_000
+            continue
+
+        disk_inc[metric] = value + seconds * 23
+
     return disk_inc
 
 
 def _check_disk_with_rates(disk, disk_with_rates):
     disk_reference = {
-        k: 0 for k in disk if not k.endswith("_base") and k not in ("timestamp", "frequency")
+        k: 23.0 for k in disk if not k.endswith("_base") and k not in ("timestamp", "frequency")
     }
     if "frequency" not in disk:
         disk_reference = {k: v for k, v in disk_reference.items() if not k.startswith("average")}
@@ -93,33 +194,46 @@ def test_parse_winperf_phydisk() -> None:
     }
 
 
-def test_compute_rates_single_disk() -> None:
-    # without frequency
+def test_parse_winperf_phydisk_real_life() -> None:
+    result = winperf_phydisk.parse_winperf_phydisk(STRING_TABLE_REAL_LIFE)
+    assert result is not None and list(result.keys()) == [
+        "C:",
+        "E:",
+        "2",
+        "3",
+        "D:",
+    ]
+
+
+def test_compute_rates_single_disk_without_frequency() -> None:
+    value_store: dict[str, Any] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK_WO_FREQUENCY,
-            get_value_store(),
+            value_store,
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
-        _increment_time_and_frequency(DISK_WO_FREQUENCY),
-        get_value_store(),
+        _advance_time(DISK_WO_FREQUENCY, 60),
+        value_store,
     )
     _check_disk_with_rates(
         DISK_WO_FREQUENCY,
         disk_with_rates,
     )
 
-    # with frequency
+
+def test_compute_rates_single_disk_with_frequency() -> None:
+    value_store: dict[str, Any] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK,
-            get_value_store(),
+            value_store,
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
-        _increment_time_and_frequency(DISK),
-        get_value_store(),
+        _advance_time(DISK, 60),
+        value_store,
     )
     _check_disk_with_rates(
         DISK,
@@ -128,7 +242,6 @@ def test_compute_rates_single_disk() -> None:
 
 
 def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
-
     # fist call: initialize value store
     with pytest.raises(IgnoreResultsError):
         list(
@@ -161,11 +274,12 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
 DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
+def test_check_winperf_phydisk(item: str) -> None:
     section_1 = {
         item: DISK_HALF,
     }
@@ -180,11 +294,12 @@ def test_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
+def test_cluster_check_winperf_phydisk(item: str) -> None:
     section_1 = {
         item: DISK_HALF,
     }

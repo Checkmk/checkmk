@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Fetcher config path manipulation."""
@@ -35,9 +35,7 @@ class ConfigPath(abc.ABC):
         return self._path_elem
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, os.PathLike):
-            return False
-        return Path(self) == Path(other)
+        return Path(self) == Path(other) if isinstance(other, os.PathLike) else False
 
     def __hash__(self) -> int:
         return hash(type(self)) ^ hash(self._path_elem)
@@ -95,6 +93,7 @@ class VersionedConfigPath(ConfigPath, Iterator):
         yield
         # TODO(ml) We should probably remove the files that were created
         #          previously and not update `serial.mk` on error.
+        # TODO: Should this be in a "finally" or not? Unclear...
         self._link_latest()
 
     def _cleanup(self) -> None:

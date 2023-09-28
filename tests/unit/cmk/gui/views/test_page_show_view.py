@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.view import View
 from cmk.gui.views.page_show_view import _get_needed_regular_columns
+from cmk.gui.visuals.filter import Filter
 
 
 def test_get_needed_regular_columns(view: View) -> None:

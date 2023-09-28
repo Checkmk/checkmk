@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,12 +9,13 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.sectionname import SectionName
 
-from cmk.base import item_state
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, Metric, Result, State
 
 
 @pytest.fixture(name="check")
@@ -22,6 +23,7 @@ def _graylog_sources_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName("graylog_sources")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, item, expected_check_result",
     [
@@ -86,7 +88,7 @@ def test_check_graylog_sources(
         SectionName("graylog_sources")
     ].parse_function
 
-    item_state.set_item_state("graylog_msgs_avg.rate", (1670328674.09963, 457))
+    get_value_store()["graylog_msgs_avg.rate"] = 1670328674.09963, 457
 
     assert (
         list(

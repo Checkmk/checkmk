@@ -6,7 +6,7 @@ Date: 1671187078
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The HTTP session management has been changed to use
 the mechanics provided by the Flask project.

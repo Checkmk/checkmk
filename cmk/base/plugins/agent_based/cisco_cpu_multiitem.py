@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
 from statistics import mean
-from typing import Dict, List, NamedTuple, Tuple, TypedDict
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, OIDEnd, register, render, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,11 +21,11 @@ class CPUInfo(NamedTuple):
     util: float
 
 
-Section = Dict[str, CPUInfo]
+Section = dict[str, CPUInfo]
 
 
 class Params(TypedDict):
-    levels: Tuple[float, float]
+    levels: tuple[float, float]
 
 
 class DiscoveryParams(TypedDict, total=False):
@@ -36,8 +38,8 @@ class Entity(NamedTuple):
     physical_class: PhysicalClasses
 
 
-def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
-    ph_idx_to_entity: Dict[str, Entity] = {}
+def parse_cisco_cpu_multiitem(string_table: list[StringTable]) -> Section:
+    ph_idx_to_entity: dict[str, Entity] = {}
     for idx, desc, class_idx in string_table[1]:
         if desc.lower().startswith("cpu "):
             desc = desc[4:]

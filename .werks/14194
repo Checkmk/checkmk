@@ -1,0 +1,14 @@
+Title: SLA: fixed exception when timerange for painter was set to 0 seconds
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1680515006
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

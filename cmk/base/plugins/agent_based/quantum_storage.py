@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -17,7 +18,7 @@ class Section(NamedTuple):
     serial: str
 
 
-def parse_quantum_storage_info(string_table: StringTable) -> Optional[Section]:
+def parse_quantum_storage_info(string_table: StringTable) -> Section | None:
     return Section(*string_table[0]) if string_table else None
 
 
@@ -51,7 +52,7 @@ def discover_quantum_storage_status(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_quantum_storage_status(  # type:ignore[no-untyped-def]
+def check_quantum_storage_status(  # type: ignore[no-untyped-def]
     params, section: Section
 ) -> CheckResult:
     state_txt = _QUANTUM_DEVICE_STATE.get(section.state, f"Unknown [{section.state}]")

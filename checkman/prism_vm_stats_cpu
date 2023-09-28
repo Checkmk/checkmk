@@ -1,0 +1,13 @@
+title: Nutanix Prism: VM CPU
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the actual CPU usage for the Nutanix VM.
+ The levels can be configured thrue the coresponding rule.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+discovery:
+ One service is created.

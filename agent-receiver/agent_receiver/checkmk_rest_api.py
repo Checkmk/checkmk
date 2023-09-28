@@ -1,37 +1,37 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
+from collections.abc import Callable
 from enum import Enum
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 from urllib.parse import quote
-from uuid import UUID
 
 import requests
+from agent_receiver.log import logger
+from agent_receiver.models import ConnectionMode
 from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 
 class CMKEdition(Enum):
     cre = "Raw"
-    cfe = "Free"
     cee = "Enterprise"
     cme = "Managed Services"
-    cpe = "Plus"
+    cce = "Cloud"
 
-    def supports_registration_with_labels(self) -> bool:
+    def supports_register_new(self) -> bool:
         """
-        >>> CMKEdition["cre"].supports_registration_with_labels()
+        >>> CMKEdition.cre.supports_register_new()
         False
-        >>> CMKEdition["cpe"].supports_registration_with_labels()
+        >>> CMKEdition.cce.supports_register_new()
         True
         """
-        return self is CMKEdition.cpe
+        return self is CMKEdition.cce
 
 
 def _local_apache_port() -> int:
@@ -59,7 +59,7 @@ def _forward_post(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.post(
+    return requests.post(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -73,7 +73,7 @@ def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
 ) -> requests.Response:
-    return requests.get(
+    return requests.get(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -86,7 +86,7 @@ def _forward_put(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.put(
+    return requests.put(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -96,25 +96,98 @@ def _forward_put(
     )
 
 
-def get_root_cert(credentials: HTTPBasicCredentials) -> requests.Response:
-    return _forward_get(
+_TEndpointParams = ParamSpec("_TEndpointParams")
+_TEndpointReturn = TypeVar("_TEndpointReturn")
+
+
+def log_http_exception(
+    endpoint_call: Callable[_TEndpointParams, _TEndpointReturn]
+) -> Callable[Concatenate[str, _TEndpointParams], _TEndpointReturn]:
+    def wrapper(
+        log_text: str,
+        /,
+        *args: _TEndpointParams.args,
+        **kwargs: _TEndpointParams.kwargs,
+    ) -> _TEndpointReturn:
+        try:
+            return endpoint_call(*args, **kwargs)
+        except HTTPException as http_excpt:
+            logger.error(
+                "%s. Error message: %s",
+                log_text,
+                http_excpt.detail,
+            )
+            raise http_excpt
+
+    return wrapper
+
+
+class ControllerCertSettings(BaseModel, frozen=True):
+    lifetime_in_months: int
+
+
+@log_http_exception
+def controller_certificate_settings(credentials: HTTPBasicCredentials) -> ControllerCertSettings:
+    response = _forward_get(
+        "agent_controller_certificates_settings",
+        credentials,
+    )
+    _verify_response(response, HTTPStatus.OK)
+    return ControllerCertSettings.parse_obj(response.json())
+
+
+class RegisterResponse(BaseModel, frozen=True):
+    connection_mode: ConnectionMode
+
+
+@log_http_exception
+def register(
+    credentials: HTTPBasicCredentials,
+    uuid: UUID4,
+    host_name: str,
+) -> RegisterResponse:
+    response = _forward_put(
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register/invoke",
+        credentials,
+        {
+            "uuid": str(uuid),
+        },
+    )
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API error message is a bit obscure in this case
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+    return RegisterResponse.parse_obj(response.json())
+
+
+@log_http_exception
+def get_root_cert(credentials: HTTPBasicCredentials) -> str:
+    response = _forward_get(
         "root_cert",
         credentials,
     )
+    _verify_response(response, HTTPStatus.OK)
+    return response.json()["cert"]
 
 
+@log_http_exception
 def post_csr(
     credentials: HTTPBasicCredentials,
     csr: str,
-) -> requests.Response:
-    return _forward_post(
+) -> str:
+    response = _forward_post(
         "csr",
         credentials,
         {"csr": csr},
     )
+    _verify_response(response, HTTPStatus.OK)
+    return response.json()["cert"]
 
 
-class HostConfiguration(BaseModel):
+class HostConfiguration(BaseModel, frozen=True):
     site: str
     is_cluster: bool
 
@@ -141,6 +214,7 @@ def _url_encode_hostname(host_name: str) -> str:
     return quote(host_name, safe="")  # '/' is not "safe" here
 
 
+@log_http_exception
 def host_configuration(
     credentials: HTTPBasicCredentials,
     host_name: str,
@@ -150,72 +224,73 @@ def host_configuration(
             f"objects/host_config_internal/{_url_encode_hostname(host_name)}",
             credentials,
         )
-    ).status_code == HTTPStatus.OK:
-        return HostConfiguration(**response.json())
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    ).status_code == HTTPStatus.NOT_FOUND:
         # The REST API only says 'Not Found' in the response title here
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail=f"Host {host_name} does not exist.",
         )
-    raise HTTPException(
-        status_code=response.status_code,
-        detail=parse_error_response_body(response.text),
-    )
+    _verify_response(response, HTTPStatus.OK)
+    return HostConfiguration(**response.json())
 
 
+@log_http_exception
 def link_host_with_uuid(
     credentials: HTTPBasicCredentials,
     host_name: str,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
-    if (
-        response := _forward_put(
-            f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
-            credentials,
-            {"uuid": str(uuid)},
-        )
-    ).status_code != HTTPStatus.NO_CONTENT:
+    response = _forward_put(
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
+        credentials,
+        {"uuid": str(uuid)},
+    )
+    _verify_response(response, HTTPStatus.NO_CONTENT)
+
+
+@log_http_exception
+def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
+    response = _forward_get(
+        "version",
+        credentials,
+    )
+    _verify_response(response, HTTPStatus.OK)
+    return CMKEdition[response.json()["edition"]]
+
+
+def _verify_response(
+    response: requests.Response,
+    expected_status_code: HTTPStatus,
+) -> None:
+    if response.status_code != expected_status_code:
         raise HTTPException(
             status_code=response.status_code,
-            detail=parse_error_response_body(response.text),
+            detail=_parse_error_response_body(response.text),
         )
 
 
-def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
-    if (
-        response := _forward_get(
-            "version",
-            credentials,
-        )
-    ).status_code == HTTPStatus.OK:
-        return CMKEdition[response.json()["edition"]]
-    raise HTTPException(
-        status_code=response.status_code,
-        detail=f"Could not determine Checkmk edition ({response.reason})",
-    )
+class _RestApiErrorDescr(BaseModel, frozen=True):
+    title: str
+    detail: str | None = None
 
 
-def parse_error_response_body(body: str) -> str:
+def _parse_error_response_body(body: str) -> str:
     """
     The REST API often returns JSON error bodies such as
     {"title": "You do not have the permission for agent pairing.", "status": 403}
     from which we want to extract the title field.
 
-    >>> parse_error_response_body("123")
+    >>> _parse_error_response_body("123")
     '123'
-    >>> parse_error_response_body('["x", "y"]')
+    >>> _parse_error_response_body('["x", "y"]')
     '["x", "y"]'
-    >>> parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
+    >>> _parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
     '{"message": "Hands off this component!", "status": 403}'
-    >>> parse_error_response_body('{"title": "You do not have the permission for agent pairing.", "status": 403}')
-    'You do not have the permission for agent pairing.'
+    >>> _parse_error_response_body('{"title": "Insufficient permissions", "detail": "You need permission xyz.", "status": 403}')
+    'Insufficient permissions - Details: You need permission xyz.'
     """
     try:
-        deserialized_body = json.loads(body)
-    except json.JSONDecodeError:
+        error_descr = _RestApiErrorDescr.parse_raw(body)
+    except Exception:
         return body
-    try:
-        return deserialized_body["title"]
-    except (TypeError, KeyError):
-        return body
+    return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

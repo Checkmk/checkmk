@@ -6,7 +6,7 @@
 
 /// Jenkins artifacts: ???
 /// Other artifacts: ???
-/// Depends on: Buster / Debian 10 package
+/// Depends on: Jammy Ubuntu 22.04, see check_mk/docker_image/Dockerfile
 
 
 def main() {
@@ -17,6 +17,7 @@ def main() {
         "SET_BRANCH_LATEST_TAG",
         "PUSH_TO_REGISTRY",
         "PUSH_TO_REGISTRY_ONLY",
+        "BUILD_IMAGE_WITHOUT_CACHE",
     ]);
 
     check_environment_variables([
@@ -33,8 +34,11 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def package_dir = "${checkout_dir}/download";
-    def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def source_dir = package_dir + "/" + cmk_version_rc_aware
     def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";
 
     def push_to_registry = PUSH_TO_REGISTRY=='true';
@@ -43,15 +47,15 @@ def main() {
    print(
         """
         |===== CONFIGURATION ===============================
-        |branch_name:....... │${branch_name}│
-        |cmk_version:....... │${cmk_version}│
-        |push_to_registry:.. │${push_to_registry}│
-        |build_image:....... │${build_image}│
-        |package_dir:....... │${package_dir}│
+        |branch_name:......... │${branch_name}│
+        |cmk_version_rc_aware: │${cmk_version_rc_aware}│
+        |push_to_registry:.... │${push_to_registry}│
+        |build_image:......... │${build_image}│
+        |package_dir:......... │${package_dir}│
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building the CMK docker image
         """.stripMargin());
@@ -64,9 +68,7 @@ def main() {
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             withCredentials([
                 usernamePassword(
-                    credentialsId: (EDITION == "raw") ? // FIXME getCredentialsId() mergen
-                        "11fb3d5f-e44e-4f33-a651-274227cc48ab" :
-                        "registry.checkmk.com",
+                    credentialsId: registry_credentials_id(EDITION),
                     passwordVariable: 'DOCKER_PASSPHRASE',
                     usernameVariable: 'DOCKER_USERNAME'),
                 usernamePassword(
@@ -85,15 +87,15 @@ def main() {
                             artifacts_helper.download_deb(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
-                                "${cmk_version}",
-                                "${package_dir}/${cmk_version}",
+                                "${cmk_version_rc_aware}",
+                                "${source_dir}",
                                 "${EDITION}",
                                 "jammy");
                             artifacts_helper.download_source_tar(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
-                                "${cmk_version}",
-                                "${package_dir}/${cmk_version}",
+                                "${cmk_version_rc_aware}",
+                                "${source_dir}",
                                 "${EDITION}");
                         }
 
@@ -103,8 +105,13 @@ def main() {
                             /// to have an arbitrary location, so we have to provide
                             /// `download` inside the checkout_dir
                             sh("""buildscripts/scripts/build-cmk-container.sh \
-                                ${branch_name} ${EDITION} ${cmk_version} \
-                                ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
+                                ${branch_name} \
+                                ${EDITION} \
+                                ${cmk_version} \
+                                ${source_dir} \
+                                ${SET_LATEST_TAG} \
+                                ${SET_BRANCH_LATEST_TAG} \
+                                ${BUILD_IMAGE_WITHOUT_CACHE} \
                                 build""");
                         }
 
@@ -113,7 +120,7 @@ def main() {
                             stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
                                     "${package_dir}",
-                                    "${cmk_version}",
+                                    "${cmk_version_rc_aware}",
                                     "${filename}",
                                     "${INTERNAL_DEPLOY_DEST}",
                                     "${INTERNAL_DEPLOY_PORT}",
@@ -121,15 +128,16 @@ def main() {
                             }
                         }
 
-                        def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version}.tar.gz";
                         if (branch_name.contains("sandbox") ) {
-                            print("Skip uploading ${image_archive_file} due to sandbox branch");
+                            print("Skip uploading ${filename} due to sandbox branch");
+                        } else if ("${EDITION}" == "saas"){
+                            print("Skip uploading ${filename} due to saas edition");
                         } else {
-                            stage("Upload ${image_archive_file}") {
+                            stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
                                     "${package_dir}",
-                                    "${cmk_version}",
-                                    "check-mk-${EDITION}-docker-${cmk_version}.tar.gz",
+                                    "${cmk_version_rc_aware}",
+                                    "${filename}",
                                     "${WEB_DEPLOY_DEST}",
                                     "${WEB_DEPLOY_PORT}",
                                 );
@@ -139,11 +147,13 @@ def main() {
 
                     conditional_stage("Push images", push_to_registry) {
                         sh("""buildscripts/scripts/build-cmk-container.sh \
-                            ${BRANCH} \
+                            ${branch_name} \
                             ${EDITION} \
                             ${cmk_version} \
+                            ${source_dir} \
                             ${SET_LATEST_TAG} \
                             ${SET_BRANCH_LATEST_TAG} \
+                            ${BUILD_IMAGE_WITHOUT_CACHE} \
                             push""");
                     }
                 }
@@ -151,4 +161,20 @@ def main() {
         }
     }
 }
+
+def registry_credentials_id(edition) {
+   switch(edition) {
+       case "raw":
+       case "cloud":
+           return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
+       case "enterprise":
+       case "managed":
+           return "registry.checkmk.com"
+       case "saas":
+           return "nexus"
+       default:
+           throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
+    }
+}
+
 return this;

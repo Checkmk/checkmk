@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,7 +23,7 @@ class TestListOf:
         expect_validate_failure(get_list_of(), ((1, "1"),))
 
     def test_canonical_value(self) -> None:
-        assert get_list_of().canonical_value() == []
+        assert not get_list_of().canonical_value()
 
     def test_mask(self) -> None:
         assert get_list_of().mask([(1, "pwd")]) == [(1, "******")]

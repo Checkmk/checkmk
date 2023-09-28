@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,13 +8,12 @@ import logging
 import sys
 
 import pytest
-
-from tests.testlib import is_enterprise_repo
+from pytest_mock import MockerFixture
 
 from livestatus import SiteId
 
 from cmk.post_rename_site import main
-from cmk.post_rename_site.registry import rename_action_registry, RenameAction, RenameActionRegistry
+from cmk.post_rename_site.registry import RenameAction, RenameActionRegistry
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +32,7 @@ def test_parse_arguments_defaults() -> None:
     }
 
 
-def test_parse_arguments_missing_old_site_id(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_parse_arguments_missing_old_site_id(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert "required: OLD_SITE_ID" in capsys.readouterr().err
@@ -49,7 +48,9 @@ def test_parse_arguments_debug() -> None:
     assert main.parse_arguments(["--debug", "old"]).debug is True
 
 
-def test_main_executes_run(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_main_executes_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     def mock_run(args: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:
         sys.stdout.write("XYZ\n")
         return False
@@ -66,7 +67,9 @@ def fixture_test_registry(monkeypatch):
     return registry
 
 
-def test_run_executes_plugins(capsys, test_registry, mocker) -> None:  # type:ignore[no-untyped-def]
+def test_run_executes_plugins(
+    capsys: pytest.CaptureFixture[str], test_registry: RenameActionRegistry, mocker: MockerFixture
+) -> None:
     handler_mock = mocker.MagicMock()
     test_registry.register(
         RenameAction(name="test", title="Test Title", sort_index=0, handler=handler_mock)
@@ -80,27 +83,3 @@ def test_run_executes_plugins(capsys, test_registry, mocker) -> None:  # type:ig
     assert output.out.endswith("Done\n")
 
     assert handler_mock.called_once_with(SiteId("old"), SiteId("NO_SITE"))
-
-
-def test_load_plugins() -> None:
-    main.load_plugins()
-    expected = [
-        "sites",
-        "hosts_and_folders",
-        "update_core_config",
-        "warn_remote_site",
-        "warn_about_network_ports",
-        "warn_about_configs_to_review",
-    ]
-
-    if is_enterprise_repo():
-        # The below line is confusing and incorrect. The reason we need it is
-        # because our test environments do not reflect our Checkmk editions properly.
-        # We cannot fix that in the short (or even mid) term because the
-        # precondition is a more cleanly separated structure.
-
-        # The CEE plugins are loaded when the CEE plugins are available, i.e.
-        # when the "enterprise/" path is present.
-        expected.append("dcd_connections")
-
-    assert sorted(rename_action_registry.keys()) == sorted(expected)

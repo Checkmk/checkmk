@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, NamedTuple, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -70,7 +71,7 @@ def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
     try:
         if b_time is None:
             return int(b_date)
-        return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
+        return time.mktime(time.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S"))
     except ValueError:
         return None
 
@@ -83,7 +84,6 @@ def _get_word(line: Sequence[str], idx: int) -> str | None:
 
 
 def parse_mssql_backup(string_table: StringTable) -> Section:
-
     parsed: dict[str, list[Backup]] = {}
 
     line: Sequence[str | None]
@@ -100,7 +100,7 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
 
         timestamp = _parse_date_and_time(b_date, b_time)
 
-        item = "%s %s" % (inst, tablespace)
+        item = f"{inst} {tablespace}"
         backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type) if b_type else None, b_state or "")
         parsed.setdefault(item, []).append(backup)
 
@@ -146,8 +146,17 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             state=State.OK,
             summary=f"{backup_type_info} Last backup: {render.datetime(backup.timestamp)}",
         )
+        if backup.timestamp is None:
+            return
+        if (age := time.time() - backup.timestamp) < 0:
+            yield Result(
+                state=State.WARN,
+                summary="Cannot reasonably calculate time since last backup (hosts time is running ahead), "
+                f"Time since last backup: -{render.timespan(abs(age))}",
+            )
+            return
         yield from check_levels(
-            time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
+            age,
             metric_name=perfkey,
             levels_upper=params.get(backup_type_var),
             render_func=render.timespan,
@@ -190,7 +199,7 @@ register.check_plugin(
 def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     if backup.type is None:
         return "%s UNKNOWN" % db_name
-    return "%s %s" % (db_name, backup.type.title())
+    return f"{db_name} {backup.type.title()}"
 
 
 def discover_mssql_backup_per_type(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
@@ -211,8 +220,17 @@ def check_mssql_backup_per_type(
                     state=State.OK,
                     summary=f"Last backup: {render.datetime(backup.timestamp)}",
                 )
+                if backup.timestamp is None:
+                    return
+                if (age := time.time() - backup.timestamp) < 0:
+                    yield Result(
+                        state=State.WARN,
+                        summary="Cannot reasonably calculate time since last backup (hosts time is running ahead), "
+                        f"Time since last backup: -{render.timespan(abs(age))}",
+                    )
+                    return
                 yield from check_levels(
-                    time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
+                    age,
                     metric_name="backup_age",
                     levels_upper=params.get("levels"),
                     render_func=render.timespan,

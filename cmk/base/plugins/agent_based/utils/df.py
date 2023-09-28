@@ -1,23 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Generator,
-    Iterable,
-    Literal,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    NewType,
-    Sequence,
-    Union,
-)
+from typing import Any, Literal, NamedTuple, NewType
 
 from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -78,7 +67,7 @@ DfSection = tuple[BlocksSubsection, InodesSubsection]
 
 # Filesystems to ignore.
 # They should not be sent by agent anyway and will indeed not be sent on Linux beginning with 1.6.0
-EXCLUDED_MOUNTPOINTS = ("/dev",)
+EXCLUDED_MOUNTPOINTS = ("/dev", "")
 
 FILESYSTEM_DEFAULT_LEVELS: Mapping[str, Any] = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -194,8 +183,16 @@ def _adjust_levels(
     relative_size = filesystem_size / reference_size
     true_factor = (relative_size**factor) / relative_size
 
-    warn_percent = Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
-    crit_percent = Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+    warn_percent = (
+        Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
+        if factor != 1.0
+        else levels.warn_percent
+    )
+    crit_percent = (
+        Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+        if factor != 1.0
+        else levels.crit_percent
+    )
 
     if isinstance(levels, LevelsFreeSpace):
         return LevelsFreeSpace(
@@ -332,7 +329,6 @@ def get_filesystem_levels(
     filesystem_size_gb: float,
     params: Mapping[str, Any],
 ) -> FilesystemLevels:
-
     filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
     filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)
@@ -378,7 +374,7 @@ def check_inodes(
     levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
-) -> Generator[Union[Metric, Result], None, None]:
+) -> Generator[Metric | Result, None, None]:
     """
     >>> levels = {
     ...     "inodes_levels": (10, 5),
@@ -398,42 +394,22 @@ def check_inodes(
     >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
     Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
+
+    >>> levels["inodes_levels"] = None
+    >>> for r in check_inodes(levels, 80, 20): print(r)
+    Metric('inodes_used', 60.0, boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
     """
-    if (inodes_levels := levels.get("inodes_levels")) is None:
-        # inodes_levels is set as default for every check except network_fs_mounts
-        # this parameter could also be None if it's set to "ignore" by the user
-        inodes_warn_variant, inodes_crit_variant = None, None
-    else:
-        inodes_warn_variant, inodes_crit_variant = inodes_levels
-
-    inodes_abs: tuple[float, float] | None = None
-    human_readable_func: Callable[[float], str] = _render_integer
-    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
-        # Levels in absolute numbers
-        inodes_abs = (
-            inodes_total - inodes_warn_variant,
-            inodes_total - inodes_crit_variant,
-        )
-    elif isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
-        # Levels in percent
-        inodes_abs = (
-            (100 - inodes_warn_variant) / 100.0 * inodes_total,
-            (100 - inodes_crit_variant) / 100.0 * inodes_total,
-        )
-
-        def human_readable_func(x: float) -> str:
-            return render.percent(100.0 * x / inodes_total)
-
-    else:
-        raise TypeError(
-            "Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
-        )
+    levels_upper, render_func = _inodes_levels_and_render_func(
+        inodes_total,
+        levels.get("inodes_levels"),
+    )
 
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
-        levels_upper=inodes_abs,
+        levels_upper=levels_upper,
         metric_name="inodes_used",
-        render_func=human_readable_func,
+        render_func=render_func,
         boundaries=(0, inodes_total),
         label="Inodes used",
     )
@@ -457,6 +433,40 @@ def check_inodes(
         yield Result(state=inode_result.state, summary=inodes_info)
     else:
         yield Result(state=inode_result.state, notice=inodes_info)
+
+
+def _inodes_levels_and_render_func(
+    inodes_total: float,
+    configured_leves: tuple[float, float] | tuple[int, int] | None,
+) -> tuple[tuple[float, float] | None, Callable[[float], str]]:
+    if configured_leves is None:
+        return None, _render_integer
+
+    inodes_warn_variant, inodes_crit_variant = configured_leves
+
+    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
+        # Levels in absolute numbers
+        return (
+            (
+                inodes_total - inodes_warn_variant,
+                inodes_total - inodes_crit_variant,
+            ),
+            _render_integer,
+        )
+
+    if isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
+        # Levels in percent
+        return (
+            (
+                (100 - inodes_warn_variant) / 100.0 * inodes_total,
+                (100 - inodes_crit_variant) / 100.0 * inodes_total,
+            ),
+            lambda inodes: render.percent(100.0 * inodes / inodes_total),
+        )
+
+    raise TypeError(
+        f"Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
+    )
 
 
 _GroupingSpec = tuple[list[str], list[str]]
@@ -539,7 +549,7 @@ def check_filesystem_levels(
     yield Result(state=status, summary=summary)
 
 
-def df_check_filesystem_single(  # type:ignore[no-untyped-def]
+def df_check_filesystem_single(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     mountpoint: str,
     filesystem_size: float | None,
@@ -606,7 +616,7 @@ def df_check_filesystem_single(  # type:ignore[no-untyped-def]
         yield from check_inodes(params, inodes_total, inodes_avail)
 
 
-def df_check_filesystem_list(  # type:ignore[no-untyped-def]
+def df_check_filesystem_list(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],
@@ -616,11 +626,14 @@ def df_check_filesystem_list(  # type:ignore[no-untyped-def]
 ) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
 
-    def group_sum(metric_name, info, mountpoints_group):
+    def group_sum(
+        metric_name: str, info: dict[str, dict[str, float | None]], mountpoints_group: list[str]
+    ) -> float | None:
         """Calculate sum of named values for matching mount points"""
         try:
+            # If we have a None, sum will throw a TypeError which we catch...
             return sum(
-                block_info[metric_name]  #
+                block_info[metric_name]  # type: ignore[misc]
                 for (mp, block_info) in info.items()  #
                 if mp in mountpoints_group
             )

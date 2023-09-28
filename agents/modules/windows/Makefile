@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,9 @@ include ../../../defines.make
 # commandline
 PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
 PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
-MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
+#MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
+MSBUILD            ?= C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
+
 
 # internal dirs:
 PYTHON_SRC_DIR     := python\$(PY_VER)
@@ -67,7 +69,7 @@ python_version:
 
 $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@powershell Write-Host "$@ is to be processed" -foreground White
-	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS Build 2017 must be installed" && exit 1
+	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS VS 2022 must be installed" && exit 1
 	@if not exist $< powershell Write-Host -foreground Red "$< absent" && exit 1
 	@powershell Write-Host -foreground Green "Unpacking $< ..."
 	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 

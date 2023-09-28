@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, MutableMapping, NamedTuple, Tuple
+from collections.abc import Mapping, MutableMapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -70,7 +71,6 @@ register.agent_section(
 
 
 def discover_oracle_processes(section: SectionOracleProcesses) -> DiscoveryResult:
-
     for process in section.error_processes:
         yield Service(item=process)
 
@@ -79,9 +79,8 @@ def discover_oracle_processes(section: SectionOracleProcesses) -> DiscoveryResul
 
 
 def check_oracle_processes(
-    item: str, params: Mapping[str, Tuple[float, float]], section: SectionOracleProcesses
+    item: str, params: Mapping[str, tuple[float, float]], section: SectionOracleProcesses
 ) -> CheckResult:
-
     if ora_error := section.error_processes.get(item):
         yield Result(state=ora_error.error_severity, summary=ora_error.error_text)
         return

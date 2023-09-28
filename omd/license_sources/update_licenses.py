@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -490,7 +490,7 @@ def update_js_dependencies(rows: list[list[str]], verbose: bool = False) -> list
     )
     license_links = get_license_links()
 
-    with os.popen("npx license-checker --json --start ../../") as os_output:
+    with os.popen("npx license-checker --json --start ../../", "r", 1) as os_output:
         license_json = json.loads(os_output.read())
 
     found_rows: list[list[str]] = []

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,7 +19,7 @@
 # 506 Cannot talk to daemon
 from calendar import timegm
 from time import strptime, time
-from typing import Any, Dict
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 
@@ -34,10 +34,10 @@ def parse_chrony(string_table):
     if is_error_message(string_table):
         return {"error": " ".join(string_table[0])}
 
-    parsed: Dict[str, Any] = {}
+    parsed: dict[str, Any] = {}
     for line in string_table:
         if ":" in line:
-            key, value = [e.strip() for e in " ".join(line).split(":", 1)]
+            key, value = (e.strip() for e in " ".join(line).split(":", 1))
             if key == "Reference ID":
                 parsed[key] = value
                 try:
@@ -63,7 +63,7 @@ def parse_chrony(string_table):
     return parsed or None
 
 
-def is_error_message(info) -> bool:  # type:ignore[no-untyped-def]
+def is_error_message(info) -> bool:  # type: ignore[no-untyped-def]
     return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 

@@ -9,6 +9,6 @@ Level: 1
 Version: 2.1.0b1
 
 If you created or edited a view, some entries in the "Sorting" section where
-shown as e.g. "<bound method PainterAlias.title of
-<cmk.gui.plugins.views.painters.PainterAlias object at 0x7fb79a752ca0>>"
+shown as e.g. `<bound method PainterAlias.title of
+<cmk.gui.plugins.views.painters.PainterAlias object at 0x7fb79a752ca0>>`
 instead of "Host Alias".

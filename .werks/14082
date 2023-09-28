@@ -6,7 +6,7 @@ Date: 1651181333
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In an effort to make the RAID monitoring more consistent, the
 plugin megaraid_ldisks now is configurable using the ruleset

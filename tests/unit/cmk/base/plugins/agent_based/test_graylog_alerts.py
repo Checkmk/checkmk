@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -45,12 +45,20 @@ def test_check_graylog_alerts(
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
+    parsed_section = parse_graylog_alerts(section)
+    assert parsed_section
     assert (
         list(
             check_graylog_alerts(
                 params={},
-                section=parse_graylog_alerts(section),
+                section=parsed_section,
             )
         )
         == expected_check_result
     )
+
+
+def test_parse_graylog_alerts_empty_alerts_section() -> None:
+    section = [['{"total": 0, "alerts": []}']]
+    parsed_section = parse_graylog_alerts(section)
+    assert parsed_section is None

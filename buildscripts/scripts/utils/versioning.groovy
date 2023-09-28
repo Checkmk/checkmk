@@ -15,40 +15,52 @@ def REPO_PATCH_RULES = [\
         "managed", \
         "cme", \
         "cme.py", \
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"],\
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
         "cme.py", \
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
-"free": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+"managed": [\
+    "paths_to_be_removed": [\
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"]], \
+"cloud": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
         "cme.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
-"managed": [\
-    "paths_to_be_removed": [\
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"], \
-    "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"]], \
-"plus": [\
+"saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
@@ -69,23 +81,28 @@ def safe_branch_name(scm) {
 def get_cmk_version(branch, version) {
     return (
       // Regular daily build of master branch
-      (branch == 'master' && version == 'daily') ? "${build_date}" :
+      (branch == 'master' && version in ['daily', 'git']) ? "${build_date}" :
       // Experimental builds
-      (branch.startsWith('sandbox') && version == 'daily') ? "${build_date}-${branch}" :
+      (branch.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch}" :
       // version branch dailies (e.g. 1.6.0)
-      (version == 'daily') ? "${branch}-${build_date}" :
+      (version == version in ['daily', 'git']) ? "${branch}-${build_date}" :
       // else
       "${version}");
 }
 
-def configured_or_overridden_distros(edition, distro_list, distro_key="DISTROS") {
+def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
     if(distro_list) {
         return distro_list.trim().split(' ');
     }
-    try {
-        return load_json("${checkout_dir}/editions.json")[edition][distro_key];
-    } catch (Exception exc) {
-        raise("Could not find editions.json:'${edition}':'{distro_key}'");
+    docker_image_from_alias("IMAGE_TESTING").inside() {
+        dir("${checkout_dir}") {
+            return sh(script: """scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --edition "${edition}" \
+                  --editions_file "${checkout_dir}/editions.yml" \
+                  --use_case "${use_case}" 
+            """, returnStdout: true).trim().split();
+        }
     }
 }
 
@@ -152,7 +169,8 @@ def patch_themes(EDITION) {
                 """
             }
             break
-        case 'plus':
+        case 'cloud':
+        case 'saas':
         case 'enterprise':
         case 'free':
             // Workaround since scss does not support conditional includes
@@ -168,9 +186,6 @@ def patch_themes(EDITION) {
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
         sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
-        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
-        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{TrialManager.h,test/test_TrialManager.cc}'''
-        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' livestatus/src/TableStatus.cc'''
     }
 }
 
@@ -190,18 +205,28 @@ def delete_non_cre_files() {
     non_cre_paths = [
         "enterprise",
         "managed",
-        "plus",
+        "cloud",
+        "saas",
         "check_mk_enterprise",
         "check_mk_managed",
         "cee",
         "cme",
-        "cpe",
+        "cce",
+        "cse",
         "cee.py",
         "cme.py",
-        "cpe.py",
+        "cce.py",
+        "cse.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
-    sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
+    // Do not remove files in .git, .venv, .mypy_cache directories
+    sh """bash -c \"find . \\
+        -not \\( -path ./.\\* -prune \\) \\
+        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""""
+}
+
+def strip_rc_number_from_version(VERSION) {
+    return VERSION.split("-rc")[0]
 }
 
 return this

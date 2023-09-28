@@ -1,0 +1,15 @@
+Title: Crash upon empty result of piggyback hostname translation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673960487
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+From Checkmk version 2.1 the <i>Check_MK</i> service crashed if the settings in <i>Hostname translation for piggybacked hosts</i> resulted in an empty host name.
+
+The host name <tt>''</tt> is now replaced by <tt>'_'</tt>.
+This is consistent with other invalid host names (such as <tt>'../../bin/pwn'</tt>), where the invalid characters are replaced by an underscore.
+

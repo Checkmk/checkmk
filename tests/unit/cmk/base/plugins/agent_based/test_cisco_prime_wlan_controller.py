@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -192,9 +192,9 @@ def test_get_last_backup(last_backup: str | None, expected_result: datetime | No
     "controller_data, expected_result",
     [(WLAN_CONTROLLERS, WLAN_CONTROLLERS_SECTION)],
 )
-def test_parse_cisco_prime_wlan_controller(  # type:ignore[no-untyped-def]
+def test_parse_cisco_prime_wlan_controller(
     controller_data: dict[str, Any], expected_result: dict[str, WlanController]
-):
+) -> None:
     string_table = [[json.dumps(controller_data)]]
     assert parse_cisco_prime_wlan_controller(string_table) == expected_result
 
@@ -203,9 +203,9 @@ def test_parse_cisco_prime_wlan_controller(  # type:ignore[no-untyped-def]
     "section, expected_result",
     [(WLAN_CONTROLLERS_SECTION, [Service(item="wism21"), Service(item="wism22")])],
 )
-def test_discovery_wlan_controller(  # type:ignore[no-untyped-def]
+def test_discovery_wlan_controller(
     section: dict[str, WlanController], expected_result: list[Service]
-):
+) -> None:
     services = discovery_wlan_controller(section)
 
     assert list(services) == expected_result
@@ -230,9 +230,9 @@ def test_discovery_wlan_controller(  # type:ignore[no-untyped-def]
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_metadata(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_metadata(
     item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
-):
+) -> None:
     result = check_wlan_controller_metadata(item, section)
     assert list(result) == expected_result
 
@@ -248,9 +248,9 @@ def test_check_wlan_controller_metadata(  # type:ignore[no-untyped-def]
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_alarm_status(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_alarm_status(
     item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
-):
+) -> None:
     result = check_wlan_controller_alarm_status(item, section)
     assert list(result) == expected_result
 
@@ -270,12 +270,12 @@ def test_check_wlan_controller_alarm_status(  # type:ignore[no-untyped-def]
         ("wism23", {"access_points": (300, 500)}, WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_access_points(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_access_points(
     item: str,
     params: Mapping[str, tuple[float, float]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
-):
+) -> None:
     result = check_wlan_controller_access_points(item, params, section)
     assert list(result) == expected_result
 
@@ -295,12 +295,12 @@ def test_check_wlan_controller_access_points(  # type:ignore[no-untyped-def]
         ("wism23", {}, WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_clients(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_clients(
     item: str,
     params: Mapping[str, tuple[float, float]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
-):
+) -> None:
     result = check_wlan_controller_clients(item, params, section)
     assert list(result) == expected_result
 
@@ -321,9 +321,9 @@ def test_check_wlan_controller_clients(  # type:ignore[no-untyped-def]
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_reachability(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_reachability(
     item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
-):
+) -> None:
     result = check_wlan_controller_reachability(item, section)
     assert list(result) == expected_result
 
@@ -353,11 +353,11 @@ def test_check_wlan_controller_reachability(  # type:ignore[no-untyped-def]
     ],
 )
 @freeze_time("2021-10-27 00:00:00.000000")
-def test_check_wlan_controller_last_backup(  # type:ignore[no-untyped-def]
+def test_check_wlan_controller_last_backup(
     item: str,
     params: Mapping[str, tuple[float, float]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
-):
+) -> None:
     result = check_wlan_controller_last_backup(item, params, section)
     assert list(result) == expected_result

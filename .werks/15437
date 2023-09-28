@@ -1,0 +1,14 @@
+Title: folder_config: deleting the root folder via the rest-api no longer causes an internal server error
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1679931758
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue with the folder_config delete endpoint.  Previously, when
+attempting to delete the root folder via the rest-api, a 500 internal server error
+would be raised. We now return a 401 with an appropriate error message.
+

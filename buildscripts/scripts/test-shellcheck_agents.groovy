@@ -3,29 +3,22 @@
 /// file: test-shellcheck_agents.groovy
 
 def main() {
-    dir("${checkout_dir}") {
-        stage("Execute Test") {
-            docker_image_from_alias("IMAGE_TESTING").inside("--ulimit nofile=1024:1024 --init") {
-                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                    dir("tests") {
-                        sh("""make SHELLCHECK_OUTPUT_ARGS="-f gcc" test-shellcheck""");
-                    }
-                }
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker_image_from_alias("IMAGE_TESTING").inside("--ulimit nofile=1024:1024 --init") {
+            dir("${checkout_dir}") {
+                test_jenkins_helper.execute_test([
+                    name: "test-shellcheck",
+                    // SHELLCHECK_OUTPUT_ARGS="-f gcc"
+                    cmd: "make -C tests test-shellcheck",
+                    output_file: "shellcheck.txt"
+                ]);
+
+                test_jenkins_helper.analyse_issues("SHELLCHECK", "shellcheck.txt");
             }
-        }
-        stage("Analyse Issues") {
-            publishIssues(
-                issues:[scanForIssues(tool: gcc())],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [
-                    [
-                        threshold: 165,
-                        type: 'TOTAL',
-                        unstable: false,
-                    ]
-                ]
-            )
         }
     }
 }
+
 return this;

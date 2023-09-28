@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,10 +11,12 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
+    render,
     Result,
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.azure import (
     _get_metrics,
     _get_metrics_number,
@@ -25,8 +27,11 @@ from cmk.base.plugins.agent_based.utils.azure import (
     check_memory,
     check_network,
     check_storage,
-    discover_azure_by_metrics,
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function,
+    create_discover_by_metrics_function_single,
     iter_resource_attributes,
+    MetricData,
     parse_resources,
     Resource,
     Section,
@@ -108,6 +113,43 @@ PARSED_RESOURCES = {
         },
         subscription="2fac104f-cb9c-461d-be57-037039662426",
     )
+}
+
+MULTIPLE_RESOURCE_SECTION = {
+    "checkmk-mysql-server-1": Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
+        name="checkmk-mysql-server",
+        type="Microsoft.DBforMySQL/servers",
+        group="BurningMan",
+        kind=None,
+        location="westeurope",
+        tags={"tag1": "value1", "tag2": "value2"},
+        properties={},
+        specific_info={},
+        metrics={
+            "average_storage_percent": AzureMetric(
+                name="storage_percent", aggregation="average", value=2.95, unit="percent"
+            ),
+        },
+        subscription="2fac104f-cb9c-461d-be57-037039662426",
+    ),
+    "checkmk-mysql-server-2": Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
+        name="checkmk-mysql-server",
+        type="Microsoft.DBforMySQL/servers",
+        group="BurningMan",
+        kind=None,
+        location="westeurope",
+        tags={"tag1": "value1", "tag2": "value2"},
+        properties={},
+        specific_info={},
+        metrics={
+            "average_storage_percent": AzureMetric(
+                name="storage_percent", aggregation="average", value=2.95, unit="percent"
+            ),
+        },
+        subscription="2fac104f-cb9c-461d-be57-037039662426",
+    ),
 }
 
 
@@ -217,11 +259,27 @@ def test_parse_resources() -> None:
     assert parse_resources(RESOURCES) == PARSED_RESOURCES
 
 
-def test_discover_azure_by_metrics() -> None:
-    discovery_func = discover_azure_by_metrics(
+def test_create_discover_by_metrics_function() -> None:
+    discovery_func = create_discover_by_metrics_function(
         "average_storage_percent", "average_active_connections"
     )
     assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]
+
+
+@pytest.mark.parametrize(
+    "section,expected_discovery",
+    [
+        pytest.param(PARSED_RESOURCES, [Service()], id="one resource"),
+        pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
+    ],
+)
+def test_create_discover_by_metrics_function_single(
+    section: Section, expected_discovery: DiscoveryResult
+) -> None:
+    discovery_func = create_discover_by_metrics_function_single(
+        "average_storage_percent", "average_active_connections"
+    )
+    assert list(discovery_func(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(
@@ -419,3 +477,51 @@ def test_check_storage(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_storage()(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section,expected_result",
+    [
+        pytest.param(
+            PARSED_RESOURCES,
+            [
+                Result(state=State.OK, summary="Storage: 2.95%"),
+                Metric("storage_percent", 2.95),
+            ],
+            id="one resource",
+        ),
+        pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
+    ],
+)
+def test_create_check_azure_metrics_function_single(
+    section: Section, expected_result: CheckResult
+) -> None:
+    check_func = create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_storage_percent",
+                "storage_percent",
+                "Storage",
+                render.percent,
+                upper_levels_param="storage",
+            ),
+        ],
+        suppress_error=True,
+    )
+    assert list(check_func({}, section)) == expected_result
+
+
+def test_create_check_azure_metrics_function_single_error() -> None:
+    check_func = create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_storage_percent",
+                "storage_percent",
+                "Storage",
+                render.percent,
+                upper_levels_param="storage",
+            ),
+        ]
+    )
+    with pytest.raises(IgnoreResultsError, match="Only one resource expected"):
+        list(check_func({}, MULTIPLE_RESOURCE_SECTION))

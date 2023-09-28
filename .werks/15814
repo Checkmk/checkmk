@@ -1,0 +1,14 @@
+Title: 'effective_attributes' now contains custom attributes and tags
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1686044601
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Starting with 2.2.0, the REST API didn't return custom attributes or non-builtin tags in
+'effective_attributes'.
+This is no longer the case.
+

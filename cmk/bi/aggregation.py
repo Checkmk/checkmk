@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,8 +7,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from cmk.utils.hostaddress import HostName
+
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.bi.lib import (
     ABCBICompiledNode,
@@ -18,7 +20,6 @@ from cmk.bi.lib import (
     create_nested_schema,
     create_nested_schema_for_class,
     ReqString,
-    String,
 )
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.node_vis import BIAggregationVisualizationSchema
@@ -26,6 +27,7 @@ from cmk.bi.rule import BIRule
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 from cmk.bi.type_defs import AggrConfigDict
+from cmk.fields import String
 
 SCOPE_GLOBAL = None
 
@@ -126,7 +128,7 @@ class BIAggregationSchema(Schema):
     id = ReqString(
         dump_default="",
         example="aggr1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The unique aggregation id",
     )
     comment = String(
         description="An optional comment that may be used to explain the purpose of this object.",

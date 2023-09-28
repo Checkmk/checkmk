@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -48,7 +49,7 @@ register.snmp_section(
     name="df_netapp",
     parse_function=parse_df_netapp,
     fetch=SNMPTree(base=".1.3.6.1.4.1.789.1.5.4.1", oids=["2", "29", "30"]),
-    detect=all_of(IS_NETAPP_FILER, exists(".1.3.6.1.4.1.789.1.5.4.1.29")),
+    detect=all_of(IS_NETAPP_FILER, exists(".1.3.6.1.4.1.789.1.5.4.1.29.*")),
 )
 
 
@@ -57,7 +58,7 @@ register.snmp_section(
     parsed_section_name="df_netapp",
     parse_function=parse_df_netapp,
     fetch=SNMPTree(base=".1.3.6.1.4.1.789.1.5.4.1", oids=["2", "3", "4"]),
-    detect=all_of(IS_NETAPP_FILER, not_exists(".1.3.6.1.4.1.789.1.5.4.1.29")),
+    detect=all_of(IS_NETAPP_FILER, not_exists(".1.3.6.1.4.1.789.1.5.4.1.29.*")),
 )
 
 

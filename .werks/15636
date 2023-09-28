@@ -1,0 +1,22 @@
+Title: Predictive Levels: Show prediction if the value is 0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1691063241
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Previously, the message
+C+:
+no reference for prediction yet
+C-:
+would be shown, if the prediction made by the CMC was <tt>0</tt>. With this Werk, the predicted
+value is now always shown. The prediction levels have been updated accordingly.
+LI: <tt>Absolute difference from prediction:</tt> 0 is treated like any other value. Some alarms, which used to be omitted, are now correctly reported.
+LI: <tt>In relation to standard deviation:</tt> 0 is treated like any other value. Some alarms, which used to be omitted, are now correctly reported.
+LI: <tt>Relative difference from prediction:</tt> Non-zero values are treated in a different manner. No dynamic levels are computed. This means the behaviour of this parameter has not changed with this Werk.
+
+Note, the configuration <tt>In relation to standard deviation</tt> can lead to false alarms, if the
+standard deviation is zero.

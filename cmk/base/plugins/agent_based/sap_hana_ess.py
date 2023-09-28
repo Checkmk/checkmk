@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        inst_data = {}
+        inst_data: dict[str, str | int] = {}
         for line in lines:
             if len(line) < 2:
                 continue

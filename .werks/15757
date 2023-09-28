@@ -1,0 +1,14 @@
+Title: agent_aws: Fix fetching service quotas for EC2, ECS and ElastiCache
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1686558026
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, service quotas were fetched without pagination which led to
+some quota values missing from the AWS API.
+For missing quota values default values were reported instead of the correct
+ones.

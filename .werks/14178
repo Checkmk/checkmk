@@ -1,0 +1,13 @@
+Title: LDAP connector: Improved performance when searching for the nearest AD/LDAP server
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1673863510
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Configurations with hundreds of domain controllers could slow down the discovery speed of the nearest LDAP server.
+

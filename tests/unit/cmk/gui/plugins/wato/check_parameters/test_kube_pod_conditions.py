@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,10 +7,14 @@
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters import kube_pod_conditions
-from cmk.gui.valuespec import Dictionary
+from cmk.utils.rulesets.definition import RuleGroup
 
-SECTION_ELEMENTS = "initialized", "scheduled", "containersready", "ready"
+from cmk.gui.plugins.wato.check_parameters import kube_pod_conditions
+from cmk.gui.plugins.wato.utils import rulespec_registry
+from cmk.gui.valuespec import Dictionary
+from cmk.gui.watolib.rulespecs import ManualCheckParameterRulespec
+
+SECTION_ELEMENTS = "initialized", "hasnetwork", "scheduled", "containersready", "ready"
 
 
 def test_parameter_valuespec_returns_a_dictionary() -> None:
@@ -24,8 +28,8 @@ def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
 
 
 @pytest.mark.parametrize("section_element", SECTION_ELEMENTS)
-def test_parameter_valuespec_has_element_for_section_element(  # type:ignore[no-untyped-def]
-    section_element,
+def test_parameter_valuespec_has_element_for_section_element(
+    section_element: str,
 ) -> None:
     expected_title = section_element
     parameters = kube_pod_conditions._parameter_valuespec()
@@ -34,20 +38,20 @@ def test_parameter_valuespec_has_element_for_section_element(  # type:ignore[no-
 
 @pytest.fixture
 def rulespec():
-    for r in kube_pod_conditions.rulespec_registry.get_by_group("static/applications"):
-        if r.name == "static_checks:kube_pod_conditions":
+    for r in rulespec_registry.get_by_group("static/applications"):
+        if r.name == RuleGroup.StaticChecks("kube_pod_conditions"):
             return r
     assert False, "Should be able to find the rulespec"
 
 
 @pytest.mark.xfail(reason="`match_type` should be dict")
-def test_rulespec_registry_match_type(rulespec) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_registry_match_type(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_registry_parameter_valuespec(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec._parameter_valuespec == kube_pod_conditions._parameter_valuespec
 
 
-def test_rulespec_registry_title(rulespec) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_registry_title(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec.title == "Kubernetes pod conditions"

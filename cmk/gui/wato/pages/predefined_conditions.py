@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Predefine conditions that can be used in the WATO rule editor"""
+"""Predefine conditions that can be used in the Setup rule editor"""
 
 from collections.abc import Collection
 
@@ -13,13 +13,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    SimpleEditMode,
-    SimpleListMode,
-    SimpleModeType,
-    WatoMode,
-)
+from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -30,17 +24,20 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
+from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import (
-    AllRulesets,
-    FilteredRulesetCollection,
-    FolderRulesets,
-    UseHostFolder,
-)
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
+
+from ._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePredefinedConditions)
+    mode_registry.register(ModeEditPredefinedCondition)
 
 
 class DummyRulespecGroup(RulespecGroup):
@@ -70,7 +67,7 @@ def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         to_valuespec=lambda c: RuleConditions.from_config("", c),
-        from_valuespec=lambda c: c.to_config(UseHostFolder.HOST),
+        from_valuespec=lambda c: c.to_config(UseHostFolder.HOST_FOLDER_FOR_UI),
     )
 
 
@@ -91,7 +88,6 @@ class PredefinedConditionModeType(SimpleModeType):
         return [ConfigDomainCore]
 
 
-@mode_registry.register
 class ModePredefinedConditions(SimpleListMode):
     @classmethod
     def name(cls) -> str:
@@ -115,14 +111,11 @@ class ModePredefinedConditions(SimpleListMode):
         return _("Predefined conditions")
 
     def _validate_deletion(self, ident, entry):
-        matched_rulesets = FilteredRulesetCollection.filter(
-            AllRulesets.load_all_rulesets().get_rulesets(),
-            key=lambda ruleset: ruleset.matches_search_with_rules(
-                {"rule_predefined_condition": ident}
-            ),
-        ).get_rulesets()
-
-        if matched_rulesets:
+        if {
+            name: ruleset
+            for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
+            if ruleset.matches_search_with_rules({"rule_predefined_condition": ident})
+        }:
             raise MKUserError(
                 "_delete",
                 _('You can not delete this %s because it is <a href="%s">in use</a>.')
@@ -132,7 +125,7 @@ class ModePredefinedConditions(SimpleListMode):
     def page(self) -> None:
         html.p(
             _(
-                "This module can be used to define conditions for Check_MK rules in a central place. "
+                "This module can be used to define conditions for Checkmk rules in a central place. "
                 "You can then refer to these conditions from different rulesets. Using these predefined "
                 "conditions may save you a lot of redundant conditions when you need them in multiple "
                 "rulesets."
@@ -140,8 +133,14 @@ class ModePredefinedConditions(SimpleListMode):
         )
         super().page()
 
-    def _show_action_cell(self, table, ident):
-        super()._show_action_cell(table, ident)
+    def _show_action_cell(  # type: ignore[no-untyped-def]
+        self,
+        nr: int,
+        table: Table,
+        ident: str,
+        entry,
+    ) -> None:
+        super()._show_action_cell(nr, table, ident, entry)
 
         html.icon_button(
             self._search_url(ident),
@@ -168,7 +167,7 @@ class ModePredefinedConditions(SimpleListMode):
         html.open_li()
         html.write_text(
             "{}: {}".format(
-                _("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()
+                _("Folder"), folder_tree().folder(entry["conditions"]["host_folder"]).alias_path()
             )
         )
         html.close_li()
@@ -196,7 +195,6 @@ class ModePredefinedConditions(SimpleListMode):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-@mode_registry.register
 class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
     def name(cls) -> str:
@@ -296,10 +294,11 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def _move_rules_for_conditions(self, conditions, old_path):
         # type (RuleConditions, str) -> None
         """Apply changed folder of predefined condition to rules"""
-        old_folder = Folder.folder(old_path)
+        tree = folder_tree()
+        old_folder = tree.folder(old_path)
         old_rulesets = FolderRulesets.load_folder_rulesets(old_folder)
 
-        new_folder = Folder.folder(conditions.host_folder)
+        new_folder = tree.folder(conditions.host_folder)
         new_rulesets = FolderRulesets.load_folder_rulesets(new_folder)
 
         for old_ruleset in old_rulesets.get_rulesets().values():
@@ -310,8 +309,8 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)
 
-        new_rulesets.save()
-        old_rulesets.save()
+        new_rulesets.save_folder()
+        old_rulesets.save_folder()
 
     def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
@@ -321,7 +320,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         the changed predefined condition. Since the conditions are only applied to the
         rules while saving them this step is needed.
         """
-        folder = Folder.folder(conditions.host_folder)
+        folder = folder_tree().folder(conditions.host_folder)
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
         for ruleset in rulesets.get_rulesets().values():
@@ -329,7 +328,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                 if rule.predefined_condition_id() == self._ident:
                     rule.update_conditions(conditions)
 
-        rulesets.save()
+        rulesets.save_folder()
 
     def _contact_group_choices(self, only_own=False):
         contact_groups = load_contact_group_information()

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -16,6 +16,12 @@ def parse_aix_lparstat_inventory(string_table: StringTable) -> Section:
     pairs = (line.split(":", 1) for line in lines)
     parsed = {k.strip(): v.strip() for k, v in pairs}
     return parsed
+
+
+register.agent_section(
+    name="aix_lparstat_inventory",
+    parse_function=parse_aix_lparstat_inventory,
+)
 
 
 def inventory_aix_lparstat_inventory(section: Section) -> InventoryResult:

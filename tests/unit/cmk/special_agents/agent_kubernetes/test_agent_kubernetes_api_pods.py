@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,10 +11,9 @@ from kubernetes import client  # type: ignore[import]
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
-from cmk.special_agents import agent_kube
+from cmk.special_agents.utils_kubernetes.agent_handlers import pod_handler
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
-    convert_to_timestamp,
     parse_metadata,
     pod_conditions,
     pod_containers,
@@ -193,7 +192,7 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
-                    last_transition_time=int(convert_to_timestamp(last_transition_time)),
+                    last_transition_time=int(api.convert_to_timestamp(last_transition_time)),
                 )
             ],
         )
@@ -245,8 +244,8 @@ class TestPodStartUp(TestCase):
         It is possible that during startup of pods, also more complete information arises.
         """
         api_pod_status = api.PodStatus(
-            start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+            start_time=api.convert_to_timestamp(
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(
@@ -282,7 +281,7 @@ class TestPodStartUp(TestCase):
             qos_class="burstable",
         )
         self.assertEqual(
-            agent_kube.pod_conditions(api_pod_status),
+            pod_handler._conditions(api_pod_status),
             section.PodConditions(
                 initialized=section.PodCondition(status=True, reason=None, detail=None),
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),
@@ -304,8 +303,8 @@ class TestPodStartUp(TestCase):
         In this specific instance all of the fields except for the scheduled field are missing.
         """
         api_pod_status = api.PodStatus(
-            start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+            start_time=api.convert_to_timestamp(
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(
@@ -321,7 +320,7 @@ class TestPodStartUp(TestCase):
         )
 
         self.assertEqual(
-            agent_kube.pod_conditions(api_pod_status),
+            pod_handler._conditions(api_pod_status),
             section.PodConditions(
                 initialized=None,
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),

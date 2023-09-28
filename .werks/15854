@@ -1,0 +1,13 @@
+Title: Fix metric scaling issues in views and dashboards
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1685108173
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some historic metric values might have been scaled incorrectly in certain view and dashboard
+elements. For example, the metric <i>RAM installed</i> might have been incorrectly scaled by a
+factor of 1024^2 in the view column <i>Services: Metric History</i> or in single-metric dashlets.

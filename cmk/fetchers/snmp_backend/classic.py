@@ -1,38 +1,41 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
 from collections.abc import Iterable
+from typing import Literal, TypeAlias
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
+CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk", "snmpbulkwalk"]
+
 
 class ClassicSNMPBackend(SNMPBackend):
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
-            commandtype = "getnext"
+            commandtype: CommandType = "snmpgetnext"
         else:
             oid_prefix = oid
-            commandtype = "get"
+            commandtype = "snmpget"
 
         protospec = self._snmp_proto_spec()
         ipaddress = self.config.ipaddress or "0.0.0.0"
         if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
         portspec = self._snmp_port_spec()
-        command = self._snmp_base_command(commandtype, context_name) + [
+        command = self._snmp_base_command(commandtype, context) + [
             "-On",
             "-OQ",
             "-Oe",
@@ -79,17 +82,19 @@ class ClassicSNMPBackend(SNMPBackend):
             return None
 
         # In case of .*, check if prefix is the one we are looking for
-        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
+        if commandtype == "snmpgetnext" and not item.startswith(oid_prefix + "."):
             return None
 
         return strip_snmp_value(value)
 
     def walk(
         self,
+        /,
         oid: str,
+        *,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: str | None = None,
-        context_name: str | None = None,
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
@@ -98,7 +103,7 @@ class ClassicSNMPBackend(SNMPBackend):
             ipaddress = "[" + ipaddress + "]"
 
         portspec = self._snmp_port_spec()
-        command = self._snmp_walk_command(context_name)
+        command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -185,13 +190,6 @@ class ClassicSNMPBackend(SNMPBackend):
             return ""
         return ":%d" % self.config.port
 
-    def _snmp_walk_command(self, context_name: SNMPContextName | None) -> list[str]:
-        """Returns command lines for snmpwalk and snmpget
-
-        Including options for authentication. This handles communities and
-        authentication for SNMP V3. Also bulkwalk hosts"""
-        return self._snmp_base_command("walk", context_name) + ["-Cc"]
-
     # if the credentials are a string, we use that as community,
     # if it is a four-tuple, we use it as V3 auth parameters:
     # (1) security level (-l)
@@ -201,16 +199,13 @@ class ClassicSNMPBackend(SNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(  # pylint: disable=too-many-branches
-        self,
-        what: str,
-        context_name: SNMPContextName | None,
-    ) -> list[str]:
+    def _snmp_base_command(self, cmd: CommandType, context: SNMPContext) -> list[str]:
+        # pylint: disable=too-many-branches
         options = []
 
-        if what == "get":
+        if cmd == "snmpget":
             command = ["snmpget"]
-        elif what == "getnext":
+        elif cmd == "snmpgetnext":
             command = ["snmpgetnext", "-Cf"]
         elif self.config.is_bulkwalk_host:
             command = ["snmpbulkwalk"]
@@ -224,7 +219,7 @@ class ClassicSNMPBackend(SNMPBackend):
             if self.config.is_bulkwalk_host:
                 options.append("-v2c")
             else:
-                if what == "walk":
+                if cmd == "snmpwalk":
                     command = ["snmpwalk"]
                 if self.config.is_snmpv2or3_without_bulkwalk_host:
                     options.append("-v2c")
@@ -300,31 +295,19 @@ class ClassicSNMPBackend(SNMPBackend):
         if "retries" in settings:
             options += ["-r", "%d" % settings["retries"]]
 
-        if context_name is not None:
-            options += ["-n", context_name]
+        if context:
+            options += ["-n", context]
 
         return command + options
 
 
 def _auth_proto_for(proto_name: str) -> str:
-    if proto_name == "md5":
-        return "md5"
-    if proto_name == "sha":
-        return "sha"
-    if proto_name == "SHA-224":
-        return "SHA-224"
-    if proto_name == "SHA-256":
-        return "SHA-256"
-    if proto_name == "SHA-384":
-        return "SHA-384"
-    if proto_name == "SHA-512":
-        return "SHA-512"
+    if proto_name in ("md5", "sha", "SHA-224", "SHA-256", "SHA-384", "SHA-512"):
+        return proto_name
     raise MKGeneralException("Invalid SNMP auth protocol: %s" % proto_name)
 
 
 def _priv_proto_for(proto_name: str) -> str:
-    if proto_name == "DES":
-        return "DES"
-    if proto_name == "AES":
-        return "AES"
+    if proto_name in ("DES", "AES", "AES-256", "AES-192"):
+        return proto_name
     raise MKGeneralException("Invalid SNMP priv protocol: %s" % proto_name)

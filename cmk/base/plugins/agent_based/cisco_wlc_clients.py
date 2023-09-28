@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import List
 
 from .agent_based_api.v1 import any_of, equals, matches, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -16,7 +15,7 @@ CISCO_WLC_CLIENTS_PATTERN = "|".join(re.escape(oid) for oid in CISCO_WLC_OIDS)
 
 
 def parse_cisco_wlc_clients(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> WlcClientsSection[ClientsPerInterface]:
     section: WlcClientsSection[ClientsPerInterface] = WlcClientsSection()
     for ssid_name, interface_name, num_clients_str in string_table[0]:
@@ -47,7 +46,7 @@ register.snmp_section(
 
 
 def parse_cisco_wlc_9800_clients(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> WlcClientsSection[ClientsTotal]:
     section: WlcClientsSection[ClientsTotal] = WlcClientsSection()
     for (ssid_name,), (num_clients_str,) in zip(string_table[0], string_table[1]):

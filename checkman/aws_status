@@ -1,0 +1,23 @@
+title: AWS Status
+agents: aws_status
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the issues from the AWS Health RSS page
+ https://health.aws.amazon.com/health/status/.
+
+ To make this check work you have to configure the related special
+ agent via {Amazon Web Service (AWS) Status}. The regions, which are
+ discovered, can be configured.
+
+ Importantly, since this check is based on the public health dashboard, there
+ are more accurate ways to monitor AWS. If you can, choose the {Amazon Web
+ Service (AWS)} monitoring over this monitoring solution.
+
+item:
+ The name of the region.
+
+discovery:
+ One service is created for each region.
+ Additionally, one service is created for global AWS services.

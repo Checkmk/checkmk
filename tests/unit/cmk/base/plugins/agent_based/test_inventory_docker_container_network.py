@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,7 @@ import pytest
 
 import cmk.base.plugins.agent_based.utils.docker as docker
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_docker_container_network import (
     inventory_docker_container_network,
     parse_docker_container_network,
@@ -70,8 +71,8 @@ def test_inventory_docker_container_network_empty() -> None:
         (AGENT_OUTPUT_WITH_OCI_ERROR, EXPECTED_RESULT),
     ],
 )
-def test_inventory_docker_container_network(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_docker_container_network(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     section = parse_docker_container_network(string_table)
     assert list(inventory_docker_container_network(section)) == expected_result

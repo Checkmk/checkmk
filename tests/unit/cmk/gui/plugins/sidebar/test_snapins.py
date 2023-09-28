@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.sidebar import snapin_registry
 
 
 def test_registered_snapins() -> None:
@@ -31,13 +31,13 @@ def test_registered_snapins() -> None:
         "wato_foldertree",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_snapins += [
             "cmc_stats",
             "reports",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_snapins += [
             "customers",
         ]
@@ -57,7 +57,7 @@ def test_refresh_snapins() -> None:
         "time",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_refresh_snapins += [
             "cmc_stats",
         ]

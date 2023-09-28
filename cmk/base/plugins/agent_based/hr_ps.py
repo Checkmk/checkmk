@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Match, NamedTuple, Sequence
+from collections.abc import Mapping, Sequence
+from re import Match
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, regex, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -111,10 +113,10 @@ def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> Check
     for (state_key, state_short, state_long), processes in processes_by_state.items():
         state = process_state_map.get(state_key, 0)
         if state_long:
-            state_info = "%s (%s)" % (state_short, state_long)
+            state_info = f"{state_short} ({state_long})"
         else:
             state_info = state_short
-        yield Result(state=State(state), summary="%s %s" % (len(processes), state_info))
+        yield Result(state=State(state), summary=f"{len(processes)} {state_info}")
 
 
 def _match_hr_process(

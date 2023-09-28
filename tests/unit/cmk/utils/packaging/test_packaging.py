@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import json
-import logging
 import shutil
 import tarfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock
@@ -20,23 +19,62 @@ import cmk.utils.packaging as packaging
 import cmk.utils.packaging._installed
 import cmk.utils.paths
 
+import cmk.ec.export as ec
 
-def _read_manifest(pacname: packaging.PackageName) -> packaging.Manifest:
-    manifest = packaging.get_installed_manifest(pacname)
+_PATH_CONFIG = packaging.PathConfig(
+    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
+    agents_dir=cmk.utils.paths.local_agents_dir,
+    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+    bin_dir=cmk.utils.paths.local_bin_dir,
+    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+    checks_dir=cmk.utils.paths.local_checks_dir,
+    doc_dir=cmk.utils.paths.local_doc_dir,
+    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
+    inventory_dir=cmk.utils.paths.local_inventory_dir,
+    lib_dir=cmk.utils.paths.local_lib_dir,
+    locale_dir=cmk.utils.paths.local_locale_dir,
+    local_root=cmk.utils.paths.local_root,
+    mib_dir=cmk.utils.paths.local_mib_dir,
+    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+    notifications_dir=cmk.utils.paths.local_notifications_dir,
+    packages_enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
+    packages_local_dir=cmk.utils.paths.local_optional_packages_dir,
+    packages_shipped_dir=cmk.utils.paths.optional_packages_dir,
+    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+    tmp_dir=cmk.utils.paths.tmp_dir,
+    web_dir=cmk.utils.paths.local_web_dir,
+)
+
+
+_NO_CALLBACKS: dict[packaging.PackagePart, packaging.PackageOperationCallbacks] = {}
+
+
+_PACKAGE_STORE = packaging.PackageStore(
+    shipped_dir=_PATH_CONFIG.packages_shipped_dir,
+    local_dir=_PATH_CONFIG.packages_local_dir,
+    enabled_dir=_PATH_CONFIG.packages_enabled_dir,
+)
+
+
+@pytest.fixture(name="installer", scope="function")
+def _get_installer() -> Iterator[packaging.Installer]:
+    cmk.utils.paths.installed_packages_dir.mkdir(parents=True, exist_ok=True)
+    yield packaging.Installer(cmk.utils.paths.installed_packages_dir)
+    shutil.rmtree(cmk.utils.paths.installed_packages_dir)
+
+
+def _read_manifest(
+    installer: packaging.Installer, pacname: packaging.PackageName
+) -> packaging.Manifest:
+    manifest = installer.get_installed_manifest(pacname)
     assert manifest is not None
     return manifest
 
 
 @pytest.fixture(autouse=True)
-def _packages_dir() -> Iterable[None]:
-    cmk.utils.packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
-    yield
-    shutil.rmtree(cmk.utils.packaging._installed.PACKAGES_DIR)
-
-
-@pytest.fixture(autouse=True)
 def clean_dirs() -> Iterable[None]:
-    paths = [Path(p.path) for p in packaging.PACKAGE_PARTS] + [
+    paths = [_PATH_CONFIG.get_path(p) for p in packaging.PackagePart] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
     ]
@@ -50,29 +88,19 @@ def clean_dirs() -> Iterable[None]:
 
 
 @pytest.fixture(name="mkp_bytes")
-def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
+def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
     # Create package information
-    _create_simple_test_package(packaging.PackageName("aaa"))
-    manifest = _read_manifest(packaging.PackageName("aaa"))
+    _create_simple_test_package(installer, packaging.PackageName("aaa"))
+    manifest = _read_manifest(installer, packaging.PackageName("aaa"))
 
     # Build MKP in memory
-    mkp = packaging.create_mkp_object(manifest)
+    mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
     # Remove files from local hierarchy
-    packaging.uninstall(manifest)
-    build_setup_search_index.assert_called_once()
-    build_setup_search_index.reset_mock()
-    assert packaging.is_installed(packaging.PackageName("aaa")) is False
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    assert installer.is_installed(packaging.PackageName("aaa")) is False
 
     return mkp
-
-
-@pytest.fixture(name="build_setup_search_index")
-def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Mock:
-    return mocker.patch(
-        "cmk.utils.packaging._build_setup_search_index_background",
-        side_effect=lambda: None,
-    )
 
 
 @pytest.fixture(name="reload_apache")
@@ -96,17 +124,20 @@ def test_get_permissions(part: packaging.PackagePart, file: Path, expected: int)
     assert packaging._get_permissions(part, file) == expected
 
 
-def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Manifest:
+def _create_simple_test_package(
+    installer: packaging.Installer, pacname: packaging.PackageName
+) -> packaging.Manifest:
     _create_test_file(pacname)
     manifest = packaging.manifest_template(
         name=pacname,
+        version_packaged="3.14.0p15",
         files={
             packaging.PackagePart.CHECKS: [Path(pacname)],
         },
     )
 
-    packaging.create(manifest)
-    return _read_manifest(pacname)
+    packaging.create(installer, manifest, _PATH_CONFIG, version_packaged="3.14.0p15")
+    return _read_manifest(installer, pacname)
 
 
 def _create_test_file(name):
@@ -115,97 +146,140 @@ def _create_test_file(name):
         f.write("lala\n")
 
 
-def test_create() -> None:
+def test_create(installer: packaging.Installer) -> None:
     name = packaging.PackageName("aaa")
-    assert not packaging.is_installed(name)
-    _create_simple_test_package(name)
-    assert packaging.is_installed(name)
+    assert not installer.is_installed(name)
+    _create_simple_test_package(installer, name)
+    assert installer.is_installed(name)
 
 
-def test_create_twice() -> None:
-    _create_simple_test_package(packaging.PackageName("aaa"))
+def test_create_twice(installer: packaging.Installer) -> None:
+    _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    with pytest.raises(packaging.PackageException):
-        _create_simple_test_package(packaging.PackageName("aaa"))
+    with pytest.raises(packaging.PackageError):
+        _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
 
-def test_edit_not_existing() -> None:
+def test_edit_not_existing(installer: packaging.Installer) -> None:
     new_manifest = packaging.manifest_template(
         name=packaging.PackageName("aaa"),
+        version_packaged="3.14.0p15",
         version=packaging.PackageVersion("2.0.0"),
     )
 
-    with pytest.raises(packaging.PackageException):
-        packaging.edit(packaging.PackageName("aaa"), new_manifest)
+    with pytest.raises(packaging.PackageError):
+        packaging.edit(
+            installer,
+            packaging.PackageName("aaa"),
+            new_manifest,
+            _PATH_CONFIG,
+            version_packaged="3.14.0p15",
+        )
 
 
-def test_edit() -> None:
+def test_edit(installer: packaging.Installer) -> None:
     new_manifest = packaging.manifest_template(
         name=packaging.PackageName("aaa"),
+        version_packaged="3.14.0p15",
         version=packaging.PackageVersion("2.0.0"),
     )
 
-    manifest = _create_simple_test_package(packaging.PackageName("aaa"))
+    manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
     assert manifest.version == packaging.PackageVersion("1.0.0")
 
-    packaging.edit(packaging.PackageName("aaa"), new_manifest)
-
-    assert _read_manifest(packaging.PackageName("aaa")).version == packaging.PackageVersion("2.0.0")
-
-
-def test_edit_rename() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("bbb"))
-
-    _create_simple_test_package(packaging.PackageName("aaa"))
-
-    packaging.edit(packaging.PackageName("aaa"), new_manifest)
-
-    assert _read_manifest(packaging.PackageName("bbb")).name == packaging.PackageName("bbb")
-    assert (
-        packaging.get_installed_manifest(packaging.PackageName("aaa"), logging.getLogger()) is None
+    packaging.edit(
+        installer,
+        packaging.PackageName("aaa"),
+        new_manifest,
+        _PATH_CONFIG,
+        version_packaged="3.14.0p15",
     )
 
-
-def test_edit_rename_conflict() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("bbb"))
-    _create_simple_test_package(packaging.PackageName("aaa"))
-    _create_simple_test_package(packaging.PackageName("bbb"))
-
-    with pytest.raises(packaging.PackageException):
-        packaging.edit(packaging.PackageName("aaa"), new_manifest)
+    assert _read_manifest(
+        installer, packaging.PackageName("aaa")
+    ).version == packaging.PackageVersion("2.0.0")
 
 
-def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
-    packaging._install(mkp_bytes, allow_outdated=False, post_package_change_actions=True)
-    build_setup_search_index.assert_called_once()
+def test_edit_rename(installer: packaging.Installer) -> None:
+    new_manifest = packaging.manifest_template(
+        packaging.PackageName("bbb"),
+        version_packaged="3.14.0p15",
+    )
 
-    assert packaging.is_installed(packaging.PackageName("aaa")) is True
-    manifest = _read_manifest(packaging.PackageName("aaa"))
+    _create_simple_test_package(installer, packaging.PackageName("aaa"))
+
+    packaging.edit(
+        installer,
+        packaging.PackageName("aaa"),
+        new_manifest,
+        _PATH_CONFIG,
+        version_packaged="3.14.0p15",
+    )
+
+    assert _read_manifest(installer, packaging.PackageName("bbb")).name == packaging.PackageName(
+        "bbb"
+    )
+    assert installer.get_installed_manifest(packaging.PackageName("aaa")) is None
+
+
+def test_edit_rename_conflict(installer: packaging.Installer) -> None:
+    new_manifest = packaging.manifest_template(
+        packaging.PackageName("bbb"),
+        version_packaged="3.14.0p15",
+    )
+    _create_simple_test_package(installer, packaging.PackageName("aaa"))
+    _create_simple_test_package(installer, packaging.PackageName("bbb"))
+
+    with pytest.raises(packaging.PackageError):
+        packaging.edit(
+            installer,
+            packaging.PackageName("aaa"),
+            new_manifest,
+            _PATH_CONFIG,
+            version_packaged="3.14.0p15",
+        )
+
+
+def test_install(
+    mkp_bytes: bytes,
+    installer: packaging.Installer,
+) -> None:
+    packaging._install(
+        installer,
+        _PACKAGE_STORE,
+        mkp_bytes,
+        _PATH_CONFIG,
+        _NO_CALLBACKS,
+        allow_outdated=False,
+        site_version="3.14.0p15",
+    )
+    assert installer.is_installed(packaging.PackageName("aaa")) is True
+    manifest = _read_manifest(installer, packaging.PackageName("aaa"))
     assert manifest.version == "1.0.0"
     assert manifest.files[packaging.PackagePart.CHECKS] == [Path("aaa")]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_release_not_existing() -> None:
-    with pytest.raises(packaging.PackageException):
-        packaging.release(packaging.PackageName("abc"), packaging.g_logger)
+def test_release_not_existing(installer: packaging.Installer) -> None:
+    with pytest.raises(packaging.PackageError):
+        packaging.release(installer, packaging.PackageName("abc"), _NO_CALLBACKS)
 
 
-def test_release() -> None:
-    _create_simple_test_package(packaging.PackageName("aaa"))
-    assert packaging.is_installed(packaging.PackageName("aaa")) is True
+def test_release(installer: packaging.Installer) -> None:
+    _create_simple_test_package(installer, packaging.PackageName("aaa"))
+    assert installer.is_installed(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release(packaging.PackageName("aaa"), packaging.g_logger)
+    packaging.release(installer, packaging.PackageName("aaa"), _NO_CALLBACKS)
 
-    assert packaging.is_installed(packaging.PackageName("aaa")) is False
+    assert installer.is_installed(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_write_file() -> None:
-    manifest = _create_simple_test_package(packaging.PackageName("aaa"))
+def test_write_file(installer: packaging.Installer) -> None:
+    manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    mkp = packaging.create_mkp_object(manifest)
+    mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
@@ -222,15 +296,17 @@ def test_write_file() -> None:
     assert info2["name"] == "aaa"
 
 
-def test_uninstall(build_setup_search_index: Mock) -> None:
-    manifest = _create_simple_test_package(packaging.PackageName("aaa"))
-    packaging.uninstall(manifest)
-    build_setup_search_index.assert_called_once()
-    assert not packaging.is_installed(packaging.PackageName("aaa"))
+def test_uninstall(installer: packaging.Installer) -> None:
+    manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    assert not installer.is_installed(packaging.PackageName("aaa"))
 
 
-def test_unpackaged_files_none() -> None:
-    assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
+def test_unpackaged_files_none(installer: packaging.Installer) -> None:
+    assert {
+        part.ident: files
+        for part, files in packaging.get_unpackaged_files(installer, _PATH_CONFIG).items()
+    } == {
         "agent_based": [],
         "agents": [],
         "alert_handlers": [],
@@ -250,7 +326,7 @@ def test_unpackaged_files_none() -> None:
     }
 
 
-def test_unpackaged_files() -> None:
+def test_unpackaged_files(installer: packaging.Installer) -> None:
     _create_test_file("abc")
 
     p = cmk.utils.paths.local_doc_dir.joinpath("docxx")
@@ -261,7 +337,7 @@ def test_unpackaged_files() -> None:
     with p.open("w", encoding="utf-8") as f:
         f.write("huhu\n")
 
-    assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
+    assert packaging.get_unpackaged_files(installer, _PATH_CONFIG) == {
         packaging.PackagePart.AGENT_BASED: [Path("dada")],
         packaging.PackagePart.AGENTS: [],
         packaging.PackagePart.ALERT_HANDLERS: [],
@@ -282,57 +358,64 @@ def test_unpackaged_files() -> None:
 
 
 def test_get_optional_manifests_none() -> None:
-    assert packaging.get_optional_manifests(packaging.PackageStore()) == {}
+    stored = packaging.get_stored_manifests(_PACKAGE_STORE)
+    assert not stored.local
+    assert not stored.shipped
 
 
-def test_get_optional_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_get_stored_manifests(
+    monkeypatch: pytest.MonkeyPatch, installer: packaging.Installer, tmp_path: Path
+) -> None:
     mkp_dir = tmp_path.joinpath("optional_packages")
     mkp_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
 
     # Create package
-    _create_simple_test_package(packaging.PackageName("optional"))
-    expected_manifest = _read_manifest(packaging.PackageName("optional"))
+    _create_simple_test_package(installer, packaging.PackageName("optional"))
+    expected_manifest = _read_manifest(installer, packaging.PackageName("optional"))
 
-    assert packaging.get_optional_manifests(packaging.PackageStore()) == {
-        packaging.PackageID(  # pylint: disable=unhashable-member  # you're wrong, pylint.
-            name=packaging.PackageName("optional"),
-            version=packaging.PackageVersion("1.0.0"),
-        ): (expected_manifest, True)
-    }
+    assert packaging.get_stored_manifests(_PACKAGE_STORE) == packaging.StoredManifests(
+        local=[expected_manifest],
+        shipped=[],
+    )
 
 
-def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_index: Mock) -> None:
-    package = packaging.manifest_template(packaging.PackageName("ding"))
-    packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
+def test_reload_gui_without_gui_files(reload_apache: Mock) -> None:
+    package = packaging.manifest_template(
+        packaging.PackageName("ding"),
+        version_packaged="3.14.0p15",
+    )
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_not_called()
 
 
-def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
+def test_reload_gui_with_gui_part(reload_apache: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
+        version_packaged="3.14.0p15",
         files={packaging.PackagePart.GUI: [Path("a")]},
     )
 
-    packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 
-def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
+def test_reload_gui_with_web_part(reload_apache: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
+        version_packaged="3.14.0p15",
         files={packaging.PackagePart.WEB: [Path("a")]},
     )
 
-    packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 
 def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
-    pi = packaging.manifest_template(packaging.PackageName("test-package"))
+    pi = packaging.manifest_template(
+        packaging.PackageName("test-package"),
+        version_packaged="3.14.0p15",
+    )
     for k, v in properties.items():
         setattr(pi, k, v)
     return pi
@@ -348,7 +431,7 @@ def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
     ],
 )
 def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_version: str) -> None:
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         packaging._raise_for_too_new_cmk_version(until_version, site_version)
 
 
@@ -370,12 +453,13 @@ def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_versio
 def _setup_local_files_structure() -> None:
     """Let's hope this gets easier during the upcomming changes."""
     for part in packaging.PackagePart:
-        subdir = part.path / "subdir"
+        part_path = _PATH_CONFIG.get_path(part)
+        subdir = part_path / "subdir"
         subdir.mkdir(parents=True)
-        (part.path / f"regular_file_of_{part.ident}.py").touch()
-        (part.path / f".hidden_file_of_{part.ident}.py").touch()
-        (part.path / f"editor_file_of_{part.ident}.py~").touch()
-        (part.path / f"compiled_file_of_{part.ident}.pyc").touch()
+        (part_path / f"regular_file_of_{part.ident}.py").touch()
+        (part_path / f".hidden_file_of_{part.ident}.py").touch()
+        (part_path / f"editor_file_of_{part.ident}.py~").touch()
+        (part_path / f"compiled_file_of_{part.ident}.pyc").touch()
         (subdir / f"subdir_file_of_{part.ident}.py").touch()
 
     other_file = cmk.utils.paths.local_root / "some" / "other" / "file.sh"
@@ -395,4 +479,4 @@ def test_get_local_files_by_part() -> None:
             cmk.utils.paths.local_root / "some" / "other" / "file.sh",
         },
     }
-    assert packaging.all_local_files() == expected
+    assert packaging.all_local_files(_PATH_CONFIG) == expected

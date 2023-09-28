@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -47,7 +48,7 @@ class PrinterSupply(NamedTuple):
     color: str
 
 
-Section = Dict[str, PrinterSupply]
+Section = dict[str, PrinterSupply]
 
 
 def _get_oid_end_last_index(oid_end: str) -> str:
@@ -60,7 +61,7 @@ def get_unit(unit_info: str) -> str:
     return unit if unit in ("", "%") else f" {unit}"
 
 
-def parse_printer_supply(string_table: List[StringTable]) -> Section:
+def parse_printer_supply(string_table: list[StringTable]) -> Section:
     if len(string_table) < 2:
         return {}
 
@@ -72,7 +73,6 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
     for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
         string_table[1]
     ):
-
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)
@@ -95,7 +95,7 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
             elif color == "" and colors:
                 color = colors[index - len(colors)]
             if color:
-                name = "%s %s" % (color.title(), name)
+                name = f"{color.title()} {name}"
 
         # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")

@@ -1,5 +1,11 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import time
-from typing import Any, MutableMapping, Optional, Tuple
+from collections.abc import MutableMapping
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
@@ -14,8 +20,8 @@ def store_sync_time(
 def _check_time_difference(
     sync_time: float,
     now: float,
-    levels_upper: Optional[Tuple[float, float]],
-    metric_name: Optional[str],
+    levels_upper: tuple[float, float] | None,
+    metric_name: str | None,
     label: str,
     notice_only: bool,
 ) -> CheckResult:
@@ -40,10 +46,10 @@ def _check_time_difference(
 
 def tolerance_check(
     *,
-    sync_time: Optional[float],
-    levels_upper: Optional[Tuple[float, float]],
+    sync_time: float | None,
+    levels_upper: tuple[float, float] | None,
     value_store: MutableMapping[str, Any],
-    metric_name: Optional[str],
+    metric_name: str | None,
     label: str,
     value_store_key: str,
     notice_only: bool = False,

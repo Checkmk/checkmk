@@ -1,0 +1,20 @@
+Title: Render prediction graphs for services on remote sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1691649984
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When using <a href="https://docs.checkmk.com/master/en/predictive_monitoring.html">predictive monitoring</a>,
+Checkmk offers the option to
+<a href="https://docs.checkmk.com/latest/en/predictive_monitoring.html#_analyzing_the_prognoses">display the current prediction in a graph</a>.
+
+Before this werk, this functionality was broken for services on remote sites. For such services,
+Checkmk always displayed the following error message:
+<i>There is currently no prediction information available for this service.</i>
+
+Note that for Checkmk 2.2 and 2.1, this issue is solved in <a href="https://checkmk.com/werk/16093">werk 16093</a>
+by linking to the remote site.

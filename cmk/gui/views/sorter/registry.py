@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,9 @@ from typing import Any
 
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
-from ..painter.v0.base import painter_registry
 from .base import Sorter
 
 

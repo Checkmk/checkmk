@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -16,19 +16,24 @@ def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
     if not string_table:
         return None
     section = gcp.parse_piggyback(string_table)
-    metric = gcp.MetricSpec(
-        "compute.googleapis.com/instance/uptime_total",
-        "uptime",
-        render.timespan,
-    )
+    metric = gcp.MetricExtractionSpec("compute.googleapis.com/instance/uptime_total")
     uptime_sec = gcp.get_value(section, metric)
     return uptime.Section(uptime_sec, None)
 
 
 register.agent_section(
     name="gcp_service_gce_uptime_total",
-    parsed_section_name="uptime",
+    parsed_section_name="gcp_gce_uptime",
     parse_function=parse_gce_uptime,
+)
+
+register.check_plugin(
+    name="gcp_gce_uptime",
+    service_name="GCP/GCE Uptime",
+    discovery_function=uptime.discover,
+    check_function=uptime.check,
+    check_ruleset_name="uptime",
+    check_default_parameters={},
 )
 
 
@@ -52,15 +57,16 @@ def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:
 def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
-            "compute.googleapis.com/instance/cpu/utilization",
-            "Utilization",
-            render.percent,
-            scale=1e2,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/cpu/utilization", scale=1e2
+            ),
+            gcp.MetricDisplaySpec(label="Utilization", render_func=render.percent),
         ),
         "vcores": gcp.MetricSpec(
-            "compute.googleapis.com/instance/cpu/reserved_cores",
-            "Reserved vCores",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/cpu/reserved_cores",
+            ),
+            gcp.MetricDisplaySpec(label="Reserved vCores", render_func=str),
         ),
     }
     yield from gcp.generic_check(metrics, section, params)
@@ -68,7 +74,7 @@ def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> Check
 
 register.check_plugin(
     name="gcp_gce_cpu",
-    service_name="CPU",
+    service_name="GCP/GCE CPU utilization",
     discovery_function=discover_default,
     check_function=check_cpu,
     check_ruleset_name="gcp_gce_cpu",
@@ -92,17 +98,19 @@ def check_network(
 ) -> CheckResult:
     metric_descs = {
         "in": gcp.MetricSpec(
-            "compute.googleapis.com/instance/network/received_bytes_count",
-            "",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/network/received_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="", render_func=render.timespan),
         ),
         "out": gcp.MetricSpec(
-            "compute.googleapis.com/instance/network/sent_bytes_count",
-            "",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/network/sent_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="", render_func=render.timespan),
         ),
     }
-    metrics = {k: gcp.get_value(section, desc) for k, desc in metric_descs.items()}
+    metrics = {k: gcp.get_value(section, desc.extraction) for k, desc in metric_descs.items()}
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(
             attributes=interfaces.Attributes(
@@ -127,7 +135,7 @@ def check_network(
 
 register.check_plugin(
     name="gcp_gce_network",
-    service_name="Network IO %s",
+    service_name="GCP/GCE Network IO %s",
     discovery_function=discover_network,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
@@ -144,24 +152,28 @@ register.agent_section(
 def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
     metrics = {
         "disk_read_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_bytes_count",
-            "Read",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/read_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Read", render_func=render.iobandwidth),
         ),
         "disk_write_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_bytes_count",
-            "Write",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/write_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Write", render_func=render.iobandwidth),
         ),
         "disk_read_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_ops_count",
-            "Read operations",
-            str,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/read_ops_count",
+            ),
+            gcp.MetricDisplaySpec(label="Read operations", render_func=str),
         ),
         "disk_write_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_ops_count",
-            "Write operations",
-            str,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/write_ops_count",
+            ),
+            gcp.MetricDisplaySpec(label="Write operations", render_func=str),
         ),
     }
     yield from gcp.generic_check(metrics, section, params)
@@ -170,7 +182,7 @@ def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection)
 register.check_plugin(
     name="gcp_gce_disk_summary",
     sections=["gcp_gce_disk"],
-    service_name="Instance disk IO",
+    service_name="GCP/GCE Disk IO Summary",
     discovery_function=discover_default,
     check_ruleset_name="gcp_gce_disk",
     check_default_parameters={

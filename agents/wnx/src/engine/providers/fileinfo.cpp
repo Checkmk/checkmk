@@ -12,13 +12,13 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/wtools.h"
-#include "glob_match.h"
-#include "logger.h"
 #include "providers/fileinfo_details.h"
 #include "tools/_raii.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/glob_match.h"
+#include "wnx/logger.h"
 
 namespace fs = std::filesystem;
 
@@ -325,7 +325,7 @@ PathVector FindFilesByMask(const std::wstring &mask) {
 }
 
 bool ValidFileInfoPathEntry(std::string_view entry) {
-    fs::path p{wtools::ConvertToUTF16(entry)};
+    fs::path p{wtools::ConvertToUtf16(entry)};
     return !p.root_name().empty() && !p.root_directory().empty();
 }
 
@@ -485,7 +485,7 @@ std::string ProcessFileInfoPathEntry(std::string_view entry,
     }
 
     // entries with glob patterns
-    auto mask = wtools::ConvertToUTF16(entry);
+    auto mask = wtools::ConvertToUtf16(entry);
     const auto file_paths = FindFilesByMask(mask);
 
     if (file_paths.empty()) {

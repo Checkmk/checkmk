@@ -1,0 +1,29 @@
+Title: Fix "Transform spool files" update issue
+Class: fix
+Compatible: compat
+Component: core
+Date: 1688458734
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Empty files in notification spool directories did break the update procedure in previous 2.2
+version, which prevented the update procedure from ensuring a consistent configuration and runtime
+data.
+
+The related error looked like this:
+
+C+:
+-| 18/20 Transform spool files...
+-| + "Transform spool files" failed
+-| Traceback (most recent call last):
+-| File "/omd/sites/semitan/lib/python3/cmk/update_config/main.py", line 223, in _call_
+-| action(self._logger, self.update_state.setdefault(action.name))
+-| File "/omd/sites/semitan/lib/python3/cmk/update_config/cee/plugins/actions/notifications.py", line 31, in _call_
+-| data["context"] = transform_flexible_and_plain_context(data["context"])
+-| ~~~~^^^^^^^^^^^
+-| KeyError: 'context'
+C-:
+

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Final, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,17 +30,15 @@ _RawCacheVaultProperties = dict[str, str]
 _RawSection = dict[str, _RawCacheVaultProperties]
 
 
-def _extract_controller(line: str) -> Optional[str]:
+def _extract_controller(line: str) -> str | None:
     return f"/c{line.split('=')[1].strip()}" if line.startswith("Controller =") else None
 
 
 def parse_storcli_cache_vault(string_table: StringTable) -> Section:
-
     raw_section: _RawSection = {}
     raw_roperties: _RawCacheVaultProperties = {}
 
     for (line,) in (l for l in string_table if l):
-
         if (item := _extract_controller(line)) is not None:
             raw_roperties = raw_section.setdefault(item, {})
             continue

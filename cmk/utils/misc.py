@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This is an unsorted collection of small unrelated helper functions which are
@@ -8,16 +8,11 @@ usable in all components of Check_MK
 Please try to find a better place for the things you want to put here."""
 
 import itertools
-import os
 import sys
 import time
-from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, ParamSpec, TypeVar
-
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostAddress
+from typing import Any
 
 
 # TODO: Change to better name like: quote_pnp_string()
@@ -88,18 +83,6 @@ def total_size(
     return sizeof(o)
 
 
-# Works with Checkmk version (without tailing .cee and/or .demo)
-def is_daily_build_version(v: str) -> bool:
-    return len(v) == 10 or "-" in v
-
-
-# Works with Checkmk version (without tailing .cee and/or .demo)
-def branch_of_daily_build(v: str) -> str:
-    if len(v) == 10:
-        return "master"
-    return v.split("-")[0]
-
-
 def cachefile_age(path: Path | str) -> float:
     """Return the time difference between the last modification and now.
 
@@ -111,53 +94,3 @@ def cachefile_age(path: Path | str) -> float:
         path = Path(path)
 
     return time.time() - path.stat().st_mtime
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-
-def with_umask(mask: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    def wrap(f: Callable[P, R]) -> Callable[P, R]:
-        def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
-            with umask(mask):
-                return f(*args, **kwargs)
-
-        return wrapped_f
-
-    return wrap
-
-
-@contextmanager
-def umask(mask: int) -> Iterator[None]:
-    old_mask = os.umask(mask)
-    try:
-        yield None
-    finally:
-        os.umask(old_mask)
-
-
-def normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
-    if isinstance(ip_addresses, str):
-        ip_addresses = ip_addresses.split()
-
-    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
-    for word in ip_addresses:
-        if word in expanded:
-            continue
-
-        try:
-            prefix, tmp = word.split("{")
-            curly, suffix = tmp.split("}")
-        except ValueError:
-            raise MKGeneralException(f"could not expand {word!r}")
-        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
-
-    return expanded
-
-
-def typeshed_issue_7724(x: Mapping[str, str] | None) -> MutableMapping[str, str] | None:
-    """Temporary workaround for https://github.com/python/typeshed/issues/7724
-    TODO: Remove this when the issue a above is fixed!"""
-    return None if x is None else dict(x)

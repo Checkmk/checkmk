@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mange custom attributes of users and hosts"""
@@ -26,17 +26,10 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    make_confirm_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -45,6 +38,15 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeEditCustomUserAttr)
+    mode_registry.register(ModeEditCustomHostAttr)
+    mode_registry.register(ModeCustomUserAttrs)
+    mode_registry.register(ModeCustomHostAttrs)
 
 
 def custom_attr_types() -> Choices:
@@ -110,7 +112,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         """Option to show the custom attribute in overview tables of the setup menu."""
         raise NotImplementedError()
 
-    def _render_table_option(  # type:ignore[no-untyped-def]
+    def _render_table_option(  # type: ignore[no-untyped-def]
         self, section_title, label, help_text
     ) -> None:
         """Helper method to implement _show_in_table_option."""
@@ -217,7 +219,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             )
         )
         if self._new:
-            html.text_input("name", self._attr.get("name", ""))
+            html.text_input("name", self._attr.get("name", ""), size=61)
             html.set_focus("name")
         else:
             html.write_text(self._name)
@@ -225,7 +227,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
         forms.section(_("Title") + "<sup>*</sup>", is_required=True)
         html.help(_("The title is used to label this attribute."))
-        html.text_input("title", self._attr.get("title", ""))
+        html.text_input("title", self._attr.get("title", ""), size=61)
 
         forms.section(_("Topic"))
         html.help(_("The attribute is added to this section in the edit dialog."))
@@ -257,7 +259,6 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         html.end_form()
 
 
-@mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls) -> str:
@@ -330,7 +331,6 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Edit user attribute")
 
 
-@mode_registry.register
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls) -> str:
@@ -467,11 +467,12 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         if not request.var("_delete"):
             return redirect(self.mode_url())
 
-        delname = request.var("_delete")
+        delname = request.get_ascii_input_mandatory("_delete")
         for index, attr in enumerate(self._attrs):
             if attr["name"] == delname:
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
+        remove_custom_attribute_from_all_users(delname)
         self._update_config()
         _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())
@@ -482,17 +483,20 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
             return
 
         with table_element(self._type + "attrs") as table:
-            for custom_attr in sorted(self._attrs, key=lambda x: x["title"]):
+            for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
+                table.cell("#", css=["narrow nowrap"])
+                html.write_text(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
                 )
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("_delete", custom_attr["name"])]),
-                    message=_('Do you really want to delete the custom attribute "%s"?')
-                    % custom_attr["name"],
+                    title=_("Delete custom attribute #%d") % nr,
+                    suffix=custom_attr["title"],
+                    message=_("Name: %s") % custom_attr["name"],
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(delete_url, _("Delete"), "delete")
@@ -502,7 +506,6 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 table.cell(_("Type"), dict(custom_attr_types())[custom_attr["type"]])
 
 
-@mode_registry.register
 class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls) -> str:
@@ -536,7 +539,6 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         )
 
 
-@mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls) -> str:

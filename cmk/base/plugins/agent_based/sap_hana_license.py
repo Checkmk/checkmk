@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Union
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,19 +20,22 @@ from .utils import sap_hana
 
 
 class SAP_HANA_MAYBE(NamedTuple):
-    bool: Optional[bool]
+    bool: bool | None
     value: Any
 
 
 def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        inst: Dict[str, Union[int, SAP_HANA_MAYBE]] = {}
+        inst: dict[str, int | str | SAP_HANA_MAYBE] = {}
         for line in lines:
             if len(line) < 7:
                 continue
 
-            for index, key, in [
+            for (
+                index,
+                key,
+            ) in [
                 (0, "enforced"),
                 (1, "permanent"),
                 (2, "locked"),
@@ -40,7 +44,10 @@ def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
                 value = line[index]
                 inst[key] = SAP_HANA_MAYBE(_parse_maybe_bool(value), value)
 
-            for index, key, in [
+            for (
+                index,
+                key,
+            ) in [
                 (3, "size"),
                 (4, "limit"),
             ]:
@@ -76,7 +83,6 @@ def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryResu
 def check_sap_hana_license(
     item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
 ) -> CheckResult:
-
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")
@@ -128,7 +134,7 @@ def _check_product_usage(size, limit, params):
 
 
 def cluster_check_sap_hana_license(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[sap_hana.ParsedSection]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, sap_hana.ParsedSection | None]
 ) -> CheckResult:
     yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():

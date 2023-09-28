@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,7 +20,7 @@ def parse_sap_hana_proc(string_table: StringTable) -> sap_hana.ParsedSection:
                 continue
 
             inst = section.setdefault(
-                "%s - %s" % (sid_instance, line[1]),
+                f"{sid_instance} - {line[1]}",
                 {
                     "port": line[0],
                     "pid": line[2],
@@ -53,12 +54,12 @@ def check_sap_hana_proc(
     if data is None:
         raise IgnoreResultsError("Login into database failed.")
 
-    yield Result(state=State.OK, summary="Port: %s, PID: %s" % (data["port"], data["pid"]))
+    yield Result(state=State.OK, summary="Port: {}, PID: {}".format(data["port"], data["pid"]))
 
     p_coordin = params["coordin"]
     coordin = data["coordin"]
     if p_coordin != coordin:
-        yield Result(state=State.WARN, summary="Role: changed from %s to %s" % (p_coordin, coordin))
+        yield Result(state=State.WARN, summary=f"Role: changed from {p_coordin} to {coordin}")
     elif coordin.lower() != "none":
         yield Result(state=State.OK, summary="Role: %s" % coordin)
 

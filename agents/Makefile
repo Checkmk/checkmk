@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,6 +6,7 @@ include ../defines.make
 include ../artifacts.make
 
 AGENTS_DIR := $(REPO_PATH)/agents
+SPECIAL_AGENTS_DIR := $(REPO_PATH)/cmk/special_agents
 RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
@@ -20,14 +21,8 @@ DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
-AGENT_CTL_GZ := $(AGENTS_DIR)/linux/cmk-agent-ctl.gz
-AGENT_CTL_CARGO_OUT := cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
-AGENT_CTL_DEPS := cmk-agent-ctl/Cargo.lock \
-	cmk-agent-ctl/Cargo.toml \
-	$(wildcard cmk-agent-ctl/src/*.rs) \
-	$(wildcard cmk-agent-ctl/src/configuration/*.rs) \
-	$(wildcard cmk-agent-ctl/src/modes/*.rs) \
-	$(wildcard cmk-agent-ctl/src/monitoring_data/*.rs)
+AGENT_CTL_GZ := $(AGENT_CTL).gz
+AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -44,7 +39,6 @@ usage:
 	@echo "make rpm           -- create RPM package of Linux agent"
 	@echo "make deb           -- create DEB package of Linux agent"
 	@echo "make packages      -- create RPM and DEB package of Linux agent"
-	@echo "make controller    -- build the agent controller binary"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -81,20 +75,23 @@ setversion:
 	    check_mk_agent.openbsd \
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
-	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
-	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' cmk-agent-ctl/src/constants.rs
+	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
+		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
+		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
+		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
+		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
+	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/include/common/wnx_version.h
+	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/include/wnx/install_api.h
+	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
+	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
+	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
-controller: $(AGENT_CTL_GZ)
-
-$(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
-	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release)
-	touch $(AGENT_CTL_CARGO_OUT)
-
-$(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)
+$(AGENT_CTL):
+	$(AGENT_CTL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(AGENT_CTL_CARGO_OUT) $(AGENT_CTL)
+	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
@@ -117,10 +114,15 @@ $(RPM_PACKAGE): $(BUILDROOT_STAMP)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDDIR)
 
 $(DEB_PACKAGE): $(BUILDROOT_STAMP)
-	rm $(DEB_BUILDDIR) -rf
-	mkdir -p $(DEB_BUILDDIR)/control
-	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
-	touch "$(DEB_BUILDDIR)/control/md5sum"
+	rm "$(DEB_BUILDDIR)" -rf
+	mkdir -p "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/conffiles" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/control" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/debian-binary" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/postinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/preinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/prerm" "$(DEB_BUILDDIR)/control"
+	install -m 644 /dev/null "$(DEB_BUILDDIR)/control/md5sum"
 	cd $(BUILDROOT); find . -type f | while read -r filename; do \
 	    md5sum "$${filename}" | sed 's|./||' >> "$(DEB_BUILDDIR)/control/md5sum"; \
 	done
@@ -129,8 +131,8 @@ $(DEB_PACKAGE): $(BUILDROOT_STAMP)
 	    -e 's|\(Installed-Size:\).*|\1 '"$$(du $(BUILDROOT) -s -B1024 | cut -f1)"'|' \
 	    "$(DEB_TOPDIR)/control/control" > "$(DEB_BUILDDIR)/control/control"
 	# gnu formatted tar
-	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" *
-	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" *
+	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" .
+	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" .
 	cd "$(DEB_TOPDIR)"; ar cr "$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
 	rm $(DEB_BUILDDIR) -rf
 

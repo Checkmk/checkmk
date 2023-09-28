@@ -3,15 +3,17 @@
 # Disabled cmk plugins based on linux specific modules
 #
 init-hook=
+    import sys
     import inspect
     import os
-    import sys
     config_file = inspect.stack()[2][0].f_locals["linter"].config_file
     sys.path.insert(0, os.path.dirname(config_file))
+load-plugins=
+    pylint.extensions.bad_builtin
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster
 persistent=no
-extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic,lxml
 bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 signature-mutators=cmk.utils.store.with_lock_dict
@@ -40,10 +42,6 @@ disable=
     # improve readability and involve some cleanups in our class hierarchy, so
     # we should do this some day.
     protected-access,
-    #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. At the moment, we have quite
-    # a few violations, so we postpone fixing this.
-    no-self-use,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations (about 220 in roughly 40 modules), so we postpone fixing
@@ -89,7 +87,6 @@ disable=
     # flow, so even adding e.g. isinstance() guards wouldn't help, see:
     # https://github.com/PyCQA/pylint/issues/1498.
     unsubscriptable-object,
-    unsupported-membership-test,
     #---------------------------------------------------------------------------
     # Our code is still full of FIXMEs/XXXs/TODOs, perhaps fixing or removing
     # them might be a good idea some day...
@@ -123,10 +120,6 @@ disable=
     duplicate-code,
     R0801,
     #---------------------------------------------------------------------------
-    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
-    # with out cmk.gui.globals.
-    assigning-non-slot,
-    #---------------------------------------------------------------------------
     # Useful, but quite a few findings.
     use-implicit-booleaness-not-comparison,
     #---------------------------------------------------------------------------
@@ -147,13 +140,23 @@ disable=
     # Tons of findings, we fix this incrementally, f-strings are much more
     # performant than old-skool string splicing/formatting.
     consider-using-f-string,
+    #---------------------------------------------------------------------------
+    # New in version 2.15.0 which causes a few findings
+    missing-timeout,
+    #---------------------------------------------------------------------------
+    # New in version 2.16.0 which causes a few findings
+    broad-exception-raised,
+    #---------------------------------------------------------------------------
+    # 2.16 also warns about call to dict() when passing keyword arguments
+    # Remove this soon!
+    use-dict-literal
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.
 allow-wildcard-with-all=yes
 
 [REPORTS]
-msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+output-format=colorized
 
 [FORMAT]
 max-line-length=100
@@ -161,3 +164,6 @@ max-line-length=100
 [VARIABLES]
 # Be a little bit more mypy-friendly.
 additional-builtins=reveal_type
+
+[LAYERING_VIOLATION]
+# layering-definition=.layering.yaml

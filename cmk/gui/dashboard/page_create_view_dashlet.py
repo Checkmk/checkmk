@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """Pages to create either linked_view or view dashlets"""
 
-from typing import Callable
-
-from cmk.utils.type_defs import UserId
+from collections.abc import Callable
 
 import cmk.gui.visuals as visuals
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -22,7 +21,6 @@ from cmk.gui.type_defs import ViewName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.views.view_choices import view_choices
 
@@ -54,6 +52,8 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
             "size": dashlet_registry["linked_view"].initial_size(),
             "show_title": True,
             "name": view_name,
+            "context": {},
+            "single_infos": dashlet_registry["linked_view"].single_infos(),
         }
     )
 
@@ -80,25 +80,17 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
         {
             "type": "view",
             "datasource": "hosts",
-            "description": "",
             "position": dashlet_registry["linked_view"].initial_position(),
             "size": dashlet_registry["linked_view"].initial_size(),
-            "hidden": False,
-            "public": True,
             "show_title": True,
             "layout": "table",
             "browser_reload": 30,
             "num_columns": 1,
             "column_headers": "pergroup",
             "name": "",
-            "owner": UserId.builtin(),
-            "hidebutton": False,
             "group_painters": [],
             "painters": [],
             "sorters": [],
-            "topic": "",
-            "link_from": {},
-            "icon": None,
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,

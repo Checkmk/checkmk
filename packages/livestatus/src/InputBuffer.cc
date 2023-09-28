@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -7,16 +7,19 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <compare>
 #include <cstring>
 #include <ostream>
+#include <string_view>
 #include <utility>
-// IWYU pragma: no_include <type_traits>
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Poller.h"
+#include "livestatus/StringUtils.h"
 
 using namespace std::chrono_literals;
 
@@ -50,6 +53,8 @@ std::ostream &operator<<(std::ostream &os, const InputBuffer::Result &r) {
             return os << "empty request";
         case InputBuffer::Result::timeout:
             return os << "timeout";
+        case InputBuffer::Result::invalid_utf8:
+            return os << "invalid UTF-8";
     }
     return os;  // never reached
 }
@@ -99,7 +104,7 @@ InputBuffer::Result InputBuffer::readRequest() {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
             if (_write_index < _readahead_buffer.capacity()) {
-                Result rd =
+                const Result rd =
                     readData();  // tries to read in further data into buffer
                 if (rd == Result::timeout) {
                     if (query_started) {
@@ -156,9 +161,9 @@ InputBuffer::Result InputBuffer::readRequest() {
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
             else if (_read_index > 0) {
-                size_t shift_by =
+                const size_t shift_by =
                     _read_index;  // distance to beginning of buffer
-                size_t size =
+                const size_t size =
                     _write_index - _read_index;  // amount of data to shift
                 memmove(_readahead_buffer.data(),
                         &_readahead_buffer[_read_index], size);
@@ -170,7 +175,7 @@ InputBuffer::Result InputBuffer::readRequest() {
             }
             // buffer is full, but still no end of line found
             else {
-                size_t new_capacity = _readahead_buffer.capacity() * 2;
+                const size_t new_capacity = _readahead_buffer.capacity() * 2;
                 if (new_capacity > maximum_buffer_size) {
                     Informational(_logger)
                         << "Error: maximum length of request line exceeded";
@@ -195,8 +200,13 @@ InputBuffer::Result InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                _request_lines.emplace_back(&_readahead_buffer[_read_index],
-                                            length);
+                const std::string_view s(&_readahead_buffer[_read_index],
+                                         length);
+                if (!mk::is_utf8(s)) {
+                    return Result::invalid_utf8;
+                }
+                _request_lines.emplace_back(s);
+
             } else {
                 Informational(_logger)
                     << "Warning ignoring line containing only whitespace";
@@ -223,8 +233,8 @@ InputBuffer::Result InputBuffer::readData() {
             }
             break;
         }
-        ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
-                           _readahead_buffer.capacity() - _write_index);
+        const ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
+                                 _readahead_buffer.capacity() - _write_index);
         if (r < 0) {
             return Result::eof;
         }

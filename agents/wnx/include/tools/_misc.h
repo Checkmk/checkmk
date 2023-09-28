@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -49,6 +49,28 @@ inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     return std::towlower(lhs) == std::towlower(rhs);
 }
 
+/// Checks basically whether we have vector(ContiguousContainer)
+/// C++ concepts library doesn't support now ContiguosContainer
+template <typename C>
+concept VectorLike = requires(C c) {
+                         c[0];
+                         c.data();
+                         c.size();
+                     };
+template <VectorLike Data>
+std::string_view ToView(const Data &input) {
+    return {reinterpret_cast<const char *>(input.data()),
+            sizeof(input[0]) * input.size()};
+}
+
+inline std::optional<std::wstring_view> ToWideView(std::string_view s) {
+    if ((s.size() % 2) != 0) {
+        return {};
+    }
+    return std::wstring_view{reinterpret_cast<const wchar_t *>(s.data()),
+                             s.size() / 2};
+}
+
 template <class T>
 concept StringLike = std::is_convertible_v<T, std::string_view>;
 template <class T>
@@ -57,15 +79,19 @@ template <class T>
 concept UniStringLike = StringLike<T> || WideStringLike<T>;
 
 template <class T>
-requires StringLike<T>
-[[nodiscard]] auto AsView(const T &p) noexcept { return std::string_view{p}; }
+    requires StringLike<T>
+[[nodiscard]] auto AsView(const T &p) noexcept {
+    return std::string_view{p};
+}
 
 template <class T>
-requires WideStringLike<T>
-[[nodiscard]] auto AsView(const T &p) noexcept { return std::wstring_view{p}; }
+    requires WideStringLike<T>
+[[nodiscard]] auto AsView(const T &p) noexcept {
+    return std::wstring_view{p};
+}
 
 template <class T, class V>
-requires UniStringLike<T> && UniStringLike<V>
+    requires UniStringLike<T> && UniStringLike<V>
 [[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
         return CompareIgnoreCase(l, r);
@@ -343,11 +369,6 @@ inline void RightTrim(std::string &str) noexcept {
 inline void AllTrim(std::string &str) {
     LeftTrim(str);
     RightTrim(str);
-}
-
-inline std::vector<std::string_view> ToView(
-    const std::vector<std::string> &table) {
-    return {table.begin(), table.end()};
 }
 
 /// max_count == 0 means inifinite parsing

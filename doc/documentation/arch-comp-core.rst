@@ -103,5 +103,13 @@ the raw edition uses the third-party `Nagios`_ core.
 The Nagios core further dictates some of our protocols such
 as the format with which the :ref:`check results<check-engine>`
 are passed to the core.
+In particular:
+These protocols are line based, so newlines have to be escaped somehow.
+Unfortunately, the cores assume that the first encountered backslash-n pair
+represents the newline separating the summary and the details (a.k.a.
+"plugin_output"  and "long_plugin_output"). The remaining backslash-n pairs
+are kept as they are, and no further decoding / unescaping is done. As a
+result, it is impossible to have a literal backslash-n in the summary, and to
+distinguish replaced newlines from backslash-n in the details.
 
 .. _Nagios: https://www.nagios.org/

@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.mobileiron_compliance import check_mobileiron_compliance
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
+from cmk.base.plugins.agent_based.utils.mobileiron import Section
 
 DEVICE_DATA = parse_mobileiron(
     [
@@ -128,8 +131,8 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
         ),
     ],
 )
-def test_check_mobileiron_compliance(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_mobileiron_compliance(
+    params: Mapping[str, object], section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_mobileiron_compliance(params, section))
     assert results == expected_results

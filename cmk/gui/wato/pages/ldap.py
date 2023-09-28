@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
@@ -9,7 +9,6 @@ from collections.abc import Collection
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.userdb as userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -23,20 +22,9 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuEntry,
 )
-from cmk.gui.plugins.userdb.utils import (
-    get_connection,
-    load_connection_config,
-    save_connection_config,
-)
-from cmk.gui.plugins.wato.utils import (
-    MigrateNotUpdatedToIndividualOrStoredPassword,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.userdb import get_connection, load_connection_config, save_connection_config
 from cmk.gui.userdb.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,
@@ -56,6 +44,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
+    ID,
     Integer,
     LDAPDistinguishedName,
     ListOfStrings,
@@ -71,9 +60,18 @@ from cmk.gui.wato.pages.userdb_common import (
     get_affected_sites,
     render_connections_page,
 )
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+from ._password_store_valuespecs import MigrateNotUpdatedToIndividualOrStoredPassword
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeLDAPConfig)
+    mode_registry.register(ModeEditLDAPConnection)
+
 
 # .
 #   .--Valuespec-----------------------------------------------------------.
@@ -87,7 +85,7 @@ if cmk_version.is_managed_edition():
 
 
 class LDAPConnectionValuespec(MigrateNotUpdated):
-    def __init__(self, new, connection_id) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, new, connection_id) -> None:  # type: ignore[no-untyped-def]
         self._new = new
         self._connection_id = connection_id
         self._connection = get_connection(self._connection_id)
@@ -144,15 +142,14 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         if self._new:
             id_element: DictionaryEntry = (
                 "id",
-                TextInput(
+                ID(
                     title=_("ID"),
                     help=_(
-                        "The ID of the connection must be a unique text. It will be used as an internal key "
-                        "when objects refer to the connection."
+                        "The ID of the connection must be a unique text, with the same requirements as an user id. "
+                        "It will be used as an internal key when objects refer to the connection."
                     ),
                     allow_empty=False,
                     size=12,
-                    validate=self._validate_ldap_connection_id,
                 ),
             )
         else:
@@ -166,7 +163,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         general_elements += [id_element]
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             general_elements += managed.customer_choice_element()
 
         general_elements += rule_option_elements()
@@ -246,7 +243,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                     help=_(
                         "Connect to the LDAP server with a SSL encrypted connection. The "
                         '<a href="wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities">trusted '
-                        "certificates authorities</a> configured in Check_MK will be used to validate the "
+                        "certificates authorities</a> configured in Checkmk will be used to validate the "
                         "certificate provided by the LDAP server."
                     ),
                     value=True,
@@ -377,7 +374,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                                 TextInput(
                                     title=_("DNS domain name to discover LDAP servers of"),
                                     help=_(
-                                        "Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                        "Configure the DNS domain name of your Active directory domain here, Checkmk "
                                         "will then query this domain for it's closest domain controller to communicate "
                                         "with."
                                     ),
@@ -602,7 +599,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "from the LDAP directory. This is done by plugins which can individually enabled "
                         "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "
-                        "into Check_MK from LDAP will be locked in WATO."
+                        "into Checkmk from LDAP will be locked in Setup."
                     ),
                     elements=lambda: ldap_attribute_plugins_elements(self._connection),
                     default_keys=["email", "alias", "auth_expire"],
@@ -617,7 +614,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "used by sites which have the "
                         '<a href="wato.py?mode=sites">Automatic User '
                         "Synchronization</a> enabled.<br><br>"
-                        "Please note: Passwords of the users are never stored in WATO and therefor never cached!"
+                        "Please note: Passwords of the users are never stored in Setup and therefor never cached!"
                     ),
                     minvalue=60,
                     default_value=300,
@@ -627,13 +624,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         ]
 
         return other_elements
-
-    def _validate_ldap_connection_id(self, value, varprefix):
-        if value in [c["id"] for c in active_config.user_connections]:
-            raise MKUserError(
-                varprefix,
-                _("This ID is already used by another connection. Please choose another one."),
-            )
 
     def _validate_ldap_connection(self, value, varprefix):
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
@@ -686,7 +676,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 )
 
 
-@mode_registry.register
 class ModeLDAPConfig(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -712,7 +701,9 @@ class ModeLDAPConfig(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        return connection_actions(config_mode_url=self.mode_url(), connection_type=self.type)
+        return connection_actions(
+            config_mode_url=self.mode_url(), connection_type=self.type, custom_config_dirs=()
+        )
 
     def page(self) -> None:
         render_connections_page(
@@ -722,7 +713,6 @@ class ModeLDAPConfig(WatoMode):
         )
 
 
-@mode_registry.register
 class ModeEditLDAPConnection(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -864,7 +854,7 @@ class ModeEditLDAPConnection(WatoMode):
                 )
             )
         else:
-            connection = userdb.get_connection(self._connection_id)
+            connection = get_connection(self._connection_id)
             assert isinstance(connection, LDAPUserConnector)
 
             for address in connection.servers():
@@ -880,9 +870,9 @@ class ModeEditLDAPConnection(WatoMode):
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
-                            img = html.render_icon("success", _("Success"))
+                            img = html.render_icon("checkmark", _("Success"))
                         else:
-                            img = html.render_icon("failed", _("Failed"))
+                            img = html.render_icon("cross", _("Failed"))
 
                         table.cell(_("Test"), title)
                         table.cell(_("State"), img)

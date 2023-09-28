@@ -1,0 +1,24 @@
+Title: autodiscovery: Show site changes made by Periodic service discovery
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1682513465
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+The werk is incompatible because it removes the 'cmk --discover-marked-hosts' command.
+We consider this command an internal one. So it's likely that you don't not need to do anything.
+However, if you need access to this command, please let us know.
+
+Previously, if 'Periodic service discovery' was used with 'Automatically update service configuration'
+enabled and 'Do not activate changes' activation option, the services would be discovered but
+the change wasn't visible in 'Activate pending changes' or in the audit log.
+
+This made it impossible to know whether there are any discovered changes that need to be activated
+and what these changes are.
+
+Now, when changes get automatically discovered but not activated, they appear in
+'Activate pending changes' and the action is logged to the audit log.
+In case of automatic discovery with activation, the action will be logged to the audit log.

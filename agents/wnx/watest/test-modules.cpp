@@ -10,10 +10,10 @@
 #include <filesystem>
 #include <iterator>
 
-#include "cfg.h"
-#include "cfg_details.h"
-#include "modules.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/modules.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -195,7 +195,7 @@ TEST(ModulesTest, Loader) {
         EXPECT_EQ(m.name(), s.name);
         auto arr = cma::cfg::GetArray<std::string>(YAML::Load(s.exts));
         EXPECT_TRUE(Compare(m.exts(), arr));
-        EXPECT_EQ(m.exec(), wtools::ConvertToUTF16(s.exec));
+        EXPECT_EQ(m.exec(), wtools::ConvertToUtf16(s.exec));
         if (s.dir.size() <= 5)
             EXPECT_EQ(m.dir(), fmt::format(defaults::kModulesDir, m.name()));
         else
@@ -571,7 +571,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
-TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
+TEST_F(ModuleCommanderTest, InstallModulesComponent) {
     auto zip_file = tst::MakePathToUnitTestFiles() / tst::install_cab_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
         << "Please make '" << tst::install_cab_to_test << "' available";

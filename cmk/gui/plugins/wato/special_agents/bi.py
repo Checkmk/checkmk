@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -24,6 +21,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 class MultisiteBiDatasource:
@@ -204,7 +203,7 @@ def _valuespec_special_agents_bi():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:bi",
+        name=RuleGroup.SpecialAgents("bi"),
         valuespec=_valuespec_special_agents_bi,
     )
 )

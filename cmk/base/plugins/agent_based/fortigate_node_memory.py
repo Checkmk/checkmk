@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     all_of,
@@ -20,10 +21,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"
 
-Section = Dict
+Section = dict
 
 
-def parse_fortigate_node_memory(string_table: List[StringTable]) -> Section:
+def parse_fortigate_node_memory(string_table: list[StringTable]) -> Section:
     if len(string_table[0]) == 1:
         return {"Cluster": float(string_table[0][0][1])}
 
@@ -56,7 +57,7 @@ def discovery_fortigate_node_memory(section: Section) -> DiscoveryResult:
         yield Service(item=k)
 
 
-def check_fortigate_node_memory(  # type:ignore[no-untyped-def]
+def check_fortigate_node_memory(  # type: ignore[no-untyped-def]
     item, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     memory = section.get(item)

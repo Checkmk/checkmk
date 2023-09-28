@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # import pytest
@@ -23,8 +23,8 @@ def _check_function_node(test_results):
 
 
 def test_node_returns_nothing() -> None:
-    assert list(make_node_notice_results("test_node", _check_function_node(()))) == []
-    assert list(make_node_notice_results("test_node", ())) == []
+    assert not list(make_node_notice_results("test_node", _check_function_node(())))
+    assert not list(make_node_notice_results("test_node", ()))
 
 
 def test_node_raises() -> None:
@@ -32,12 +32,12 @@ def test_node_raises() -> None:
         raise IgnoreResultsError()
         yield  # pylint: disable=unreachable
 
-    assert list(make_node_notice_results("test_node", _check_node_raises())) == []
+    assert not list(make_node_notice_results("test_node", _check_node_raises()))
 
 
 def test_node_ignore_results() -> None:
     node_results = _check_function_node((_OK_RESULT, IgnoreResults()))
-    assert list(make_node_notice_results("test_node", node_results)) == []
+    assert not list(make_node_notice_results("test_node", node_results))
 
 
 def test_node_returns_metric() -> None:

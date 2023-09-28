@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,12 +13,12 @@ API data, see CMK-10826.
 """
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal, TypedDict
+from typing import cast, Literal, NotRequired
 
-from typing_extensions import NotRequired
+from typing_extensions import TypedDict
 
 from .schemata import api
-from .transform_any import parse_annotations, parse_labels, parse_match_labels
+from .transform_any import parse_match_labels
 
 # StatefulSet
 
@@ -73,21 +73,16 @@ class JSONSelector(TypedDict, total=False):
 
 
 class JSONStatefulSetSpec(TypedDict):
+    minReadySeconds: NotRequired[int]
     replicas: int
     selector: JSONSelector
     updateStrategy: JSONStatefulSetUpdateStrategy
 
 
-class JSONStatefulSetStatus(TypedDict, total=False):
-    readyReplicas: int
-    updatedReplicas: int
-    availableReplicas: int
-
-
 class JSONStatefulSet(TypedDict):
     metadata: JSONStatefulSetMetaData
     spec: JSONStatefulSetSpec
-    status: JSONStatefulSetStatus
+    status: object
 
 
 class JSONStatefulSetList(TypedDict):
@@ -111,22 +106,11 @@ class JSONNodeList(TypedDict):
 
 
 def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData:
-    return api.MetaData(
-        name=metadata["name"],
-        namespace=api.NamespaceName(metadata["namespace"]),
-        creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
-        labels=parse_labels(metadata.get("labels", {})),
-        annotations=parse_annotations(metadata.get("annotations", {})),
-    )
+    return api.MetaData.parse_obj(metadata)
 
 
 def _metadata_no_namespace_from_json(metadata: JSONNodeMetaData) -> api.NodeMetaData:
-    return api.NodeMetaData(
-        name=metadata["name"],
-        creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
-        labels=parse_labels(metadata.get("labels", {})),
-        annotations=parse_annotations(metadata.get("annotations", {})),
-    )
+    return api.NodeMetaData.parse_obj(metadata)
 
 
 def _parse_match_expression_from_json(
@@ -167,17 +151,10 @@ def _statefulset_update_strategy_from_json(
 
 def _statefulset_spec_from_json(spec: JSONStatefulSetSpec) -> api.StatefulSetSpec:
     return api.StatefulSetSpec(
+        min_ready_seconds=spec.get("minReadySeconds", 0),
         strategy=_statefulset_update_strategy_from_json(spec["updateStrategy"]),
         selector=_selector_from_json(spec["selector"]),
         replicas=spec["replicas"],
-    )
-
-
-def _statefulset_status_from_json(status: JSONStatefulSetStatus) -> api.StatefulSetStatus:
-    return api.StatefulSetStatus(
-        ready_replicas=status.get("readyReplicas", 0),
-        updated_replicas=status.get("updatedReplicas", 0),
-        available_replicas=status.get("availableReplicas"),
     )
 
 
@@ -188,7 +165,7 @@ def _statefulset_from_json(
     return api.StatefulSet(
         metadata=_metadata_from_json(statefulset["metadata"]),
         spec=_statefulset_spec_from_json(statefulset["spec"]),
-        status=_statefulset_status_from_json(statefulset["status"]),
+        status=api.StatefulSetStatus.parse_obj(statefulset["status"]),
         pods=pod_uids,
     )
 

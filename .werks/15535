@@ -1,0 +1,14 @@
+Title: IPMI sensors: Do not discover single absent sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683402537
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+When configured to discover one service per sensor in the rule set <i>IPMI sensor discovery</i>, the IPMI check plugins now ignore absent sensors.
+
+A sensor is considered absent if its status description contains any of the strings "<i>Device Removed</i>" "<i>Device Absent</i>" or "<i>Entity Absent</i>".
+

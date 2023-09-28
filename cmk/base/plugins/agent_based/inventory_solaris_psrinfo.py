@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,7 +31,7 @@
 # The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
-from typing import Dict, NamedTuple, Optional, Union
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, regex, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -72,9 +72,9 @@ register.agent_section(
 class ProcessorInfo(NamedTuple):
     model: str
     maximum_speed: str
-    cpus: Optional[int]
-    cores: Optional[int]
-    threads: Optional[int]
+    cpus: int | None
+    cores: int | None
+    threads: int | None
 
 
 def parse_solaris_psrinfo_verbose(string_table: StringTable) -> ProcessorInfo:
@@ -141,8 +141,8 @@ register.agent_section(
 
 
 class ParsedTable(NamedTuple):
-    cpus: Optional[int]
-    cores: Optional[int]
+    cpus: int | None
+    cores: int | None
 
 
 # Don't include info about threads.
@@ -191,39 +191,42 @@ register.agent_section(
 
 
 def inventory_solaris_cpus(
-    section_solaris_psrinfo_physical: Optional[int],
-    section_solaris_psrinfo_virtual: Optional[int],
-    section_solaris_psrinfo_verbose: Optional[ProcessorInfo],
-    section_solaris_psrinfo_table: Optional[ParsedTable],
+    section_solaris_psrinfo_physical: int | None,
+    section_solaris_psrinfo_virtual: int | None,
+    section_solaris_psrinfo_verbose: ProcessorInfo | None,
+    section_solaris_psrinfo_table: ParsedTable | None,
 ) -> InventoryResult:
-    if section_solaris_psrinfo_physical is None:
-        return
-
-    if section_solaris_psrinfo_virtual is None:
-        return
+    inventory_attributes: dict[str, int | str] = {}
 
     # cpus and threads are also (partly) available in section_solaris_psrinfo
     # and section_solaris_psrinfo_table, but these are more reliable
-    cpus = section_solaris_psrinfo_physical
-    threads = section_solaris_psrinfo_virtual
-
-    inventory_attributes: Dict[str, Union[int, str]] = {
-        "cpus": cpus,
-        "threads": threads,
-    }
+    if section_solaris_psrinfo_physical is not None:
+        inventory_attributes["cpus"] = section_solaris_psrinfo_physical
+    if section_solaris_psrinfo_virtual is not None:
+        inventory_attributes["threads"] = section_solaris_psrinfo_virtual
 
     if (
         cores := _get_cores(
             section_solaris_psrinfo_verbose,
             section_solaris_psrinfo_table,
-            threads,
+            section_solaris_psrinfo_virtual,
         )
     ) is not None:
         inventory_attributes["cores"] = cores
 
     if section_solaris_psrinfo_verbose is not None:
-        inventory_attributes["Model"] = section_solaris_psrinfo_verbose.model
-        inventory_attributes["Maximum Speed"] = section_solaris_psrinfo_verbose.maximum_speed
+        inventory_attributes["model"] = section_solaris_psrinfo_verbose.model
+        inventory_attributes["max_speed"] = section_solaris_psrinfo_verbose.maximum_speed
+
+        # See comment above: But if do not already have cpus or threads we use these ones:
+        if "cpus" not in inventory_attributes and section_solaris_psrinfo_verbose.cpus is not None:
+            inventory_attributes["cpus"] = section_solaris_psrinfo_verbose.cpus
+
+        if (
+            "threads" not in inventory_attributes
+            and section_solaris_psrinfo_verbose.threads is not None
+        ):
+            inventory_attributes["threads"] = section_solaris_psrinfo_verbose.threads
 
     yield Attributes(
         path=["hardware", "cpu"],
@@ -232,10 +235,10 @@ def inventory_solaris_cpus(
 
 
 def _get_cores(
-    processor_info: Optional[ProcessorInfo],
-    parsed_table: Optional[ParsedTable],
-    threads: int,
-) -> Optional[int]:
+    processor_info: ProcessorInfo | None,
+    parsed_table: ParsedTable | None,
+    threads: int | None,
+) -> int | None:
     # 1st try: Obtain cores from parsed "psrinfo -t" table
     if parsed_table is not None and parsed_table.cores is not None:
         return parsed_table.cores
@@ -247,6 +250,9 @@ def _get_cores(
     # Exit if section is not available at all (shouldn't happen)
     if processor_info.cores is not None:
         return processor_info.cores
+
+    if threads is None:
+        return None
 
     # Last resort if there's still no information about cores:
     # All "current" SPARC M, T, and S series processors have 8 threads per core,

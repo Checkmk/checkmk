@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
+from typing import Any, NamedTuple
+
+from pydantic import BaseModel, Field
 
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -28,8 +31,8 @@ class Resource(NamedTuple):
     kind: str | None = None
     location: str | None = None
     tags: Mapping[str, str] = {}
-    properties: Mapping = {}
-    specific_info: Mapping = {}
+    properties: Mapping[Any, Any] = {}
+    specific_info: Mapping[Any, Any] = {}
     metrics: Mapping[str, AzureMetric] = {}
     subscription: str | None = None
 
@@ -42,6 +45,22 @@ class MetricData(NamedTuple):
     upper_levels_param: str = ""
     lower_levels_param: str = ""
     boundaries: tuple[float | None, float | None] | None = None
+
+
+class PublicIP(BaseModel):
+    name: str
+    location: str
+    ipAddress: str
+    publicIPAllocationMethod: str
+    dns_fqdn: str
+
+
+class FrontendIpConfiguration(BaseModel):
+    id: str
+    name: str
+    privateIPAllocationMethod: str
+    privateIPAddress: str | None = Field(None)
+    public_ip_address: PublicIP | None = Field(None)
 
 
 Section = Mapping[str, Resource]
@@ -84,7 +103,7 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         )
 
 
-def _get_resource(resource: Mapping[str, Any], metrics=None):  # type:ignore[no-untyped-def]
+def _get_resource(resource: Mapping[str, Any], metrics=None):  # type: ignore[no-untyped-def]
     return Resource(
         resource["id"],
         resource["name"],
@@ -151,7 +170,7 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 #   +----------------------------------------------------------------------+
 
 
-def discover_azure_by_metrics(
+def create_discover_by_metrics_function(
     *desired_metrics: str,
     resource_type: str | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
@@ -163,6 +182,28 @@ def discover_azure_by_metrics(
                 set(desired_metrics) & set(resource.metrics)
             ):
                 yield Service(item=item)
+
+    return discovery_function
+
+
+def create_discover_by_metrics_function_single(
+    *desired_metrics: str,
+    resource_type: str | None = None,
+) -> Callable[[Section], DiscoveryResult]:
+    """
+    Return a discovery function, that will discover if any of the metrics are found
+    only if there is one resource in the section; doesn't return an item
+    """
+
+    def discovery_function(section: Section) -> DiscoveryResult:
+        if len(section) != 1:
+            return
+
+        resource = list(section.values())[0]
+        if (resource_type is None or resource_type == resource.type) and (
+            set(desired_metrics) & set(resource.metrics)
+        ):
+            yield Service()
 
     return discovery_function
 
@@ -179,8 +220,8 @@ def discover_azure_by_metrics(
 
 def iter_resource_attributes(
     resource: Resource, include_keys: tuple[str] = ("location",)
-) -> Iterable[tuple[str, str | None]]:
-    def capitalize(string):
+) -> Generator[tuple[str, str | None], None, None]:
+    def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
 
     for key in include_keys:
@@ -192,7 +233,32 @@ def iter_resource_attributes(
             yield capitalize(key), value
 
 
-def check_azure_metrics(
+def check_resource_metrics(
+    resource: Resource,
+    params: Mapping[str, Any],
+    metrics_data: Sequence[MetricData],
+    suppress_error: bool = False,
+) -> CheckResult:
+    metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
+    if not any(metrics) and not suppress_error:
+        raise IgnoreResultsError("Data not present at the moment")
+
+    for metric, metric_data in zip(metrics, metrics_data):
+        if not metric:
+            continue
+
+        yield from check_levels(
+            metric.value,
+            levels_upper=params.get(metric_data.upper_levels_param),
+            levels_lower=params.get(metric_data.lower_levels_param),
+            metric_name=metric_data.metric_name,
+            label=metric_data.metric_label,
+            render_func=metric_data.render_func,
+            boundaries=metric_data.boundaries,
+        )
+
+
+def create_check_metrics_function(
     metrics_data: Sequence[MetricData], suppress_error: bool = False
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -202,29 +268,28 @@ def check_azure_metrics(
                 return
             raise IgnoreResultsError("Data not present at the moment")
 
-        metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
-        if not any(metrics) and not suppress_error:
-            raise IgnoreResultsError("Data not present at the moment")
+        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
 
-        for metric, metric_data in zip(metrics, metrics_data):
-            if not metric:
-                continue
+    return check_metric
 
-            yield from check_levels(
-                metric.value,
-                levels_upper=params.get(metric_data.upper_levels_param),
-                levels_lower=params.get(metric_data.lower_levels_param),
-                metric_name=metric_data.metric_name,
-                label=metric_data.metric_label,
-                render_func=metric_data.render_func,
-                boundaries=metric_data.boundaries,
-            )
+
+def create_check_metrics_function_single(
+    metrics_data: Sequence[MetricData], suppress_error: bool = False
+) -> Callable[[Mapping[str, Any], Section], CheckResult]:
+    def check_metric(params: Mapping[str, Any], section: Section) -> CheckResult:
+        if len(section) != 1:
+            if suppress_error:
+                return
+            raise IgnoreResultsError("Only one resource expected")
+
+        resource = list(section.values())[0]
+        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
 
     return check_metric
 
 
 def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_memory_percent",
@@ -238,7 +303,7 @@ def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_cpu_percent",
@@ -252,7 +317,7 @@ def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_active_connections",
@@ -273,7 +338,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
 
 
 def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "total_network_bytes_ingress",
@@ -294,7 +359,7 @@ def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_io_consumption_percent",

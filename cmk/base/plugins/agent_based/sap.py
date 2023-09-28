@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,7 +17,9 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-from typing import Any, Literal, Mapping, Match, NamedTuple, Sequence
+from collections.abc import Mapping, Sequence
+from re import Match
+from typing import Any, Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -188,7 +190,7 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
             if entry.reading is not None:
                 # This is a performance value, has no output
                 yield Metric("value", entry.reading)
-                output = "%0.2f%s" % (entry.reading, entry.unit)
+                output = f"{entry.reading:0.2f}{entry.unit}"
             else:
                 # This is a status field without perfdata
                 output = entry.output
@@ -259,7 +261,6 @@ def discover_sap_value_groups(
 
 
 def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     try:
         patterns: GroupPatterns = params["_group_relevant_patterns"]
     except KeyError:

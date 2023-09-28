@@ -1,0 +1,23 @@
+Title: Agent Bakery: New default UNIX agent folder permissions
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1680265497
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This change will be compatible for most, if not all, users.<br>
+You are only affected if you actually make use of the (now removed) group-writable flag on agent package folders.<br>
+Normally, (especially when using the agent updater) the checkmk agent package files/folders will be installed with root ownership, while metadata of pre-existing folders won't be altered by the installation.<br>
+Hence, only customized installation methods (e.g., unpacking the tar package with a special user) may possibly run into problems with this change.
+
+Previously, the folders of a baked UNIX agent package were packaged with octal permissions of <tt>775</tt>.<br>
+This lead to problems in some rare cases, e.g. when storing (and using) an ssh-id under an agent folder.
+
+This has now been changed to <tt>755</tt>, as the agent's folders are owned by root and also installed under folders owned by root by default.<br>
+
+Please note that these are the permissions of the folders as they are packaged by the agent bakery.<br>
+Depending on the package manager (or <tt>tar</tt> unpack command) and the target system's umask, the installed folders may end up with other permissions.
+

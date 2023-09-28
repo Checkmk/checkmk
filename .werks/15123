@@ -1,0 +1,14 @@
+Title: Fix lost changes while editing dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1674721951
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+If you edited a dashboard, e.g. moved a dashlet arround, sometimes these
+dashlet was positioned as before after the next change in the dashboard.
+
+This has been fixed.

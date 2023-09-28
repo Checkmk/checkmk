@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract classes and types."""
 
+import logging
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Final
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, SectionName
+from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -21,8 +24,18 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
-        walk = self.walk(oid)
+    def __init__(
+        self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path | None = None
+    ) -> None:
+        super().__init__(snmp_config, logger)
+        self.path: Final = (
+            path if path is not None else Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+        )
+        if not self.path.exists():
+            raise MKSNMPError(f"No snmpwalk file {self.path}")
+
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
+        walk = self.walk(oid, context=context)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
@@ -33,10 +46,12 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     def walk(
         self,
+        /,
         oid: OID,
+        *,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
-        context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]
@@ -48,13 +63,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        host_cache = snmp_cache.host_cache()
-        try:
-            lines = host_cache[self.config.hostname]
-        except KeyError:
-            console.vverbose(f"  Loading {oid}")
-            lines = self.read_walk_data()
-            host_cache[self.config.hostname] = lines
+        console.vverbose(f"  Loading {oid}")
+        lines = self.read_walk_data()
 
         begin = 0
         end = len(lines)
@@ -84,7 +94,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return rowinfo
 
     @staticmethod
-    def read_walk_from_path(path: Path) -> list[str]:
+    def read_walk_from_path(path: Path) -> Sequence[str]:
         console.vverbose(f"  Opening {path}\n")
         lines = []
         with path.open() as f:
@@ -97,12 +107,11 @@ class StoredWalkSNMPBackend(SNMPBackend):
                     lines[-1] += line
         return lines
 
-    def read_walk_data(self):  # type:ignore[no-untyped-def]
-        path = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+    def read_walk_data(self) -> Sequence[str]:
         try:
-            return self.read_walk_from_path(path)
+            return self.read_walk_from_path(self.path)
         except OSError:
-            raise MKSNMPError("No snmpwalk file %s" % path)
+            raise MKSNMPError("No snmpwalk file %s" % self.path)
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:
@@ -118,12 +127,14 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def _to_bin_string(oid: OID) -> tuple[int, ...]:
         try:
             return tuple(map(int, oid.strip(".").split(".")))
+        except MKException:
+            raise
         except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 
     @staticmethod
     def _collect_until(
-        oid: OID, oid_prefix: OID, lines: list[str], index: int, direction: int
+        oid: OID, oid_prefix: OID, lines: Sequence[str], index: int, direction: int
     ) -> SNMPRowInfo:
         rows = []
         # Handle case, where we run after the end of the lines list
@@ -139,7 +150,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    # FIXME: This encoding ping-pong os horrible...
+                    # FIXME: This encoding ping-pong is horrible...
                     value = agent_simulator.process(
                         AgentRawData(
                             parts[1].encode(),

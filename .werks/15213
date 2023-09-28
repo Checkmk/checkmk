@@ -1,0 +1,17 @@
+Title: rest_api: time_period exception/active time_ranges default
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675345315
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+When creating a time_period via the REST-API, the exception time_ranges
+field is not required, however if it's not provided, it will raise a
+key error. This werk adds an empty list as a default value, which
+aligns with the interface functionality of allowing an empty time_range
+value. The second fix is the same issue but for the active time_ranges
+field.
+

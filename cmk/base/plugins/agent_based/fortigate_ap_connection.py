@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping, NamedTuple, Tuple, TypedDict
+from collections.abc import Mapping
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, startswith, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -22,7 +25,7 @@ class AccessPoint(NamedTuple):
 Section = Mapping[str, AccessPoint]
 
 
-_CONN_STATE_TO_READABLE: Mapping[str, Tuple[str, str]] = {
+_CONN_STATE_TO_READABLE: Mapping[str, tuple[str, str]] = {
     "0": (
         "other",
         "The WTP connection state is unknown.",
@@ -50,7 +53,7 @@ _CONN_STATE_TO_READABLE: Mapping[str, Tuple[str, str]] = {
 }
 
 
-def parse_fortigate_ap_connection(string_table: List[StringTable]) -> Section:
+def parse_fortigate_ap_connection(string_table: list[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_fortigate_ap_connection([

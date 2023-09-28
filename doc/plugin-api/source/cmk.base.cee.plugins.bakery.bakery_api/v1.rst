@@ -1,7 +1,0 @@
-=============
-bakery_api.v1
-=============
-
-.. automodule:: cmk.base.cee.plugins.bakery.bakery_api.v1
-   :members:
-   :show-inheritance:

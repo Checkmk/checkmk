@@ -1,6 +1,8 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as utils from "utils";
 
@@ -8,7 +10,8 @@ import * as utils from "utils";
 //#   | Mouseover hover menu, used for performance graph popups            |
 //#   '--------------------------------------------------------------------'
 
-var g_hover_menu;
+type ContainerSize = {height: number | null; width: number | null};
+let g_hover_menu: HTMLDivElement | null;
 
 export function hide() {
     if (!g_hover_menu) {
@@ -20,8 +23,7 @@ export function hide() {
     hover_menu.parentNode?.removeChild(hover_menu);
 }
 
-export function show(event_, code) {
-    event_ = event_ || window.event;
+export function show(event_: MouseEvent, code: string) {
     add();
     update_content(code, event_);
 }
@@ -38,7 +40,7 @@ export function add() {
     hover_container().appendChild(g_hover_menu);
 }
 
-export function update_content(code, event_) {
+export function update_content(code: string, event_: MouseEvent) {
     if (!g_hover_menu) {
         return;
     }
@@ -49,7 +51,7 @@ export function update_content(code, event_) {
 }
 
 // Position updates are triggered by the AJAX call response in graph_integration.js
-export function update_position(event_) {
+export function update_position(event_: MouseEvent) {
     if (!g_hover_menu) {
         return;
     }
@@ -110,7 +112,7 @@ export function update_position(event_) {
         }
     }
 
-    let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
+    const hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
     if (
         hoverTop + g_hover_menu.clientHeight >
         scrollTop + container_size.height!
@@ -159,13 +161,13 @@ export function update_position(event_) {
 }
 
 function stretch_to_full_width(
-    hover_menu,
-    container_size,
-    scrollLeft,
-    hoverSpacer
+    _hover_menu: HTMLDivElement,
+    container_size: ContainerSize,
+    scrollLeft: number,
+    hoverSpacer: number
 ) {
     g_hover_menu!.style.left = hoverSpacer + scrollLeft + "px";
-    g_hover_menu!.style.width = container_size.width - 2 * hoverSpacer + "px";
+    g_hover_menu!.style.width = container_size.width! - 2 * hoverSpacer + "px";
 }
 
 function hover_container() {

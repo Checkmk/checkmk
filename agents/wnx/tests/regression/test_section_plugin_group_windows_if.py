@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,10 +18,10 @@ from .local import local_test, user_dir
 
 
 class Globals:
-    executionmode = None
+    executionmode: str | None = None
     pluginname = ""
-    plugintype = None
-    suffixes = None
+    plugintype: str | None = None
+    suffixes: str | None = None
     binaryplugin = "monty.exe"
     alone = False
 
@@ -192,11 +192,11 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_windows_if(  # type:ignore[no-untyped-def]
+@pytest.mark.skip("This test is not conform with latest changes on Monitoring Site")
+def test_section_plugin_windows_if(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name
-    pytest.skip("This test is not conform with latest changes on Monitoring Site")
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":
         pytest.skip("This test is not conform with latest changes on Monitoring Site")
     local_test(expected_output, actual_output, testfile, request.node.name)

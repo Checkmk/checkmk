@@ -34,6 +34,7 @@ host_downtime_url=""
 host_ack_url=""
 service_downtime_url=""
 service_ack_url=""
+backgroundcolor="#ffffff"
 
 [backend_###SITE###]
 backendtype="mklivestatus"

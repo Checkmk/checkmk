@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.omd_status import (
     check_omd_status,
     cluster_check_omd_status,
     parse_omd_status,
+    Section,
 )
 
 
@@ -35,9 +39,7 @@ from cmk.base.plugins.agent_based.omd_status import (
         ([], {}),
     ],
 )
-def test_parse_omd_status(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
-) -> None:
+def test_parse_omd_status(string_table: StringTable, expected_parsed_data: Section | None) -> None:
     assert parse_omd_status(string_table) == expected_parsed_data
 
 
@@ -80,8 +82,11 @@ def test_parse_omd_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_omd_status(  # type:ignore[no-untyped-def]
-    item, section_omd_status, section_omd_info, result
+def test_check_omd_status(
+    item: str,
+    section_omd_status: Section | None,
+    section_omd_info: Section | None,
+    result: CheckResult,
 ) -> None:
     assert list(check_omd_status(item, section_omd_status, section_omd_info)) == result
 
@@ -148,7 +153,10 @@ def test_check_omd_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_check_omd_status(  # type:ignore[no-untyped-def]
-    item, section_omd_status, section_omd_info, result
+def test_cluster_check_omd_status(
+    item: str,
+    section_omd_status: Mapping[str, Section | None],
+    section_omd_info: Mapping[str, Section | None],
+    result: CheckResult,
 ) -> None:
     assert list(cluster_check_omd_status(item, section_omd_status, section_omd_info)) == result

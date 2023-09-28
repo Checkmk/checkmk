@@ -1,0 +1,19 @@
+Title: activate_changes: implement list pending changes endpoint
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1685634551
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a new endpoint in the activation_run domain
+for showing a list of pending changes. This is useful if you want
+to know if there are changes pending and what they are before
+activating them.
+
+The new endpoint is as follows .../domain-types/activation_run/collections/pending_changes
+
+
+

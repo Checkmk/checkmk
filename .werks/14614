@@ -1,0 +1,15 @@
+Title: Jolokia: manpages indicated agent support for Linux only
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1691418444
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This change adds `windows` to supported agents in jolokia related manpages.
+
+
+

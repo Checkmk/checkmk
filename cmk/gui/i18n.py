@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,11 +9,9 @@ import gettext as gettext_module
 from pathlib import Path
 from typing import NamedTuple
 
-from flask import g
-
 import cmk.utils.paths
 
-from cmk.gui.ctx_stack import request_local_attr, set_global_var
+from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
 from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
@@ -39,16 +37,12 @@ class Translation(NamedTuple):
 translation = request_local_attr("translation", Translation)
 
 
-def _translation() -> Translation | None:
-    return translation
-
-
 @request_memoize()
 def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
     """
-    if _translation():
+    if translation:
         return translation.translation.gettext(message)
     return str(message)
 
@@ -64,7 +58,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings
     """
-    if _translation():
+    if translation:
         return translation.translation.ngettext(singular, plural, n)
     if n == 1:
         return str(singular)
@@ -72,7 +66,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
 
 
 def get_current_language() -> str:
-    if _translation():
+    if translation:
         return translation.name
     return "en"
 
@@ -90,7 +84,7 @@ def _get_package_language_dirs() -> list[Path]:
 
     It's possible for extension packages to provide custom localization files
     which are meant for localizing extension specific texts. These localizations
-    are then used in addition to the builtin and local localization files.
+    are then used in addition to the built-in and local localization files.
     """
     package_locale_dir = cmk.utils.paths.local_locale_dir / "packages"
     if not package_locale_dir.exists():
@@ -140,7 +134,7 @@ def _unlocalize() -> None:
 
 
 def localize(lang: str) -> None:
-    _.cache_clear()  # type:ignore[attr-defined]
+    _.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
         return None
@@ -156,14 +150,15 @@ def localize(lang: str) -> None:
 
 def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     """Load all available "multisite" translation files. All are loaded first.
-    The builtin ones are used as "fallback" for the local files which means that
+    The built-in ones are used as "fallback" for the local files which means that
     the texts in the local files have precedence.
     """
     translations: list[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            g.translation = gettext_module.translation(
-                "multisite", str(locale_base_dir), languages=[lang]
+            set_global_var(
+                "translation",
+                gettext_module.translation("multisite", str(locale_base_dir), languages=[lang]),
             )
 
         except OSError:
@@ -171,8 +166,8 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
 
         # Create a chain of fallback translations
         if translations:
-            g.translation.add_fallback(translations[-1])
-        translations.append(g.translation)
+            global_var("translation").add_fallback(translations[-1])
+        translations.append(global_var("translation"))
 
     if not translations:
         return None
@@ -208,7 +203,7 @@ def _u(text: str) -> str:
         if current_language == "en":
             return text
         return ldict.get(current_language, text)
-    if _translation():
+    if translation:
         return translation.translation.gettext(text)
     return text
 

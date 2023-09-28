@@ -1,10 +1,19 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.plugins.agent_based import synology_update
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 
 SECTION_TABLE = [
     ["nana batman", "0"],
@@ -25,7 +34,7 @@ def test_discovery() -> None:
 
 @pytest.mark.parametrize("cmk_state", [State.OK, State.WARN, State.CRIT])
 @pytest.mark.parametrize("observed_state", range(1, 6))
-def test_result_state(cmk_state, observed_state) -> None:
+def test_result_state(cmk_state: State, observed_state: int) -> None:
     state_names = {State.OK: "ok_states", State.WARN: "warn_states", State.CRIT: "crit_states"}
     params: dict[str, Any] = {name: [] for name in ["ok_states", "warn_states", "crit_states"]}
     params[state_names[cmk_state]] = [1, 2, 3, 4, 5]

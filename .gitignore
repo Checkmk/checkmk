@@ -39,10 +39,8 @@
 /.tmp*
 /*.wpr
 /*.wpu
-aclocal.m4
-ar-lib
+/announce*
 artefacts/
-autom4te.cache/
 build/
 ChangeLog
 check_mk-*.tar.gz
@@ -53,15 +51,6 @@ check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
-compile
-config.guess
-config.h
-config.h.in
-config.log
-config.status
-config.sub
-configure
-depcomp
 agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
@@ -72,26 +61,26 @@ GPATH
 GRTAGS
 GTAGS
 htmlcov/
-install-sh
 agent-receiver/agent_receiver.egg-info
 agent-receiver/pyproject.toml
-missing
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
 omd/pkgs_by_bzl/
+bazel_execution_log*.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements.txt
 requirements-no-dev.txt
-stamp-h1
 tags
 tests/web/data/*
 tests/var/*
+tests/results/*
 tests/.hypothesis/
-web/htdocs/js/*_min.js.map
 /results
 /buildscripts/infrastructure/build-nodes/scripts/defines.make
+/buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
+/bazel-*
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for check devolpment
@@ -8,14 +8,15 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Dict, Generator, MutableMapping, Optional, overload, Tuple, Union
+from collections.abc import Callable, Generator, MutableMapping
+from typing import Any, overload
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import get_predictive_levels, PredictionParameters
 
-import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
-import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 
@@ -222,10 +223,10 @@ def not_exists(oidstr: str) -> SNMPDetectSpecification:
 
 def _do_check_levels(
     value: float,
-    levels_upper: Optional[Tuple[float, float]],
-    levels_lower: Optional[Tuple[float, float]],
+    levels_upper: tuple[float, float] | None,
+    levels_lower: tuple[float, float] | None,
     render_func: Callable[[float], str],
-) -> Tuple[State, str]:
+) -> tuple[State, str]:
     # Typing says that levels are either None, or a Tuple of float.
     # However we also deal with (None, None) to avoid crashes of custom plugins.
     # CRIT ?
@@ -244,24 +245,24 @@ def _do_check_levels(
 
 
 def _levelsinfo_ty(
-    preposition: str, levels: Tuple[float, float], render_func: Callable[[float], str]
+    preposition: str, levels: tuple[float, float], render_func: Callable[[float], str]
 ) -> str:
     # Again we are forgiving if we get passed 'None' in the levels.
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
-    return " (warn/crit %s %s/%s)" % (preposition, warn_str, crit_str)
+    return f" (warn/crit {preposition} {warn_str}/{crit_str})"
 
 
 @overload
 def check_levels(
     value: float,
     *,
-    levels_upper: Optional[Tuple[float, float]] = None,
-    levels_lower: Optional[Tuple[float, float]] = None,
+    levels_upper: tuple[float, float] | None = None,
+    levels_lower: tuple[float, float] | None = None,
     metric_name: None = None,
-    render_func: Optional[Callable[[float], str]] = None,
-    label: Optional[str] = None,
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    render_func: Callable[[float], str] | None = None,
+    label: str | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
 ) -> Generator[Result, None, None]:
     pass
@@ -271,28 +272,28 @@ def check_levels(
 def check_levels(
     value: float,
     *,
-    levels_upper: Optional[Tuple[float, float]] = None,
-    levels_lower: Optional[Tuple[float, float]] = None,
+    levels_upper: tuple[float, float] | None = None,
+    levels_lower: tuple[float, float] | None = None,
     metric_name: str = "",
-    render_func: Optional[Callable[[float], str]] = None,
-    label: Optional[str] = None,
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    render_func: Callable[[float], str] | None = None,
+    label: str | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
-) -> Generator[Union[Result, Metric], None, None]:
+) -> Generator[Result | Metric, None, None]:
     pass
 
 
 def check_levels(
     value: float,
     *,
-    levels_upper: Optional[Tuple[float, float]] = None,
-    levels_lower: Optional[Tuple[float, float]] = None,
-    metric_name: Optional[str] = None,
-    render_func: Optional[Callable[[float], str]] = None,
-    label: Optional[str] = None,
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    levels_upper: tuple[float, float] | None = None,
+    levels_lower: tuple[float, float] | None = None,
+    metric_name: str | None = None,
+    render_func: Callable[[float], str] | None = None,
+    label: str | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
-) -> Generator[Union[Result, Metric], None, None]:
+) -> Generator[Result | Metric, None, None]:
     """Generic function for checking a value against levels.
 
     Args:
@@ -335,7 +336,7 @@ def check_levels(
 
     info_text = str(render_func(value))  # forgive wrong output type
     if label:
-        info_text = "%s: %s" % (label, info_text)
+        info_text = f"{label}: {info_text}"
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
@@ -350,12 +351,12 @@ def check_levels(
 def check_levels_predictive(
     value: float,
     *,
-    levels: Dict[str, Any],
+    levels: dict[str, Any],
     metric_name: str,
-    render_func: Optional[Callable[[float], str]] = None,
-    label: Optional[str] = None,
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
-) -> Generator[Union[Result, Metric], None, None]:
+    render_func: Callable[[float], str] | None = None,
+    label: str | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
+) -> Generator[Result | Metric, None, None]:
     """Generic function for checking a value against levels.
 
     Args:
@@ -382,14 +383,14 @@ def check_levels_predictive(
     _ = Metric(metric_name, value)
 
     try:
-        ref_value, levels_tuple = cmk.base.prediction.get_levels(
+        ref_value, levels_tuple = get_predictive_levels(
             HostName(plugin_contexts.host_name()),
             plugin_contexts.service_description(),
             metric_name,
-            levels,
+            PredictionParameters.parse_obj(levels),
             "MAX",
         )
-        if ref_value:
+        if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
         else:
             predictive_levels_msg = " (no reference for prediction yet)"
@@ -420,13 +421,13 @@ def check_levels_predictive(
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
     if label:
-        info_text = "%s: %s%s" % (label, render_func(value), predictive_levels_msg)
+        info_text = f"{label}: {render_func(value)}{predictive_levels_msg}"
     else:
-        info_text = "%s%s" % (render_func(value), predictive_levels_msg)
+        info_text = f"{render_func(value)}{predictive_levels_msg}"
 
     yield Result(state=value_state, summary=info_text + levels_text)
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
-    if ref_value:
+    if ref_value is not None:
         yield Metric("predict_%s" % metric_name, ref_value)
 
 

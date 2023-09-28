@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from tests.unit.conftest import FixRegister
 
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 check_name = "megaraid_bbu"
@@ -13,7 +19,7 @@ check_name = "megaraid_bbu"
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
+def _get_plugin(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName(check_name)]
 
 
@@ -25,13 +31,13 @@ def _get_parse_function(fix_register):
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"discover_{check_name}")
-def _get_discovery_function(plugin):
+def _get_discovery_function(plugin: CheckPlugin) -> DiscoveryFunction:
     return lambda s: plugin.discovery_function(section=s)
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"check_{check_name}")
-def _get_check_function(plugin):
+def _get_check_function(plugin: CheckPlugin) -> CheckFunction:
     return lambda i, s: plugin.check_function(item=i, params={}, section=s)
 
 
@@ -78,11 +84,11 @@ Remaining reserve space : 0
     )
 
 
-def test_discovery(discover_megaraid_bbu, section) -> None:  # type:ignore[no-untyped-def]
+def test_discovery(discover_megaraid_bbu: DiscoveryFunction, section: object) -> None:
     assert list(discover_megaraid_bbu(section)) == [Service(item="/c0")]
 
 
-def test_check_ok(check_megaraid_bbu, section) -> None:  # type:ignore[no-untyped-def]
+def test_check_ok(check_megaraid_bbu: CheckFunction, section: object) -> None:
     assert list(check_megaraid_bbu("/c0", section)) == [
         Result(
             state=State.OK,
@@ -95,7 +101,9 @@ def test_check_ok(check_megaraid_bbu, section) -> None:  # type:ignore[no-untype
     ]
 
 
-def test_check_low_cap(check_megaraid_bbu, section) -> None:  # type:ignore[no-untyped-def]
+def test_check_low_cap(
+    check_megaraid_bbu: CheckFunction, section: dict[str, dict[str, str]]
+) -> None:
     section["0"]["Remaining Capacity Low"] = "Yes"
     assert list(check_megaraid_bbu("/c0", section)) == [
         Result(

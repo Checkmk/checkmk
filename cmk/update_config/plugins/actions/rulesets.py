@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Container, Mapping, Sequence
 from datetime import time as dt_time
 from itertools import chain
 from logging import Logger
+from re import Pattern
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import CheckPluginName, RulesetName
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import timeperiods
@@ -27,6 +32,8 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "static_checks:systemd_services": "static_checks:systemd_units_services",
 }
 
+DEPRECATED_RULESET_PATTERNS = (re.compile("^inv_exports:"),)
+
 
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
@@ -36,6 +43,11 @@ class UpdateRulesets(UpdateAction):
         _extract_connection_encryption_handling_from_210_rules(logger, all_rulesets)
 
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
+        _delete_deprecated_wato_rulesets(
+            logger,
+            all_rulesets,
+            DEPRECATED_RULESET_PATTERNS,
+        )
         _transform_replaced_wato_rulesets(
             logger,
             all_rulesets,
@@ -102,6 +114,18 @@ def _extract_connection_encryption_handling_from_210_rules(
         encryption_handling.append_rule(folder, new_rule)
 
 
+def _delete_deprecated_wato_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    deprecated_ruleset_patterns: tuple[Pattern],
+) -> None:
+    for ruleset_name in list(all_rulesets.get_rulesets()):
+        if any(p.match(ruleset_name) for p in deprecated_ruleset_patterns):
+            logger.log(VERBOSE, f"Removing ruleset {ruleset_name}")
+            all_rulesets.delete(ruleset_name)
+            continue
+
+
 def _transform_replaced_wato_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
@@ -157,7 +181,7 @@ def _validate_rule_values(
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
-        "extra_service_conf:_sla_config",
+        RuleGroup.ExtraServiceConf("_sla_config"),
     }
 
     n_invalid = 0
@@ -227,7 +251,9 @@ def _transform_fileinfo_timeofday_to_timeperiods(collection: RulesetCollection) 
     This transformation is introduced in v2.2 and can be removed in v2.3.
     """
     all_rulesets = collection.get_rulesets()
-    rulesets = [all_rulesets[f"checkgroup_parameters:{c}"] for c in ("fileinfo", "fileinfo-groups")]
+    rulesets = [
+        all_rulesets[RuleGroup.CheckgroupParameters(c)] for c in ("fileinfo", "fileinfo-groups")
+    ]
     rules = [r.get_rules() for r in rulesets]
 
     for _folder, _folder_index, rule in chain(*rules):
@@ -274,7 +300,7 @@ def _get_timeperiod_name(timeofday: Sequence[TimeRange]) -> str:
 def _create_timeperiod(name: str, timeofday: Sequence[TimeRange]) -> None:
     periods = [_transform_time_range(t) for t in timeofday]
     periods_alias = ", ".join((f"{b}-{e}" for b, e in periods))
-    timeperiods.save_timeperiod(
+    timeperiods.create_timeperiod(
         name,
         {
             "alias": f"Created by migration of timeofday parameter ({periods_alias})",

@@ -1,0 +1,12 @@
+Title: HW/SW Inventory history: Fix missing row fields if changed
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1675944556
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Some refactorings broke the werk 6821. Bring back the missing row fields.
+Persisted delta trees cannot be changed and stay without these fields.

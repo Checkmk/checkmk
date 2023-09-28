@@ -1,0 +1,25 @@
+Title: smart_stats: Prevent reporting mismatched temperature value
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685684797
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+In previous versions, the smart_stats check may have reported wrong temperature
+values for ATA disks.<br>
+This lead to false-positive CRIT states in "SMART ... Stats" services.
+
+Technical background:
+
+The attribute names for ATA disks reported by smartutils turned out
+to be either not clearly defined (multiple names for the same attribute),
+or even plainly wrong.
+
+To avoid missing some attributes or to even report wrong data,
+we now look up the names of all actually used attributes by their
+attribute ID.
+

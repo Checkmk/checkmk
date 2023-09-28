@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import http.client
 
 from werkzeug.http import HTTP_STATUS_CODES
 
-from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKException, MKTimeout
 
 
 class RequestTimeout(MKTimeout):
@@ -41,7 +41,7 @@ class MKAuthException(MKHTTPException):
     status = http.HTTPStatus.UNAUTHORIZED
 
 
-class MKUnauthenticatedException(MKGeneralException):
+class MKUnauthenticatedException(MKAuthException):
     pass
 
 

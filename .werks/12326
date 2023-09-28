@@ -8,7 +8,7 @@ Knowledge: doc
 Level: 2
 Version: 2.1.0b1
 
-Since this release the following binary files are code signed with tribe29 digital 
+Since this release the following binary files are code signed with Checkmk digital
 certificate:
 <ul>
 <li>check_mk_agent.msi</li>
@@ -17,6 +17,6 @@ certificate:
 </ul>
 
 Details of the used digital certificate:
-Name of signer: <tt>tribe29 GmbH</tt>
+Name of signer: <tt>Checkmk GmbH</tt>
 Digest algorithm: <tt>SHA256</tt>
 Timestamp: presented

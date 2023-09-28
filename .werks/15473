@@ -1,0 +1,14 @@
+Title: ec: Fix crash in parsing syslog
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1683288090
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, parsing of syslog would crash if pid wasn't a number,
+e.g. "App[-]: message". This can happend if syslog messages are
+forwarded or processed from some other instance.
+

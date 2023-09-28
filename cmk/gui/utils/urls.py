@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,12 +8,11 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from functools import lru_cache
-from typing import Literal
-
-from typing_extensions import assert_never
+from typing import assert_never, Literal
 
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
@@ -273,11 +272,83 @@ def makeuri_contextless_rulespec_group(
     )
 
 
-def make_confirm_link(*, url: str, message: str) -> str:
-    return "javascript:cmk.forms.confirm_link({}, {}),cmk.popup_menu.close_popup()".format(
+def make_confirm_link(
+    *,
+    url: str,
+    title: str,
+    suffix: str | None = None,
+    message: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+) -> str:
+    return _make_customized_confirm_link(
+        url=url,
+        title=get_confirm_link_title(title, suffix),
+        confirm_button=confirm_button if confirm_button else _("Yes"),
+        cancel_button=cancel_button if cancel_button else _("No"),
+        message=message,
+    )
+
+
+def make_confirm_delete_link(
+    *,
+    url: str,
+    title: str,
+    suffix: str | None = None,
+    message: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+    warning: bool = False,
+) -> str:
+    return _make_customized_confirm_link(
+        url=url,
+        title=get_confirm_link_title(title, suffix),
+        confirm_button=confirm_button if confirm_button else _("Delete"),
+        cancel_button=cancel_button if cancel_button else _("Cancel"),
+        message=message,
+        icon="warning" if warning else "question",
+        custom_class_options={
+            "confirmButton": "confirm_warning" if warning else "confirm_question",
+            "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
+        },
+    )
+
+
+def _make_customized_confirm_link(
+    *,
+    url: str,
+    title: str,
+    confirm_button: str,
+    cancel_button: str,
+    message: str | None = None,
+    icon: str | None = None,
+    custom_class_options: dict[str, str] | None = None,
+) -> str:
+    return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
         json.dumps(escape_text(message)),
+        json.dumps(
+            {
+                "title": title,
+                "html": message,
+                "confirmButtonText": confirm_button,
+                "cancelButtonText": cancel_button,
+                "icon": icon if icon else "question",
+                "customClass": custom_class_options if custom_class_options else {},
+            }
+        ),
     )
+
+
+def get_confirm_link_title(
+    title: str | None = None,
+    suffix: str | None = None,
+) -> str:
+    if title is None:
+        return ""
+    if title and suffix:
+        return title + f" - {suffix}?"
+    return title + "?"
 
 
 def file_name_and_query_vars_from_url(url: str) -> tuple[str, QueryVars]:
@@ -344,20 +415,23 @@ class DocReference(Enum):
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"
+    FORECAST_GRAPH = "forecast_graphs"
+    GCP = "monitoring_gcp"
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"
     INFLUXDB_CONNECTIONS = "metrics_exporter"
-    # TODO: Check whether these anchors on the intro page exist and fix/remove broken ones.
-    INTRO_CREATING_FOLDERS = "intro#Creating folders"
-    INTRO_FOLDERS = "intro#folders"
-    INTRO_LINUX = "intro#linux"
-    INTRO_SERVICES = "intro#services"
-    INTRO_WELCOME = "intro_welcome"
+    INTRO_CREATING_FOLDERS = "intro_setup_monitor#folders"
+    INTRO_FOLDERS = "intro_setup_monitor#folders"
+    INTRO_LINUX = "intro_setup_monitor#linux"
+    INTRO_SERVICES = "intro_setup_monitor#services"
+    INTRO_WELCOME = "welcome"
+    KUBERNETES = "monitoring_kubernetes"
     LICENSING = "license"
     LDAP = "ldap"
     MKPS = "mkps"
     NOTIFICATIONS = "notifications"
     PIGGYBACK = "piggyback"
+    PROMETHEUS = "monitoring_prometheus"
     REGEXES = "regexes"
     REST_API = "rest_api"
     REPORTS = "reporting"
@@ -369,8 +443,8 @@ class DocReference(Enum):
     WATO_AGENTS = "wato_monitoringagents"
     WATO_HOSTS = "wato_hosts"
     WATO_RULES = "wato_rules"
-    WATO_RULES_DEPCRECATED = "wato_rules#_obsolete_rule_sets"
-    WATO_RULES_INEFFECTIVE = "wato_rules#_ineffective_rules"
+    WATO_RULES_DEPCRECATED = "wato_rules#obsolete_rule_sets"
+    WATO_RULES_INEFFECTIVE = "wato_rules#ineffective_rules"
     WATO_RULES_IN_USE = "wato_rules#_rule_sets_in_use"
     WATO_SERVICES = "wato_services"
     WATO_SERVICES_ENFORCED_SERVICES = "wato_services#enforced_services"
@@ -389,3 +463,22 @@ def doc_reference_url(doc_ref: DocReference | None = None) -> str:
     if "#" not in doc_ref.value:
         return f"{base}/{doc_ref.value}.html"
     return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}"
+
+
+class YouTubeReference(Enum):
+    """All references to youtube videos must be listed in YouTubeReference. The string must hold a
+    valid video id."""
+
+    INSTALLING_CHECKMK = "opO-SOgOJ1I"
+    MONITORING_WINDOWS = "Nxiq7Jb9mB4"
+
+    @classmethod
+    def has_key(cls, key: str) -> bool:
+        return key in cls._member_names_
+
+
+def youtube_reference_url(youtube_ref: YouTubeReference | None = None) -> str:
+    # Default to the Checkmk youtube channel
+    if youtube_ref is None:
+        return "https://youtube.com/@checkmk-channel"
+    return "https://youtu.be/%s" % youtube_ref.value

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -60,14 +60,14 @@ EXCEPTIONS = [
         GCPException(
             section=_ExceptionSection(
                 type="HttpError",
-                message="""<HttpError 403 when requesting https://bigquery.googleapis.com/bigquery/v2/projects/tribe29-cost-analytics/queries?alt=json returned "Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.". Details: "[{'message': 'Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.', 'domain': 'global', 'reason': 'accessDenied'}]">""",
+                message="""<HttpError 403 when requesting https://bigquery.googleapis.com/bigquery/v2/projects/checkmk-cost-analytics/queries?alt=json returned "Access Denied: Project checkmk-cost-analytics: User does not have bigquery.jobs.create permission in project checkmk-cost-analytics.". Details: "[{'message': 'Access Denied: Project checkmk-cost-analytics: User does not have bigquery.jobs.create permission in project checkmk-cost-analytics.', 'domain': 'global', 'reason': 'accessDenied'}]">""",
                 gcp_source="BigQuery",
             ),
             results=[
                 Result(
                     state=State.CRIT,
                     summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
-                    details="HttpError when trying to access BigQuery: Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.",
+                    details="HttpError when trying to access BigQuery: Access Denied: Project checkmk-cost-analytics: User does not have bigquery.jobs.create permission in project checkmk-cost-analytics.",
                 )
             ],
         ),
@@ -106,6 +106,23 @@ EXCEPTIONS = [
             ],
         ),
         id="no source",
+    ),
+    pytest.param(
+        GCPException(
+            section=_ExceptionSection(
+                type="Unauthenticated",
+                message="""Cloud Asset:401 Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project. [reason: "ACCOUNT_STATE_INVALID"domain: "googleapis.com"metadata {  key: "email"  value: "test-metric-access@checkmk-check-development.iam.gserviceaccount.com"}metadata {  key: "method"  value: "google.cloud.asset.v1.AssetService.ListAssets"}metadata {  key: "service"  value: "cloudasset.googleapis.com"}]""",
+                gcp_source=None,
+            ),
+            results=[
+                Result(
+                    state=State.CRIT,
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="Unauthenticated: Cloud Asset:401 Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+                )
+            ],
+        ),
+        id="unauthenticated",
     ),
     pytest.param(
         GCPException(

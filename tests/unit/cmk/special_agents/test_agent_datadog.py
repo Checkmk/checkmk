@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 import json
+import time
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from typing import Any
@@ -13,7 +13,8 @@ import pytest
 import requests
 from pytest import MonkeyPatch
 
-from cmk.special_agents import agent_datadog
+from tests.testlib import on_time
+
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
     _log_to_syslog_message,
@@ -205,11 +206,7 @@ class TestEventsQuerier:
         events_querier: EventsQuerier,
     ) -> None:
         now = 1601310544
-        monkeypatch.setattr(
-            agent_datadog.time,
-            "time",
-            lambda: now,
-        )
+        monkeypatch.setattr(time, "time", lambda: now)
         assert events_querier._events_query_time_range() == (
             now - events_querier.max_age,
             now,
@@ -351,20 +348,13 @@ class TestLogsQuerier:
 
     def test_logs_query_time_range(
         self,
-        monkeypatch: MonkeyPatch,
         logs_querier: LogsQuerier,
     ) -> None:
-        timestamp = 1601310544
-        now = datetime.datetime.fromtimestamp(timestamp)
-        monkeypatch.setattr(
-            agent_datadog.time,
-            "time",
-            lambda: timestamp,
-        )
-        assert logs_querier._query_time_range() == (
-            now - datetime.timedelta(seconds=logs_querier.max_age),
-            now,
-        )
+        now = 1601310544
+        with on_time(now, "UTC"):
+            start, end = logs_querier._query_time_range()
+            assert start.timestamp() == now - logs_querier.max_age
+            assert end.timestamp() == now
 
     def test_query_logs_no_previous_ids(
         self,
@@ -394,7 +384,7 @@ class TestLogsQuerier:
         pytest.param(["Number:attributes.number"], " Number=42", id="numerical"),
         pytest.param(
             ["object:attributes.object"],
-            " object=[1, 2, 3, cmk: [4, 5, 6], tribe29]",
+            " object=[1, 2, 3, cmk: [4, 5, 6], Checkmk]",
             id="composite object",
         ),
     ],
@@ -409,7 +399,7 @@ def test_log_to_syslog_message(raw_translator: Sequence[str], message_text: str)
                     attributes={
                         "test": {"baz": "fun"},
                         "number": 42,
-                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "tribe29"],
+                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "Checkmk"],
                     },
                     host="cmk",
                     service="app",

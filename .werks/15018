@@ -1,0 +1,15 @@
+Title: Additional Google Cloud Platform support
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674826466
+Edition: cce
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Monitored GCP services
+
+- Cloud Functions
+- Cloud Run
+- Memorystore for Redis

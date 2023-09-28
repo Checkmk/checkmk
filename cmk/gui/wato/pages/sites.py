@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
@@ -14,12 +14,21 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, overload
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import (
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+    TLSParams,
+)
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.log as log
@@ -28,7 +37,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -44,25 +53,18 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-    ConfigVariableGroup,
-)
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeactionuri_contextless,
     makeuri_contextless,
@@ -81,9 +83,20 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
-from cmk.gui.watolib.activate_changes import get_trial_expired_message
-from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
+from cmk.gui.watolib.activate_changes import get_free_message
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    do_site_login,
+    MKAutomationException,
+    parse_license_state,
+)
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -91,16 +104,26 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
     SiteManagementFactory,
 )
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 
-@mode_registry.register
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+    page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
+    mode_registry.register(ModeEditSite)
+    mode_registry.register(ModeDistributedMonitoring)
+    mode_registry.register(ModeEditSiteGlobals)
+    mode_registry.register(ModeEditSiteGlobalSetting)
+    mode_registry.register(ModeSiteLivestatusEncryption)
+
+
 class ModeEditSite(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -139,8 +162,8 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if cmk_version.is_expired_trial() and (self._new or self._site_id != omd_site()):
-            raise MKUserError(None, get_trial_expired_message())
+        if is_free() and (self._new or self._site_id != omd_site()):
+            raise MKUserError(None, get_free_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -161,9 +184,7 @@ class ModeEditSite(WatoMode):
                             address=("", 6557),
                             tls=(
                                 "encrypted",
-                                {
-                                    "verify": True,
-                                },
+                                TLSParams(verify=True),
                             ),
                         ),
                     ),
@@ -428,7 +449,7 @@ class ModeEditSite(WatoMode):
         return MonitoredHostname(title=_("Host:"))
 
     def _replication_elements(self):
-        return [
+        elements = [
             (
                 "replication",
                 DropdownChoice(
@@ -451,7 +472,7 @@ class ModeEditSite(WatoMode):
                 HTTPUrl(
                     title=_("URL of remote site"),
                     help=_(
-                        "URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+                        "URL of the remote Checkmk including <tt>/check_mk/</tt>. "
                         "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
                         "appended, but it must always be an absolute URL. Please note, that "
                         "that URL will be fetched by the Apache server of the local "
@@ -464,9 +485,9 @@ class ModeEditSite(WatoMode):
                 "disable_wato",
                 Checkbox(
                     title=_("Disable remote configuration"),
-                    label=_("Disable configuration via WATO on this site"),
+                    label=_("Disable configuration via Setup on this site"),
                     help=_(
-                        "It is a good idea to disable access to WATO completely on the remote site. "
+                        "It is a good idea to disable access to Setup completely on the remote site. "
                         "Otherwise a user who does not now about the replication could make local "
                         "changes that are overridden at the next configuration activation."
                     ),
@@ -495,37 +516,44 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
-            ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
-            (
-                "replicate_ec",
-                Checkbox(
-                    title=_("Replicate Event Console config"),
-                    label=_("Replicate Event Console configuration to this site"),
-                    help=_(
-                        "This option enables the distribution of global settings and rules of the Event Console "
-                        "to the remote site. Any change in the local Event Console settings will mark the site "
-                        "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                        "the remote site."
-                    ),
-                ),
-            ),
-            (
-                "replicate_mkps",
-                Checkbox(
-                    title=_("Replicate extensions"),
-                    label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
-                    help=_(
-                        "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                        "that are installed on your central site and all other files below the <tt>~/local/</tt> "
-                        "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
-                        "below <tt>~/local/</tt> on the remote site will be removed</b>."
-                    ),
-                ),
-            ),
         ]
 
+        if ldap_connections_are_configurable():
+            elements.append(("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)))
 
-@mode_registry.register
+        elements.extend(
+            [
+                (
+                    "replicate_ec",
+                    Checkbox(
+                        title=_("Replicate Event Console config"),
+                        label=_("Replicate Event Console configuration to this site"),
+                        help=_(
+                            "This option enables the distribution of global settings and rules of the Event Console "
+                            "to the remote site. Any change in the local Event Console settings will mark the site "
+                            "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                            "the remote site."
+                        ),
+                    ),
+                ),
+                (
+                    "replicate_mkps",
+                    Checkbox(
+                        title=_("Replicate extensions"),
+                        label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
+                        help=_(
+                            "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                            "that are installed on your central site and all other files below the <tt>~/local/</tt> "
+                            "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
+                            "below <tt>~/local/</tt> on the remote site will be removed</b>."
+                        ),
+                    ),
+                ),
+            ]
+        )
+        return elements
+
+
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -587,14 +615,14 @@ class ModeDistributedMonitoring(WatoMode):
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(  # type:ignore[no-untyped-def] # pylint: disable=useless-return
+    def _action_delete(  # type: ignore[no-untyped-def] # pylint: disable=useless-return
         self, delete_id
     ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
-        # fall back to non-distributed-WATO and the site attribute
+        # fall back to non-distributed-Setup and the site attribute
         # will be removed.
         test_sites = dict(configured_sites.items())
         del test_sites[delete_id]
@@ -605,7 +633,7 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in Folder.root_folder().all_site_ids():
+        if delete_id in folder_tree().root_folder().all_site_ids():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,
@@ -648,7 +676,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _action_login(self, login_id: SiteId) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
-        if request.get_ascii_input("_abort"):
+        if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
 
         if not transactions.check_transaction():
@@ -727,7 +755,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
         forms.end()
         html.button("_do_login", _("Login"))
-        html.button("_abort", _("Abort"))
+        html.button("_cancel", _("Cancel"))
         html.hidden_field("_login", login_id)
         html.hidden_fields()
         html.end_form()
@@ -737,8 +765,8 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if cmk_version.is_expired_trial():
-            html.show_message(get_trial_expired_message())
+        if is_free():
+            html.show_message(get_free_message(format_html=True))
 
         html.div("", id_="message_container")
         with table_element(
@@ -751,7 +779,6 @@ class ModeDistributedMonitoring(WatoMode):
                 "you want to display its data."
             ),
         ) as table:
-
             for site_id, site in sites:
                 table.row()
 
@@ -779,10 +806,11 @@ class ModeDistributedMonitoring(WatoMode):
         if site_id == omd_site():
             html.empty_icon_button()
         else:
-            delete_url = make_confirm_link(
+            delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_delete", site_id)]),
-                message=_("Do you really want to delete the connection to the site %s?")
-                % HTMLWriter.render_tt(site_id),
+                title=_("Delete connection to site"),
+                suffix=site.get("alias", ""),
+                message=_("ID: %s") % site_id,
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -853,10 +881,12 @@ class ModeDistributedMonitoring(WatoMode):
 
         if site["replication"]:
             if site.get("secret"):
-                logout_url = make_confirm_link(
+                logout_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
-                    message=_("Do you really want to log out of '%s'?")
-                    % HTMLWriter.render_tt(site["alias"]),
+                    title=_("Log out of site"),
+                    suffix=site["alias"],
+                    message=_("ID: %s") % site_id,
+                    confirm_button=_("Log out"),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:
@@ -874,8 +904,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
 
-@page_registry.register_page("wato_ajax_fetch_site_status")
-class ModeAjaxFetchSiteStatus(AjaxPage):
+class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
     def page(self) -> PageResult:
@@ -917,14 +946,15 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         status = replication_status[site_id]
         if status.success:
             assert not isinstance(status.response, Exception)
-            icon = "success"
-            msg = _("Online (Version: %s, Edition: %s)") % (
+            icon = "checkmark"
+            msg = _("Online (%s)") % make_site_version_info(
                 status.response.version,
                 status.response.edition,
+                status.response.license_state,
             )
         else:
             assert isinstance(status.response, Exception)
-            icon = "failed"
+            icon = "cross"
             msg = "%s" % status.response
 
         return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
@@ -943,7 +973,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         else:
             message = status_msg.title()
 
-        icon = "success" if status == "online" else "failed"
+        icon = "checkmark" if status == "online" else "cross"
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
@@ -952,6 +982,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 class PingResult(NamedTuple):
     version: str
     edition: str
+    license_state: LicenseState | None
 
 
 class ReplicationStatus(NamedTuple):
@@ -1028,10 +1059,16 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
+            raw_result = do_remote_automation(site, "ping", [], timeout=5)
+            assert isinstance(raw_result, dict)
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**do_remote_automation(site, "ping", [], timeout=5)),
+                response=PingResult(
+                    version=raw_result["version"],
+                    edition=raw_result["edition"],
+                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                ),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:
@@ -1049,7 +1086,6 @@ class ReplicationStatusFetcher:
             result_queue.join()
 
 
-@mode_registry.register
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -1192,7 +1228,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-@mode_registry.register
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -1238,7 +1273,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-@mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -1480,3 +1514,11 @@ def _page_menu_entries_site_details(
                 )
             ),
         )
+
+
+def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguration]]:
+    """Sort given sites argument by local, followed by remote sites"""
+    return sorted(
+        sites.items(),
+        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+    )

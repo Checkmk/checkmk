@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,24 +12,24 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import DataStats, Seconds, Timegroup, TimeSeriesValues, Timestamp
-
-from cmk.base import prediction
+from cmk.utils.prediction import _prediction, DataStat
 
 
 @pytest.mark.parametrize(
     "group_by, timestamp, result",
     [
-        (prediction._group_by_wday, 1543402800, ("wednesday", 43200)),
-        (prediction._group_by_day, 1543402800, ("everyday", 43200)),
-        (prediction._group_by_day_of_month, 1543402800, ("28", 43200)),
-        (prediction._group_by_everyhour, 1543402820, ("everyhour", 20)),
+        (_prediction._group_by_wday, 1543402800, ("wednesday", 43200)),
+        (_prediction._group_by_day, 1543402800, ("everyday", 43200)),
+        (_prediction._group_by_day_of_month, 1543402800, ("28", 43200)),
+        (_prediction._group_by_everyhour, 1543402820, ("everyhour", 20)),
     ],
 )
 def test_group_by(
-    group_by: Callable[[Timestamp], tuple[Timegroup, Timestamp]],
-    timestamp: Timestamp,
-    result: tuple[Timegroup, Timestamp],
+    group_by: Callable[
+        [_prediction.Timestamp], tuple[_prediction.Timegroup, _prediction.Timestamp]
+    ],
+    timestamp: _prediction.Timestamp,
+    result: tuple[_prediction.Timegroup, _prediction.Timestamp],
 ) -> None:
     with on_time(timestamp, "CET"):
         assert group_by(timestamp) == result
@@ -44,7 +44,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "UTC",
             86400 * 3,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)],
         ),
@@ -53,7 +53,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "Europe/Berlin",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1531000800, 1531087200), (1530914400, 1531000800)],
         ),
@@ -62,7 +62,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "America/New_York",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1530936000, 1531022400), (1530849600, 1530936000)],
         ),
@@ -71,7 +71,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "UTC",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540684800, 1540771200), (1540598400, 1540684800)],
         ),
@@ -80,7 +80,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "Europe/Berlin",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540681200, 1540767600), (1540591200, 1540677600)],
         ),
@@ -89,7 +89,7 @@ def test_group_by(
             "2018-10-28 0:00",
             "Europe/Berlin",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540677600, 1540764000), (1540591200, 1540677600)],
         ),
@@ -98,7 +98,7 @@ def test_group_by(
             "2018-11-04 7:00",
             "America/New_York",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1541307600, 1541394000), (1541217600, 1541304000)],
         ),
@@ -107,7 +107,7 @@ def test_group_by(
             "2018-11-04 5:00",
             "America/New_York",
             86400 * 2,
-            prediction._PREDICTION_PERIODS["hour"],
+            _prediction.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1541304000, 1541390400), (1541217600, 1541304000)],
         ),
@@ -116,7 +116,7 @@ def test_group_by(
             "2019-04-02 10:00",
             "Europe/Berlin",
             86400 * 12,
-            prediction._PREDICTION_PERIODS["wday"],
+            _prediction.PREDICTION_PERIODS["wday"],
             "tuesday",
             [(1554156000, 1554242400), (1553554800, 1553641200)],
         ),
@@ -125,10 +125,10 @@ def test_group_by(
 def test_time_slices(
     utcdate: str,
     timezone: str,
-    horizon: Seconds,
-    period_info: prediction._PeriodInfo,
-    timegroup: Timegroup,
-    result: Sequence[tuple[Timestamp, Timestamp]],
+    horizon: _prediction.Seconds,
+    period_info: _prediction._PeriodInfo,
+    timegroup: _prediction.Timegroup,
+    result: Sequence[tuple[_prediction.Timestamp, _prediction.Timestamp]],
 ) -> None:
     """Find period slices for predictive levels
 
@@ -139,27 +139,40 @@ def test_time_slices(
         timestamp = time.time()
         print(timestamp)
 
-        slices = prediction._time_slices(int(timestamp), horizon, period_info, timegroup)
+        slices = _prediction._time_slices(int(timestamp), horizon, period_info, timegroup)
         pprint([("ontz", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     pprint([("sys", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result
 
 
+def approx(value_in: float) -> float:
+    # ApproxBase != float :-(
+    return pytest.approx(value_in)  # type: ignore[return-value]
+
+
 @pytest.mark.parametrize(
     "slices, result",
     [
-        ([list(range(6))], [[i] * 4 for i in range(6)]),
-        ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
+        ([list(range(6))], [DataStat(i, i, i, None) for i in range(6)]),
+        (
+            [[1, 5, None, 6]],
+            [
+                DataStat(1, 1, 1, None),
+                DataStat(5, 5, 5, None),
+                None,
+                DataStat(6, 6, 6, None),
+            ],
+        ),
         (
             [
                 [1, 5, None, 6],
                 [2, None, 2, 4],
             ],
             [
-                pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),  # fixed: true-division
-                [5.0, 5, 5, 5.0],
-                [2.0, 2, 2, 2.0],
-                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
+                DataStat(1.5, 1, 2, approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(5.0, 5, 5, None),
+                DataStat(2.0, 2, 2, None),
+                DataStat(5.0, 4, 6, approx(math.sqrt(2))),
             ],
         ),
         (
@@ -169,12 +182,12 @@ def test_time_slices(
                 [3, 3, None, None, 2, 2],
             ],
             [
-                pytest.approx([2.0, 1, 3, 1.0]),
-                pytest.approx([10.0 / 3.0, 2, 5, 1.527525]),
-                pytest.approx([2.5, 2, 3, math.sqrt(2) / 2]),  # fixed: true-division
-                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
-                pytest.approx([4.333333, 2, 8, 3.214550]),
-                pytest.approx([3.5, 2, 5, 2.121320]),
+                DataStat(approx(2.0), 1, 3, approx(1.0)),
+                DataStat(approx(3.333333), 2, 5, approx(1.527525)),
+                DataStat(2.5, 2, 3, approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(approx(5.0), 4, 6, approx(math.sqrt(2))),
+                DataStat(approx(4.333333), 2, 8, approx(3.214550)),
+                DataStat(approx(3.5), 2, 5, approx(2.121320)),
             ],
         ),
         (
@@ -184,16 +197,18 @@ def test_time_slices(
                 [5, 5, 5, 5, 2, 2, 2],
             ],
             [
-                pytest.approx([3.0, 1, 5, 2.828427]),
-                pytest.approx([5.0, 5, 5, 0.0]),
-                pytest.approx([4.0, 3, 5, 1.414213]),
-                pytest.approx([3.5, 2, 5, 2.121320]),
-                pytest.approx([4.0, 2, 6, 2.828427]),
-                pytest.approx([5.0, 2, 8, 4.242640]),
-                pytest.approx([2.0, 2, 2, 2.0]),
+                DataStat(3.0, 1, 5, approx(2.828427)),
+                DataStat(5.0, 5, 5, approx(0.0)),
+                DataStat(4.0, 3, 5, approx(1.414213)),
+                DataStat(3.5, 2, 5, approx(2.121320)),
+                DataStat(4.0, 2, 6, approx(2.828427)),
+                DataStat(5.0, 2, 8, approx(4.242640)),
+                DataStat(2.0, 2, 2, None),
             ],
         ),
     ],
 )
-def test_data_stats(slices: list[TimeSeriesValues], result: DataStats) -> None:
-    assert prediction._data_stats(slices) == result
+def test_data_stats(
+    slices: list[_prediction.TimeSeriesValues], result: list[DataStat | None]
+) -> None:
+    assert _prediction._data_stats(slices) == result

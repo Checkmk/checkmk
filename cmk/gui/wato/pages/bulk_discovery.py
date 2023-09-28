@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """When the user wants to scan the services of multiple hosts at once
@@ -8,6 +8,8 @@ this mode is used."""
 import copy
 from collections.abc import Collection
 from typing import cast
+
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
@@ -20,7 +22,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -34,10 +35,20 @@ from cmk.gui.watolib.bulk_discovery import (
     start_bulk_discovery,
     vs_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import (
+    disk_or_search_folder_from_request,
+    Folder,
+    SearchFolder,
+)
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+from ._bulk_actions import get_hostnames_from_checkboxes
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkDiscovery)
+
+
 class ModeBulkDiscovery(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -51,14 +62,15 @@ class ModeBulkDiscovery(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._start = bool(request.var("_save"))
         self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
+        self._folder = disk_or_search_folder_from_request()
 
-    def _get_bulk_discovery_params(self):
+    def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
 
         if self._start:
@@ -139,7 +151,7 @@ class ModeBulkDiscovery(WatoMode):
 
         self._show_start_form()
 
-    def _show_start_form(self):
+    def _show_start_form(self) -> None:
         html.begin_form("bulkinventory", method="POST")
 
         msgs = []
@@ -192,14 +204,14 @@ class ModeBulkDiscovery(WatoMode):
 
         if not self._all:
             for host_name in get_hostnames_from_checkboxes(
-                (lambda host: host.discovery_failed()) if self._only_failed else None
+                self._folder, (lambda host: host.discovery_failed()) if self._only_failed else None
             ):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = Folder.current().load_host(host_name)
-                host.need_permission("write")
+                host = self._folder.load_host(host_name)
+                host.permissions.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)
                 )
@@ -208,31 +220,34 @@ class ModeBulkDiscovery(WatoMode):
             # all host in this folder, maybe recursively. New: we always group
             # a bunch of subsequent hosts of the same folder into one item.
             # That saves automation calls and speeds up mass inventories.
-            entries = self._recurse_hosts(Folder.current())
+            entries = self._recurse_hosts(self._folder)
             for host_name, folder in entries:
                 if restrict_to_hosts is not None and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = folder.host(host_name)
-                host.need_permission("write")
+                host = folder.load_host(host_name)
+                host.permissions.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)
                 )
 
         return hosts_to_discover
 
-    def _recurse_hosts(self, folder):
+    def _recurse_hosts(
+        self, folder: Folder | SearchFolder
+    ) -> list[tuple[HostName, Folder | SearchFolder]]:
         entries = []
         for host_name, host in folder.hosts().items():
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
+            assert isinstance(folder, Folder)
             for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder)
         return entries
 
-    def _find_hosts_with_failed_discovery_check(self):
+    def _find_hosts_with_failed_discovery_check(self) -> list[HostName]:
         # Old service name "Check_MK inventory" needs to be kept because old
         # installations may still use that name
         return sites.live().query_column(
@@ -244,7 +259,7 @@ class ModeBulkDiscovery(WatoMode):
             "Columns: host_name"
         )
 
-    def _find_hosts_with_failed_agent(self):
+    def _find_hosts_with_failed_agent(self) -> list[HostName]:
         return sites.live().query_column(
             "GET services\n"
             "Filter: description = Check_MK\n"

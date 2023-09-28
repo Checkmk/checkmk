@@ -1,0 +1,13 @@
+Title: Added option to execute ibm_mq plugin as mqm user
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1686140364
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Added option to execute ibm_mq plugin as mqm user.
+This can be set in the existing bakery WATO rule 'IBM MQ (Linux)' by checking the 'Execute as another user' option and selecting 'Execute as MQM'.
+

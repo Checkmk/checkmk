@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,16 +10,22 @@ import itertools
 import os
 import re
 import time
-from collections.abc import Iterable, Iterator
-from typing import Any, cast, Literal, TypedDict
+from collections.abc import Callable, Iterable, Iterator
+from functools import partial
+from typing import Any, cast, Literal
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.werks
+import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks import Werk, WerkTranslator
+from cmk.utils.werks.acknowledgement import is_acknowledged
+from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
+from cmk.utils.werks.acknowledgement import load_werk_entries
+from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
+from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
+from cmk.utils.werks.werk import Compatibility, Werk, WerkTranslator
 
-import cmk.gui.pages
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -28,9 +34,11 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import html, HTMLContent
+from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -45,14 +53,15 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
-from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive
+from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -63,10 +72,24 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-# Keep global variable for caching werks between requests. The never change.
-g_werks: dict[int, Werk] = {}
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("info")(AboutCheckmkPage)
+    page_registry.register_page("change_log")(ChangeLogPage)
+    page_registry.register_page_handler("werk", page_werk)
+
+
+def render_description(description: str) -> HTML:
+    return HTML(description)
+
+
+def get_werk_by_id(werk_id: int) -> Werk:
+    for werk in load_werk_entries():
+        if werk.id == werk_id:
+            return werk
+    raise MKUserError("werk", _("This werk does not exist."))
 
 
 class WerkTableOptions(TypedDict):
@@ -100,12 +123,11 @@ _WerkTableOptionColumns = Literal[
 ]
 
 
-@cmk.gui.pages.page_registry.register_page("info")
-class ModeAboutCheckmkPage(cmk.gui.pages.Page):
+class AboutCheckmkPage(Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,
@@ -114,10 +136,10 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
 
         html.open_div(id_="info_title")
-        html.h1(_("Your monitoring machine"))
+        html.h1(_("Your IT monitoring platform"))
         html.a(
-            HTMLWriter.render_img(theme.url("images/tribe29.svg")),
-            "https://tribe29.com",
+            html.render_img(theme.url("images/checkmk_logo.svg")),
+            "https://checkmk.com",
             target="_blank",
         )
         html.close_div()
@@ -125,12 +147,9 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.div(None, id_="info_underline")
 
         html.open_div(id_="info_intro_text")
-        html.span(_("Open. Effective. Awesome."))
         html.span(
             _(
-                "May we present? Monitoring as it's supposed to be: "
-                "incredibly quick to install, infinetely scalable, highly customizable and "
-                "designed for admins."
+                "Gain a complete view of your entire IT infrastructure: from public cloud providers, to your data centers, across servers, networks, containers, and more. Checkmk enables ITOps and DevOps teams to run your IT at peak performance."
             )
         )
         html.span(
@@ -146,14 +165,8 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
         html.close_div()
 
-        version_major_minor = re.sub(r".\d+$", "", Version(__version__).version_base)
-        if version_major_minor:
-            current_version_link = "https://checkmk.com/product/checkmk-%s" % version_major_minor
-        else:
-            current_version_link = "https://checkmk.com/product/latest-version"
-
         html.open_div(id="info_image")
-        html.open_a(href=current_version_link, target="_blank")
+        html.open_a(href="https://checkmk.com/product/latest-version", target="_blank")
         html.img(theme.url("images/monitoring-machine.png"))
         html.close_a()
         html.close_div()
@@ -161,21 +174,19 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.open_div(id_="info_footer")
-        html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
+        html.span(_("© %s Checkmk GmbH. All Rights Reserved.") % time.strftime("%Y"))
         html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
         return None
 
 
-@cmk.gui.pages.page_registry.register_page("change_log")
-class ModeChangeLogPage(cmk.gui.pages.Page):
+class ChangeLogPage(Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
-        load_werks()
         werk_table_options = _werk_table_options_from_request()
 
         make_header(
@@ -186,7 +197,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         )
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         handle_acknowledgement()
 
@@ -223,24 +234,21 @@ def handle_acknowledgement():
 
     if request.var("_werk_ack"):
         werk_id = request.get_integer_input_mandatory("_werk_ack")
-        if werk_id not in g_werks:
-            raise MKUserError("werk", _("This werk does not exist."))
-        werk = g_werks[werk_id]
-
-        if werk["compatible"] == "incomp_unack":
+        werk = get_werk_by_id(werk_id)
+        if werk.compatible == Compatibility.NOT_COMPATIBLE and not is_acknowledged(
+            werk, load_acknowledgements()
+        ):
             acknowledge_werk(werk)
             html.show_message(
                 _("Werk %s - %s has been acknowledged.")
-                % (render_werk_id(werk, with_link=True), render_werk_title(werk))
+                % (render_werk_id(werk), render_werk_title(werk))
             )
-            load_werks()  # reload ack states after modification
             render_unacknowleged_werks()
 
     elif request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
         acknowledge_all_werks()
         flash(_("%d incompatible Werks have been acknowledged.") % num)
-        load_werks()  # reload ack states after modification
         html.reload_whole_page()
 
 
@@ -254,16 +262,17 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
         is_shortcut=True,
         is_suggested=True,
         item=make_simple_link(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_ack_all", "1")]),
-                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+                title=_("Acknowledge all incompatible werks"),
+                confirm_button=_("Acknowledge all"),
             )
         ),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )
 
 
-def _extend_display_dropdown(  # type:ignore[no-untyped-def]
+def _extend_display_dropdown(  # type: ignore[no-untyped-def]
     menu, werk_table_options: WerkTableOptions
 ) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -321,15 +330,14 @@ def _show_werk_options_controls() -> None:
     html.close_div()
 
 
-@cmk.gui.pages.register("werk")
 def page_werk() -> None:
-    load_werks()
-    werk_id = request.get_integer_input_mandatory("werk")
-    if werk_id not in g_werks:
-        raise MKUserError("werk", _("This werk does not exist."))
-    werk = g_werks[werk_id]
+    werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
 
-    title = ("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"])
+    title = ("%s %s - %s") % (
+        _("Werk"),
+        render_werk_id(werk),
+        werk.title,
+    )
 
     breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help_links"])
     breadcrumb.append(
@@ -350,23 +358,29 @@ def page_werk() -> None:
         html.close_tr()
 
     translator = WerkTranslator()
-    werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
+    werk_table_row(_("ID"), render_werk_id(werk))
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
-    werk_table_row(_("Date"), render_werk_date(werk))
-    werk_table_row(_("Checkmk Version"), werk["version"])
+    werk_table_row(_("Date"), get_date_formatted(werk))
+    werk_table_row(_("Checkmk Version"), werk.version)
     werk_table_row(
-        _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"]
+        _("Level"),
+        translator.level_of(werk),
+        css="werklevel werklevel%d" % werk.level.value,
     )
     werk_table_row(
-        _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"]
+        _("Class"),
+        translator.class_of(werk),
+        css="werkclass werkclass%s" % werk.level.value,
     )
     werk_table_row(
         _("Compatibility"),
-        translator.compatibility_of(werk),
-        css="werkcomp werkcomp%s" % werk["compatible"],
+        compatibility_of(werk.compatible, is_acknowledged(werk, load_acknowledgements())),
+        css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
-    werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
+    werk_table_row(
+        _("Description"), render_description(werk.description), css="nowiki"
+    )  # TODO: remove nowiki
 
     html.close_table()
 
@@ -396,30 +410,16 @@ def _page_menu_entries_ack_werk(werk: Werk) -> Iterator[PageMenuEntry]:
         return
 
     ack_url = makeactionuri(
-        request, transactions, [("_werk_ack", werk["id"])], filename="change_log.py"
+        request, transactions, [("_werk_ack", werk.id)], filename="change_log.py"
     )
     yield PageMenuEntry(
         title=_("Acknowledge"),
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
-        is_enabled=werk["compatible"] == "incomp_unack",
+        is_enabled=not is_acknowledged(werk, load_acknowledgements()),
         is_shortcut=True,
         is_suggested=True,
     )
-
-
-def load_werks() -> None:
-    global g_werks
-    if not g_werks:
-        g_werks = cmk.utils.werks.load()
-
-    ack_ids = load_acknowledgements()
-    for werk in g_werks.values():
-        if werk["compatible"] in ["incomp", "incomp_unack"]:
-            if werk["id"] in ack_ids or werk_is_pre_127(werk):
-                werk["compatible"] = "incomp_ack"
-            else:
-                werk["compatible"] = "incomp_unack"
 
 
 def may_acknowledge() -> bool:
@@ -436,36 +436,25 @@ def acknowledge_werks(werks: Iterable[Werk], check_permission: bool = True) -> N
 
     ack_ids = load_acknowledgements()
     for werk in werks:
-        ack_ids.append(werk["id"])
-        werk["compatible"] = "incomp_ack"
-    save_acknowledgements(ack_ids)
+        ack_ids.add(werk.id)
+    save_acknowledgements(list(ack_ids))
 
 
 def save_acknowledgements(acknowledged_werks: list[int]) -> None:
-    store.save_object_to_file(acknowledgement_path, acknowledged_werks)
+    load_acknowledgements.cache_clear()  # type: ignore[attr-defined]
+    werks_save_acknowledgements(acknowledged_werks)
 
 
 def acknowledge_all_werks(check_permission: bool = True) -> None:
-    load_werks()
     acknowledge_werks(unacknowledged_incompatible_werks(), check_permission)
 
 
-def werk_is_pre_127(werk: Werk) -> bool:
-    return werk["version"].startswith("1.2.5") or werk["version"].startswith("1.2.6")
-
-
-def load_acknowledgements() -> list[int]:
-    return store.load_object_from_file(acknowledgement_path, default=[])
-
-
-def unacknowledged_incompatible_werks() -> list[Werk]:
-    return cmk.utils.werks.sort_by_date(
-        werk for werk in g_werks.values() if werk["compatible"] == "incomp_unack"  #
-    )
+@request_memoize()
+def load_acknowledgements() -> set[int]:
+    return werks_load_acknowledgements()
 
 
 def num_unacknowledged_incompatible_werks() -> int:
-    load_werks()
     return len(unacknowledged_incompatible_werks())
 
 
@@ -540,7 +529,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CPE, Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE)
                     ),
                 ],
             ),
@@ -566,7 +555,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     TextInput(label=_("to:"), size=12),
                 ],
             ),
-            (Version(__version__).version_base, ""),
+            (Version.from_str(__version__).version_base, ""),
         ),
         (
             "grouping",
@@ -611,29 +600,59 @@ def render_unacknowleged_werks() -> None:
         html.close_div()
 
 
+def get_sort_key_by_version_and_component(
+    translator: WerkTranslator, werk: Werk
+) -> tuple[str | int, ...]:
+    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk)
+    result = (
+        *werk_result[:4],
+        int(is_acknowledged(werk, load_acknowledgements())),
+        *werk_result[4:],
+    )
+    return result
+
+
+def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+    translator = WerkTranslator()
+    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
+
+
+def get_date_formatted(werk: Werk) -> str:
+    # return date formatted as string in local timezone
+    return werk.date.astimezone().strftime(TIME_FORMAT)
+
+
 # NOTE: The sorter and the grouping function should better agree, otherwise chaos will ensue...
-_SORT_AND_GROUP = {
-    "version": (cmk.utils.werks.sort_by_version_and_component, lambda werk: werk["version"]),  #
+_SORT_AND_GROUP: dict[
+    str | None,
+    tuple[
+        Callable[[Iterator[Werk]], list[Werk]],
+        Callable[[Werk], None | str],
+    ],
+] = {
+    "version": (sort_by_version_and_component, lambda werk: werk.version),
     "day": (
-        cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%Y-%m-%d", time.localtime(werk["date"])),  #
+        sort_by_date,
+        lambda werk: werk.date.astimezone().strftime("%Y-%m-%d"),
     ),
     "week": (
-        cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"])),  #
+        sort_by_date,
+        lambda werk: werk.date.astimezone().strftime("%s %%U - %%Y" % _("Week")),
     ),
-    None: (cmk.utils.werks.sort_by_date, lambda _werk: None),  #
+    None: (sort_by_date, lambda _werk: None),
 }
+
+# TODO: validate version field of markdown files!
 
 
 def render_werks_table(werk_table_options: WerkTableOptions) -> None:
     translator = WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
-    werklist = sorter(
-        werk for werk in g_werks.values() if werk_matches_options(werk, werk_table_options)  #
+    list_of_werks = sorter(
+        werk for werk in load_werk_entries() if werk_matches_options(werk, werk_table_options)  #
     )
-    groups = itertools.groupby(werklist, key=grouper)
+    groups = itertools.groupby(list_of_werks, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
         with table_element(
             title=group_title, limit=None, searchable=False, sortable=False, css="werks"
@@ -645,20 +664,47 @@ def render_werks_table(werk_table_options: WerkTableOptions) -> None:
         html.h3(_("No matching Werks found."))
 
 
+def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
+    compatibilities = {
+        (Compatibility.COMPATIBLE, False): _("Compatible"),
+        (Compatibility.NOT_COMPATIBLE, True): _("Incompatible"),
+        (Compatibility.NOT_COMPATIBLE, False): _("Incompatible - TODO"),
+        # compatible and acknowledge should not be possible, but GUI Crawler hit that case:
+        (Compatibility.COMPATIBLE, True): _("Compatible"),
+    }
+    return compatibilities[(compatible, acknowledged)]
+
+
 def render_werks_table_row(table: Table, translator: WerkTranslator, werk: Werk) -> None:
     table.row()
-    table.cell(_("ID"), render_werk_id(werk, with_link=True), css=["number narrow"])
-    table.cell(_("Version"), werk["version"], css=["number narrow"])
-    table.cell(_("Date"), render_werk_date(werk), css=["number narrow"])
-    table.cell(_("Class"), translator.class_of(werk), css=["werkclass werkclass%s" % werk["class"]])
-    table.cell(_("Level"), translator.level_of(werk), css=["werklevel werklevel%d" % werk["level"]])
+    table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
+    table.cell(_("Version"), werk.version, css=["number narrow"])
+    table.cell(_("Date"), get_date_formatted(werk), css=["number narrow"])
+    table.cell(
+        _("Class"),
+        translator.class_of(werk),
+        css=["werkclass werkclass%s" % werk.class_.value],
+    )
+    table.cell(
+        _("Level"),
+        translator.level_of(werk),
+        css=["werklevel werklevel%d" % werk.level.value],
+    )
     table.cell(
         _("Compatibility"),
-        translator.compatibility_of(werk),
-        css=["werkcomp werkcomp%s" % werk["compatible"]],
+        compatibility_of(werk.compatible, is_acknowledged(werk, load_acknowledgements())),
+        css=["werkcomp werkcomp%s" % _to_ternary_compatibility(werk)],
     )
     table.cell(_("Component"), translator.component_of(werk), css=["nowrap"])
     table.cell(_("Title"), render_werk_title(werk))
+
+
+def _to_ternary_compatibility(werk: Werk) -> str:
+    if werk.compatible == Compatibility.NOT_COMPATIBLE:
+        if is_acknowledged(werk, load_acknowledgements()):
+            return "incomp_ack"
+        return "incomp_unack"
+    return "compat"
 
 
 def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bool:
@@ -671,34 +717,30 @@ def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bo
         werk_to_match = ""
 
     if not (
-        (not werk_to_match or werk["id"] == werk_to_match)
-        and werk["level"] in werk_table_options["levels"]
-        and werk["class"] in werk_table_options["classes"]
-        and werk["compatible"] in werk_table_options["compatibility"]
-        and werk_table_options["component"] in (None, werk["component"])
-        and werk["date"] >= werk_table_options["date_range"][0]
-        and werk["date"] <= werk_table_options["date_range"][1]
+        (not werk_to_match or werk.id == werk_to_match)
+        and werk.level.value in werk_table_options["levels"]
+        and werk.class_.value in werk_table_options["classes"]
+        and _to_ternary_compatibility(werk) in werk_table_options["compatibility"]
+        and werk_table_options["component"] in (None, werk.component)
+        and werk.date.timestamp() >= werk_table_options["date_range"][0]
+        and werk.date.timestamp() <= werk_table_options["date_range"][1]
     ):
         return False
 
-    if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:
+    if werk_table_options["edition"] and werk.edition.value != werk_table_options["edition"]:
         return False
 
     from_version, to_version = werk_table_options["version"]
-    if from_version and cmp_version(werk["version"], from_version) < 0:
+    if from_version and cmp_version(werk.version, from_version) < 0:
         return False
 
-    if to_version and cmp_version(werk["version"], to_version) > 0:
+    if to_version and cmp_version(werk.version, to_version) > 0:
         return False
 
     if werk_table_options["werk_content"]:
-        have_match = False
         search_text = werk_table_options["werk_content"].lower()
-        for line in [werk["title"]] + werk["description"]:
-            if search_text in line.lower():
-                have_match = True
-                break
-        if not have_match:
+        text = werk.title + strip_tags(render_description(werk.description))
+        if search_text not in text.lower():
             return False
 
     return True
@@ -735,19 +777,18 @@ def _werk_table_options_from_request() -> WerkTableOptions:
     return cast(WerkTableOptions, werk_table_options)
 
 
-def render_werk_id(werk: Werk, with_link: bool) -> HTML | str:
-    if with_link:
-        url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
-        return HTMLWriter.render_a("#%04d" % werk["id"], href=url)
-    return "#%04d" % werk["id"]
+def render_werk_id(werk: Werk) -> str:
+    return "#%04d" % werk.id
 
 
-def render_werk_date(werk: Werk) -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
+def render_werk_link(werk: Werk) -> HTML:
+    werk_id = render_werk_id(werk)
+    url = makeuri_contextless(request, [("werk", werk.id)], filename="werk.py")
+    return HTMLWriter.render_a(werk_id, href=url)
 
 
 def render_werk_title(werk: Werk) -> HTML:
-    title = werk["title"]
+    title = werk.title
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
     if ":" in title:
@@ -756,14 +797,14 @@ def render_werk_title(werk: Werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_werk_description(  # pylint: disable=too-many-branches
-    werk: Werk,
+def render_nowiki_werk_description(  # pylint: disable=too-many-branches
+    description_raw: list[str],
 ) -> HTML:
     with output_funnel.plugged():
         html.open_p()
         in_list = False
         in_code = False
-        for line in werk["description"]:
+        for line in description_raw:
             if line.startswith("LI:"):
                 if not in_list:
                     html.open_ul()

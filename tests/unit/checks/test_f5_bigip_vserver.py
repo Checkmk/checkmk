@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
 
@@ -88,7 +91,7 @@ from tests.testlib import Check
         ),
     ],
 )
-def test_wmi_cpu_load_discovery(
+def test_f5_bigip_vserver_parsing(
     info: Sequence[Sequence[str]],
     item: str,
     expected_item_data: Mapping[str, str | Sequence[float]],

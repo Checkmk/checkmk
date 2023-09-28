@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -42,9 +42,14 @@ class TestPackageVersion:
         # this is not correct, but we don't care:
         assert PackageVersion("v2").sort_key > PackageVersion("v10").sort_key
 
+    @pytest.mark.parametrize("raw_str", ["1/2/3"])
+    def test_invalid_version(self, raw_str: str) -> None:
+        with pytest.raises(ValueError, match=raw_str):
+            _ = PackageName(raw_str)
+
 
 class TestPackageName:
     @pytest.mark.parametrize("raw_str", ["", "foo;bar"])
     def test_invalid_name(self, raw_str: str) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=raw_str):
             _ = PackageName(raw_str)

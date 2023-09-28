@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,8 +9,9 @@ import logging
 from collections.abc import Mapping, Sequence
 from typing import Any, Final
 
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -61,10 +62,10 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         self._sources.clear()
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        return AgentRawData(b"" + self._get_main_section() + self._get_source_labels_section())
+        return AgentRawData(bytes(self._get_main_section() + self._get_source_labels_section()))
 
-    def _get_main_section(self) -> AgentRawData:
-        raw_data = AgentRawData(b"")
+    def _get_main_section(self) -> bytearray | bytes:
+        raw_data = bytearray()
         for src in self._sources:
             if src.info.successfully_processed:
                 # !! Important for Check_MK and Check_MK Discovery service !!
@@ -74,23 +75,23 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
                 #     it's service details
                 #   - Check_MK Discovery: Only shows vanished/new/... if raw data is not
                 #     added; ie. if file_info is not successfully processed
-                raw_data = AgentRawData(raw_data + src.raw_data)
+                raw_data += src.raw_data
         return raw_data
 
-    def _get_source_labels_section(self) -> AgentRawData:
+    def _get_source_labels_section(self) -> bytearray | bytes:
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
         if not self._sources:
-            return AgentRawData(b"")
+            return b""
 
         labels = {
             "cmk/piggyback_source_%s" % src.info.source_hostname: "yes" for src in self._sources
         }
-        return AgentRawData(b"<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels).encode("utf-8"))
+        return ("<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels)).encode("utf-8")
 
     @staticmethod
     def _raw_data(
-        hostname: str | None,
+        hostname: HostName | HostAddress | None,
         time_settings: PiggybackTimeSettings,
     ) -> Sequence[PiggybackRawDataInfo]:
-        return get_piggyback_raw_data(hostname if hostname else "", time_settings)
+        return get_piggyback_raw_data(hostname if hostname else HostName(""), time_settings)

@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Union
+from collections.abc import Mapping
+from typing import Any, Final
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 
-SectionDict = Dict[
+SectionDict = dict[
     str,
-    Union[
-        List[Tuple[str, int]],  #
-        List[Tuple[str, List[str]]],  # TODO: .util.cpu_util.CPUInfo?
-    ],
+    (list[tuple[str, int]] | list[tuple[str, list[str]]]),  #  # TODO: .util.cpu_util.CPUInfo?
 ]
 
-Section = Tuple[Optional[int], SectionDict]
+Section = tuple[int | None, SectionDict]
 
 
-KERNEL_COUNTER_NAMES: Final[Dict[str, str]] = {  # order determines the service output!
+KERNEL_COUNTER_NAMES: Final[dict[str, str]] = {  # order determines the service output!
     "processes": "Process Creations",
     "ctxt": "Context Switches",
     "pgmajfault": "Major Page Faults",
@@ -61,11 +59,11 @@ def parse_kernel(string_table: StringTable) -> Section:
 
     """
     try:
-        timestamp: Optional[int] = int(string_table[0][0])
+        timestamp: int | None = int(string_table[0][0])
     except (IndexError, ValueError):
         timestamp = None
 
-    parsed: Dict[str, List] = {}
+    parsed: dict[str, list] = {}
     for line in string_table[1:]:
         if line[0] in KERNEL_COUNTER_NAMES:
             try:
@@ -109,7 +107,7 @@ def discover_kernel_util(section: Section) -> DiscoveryResult:
 
 
 def check_kernel_util(params: Mapping[str, Any], section: Section) -> CheckResult:
-    total: Optional[CPUInfo] = None
+    total: CPUInfo | None = None
     cores = []
 
     # Look for entry matching "cpu" (this is the combined load of all cores)

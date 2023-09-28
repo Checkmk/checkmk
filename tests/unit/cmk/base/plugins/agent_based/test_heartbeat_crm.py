@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,6 +10,7 @@ from tests.testlib import on_time
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.heartbeat_crm import (
     check_heartbeat_crm,
+    check_heartbeat_crm_resources,
     discover_heartbeat_crm,
     parse_heartbeat_crm,
     Section,
@@ -138,6 +139,82 @@ def _get_section_2() -> Section:
     return section
 
 
+@pytest.fixture(name="section_3", scope="module")
+def _get_section_3() -> Section:
+    section = parse_heartbeat_crm(
+        [
+            ["Stack:", "corosync"],
+            [
+                "Current",
+                "DC:",
+                "ha_b",
+                "(version",
+                "2.0.1-9e909a5bdd)",
+                "-",
+                "partition",
+                "WITHOUT",
+                "quorum",
+            ],
+            ["Last", "updated:", "Thu", "Aug", "11", "08:39:19", "2022"],
+            [
+                "Last",
+                "change:",
+                "Thu",
+                "Aug",
+                "11",
+                "09:29:04",
+                "2022",
+                "by",
+                "root",
+                "via",
+                "crm_resource",
+                "on",
+                "ha_b",
+            ],
+            ["2", "nodes", "configured"],
+            ["7", "resources", "configured"],
+            ["Online:", "[", "ha_b", "]"],
+            ["OFFLINE:", "[", "ha_a", "]"],
+            ["Full", "list", "of", "resources:"],
+            ["Clone", "Set:", "clone_1", "[pri_clone_1]", "(promotable)"],
+            ["_", "Masters:", "[", "ha_b", "]"],
+            ["_", "Stopped:", "[", "ha_a", "]"],
+            ["Clone", "Set:", "clone_ping", "[pri_ping]"],
+            ["_", "Started:", "[", "ha_b", "]"],
+            ["_", "Stopped:", "[", "ha_a", "]"],
+            ["Resource", "Group:", "grp_omd"],
+            ["_", "pri_fs_omd", "(ocf::heartbeat:Filesystem):", "Started", "ha_b"],
+            ["_", "pri_ip_omd", "(ocf::heartbeat:IPaddr2):", "Started", "ha_b"],
+            ["_", "pri_proc_omd", "(ocf::mk:omd):", "Stopped"],
+            ["Failed", "Resource", "Actions:"],
+            [
+                "*",
+                "pri_proc_omd_start_0",
+                "on",
+                "ha_b",
+                "'unknown",
+                "error'",
+                "(1):",
+                "call=35,",
+                "status=complete,",
+                "exitreason='',",
+            ],
+            [
+                "_",
+                "last-rc-change='Thu",
+                "Aug",
+                "11",
+                "07:52:05",
+                "2022',",
+                "queued=0ms,",
+                "exec=846ms",
+            ],
+        ]
+    )
+    assert section
+    return section
+
+
 def test_discover_heartbeat_crm(section_1: Section) -> None:
     assert list(discover_heartbeat_crm({"naildown_dc": False}, section_1)) == [
         Service(parameters={"num_nodes": 2, "num_resources": 3}),
@@ -202,3 +279,13 @@ def test_check_heartbeat_crm_crit(section_2: Section) -> None:
                 ),
             ),
         ]
+
+
+def test_check_heartbeat_crm_resources_promotable_clone(section_3: Section) -> None:
+    assert list(
+        check_heartbeat_crm_resources(
+            "clone_1",
+            {"expected_node": None},
+            section_3,
+        )
+    ) == [Result(state=State.OK, summary="clone_1 Master Started ha_b")]

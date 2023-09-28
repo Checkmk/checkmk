@@ -1,0 +1,16 @@
+Title: azure_virtualmachines: Remove resource group from summary
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1676289790
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Previously, the resource group was shown in a summary of a VM service if VMs
+are maped to separate hosts (option 'Map data to the VM itself' in the agent config).
+
+With the werk 15261, the `cmk/azure/resource_group:<group>` label was added
+to all Azure hosts, which made this data redundant.
+

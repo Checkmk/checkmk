@@ -1,0 +1,14 @@
+Title: Fix timerange on export of graph collections as PDF
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1682083308
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you changed the timerange of a graph collection, e.g. to "The last 8 days",
+exporting as PDF always resulted in a graph with a 4 hour timerange.
+

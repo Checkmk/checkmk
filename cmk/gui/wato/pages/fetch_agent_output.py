@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
@@ -19,14 +21,14 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
@@ -35,7 +37,13 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
+    page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
+
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -49,19 +57,19 @@ from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
 #   | Page for downloading the current agent output / SNMP walk of a host  |
 #   '----------------------------------------------------------------------'
 # TODO: This feature is used exclusively from the GUI. Why is the code in
-#       wato.py? The only reason is because the WATO automation is used. Move
+#       wato.py? The only reason is because the Setup automation is used. Move
 #       to better location.
 
 
 class FetchAgentOutputRequest:
-    def __init__(self, host: CREHost, agent_type: str) -> None:
+    def __init__(self, host: Host, agent_type: str) -> None:
         self.host = host
         self.agent_type = agent_type
 
     @classmethod
     def deserialize(cls, serialized: dict[str, str]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
-        host = Host.host(host_name)
+        host = Host.host(HostName(host_name))
         if host is None:
             raise MKGeneralException(
                 _(
@@ -72,7 +80,7 @@ class FetchAgentOutputRequest:
                 )
                 % (host_name, omd_site())
             )
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         return cls(host, serialized["agent_type"])
 
@@ -103,13 +111,13 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = Folder.current().host(host_name)
+        host = folder_from_request().host(HostName(host_name))
         if not host:
             raise MKGeneralException(
-                _('Host is not managed by WATO. Click <a href="%s">here</a> to go back.')
+                _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')
                 % escape_attribute(self._back_url)
             )
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
 
@@ -122,7 +130,6 @@ class AgentOutputPage(Page, abc.ABC):
         )
 
 
-@page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
         title = self._title()
@@ -195,12 +202,14 @@ class PageFetchAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return do_remote_automation(
-            get_site_config(self._request.host.site_id()),
-            "fetch-agent-output-get-status",
-            [
-                ("request", repr(self._request.serialize())),
-            ],
+        return JobStatusSpec.parse_obj(
+            do_remote_automation(
+                get_site_config(self._request.host.site_id()),
+                "fetch-agent-output-get-status",
+                [
+                    ("request", repr(self._request.serialize())),
+                ],
+            )
         )
 
 
@@ -312,27 +321,28 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         )
 
 
-@page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self) -> None:
         file_name = self.file_name(self._request)
         file_content = self._get_agent_output_file()
 
         response.set_content_type("text/plain")
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, file_name)
         response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return do_remote_automation(
+        raw_response = do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),
             ],
         )
+        assert isinstance(raw_response, bytes)
+        return raw_response
 
 
 @automation_command_registry.register

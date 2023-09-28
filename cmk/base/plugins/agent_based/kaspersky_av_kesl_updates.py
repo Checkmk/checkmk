@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,12 +22,11 @@
 # Application update state:                   No application updates available
 
 import time
-from typing import Dict
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, str]
+Section = dict[str, str]
 
 
 def parse_kaspersky_av_kesl_updates(string_table: StringTable) -> Section:
@@ -54,21 +53,6 @@ def discover_kaspersky_av_kesl_updates(section: Section) -> DiscoveryResult:
 
 
 def check_kaspersky_av_kesl_updates(section: Section) -> CheckResult:
-    """
-    # set fixed timezone for reproducable tests
-    >>> import os
-    >>> os.environ["TZ"] = "0"
-
-    >>> for result in check_kaspersky_av_kesl_updates({
-    ...     'Anti-virus databases loaded': 'Yes',
-    ...     'Last release date of databases': '1970-01-01 00:00:00',
-    ...     'Anti-virus database records': '1',
-    ... }):
-    ...     print(result)
-    Result(state=<State.OK: 0>, summary='Databases loaded: True')
-    Result(state=<State.OK: 0>, summary='Database date: Jan 01 1970 00:00:00')
-    Result(state=<State.OK: 0>, summary='Database records: 1')
-    """
     loaded = section["Anti-virus databases loaded"] == "Yes"
     yield Result(state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}")
     db_release_date = time.mktime(

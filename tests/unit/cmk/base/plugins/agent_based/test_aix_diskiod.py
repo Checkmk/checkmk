@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -48,7 +48,6 @@ def test_check_disk() -> None:
 
 
 def _test_check_aix_diskiod(item, section_1, section_2, check_func):
-
     value_store: dict[str, Any] = {}
 
     # fist call: initialize value store
@@ -85,7 +84,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_aix_diskiod(item) -> None:  # type:ignore[no-untyped-def]
+def test_check_aix_diskiod(item: str) -> None:
     _test_check_aix_diskiod(
         item,
         {
@@ -102,7 +101,7 @@ def test_check_aix_diskiod(item) -> None:  # type:ignore[no-untyped-def]
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_aix_diskiod(item) -> None:  # type:ignore[no-untyped-def]
+def test_cluster_check_aix_diskiod(item: str) -> None:
     _test_check_aix_diskiod(
         item,
         {

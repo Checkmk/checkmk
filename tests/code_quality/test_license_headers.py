@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,21 +17,25 @@ ignored_files = [
     "cmk/notification_plugins/signl4.py",
     "notifications/signl4",
     "omd/packages/maintenance/merge-crontabs",
+    "omd/packages/Python/pip",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories
 # based on their name.
 enterprise_names = [
     "nonfree",
-    "plus",
+    "cloud",
     "enterprise",
     "managed",
+    "saas",
     "cee",
     "cme",
-    "cpe",
+    "cce",
+    "cse",
+    "cmc",
     "cee.py",
     "cme.py",
-    "cpe.py",
+    "cce.py",
 ]
 
 
@@ -57,7 +61,7 @@ def test_license_headers(python_files: Sequence[str]) -> None:
         abs_path = os.path.realpath(path)
         rel_path = os.path.relpath(abs_path, cmk_path())
 
-        if rel_path.startswith("tests") or rel_path in ignored_files:
+        if rel_path in ignored_files:
             continue
 
         if needs_enterprise_license(rel_path):

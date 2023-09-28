@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,8 +11,11 @@
 # juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
 import time
+from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     any_of,
@@ -31,10 +34,10 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-RadioCounters = List[float]
+RadioCounters = list[float]
 
-RadioInfo = Dict[str, Tuple[RadioCounters, int, int]]
-RadioDict = Dict[str, RadioInfo]
+RadioInfo = dict[str, tuple[RadioCounters, int, int]]
+RadioDict = dict[str, RadioInfo]
 
 
 class ApInfo(TypedDict, total=False):
@@ -45,8 +48,8 @@ class ApInfo(TypedDict, total=False):
     active_node: str
 
 
-ApDict = Dict[str, ApInfo]
-Section = Tuple[ApDict, RadioDict]
+ApDict = dict[str, ApInfo]
+Section = tuple[ApDict, RadioDict]
 
 AP_STATES = {
     "1": (State.CRIT, "cleared"),
@@ -61,7 +64,7 @@ AP_STATES = {
 }
 
 
-def parse_juniper_trpz_aps_sessions(string_table: List[StringTable]) -> Section:
+def parse_juniper_trpz_aps_sessions(string_table: list[StringTable]) -> Section:
     """
     >>> aps, radios = parse_juniper_trpz_aps_sessions(
     ...     [[['12.109.103.48.50.49.50.48.51.48.50.54.50', '7', 'ap1'],
@@ -173,7 +176,7 @@ def _check_common_juniper_trpz_aps_sessions(
         state=state_code,
         summary="%sStatus: %s"
         % (
-            "" if "" in section else ("[%s/%s] " % (item_active_node, item_passive_node)),
+            "" if "" in section else (f"[{item_active_node}/{item_passive_node}] "),
             state_string,
         ),
     )
@@ -247,7 +250,7 @@ def check_juniper_trpz_aps_sessions(
 
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),

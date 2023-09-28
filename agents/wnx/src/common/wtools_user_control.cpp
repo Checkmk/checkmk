@@ -1,22 +1,17 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "wtools_user_control.h"
+#include "common/wtools_user_control.h"
 
-#include <ranges>
-// WINDOWS STUFF
-#if defined(_WIN32)
-#include <minwindef.h>
-//
 #include <lmaccess.h>
 #include <lmapibuf.h>
 #include <lmerr.h>
 
-#pragma comment(lib, "netapi32.lib")
-#endif
+#include <ranges>
 
-#include "logger.h"
-#include "winerror.h"  // for ERROR_NO_SUCH_ALIAS, ERROR_ALIAS_EXISTS, ERROR_MEMBER_IN_ALIAS
+#include "wnx/logger.h"
+
+#pragma comment(lib, "netapi32.lib")
 
 namespace rs = std::ranges;
 
@@ -35,7 +30,7 @@ Status LdapControl::userAdd(std::wstring_view user_name,
     wchar_t user_home_dir[] = L"";
     user_info.usri1_home_dir = user_home_dir;
 
-    wchar_t user_comment[] = L"Temporary Check MK User";
+    wchar_t user_comment[] = L"Temporary Checkmk User";
     user_info.usri1_comment = user_comment;
 
     user_info.usri1_flags = UF_SCRIPT;
@@ -175,10 +170,11 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
     lg_info.lgrpi1_comment = const_cast<wchar_t *>(group_comment.data());
 
     unsigned long parm_err = 0;
-    auto err = ::NetLocalGroupAdd(primary_dc_name_,           // PDC name
-                                  1,                          // level
-                                  (unsigned char *)&lg_info,  // input buffer
-                                  &parm_err);  // parameter in error
+    auto err =
+        ::NetLocalGroupAdd(primary_dc_name_,                    // PDC name
+                           1,                                   // level
+                           reinterpret_cast<BYTE *>(&lg_info),  // input buffer
+                           &parm_err);  // parameter in error
 
     switch (err) {
         case 0:

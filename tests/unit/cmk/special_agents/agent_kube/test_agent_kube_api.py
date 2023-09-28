@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,10 @@
 
 
 import pytest
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APICronJobFactory,
     APIDeploymentFactory,
     APINodeFactory,
     APIPodFactory,
@@ -22,18 +23,15 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.agent_kube import aggregate_resources
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import aggregate_resources
 from cmk.special_agents.utils_kubernetes.api_server import LOWEST_FUNCTIONING_VERSION
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 class ResourcesRequirementsFactory(ModelFactory):
     __model__ = api.ResourcesRequirements
-
-
-class CronJobFactory(ModelFactory):
-    __model__ = api.CronJob
 
 
 def test_pod_node_allocation_within_cluster() -> None:
@@ -117,7 +115,7 @@ def test_aggregate_resources_with_only_zeroed_limit_memory() -> None:
 def test_pod_resources_from_api_pods(pods_count: int) -> None:
     pods = [
         APIPodFactory.build(
-            metadata=MetaDataFactory.build(name=str(i)),
+            metadata=MetaDataFactory.build(name=str(i), factory_use_construct=True),
             status=PodStatusFactory.build(
                 phase=api.Phase.RUNNING,
             ),
@@ -125,7 +123,9 @@ def test_pod_resources_from_api_pods(pods_count: int) -> None:
         for i in range(pods_count)
     ]
 
-    pod_resources = agent._pod_resources_from_api_pods(pods)
+    pod_resources = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_resources_from_api_pods(pods)
+    )
 
     assert pod_resources == section.PodResources(
         running=[str(i) for i in range(pods_count)],
@@ -135,18 +135,26 @@ def test_pod_resources_from_api_pods(pods_count: int) -> None:
 def test_pod_name() -> None:
     name = "name"
     namespace = "namespace"
-    pod = APIPodFactory.build(metadata=MetaDataFactory.build(name=name, namespace=namespace))
+    pod = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name=name, namespace=namespace, factory_use_construct=True)
+    )
 
-    pod_name = agent.pod_name(pod)
-    pod_namespaced_name = agent.pod_name(pod, prepend_namespace=True)
+    pod_name = cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_name(pod)
+    pod_namespaced_name = cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_name(
+        pod, prepend_namespace=True
+    )
 
     assert pod_name == name
     assert pod_namespaced_name == f"{namespace}_{name}"
 
 
 def test_filter_pods_by_namespace() -> None:
-    pod_one = APIPodFactory.build(metadata=MetaDataFactory.build(name="pod_one", namespace="one"))
-    pod_two = APIPodFactory.build(metadata=MetaDataFactory.build(name="pod_two", namespace="two"))
+    pod_one = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name="pod_one", namespace="one", factory_use_construct=True)
+    )
+    pod_two = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name="pod_two", namespace="two", factory_use_construct=True)
+    )
 
     filtered_pods = agent.filter_pods_by_namespace([pod_one, pod_two], api.NamespaceName("one"))
 
@@ -160,7 +168,7 @@ def test_filter_pods_by_cron_job() -> None:
     pod_two = APIPodFactory.build(
         uid="not_in_cron_job",
     )
-    cron_job = CronJobFactory.build(
+    cron_job = APICronJobFactory.build(
         pod_uids=[
             "in_cron_job",
         ]
@@ -210,8 +218,12 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
         for _ in range(pods_count)
     ]
 
-    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
-    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        pods
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        pods
+    )
 
     assert memory_resources == section.Resources(
         request=pods_count * ONE_MiB,
@@ -249,8 +261,12 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
         for _ in range(pods_count)
     ]
 
-    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
-    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        pods
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        pods
+    )
 
     assert memory_resources == section.Resources(
         request=pods_count * ONE_MiB,
@@ -272,8 +288,12 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
 
 
 def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None:
-    memory_resources = agent._collect_memory_resources_from_api_pods([])
-    cpu_resources = agent._collect_cpu_resources_from_api_pods([])
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        []
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        []
+    )
     empty_section = section.Resources(
         request=0.0,
         limit=0.0,

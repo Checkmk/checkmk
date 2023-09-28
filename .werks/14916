@@ -6,7 +6,7 @@ Date: 1665133214
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 
 When using the <i>Agent updater</i> the Checkmk server needs a secret in order to allow the agent to download new agents.
@@ -28,8 +28,10 @@ LI: Update your agent.
 LI: Reregister the agent-updater.
 
 
-All versions including 1.5 are subject to this vulnerability.
+All versions including 1.6 are subject to this vulnerability.
 
 We found this vulnerability internally and have no indication of any exploitation.
 
-We calculated a CVSS 3.1 score of 6.5 (Medium) with the following vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N
+We calculated a CVSS 3.1 score of 6.5 (Medium) with the following vector:
+<tt>CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N</tt>.
+We have assigned CVE-2022-48319 for this issue.

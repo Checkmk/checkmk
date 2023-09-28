@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal
 
 from marshmallow import fields, Schema
+from typing_extensions import TypedDict
 
-from cmk.utils.type_defs import HTTPMethod
+from cmk.gui.http import HTTPMethod
 
 URL = str
 
@@ -16,6 +17,7 @@ DomainType = Literal[
     "activation_run",
     "agent",
     "agent_binary",
+    "audit_log",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
@@ -26,7 +28,6 @@ DomainType = Literal[
     "downtime",
     "event_console",
     "folder_config",
-    "graph",
     "host",
     "host_config",
     "host_config_internal",
@@ -35,6 +36,8 @@ DomainType = Literal[
     "host_tag_group",
     "licensing",
     "license_usage",
+    "metric",
+    "notification_rule",
     "password",
     "rule",
     "ruleset",
@@ -45,6 +48,7 @@ DomainType = Literal[
     "service_group_config",
     "sign_key",
     "site_connection",
+    "sla",
     "time_period",
     "user",
     "user_config",
@@ -63,6 +67,8 @@ CmkEndpointName = Literal[
     "cmk/bulk_create",
     "cmk/bulk_discovery",
     "cmk/bulk_update",
+    "cmk/compute",
+    "cmk/configure",
     "cmk/create",
     "cmk/create_aux_tag",
     "cmk/create_host",
@@ -83,6 +89,7 @@ CmkEndpointName = Literal[
     "cmk/start",
     "cmk/host_config",
     "cmk/folder_config",
+    "cmk/global_config",
     "cmk/delete_bi_rule",
     "cmk/delete_bi_aggregation",
     "cmk/delete_bi_pack",
@@ -98,6 +105,7 @@ CmkEndpointName = Literal[
     "cmk/get_bi_aggregation_state",
     "cmk/get_bi_pack",
     "cmk/get_bi_packs",
+    "cmk/pending-activation-changes",
     "cmk/put_bi_pack",
     "cmk/post_bi_pack",
     "cmk/wait-for-completion",
@@ -116,6 +124,8 @@ CmkEndpointName = Literal[
     "cmk/update",
     "cmk/update_and_acknowledge",
     "cmk/change_state",
+    "cmk/verify",
+    "cmk/register",
 ]
 
 RestfulEndpointName = Literal[
@@ -156,7 +166,7 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # fmt: off
 
-LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
+LinkRelation = CmkEndpointName | RestfulEndpointName
 
 PropertyFormat = Literal[
     # String values
@@ -201,11 +211,11 @@ class ObjectProperty(TypedDict, total=False):
     extensions: dict[str, Any]
 
 
-Serializable = Union[dict[str, Any], CollectionObject, ObjectProperty]
+Serializable = dict[str, Any] | CollectionObject | ObjectProperty
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = type[Schema]
-SchemaInstanceOrClass = Union[Schema, SchemaClass]
+SchemaInstanceOrClass = Schema | SchemaClass
 OpenAPISchemaType = Literal["string", "array", "object", "boolean", "integer", "number"]
 
 # Used to blacklist some endpoints in certain locations
@@ -296,12 +306,12 @@ OpenAPIParameter = TypedDict(
         "required": bool,
         "allowEmptyValue": bool,
         "example": Any,
-        "schema": Union[SchemaType, type[Schema]],
+        "schema": SchemaType | type[Schema],
     },
     total=False,
 )
 
-RawParameter = Union[MarshmallowFieldParams, type[Schema]]
+RawParameter = MarshmallowFieldParams | type[Schema]
 
 
 class PathItem(TypedDict, total=False):
@@ -393,7 +403,24 @@ EndpointKey = tuple[str, LinkRelation]
 ParameterKey = tuple[str, ...]
 
 StatusCodeInt = Literal[
-    200, 204, 301, 302, 400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428
+    200,
+    204,
+    301,
+    302,
+    400,
+    401,
+    403,
+    404,
+    405,
+    406,
+    409,
+    412,
+    415,
+    422,
+    423,
+    428,
+    504,
+    409,
 ]
 ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
 StatusCode = Literal[
@@ -413,6 +440,7 @@ StatusCode = Literal[
     "422",
     "423",
     "428",
+    "504",
 ]
 
 ContentType = str

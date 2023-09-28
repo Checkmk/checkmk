@@ -6,6 +6,6 @@ Date: 1654702879
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Mask sensitive information in the GUI view which displays the Rule representation for the REST API.

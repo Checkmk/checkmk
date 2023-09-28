@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides commonly used functions for the handling of encrypted
@@ -9,136 +9,22 @@ from __future__ import annotations
 
 import binascii
 import contextlib
-import enum
-import errno
-import hashlib
 import os
 import re
 import socket
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
-from Cryptodome.Cipher import AES
-from Cryptodome.Hash import SHA256
-from Cryptodome.Protocol.KDF import PBKDF2
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL
 
-import cmk.utils.paths
+from cmk.utils.crypto.secrets import EncrypterSecret
+from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
-
-OPENSSL_SALTED_MARKER = "Salted__"
-
-
-class TransportProtocol(enum.Enum):
-    PLAIN = b"<<"
-    MD5 = b"00"
-    SHA256 = b"02"
-    PBKDF2 = b"03"
-    TLS = b"16"
-    NONE = b"99"
-
-
-def decrypt_by_agent_protocol(
-    password: str,
-    protocol: TransportProtocol,
-    encrypted_pkg: bytes,
-) -> bytes:
-    """select the decryption algorithm based on the agent header
-
-    Support encrypted agent data with "99" header.
-    This was not intended, but the Windows agent accidentally sent this header
-    instead of "00" up to 2.0.0p1, so we keep this for a while.
-
-    Warning:
-        "99" for real-time check data means "unencrypted"!
-    """
-
-    if protocol is TransportProtocol.PBKDF2:
-        return _decrypt_aes_256_cbc_pbkdf2(
-            ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
-            password=password,
-        )
-
-    if protocol is TransportProtocol.SHA256:
-        return _decrypt_aes_256_cbc_legacy(
-            ciphertext=encrypted_pkg,
-            password=password,
-            digest=hashlib.sha256,
-        )
-
-    return _decrypt_aes_256_cbc_legacy(
-        ciphertext=encrypted_pkg,
-        password=password,
-        digest=hashlib.md5,
-    )
-
-
-def _decrypt_aes_256_cbc_pbkdf2(
-    ciphertext: bytes,
-    password: str,
-) -> bytes:
-    """Decrypt an openssl encrypted bytestring:
-    Cipher: AES256-CBC
-    Salted: yes
-    Key Derivation: PKBDF2, with SHA256 digest, 10000 cycles
-    """
-    SALT_LENGTH = 8
-    KEY_LENGTH = 32
-    IV_LENGTH = 16
-    PBKDF2_CYCLES = 10_000
-
-    salt = ciphertext[:SALT_LENGTH]
-    raw_key = PBKDF2(
-        password, salt, KEY_LENGTH + IV_LENGTH, count=PBKDF2_CYCLES, hmac_hash_module=SHA256
-    )
-    key, iv = raw_key[:KEY_LENGTH], raw_key[KEY_LENGTH:]
-
-    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_pkg = decryption_suite.decrypt(ciphertext[SALT_LENGTH:])
-
-    return _strip_fill_bytes(decrypted_pkg)
-
-
-def _decrypt_aes_256_cbc_legacy(
-    ciphertext: bytes,
-    password: str,
-    digest: Callable[..., hashlib._Hash],
-) -> bytes:
-    """Decrypt an openssl encrypted bytesting:
-    Cipher: AES256-CBC
-    Salted: no
-    Key derivation: Simple OpenSSL Key derivation
-    """
-    key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, 32, AES.block_size)
-
-    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_pkg = decryption_suite.decrypt(ciphertext)
-
-    return _strip_fill_bytes(decrypted_pkg)
-
-
-def _derive_openssl_key_and_iv(
-    password: bytes,
-    digest: Callable[..., hashlib._Hash],
-    key_length: int,
-    iv_length: int,
-) -> tuple[bytes, bytes]:
-    """Simple OpenSSL Key derivation function"""
-    d = d_i = b""
-    while len(d) < key_length + iv_length:
-        d_i = digest(d_i + password).digest()
-        d += d_i
-    return d[:key_length], d[key_length : key_length + iv_length]
-
-
-def _strip_fill_bytes(content: bytes) -> bytes:
-    return content[0 : -content[-1]]
-
 
 _PEM_RE = re.compile(
     "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
@@ -157,11 +43,9 @@ def raw_certificates_from_file(path: Path) -> list[str]:
                 for match in _PEM_RE.finditer(f.read())
                 if (content := match.group(0)).isascii()
             ]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            # Silently ignore e.g. dangling symlinks
-            return []
-        raise
+    except FileNotFoundError:
+        # Silently ignore e.g. dangling symlinks
+        return []
 
 
 class CertificateDetails(NamedTuple):
@@ -288,47 +172,27 @@ class Encrypter:
     """Helper to encrypt site secrets
 
     The secrets are encrypted using the auth.secret which is only known to the local and remotely
-    configured sites. The encrypted values are base64 encoded for easier processing.
+    configured sites.
     """
 
-    @staticmethod
-    def _secret_key_path() -> Path:
-        return cmk.utils.paths.omd_root / "etc" / "auth.secret"
+    # TODO: This shares almost all the code with PasswordStore, except for the version bytes that
+    # are prepended by the store.
 
-    @staticmethod
-    def _passphrase() -> bytes:
-        with Encrypter._secret_key_path().open(mode="rb") as f:
-            return f.read().strip()
-
-    @staticmethod
-    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
-        """Build some secret for the encryption
-
-        Use the sites auth.secret for encryption. This secret is only known to the current site
-        and other distributed sites.
-        """
-        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
-
-    @staticmethod
-    def _cipher(key: bytes, nonce: bytes) -> Any:  # FIXME: Better return type?
-        return AES.new(key, AES.MODE_GCM, nonce=nonce)
+    SALT_LENGTH: int = 16
+    NONCE_LENGTH: int = 16
 
     @staticmethod
     def encrypt(value: str) -> bytes:
-        salt = os.urandom(AES.block_size)
-        nonce = os.urandom(AES.block_size)
-        cipher = Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
-        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
-        return salt + nonce + tag + encrypted
+        salt = os.urandom(Encrypter.SALT_LENGTH)
+        nonce = os.urandom(Encrypter.NONCE_LENGTH)
+        key = EncrypterSecret().derive_secret_key(salt)
+        encrypted = aes_gcm_encrypt(key, nonce, value)
+        return salt + nonce + encrypted.tag + encrypted.ciphertext
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        salt, rest = raw[: AES.block_size], raw[AES.block_size :]
-        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
-        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
-
-        return (
-            Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
-            .decrypt_and_verify(encrypted, tag)
-            .decode("utf-8")
-        )
+        salt, rest = raw[: Encrypter.SALT_LENGTH], raw[Encrypter.SALT_LENGTH :]
+        nonce, rest = rest[: Encrypter.NONCE_LENGTH], rest[Encrypter.NONCE_LENGTH :]
+        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        key = EncrypterSecret().derive_secret_key(salt)
+        return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

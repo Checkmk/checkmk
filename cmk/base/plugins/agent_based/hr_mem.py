@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import suppress
-from typing import Dict, List, Optional, Tuple
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils import memory, ucd_hr_detection
 
-PreParsed = Dict[str, List[Tuple[str, int, int]]]
+PreParsed = dict[str, list[tuple[str, int, int]]]
 
 
-def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
+def pre_parse_hr_mem(string_table: list[StringTable]) -> PreParsed:
     """
     >>> for item, values in pre_parse_hr_mem([[
     ...     ['.1.3.6.1.2.1.25.2.1.2', 'Physical memory', '4096', '11956593', '11597830'],
@@ -25,7 +24,7 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     """
     info = string_table[0]
 
-    def identify_map_type(hrtype_str: str) -> Optional[str]:
+    def identify_map_type(hrtype_str: str) -> str | None:
         map_types = {
             ".1.3.6.1.2.1.25.2.1.1": "other",
             ".1.3.6.1.2.1.25.2.1.2": "RAM",
@@ -124,7 +123,7 @@ def aggregate_meminfo(parsed: PreParsed) -> memory.SectionMemUsed:
     return meminfo
 
 
-def parse_hr_mem(string_table: List[StringTable]) -> Optional[memory.SectionMemUsed]:
+def parse_hr_mem(string_table: list[StringTable]) -> memory.SectionMemUsed | None:
     pre_parsed = pre_parse_hr_mem(string_table)
 
     # Do we find at least one entry concerning memory?

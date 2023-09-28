@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,8 +20,8 @@ class Quota(NamedTuple):
 
 
 class Section(NamedTuple):
-    fs_sizes: Dict[str, int]
-    quotas: List[Quota]
+    fs_sizes: dict[str, int]
+    quotas: list[Quota]
 
 
 def parse_vnx_quotas(string_table: StringTable) -> Section:
@@ -58,7 +59,7 @@ def parse_vnx_quotas(string_table: StringTable) -> Section:
                 continue
 
             dms, fs, mp, used_str, limit_str = line
-            name = "%s %s" % (dms.strip(), mp.strip())
+            name = f"{dms.strip()} {mp.strip()}"
             section.quotas.append(
                 Quota(
                     name=name,
@@ -77,7 +78,7 @@ register.agent_section(
 )
 
 
-def vnx_quotas_renaming(name: str, mappings: Sequence[Tuple[str, str]]) -> str:
+def vnx_quotas_renaming(name: str, mappings: Sequence[tuple[str, str]]) -> str:
     for match, substitution in mappings:
         if match.startswith("~"):
             num_perc_s = substitution.count("%s")
@@ -96,16 +97,16 @@ def vnx_quotas_renaming(name: str, mappings: Sequence[Tuple[str, str]]) -> str:
     return name
 
 
-def discover_vnx_quotas(params: List[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+def discover_vnx_quotas(params: list[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     for quota in section.quotas:
         dms, mpt = quota.name.split(" ")
         if params and params[0]:
             dms = vnx_quotas_renaming(dms, params[0]["dms_names"])
             mpt = vnx_quotas_renaming(mpt, params[0]["mp_names"])
-        yield Service(item="%s %s" % (dms, mpt), parameters={"pattern": quota.name})
+        yield Service(item=f"{dms} {mpt}", parameters={"pattern": quota.name})
 
 
-def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Optional[Quota]:
+def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Quota | None:
     for quota in section.quotas:
         if quota.name in (item, params["pattern"]):
             return quota

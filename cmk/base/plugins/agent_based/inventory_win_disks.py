@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -36,7 +36,8 @@
 # SCSIPort                    : 2
 # SCSITargetId                : 0
 
-from typing import Any, Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -45,8 +46,8 @@ Section = Sequence[Mapping[str, Any]]
 
 
 def parse_win_disks(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
-    disks: List[Mapping[str, Any]] = []
-    array: Dict[str, Any] = {}
+    disks: list[Mapping[str, Any]] = []
+    array: dict[str, Any] = {}
     first_varname = None
 
     for line in string_table:
@@ -108,11 +109,10 @@ register.agent_section(
 
 
 def inventory_win_disks(section: Section) -> InventoryResult:
-    path = ["hardware", "storage", "disks"]
     for disk in section:
         if "fsnode" in disk:
             yield TableRow(
-                path=path,
+                path=["hardware", "storage", "disks"],
                 key_columns={
                     "fsnode": disk["fsnode"],
                 },

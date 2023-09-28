@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.graphing._utils import metric_info
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -26,6 +26,20 @@ metric_info["clients_connected"] = {
     "unit": "count",
     "color": "11/a",
 }
+
+metric_info["connections_total"] = {
+    "title": _("Accepted connection requests"),
+    "unit": "1/s",
+    "color": "14/a",
+}
+
+
+metric_info["clients_rejected"] = {
+    "title": _("Rejected connection requests"),
+    "unit": "1/s",
+    "color": "12/a",
+}
+
 
 metric_info["clients_output"] = {
     "title": _("Longest output list"),

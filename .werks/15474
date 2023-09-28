@@ -1,0 +1,11 @@
+Title: rds_licenses: Windows Server 2022 enabled in RDS Licenses check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683539460
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+RDS Licenses now additionally checks Windows Server 2022 licenses.

@@ -1,0 +1,16 @@
+Title: HW/SW Inventory: Remove declare_joined_inventory_table_view
+Class: feature
+Compatible: incomp
+Component: inv
+Date: 1675765537
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+With werk 10836 the {{declare_joined_inventory_table_view}} function was
+introduced.
+
+Due to the werks 15086, 15087 there is no need for this programatical approach
+of joining inventory tables anymore.
+

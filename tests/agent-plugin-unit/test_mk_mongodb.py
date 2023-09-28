@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,6 +9,7 @@
 import json
 import os
 import sys
+from typing import Dict, Mapping, Tuple, Union
 
 import pymongo
 import pytest
@@ -260,7 +261,9 @@ def test_router_instance_mongodb_3_4() -> None:
         ),
     ],
 )
-def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no-untyped-def]
+def test_read_config(
+    config: Mapping[str, str], expected_pymongo_config: Dict[str, Union[str, bool]]
+) -> None:
     """
     see if the config is corretly transformed to pymongo arguments
     """
@@ -330,12 +333,15 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
         ),
     ],
 )
-def test_transform_config(pymongo_version, pymongo_config) -> None:  # type:ignore[no-untyped-def]
+def test_transform_config(
+    pymongo_version: Tuple[int, int, int], pymongo_config: Mapping[str, Union[str, bool]]
+) -> None:
     class DummyConfig(mk_mongodb.Config):
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.tls_enable = True
             self.tls_verify = None
             self.tls_ca_file = None
+            self.tls_cert_key_file = None
             self.auth_mechanism = None
             self.auth_source = None
             self.port = None

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,9 +12,10 @@ See: https://github.com/microsoft/playwright-pytest
 import logging
 import os
 import typing as t
+import urllib
 
-import _pytest
 import pytest
+from _pytest.fixtures import SubRequest  # TODO: Do we really need an implementation detail?
 from playwright.sync_api import (
     Browser,
     BrowserContext,
@@ -26,7 +27,8 @@ from playwright.sync_api import (
 )
 
 logger = logging.getLogger(__name__)
-_browser_engines = ["chromium", "firefox"]  # to align with what playwright installs (see Makefile).
+_browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
+_browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
 _mobile_devices = ["iPhone 6", "Galaxy S8"]
 
 
@@ -46,7 +48,7 @@ def _build_artifact_test_folder(
     pytestconfig: t.Any, request: pytest.FixtureRequest, folder_or_file_name: str
 ) -> str:
     output_dir = pytestconfig.getoption("--output")
-    return os.path.join(output_dir, request.node.nodeid, folder_or_file_name)
+    return os.path.join(output_dir, urllib.parse.quote(request.node.nodeid), folder_or_file_name)
 
 
 @pytest.fixture(scope="session", name="playwright")
@@ -157,13 +159,12 @@ def is_chromium(browser_name: str) -> bool:
 
 
 @pytest.fixture(name="browser_name", scope="session", params=_browser_engines)
-def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.config.Config) -> str:
+def _browser_name(request: SubRequest, pytestconfig: pytest.Config) -> str:
     """Returns the browser name(s).
 
     Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
     can be selected via the --browser flag in the CLI.
     """
-    browser_name_ci = "chromium"  # only this browser is selected when running the tests in the CI
     browser_name_param = str(request.param)
     browser_names_cli = t.cast(list[str], pytestconfig.getoption("--browser"))
 
@@ -172,16 +173,15 @@ def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.co
             f"Only {', '.join(str(browser) for browser in browser_names_cli)} engine(s) selected "
             f"from the CLI"
         )
-
-    elif len(browser_names_cli) == 0 and browser_name_param != browser_name_ci:
-        pytest.skip(f"Only {browser_name_ci} engine running inside the CI")
+    elif len(browser_names_cli) == 0 and browser_name_param not in _browser_engines_ci:
+        pytest.skip(f"{browser_name_param} engine not running in the CI. Still selectable via CLI")
     return browser_name_param
 
 
 # Making test result information available in fixtures
 # https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 # NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)  # type: ignore[misc]
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any, None]:
     # execute all other hooks to obtain the report object
     outcome = yield

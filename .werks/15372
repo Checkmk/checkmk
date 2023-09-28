@@ -1,0 +1,13 @@
+Title: rest-api: alias field now required when creating a host group
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675859013
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk fixes an issue with getting a wrong response when creating
+a host group without an alias. The alias field is now required.
+

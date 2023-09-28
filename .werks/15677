@@ -1,0 +1,44 @@
+Title: downtimes: response with correct error message when host does not exist
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681484583
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the endpont
+
+LI: /domain-types/downtime/collections/host
+
+Previously when you provided a host that didn't exist
+the response would be
+
+C+:
+{
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "These fields have problems: host_name",
+  "fields": {
+    "host_name": [
+      "Host 'example.com' exists, but is not monitored. Activate the configuration?"
+    ]
+  }
+}
+C-:
+
+we now reply with
+
+C+:
+{
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "These fields have problems: host_name",
+  "fields": {
+    "host_name": [
+      "Host not found: 'example.com'"
+    ]
+  }
+}
+C-:

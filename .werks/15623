@@ -1,0 +1,20 @@
+Title: <tt>citrix</tt>: Add Missing Checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685967539
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The following checks were not properly migrated in the 2.2.0 release:
+
+LI: <tt>citrix_controller.licensing</tt>
+LI: <tt>citrix_controller.registered</tt>
+LI: <tt>citrix_controller.services</tt>
+LI: <tt>citrix_controller.sessions</tt>
+LI: <tt>citrix_controller</tt>
+LI: the inventory plugin <tt>citrix_controller</tt>
+
+With this Werk, they continue to work as they did in 2.1.0.

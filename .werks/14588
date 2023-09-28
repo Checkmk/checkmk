@@ -1,0 +1,15 @@
+Title: KUBE: Add missing imported labels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678092179
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p24
+
+Previously, labels of the form
+C+:
+cmk/kubernetes/label/{kubernetes-label}
+C-:
+would not be created for Deployments, DaemonSets and StatefulSets.

@@ -6,10 +6,10 @@ Date: 1662118124
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
-This werk only affects users of non-tribe29 local customizations (single files and MKPs from non-
-tribe29 sources such as the Checkmk exchange).
+This werk only affects users of non-Checkmk local customizations (single files and MKPs from non-
+Checkmk sources such as the Checkmk exchange).
 
 Before this werk, the Checkmk codebase offered two convenience functions for creating
 <tt>ValueSpecs</tt> for passwords (either entered directly or selected from the password store):
@@ -28,5 +28,5 @@ To stay compatible, we recommend to simply use <tt>IndividualOrStoredPassword</t
 <tt>PasswordFromStore</tt> in Checkmk 2.1 customizations, which will continue working when upgrading
 to 2.2.
 
-Note that this only affects non-tribe29 customizations because as of the writing of this werk, any
-customization produced by tribe29 will be obsolete with Checkmk 2.2.
+Note that this only affects non-Checkmk customizations because as of the writing of this werk, any
+customization produced by Checkmk will be obsolete with Checkmk 2.2.

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -19,7 +19,7 @@ class VPNTunnel(NamedTuple):
     link_priority: str
 
 
-Section = List[VPNTunnel]
+Section = list[VPNTunnel]
 
 
 def parse_checkpoint_vpn_tunnels(string_table: StringTable) -> Section:
@@ -62,10 +62,9 @@ register.snmp_section(
 
 
 def inventory_checkpoint_vpn_tunnels(section: Section) -> InventoryResult:
-    path = ["networking", "tunnels"]
     for vpn_tunnel in section:
         yield TableRow(
-            path=path,
+            path=["networking", "tunnels"],
             key_columns={
                 "peername": vpn_tunnel.peer_name,
             },

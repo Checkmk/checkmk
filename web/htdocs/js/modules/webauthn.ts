@@ -1,9 +1,76 @@
-// Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
-import {CBOR} from "cbor_ext";
 import * as utils from "utils";
+
+function urlsafe_base64_decode(base64str: string): string {
+    return window.atob(base64str.replace(/_/g, "/").replace(/-/g, "+"));
+}
+
+interface JsonEncodedCredential {
+    type: string;
+    id: string;
+}
+
+function parseCreationOptionsFromJSON(
+    credentialcreationoptions: any
+): CredentialCreationOptions {
+    /* The data comes from the server now as JSON, but the browser API likes
+     * native types like Uint8Arrays... There is a draft for the 3rd spec to
+     * include a function like this wo the API. Once we're there we can remove
+     * this...*/
+    const options = credentialcreationoptions["publicKey"];
+    return {
+        publicKey: {
+            challenge: Uint8Array.from(
+                urlsafe_base64_decode(options["challenge"]),
+                c => c.charCodeAt(0)
+            ),
+            rp: options["rp"],
+            user: {
+                id: Uint8Array.from(
+                    urlsafe_base64_decode(options["user"]["id"]),
+                    c => c.charCodeAt(0)
+                ),
+                name: options["user"]["name"],
+                displayName: options["user"]["displayName"],
+            },
+            pubKeyCredParams: options["pubKeyCredParams"],
+            authenticatorSelection: options["authenticatorSelection"],
+            excludeCredentials: options["excludeCredentials"].map(
+                (e: JsonEncodedCredential) => ({
+                    type: e["type"],
+                    id: Uint8Array.from(urlsafe_base64_decode(e["id"]), c =>
+                        c.charCodeAt(0)
+                    ),
+                })
+            ),
+        },
+    };
+}
+
+function parseRequestOptionsFromJSON(data: any): CredentialRequestOptions {
+    const options = data["publicKey"];
+    return {
+        publicKey: {
+            challenge: Uint8Array.from(
+                urlsafe_base64_decode(options["challenge"]),
+                c => c.charCodeAt(0)
+            ),
+            allowCredentials: options["allowCredentials"].map(
+                (e: JsonEncodedCredential) => ({
+                    type: e["type"],
+                    id: Uint8Array.from(urlsafe_base64_decode(e["id"]), c =>
+                        c.charCodeAt(0)
+                    ),
+                })
+            ),
+        },
+    };
+}
 
 export function register() {
     fetch("user_webauthn_register_begin.py", {
@@ -12,27 +79,36 @@ export function register() {
         .then(function (response) {
             if (response.ok) {
                 show_info("Activate your authenticator device now");
-                return response.arrayBuffer();
+                return response.json();
             }
             throw new Error("Error getting registration data!");
         })
-        .then(CBOR.decode)
         .then(function (options) {
-            return navigator.credentials.create(options);
+            return navigator.credentials.create(
+                parseCreationOptionsFromJSON(options)
+            );
         })
         .then(function (attestation) {
-            var attestationPkc = attestation as PublicKeyCredential;
-            var attestationPkcResponse =
+            const attestationPkc = attestation as PublicKeyCredential;
+            const attestationPkcResponse =
                 attestationPkc.response as AuthenticatorAttestationResponse;
             return fetch("user_webauthn_register_complete.py", {
                 method: "POST",
-                headers: {"Content-Type": "application/cbor"},
-                body: CBOR.encode({
-                    attestationObject: new Uint8Array(
-                        attestationPkcResponse.attestationObject
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    attestationObject: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(
+                                attestationPkcResponse.attestationObject
+                            )
+                        )
                     ),
-                    clientDataJSON: new Uint8Array(
-                        attestationPkcResponse.clientDataJSON
+                    clientDataJSON: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(
+                                attestationPkcResponse.clientDataJSON
+                            )
+                        )
                     ),
                 }),
             });
@@ -57,7 +133,7 @@ export function register() {
             if (e.name == "SecurityError") {
                 show_error(
                     "Can not enable two-factor authentication. You have to use HTTPS and access " +
-                        "the GUI thourgh a valid domain name (See #13325 for further information)."
+                        "the GUI through a valid domain name (See #13325 for further information)."
                 );
             } else if (e.name == "AbortError") {
                 show_error(
@@ -77,16 +153,16 @@ export function register() {
         });
 }
 
-function show_info(text) {
+function show_info(text: string) {
     show_message(text, "success");
 }
 
-function show_error(text) {
+function show_error(text: string) {
     show_message(text, "error");
 }
 
-function show_message(text, cls) {
-    var msg = document.getElementById("webauthn_message")!;
+function show_message(text: string, cls: string) {
+    const msg = document.getElementById("webauthn_message")!;
     utils.remove_class(msg, "error");
     utils.remove_class(msg, "success");
     utils.add_class(msg, cls);
@@ -101,30 +177,45 @@ export function login() {
         .then(function (response) {
             if (response.ok) {
                 show_info("Activate your authenticator device now");
-                return response.arrayBuffer();
+                return response.json();
             }
             throw new Error("No credential available to authenticate!");
         })
-        .then(CBOR.decode)
         .then(function (options) {
-            return navigator.credentials.get(options);
+            return navigator.credentials.get(
+                parseRequestOptionsFromJSON(options)
+            );
         })
         .then(function (assertion) {
-            var assertionPkc = assertion as PublicKeyCredential;
-            var assertionResponse =
+            const assertionPkc = assertion as PublicKeyCredential;
+            const assertionResponse =
                 assertionPkc.response as AuthenticatorAssertionResponse;
             return fetch("user_webauthn_login_complete.py", {
                 method: "POST",
                 headers: {"Content-Type": "application/cbor"},
-                body: CBOR.encode({
-                    credentialId: new Uint8Array(assertionPkc.rawId),
-                    authenticatorData: new Uint8Array(
-                        assertionResponse.authenticatorData
+                body: JSON.stringify({
+                    credentialId: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(assertionPkc.rawId)
+                        )
                     ),
-                    clientDataJSON: new Uint8Array(
-                        assertionResponse.clientDataJSON
+                    authenticatorData: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(
+                                assertionResponse.authenticatorData
+                            )
+                        )
                     ),
-                    signature: new Uint8Array(assertionResponse.signature),
+                    clientDataJSON: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(assertionResponse.clientDataJSON)
+                        )
+                    ),
+                    signature: btoa(
+                        String.fromCharCode(
+                            ...new Uint8Array(assertionResponse.signature)
+                        )
+                    ),
                 }),
             });
         })

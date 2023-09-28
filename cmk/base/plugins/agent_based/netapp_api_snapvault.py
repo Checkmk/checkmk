@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,9 @@
 # snapvault my_snap	state snapmirrored	source-system i1	destination-location d1:my_snap	policy Default	lag-time 82486	destination-system a2-b0-02	status idle
 # snapvault my_snap	state snapmirrored	source-system t1	destination-location d2:my_snap	policy Default	lag-time 73487	destination-system a2-b0-02	status idle
 
-from typing import Any, Dict, Iterable, Mapping, OrderedDict, Tuple
+from collections import OrderedDict
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,7 +31,7 @@ def _cleanse_item_name(name: str) -> str:
 def parse_netapp_api_snapvault(string_table: StringTable) -> SectionSingleInstance:
     section = {}
     for line in string_table:
-        parsed_line = dict(tuple(i.split(" ", 1)) for i in line)  # type: ignore
+        parsed_line: dict[str, str] = dict(tuple(i.split(" ", 1)) for i in line)  # type: ignore[misc]
         # Whether the item will be named after the snapvault or destination-location
         # values depends on the user's configuration (discovery parameters). For simplicity,
         # the same line is referenced to both in the parsed dictionary, so that the items
@@ -52,7 +54,7 @@ register.agent_section(
 def _prefilter_items(
     parsed: SectionSingleInstance,
     exclude_vserver: bool,
-) -> Iterable[Tuple[str, Dict[str, str]]]:
+) -> Iterable[tuple[str, dict[str, str]]]:
     if exclude_vserver:
         return [i for i in parsed.items() if ":" not in i[0]]
     return [i for i in parsed.items() if ":" in i[0] or "destination-location" not in i[1]]
@@ -78,7 +80,7 @@ def check_netapp_api_snapvault(
 
     for key in ["source-system", "destination-system", "policy", "status", "state"]:
         if key in snapvault:
-            yield Result(state=State.OK, summary="%s: %s" % (key.title(), snapvault[key]))
+            yield Result(state=State.OK, summary=f"{key.title()}: {snapvault[key]}")
 
     if "lag-time" not in snapvault:
         return

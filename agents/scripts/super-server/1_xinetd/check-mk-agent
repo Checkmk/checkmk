@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,7 +26,7 @@ service check-mk-agent
     # queries from one source we set this parameter. It limits the number of
     # concurrent connections per source address. If you need more requests
     # per source system, you can of course increase or remove this value
-    # (https://github.com/tribe29/checkmk/pull/157)
+    # (https://github.com/checkmk/checkmk/pull/157)
     per_source     = 3
 
     # listen on IPv4 AND IPv6 when available on this host

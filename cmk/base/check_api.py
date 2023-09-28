@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -13,142 +13,46 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 |                                                                           |
 +---------------------------------------------------------------------------+
 
-Meaning all variables, functions etc. and default modules that are available to checks.
+"""
 
-Modules available by default (pre imported by Check_MK):
-    collections
-    enum
-    fnmatch
-    functools
-    math
-    os
-    re
-    socket
-    sys
-    time
-    pprint
-
-Global variables:
-    from cmk.utils.regex import regex
-    core_state_names     Names of states. Usually used to convert numeric states
-                         to their name for adding it to the plugin output.
-                         The mapping is like this:
-
-                           -1: 'PEND'
-                            0: 'OK'
-                            1: 'WARN'
-                            2: 'CRIT'
-                            3: 'UNKN'
-
-    state_markers        Symbolic representations of states in plugin output.
-                         Will be displayed colored by the Check_MK GUI.
-                         The mapping is like this:
-
-                            0: ''
-                            1: '(!)'
-                            2: '(!!)'
-                            3: '(?)'
-
-    nagios_illegal_chars Characters not allowed to be used in service
-                         descriptions. Can be used in discovery functions to
-                         remove unwanted characters from a string. The unwanted
-                         chars default are: `;~!$%^&*|\'"<>?,=
-
-
-    OID_BIN              TODO
-    OID_END              TODO
-    OID_END_BIN          TODO
-    OID_END_OCTET_STRING TODO
-    OID_STRING           TODO
-
-    MGMT_ONLY            Check is only executed for management boards.
-    HOST_PRECEDENCE      Use host address/credentials eg. when it's a SNMP HOST.
-    HOST_ONLY            Check is only executed for real SNMP hosts.
-
-    RAISE                Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
-    SKIP                 Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
-    ZERO                 Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
-"""  # pylint: disable=pointless-string-statement
-
-# NOTE: The above suppression is necessary because our testing framework blindly
-# concatenates lots of files, including this one.
-
-# We import several modules here for the checks
-
-import calendar
-
-# TODO: Move imports directly to checks?
-import collections  # noqa: F401 # pylint: disable=unused-import
-import enum  # noqa: F401 # pylint: disable=unused-import
-import fnmatch  # noqa: F401 # pylint: disable=unused-import
-import functools
-import math  # noqa: F401 # pylint: disable=unused-import
-import os  # noqa: F401 # pylint: disable=unused-import
-
-# NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # noqa: F401 # pylint: disable=unused-import
-import re  # noqa: F401 # pylint: disable=unused-import
-import socket  # noqa: F401 # pylint: disable=unused-import
-import sys  # noqa: F401 # pylint: disable=unused-import
+import socket
 import time
-from collections.abc import Callable, Iterable
-from contextlib import suppress
-from typing import Any, Dict, List, Literal, Mapping, Optional, Set, Tuple, Union
+from collections.abc import Callable
+from typing import Any, Literal
 
-import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
-import cmk.utils.defines as _defines
-import cmk.utils.paths as _paths
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
-from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
-    get_rule_options,
-    hosttags_match_taglist,
-    in_extraconf_hostlist,
-)
+from cmk.utils.metrics import MetricName
+from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
+from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    EvalableFloat as as_float,
-)
-from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
-from cmk.utils.type_defs import Ruleset as _Ruleset
-from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state_markers
+from cmk.checkengine.checkresults import state_markers as state_markers
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
-from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
-
-import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
-import cmk.base.item_state as _item_state
-import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: disable=unused-import
-    IgnoreResultsError as MKCounterWrapped,
-)
-from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
-from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
-from cmk.base.plugin_contexts import check_type
-from cmk.base.plugin_contexts import (
-    host_name as _internal_host_name,  # pylint: disable=unused-import
-)
-from cmk.base.plugin_contexts import service_description
+from cmk.base.api.agent_based.plugin_contexts import host_name as _internal_host_name
+from cmk.base.api.agent_based.plugin_contexts import service_description
 
-Warn = Union[None, int, float]
-Crit = Union[None, int, float]
-_Bound = Union[None, int, float]
-Levels = Tuple  # Has length 2 or 4
+# pylint: disable=unused-import
+from cmk.base.api.agent_based.register.utils_legacy import (
+    LegacyCheckDefinition as LegacyCheckDefinition,
+)
 
-_MetricTuple = Tuple[
+# pylint: enable=unused-import
+
+Warn = None | int | float
+Crit = None | int | float
+_Bound = None | int | float
+Levels = tuple  # Has length 2 or 4
+
+_MetricTuple = tuple[
     MetricName,
     float,
     Warn,
@@ -157,40 +61,13 @@ _MetricTuple = Tuple[
     _Bound,
 ]
 
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[_MetricTuple]]
-
-# These 3 are no longer used, but we keep the names around, so old plugins won't crash.
-MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = (
-    "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-)
-HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
+ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 
 
 def host_name() -> str:
     """compatibility for making HostName a own class
     if somebody make type comparision to str or some other weird stuff we want to be compatible"""
     return str(_internal_host_name())
-
-
-def HostLabel(*_a, **_kw):
-    raise NotImplementedError(
-        "Creation of HostLabels in legacy plugins is no longer supported"
-        " (see https://checkmk.de/check_mk-werks.php?werk_id=11117)."
-    )
-
-
-HostLabels = HostLabel
-
-
-def ServiceLabel(*_a, **_kw):
-    raise NotImplementedError(
-        "Creation of ServiceLabels in legacy plugins is no longer supported"
-        " (see https://checkmk.de/check_mk-werks.php?werk_id=13229)."
-    )
-
-
-ServiceLabels = ServiceLabel
 
 
 def get_check_api_context() -> _config.CheckContext:
@@ -210,25 +87,6 @@ def get_check_api_context() -> _config.CheckContext:
 #   +----------------------------------------------------------------------+
 #   |  Helper API for being used in checks                                 |
 #   '----------------------------------------------------------------------'
-
-# Names of texts usually output by checks
-core_state_names = _defines.short_service_state_names()
-
-
-# backwards compatibility: allow to pass integer.
-def BINARY(x: str | int) -> _OIDBytes:
-    return _OIDBytes(str(x))
-
-
-def CACHED_OID(x: str | int) -> _OIDCached:
-    return _OIDCached(str(x))
-
-
-OID_BIN = _SpecialColumn.BIN
-OID_STRING = _SpecialColumn.STRING
-OID_END = _SpecialColumn.END
-OID_END_BIN = _SpecialColumn.END_BIN
-OID_END_OCTET_STRING = _SpecialColumn.END_OCTET_STRING
 
 
 def saveint(i: Any) -> int:
@@ -257,48 +115,10 @@ def savefloat(f: Any) -> float:
         return 0.0
 
 
-# Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
-def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _config.Ruleset) -> List:
-    return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
-
-
-# Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname: str, ruleset: _config.Ruleset) -> List:
-    return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
-
-
-# Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
-def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
-    return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
-
-
-# Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, Any]:
-    return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(condition: RuleConditionsSpec, with_foreign_hosts: bool) -> Set[HostName]:
-    return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        condition, with_foreign_hosts
-    )
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def tags_of_host(hostname: HostName) -> Set[str]:
-    return _config.get_config_cache().tag_list(hostname)
-
-
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def is_ipv6_primary(hostname: HostName) -> bool:
-    return _config.get_config_cache().is_ipv6_primary(hostname)
-
-
-nagios_illegal_chars = _config.nagios_illegal_chars
-is_cmc = _config.is_cmc
+    return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
 
 
 def get_age_human_readable(seconds: float) -> str:
@@ -321,89 +141,12 @@ def get_bytes_human_readable(
     return renderer(bytes_)[:-1] + unit
 
 
-def get_nic_speed_human_readable(bits_per_sec: float | str) -> str:
-    return _render.nicspeed(float(bits_per_sec) / 8)
-
-
-def get_percent_human_readable(
-    percentage: float,
-    scientific_notation: object = None,  # for legacy compatibility
-) -> str:
-    return _render.percent(percentage)
-
-
-def get_number_with_precision(
-    v: float,
-    base: object = None,  # for legacy compatibility
-    precision: int = 2,
-    drop_zeroes: object = None,  # for legacy compatibility
-    unit: str = "",
-    zero_non_decimal: object = None,  # for legacy compatibility
-) -> str:
-    """
-    >>> get_number_with_precision(123.4324)
-    '123.43'
-    >>> get_number_with_precision(2.3e5, precision=3, unit='V')
-    '230000.000 V'
-    """
-    return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
-
-
-def get_checkgroup_parameters(group: str, deflt: _Ruleset) -> _Ruleset:
-    return _config.checkgroup_parameters.get(group, deflt)
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_filesize_human_readable(size: float) -> str:
-    """Format size of a file for humans.
-
-    Similar to get_bytes_human_readable, but optimized for file
-    sizes. Really only use this for files. We assume that for smaller
-    files one wants to compare the exact bytes of a file, so the
-    threshold to show the value as MB/GB is higher as the one of
-    get_bytes_human_readable()."""
-    if size < 4 * 1024 * 1024:
-        return "%d B" % int(size)
-    if size < 4 * 1024 * 1024 * 1024:
-        return "%.2f MB" % (float(size) / (1024 * 1024))
-    return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
-
-
-# TODO: Replace by some render.* function / move to render module?
 def get_timestamp_human_readable(timestamp: float) -> str:
     """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
     In case None is given or timestamp is 0, it returns "never"."""
     if timestamp:
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
     return "never"
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_relative_date_human_readable(timestamp: float) -> str:
-    """Formats the given timestamp for humans "in ..." for future times
-    or "... ago" for past timestamps."""
-    now = time.time()
-    if timestamp > now:
-        return "in " + get_age_human_readable(timestamp - now)
-    return get_age_human_readable(now - timestamp) + " ago"
-
-
-#
-# Counter handling
-#
-
-set_item_state = _item_state.set_item_state
-get_item_state = _item_state.get_item_state
-clear_item_state = _item_state.clear_item_state
-
-get_rate = _item_state.get_rate
-get_average = _item_state.get_average
-
-last_counter_wrap = _item_state.last_counter_wrap
-
-SKIP = _item_state.SKIP
-RAISE = _item_state.RAISE
-ZERO = _item_state.ZERO
 
 
 def _normalize_levels(levels: Levels) -> Levels:
@@ -419,8 +162,8 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 
 def _do_check_levels(
-    value: Union[int, float], levels: Levels, human_readable_func: Callable, unit_info: str
-) -> Tuple[ServiceState, ServiceDetails]:
+    value: int | float, levels: Levels, human_readable_func: Callable, unit_info: str
+) -> tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -439,19 +182,19 @@ def _do_check_levels(
 def _levelsinfo_ty(
     ty: str, warn: Warn, crit: Crit, human_readable_func: Callable, unit_info: str
 ) -> str:
-    warn_str = "never" if warn is None else "%s%s" % (human_readable_func(warn), unit_info)
-    crit_str = "never" if crit is None else "%s%s" % (human_readable_func(crit), unit_info)
-    return " (warn/crit %s %s/%s)" % (ty, warn_str, crit_str)
+    warn_str = "never" if warn is None else f"{human_readable_func(warn)}{unit_info}"
+    crit_str = "never" if crit is None else f"{human_readable_func(crit)}{unit_info}"
+    return f" (warn/crit {ty} {warn_str}/{crit_str})"
 
 
 def _build_perfdata(
-    dsname: Union[None, MetricName],
-    value: Union[int, float],
+    dsname: None | MetricName,
+    value: int | float,
     scale_value: Callable,
     levels: Levels,
-    boundaries: Optional[Tuple],
-    ref_value: Union[None, int, float] = None,
-) -> List:
+    boundaries: tuple | None,
+    ref_value: None | int | float = None,
+) -> list:
     if not dsname:
         return []
 
@@ -465,16 +208,16 @@ def _build_perfdata(
 
 
 def check_levels(  # pylint: disable=too-many-branches
-    value: Union[int, float],
-    dsname: Union[None, MetricName],
+    value: int | float,
+    dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    factor: Union[int, float] = 1.0,
-    scale: Union[int, float] = 1.0,
+    factor: int | float = 1.0,
+    scale: int | float = 1.0,
     statemarkers: bool = False,
-    human_readable_func: Optional[Callable] = None,
-    infoname: Optional[str] = None,
-    boundaries: Optional[Tuple] = None,
+    human_readable_func: Callable | None = None,
+    infoname: str | None = None,
+    boundaries: tuple | None = None,
 ) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
@@ -533,14 +276,14 @@ def check_levels(  # pylint: disable=too-many-branches
     if human_readable_func is None:
         human_readable_func = default_human_readable_func
 
-    def scale_value(v: Union[None, int, float]) -> Union[None, int, float]:
+    def scale_value(v: None | int | float) -> None | int | float:
         if v is None:
             return None
         return v * factor * scale
 
-    infotext = "%s%s" % (human_readable_func(value), unit_info)
+    infotext = f"{human_readable_func(value)}{unit_info}"
     if infoname:
-        infotext = "%s: %s" % (infoname, infotext)
+        infotext = f"{infoname}: {infotext}"
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
@@ -560,7 +303,7 @@ def check_levels(  # pylint: disable=too-many-branches
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _prediction.get_levels(
+            ref_value, levels = _get_predictive_levels(
                 _internal_host_name(),
                 service_description(),
                 dsname,
@@ -596,31 +339,7 @@ def check_levels(  # pylint: disable=too-many-branches
     return state, infotext, perfdata
 
 
-def get_effective_service_level() -> ServiceState:
-    """Get the service level that applies to the current service.
-    This can only be used within check functions, not during discovery nor parsing."""
-    config_cache = _config.get_config_cache()
-    service_level = config_cache.service_level_of_service(
-        _internal_host_name(),
-        service_description(),
-    )
-    if service_level is not None:
-        return service_level
-
-    service_level = config_cache.service_level(_internal_host_name())
-    if service_level is not None:
-        return service_level
-
-    return 0
-
-
-def utc_mktime(time_struct: time.struct_time) -> int:
-    """Works like time.mktime() but assumes the time_struct to be in UTC,
-    not in local time."""
-    return calendar.timegm(time_struct)
-
-
-def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]:
+def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
     if not isinstance(pw, tuple):
@@ -632,238 +351,12 @@ def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tup
     return ("store", pw[1], fmt)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     return _config.get_http_proxy(http_proxy)
-
-
-def get_agent_data_time() -> Optional[float]:
-    """Use this function to get the age of the agent data cache file
-    of tcp or snmp hosts or None in case of piggyback data because
-    we do not exactly know the latest agent data. Maybe one time
-    we can handle this. For cluster hosts an exception is raised."""
-    return _agent_cache_file_age(_internal_host_name(), check_type())
-
-
-def _agent_cache_file_age(
-    hostname: HostName,
-    check_plugin_name: str,
-) -> Optional[float]:
-    config_cache = _config.get_config_cache()
-    if config_cache.is_cluster(hostname):
-        raise MKGeneralException("get_agent_data_time() not valid for cluster")
-
-    # NOTE: This is a workaround for the 'old' API and will not be correct
-    # for the new one. This is a check plugin name, and the property of being
-    # 'TCP' or 'SNMP' is a property of the section.
-    # This function is deprecated for new plugins.
-    # For old-style plugins, plugin and section name are same, so check the
-    # corresponding section:
-    section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
-    section = _agent_based_register.get_section_plugin(_SectionName(section_name_str))
-    if hasattr(section, "trees"):
-        cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
-    else:
-        cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
-
-    with suppress(FileNotFoundError):
-        return _cmk_utils.cachefile_age(cachefile)
-
-    return None
-
-
-def get_parsed_item_data(check_function: Callable) -> Callable:
-    """Use this decorator to determine the parsed item data outside
-    of the respective check function.
-
-    The check function can hence be defined as follows:
-
-    @get_parsed_item_data
-    def check_<check_name>(item, params, data):
-        ...
-
-    In case of parsed not being a dict the decorator returns 3
-    (unknown state) with a wrong usage message.
-    In case of item not existing as a key in parsed or parsed[item]
-    evaluating to False the decorator gives an empty return leading to
-    cmk.base returning 3 (unknown state) with an item not found message
-    (see cmk/base/agent_based/checking.py).
-
-    WATCH OUT:
-    This will not work if valid item data evaluates to False (such as a
-    sensor reading that is 0.0, for example).
-    """
-    # ^- However: It's been like this for a while and some plugins rely on this
-    # behaviour. Since this function has no counterpart in the new check API,
-    # we leave it as it is.
-
-    @functools.wraps(check_function)
-    def wrapped_check_function(item: str, params: Any, parsed: Any) -> Any:
-        # TODO
-        if not isinstance(parsed, dict):
-            return (
-                3,
-                "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict",
-            )
-        if item not in parsed or not parsed[item]:
-            return None
-        return check_function(item, params, parsed[item])
-
-    return wrapped_check_function
-
-
-def discover_single(
-    info: list[object] | dict[object, object] | None
-) -> list[tuple[None, Mapping[object, object]]] | None:
-    """Return a discovered item in case there is info text or parsed"""
-    if info:
-        return [(None, {})]
-    return None
-
-
-def validate_filter(filter_function: Any) -> Callable:
-    """Validate function argument is a callable and return it"""
-    if callable(filter_function):
-        return filter_function
-    if filter_function is None:
-        return lambda *entry: entry[0]
-    raise ValueError(
-        "Filtering function is not a callable, a {} has been given.".format(type(filter_function))
-    )
-
-
-def discover(
-    selector: Optional[Callable] = None, default_params: Union[None, Dict[Any, Any], str] = None
-) -> Callable:
-    """Helper function to assist with service discoveries
-
-    The discovery function is in many cases just a boilerplate function to
-    recognize services listed in your parsed dictionary or the info
-    list. It in general looks like
-
-        def inventory_check(parsed):
-            for key, value in parsed.items():
-                if some_condition_based_on(key, value):
-                    yield key, parameters
-
-
-    The idea of this helper is to allow you only to worry about the logic
-    function that decides if an entry is a service to be discovered or not.
-
-
-    Keyword Arguments:
-    selector       -- Filtering function (default lambda entry: entry[0])
-        Default: Uses the key or first item of info variable
-    default_params -- Default parameters for discovered items (default {})
-
-    Possible uses:
-
-        If your discovery function recognizes every entry of your parsed
-        dictionary or every row of the info list as a service, then you
-        just need to call discover().
-
-            check_info["chk"] = {'inventory_function': discover()}
-
-        In case you want to have a simple filter function when dealing with
-        the info list, you can directly give a lambda function. If this
-        function returns a Boolean the first item of every entry is taken
-        as the service name, if the function returns a string that will be
-        taken as the service name. For this example we discover as services
-        entries where item3 is positive and name the service according to
-        item2.
-
-            check_info["chk"] = {'inventory_function': discover(selector=lambda line: line[2] if line[3]>0 else False)}
-
-        In case you have a more complicated selector condition and also
-        want to include default parameters you may use a decorator.
-
-        Please note: that this discovery function does not work with the
-        whole parsed/info data but only implements the logic for selecting
-        each individual entry as a service.
-
-        In the next example, we will process each entry of the parsed data
-        dictionary. Use as service name the capitalized key when the
-        corresponding value has certain keywords.
-
-            @discover(default_params="the_check_default_levels")
-            def inventory_thecheck(key, value):
-                required_entries = ["used", "ready", "total", "uptime"]
-                if all(data in value for data in required_entries):
-                    return key.upper()
-
-            check_info["chk"] = {'inventory_function': inventory_thecheck}
-    """
-
-    def _discovery(filter_function: Callable) -> Callable:
-        @functools.wraps(filter_function)
-        def discoverer(
-            parsed: Union[Dict[Any, Any], List[Any], Tuple]
-        ) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]:
-            params = default_params if isinstance(default_params, (str, dict)) else {}
-            if isinstance(parsed, dict):
-                filterer = validate_filter(filter_function)
-                for key, value in parsed.items():
-                    for n in _get_discovery_iter(
-                        filterer(key, value),
-                        lambda: key,  # pylint: disable=cell-var-from-loop
-                    ):
-                        yield (n, params)
-            elif isinstance(parsed, (list, tuple)):
-                filterer = validate_filter(filter_function)
-                for entry in parsed:
-                    for n in _get_discovery_iter(
-                        filterer(entry),
-                        lambda: entry[0],  # pylint: disable=cell-var-from-loop
-                    ):
-                        yield (n, params)
-            else:
-                raise ValueError(
-                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}".format(
-                        type(parsed)
-                    )
-                )
-
-        return discoverer
-
-    if callable(selector):
-        return _discovery(selector)
-
-    if selector is None and default_params is None:
-        return _discovery(lambda *args: args[0])
-
-    return _discovery
-
-
-def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]:
-    if isinstance(name, str):
-        return iter((name,))
-    if name is True:
-        return iter((get_name(),))
-    try:
-        return iter(name)
-    except TypeError:
-        return iter(())
-
-
-# Obsolete! Do not confuse with the Service object exposed by the new API.
-class Service:
-    """Can be used to by the discovery function to tell Checkmk about a new service"""
-
-    def __init__(
-        self,
-        item: Optional[str],
-        parameters: Any = None,
-        # ignored, but ServiceLabels are deprecated anyway.
-        # see Werk 13229
-        service_labels: Optional[Any] = None,
-    ) -> None:
-        self.item = item
-        self.parameters = parameters
-        if service_labels:
-            _ = ServiceLabels()  # raise
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

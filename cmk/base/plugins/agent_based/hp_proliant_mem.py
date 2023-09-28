@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Final, NamedTuple
+from typing import Final, NamedTuple
 
 from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -43,7 +43,7 @@ class Module(NamedTuple):
     condition: str
 
 
-Section = Dict[str, Module]
+Section = dict[str, Module]
 
 
 def parse_hp_proliant_mem(string_table: StringTable) -> Section:
@@ -133,7 +133,7 @@ def discovery_hp_proliant_mem(section: Section) -> DiscoveryResult:
             yield Service(item=module.number)
 
 
-def check_hp_proliant_mem(item, section) -> CheckResult:  # type:ignore[no-untyped-def]
+def check_hp_proliant_mem(item, section) -> CheckResult:  # type: ignore[no-untyped-def]
     module = section.get(item)
     if module is None:
         return
@@ -163,7 +163,6 @@ register.check_plugin(
 
 
 def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
-
     for module in section.values():
         yield TableRow(
             path=["hardware", "memory", "arrays", str(module.cpu_num), "devices"],

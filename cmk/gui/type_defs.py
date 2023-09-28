@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,28 +10,32 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NewType, NotRequired
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto import PasswordHash
-from cmk.utils.labels import Labels
-from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import (
-    ContactgroupName,
-    DisabledNotificationsOptions,
-    EventRule,
-    HostName,
-    MetricName,
-    ServiceName,
-    UserId,
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    EncryptedPrivateKeyPEM,
+    RsaPrivateKey,
 )
+from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.labels import Labels
+from cmk.utils.metrics import MetricName
+from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.structured_data import SDPath
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-SizePT = float
+SizePT = NewType("SizePT", float)
 SizeMM = float
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
@@ -80,13 +84,27 @@ class WebAuthnCredential(TypedDict):
     credential_data: bytes
 
 
+class TotpCredential(TypedDict):
+    credential_id: str
+    secret: bytes
+    version: int
+    registered_at: int
+    alias: str
+
+
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: dict[str, WebAuthnCredential]
     backup_codes: list[PasswordHash]
+    totp_credentials: dict[str, TotpCredential]
+
+
+class WebAuthnActionState(TypedDict):
+    challenge: str
+    user_verification: str
 
 
 SessionId = str
-AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer"]
+AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
 
 
 @dataclass
@@ -99,7 +117,7 @@ class SessionInfo:
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
-    webauthn_action_state: object = None
+    webauthn_action_state: WebAuthnActionState | None = None
 
     logged_out: bool = field(default=False)
     auth_type: AuthType | None = None
@@ -144,7 +162,7 @@ class UserSpec(TypedDict, total=False):
     alias: str
     authorized_sites: Any  # TODO: Improve this
     automation_secret: str
-    connector: str | None
+    connector: str | None  # Contains the connection id this user was synced from
     contactgroups: list[ContactgroupName]
     customer: str | None
     disable_notifications: DisabledNotificationsOptions
@@ -178,9 +196,10 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
     nav_hide_icons_title: Literal["hide"] | None
     icons_per_item: Literal["entry"] | None
+    temperature_unit: str | None
 
 
-class UserObjectValue(TypedDict, total=True):
+class UserObjectValue(TypedDict):
     attributes: UserSpec
     is_new_user: bool
 
@@ -199,7 +218,14 @@ InfoName = str
 SingleInfos = Sequence[InfoName]
 
 
-class _VisualMandatory(TypedDict):
+class LinkFromSpec(TypedDict, total=False):
+    single_infos: SingleInfos
+    host_labels: Labels
+    has_inventory_tree: SDPath
+    has_inventory_tree_history: SDPath
+
+
+class Visual(TypedDict):
     owner: UserId
     name: str
     context: VisualContext
@@ -214,16 +240,7 @@ class _VisualMandatory(TypedDict):
     hidden: bool
     hidebutton: bool
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
-
-
-class LinkFromSpec(TypedDict, total=False):
-    single_infos: SingleInfos
-    host_labels: Labels
-    has_inventory_tree: Sequence[SDPath]
-    has_inventory_tree_history: Sequence[SDPath]
-
-
-class Visual(_VisualMandatory):
+    packaged: bool
     link_from: LinkFromSpec
 
 
@@ -234,7 +251,7 @@ class VisualLinkSpec(NamedTuple):
     @classmethod
     def from_raw(cls, value: VisualName | tuple[VisualTypeName, VisualName]) -> VisualLinkSpec:
         # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
-        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
+        # only a string (view_name) anymore, but a tuple of two elements: ('<visual_type_name>',
         # '<visual_name>'). Transform the old value to the new format.
         if isinstance(value, tuple):
             return cls(value[0], value[1])
@@ -258,7 +275,7 @@ class PainterParameters(TypedDict, total=False):
     # TODO Improve:
     # First step was: make painter's param a typed dict with all obvious keys
     # but some possible keys are still missing
-    aggregation: tuple[str, str]
+    aggregation: Literal["min", "max", "avg"] | tuple[str, str]
     color_choices: list[str]
     column_title: str
     ident: str
@@ -267,36 +284,41 @@ class PainterParameters(TypedDict, total=False):
     render_states: list[int | str]
     use_short: bool
     uuid: str
+    # From join inv painter params
+    path_to_table: SDPath
+    column_to_display: str
+    columns_to_match: list[tuple[str, str]]
+    color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+    # From historic metric painters
+    rrd_consolidation: Literal["average", "min", "max"]
+    time_range: tuple[str, int]
+    # From graph painters
+    graph_render_options: GraphRenderOptions
+    set_default_time_range: int
 
 
 def _make_default_painter_parameters() -> PainterParameters:
     return PainterParameters()
 
 
-ColumnTypes = Literal["column", "join_column"]
+ColumnTypes = Literal["column", "join_column", "join_inv_column"]
 
 
-class RawLegacyColumnSpec(TypedDict):
+class _RawCommonColumnSpec(TypedDict):
     name: PainterName
     parameters: PainterParameters | None
     link_spec: tuple[VisualTypeName, VisualName] | None
     tooltip: ColumnName | None
-    join_index: ColumnName | None
     column_title: str | None
     column_type: ColumnTypes | None
 
 
-class RawColumnSpec(TypedDict):
-    name: PainterName
-    parameters: PainterParameters
-    link_spec: tuple[VisualTypeName, VisualName] | None
-    tooltip: ColumnName | None
+class _RawLegacyColumnSpec(_RawCommonColumnSpec):
     join_index: ColumnName | None
-    column_title: str | None
-    column_type: ColumnTypes | None
 
 
-# TODO join_index -> join_value
+class _RawColumnSpec(_RawCommonColumnSpec):
+    join_value: ColumnName | None
 
 
 @dataclass(frozen=True)
@@ -305,24 +327,46 @@ class ColumnSpec:
     parameters: PainterParameters = field(default_factory=_make_default_painter_parameters)
     link_spec: VisualLinkSpec | None = None
     tooltip: ColumnName | None = None
-    join_index: ColumnName | None = None
+    join_value: ColumnName | None = None
     column_title: str | None = None
     _column_type: ColumnTypes | None = None
 
     @property
     def column_type(self) -> ColumnTypes:
-        if self._column_type in ["column", "join_column"]:
+        if self._column_type in ["column", "join_column", "join_inv_column"]:
             return self._column_type
-        return "column" if self.join_index is None else "join_column"
+
+        # First note:
+        #   The "column_type" is used for differentiating ColumnSpecs in the view editor
+        #   dialog. ie. "Column", "Joined Column", "Joined inventory column".
+        # We have two entry points for ColumnSpec initialization:
+        # 1. In "group_painters" or "painters" in views/dashboards/..., eg. views/builtin_views.py
+        #    Here the "_column_type" is not set but calculated from "join_value".
+        #    This only applies to "column" and "join_column" but not to "join_inv_column"
+        #    because there are no such pre-defined ColumnSpecs
+        # 2. during loading of visuals
+        #    Here the "column_type" is part of the raw ColumnSpec which is add below in "from_raw"
+        # Thus we don't need to handle "join_inv_column" here as long as there are no pre-defined
+        # ColumnSpecs.
+        return self._get_column_type_from_join_value(self.join_value)
 
     @classmethod
-    def from_raw(cls, value: RawColumnSpec | RawLegacyColumnSpec | tuple) -> ColumnSpec:
+    def from_raw(cls, value: _RawColumnSpec | _RawLegacyColumnSpec | tuple) -> ColumnSpec:
         # TODO
         # 1: The params-None case can be removed with Checkmk 2.3
         # 2: The tuple-case can be removed with Checkmk 2.4.
+        # 3: The join_index case can be removed with Checkmk 2.3
         # => The transformation is done via update_config/plugins/actions/cre_visuals.py
 
         if isinstance(value, dict):
+
+            def _get_join_value(value: _RawColumnSpec | _RawLegacyColumnSpec) -> ColumnName | None:
+                if isinstance(join_value := value.get("join_value"), str):
+                    return join_value
+                if isinstance(join_value := value.get("join_index"), str):
+                    return join_value
+                return None
+
             return cls(
                 name=value["name"],
                 parameters=value["parameters"] or PainterParameters(),
@@ -332,7 +376,7 @@ class ColumnSpec:
                     else VisualLinkSpec.from_raw(link_spec)
                 ),
                 tooltip=value["tooltip"] or None,
-                join_index=value["join_index"],
+                join_value=_get_join_value(value),
                 column_title=value["column_title"],
                 _column_type=value.get("column_type"),
             )
@@ -347,23 +391,30 @@ class ColumnSpec:
             name = value[0]
             parameters = PainterParameters()
 
+        join_value = value[3]
         return cls(
             name=name,
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_index=value[3],
+            join_value=join_value,
             column_title=value[4],
-            _column_type=None,
+            _column_type=cls._get_column_type_from_join_value(join_value),
         )
 
-    def to_raw(self) -> RawColumnSpec:
+    @staticmethod
+    def _get_column_type_from_join_value(
+        join_value: ColumnName | None,
+    ) -> Literal["column", "join_column"]:
+        return "column" if join_value is None else "join_column"
+
+    def to_raw(self) -> _RawColumnSpec:
         return {
             "name": self.name,
             "parameters": self.parameters,
             "link_spec": None if self.link_spec is None else self.link_spec.to_raw(),
             "tooltip": self.tooltip,
-            "join_index": self.join_index,
+            "join_value": self.join_value,
             "column_title": self.column_title,
             "column_type": self.column_type,
         }
@@ -398,7 +449,11 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _ViewSpecMandatory(Visual):
+class _InventoryJoinMacrosSpec(TypedDict):
+    macros: list[tuple[str, str]]
+
+
+class ViewSpec(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
     group_painters: Sequence[ColumnSpec]
@@ -407,17 +462,15 @@ class _ViewSpecMandatory(Visual):
     num_columns: int
     column_headers: Literal["off", "pergroup", "repeat"]
     sorters: Sequence[SorterSpec]
-
-
-class ViewSpec(_ViewSpecMandatory, total=False):
-    add_headers: str
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    add_headers: NotRequired[str]
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
-    mobile: bool
-    mustsearch: bool
-    force_checkboxes: bool
-    user_sortable: bool
-    play_sounds: bool
+    mobile: NotRequired[bool]
+    mustsearch: NotRequired[bool]
+    force_checkboxes: NotRequired[bool]
+    user_sortable: NotRequired[bool]
+    play_sounds: NotRequired[bool]
+    inventory_join_macros: NotRequired[_InventoryJoinMacrosSpec]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -495,6 +548,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
+    additional_matches_setup_search: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):
@@ -535,26 +589,30 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 UnitRenderFunc = Callable[[Any], str]
 
-
-class _UnitInfoRequired(TypedDict):
-    title: str
-    symbol: str
-    render: UnitRenderFunc
-    js_render: str
-
-
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
 
-class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
-    id: str
-    stepping: str
-    color: str
-    graph_unit: GraphUnitRenderFunc
-    description: str
-    valuespec: Any  # TODO: better typing
-    conversions: Mapping[str, Callable[[float | int], float | int]]
+class UnitInfo(TypedDict):
+    title: str
+    symbol: str
+    render: UnitRenderFunc
+    js_render: str
+    id: NotRequired[str]
+    stepping: NotRequired[str]
+    color: NotRequired[str]
+    graph_unit: NotRequired[GraphUnitRenderFunc]
+    description: NotRequired[str]
+    valuespec: NotRequired[Any]  # TODO: better typing
+    conversion: NotRequired[Callable[[float], float]]
+    perfometer_render: NotRequired[UnitRenderFunc]
+
+
+class ScalarBounds(TypedDict, total=False):
+    warn: float
+    crit: float
+    min: float
+    max: float
 
 
 class _TranslatedMetricRequired(TypedDict):
@@ -567,28 +625,29 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     # CustomGraphPage._show_metric_type_combined_summary)
     orig_name: list[str]
     value: float
-    scalar: dict[str, float]
+    scalar: ScalarBounds
     auto_graph: bool
     title: str
     unit: UnitInfo
     color: str
 
 
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
-GraphConsoldiationFunction = Literal["max", "min", "average"]
-
-RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
-MetricExpression = str
-LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-MetricDefinition = Union[
-    tuple[MetricExpression, LineType],
-    tuple[MetricExpression, LineType, str | LazyString],
-]
+
 PerfometerSpec = dict[str, Any]
-PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
-Perfdata = list[PerfdataTuple]
+
+
+class PerfDataTuple(NamedTuple):
+    metric_name: MetricName
+    value: float | int
+    unit_name: str
+    warn: float | None
+    crit: float | None
+    min: float | None
+    max: float | None
+
+
+Perfdata = list[PerfDataTuple]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 
@@ -599,86 +658,7 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-class GraphSpec(TypedDict):
-    pass
-
-
-class _TemplateGraphSpecMandatory(GraphSpec):
-    site: str | None
-    host_name: HostName
-    service_description: ServiceName
-
-
-class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
-    graph_index: int | None
-    graph_id: str | None
-
-
-class ExplicitGraphSpec(GraphSpec, total=False):
-    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it
-    # used?
-    specification: tuple[Literal["explicit"], GraphSpec]  # TODO: Correct would be ExplicitGraphSpec
-    # I'd bet they are not mandatory. Needs to be figured out
-    title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
-    omit_zero_metrics: bool
-    horizontal_rules: list  # TODO: Be more specific
-    context: VisualContext
-    add_context_to_title: bool
-    metrics: list  # TODO: Be more specific
-
-
-class _CombinedGraphSpecMandatory(GraphSpec):
-    datasource: str
-    single_infos: SingleInfos
-    presentation: GraphPresentation
-    context: VisualContext
-
-
-class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
-    selected_metric: MetricDefinition
-    consolidation_function: GraphConsoldiationFunction
-    graph_template: str
-
-
-class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
-    site: str
-    metric: MetricName
-
-
-class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
-    host: HostName
-    service: ServiceName
-    service_description: ServiceName
-    color: str | None
-
-
-TemplateGraphIdentifier = tuple[Literal["template"], TemplateGraphSpec]
-CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
-CustomGraphIdentifier = tuple[Literal["custom"], str]
-ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
-SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
-
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-GraphIdentifier = Union[
-    CustomGraphIdentifier,
-    tuple[Literal["forecast"], str],
-    TemplateGraphIdentifier,
-    CombinedGraphIdentifier,
-    ExplicitGraphIdentifier,
-    SingleTimeseriesGraphIdentifier,
-]
-
-
-class RenderableRecipe(NamedTuple):
-    title: str
-    expression: RenderingExpression
-    color: str
-    line_type: str
-    visible: bool
-
+GraphRenderOptions = dict[str, Any]
 
 ActionResult = FinalizeRequest | None
 
@@ -693,7 +673,7 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-class CustomAttr(TypedDict, total=True):
+class CustomAttr(TypedDict):
     title: str
     help: str
     name: str
@@ -709,11 +689,28 @@ class Key(BaseModel):
     alias: str
     owner: UserId
     date: float
-    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # Before 2.2 this field was only used for Setup backup keys. Now we add it to all key, because it
     # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.
     not_downloaded: bool = False
+
+    def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
+        return CertificateWithPrivateKey(
+            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
+            private_key=RsaPrivateKey.load_pem(
+                EncryptedPrivateKeyPEM(self.private_key), passphrase
+            ),
+        )
+
+    def fingerprint(self, algorithm: HashAlgorithm) -> str:
+        """return the fingerprint aka hash of the certificate as a hey string"""
+        return (
+            Certificate.load_pem(CertificatePEM(self.certificate))
+            .fingerprint(algorithm)
+            .hex(":")
+            .upper()
+        )
 
 
 GlobalSettings = Mapping[str, Any]

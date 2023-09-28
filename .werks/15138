@@ -1,0 +1,16 @@
+Title: azure_vaults: Monitor Azure Recovery Services Vault
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1672844495
+Edition: cce
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+It's now possible to monitor Azure Recovery Services Vault in Checkmk.
+A new check Microsoft Azure Recovery Services Vault Backup Container
+has been added.
+
+To monitor Recovery Services Vault you have to configure
+the related special agent Microsoft Azure.

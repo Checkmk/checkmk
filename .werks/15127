@@ -1,0 +1,16 @@
+Title: Fix host rename for hosts with parents in same folder
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1677338904
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you renamed a host which was a parent of another host in the same folder,
+the parent was correctly renamed but the host itself was not.
+
+A workarround was to rename the host twice.
+

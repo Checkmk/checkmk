@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from cmk.gui.ctx_stack import g
+from cmk.gui.ctx_stack import global_var, set_global_var
 
 
 @contextmanager
@@ -34,10 +34,8 @@ def is_permission_tracking_enabled() -> bool:
 
 
 def _get_permission_tracking() -> bool:
-    if "permission_tracking" not in g:
-        return False
-    return g.permission_tracking
+    return global_var("permission_tracking", default=False)
 
 
 def _set_permission_tracking(enable: bool) -> None:
-    g.permission_tracking = enable
+    set_global_var("permission_tracking", enable)

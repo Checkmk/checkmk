@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 
+import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -17,18 +19,17 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
-    defines,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     FixedValue,
-    Float,
     Integer,
     Labels,
     ListChoice,
     ListOf,
     ListOfStrings,
+    Migrate,
     MonitoringState,
     Optional,
     OptionalDropdownChoice,
@@ -38,6 +39,15 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
+
+def _transform_discards(v: tuple[float, float] | Mapping[str, object]) -> Mapping[str, object]:
+    if isinstance(v, dict):
+        return v
+
+    (warn, crit) = v
+    # old discards abs levels have been float but target is int, so cast to int
+    return {"both": ("abs", (int(warn), int(crit)))}
 
 
 def _vs_item_appearance(title, help_txt):
@@ -208,6 +218,7 @@ def _vs_regex_matching(match_obj):
 
 def _note_for_admin_state_options():
     return _(
+        # xgettext: no-python-format
         "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
         "Additionally, you have to specifically configure Checkmk to fetch this information, "
         "otherwise, using this option will have no effect. To make Checkmk fetch the admin status, "
@@ -259,7 +270,7 @@ def _vs_matching_conditions():
                                     "Apply this rule only to interfaces whose port type is listed "
                                     "below."
                                 ),
-                                choices=defines.interface_port_types(),
+                                choices=ifaceoper.interface_port_types(),
                                 rows=40,
                                 default_value=[
                                     "6",
@@ -285,9 +296,9 @@ def _vs_matching_conditions():
                                     "Apply this rule only to interfaces whose port state is listed "
                                     "below."
                                 ),
-                                choices=defines.interface_oper_states(),
+                                choices=ifaceoper.interface_oper_states(),
                                 toggle_all=True,
-                                default_value=["1"],
+                                default_value=["1", "-1"],
                             ),
                         ),
                         (
@@ -388,7 +399,7 @@ vs_elements_if_groups_matches: list[DictionaryEntry] = [
         Transform(
             valuespec=DropdownChoice[int](
                 title=_("Select interface port type"),
-                choices=ListChoice.dict_choices(defines.interface_port_types()),
+                choices=ListChoice.dict_choices(ifaceoper.interface_port_types()),
                 help=_(
                     "Only interfaces with the given port type are put into this group. "
                     "For example 53 (propVirtual)."
@@ -565,6 +576,7 @@ def _item_spec_if():
 
 
 PERC_ERROR_LEVELS = (0.01, 0.1)
+PERC_DISCARD_LEVELS = (10.0, 20.0)
 PERC_PKG_LEVELS = (10.0, 20.0)
 
 
@@ -637,7 +649,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
-                                            choices=defines.interface_oper_states(),
+                                            choices=ifaceoper.interface_oper_states(),
                                             allow_empty=False,
                                         ),
                                         MonitoringState(),
@@ -688,7 +700,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                         str(key),
                                         f"{key} - {value}",
                                     )
-                                    for key, value in defines.interface_oper_states().items()
+                                    for key, value in ifaceoper.interface_oper_states().items()
                                 ],
                                 title=_("Operational state"),
                             ),
@@ -780,7 +792,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 Optional(
                     valuespec=ListChoice(
                         title=_("Allowed operational states:"),
-                        choices=defines.interface_oper_states(),
+                        choices=ifaceoper.interface_oper_states(),
                         allow_empty=False,
                     ),
                     title=_("Operational state"),
@@ -1025,6 +1037,24 @@ def _parameter_valuespec_if() -> Dictionary:
                 ),
             ),
             (
+                "discards",
+                Migrate(
+                    valuespec=_vs_alternative_levels(
+                        title=_("Levels for discards rates"),
+                        help=_(
+                            "These levels make the check go warning or critical whenever the "
+                            "<b>percentual discards rate</b> or the <b>absolute discards rate</b> of the monitored interface reaches "
+                            "the given bounds. The percentual discards rate is computed by "
+                            "the formula <b>(discards / (unicast + non-unicast + discards))*100</b> "
+                        ),
+                        percent_levels=PERC_DISCARD_LEVELS,
+                        percent_detail=_(" (in relation to all packets (successful + discard))"),
+                        abs_detail=_(" (in discards per second)"),
+                    ),
+                    migrate=_transform_discards,
+                ),
+            ),
+            (
                 "average_bm",
                 Integer(
                     title=_("Average values for broad- and multicast packet rates"),
@@ -1037,16 +1067,6 @@ def _parameter_valuespec_if() -> Dictionary:
                     unit=_("minutes"),
                     minvalue=1,
                     default_value=15,
-                ),
-            ),
-            (
-                "discards",
-                Tuple(
-                    title=_("Absolute levels for discards rates"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("discards")),
-                        Float(title=_("Critical at"), unit=_("discards")),
-                    ],
                 ),
             ),
             (

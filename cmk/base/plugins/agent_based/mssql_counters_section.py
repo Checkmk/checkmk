@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Turns a @mssql_counters section into a dict mapping database instances to metric -> value dicts
@@ -20,9 +20,9 @@ MSSQL_VEEAMSQL2012:Databases|data_file(s)_size_(kb)|tempdb|164928
 MSSQL_VEEAMSQL2012:Databases|log_file(s)_size_(kb)|tempdb|13624
 """
 
+from collections.abc import Sequence
 from contextlib import suppress
 from datetime import datetime, timezone
-from typing import Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable

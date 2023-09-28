@@ -1,0 +1,102 @@
+Title: time_period: response schemas updated to align with other endpoints.
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675846331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk introduces a fix for the time period collection and
+object respsonse schemas.
+
+For example, the previous collection response looked like this
+
+C+:
+{
+  "links": [
+    {
+      "domainType": "link",
+      "rel": "self",
+      "href": "http://localhost/heute/check_mk/api/1.0/domain-types/time_period/collections/all",
+      "method": "GET",
+      "type": "application/json"
+    }
+  ],
+  "id": "timeperiod",
+  "domainType": "time_period",
+  "value": [
+    {
+      "domainType": "dict",
+      "title": "tp1"
+    },
+  ]
+}
+C-:
+
+It now looks like this
+
+C+:
+{
+  "links": [
+    {
+      "domainType": "link",
+      "rel": "self",
+      "href": "http://localhost/heute/check_mk/api/1.0/domain-types/time_period/collections/all",
+      "method": "GET",
+      "type": "application/json"
+    }
+  ],
+  "id": "time_period",
+  "domainType": "time_period",
+  "value": [
+    {
+      "links": [
+        {
+          "domainType": "link",
+          "rel": "self",
+          "href": "http://localhost/heute/check_mk/api/1.0/objects/time_period/time_period_1",
+          "method": "GET",
+          "type": "application/json"
+        },
+        {
+          "domainType": "link",
+          "rel": "urn:org.restfulobjects:rels/update",
+          "href": "http://localhost/heute/check_mk/api/1.0/objects/time_period/time_period_1",
+          "method": "PUT",
+          "type": "application/json"
+        },
+        {
+          "domainType": "link",
+          "rel": "urn:org.restfulobjects:rels/delete",
+          "href": "http://localhost/heute/check_mk/api/1.0/objects/time_period/time_period_1",
+          "method": "DELETE",
+          "type": "application/json"
+        }
+      ],
+      "domainType": "time_period",
+      "id": "time_period_1",
+      "title": "tp1",
+      "members": {},
+      "extensions": {
+        "alias": "tp1",
+        "active_time_ranges": [
+          {
+            "day": "monday",
+            "time_ranges": [
+              {
+                "start": "12:00",
+                "end": "15:00"
+              }
+            ]
+          }
+        ],
+        "exceptions": [],
+        "exclude": []
+      }
+    },
+  ],
+  "extensions": {}
+}
+C-:

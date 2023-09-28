@@ -1,0 +1,19 @@
+Title: check_http: Fix Option Enforce IPv4 Properly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687253760
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In Werk 15621, the behaviour of <tt>Enforce IPv4</tt> was changed. Existing rules have been
+migrated to a new option (with the old behaviour). However, the selection of the option <tt>Enforce
+IPv4</tt> in the user interface did not work properly. It resulted in the following crash
+
+C+:
+ValueError('ipv4_enforced' is not a valid Family)
+C-:
+
+This Werk fixes the selection.

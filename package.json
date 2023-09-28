@@ -14,10 +14,7 @@
     "not op_mini all"
   ],
   "scripts": {
-    "build": "webpack",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "//": "COMMENT: Process 'resolutions' key below",
-    "preinstall": "npx npm-force-resolutions"
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -36,10 +33,19 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
-    "@types/jquery": "^3.5.13",
-    "@types/node": "^17.0.10",
+    "@types/crossfilter": "^0.0.34",
     "@types/d3": "^7.1.1",
+    "@types/d3-flextree": "^2.1.1",
+    "@types/d3-hexbin": "^0.2.3",
+    "@types/d3-sankey": "^0.12.1",
+    "@types/dc": "^4.2.1",
+    "@types/jquery": "^3.5.13",
+    "@types/lodash": "^4.14.191",
+    "@types/lodash.range": "^3.2.7",
+    "@types/node": "^18.0.10",
+    "@types/qrcode": "^1.5.1",
     "@types/select2": "^4.0.55",
+    "@types/yaireo__tagify": "^4.16.1",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "autoprefixer": "^10.4.0",
@@ -51,7 +57,9 @@
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-compat": "^4.0.0",
+    "eslint-plugin-license-header": "^0.6.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
     "extract-loader": "^5.1.0",
     "file-loader": "^6.2.0",
     "merge": ">=2.1.1",
@@ -60,14 +68,14 @@
     "postcss": "^8.2.4",
     "postcss-loader": "^6.2.1",
     "prettier": "^2.5.0",
-    "redoc": "^2.0.0-rc.58",
-    "redoc-cli": "^0.13.1",
     "sass": "^1.44.0",
     "sass-loader": "^12.3.0",
     "script-loader": "^0.7.2",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.1.1",
     "typescript": "^4.7.2",
+    "vue-loader": "^17.2.2",
+    "vue": "^3.3.4",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1",
     "webpack-remove-empty-scripts": "^0.7.1"
@@ -78,7 +86,7 @@
     "yargs-parser": "is an indirect dependency and only here so clean-install won't fail"
   },
   "dependencies": {
-    "@yaireo/tagify": "^4.9.2",
+    "@yaireo/tagify": "^4.17.7",
     "@zxcvbn-ts/core": "^2.0.3",
     "@zxcvbn-ts/language-common": "^2.0.1",
     "@zxcvbn-ts/language-en": "^2.0.1",
@@ -94,18 +102,14 @@
     "jquery": "^3.6.0",
     "lodash.range": "^3.2.0",
     "ms": "^2.0.0",
+    "qrcode": "^1.5.3",
     "select2": "^4.0.13",
     "simplebar": "^5.3.6",
     "sweetalert2": "^11.2.1",
-    "whatwg-fetch": "^3.6.2",
     "yargs-parser": "^20.2.9"
   },
   "//": "COMMENT: This is here, so the that the build doesn't fail on a npm version missmatch.",
   "optionalDependencies": {
     "fsevents": "2.1.2"
-  },
-  "resolutions": {
-    "//": "COMMENT: Ensure we get the desired version without dependency declaration",
-    "elliptic": ">=6.5.4"
   }
 }

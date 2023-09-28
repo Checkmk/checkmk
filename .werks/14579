@@ -1,0 +1,14 @@
+Title: KUBE: Allow configuration of roles belonging to a control plane node
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674825109
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+With this werk, you can specify roles of a control plane node via the rule <tt>Kubernetes node
+count</tt>.  If a node has any of these roles, then it is considered a control plane node by
+Checkmk. Otherwise, it is considered a worker node.
+

@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.render
 
+from cmk.gui.graphing._color import indexed_color, parse_color_into_hexrgb
+from cmk.gui.graphing._utils import graph_info, MAX_NUMBER_HOPS, metric_info
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import (
-    graph_info,
-    indexed_color,
-    MAX_NUMBER_HOPS,
-    metric_info,
-    parse_color_into_hexrgb,
-)
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -106,6 +101,12 @@ metric_info["requests"] = {
     "title": _("Requests per second"),
     "unit": "count",
     "color": "31/a",
+}
+
+metric_info["failed_requests"] = {
+    "title": _("Failed requests"),
+    "unit": "count",
+    "color": "32/a",
 }
 
 metric_info["requests_per_conn"] = {
@@ -885,7 +886,19 @@ metric_info["ap_devices_percent_unhealthy"] = {
 metric_info["request_rate"] = {
     "title": _("Request rate"),
     "unit": "1/s",
+    "color": "35/a",
+}
+
+metric_info["server_conns"] = {
+    "title": _("Server connections"),
+    "unit": "count",
     "color": "34/a",
+}
+
+metric_info["client_conns"] = {
+    "title": _("Client connections"),
+    "unit": "count",
+    "color": "45/a",
 }
 
 metric_info["error_rate"] = {
@@ -1341,6 +1354,18 @@ metric_info["dns_nxdomain"] = {
     "title": _("DNS queries received for non-existent domain"),
     "unit": "count",
     "color": "34/a",
+}
+
+metric_info["time_to_resolve_dns"] = {
+    "title": _("Time to resolve DNS"),
+    "unit": "s",
+    "color": "36/a",
+}
+
+metric_info["time_consumed_by_rule_engine"] = {
+    "title": _("Time consumed by rule engine"),
+    "unit": "s",
+    "color": "35/a",
 }
 
 metric_info["inside_macs"] = {
@@ -2200,5 +2225,41 @@ graph_info["connection_count"] = {
     "metrics": [
         ("current_connections", "line"),
         ("new_connections", "line"),
+    ],
+}
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["requests"] = {
+    "title": _("Requests"),
+    "metrics": [
+        ("requests", "line"),
+    ],
+}
+
+graph_info["transactions"] = {
+    "title": _("Transactions"),
+    "metrics": [
+        ("transactions", "line"),
+    ],
+}
+
+graph_info["server_latency"] = {
+    "title": _("Server latency"),
+    "metrics": [
+        ("server_latency", "line"),
+    ],
+}
+
+graph_info["e2e_latency"] = {
+    "title": _("End-to-end latency"),
+    "metrics": [
+        ("e2e_latency", "line"),
+    ],
+}
+
+graph_info["availability"] = {
+    "title": _("Availability"),
+    "metrics": [
+        ("availability", "line"),
     ],
 }

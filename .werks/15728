@@ -1,0 +1,16 @@
+Title: mk_oracle: revert werk 15210
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1683290539
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The introduction of werk 15210 brought convenience for some, while
+it unintentionally broke the rules for others. This new werk reverts
+the rule set back to the previous behaviour. Users should reverify
+the auth values for host and port in their existing rules and
+disable those options if this was previously the case.
+

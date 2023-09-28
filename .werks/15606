@@ -1,0 +1,23 @@
+Title: Show explanation message instead of crashing
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1682063327
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, if the DCD tried to contact a remote site, then it would show the error
+C+:
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/connectors/utils.py", line 221, in _execute_sync
+    phase1_result = self._fetch_phase1_result_from_remote_site()
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/connectors/utils.py", line 259, in _fetch_phase1_result_from_remote_site
+    phase_one_result = self._web_api.execute_phase1_result(
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/web_api.py", line 303, in execute_phase1_result
+    return result.json()["extensions"]
+KeyError: 'extensions'
+C-:
+With this Werk, the message <tt>Failed to contact remote site</tt> will be shown instead.
+The remaining phases were working as expected.
+

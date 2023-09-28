@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
@@ -12,10 +13,10 @@ from .utils.interfaces import saveint
 
 class ZpoolStatus(NamedTuple):
     message: str = ""
-    state_messages: List[str] = []
-    error_pools: Dict[str, Any] = {}
-    warning_pools: Dict[str, Any] = {}
-    pool_messages: Dict[str, Any] = {}
+    state_messages: list[str] = []
+    error_pools: dict[str, Any] = {}
+    warning_pools: dict[str, Any] = {}
+    pool_messages: dict[str, Any] = {}
 
 
 class StateDetails(NamedTuple):
@@ -37,7 +38,7 @@ state_mappings = {
 
 def parse_zpool_status(  # pylint: disable=too-many-branches
     string_table: type_defs.StringTable,
-) -> Optional[Section]:
+) -> Section | None:
     if not string_table:
         return None
 
@@ -50,10 +51,10 @@ def parse_zpool_status(  # pylint: disable=too-many-branches
     start_pool: bool = False
     multiline: bool = False
     last_pool: str = ""
-    error_pools: Dict[str, Any] = {}
-    warning_pools: Dict[str, Any] = {}
-    pool_messages: Dict[str, Any] = {}
-    state_messages: List[str] = []
+    error_pools: dict[str, Any] = {}
+    warning_pools: dict[str, Any] = {}
+    pool_messages: dict[str, Any] = {}
+    state_messages: list[str] = []
 
     for line in string_table:
         if line[0] == "pool:":
@@ -110,7 +111,7 @@ def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:
 
 def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     state: State = State.OK
-    messages: List[str] = []
+    messages: list[str] = []
 
     if section.message == "All pools are healthy":
         state = State.OK
@@ -128,7 +129,7 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
 
     for pool, msg in section.pool_messages.items():
         state = State.WARN
-        messages.append("%s: %s" % (pool, " ".join(msg)))
+        messages.append("{}: {}".format(pool, " ".join(msg)))
 
     for pool, msg in section.warning_pools.items():
         state = State.WARN
@@ -136,7 +137,7 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
 
     for pool, msg in section.error_pools.items():
         state = State.CRIT
-        messages.append("%s state: %s" % (pool, msg[0]))
+        messages.append(f"{pool} state: {msg[0]}")
 
     if len(messages) == 0:
         messages.append("No critical errors")

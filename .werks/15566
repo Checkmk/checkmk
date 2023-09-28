@@ -1,0 +1,21 @@
+Title: Exclude sections with mk_oracle.ps1
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687251382
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+mk_oracle.ps1 provides a configuration to exclude sections for <tt>SID</tt>.
+This was only working if you prepend the section name with <tt>sql_</tt>, like e.g.:
+C+:
+$EXCLUDE_XE="sql_performance"
+C-:
+
+If you were using the agent bakery to generate the configuration, the exclude mechansim was not working as it didn't generate the prefix.
+It is now not necessary anymore to add this prefix (however with prefix it is stil, like e.g.l working).
+In order to apply this fix, the agent plugin <tt>mk_oracle.ps1</tt> must be re-deployed onto your monitored host.
+

@@ -1,0 +1,18 @@
+Title: <tt>mk_postgres.py</tt>: Allow Declaring PG_BINARY_NAME in <tt>postgres.cfg</tt>
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1685018073
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Previously, <tt>mk_postgres.py</tt> always dynamically determine the path to the <tt>psql</tt>
+binary. With this Werk, the user may skip this dynamic configuration. This is done by specifying the
+binary path in <tt>postgres.cfg</tt> as follows:
+
+C+:
+PG_BINARY_PATH=C:\PostgreSQL\15\bin\psql.exe
+DBUSER=user_xy
+C-:

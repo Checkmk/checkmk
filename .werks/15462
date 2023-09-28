@@ -1,0 +1,15 @@
+Title: agent_azure: Fix missing 'Remaining API reads' metric if no monitored resources
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1680704823
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+'Remaining API reads' metric was missing from the 'Azure Agent Info' service
+in case there were no resources to monitor.
+
+Now, the metric is always shown, independantly of the monitored resources.
+

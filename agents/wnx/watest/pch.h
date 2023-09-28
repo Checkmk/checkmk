@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -13,8 +13,8 @@
 #ifndef PCH_H
 #define PCH_H
 
-#include "../engine/stdafx_defines.h"  // this is not very nice approach, still we want to test Engine with same definitions.
-                                       // --- We just reuse header file
+#include "wnx/stdafx_defines.h"  // this is not very nice approach, still we want to test Engine with same definitions.
+                                 // --- We just reuse header file
 
 // NOTE: This code block is used to speed compilation.
 // Sets usually for msbuild in script using environment variable

@@ -1,0 +1,15 @@
+Title: df: Showing wrong WARN/CRIT levels when magic factor is 1.0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1691510279
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When levels for free/used space were configured and the magic factor was configured to 1.0, the df check plugin was using the default parameters as WARN/CRIT levels.
+This behaviour differed from 2.1 and causes the check plugin to sometimes report an incorrect state.
+The problem has been fixed and the behaviour is the same as in 2.1.
+

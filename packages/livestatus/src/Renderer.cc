@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,6 +6,7 @@
 #include "livestatus/Renderer.h"
 
 #include <cmath>
+#include <cstdint>
 
 #include "livestatus/Logger.h"
 #include "livestatus/RendererBrokenCSV.h"
@@ -45,13 +46,14 @@ void Renderer::output(double value) {
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::outputUnicodeChar(char32_t value) {
-    if (value < 0x10000U) {
-        outputHex('u', 4, value);
+    const uint_least32_t number{value};
+    if (number < 0x10000U) {
+        outputHex('u', 4, number);
     } else if (useSurrogatePairs()) {
-        outputHex('u', 4, 0xd800U | (((value - 0x10000U) >> 10) & 0x3ffU));
-        outputHex('u', 4, 0xdc00U | ((value - 0x10000U) & 0x3ffU));
+        outputHex('u', 4, 0xd800U | (((number - 0x10000U) >> 10) & 0x3ffU));
+        outputHex('u', 4, 0xdc00U | ((number - 0x10000U) & 0x3ffU));
     } else {
-        outputHex('U', 8, value);
+        outputHex('U', 8, number);
     }
 }
 
@@ -63,6 +65,12 @@ void Renderer::output(const std::string &value) { outputString(value); }
 
 void Renderer::output(std::chrono::system_clock::time_point value) {
     output(std::chrono::system_clock::to_time_t(value));
+}
+
+void Renderer::output(CommentType value) { _os << static_cast<int32_t>(value); }
+
+void Renderer::output(RecurringKind value) {
+    _os << static_cast<int32_t>(value);
 }
 
 namespace {
@@ -116,7 +124,7 @@ void Renderer::outputUnicodeString(const char *start, const char *end,
 
 void Renderer::outputUTF8(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch0 = *p;
+        const unsigned char ch0 = *p;
         if ((ch0 & 0x80) == 0x00) {
             if (isBoringChar(ch0)) {
                 _os.put(*p);
@@ -132,7 +140,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[1]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
@@ -143,11 +151,11 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[2]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            unsigned char ch2 = *++p;
+            const unsigned char ch2 = *++p;
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
@@ -163,15 +171,15 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[3]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            unsigned char ch2 = *++p;
+            const unsigned char ch2 = *++p;
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            unsigned char ch3 = *++p;
+            const unsigned char ch3 = *++p;
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
@@ -187,7 +195,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
 
 void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch = *p;
+        const unsigned char ch = *p;
         if (isBoringChar(ch)) {
             _os.put(*p);
         } else {
@@ -198,7 +206,7 @@ void Renderer::outputLatin1(const char *start, const char *end) {
 
 void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch0 = *p;
+        const unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
             _os.put(*p);
         } else if ((ch0 & 0xE0) == 0xC0) {
@@ -207,7 +215,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
             if (end <= &p[1]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }

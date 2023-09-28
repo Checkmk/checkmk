@@ -1,0 +1,19 @@
+Title: host_config: fix host attribute IPv6 address validation
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675092378
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this werk, the REST API failed with a 500 error if the
+user tried to query or create a host with a valid Host- or DNS
+name as Ipv6 address.
+
+This restriction also caused an error in the DCD as it is reliant
+on the the list all hosts endpoint.
+
+This werk resolves both issues.
+

@@ -1,0 +1,46 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "xinetd",
+    args = ["-j4"],
+    configure_in_place = True,
+    configure_options = [
+        "--with-loadavg",
+        "--with-libwrap",
+    ],
+    copts = [
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+    },
+    install_prefix = "xinetd_dir",
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "xinetd",
+    ],
+    out_data_dirs = [
+        "share",
+    ],
+    postfix_script = """
+        mkdir -p ${INSTALLDIR}/bin
+        install -m 644 ${BUILD_TMPDIR}/xinetd ${INSTALLDIR}/bin
+
+        # Correct package documentation
+        rm ${INSTALLDIR}/share/man/man8/itox.8
+        rm ${INSTALLDIR}/share/man/man8/xconv.pl.8
+
+        mkdir -p ${INSTALLDIR}/share/doc/xinetd
+        for file in CHANGELOG COPYRIGHT README.md; do \
+            install -m 644 ${BUILD_TMPDIR}/$file ${INSTALLDIR}/share/doc/xinetd; \
+        done
+    """,
+)

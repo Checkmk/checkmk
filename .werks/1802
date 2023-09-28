@@ -9,4 +9,4 @@ Date: 1420616484
 
 The werk #1800 introduced a problem where different HTML tags which are used in
 message texts were not interpreted as intended. This change makes the links
-working again and also allows <sup> and <p> tags in messages again.
+working again and also allows &lt;sup&gt; and &lt;p&gt; tags in messages again.

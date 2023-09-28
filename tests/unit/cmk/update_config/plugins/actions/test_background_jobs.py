@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.gui.background_job import BackgroundJobDefines
+from cmk.gui.background_job import BackgroundJobDefines, JobStatusStore
 
 from cmk.update_config.plugins.actions.background_jobs import (
-    JobStatusStore,
     migrate_job_status_spec,
     update_job_status,
     UpdateBackgroundJobStatusSpec,

@@ -16,6 +16,11 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
+BAZEL_BUILD := "../scripts/run-bazel-build.sh"
+
+# Bazel paths
+BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
+BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
@@ -118,9 +123,7 @@ include \
     packages/openssl/openssl.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
-    packages/lasso/lasso.make \
     packages/xinetd/xinetd.make \
-    packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/freetds/freetds.make \
@@ -131,6 +134,7 @@ include \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
+    packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
     packages/nagvis/nagvis.make \
@@ -149,8 +153,10 @@ include \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \
-    packages/livestatus/livestatus.make
-
+    packages/livestatus/livestatus.make \
+    packages/neb/neb.make \
+    packages/unixcat/unixcat.make \
+    packages/xmlsec1/xmlsec1.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make
@@ -158,15 +164,21 @@ endif
 ifeq ($(EDITION),free)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/plus/plus.make
+    $(REPO_PATH)/cloud/cloud.make
 endif
 ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
 endif
-ifeq ($(EDITION),plus)
+ifeq ($(EDITION),cloud)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/plus/plus.make
+    $(REPO_PATH)/cloud/cloud.make
+endif
+ifeq ($(EDITION),saas)
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/cloud/cloud.make \
+    $(REPO_PATH)/saas/saas.make
 endif

@@ -1,0 +1,17 @@
+This patch is currently just a hack:
+* DESTDIR is not set during bazel's make invocation
+* so bazel tries to "mkdir -p" under /etc (root) -> does & should not work
+* BINDIR/MANDIR however are receiving a correct bazel path as bazel is setting PREFIX
+* as we don't need the SYSCONFIG/MAILRC anyway, let's just skip those for now
+--- a/Makefile	2023-01-26 16:45:46.350443011 +0100
++++ b/Makefile	2023-01-26 17:00:18.531367604 +0100
+@@ -105,9 +105,6 @@
+ 	$(STRIP) $(DESTDIR)$(BINDIR)/mailx
+ 	test -d $(DESTDIR)$(MANDIR)/man1 || mkdir -p $(DESTDIR)$(MANDIR)/man1
+ 	$(UCBINSTALL) -c -m 644 mailx.1 $(DESTDIR)$(MANDIR)/man1/mailx.1
+-	test -d $(DESTDIR)$(SYSCONFDIR) || mkdir -p $(DESTDIR)$(SYSCONFDIR)
+-	test -f $(DESTDIR)$(MAILRC) || \
+-		$(UCBINSTALL) -c -m 644 nail.rc $(DESTDIR)$(MAILRC)
+
+ clean:
+ 	rm -f $(OBJ) mailx *~ core log

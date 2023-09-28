@@ -1,0 +1,17 @@
+Title: mk-job: improvements to state file persistence
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681458508
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The mk-job agent plugin saves information about a job's running and completed
+states in files under $MK_VARDIR/job. These files were written dynamically and
+this could give rise to situations in which the state file was read while
+information was being written to it. The information within the `<<<job>>>`
+section could therefore be confusing and incomplete. This has been improved by
+introducing atomic operations: files are now either present and complete, or
+absent altogether.

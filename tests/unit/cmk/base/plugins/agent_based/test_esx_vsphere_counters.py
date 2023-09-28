@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
+
+import pytest
 
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -442,6 +444,7 @@ def test_discovery_counters_diskio() -> None:
     ) == [Service(item="SUMMARY")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.check_esx_vsphere_counters_diskio(

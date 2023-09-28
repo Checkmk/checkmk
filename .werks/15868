@@ -1,0 +1,22 @@
+Title: cpu_loads, blade_bx_load, wmi_cpuload: Configurable levels for other load averaging types
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1690830398
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The check plugins
+
+LI: <i>CPU load</i> (<tt>cpu_loads</tt>)
+LI: <i>Primergy BX600 Blade Enclosure: CPU Load</i> (<tt>blade_bx_load</tt>)
+LI: <i>Windows CPU Load</i> (<tt>wmi_cpuload</tt>)
+
+show and allow configuration of levels for the 15 minutes average of
+the CPU load.
+
+These plugins now also show (in the service details only) the one and five
+minutes average of the load, and allow configuration of levels for them.
+

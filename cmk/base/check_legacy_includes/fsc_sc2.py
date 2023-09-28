@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -50,9 +50,7 @@ def check_fsc_sc2_cpu_status(item, _no_params, info):
     for designation, status, model, speed, cores in info:
         if designation == item:
             status_state, status_txt = get_cpu_status(status)
-            return status_state, "Status is {}, {}, {} cores @ {} MHz".format(
-                status_txt, model, cores, speed
-            )
+            return status_state, f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz"
 
 
 # .
@@ -252,9 +250,7 @@ def check_fsc_sc2_info(_no_item, _no_params, info):
     if info:
         return (
             0,
-            "Model: {}, Serial Number: {}, BIOS Version: {}".format(
-                info[0][0], info[0][1], info[0][2]
-            ),
+            f"Model: {info[0][0]}, Serial Number: {info[0][1]}, BIOS Version: {info[0][2]}",
         )
     return None
 

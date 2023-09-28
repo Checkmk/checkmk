@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage roles and permissions
 
-In order to make getting started easier - Check_MK Multisite comes with three
+In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
-The builtin roles cannot be deleted. Users listed in admin_users in
+The built-in roles cannot be deleted. Users listed in admin_users in
 multisite.mk automatically get the role admin - even if no such user or contact
 has been configured yet. By that way an initial login - e.g. as omdamin - is
 possible. The admin role cannot be removed from that user as long as he is
 listed in admin_users. Also the variables guest_users, users and default_user_
-role still work. That way Multisite is fully operable without WATO and also
-backwards compatible.  In WATO you can create further roles and also edit the
-permissions of the existing roles. Users can be assigned to builtin and custom
+role still work. That way Multisite is fully operable without Setup and also
+backwards compatible.  In Setup you can create further roles and also edit the
+permissions of the existing roles. Users can be assigned to built-in and custom
 roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
@@ -32,6 +32,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
@@ -45,26 +46,24 @@ from cmk.gui.permissions import (
     permission_registry,
     permission_section_registry,
 )
-from cmk.gui.plugins.wato.utils import (
-    get_search_expression,
-    make_confirm_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.userroles import RoleID
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeRoles)
+    mode_registry.register(ModeEditRole)
+    mode_registry.register(ModeRoleMatrix)
+
+
 class ModeRoles(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -127,18 +126,24 @@ class ModeRoles(WatoMode):
 
     def page(self) -> None:
         with table_element("roles") as table:
-
             users = userdb.load_users()
-            for role in sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name)):
+            for nr, role in enumerate(
+                sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name))
+            ):
                 table.row()
+
+                table.cell("#", css=["narrow nowrap"])
+                html.write_text(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", role.name)])
                 clone_url = make_action_link([("mode", "roles"), ("_clone", role.name)])
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "roles"), ("_delete", role.name)]),
-                    message=_("Do you really want to delete the role %s?") % role.name,
+                    title=_("Delete role #%d") % nr,
+                    suffix=role.alias,
+                    message=("Name: %s") % role.name,
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(clone_url, _("Clone"), "clone")
@@ -152,7 +157,7 @@ class ModeRoles(WatoMode):
                 table.cell(_("Alias"), role.alias)
 
                 # Type
-                table.cell(_("Type"), _("builtin") if role.builtin else _("custom"))
+                table.cell(_("Type"), _("built-in") if role.builtin else _("custom"))
 
                 # Modifications
                 table.cell(
@@ -183,7 +188,6 @@ class ModeRoles(WatoMode):
         # - number of users with this role
 
 
-@mode_registry.register
 class ModeEditRole(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -261,7 +265,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("builtin role")))
+            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)
@@ -277,10 +281,10 @@ class ModeEditRole(WatoMode):
             forms.section(_("Based on role"))
             html.help(
                 _(
-                    "Each user defined role is based on one of the builtin roles. "
+                    "Each user defined role is based on one of the built-in roles. "
                     "When created it will start with all permissions of that role. When due to a software "
                     "update or installation of an addons new permissions appear, the user role will get or "
-                    "not get those new permissions based on the default settings of the builtin role it's "
+                    "not get those new permissions based on the default settings of the built-in role it's "
                     "based on."
                 )
             )
@@ -298,11 +302,12 @@ class ModeEditRole(WatoMode):
         base_role_id = self._role_id if self._role.basedon is None else self._role.basedon
         html.help(
             _(
-                "When you leave the permissions at &quot;default&quot; then they get their "
-                "settings from the factory defaults (for builtin roles) or from the "
-                "factory default of their base role (for user define roles). Factory defaults "
-                "may change due to software updates. When choosing another base role, all "
-                "permissions that are on default will reflect the new base role."
+                'If you leave the permissions at "default", '
+                "they get their settings from the factory defaults (for built-in roles) or from the "
+                "factory default of their base role (for user define roles). "
+                "Factory defaults may change due to software updates. "
+                "When choosing another base role, all permissions that are on default will reflect "
+                "the new base role."
             )
         )
 
@@ -343,7 +348,6 @@ class ModeEditRole(WatoMode):
         html.end_form()
 
 
-@mode_registry.register
 class ModeRoleMatrix(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -367,7 +371,6 @@ class ModeRoleMatrix(WatoMode):
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
             ) as table:
-
                 permission_list = permission_registry.get_sorted_permissions(section)
 
                 if not permission_list:
@@ -388,11 +391,11 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role.permissions.get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name: str | None = "perm_yes_default"
+                                icon_name: str | None = "checkmark_bg_white"
                             else:
                                 icon_name = None
                         else:
-                            icon_name = "perm_%s" % (pvalue and "yes" or "no")
+                            icon_name = "checkmark" if pvalue else "cross_bg_white"
 
                         table.cell(role.name, css=["center"])
                         if icon_name:

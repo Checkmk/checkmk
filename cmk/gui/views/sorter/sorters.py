@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,20 +11,18 @@ from typing import Any
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import get_labels
 
-from ..painter.v0.helpers import get_tag_groups
-from ..painter.v1.helpers import get_perfdata_nth_value
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
-    cmp_custom_variable,
     cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
-    cmp_service_name_equiv,
     cmp_simple_number,
     cmp_simple_string,
     cmp_string_list,
@@ -43,7 +41,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterServiceTags)
     registry.register(SorterHostLabels)
     registry.register(SorterServiceLabels)
-    registry.register(SorterServicelevel)
     registry.register(SorterSvcPerfVal01)
     registry.register(SorterSvcPerfVal02)
     registry.register(SorterSvcPerfVal03)
@@ -112,7 +109,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("svc_group_memberlist", cmp_string_list)
     declare_1to1_sorter("svc_acknowledged", cmp_simple_number)
     declare_1to1_sorter("svc_staleness", cmp_simple_number)
-    declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
 
     # Host
     declare_1to1_sorter("alias", cmp_num_split)
@@ -147,7 +143,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("host_group_memberlist", cmp_string_list)
     declare_1to1_sorter("host_contacts", cmp_string_list)
     declare_1to1_sorter("host_contact_groups", cmp_string_list)
-    declare_1to1_sorter("host_servicelevel", cmp_simple_number)
 
     # Host group
     declare_1to1_sorter("hg_num_services", cmp_simple_number)
@@ -447,26 +442,9 @@ class SorterServiceLabels(ABCLabelSorter):
         return ["service_labels"]
 
 
-class SorterServicelevel(Sorter):
-    @property
-    def ident(self) -> str:
-        return "servicelevel"
-
-    @property
-    def title(self) -> str:
-        return _("Servicelevel")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["custom_variables"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
-
-
 def cmp_service_name(column, r1, r2):
-    return (cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) - (
-        cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])
+    return (utils.cmp_service_name_equiv(r1[column]) > utils.cmp_service_name_equiv(r2[column])) - (
+        utils.cmp_service_name_equiv(r1[column]) < utils.cmp_service_name_equiv(r2[column])
     ) or cmp_num_split(column, r1, r2)
 
 

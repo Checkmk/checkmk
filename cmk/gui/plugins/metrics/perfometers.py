@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     GB,
     MAX_NUMBER_HOPS,
     MB,
@@ -800,6 +800,26 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
+                "metric": "net_data_recv",
+                "half_value": 5000000,
+                "exponent": 5,
+            },
+            {
+                "type": "logarithmic",
+                "metric": "net_data_sent",
+                "half_value": 5000000,
+                "exponent": 5,
+            },
+        ],
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "dual",
+        "perfometers": [
+            {
+                "type": "logarithmic",
                 "metric": "if_in_bps",
                 "half_value": 5000000,
                 "exponent": 5,
@@ -1372,13 +1392,13 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "linear",
-                "segments": ["qos_dropped_bytes_rate"],
-                "total": "qos_dropped_bytes_rate:max",
+                "segments": ["qos_dropped_bits_rate"],
+                "total": "qos_dropped_bits_rate:max",
             },
             {
                 "type": "linear",
-                "segments": ["qos_outbound_bytes_rate"],
-                "total": "qos_outbound_bytes_rate:max",
+                "segments": ["qos_outbound_bits_rate"],
+                "total": "qos_outbound_bits_rate:max",
             },
         ],
     }
@@ -2052,6 +2072,32 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "aws_bucket_size",
+        "half_value": GB,
+        "exponent": 2,
+    }
+)
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "aws_s3_buckets",
+        "half_value": 50,
+        "exponent": 2,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "requests",
+        "half_value": 100.0,
+        "exponent": 2,
+    }
+)
+
+perfometer_info.append(
     {"type": "logarithmic", "metric": "mobileiron_last_patched", "half_value": 45.0, "exponent": 2}
 )
 
@@ -2157,4 +2203,13 @@ perfometer_info.append(
         ),
         "total": 100.0,
     },
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "test_runtime",
+        "half_value": 864000.0,
+        "exponent": 2,
+    }
 )

@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import itertools
 import json
 import logging
 import re
-from collections.abc import Callable, Mapping, Sequence
+import time
+import typing
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar
 
+import requests
 from kubernetes import client  # type: ignore[import]
+from pydantic import parse_obj_as
 
+from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.controllers import (
     map_controllers,
     map_controllers_top_to_down,
@@ -28,7 +33,6 @@ from cmk.special_agents.utils_kubernetes.transform import (
     persistent_volume_claim_from_client,
     pod_from_client,
     resource_quota_from_client,
-    statefulset_from_client,
 )
 from cmk.special_agents.utils_kubernetes.transform_any import parse_open_metric_samples
 from cmk.special_agents.utils_kubernetes.transform_json import (
@@ -40,145 +44,159 @@ from cmk.special_agents.utils_kubernetes.transform_json import (
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
-SUPPORTED_VERSIONS = [(1, 21), (1, 22), (1, 23)]
+SUPPORTED_VERSIONS = [(1, 22), (1, 23), (1, 24), (1, 25), (1, 26)]
 LOWEST_FUNCTIONING_VERSION = min(SUPPORTED_VERSIONS)
 SUPPORTED_VERSIONS_DISPLAY = ", ".join(f"v{major}.{minor}" for major, minor in SUPPORTED_VERSIONS)
 
 
-class BatchAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.BatchV1Api(api_client)
-        self.timeout = timeout
+class FakeResponse:
+    def __init__(self, response: requests.Response):
+        self.data: str = response.text
 
+
+class Deserializer:
+    def __init__(self):
+        self._api_client = client.ApiClient()
+
+    def run(self, response_type: str, data: requests.Response) -> typing.Any:
+        return self._api_client.deserialize(FakeResponse(data), response_type)
+
+
+class ClientAPI:
+    def __init__(
+        self,
+        client_config: query.APISessionConfig,
+        request_client: requests.Session,
+        deserizalizer: Deserializer,
+    ) -> None:
+        self._config = client_config
+        self._client = request_client
+        self._deserializer = deserizalizer
+
+
+class ClientBatchAPI(ClientAPI):
     def query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
-        return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/apis/batch/v1/cronjobs"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1CronJobList", response).items
 
     def query_raw_jobs(self) -> Sequence[client.V1Job]:
-        return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/apis/batch/v1/jobs"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1JobList", response).items
 
 
-class CoreAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.CoreV1Api(api_client)
-        self.timeout = timeout
-
+class ClientCoreAPI(ClientAPI):
     def query_raw_pods(self) -> Sequence[client.V1Pod]:
-        return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/api/v1/pods"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1PodList", response).items
 
     def query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
-        return self.connection.list_resource_quota_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/api/v1/resourcequotas"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1ResourceQuotaList", response).items
 
     def query_raw_namespaces(self):
-        return self.connection.list_namespace(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/api/v1/namespaces"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1NamespaceList", response).items
 
-    def query_persistent_volume_claims(self):
-        return self.connection.list_persistent_volume_claim_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+    def query_persistent_volume_claims(self) -> Sequence[client.V1PersistentVolumeClaim]:
+        request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1PersistentVolumeClaimList", response).items
+
+    def query_persistent_volumes(self):
+        request = requests.Request("GET", self._config.url("/api/v1/persistentvolumes"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1PersistentVolumeList", response).items
 
 
-class AppsAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.AppsV1Api(api_client)
-        self.timeout = timeout
-
+class ClientAppsAPI(ClientAPI):
     def query_raw_deployments(self) -> Sequence[client.V1Deployment]:
-        return self.connection.list_deployment_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/deployments"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1DeploymentList", response).items
 
     def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
-        return self.connection.list_daemon_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
-
-    def query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
-        return self.connection.list_stateful_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/daemonsets"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1DaemonSetList", response).items
 
     def query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
-        return self.connection.list_replica_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
-
-
-@dataclass
-class RawAPIResponse:
-    response: str
-    status_code: int
-    headers: dict[str, str]
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/replicasets"))
+        response = send_request(self._config, self._client, request)
+        return self._deserializer.run("V1ReplicaSetList", response).items
 
 
 class RawAPI:
+    def __init__(
+        self, client_config: query.APISessionConfig, request_client: requests.Session
+    ) -> None:
+        self._config = client_config
+        self._client = request_client
+
+
+def send_request(
+    client_config: query.APISessionConfig,
+    request_client: requests.Session,
+    request: requests.Request,
+) -> requests.Response:
+    prepared_request = request_client.prepare_request(request)
+    return request_client.send(
+        prepared_request,
+        verify=client_config.verify_cert_api,
+        timeout=client_config.requests_timeout(),
+    )
+
+
+class CoreAPI(RawAPI):
     """
     readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
     """
 
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.timeout = timeout
-        self._api_client = api_client
-
-    def _request(
-        self,
-        method: Literal["GET", "POST", "PUT", "OPTIONS", "DELETE"],
-        resource_path: str,
-        query_params: dict[str, str] | None = None,
-    ) -> RawAPIResponse:
-        # Found the auth_settings here:
-        # https://github.com/kubernetes-client/python/issues/528
-        response, status_code, headers = self._api_client.call_api(
-            resource_path,
-            method,
-            query_params=query_params,
-            auth_settings=["BearerToken"],
-            _request_timeout=self.timeout,
-            _preload_content=False,
-        )
-        return RawAPIResponse(
-            response=response.data.decode("utf-8"), status_code=status_code, headers=headers
-        )
-
-    def _get_healthz(self, url: str) -> api.HealthZ:
-        def get_health(query_params: dict[str, str] | None = None) -> tuple[int, str]:
-            # https://kubernetes.io/docs/reference/using-api/health-checks/
-            try:
-                response = self._request("GET", url, query_params=query_params)
-            except client.rest.ApiException as e:
-                return e.status, e.body
-            return response.status_code, response.response
-
-        status_code, response = get_health()
-        if status_code != 200:
-            _status_code, verbose_response = get_health({"verbose": "1"})
-        else:
-            verbose_response = None
-
-        return api.HealthZ(
-            response=response,
-            status_code=status_code,
-            verbose_response=verbose_response,
-        )
-
     def query_raw_version(self) -> str:
-        return self._request("GET", "/version").response
+        request = requests.Request("GET", self._config.url("/version"))
+        return send_request(self._config, self._client, request).text
 
-    def query_api_health(self) -> api.APIHealth:
-        return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
-
-    def query_kubelet_health(self, node_name: str) -> api.HealthZ:
-        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
-
-    def query_raw_statefulsets(self) -> JSONStatefulSetList:
-        return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
-
-    def query_kubelet_metrics(self, node_name: str) -> str:
-        return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+    def query_kubelet_metrics(self, node_names: Sequence[str]) -> Sequence[str]:
+        result = []
+        finish_time = time.time() + 30.0
+        node_queue = list(node_names)
+        while time.time() < finish_time and node_queue:
+            node_name = node_queue.pop()
+            request = requests.Request(
+                "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
+            )
+            with contextlib.suppress(requests.RequestException):
+                result.append(send_request(self._config, self._client, request).text)
+        return result
 
     def query_raw_nodes(self) -> JSONNodeList:
-        return json.loads(self._request("GET", "/api/v1/nodes").response)
+        request = requests.Request("GET", self._config.url("/api/v1/nodes"))
+        return send_request(self._config, self._client, request).json()
+
+    def query_api_health(self) -> api.APIHealth:
+        # https://kubernetes.io/docs/reference/using-api/health-checks/
+        return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
+
+    def query_kubelet_health(self, node_names: Sequence[str]) -> Mapping[str, api.HealthZ]:
+        return {
+            node_name: self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
+            for node_name in node_names
+        }
+
+    def _get_healthz(self, resource_path: str) -> api.HealthZ:
+        request = requests.Request("GET", self._config.url(resource_path))
+        response = send_request(self._config, self._client, request)
+        return api.HealthZ(status_code=response.status_code, response=response.text)
+
+
+class AppsAPI(RawAPI):
+    def query_raw_statefulsets(self) -> JSONStatefulSetList:
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/statefulsets"))
+        return send_request(self._config, self._client, request).json()
 
 
 def _extract_sequence_based_identifier(git_version: str) -> str | None:
@@ -188,10 +206,6 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
     '1.20.0'
     >>> _extract_sequence_based_identifier("    v1.20.0")  # some white space is allowed
     '1.20.0'
-    >>> _extract_sequence_based_identifier("v   1.20.0")  # but only in specific cases
-
-    >>> _extract_sequence_based_identifier("a1.20.0")  # v or whitespace are the only allowed letters at the start
-
     >>> _extract_sequence_based_identifier("v1.21.9-eks-0d102a7")  # flavors are ok, but discarded
     '1.21.9'
     >>> _extract_sequence_based_identifier("v1")  # sequences without minor are allowed
@@ -207,6 +221,10 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
     >>> _extract_sequence_based_identifier("")  # empty strings are not allowed
 
     >>> _extract_sequence_based_identifier("abc")  # nonesense is also not allowed
+
+    >>> _extract_sequence_based_identifier("v   1.20.0")  # but only in specific cases
+
+    >>> _extract_sequence_based_identifier("a1.20.0")  # v or whitespace are the only allowed letters at the start
 
     """
     version_match = VERSION_MATCH_RE.fullmatch(git_version)
@@ -295,9 +313,14 @@ def _verify_version_support(version: api.KubernetesVersion | api.UnknownKubernet
         isinstance(version, api.KubernetesVersion)
         and (version.major, version.minor) < LOWEST_FUNCTIONING_VERSION
     ):
+        # The agent will always abort processing data, if the version is
+        # known to be unsupported. If one does not abort data processing
+        # for version 1.20 or below, then the agent will crash for sure.
+        # E.g., it is possible that the agent succeeds in parsing version
+        # 1.21 API data, if the following exception is not raised. However,
+        # for 1.20 it will crash anyway with a less helpful message.
         raise UnsupportedEndpointData(
-            f"Unsupported Kubernetes version '{version.git_version}'. API "
-            "Servers with version < v1.21 are known to return incompatible data. "
+            f"Unsupported Kubernetes version '{version.git_version}'. "
             "Aborting processing API data. "
             f"Supported versions are {SUPPORTED_VERSIONS_DISPLAY}.",
         )
@@ -315,16 +338,14 @@ class APIData:
     nodes: Sequence[api.Node]
     pods: Sequence[api.Pod]
     persistent_volume_claims: Sequence[api.PersistentVolumeClaim]
+    persistent_volumes: Sequence[api.PersistentVolume]
     kubelet_open_metrics: Sequence[api.OpenMetricSample]
     resource_quotas: Sequence[api.ResourceQuota]
     cluster_details: api.ClusterDetails
 
 
-StatefulSets = TypeVar("StatefulSets", Sequence[client.V1StatefulSet], JSONStatefulSetList)
-
-
 @dataclass(frozen=True)
-class UnparsedAPIData(Generic[StatefulSets]):
+class UnparsedAPIData:
     raw_jobs: Sequence[client.V1Job]
     raw_cron_jobs: Sequence[client.V1CronJob]
     raw_pods: Sequence[client.V1Pod]
@@ -332,87 +353,45 @@ class UnparsedAPIData(Generic[StatefulSets]):
     raw_namespaces: Sequence[client.V1Namespace]
     raw_resource_quotas: Sequence[client.V1ResourceQuota]
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim]
+    raw_persistent_volumes: Sequence[client.V1PersistentVolume]
     raw_deployments: Sequence[client.V1Deployment]
     raw_daemonsets: Sequence[client.V1DaemonSet]
     raw_replica_sets: Sequence[client.V1ReplicaSet]
     node_to_kubelet_health: Mapping[str, api.HealthZ]
     api_health: api.APIHealth
-    raw_statefulsets: StatefulSets
+    raw_statefulsets: JSONStatefulSetList
     raw_kubelet_open_metrics_dumps: Sequence[str]
 
 
-def query_raw_api_data_v1(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
-) -> UnparsedAPIData[Sequence[client.V1StatefulSet]]:
-    raw_nodes = raw_api.query_raw_nodes()
-    return UnparsedAPIData(
-        raw_jobs=batch_api.query_raw_jobs(),
-        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
-        raw_pods=core_api.query_raw_pods(),
-        raw_nodes=raw_nodes,
-        raw_namespaces=core_api.query_raw_namespaces(),
-        raw_resource_quotas=core_api.query_raw_resource_quotas(),
-        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
-        raw_deployments=external_api.query_raw_deployments(),
-        raw_daemonsets=external_api.query_raw_daemon_sets(),
-        raw_statefulsets=external_api.query_raw_statefulsets(),
-        raw_replica_sets=external_api.query_raw_replica_sets(),
-        node_to_kubelet_health={
-            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        },
-        api_health=raw_api.query_api_health(),
-        raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        ],
-    )
-
-
 def query_raw_api_data_v2(
-    batch_api: BatchAPI,
     core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
-) -> UnparsedAPIData[JSONStatefulSetList]:
-    raw_nodes = raw_api.query_raw_nodes()
+    apps_api: AppsAPI,
+    client_batch_api: ClientBatchAPI,
+    client_core_api: ClientCoreAPI,
+    client_apps_api: ClientAppsAPI,
+    query_kubelet_endpoints: bool,
+) -> UnparsedAPIData:
+    raw_nodes = core_api.query_raw_nodes()
+    node_names = [raw_node["metadata"]["name"] for raw_node in raw_nodes["items"]]
     return UnparsedAPIData(
-        raw_jobs=batch_api.query_raw_jobs(),
-        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
-        raw_pods=core_api.query_raw_pods(),
+        raw_jobs=client_batch_api.query_raw_jobs(),
+        raw_cron_jobs=client_batch_api.query_raw_cron_jobs(),
+        raw_pods=client_core_api.query_raw_pods(),
         raw_nodes=raw_nodes,
-        raw_namespaces=core_api.query_raw_namespaces(),
-        raw_resource_quotas=core_api.query_raw_resource_quotas(),
-        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
-        raw_deployments=external_api.query_raw_deployments(),
-        raw_daemonsets=external_api.query_raw_daemon_sets(),
-        raw_statefulsets=raw_api.query_raw_statefulsets(),
-        raw_replica_sets=external_api.query_raw_replica_sets(),
-        node_to_kubelet_health={
-            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        },
-        api_health=raw_api.query_api_health(),
-        raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        ],
+        raw_namespaces=client_core_api.query_raw_namespaces(),
+        raw_resource_quotas=client_core_api.query_raw_resource_quotas(),
+        raw_persistent_volume_claims=client_core_api.query_persistent_volume_claims(),
+        raw_persistent_volumes=client_core_api.query_persistent_volumes(),
+        raw_deployments=client_apps_api.query_raw_deployments(),
+        raw_daemonsets=client_apps_api.query_raw_daemon_sets(),
+        raw_statefulsets=apps_api.query_raw_statefulsets(),
+        raw_replica_sets=client_apps_api.query_raw_replica_sets(),
+        node_to_kubelet_health=core_api.query_kubelet_health(node_names),
+        api_health=core_api.query_api_health(),
+        raw_kubelet_open_metrics_dumps=core_api.query_kubelet_metrics(node_names)
+        if query_kubelet_endpoints
+        else [],
     )
-
-
-def statefulset_list_from_client(
-    statefulset_list: Sequence[client.V1StatefulSet],
-    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
-) -> Sequence[api.StatefulSet]:
-    return [
-        statefulset_from_client(
-            raw_statefulset, controller_to_pods.get(raw_statefulset.metadata.uid, [])
-        )
-        for raw_statefulset in statefulset_list
-    ]
 
 
 def parse_api_data(
@@ -424,8 +403,9 @@ def parse_api_data(
     raw_resource_quotas: Sequence[client.V1ResourceQuota],
     raw_deployments: Sequence[client.V1Deployment],
     raw_daemonsets: Sequence[client.V1DaemonSet],
-    raw_statefulsets: StatefulSets,
+    raw_statefulsets: JSONStatefulSetList,
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
+    raw_persistent_volumes: Sequence[client.V1PersistentVolume],
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
@@ -433,9 +413,6 @@ def parse_api_data(
     controllers_to_dependents: Mapping[str, Sequence[str]],
     git_version: api.GitVersion,
     kubelet_open_metrics_dumps: Sequence[str],
-    versioned_parse_statefulsets: Callable[
-        [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
-    ],
 ) -> APIData:
     """Parses the Kubernetes API to the format used"""
     job_uids = {raw_job.metadata.uid for raw_job in raw_jobs}
@@ -474,7 +451,7 @@ def parse_api_data(
         )
         for raw_job in raw_jobs
     ]
-    statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)
+    statefulsets = statefulset_list_from_json(raw_statefulsets, controller_to_pods)
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
     nodes = node_list_from_json(raw_nodes, node_to_kubelet_health)
     pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
@@ -500,6 +477,7 @@ def parse_api_data(
         nodes=nodes,
         pods=pods,
         persistent_volume_claims=persistent_volume_claims,
+        persistent_volumes=parse_obj_as(list[api.PersistentVolume], raw_persistent_volumes),
         kubelet_open_metrics=[
             kubelet_metric_sample
             for dump in kubelet_open_metrics_dumps
@@ -510,69 +488,22 @@ def parse_api_data(
     )
 
 
-def create_api_data_v1(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
-    git_version: api.GitVersion,
-) -> APIData:
-    raw_api_data = query_raw_api_data_v1(
-        batch_api,
-        core_api,
-        raw_api,
-        external_api,
-    )
-    object_to_owners = parse_object_to_owners(
-        workload_resources_client=itertools.chain(
-            raw_api_data.raw_pods,
-            raw_api_data.raw_deployments,
-            raw_api_data.raw_daemonsets,
-            raw_api_data.raw_statefulsets,
-            raw_api_data.raw_replica_sets,
-            raw_api_data.raw_cron_jobs,
-            raw_api_data.raw_jobs,
-        ),
-        workload_resources_json=(),
-    )
-    controller_to_pods, pod_to_controllers = map_controllers(
-        raw_api_data.raw_pods,
-        object_to_owners=object_to_owners,
-    )
-    return parse_api_data(
-        raw_api_data.raw_cron_jobs,
-        raw_api_data.raw_pods,
-        raw_api_data.raw_jobs,
-        raw_api_data.raw_nodes,
-        raw_api_data.raw_namespaces,
-        raw_api_data.raw_resource_quotas,
-        raw_api_data.raw_deployments,
-        raw_api_data.raw_daemonsets,
-        raw_api_data.raw_statefulsets,
-        raw_api_data.raw_persistent_volume_claims,
-        raw_api_data.node_to_kubelet_health,
-        raw_api_data.api_health,
-        controller_to_pods,
-        pod_to_controllers,
-        map_controllers_top_to_down(object_to_owners),
-        git_version,
-        kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
-        versioned_parse_statefulsets=statefulset_list_from_client,
-    )
-
-
 def create_api_data_v2(
-    batch_api: BatchAPI,
     core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
+    apps_api: AppsAPI,
+    client_batch_api: ClientBatchAPI,
+    client_core_api: ClientCoreAPI,
+    client_apps_api: ClientAppsAPI,
     git_version: api.GitVersion,
+    query_kubelet_endpoints: bool,
 ) -> APIData:
     raw_api_data = query_raw_api_data_v2(
-        batch_api,
         core_api,
-        raw_api,
-        external_api,
+        apps_api,
+        client_batch_api,
+        client_core_api,
+        client_apps_api,
+        query_kubelet_endpoints,
     )
     object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
@@ -601,6 +532,7 @@ def create_api_data_v2(
         raw_api_data.raw_daemonsets,
         raw_api_data.raw_statefulsets,
         raw_api_data.raw_persistent_volume_claims,
+        raw_api_data.raw_persistent_volumes,
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,
@@ -608,40 +540,36 @@ def create_api_data_v2(
         map_controllers_top_to_down(object_to_owners),
         git_version,
         kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
-        versioned_parse_statefulsets=statefulset_list_from_json,
     )
 
 
-def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> APIData:
+def from_kubernetes(
+    client_config: query.APISessionConfig,
+    logger: logging.Logger,
+    query_kubelet_endpoints: bool,
+) -> APIData:
     """
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
-    batch_api = BatchAPI(api_client, timeout)
-    core_api = CoreAPI(api_client, timeout)
-    raw_api = RawAPI(api_client, timeout)
-    external_api = AppsAPI(api_client, timeout)
+    deserizalizer = Deserializer()
+    api_client_requests = query.make_api_client_requests(client_config, logger)
+    client_batch_api = ClientBatchAPI(client_config, api_client_requests, deserizalizer)
+    client_core_api = ClientCoreAPI(client_config, api_client_requests, deserizalizer)
+    client_apps_api = ClientAppsAPI(client_config, api_client_requests, deserizalizer)
 
-    raw_version = raw_api.query_raw_version()
+    core_api = CoreAPI(client_config, api_client_requests)
+    apps_api = AppsAPI(client_config, api_client_requests)
+    raw_version = core_api.query_raw_version()
     version = version_from_json(raw_version)
     _verify_version_support(version)
 
-    if isinstance(version, api.UnknownKubernetesVersion) or (version.major, version.minor) in {
-        (1, 21),
-        (1, 22),
-    }:
-        return create_api_data_v1(
-            batch_api,
-            core_api,
-            raw_api,
-            external_api,
-            version.git_version,
-        )
-
     return create_api_data_v2(
-        batch_api,
         core_api,
-        raw_api,
-        external_api,
+        apps_api,
+        client_batch_api,
+        client_core_api,
+        client_apps_api,
         version.git_version,
+        query_kubelet_endpoints,
     )

@@ -1,0 +1,32 @@
+Title: Agent controller: Changes in the output format of the status command
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1681391442
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk is only incompatible for users who process the json output of the agent controller status
+command (<tt>cmk-agent-ctl status --json</tt>). For all other users, this werk is purely
+informational.
+
+The human-readable output of the status command has changed as follows:
+
+LI: The section about the remote status of a connection does not report `Registration state: operational` anymore, since this was redundant information. If the host is registered, we now simply report hostname and connection mode.
+LI: If the host is not registered anymore at the monitoring site, we now report `Not registered`. Before, the controller reported a 404 error with a description stating that the host is not registered.
+
+These changes are also reflected in the new json schema for the remote status, which reads
+
+C+:
+{"status": "Registered", "hostname": "...", "connection_mode": "..."}
+C-:
+
+for registered hosts and
+
+C+:
+{"status":"NotRegistered"}
+C-:
+
+for hosts which are not registered.

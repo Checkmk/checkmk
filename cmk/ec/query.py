@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import operator
 from collections.abc import Callable, Sequence
 from logging import Logger
 from typing import Any, Literal
@@ -35,7 +36,6 @@ class Query:
         raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
-        super().__init__()
         self.output_format = "python"
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
@@ -60,11 +60,11 @@ OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
 # around that somehow: We either duplicate the operator names below or we introduce a case in
 # operator_for(). We're choosing evil no. 1... :-/
 _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
-    "=": ("=", lambda a, b: a == b),
-    ">": (">", lambda a, b: a > b),
-    "<": ("<", lambda a, b: a < b),
-    ">=": (">=", lambda a, b: a >= b),
-    "<=": ("<=", lambda a, b: a <= b),
+    "=": ("=", operator.eq),
+    ">": (">", operator.gt),
+    "<": ("<", operator.lt),
+    ">=": (">=", operator.ge),
+    "<=": ("<=", operator.le),
     "~": ("~", lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
     "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),

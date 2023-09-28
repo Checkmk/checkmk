@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.site import omd_site
+from cmk.utils.urls import is_allowed_url
 
-import cmk.gui.pages
-import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageRegistry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 
 
-@cmk.gui.pages.register("index")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("index", page_index)
+
+
 def page_index() -> None:
     # Redirect to mobile GUI if we are a mobile device and the index is requested
     if is_mobile(request, response):
@@ -32,7 +35,7 @@ def page_index() -> None:
 
 def _get_start_url() -> str:
     default_start_url = user.start_url or active_config.start_url
-    if not utils.is_allowed_url(default_start_url):
+    if not is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 
     return request.get_url_input("start_url", default_start_url)

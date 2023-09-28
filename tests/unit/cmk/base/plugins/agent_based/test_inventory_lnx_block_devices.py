@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_lnx_block_devices import (
     inventory_lnx_block_devices,
     parse_lnx_block_devices,
@@ -47,7 +49,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_lnx_block_devices(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_lnx_block_devices(string_table: StringTable, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_lnx_block_devices(parse_lnx_block_devices(string_table))
     ) == sort_inventory_result(expected_result)

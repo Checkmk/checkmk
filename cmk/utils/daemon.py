@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import sys
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import cmk.utils.store as store
@@ -94,10 +94,8 @@ def _cleanup_locked_pid_file(path: Path) -> None:
 
     store.release_lock(str(path))
 
-    try:
+    with suppress(OSError):
         path.unlink()
-    except OSError:
-        pass
 
 
 @contextmanager

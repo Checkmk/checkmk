@@ -1,10 +1,10 @@
-title: HP Web Management: Status
+title: HPE Web Management: Status
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the overall health status of various HP devices.
+ This check monitors the overall health status of various HPE devices.
 
  The check status is directly relayed from the device, with both "critical"
  and "non-recoverable" device statuses translating to {CRIT}

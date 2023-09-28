@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -39,7 +39,7 @@ class DisplayOptions:
     S = "S"  # The playing of alarm sounds (on critical and warning services)
     U = "U"  # Load persisted user row selections
     I = "I"  # All hyperlinks pointing to other views
-    X = "X"  # All other hyperlinks (pointing to external applications like PNP, WATO or others)
+    X = "X"  # All other hyperlinks (pointing to external applications like PNP, Setup or others)
     M = "M"  # If this option is not set, then all hyperlinks are targeted to the HTML frame
     # with the name main. This is useful when using views as elements in the dashboard.
     L = "L"  # The column title links in multisite views

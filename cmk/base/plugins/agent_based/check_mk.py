@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from .agent_based_api.v1 import Attributes, HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
@@ -28,7 +27,7 @@ def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
     provided).
     """
 
-    section: dict[str, Optional[str]] = {}
+    section: dict[str, str | None] = {}
 
     for line in string_table:
         key = line[0][:-1].lower()

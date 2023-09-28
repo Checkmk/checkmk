@@ -33,12 +33,11 @@ access the metrics of all configured sites.
 Project infrastructure
 ======================
 
-The connector is a pure `GitHub project <https://github.com/tribe29/grafana-checkmk-datasource>`_.
+The connector is a pure `GitHub project <https://github.com/checkmk/grafana-checkmk-datasource>`_.
 Issues and pull requests are managed on GitHub and also related CI jobs are
 built as GitHub actions.
 
 See also
 --------
 - `User manual: Integrating Checkmk in Grafana <https://docs.checkmk.com/master/en/grafana.html>`_
-- `Github repository <https://github.com/tribe29/grafana-checkmk-datasource>`_
-
+- `Github repository <https://github.com/checkmk/grafana-checkmk-datasource>`_

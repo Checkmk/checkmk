@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 import time
-from typing import Mapping, Optional, Tuple
+from collections.abc import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -51,9 +51,7 @@ def discovery(section: DeploymentConditions) -> DiscoveryResult:
     yield Service()
 
 
-def condition_levels(
-    params: Mapping[str, VSResultAge], condition: str
-) -> Optional[Tuple[int, int]]:
+def condition_levels(params: Mapping[str, VSResultAge], condition: str) -> tuple[int, int] | None:
     if (levels := params.get(condition, "no_levels")) == "no_levels":
         return None
     return levels[1]
@@ -115,10 +113,10 @@ register.check_plugin(
     service_name="Condition",
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        available="no_levels",
-        progressing="no_levels",
-        replicafailure="no_levels",
-    ),
+    check_default_parameters={
+        "available": "no_levels",
+        "progressing": "no_levels",
+        "replicafailure": "no_levels",
+    },
     check_ruleset_name="kube_deployment_conditions",
 )

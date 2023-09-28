@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,9 +35,9 @@ def test_openapi_get_bi_rule_non_existing_id(
     )
 
 
-def test_openapi_get_bi_aggregation_non_existing_id(  # type:ignore[no-untyped-def]
+def test_openapi_get_bi_aggregation_non_existing_id(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-):
+) -> None:
     aut_user_auth_wsgi_app.get(
         base + "/domain-types/objects/bi_aggregation/abc",
         headers={"Accept": "application/json"},
@@ -542,8 +542,11 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
-def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled, set_config: SetConfig
+def test_get_aggregation_state_empty(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+    set_config: SetConfig,
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
@@ -568,8 +571,11 @@ def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
-def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled, set_config: SetConfig
+def test_get_aggregation_state_filter_names(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+    set_config: SetConfig,
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"

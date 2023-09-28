@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-
-npx --no tsc --noEmit
+set -e
+echo "Check typescript with tsconfig.json"
+npx --no tsc

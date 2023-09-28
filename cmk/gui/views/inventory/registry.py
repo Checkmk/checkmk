@@ -1,10 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any
 
-InventoryHintSpec = dict[str, Any]
+from typing_extensions import TypedDict
+
+
+class InventoryHintSpec(TypedDict, total=False):
+    title: Any
+    short: Any
+    icon: str
+    paint: str
+    view: str
+    keyorder: Sequence[str]
+    sort: Any
+    filter: Any
+    is_show_more: bool
+
+
 InventoryHintRegistry = dict[str, InventoryHintSpec]
 inventory_displayhints: InventoryHintRegistry = {}

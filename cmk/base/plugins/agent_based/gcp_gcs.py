@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -30,11 +30,10 @@ def discover(
     assets = gcp.validate_asset_section(section_gcp_assets, "gcs")
     for item, bucket in assets[ASSET_TYPE].items():
         data = bucket.resource_data
-        labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
-        labels.append(ServiceLabel("gcp/location", data["location"]))
-        labels.append(ServiceLabel("gcp/bucket/storageClass", data["storageClass"]))
-        labels.append(ServiceLabel("gcp/bucket/locationType", data["locationType"]))
-        labels.append(ServiceLabel("gcp/projectId", assets.project))
+        labels = [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data["labels"].items()]
+        labels.append(ServiceLabel("cmk/gcp/location", data["location"]))
+        labels.append(ServiceLabel("cmk/gcp/bucket/storageClass", data["storageClass"]))
+        labels.append(ServiceLabel("cmk/gcp/bucket/locationType", data["locationType"]))
         yield Service(item=item, labels=labels)
 
 
@@ -45,7 +44,10 @@ def check_gcp_gcs_requests(
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
-        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
+        "requests": gcp.MetricSpec(
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/api/request_count"),
+            gcp.MetricDisplaySpec(label="Requests", render_func=str),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
@@ -71,10 +73,14 @@ def check_gcp_gcs_network(
 ) -> CheckResult:
     metrics = {
         "net_data_sent": gcp.MetricSpec(
-            "storage.googleapis.com/network/sent_bytes_count", "Out", render.networkbandwidth
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/network/sent_bytes_count"),
+            gcp.MetricDisplaySpec(label="Out", render_func=render.networkbandwidth),
         ),
         "net_data_recv": gcp.MetricSpec(
-            "storage.googleapis.com/network/received_bytes_count", "In", render.networkbandwidth
+            gcp.MetricExtractionSpec(
+                metric_type="storage.googleapis.com/network/received_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="In", render_func=render.networkbandwidth),
         ),
     }
     yield from gcp.check(
@@ -101,10 +107,12 @@ def check_gcp_gcs_object(
 ) -> CheckResult:
     metrics = {
         "aws_bucket_size": gcp.MetricSpec(
-            "storage.googleapis.com/storage/total_bytes", "Bucket size", render.bytes
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/storage/total_bytes"),
+            gcp.MetricDisplaySpec(label="Bucket size", render_func=render.bytes),
         ),
         "aws_num_objects": gcp.MetricSpec(
-            "storage.googleapis.com/storage/object_count", "Objects", str
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/storage/object_count"),
+            gcp.MetricDisplaySpec(label="Objects", render_func=str),
         ),
     }
     yield from gcp.check(

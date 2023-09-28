@@ -1,0 +1,13 @@
+Title: Bring back some ALLNET IP-Sensoric services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674039927
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Due to changes and a small bug in the ALLNET IP-Sensoric API the temperature and pressure services have not been discovered.
+

@@ -1,1 +1,0 @@
-@7z\7z a -r -tzip wnx_log "%Public%\check_mk.*" 2> nul > nul

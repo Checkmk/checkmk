@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -37,22 +37,19 @@ service_namer = gcp.service_name_factory("Cloud SQL")
 ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 
-def _get_service_labels(
-    project: gcp.Project, service: gcp.GCPAsset, item: str
-) -> list[ServiceLabel]:
+def _get_service_labels(service: gcp.GCPAsset, item: str) -> list[ServiceLabel]:
     data = service.resource_data
     labels = (
-        [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
+        [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
         if "userLabels" in data["settings"]
         else []
     )
     labels.extend(
         [
-            ServiceLabel("gcp/location", service.location),
-            ServiceLabel("gcp/cloud_sql/name", item),
-            ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
-            ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
-            ServiceLabel("gcp/projectId", project),
+            ServiceLabel("cmk/gcp/location", service.location),
+            ServiceLabel("cmk/gcp/cloud_sql/name", item),
+            ServiceLabel("cmk/gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
+            ServiceLabel("cmk/gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
         ]
     )
     return labels
@@ -64,7 +61,7 @@ def discover(
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
     for item, service in assets[ASSET_TYPE].items():
-        labels = _get_service_labels(assets.project, service, item)
+        labels = _get_service_labels(service, item)
         yield Service(item=item, labels=labels)
 
 
@@ -86,10 +83,9 @@ def check_gcp_sql_status(
         return
     metrics = {
         "up": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/up",
-            "Up:",
-            lambda x: str(bool(x)),
-        ),
+            gcp.MetricExtractionSpec(metric_type="cloudsql.googleapis.com/database/up"),
+            gcp.MetricDisplaySpec(label="Up", render_func=lambda x: str(bool(x))),
+        )
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
     yield from gcp.generic_check(metrics, timeseries, {"up": None})
@@ -130,13 +126,13 @@ def check_gcp_sql_memory(
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
-        # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/memory/utilization",
-            "Memory",
-            render.percent,
-            scale=1e2,
-        ),
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/memory/utilization",
+                scale=1e2,  # percent render expects numbers range 0 to 100 and not fractions.
+            ),
+            gcp.MetricDisplaySpec(label="Memory", render_func=render.percent),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -162,8 +158,11 @@ def check_gcp_sql_cpu(
 ) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/cpu/utilization", "CPU", render.percent, scale=1e2
-        ),
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/cpu/utilization", scale=1e2
+            ),
+            gcp.MetricDisplaySpec(label="CPU", render_func=render.percent),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -189,19 +188,22 @@ def check_gcp_sql_network(
 ) -> CheckResult:
     metrics = {
         "net_data_recv": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/received_bytes_count",
-            "In",
-            render.networkbandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/network/received_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="In", render_func=render.networkbandwidth),
         ),
         "net_data_sent": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/sent_bytes_count",
-            "Out",
-            render.networkbandwidth,
+            gcp.MetricExtractionSpec(
+                "cloudsql.googleapis.com/database/network/sent_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Out", render_func=render.networkbandwidth),
         ),
         "connections": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/connections",
-            "Active connections",
-            str,
+            gcp.MetricExtractionSpec(
+                "cloudsql.googleapis.com/database/network/connections",
+            ),
+            gcp.MetricDisplaySpec(label="Active connections", render_func=str),
         ),
     }
     yield from gcp.check(
@@ -232,14 +234,20 @@ def check_gcp_sql_disk(
         return
 
     metrics = {
-        "utilization": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/utilization", "", str),
-        "read_ios": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/read_ops_count", "", str),
-        "write_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/write_ops_count", "", str
+        "utilization": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/utilization"
         ),
-        "capacity": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/quota", "", str),
-        "used_capacity": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/bytes_used", "", str
+        "read_ios": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/read_ops_count"
+        ),
+        "write_ios": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/write_ops_count",
+        ),
+        "capacity": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/quota",
+        ),
+        "used_capacity": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/bytes_used",
         ),
     }
 
@@ -317,7 +325,7 @@ def discover_gcp_sql_replication(
         ):
             continue
 
-        labels = _get_service_labels(assets.project, service, item)
+        labels = _get_service_labels(service, item)
         yield Service(item=item, labels=labels)
 
 
@@ -329,9 +337,10 @@ def check_gcp_sql_replication(
 ) -> CheckResult:
     metrics = {
         "replication_lag": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/replication/replica_lag",
-            "Replication lag",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/replication/replica_lag"
+            ),
+            gcp.MetricDisplaySpec(label="Replication lag", render_func=render.timespan),
         )
     }
     yield from gcp.check(

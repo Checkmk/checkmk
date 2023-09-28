@@ -1,0 +1,17 @@
+Title: omd_diskusage: Seemingly random crashes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689690127
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This fixes a seemingly random crash of the plugin <i>Checkmk: Site disk usage</i>.
+The plugin would crash if the <tt>du</tt> command on the sites home directory failed.
+
+We now rather omit the metric than crash in this case.
+
+

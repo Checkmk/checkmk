@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -248,7 +248,6 @@ def test_edit_builtin_alias(object_base: str, edit_userrole: Callable) -> None:
 def test_permission_change_when_builtin_changes(
     get_userrole: Callable, clone_userrole: Callable, edit_userrole: Callable, object_base: str
 ) -> None:
-
     admin_permissions = get_userrole(url=object_base + "admin").json["extensions"]["permissions"]
     guest_permissions = get_userrole(url=object_base + "guest").json["extensions"]["permissions"]
     user_permissions = get_userrole(url=object_base + "user").json["extensions"]["permissions"]

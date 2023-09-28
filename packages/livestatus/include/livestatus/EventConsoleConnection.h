@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,9 +6,11 @@
 #ifndef EventConsoleConnection_h
 #define EventConsoleConnection_h
 
-#include <asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>
+
+#include "asio/local/stream_protocol.hpp"
+
 class Logger;
 
 class EventConsoleConnection {
@@ -25,8 +27,8 @@ private:
     void check(asio::local::stream_protocol::iostream &stream,
                const std::string &what) const;
 
-    Logger *const _logger;
-    const std::string _path;
+    Logger *_logger;
+    std::string _path;
 };
 
 #endif  // EventConsoleConnection_h

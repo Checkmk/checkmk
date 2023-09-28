@@ -1,34 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
-
-checkname = 'mbg_lantime_ng_refclock'
-
-
-info = [['1',
-         '15',
-         '3',
-         '2',
-         '101',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         'not announced']]
+checkname = "mbg_lantime_ng_refclock"
 
 
-discovery = {'': [('1', None)], 'gps': []}
+info = [["1", "15", "3", "2", "101", "0", "0", "0", "0", "0", "not announced"]]
 
 
-checks = {'': [('1',
-                {},
-                [(1,
-                  'Type: tcr511, Usage: primary, State: not synchronized (TCT sync)',
-                  [])])]}
+discovery = {"": [("1", None)], "gps": []}
+
+
+checks = {
+    "": [("1", {}, [(1, "Type: tcr511, Usage: primary, State: not synchronized (TCT sync)", [])])]
+}

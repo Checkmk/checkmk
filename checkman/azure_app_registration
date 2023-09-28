@@ -1,0 +1,21 @@
+title: Microsoft Azure App Registration Secret
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors validity of an Microsoft Azure
+ app registration secret.
+ The state of the service is CRIT if the secret has
+ expired.
+
+ The levels for remaining time until expiry can be
+ configured in the rule "Credentials Expiration".
+
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The app and the secret name.
+
+discovery:
+ One service is created for each app registration secret.

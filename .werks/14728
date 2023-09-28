@@ -1,0 +1,20 @@
+Title: Netapp Volume Efficiency
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1677844134
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The Netapp Special Agent now monitors the logical used space of a volume.
+
+The logical used space includes unlike the physically used space the space savings
+due to deduplication, compression and compaction.
+
+For the saved space and logical used space metrics are generated which are
+displayed in a new graph called <b>Space savings</b>.
+
+To be able to use this feature the space enforcement of Netapp cannot be set to logical.
+

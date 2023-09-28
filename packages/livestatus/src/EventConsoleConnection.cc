@@ -1,24 +1,20 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #include "livestatus/EventConsoleConnection.h"
 
-#include <asio/basic_socket_streambuf.hpp>
-#include <asio/buffer.hpp>
-#include <asio/detail/impl/reactive_socket_service_base.ipp>
-#include <asio/error.hpp>
-#include <asio/error_code.hpp>
-#include <asio/local/stream_protocol.hpp>
-#include <asio/socket_base.hpp>
-#include <asio/system_error.hpp>
 #include <chrono>
 #include <ostream>
 #include <system_error>
 #include <thread>
 #include <utility>
 
+#include "asio/basic_socket.hpp"
+#include "asio/error.hpp"
+#include "asio/socket_base.hpp"
+#include "asio/system_error.hpp"
 #include "livestatus/Logger.h"
 
 using namespace std::chrono_literals;
@@ -31,7 +27,7 @@ EventConsoleConnection::~EventConsoleConnection() {
 }
 
 void EventConsoleConnection::run() {
-    asio::local::stream_protocol::endpoint ep(_path);
+    const asio::local::stream_protocol::endpoint ep(_path);
     // Attention, tricky timing-dependent stuff ahead: When we connect very
     // rapidly, a no_buffer_space (= ENOBUFS) error can happen. This is probably
     // caused by some internal asio Kung Fu, remapping EAGAIN to ENOBUFS, and
@@ -55,7 +51,7 @@ void EventConsoleConnection::run() {
     stream << std::nounitbuf;
     sendRequest(stream);
     stream.flush();
-    stream.rdbuf()->shutdown(asio::socket_base::shutdown_send);
+    stream.socket().shutdown(asio::socket_base::shutdown_send);
     check(stream, "send request");
 
     receiveReply(stream);

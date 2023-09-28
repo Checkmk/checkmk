@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Final, Literal
+from collections.abc import Container, Iterable, Mapping, Sequence
+from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict, Union
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
+from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
-from cmk.utils.store.host_storage import FolderAttributes
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    Contact,
-    ContactgroupName,
-    ContactName,
-    HostAddress,
-    HostgroupName,
-    HostName,
-    Ruleset,
-    ServicegroupName,
-    ServiceName,
-    TagConfigSpec,
-    TagsOfHosts,
-    TimeperiodSpecs,
-)
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
+from cmk.utils.servicename import ServiceName
+from cmk.utils.store.host_storage import ContactgroupName, FolderAttributesForBase
+from cmk.utils.structured_data import RawIntervalFromConfig
+from cmk.utils.tags import TagConfigSpec
+from cmk.utils.timeperiod import TimeperiodSpecs
+from cmk.utils.translations import TranslationOptions, TranslationOptionsSpec
 
-from cmk.snmplib.type_defs import SNMPCredentials
+from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
+
+from cmk.fetchers import IPMICredentials
+
+from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.checkengine.discovery import RediscoveryParameters
+from cmk.checkengine.exitspec import ExitSpec
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -33,20 +33,22 @@ from cmk.snmplib.type_defs import SNMPCredentials
 # TODO: Remove the duplication with cmk.base.config
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
 _NEGATE: Final = "@negate"  # negation in boolean lists
+_HostgroupName: TypeAlias = str
+_ServicegroupName: TypeAlias = str
 
 monitoring_core: Literal["nagios", "cmc"] = "nagios"
 mkeventd_enabled = False  # Set by OMD hook
 pnp4nagios_enabled = True  # Set by OMD hook
 # TODO: Is this one deprecated for a long time?
 agent_port = 6556
-agent_ports: Ruleset[int] = []
-agent_encryption: Ruleset[str | None] = []
-encryption_handling: Ruleset[object] = []
-agent_exclude_sections: Ruleset[object] = []
+agent_ports: list[RuleSpec[int]] = []
+agent_encryption: list[RuleSpec[str | None]] = []
+encryption_handling: list[RuleSpec[Mapping[str, str]]] = []
+agent_exclude_sections: list[RuleSpec[dict[str, str]]] = []
 # UDP ports used for SNMP
-snmp_ports: Ruleset[object] = []
+snmp_ports: list[RuleSpec[int]] = []
 tcp_connect_timeout = 5.0
-tcp_connect_timeouts: Ruleset[object] = []
+tcp_connect_timeouts: list[RuleSpec[float]] = []
 use_dns_cache = True  # prevent DNS by using own cache file
 delay_precompile = False  # delay Python compilation to Nagios execution
 restart_locking: Literal["abort", "wait"] | None = "abort"
@@ -57,9 +59,9 @@ check_max_cachefile_age = 0  # per default do not use cache files when checking
 cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
-piggyback_translation: Ruleset[object] = []
+piggyback_translation: list[RuleSpec[TranslationOptions]] = []
 # Ruleset for translating service descriptions
-service_description_translation: Ruleset[object] = []
+service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
 agent_simulator = False
@@ -86,53 +88,74 @@ snmp_backend_default: Literal["inline", "classic"] = "inline"
 use_inline_snmp: bool = True
 
 # Ruleset to enable specific SNMP Backend for each host.
-snmp_backend_hosts: Ruleset[object] = []
+snmp_backend_hosts: list[RuleSpec[object]] = []
 # Deprecated: Replaced by snmp_backend_hosts
-non_inline_snmp_hosts: Ruleset[object] = []
+non_inline_snmp_hosts: list[RuleSpec[object]] = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
-snmp_limit_oid_range: Ruleset[object] = []
+snmp_limit_oid_range: list[RuleSpec[tuple[str, Sequence[RangeLimit]]]] = []
 # Ruleset to customize bulk size
-snmp_bulk_size: Ruleset[object] = []
+snmp_bulk_size: list[RuleSpec[int]] = []
 snmp_default_community = "public"
-snmp_communities: Ruleset[object] = []
+snmp_communities: list[RuleSpec[SNMPCredentials]] = []
 # override the rule based configuration
-explicit_snmp_communities: dict[HostName, SNMPCredentials] = {}
-snmp_timing: Ruleset[object] = []
-snmp_character_encodings: Ruleset[object] = []
+explicit_snmp_communities: dict[HostName | HostAddress, SNMPCredentials] = {}
+snmp_timing: list[RuleSpec[SNMPTiming]] = []
+snmp_character_encodings: list[RuleSpec[str | None]] = []
 
 # Custom variables
 explicit_service_custom_variables: dict[tuple[HostName, ServiceName], dict[str, str]] = {}
 
 # Management board settings
 # Ruleset to specify management board settings
-management_board_config: Ruleset[object] = []
+management_board_config: list[RuleSpec[tuple[str, SNMPCredentials | IPMICredentials]]] = []
 # Mapping from hostname to management board protocol
 management_protocol: dict[HostName, Literal["snmp", "ipmi"]] = {}
 # Mapping from hostname to SNMP credentials
 management_snmp_credentials: dict[HostName, SNMPCredentials] = {}
 # Mapping from hostname to IPMI credentials
-management_ipmi_credentials: dict[HostName, dict[str, str]] = {}
+management_ipmi_credentials: dict[HostName, IPMICredentials] = {}
 # Ruleset to specify whether or not to use bulkwalk
-management_bulkwalk_hosts: Ruleset[object] = []
+management_bulkwalk_hosts: list[RuleSpec[bool]] = []
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation: Literal["terse", "full"] | None = None
 # Rule for per-host configuration of RRDs
-cmc_host_rrd_config: Ruleset[object] = []
+cmc_host_rrd_config: list[RuleSpec[Any]] = []
 # Rule for per-service configuration of RRDs
-cmc_service_rrd_config: Ruleset[object] = []
+
+
+class _RRDConfig(TypedDict):
+    """RRDConfig
+    This typing might not be complete or even wrong, feel free to improve"""
+
+    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
+    rras: list[tuple[float, int, int]]
+    step: int
+    format: Literal["pnp_multiple", "cmc_single"]
+
+
+cmc_service_rrd_config: list[RuleSpec[_RRDConfig]] = []
 
 # Inventory and inventory checks
 inventory_check_interval: int | None = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
-inv_retention_intervals: Ruleset[object] = []
+inv_retention_intervals: list[RuleSpec[Sequence[RawIntervalFromConfig]]] = []
 # TODO: Remove this already deprecated option
 always_cleanup_autochecks = None  # For compatiblity with old configuration
 
-periodic_discovery: Ruleset[object] = []
+
+class _PeriodicDiscovery(TypedDict):
+    severity_unmonitored: SupportsInt
+    severity_vanished: SupportsInt
+    severity_new_host_label: SupportsInt
+    check_interval: SupportsInt
+    inventory_rediscovery: RediscoveryParameters
+
+
+periodic_discovery: list[RuleSpec[_PeriodicDiscovery]] = []
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
@@ -157,27 +180,26 @@ tag_config: TagConfigSpec = {
     "aux_tags": [],
     "tag_groups": [],
 }
-checks: Ruleset[object] = []
-static_checks: dict[str, Ruleset[object]] = {}
-check_parameters: Ruleset[object] = []
-checkgroup_parameters: dict[str, Ruleset[object]] = {}
+static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
+check_parameters: list[RuleSpec[Any]] = []
+checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
 # for HW/SW-Inventory
-inv_parameters: dict[str, Ruleset[object]] = {}
+inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # WATO variant for fully formalized checks
-active_checks: dict[str, Ruleset[object]] = {}
+active_checks: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # WATO variant for datasource_programs
-special_agents: dict[str, Ruleset[object]] = {}
+special_agents: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # WATO variant for free-form custom checks without formalization
-custom_checks: Ruleset[object] = []
+custom_checks: list[RuleSpec[dict[Any, Any]]] = []
 all_hosts: list = []
 # store host tag config per host
 host_tags: TagsOfHosts = {}
 # store explicit host labels per host
 host_labels: dict[HostName, Labels] = {}
 # Assign labels via ruleset to hosts
-host_label_rules: Ruleset[dict[str, str]] = []
+host_label_rules: list[RuleSpec[Mapping[str, str]]] = []
 # Asssing labels via ruleset to services
-service_label_rules: Ruleset[dict[str, str]] = []
+service_label_rules: list[RuleSpec[Mapping[str, str]]] = []
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 # Map of hostnames to .mk files declaring the hosts (e.g. /wato/hosts.mk)
@@ -191,95 +213,112 @@ tcp_hosts: list = [
     # Match all those that don't have ping and don't have no-agent set
     (["!ping", "!no-agent"], _ALL_HOSTS),
 ]
+# cf. cmk.checkengine.checking.HostAgentConnectionMode, currently there seems to be no good way to
+# directly couple these two definitions
+# https://github.com/python/typing/issues/781
 cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
-bulkwalk_hosts: Ruleset[object] = []
-snmpv2c_hosts: Ruleset[object] = []
-snmp_without_sys_descr: Ruleset[object] = []
-snmpv3_contexts: Ruleset[object] = []
-usewalk_hosts: Ruleset[object] = []
+bulkwalk_hosts: list[RuleSpec[bool]] = []
+snmpv2c_hosts: list[RuleSpec[bool]] = []
+snmp_without_sys_descr: list[RuleSpec[bool]] = []
+snmpv3_contexts: list[RuleSpec[tuple[str | None, Sequence[str]]]] = []
+usewalk_hosts: list[RuleSpec[bool]] = []
 # use host name as ip address for these hosts
-dyndns_hosts: Ruleset[object] = []
-primary_address_family: Ruleset[object] = []
+dyndns_hosts: list[RuleSpec[bool]] = []
+primary_address_family: list[RuleSpec[object]] = []
 # exclude from inventory
 ignored_checktypes: list[str] = []
 # exclude from inventory
-ignored_services: Ruleset[object] = []
+ignored_services: list[RuleSpec[object]] = []
 # exclude from inventory
-ignored_checks: Ruleset[object] = []
-host_groups: Ruleset[object] = []
-service_groups: Ruleset[object] = []
-service_contactgroups: Ruleset[object] = []
+ignored_checks: list[RuleSpec[Container[str]]] = []
+host_groups: list[RuleSpec[str]] = []
+service_groups: list[RuleSpec[str]] = []
+service_contactgroups: list[RuleSpec[str]] = []
 # deprecated, will be removed soon.
-service_notification_periods: Ruleset[object] = []
+service_notification_periods: list[RuleSpec[object]] = []
 # deprecated, will be removed soon.
-host_notification_periods: Ruleset[object] = []
-host_contactgroups: Ruleset[object] = []
-parents: Ruleset[object] = []
-define_hostgroups: dict[HostgroupName, str] = {}
-define_servicegroups: dict[ServicegroupName, str] = {}
+host_notification_periods: list[RuleSpec[object]] = []
+host_contactgroups: list[RuleSpec[str]] = []
+parents: list[RuleSpec[str]] = []
+define_hostgroups: dict[_HostgroupName, str] = {}
+define_servicegroups: dict[_ServicegroupName, str] = {}
 define_contactgroups: dict[ContactgroupName, str] = {}
 contactgroup_members: dict[ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}
 # needed for WATO
 timeperiods: TimeperiodSpecs = {}
 clusters: dict[HostName, list[HostName]] = {}
-clustered_services: Ruleset[object] = []
+clustered_services: list[RuleSpec[object]] = []
 # new in 1.1.4
-clustered_services_of: dict = {}
+clustered_services_of: dict[HostAddress, Iterable[RuleSpec[object]]] = {}
 # new for 1.2.5i1 Wato Rule
-clustered_services_mapping: Ruleset[object] = []
-clustered_services_configuration: Ruleset[object] = []
-datasource_programs: Ruleset[object] = []
+clustered_services_mapping: list[RuleSpec[HostAddress]] = []
+clustered_services_configuration: list[
+    RuleSpec[Sequence[Mapping[str, Mapping[object, object]]]]
+] = []
+datasource_programs: list[RuleSpec[str]] = []
 service_dependencies: list = []
 # mapping from hostname to IPv4 address
-ipaddresses: dict[HostName, HostAddress] = {}
+ipaddresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to IPv6 address
-ipv6addresses: dict[HostName, HostAddress] = {}
+ipv6addresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to addtional IPv4 addresses
 additional_ipv4addresses: dict[HostName, list[HostAddress]] = {}
 # mapping from hostname to addtional IPv6 addresses
 additional_ipv6addresses: dict[HostName, list[HostAddress]] = {}
-only_hosts: Ruleset[object] | None = None
+only_hosts: list[RuleSpec[bool]] | None = None
 distributed_wato_site: str | None = None  # used by distributed WATO
 is_wato_slave_site = False
-extra_host_conf: dict[str, Ruleset[str]] = {}
+extra_host_conf: dict[str, list[RuleSpec[Any]]] = {}
 explicit_host_conf: dict[str, dict[HostName, Any]] = {}
-extra_service_conf: dict[str, Ruleset[object]] = {}
+extra_service_conf: dict[str, list[RuleSpec[int]]] = {}
 extra_nagios_conf = ""
 service_descriptions: dict[str, str] = {}
 # needed by WATO, ignored by Checkmk
 host_attributes: dict[HostName, dict[str, Any]] = {}
 # special parameters for host/PING check_command
-ping_levels: Ruleset[object] = []
+_PingLevels = dict[str, Union[int, tuple[float, float]]]
+ping_levels: list[RuleSpec[_PingLevels]] = []
 # alternative host check instead of check_icmp
-host_check_commands: Ruleset[object] = []
+_HostCheckCommand = Union[None, str, tuple[str, int | str]]
+host_check_commands: list[RuleSpec[_HostCheckCommand]] = []
 # time settings for piggybacked hosts
-piggybacked_host_files: Ruleset[object] = []
+piggybacked_host_files: list[RuleSpec[Mapping[str, object]]] = []
 # Rule for specifying CMK's exit status in case of various errors
-check_mk_exit_status: Ruleset[object] = []
+
+
+class _NestedExitSpec(ExitSpec, total=False):
+    overall: ExitSpec
+    individual: dict[str, ExitSpec]
+
+
+check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
-check_mk_agent_target_versions: Ruleset[object] = []
-check_periods: Ruleset[object] = []
-snmp_check_interval: Ruleset[object] = []
-snmp_exclude_sections: Ruleset[object] = []
+check_mk_agent_target_versions: list[RuleSpec[str]] = []
+check_periods: list[RuleSpec[str]] = []
+snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
+snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
-notification_parameters: dict[str, Ruleset[object]] = {}
+notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 use_new_descriptions_for: list[CheckPluginNameStr] = []
 # Custom user icons / actions to be configured
-host_icons_and_actions: Ruleset[object] = []
+host_icons_and_actions: list[RuleSpec[str]] = []
 # Custom user icons / actions to be configured
-service_icons_and_actions: Ruleset[object] = []
+service_icons_and_actions: list[RuleSpec[str]] = []
 # Match all ruleset to assign custom service attributes
-custom_service_attributes: Ruleset[object] = []
+custom_service_attributes: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Assign tags to services
-service_tag_rules: Ruleset[object] = []
+service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 
 # Rulesets for agent bakery
-agent_config: dict[str, Ruleset[object]] = {}
+agent_config: dict[str, list[RuleSpec[Any]]] = {}
+agent_bakery_logging: int | None = None
 bake_agents_on_restart = False
-folder_attributes: dict[str, FolderAttributes] = {}
+apply_bake_revision = False
+folder_attributes: dict[str, FolderAttributesForBase] = {}
 
 # BEGIN Kept for compatibility, but are deprecated and not used anymore
+inv_exports: dict = {}  # Rulesets for inventory export hooks
 extra_summary_host_conf: dict = {}
 extra_summary_service_conf: dict = {}
 summary_host_groups: list = []
@@ -294,11 +333,10 @@ non_aggregated_hosts: list = []
 aggregate_check_mk = False
 aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multiline"
 aggr_summary_hostname = "%s-s"
-legacy_checks: Ruleset[object] = []
 # END Kept for compatibility
 
-status_data_inventory: Ruleset[object] = []
-logwatch_rules: Ruleset[object] = []
+status_data_inventory: list[RuleSpec[object]] = []
+logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
-automatic_host_removal: Ruleset[object] = []
+automatic_host_removal: list[RuleSpec[object]] = []

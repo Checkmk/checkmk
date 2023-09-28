@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict
+from typing import Any
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 from .utils import docker
 
-Section = Dict[str, Any]
+Section = dict[str, Any]
 
 
 def parse_docker_node_network(string_table: StringTable) -> Section:
@@ -23,9 +23,7 @@ register.agent_section(
 
 
 def inventory_docker_node_network(section: Section) -> InventoryResult:
-
     for network_id, network in section.items():
-
         network_name = network["Name"]
         network_path = ["software", "applications", "docker", "networks", network_name]
         container_path = network_path + ["containers"]

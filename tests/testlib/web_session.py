@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ import urllib.parse
 from collections.abc import Collection, Container
 
 import requests
-from bs4 import BeautifulSoup  # type: ignore[import]
+from bs4 import BeautifulSoup
 
 
 class APIError(Exception):
@@ -21,9 +21,9 @@ logger = logging.getLogger()
 
 
 class CMKWebSession:
-    def __init__(self, site) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
-        self.transids: list = []
+        self.transids: list[str] = []
         # Resources are only fetched and verified once per session
         self.verified_resources: set = set()
         self.site = site
@@ -34,18 +34,19 @@ class CMKWebSession:
         if expected_target:
             if response.headers["Location"] != expected_target:
                 raise AssertionError(
-                    "REDIRECT FAILED: '%s' != '%s'"
-                    % (response.headers["Location"], expected_target)
+                    "REDIRECT FAILED: '{}' != '{}'".format(
+                        response.headers["Location"], expected_target
+                    )
                 )
             assert response.headers["Location"] == expected_target
 
-    def get(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
+    def get(self, *args, **kwargs) -> requests.Response:  # type: ignore[no-untyped-def]
         return self.request("get", *args, **kwargs)
 
-    def post(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
+    def post(self, *args, **kwargs) -> requests.Response:  # type: ignore[no-untyped-def]
         return self.request("post", *args, **kwargs)
 
-    def request(  # type:ignore[no-untyped-def]
+    def request(  # type: ignore[no-untyped-def]
         self,
         method: str | bytes,
         path: str,
@@ -172,8 +173,8 @@ class CMKWebSession:
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
 
-    def _find_resource_urls(  # type:ignore[no-untyped-def]
-        self, tag: str, attribute, soup: BeautifulSoup, filters: Collection | None = None
+    def _find_resource_urls(
+        self, tag: str, attribute: str, soup: BeautifulSoup, filters: Collection | None = None
     ) -> list:
         urls = []
 
@@ -207,7 +208,7 @@ class CMKWebSession:
                 "_login": "Login",
             },
         )
-        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)
+        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)  # type: ignore[no-untyped-call]
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 

@@ -1,0 +1,25 @@
+Title: Reduce permission questions during "omd update"
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1682497902
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When executing "omd update" with old sites that have been running with various older stable versions,
+the permissions of some directories may not be as we expect. Instead of asking user for confirmation
+we now enforce the new default permissions to be applied.
+
+This change affects these directories:
+
+<ul>
+<li>etc/check_mk/multisite.d</li>
+<li>etc/check_mk/conf.d</li>
+<li>etc/check_mk/conf.d/wato</li>
+<li>local/share/nagvis/htdocs/userfiles/images/maps</li>
+<li>local/share/nagvis/htdocs/userfiles/images/shapes</li>
+<li>etc/ssl/private</li>
+<li>etc/ssl/certs</li>
+</ul>

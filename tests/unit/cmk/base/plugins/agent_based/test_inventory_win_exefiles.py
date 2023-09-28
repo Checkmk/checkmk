@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ import time
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_win_exefiles import (
     inventory_win_exefiles,
     parse_win_exefiles,
@@ -38,9 +39,9 @@ _INSTALLED_DATE = 123
                     path=["software", "packages"],
                     key_columns={
                         "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                     },
                     inventory_columns={
-                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                         "package_type": "exe",
                         "install_date": _INSTALLED_DATE,
                         "size": 1662840,
@@ -68,9 +69,9 @@ _INSTALLED_DATE = 123
                     path=["software", "packages"],
                     key_columns={
                         "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                     },
                     inventory_columns={
-                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                         "package_type": "exe",
                         "install_date": _INSTALLED_DATE,
                         "size": 1662840,
@@ -98,9 +99,9 @@ _INSTALLED_DATE = 123
                     path=["software", "packages"],
                     key_columns={
                         "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                     },
                     inventory_columns={
-                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                         "package_type": "exe",
                         "install_date": _INSTALLED_DATE,
                         "size": 1662840,
@@ -128,9 +129,9 @@ _INSTALLED_DATE = 123
                     path=["software", "packages"],
                     key_columns={
                         "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                     },
                     inventory_columns={
-                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
                         "package_type": "exe",
                         "install_date": _INSTALLED_DATE,
                         "size": 1662840,
@@ -142,10 +143,66 @@ _INSTALLED_DATE = 123
                 )
             ],
         ),
+        (
+            [
+                [
+                    "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin\\ARCGIS.exe",
+                    "05/28/2013 19:17:22",
+                    "1662840",
+                    "ARCGIS daemon",
+                    "",
+                    "",
+                ],
+                [
+                    "C:\\Program Files (x86)\\ArcGIS\\License10.5\\bin\\ARCGIS.exe",
+                    "05/28/2013 19:17:22",
+                    "1662840",
+                    "ARCGIS daemon",
+                    "",
+                    "",
+                ],
+            ],
+            [
+                TableRow(
+                    path=["software", "packages"],
+                    key_columns={
+                        "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.2\\bin",
+                    },
+                    inventory_columns={
+                        "package_type": "exe",
+                        "install_date": _INSTALLED_DATE,
+                        "size": 1662840,
+                        "version": "",
+                        "summary": "ARCGIS daemon",
+                        "vendor": "",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "packages"],
+                    key_columns={
+                        "name": "ARCGIS.exe",
+                        "path": "C:\\Program Files (x86)\\ArcGIS\\License10.5\\bin",
+                    },
+                    inventory_columns={
+                        "package_type": "exe",
+                        "install_date": _INSTALLED_DATE,
+                        "size": 1662840,
+                        "version": "",
+                        "summary": "ARCGIS daemon",
+                        "vendor": "",
+                    },
+                    status_columns={},
+                ),
+            ],
+        ),
     ],
 )
-def test_inventory_win_exefiles(  # type:ignore[no-untyped-def]
-    monkeypatch, string_table, expected_result
+def test_inventory_win_exefiles(
+    monkeypatch: pytest.MonkeyPatch,
+    string_table: StringTable,
+    expected_result: InventoryResult,
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(

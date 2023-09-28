@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Prometheus Build Check"""
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-Section = Dict[str, Any]
+Section = dict[str, Any]
 
 
-def parse_prometheus_build(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_prometheus_build(string_table: type_defs.StringTable) -> Section | None:
     section = {}
     try:
         prometheus_section = json.loads(string_table[0][0])

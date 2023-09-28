@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -21,8 +21,9 @@ namespace mk {
 std::string unsafe_tolower(const std::string &str);
 std::string unsafe_toupper(const std::string &str);
 
-bool starts_with(std::string_view input, std::string_view test);
-bool ends_with(std::string_view input, std::string_view test);
+std::string replace_chars(const std::string &str,
+                          const std::string &chars_to_replace,
+                          char replacement);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
 
@@ -73,11 +74,16 @@ std::string replace_first(const std::string &str, const std::string &from,
 
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to);
-
 std::string from_multi_line(const std::string &str);
 std::string to_multi_line(const std::string &str);
 
 std::string ipv4ToString(in_addr_t ipv4_address);
+namespace ec {
+bool is_none(const std::string &str);
+std::vector<std::string> split_list(const std::string &str);
+}  // namespace ec
+
+bool is_utf8(std::string_view s);
 }  // namespace mk
 
 template <size_t N>

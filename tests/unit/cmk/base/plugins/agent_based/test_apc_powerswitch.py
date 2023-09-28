@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,29 +31,30 @@ def test_discover_apc_powerswitch() -> None:
 
 
 def test_discover_apc_powerswitch_no_items() -> None:
-    assert list(discover_apc_powerswitch({})) == []
+    assert not list(discover_apc_powerswitch({}))
 
 
 def test_check_apc_powerswitch_item_not_found() -> None:
-    assert (
-        list(
-            check_apc_powerswitch(
-                item="Not there",
-                section=parse_apc_powerswitch(STRING_TABLE),
-            )
+    assert not list(
+        check_apc_powerswitch(
+            item="Not there",
+            section=parse_apc_powerswitch(STRING_TABLE),
         )
-        == []
     )
 
 
 def test_check_apc_powerswitch() -> None:
-    assert list(check_apc_powerswitch(item="1", section=parse_apc_powerswitch(STRING_TABLE),)) == [
+    assert list(
+        check_apc_powerswitch(
+            item="1",
+            section=parse_apc_powerswitch(STRING_TABLE),
+        )
+    ) == [
         Result(state=State.OK, summary="Port Rubrik rbot2 1-4 has status on"),
     ]
 
 
 def test_check_apc_powerswitch_empty_string_state() -> None:
-
     assert list(
         check_apc_powerswitch(
             item="24",
@@ -63,7 +64,6 @@ def test_check_apc_powerswitch_empty_string_state() -> None:
 
 
 def test_check_apc_powerswitch_unknown_state() -> None:
-
     assert list(check_apc_powerswitch(item="30", section=parse_apc_powerswitch(STRING_TABLE))) == [
         Result(
             state=State.UNKNOWN,

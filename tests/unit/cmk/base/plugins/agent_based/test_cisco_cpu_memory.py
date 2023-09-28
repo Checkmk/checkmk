@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -44,6 +44,7 @@ def test_discovery(section: Section) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_no_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem("Switch2 Supervisor 1 (virtual slot 11)", {}, section)
@@ -53,6 +54,7 @@ def test_check_no_levels(section: Section) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_used_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
@@ -67,6 +69,7 @@ def test_check_used_levels(section: Section) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_free_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import calendar
 import time
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -30,15 +31,19 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 KNOWN_RESOURCES_HEADERS = {"full list of resources:"}
-KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {"failed actions:", "failed resource actions:"}
+KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
+    "failed actions:",
+    "failed resource actions:",
+    "failed fencing actions:",
+}
 
 
 class _Cluster(NamedTuple):
     last_updated: str
-    dc: Optional[str]
-    num_nodes: Optional[int]
-    num_resources: Optional[int]
-    error: Optional[str]
+    dc: str | None
+    num_nodes: int | None
+    num_resources: int | None
+    error: str | None
 
 
 class _Resources(NamedTuple):
@@ -51,7 +56,7 @@ class Section(NamedTuple):
     resources: _Resources
 
 
-def _parse_for_error(first_line: str) -> Optional[str]:
+def _parse_for_error(first_line: str) -> str | None:
     if (
         first_line.lower().startswith(("critical", "error:"))
         or "connection to cluster failed" in first_line.lower()
@@ -145,7 +150,7 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
             # Clone set
             resource = _title(parts[2])
             resources[resource] = []
-            mode = "cloneset"
+            mode = "masterslaveset" if "(promotable)" in parts[-1] else "cloneset"
         elif line.startswith("Master/Slave Set:"):
             # Master/Slave set
             resource = _title(parts[2])
@@ -268,7 +273,7 @@ def _partition_string_table(iter_string_table, next_section_headers=None):
         yield _sanitise_line(line)
 
 
-def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
+def parse_heartbeat_crm(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
@@ -321,7 +326,6 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:
@@ -330,7 +334,7 @@ def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckRes
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
-    dt = calendar.timegm((time.strptime(last_updated, "%a %b %d %H:%M:%S %Y")))
+    dt = calendar.timegm(time.strptime(last_updated, "%a %b %d %H:%M:%S %Y"))
     now = time.time()
     delta = now - dt
     if delta > params["max_age"]:
@@ -422,27 +426,27 @@ def discover_heartbeat_crm_resources(
 
 def check_heartbeat_crm_resources(
     item: str,
-    params: Mapping[str, Optional[str]],
+    params: Mapping[str, str | None],
     section: Section,
 ) -> CheckResult:
     if (resources := section.resources.resources.get(item)) is None:
         return
 
-    if not len(resources):
+    if not resources:
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:
         yield Result(state=State.OK, summary=" ".join(resource))
 
         if len(resource) == 3 and resource[2] != "Started":
-            yield Result(state=State.CRIT, summary='Resource is in state "%s"' % (resource[2],))
+            yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
         elif (
             (target_node := params["expected_node"])
             and target_node != resource[3]
             and resource[1] != "Slave"
             and resource[1] != "Clone"
         ):
-            yield Result(state=State.CRIT, summary="Expected node: %s" % (target_node,))
+            yield Result(state=State.CRIT, summary=f"Expected node: {target_node}")
 
 
 register.check_plugin(

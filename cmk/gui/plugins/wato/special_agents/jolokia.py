@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, TextInput, Tuple
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _special_agents_jolokia_mk_jolokia_elements():
     return [
         (
             "port",
-            Integer(
+            NetworkPort(
                 title=_("TCP port for connection"),
                 default_value=8080,
                 minvalue=1,
@@ -94,7 +92,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jolokia(),
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:jolokia",
+        name=RuleGroup.SpecialAgents("jolokia"),
         valuespec=_valuespec_special_agents_jolokia,
     )
 )

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import register, SNMPTree, type_defs
 from .utils import if64, interfaces
@@ -41,8 +42,8 @@ register.snmp_section(
 
 
 def _add_admin_status_to_ifaces(
-    section_if64: if64.Section,
-    section_if64adm: Optional[If64AdmSection],
+    section_if64: interfaces.Section[interfaces.TInterfaceType],
+    section_if64adm: If64AdmSection | None,
 ) -> None:
     if section_if64adm is None or len(section_if64) != len(section_if64adm):
         return
@@ -52,8 +53,8 @@ def _add_admin_status_to_ifaces(
 
 def discover_if64(
     params: Sequence[Mapping[str, Any]],
-    section_if64: Optional[if64.Section],
-    section_if64adm: Optional[If64AdmSection],
+    section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
+    section_if64adm: If64AdmSection | None,
 ) -> type_defs.DiscoveryResult:
     if section_if64 is None:
         return
@@ -67,8 +68,8 @@ def discover_if64(
 def check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: Optional[if64.Section],
-    section_if64adm: Optional[If64AdmSection],
+    section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
+    section_if64adm: If64AdmSection | None,
 ) -> type_defs.CheckResult:
     if section_if64 is None:
         return
@@ -83,11 +84,10 @@ def check_if64(
 def cluster_check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: Mapping[str, Optional[if64.Section]],
-    section_if64adm: Mapping[str, Optional[If64AdmSection]],
+    section_if64: Mapping[str, interfaces.Section[interfaces.TInterfaceType] | None],
+    section_if64adm: Mapping[str, If64AdmSection | None],
 ) -> type_defs.CheckResult:
-
-    sections_w_admin_status: Dict[str, if64.Section] = {}
+    sections_w_admin_status: dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:
             _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])

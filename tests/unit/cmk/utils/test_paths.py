@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib import import_module_hack
 
@@ -37,7 +37,6 @@ _STR_PATHS: Final = {
     "data_source_cache_dir",
     "snmp_scan_cache_dir",
     "include_cache_dir",
-    "tmp_dir",
     "logwatch_dir",
     "nagios_objects_file",
     "nagios_command_pipe_path",
@@ -77,13 +76,15 @@ def _ignore(varname: str) -> bool:
 
 def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
     for var, value in namespace_dict.items():
-
         if _ignore(var):
             continue
 
         if var in _STR_PATHS:
             assert isinstance(value, str)
             assert value.startswith(root)
+            continue
+
+        if var == "cse_config_dir":
             continue
 
         assert isinstance(value, Path)

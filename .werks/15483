@@ -1,0 +1,17 @@
+Title: Fix missing metric history values on edit
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1682585847
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The metric history is or can be used in different places, e.g. the gauge
+dashlet or in columns of views.
+If you have used e.g. a column with "Service: Metric History" in a view and
+edited the view again, the default value was always shown.
+
+Note: The settings were stored correctly, this was just a display bug.
+

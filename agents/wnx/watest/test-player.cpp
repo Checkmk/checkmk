@@ -5,29 +5,29 @@
 
 #include <filesystem>
 
-#include "carrier.h"
-#include "cfg.h"
-#include "cfg_details.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "player.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/carrier.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cma_core.h"
+#include "wnx/read_file.h"
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
-    auto p = new wtools::SimplePipe();
+    auto p = new wtools::DirectPipe();
     EXPECT_TRUE(p->getRead() == nullptr);
     EXPECT_TRUE(p->getWrite() == nullptr);
     p->create();
     EXPECT_TRUE(p->getRead() != nullptr);
     EXPECT_TRUE(p->getWrite() != nullptr);
 
-    auto p2 = new wtools::SimplePipe();
+    auto p2 = new wtools::DirectPipe();
     EXPECT_TRUE(p2->getRead() == nullptr);
     EXPECT_TRUE(p2->getWrite() == nullptr);
     p2->create();
@@ -40,7 +40,7 @@ TEST(PlayerTest, Pipe) {
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     {
         std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
@@ -141,7 +141,7 @@ TEST(PlayerTest, All) {
     EXPECT_TRUE(box.processes_.size() == 3);
 }
 
-TEST(PlayerTest, RealLifeInventory_Long) {
+TEST(PlayerTest, RealLifeInventory_Simulation) {
     using namespace std::chrono;
     using namespace std;
     using namespace cma::cfg;

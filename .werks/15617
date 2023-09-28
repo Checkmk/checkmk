@@ -1,0 +1,16 @@
+Title: KUBE: Improve Validation of URLs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684915007
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this Werk, the rule <tt>Kubernetes</tt> will validate URLs more stringently. Specifically, the
+rules of RFC 3986 are applied. Some examples of URLs, which would previously be allowed:
+
+LI: http://::1
+LI: http://localhost!:8080
+LI: http://:8080

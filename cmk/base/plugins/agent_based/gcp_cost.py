@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -10,28 +10,26 @@ from dataclasses import dataclass
 from itertools import groupby
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, field_validator
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import gcp
+
+ProjectId = str
 
 
-@dataclass(frozen=True)
-class Cost:
+class Cost(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     month: datetime.datetime
     amount: float
     currency: str
+    project: str
 
+    @field_validator("month", mode="before")
     @classmethod
-    def from_dict(cls, data: Mapping[str, str | float]) -> "Cost":
-        month = data["month"]
-        amount = data["amount"]
-        currency = data["currency"]
-        assert isinstance(month, str)
-        assert isinstance(amount, float)
-        assert isinstance(currency, str)
-
-        date = datetime.datetime.strptime(month, "%Y%m")
-        return cls(month=date, amount=amount, currency=currency)
+    def parse_month(cls, value: str) -> datetime.datetime:
+        return datetime.datetime.strptime(value, "%Y%m")
 
     def to_details(self) -> str:
         return f"{self.month.strftime('%B %Y')}: {self.amount:.2f} {self.currency}"
@@ -39,30 +37,37 @@ class Cost:
 
 @dataclass(frozen=True)
 class ProjectCost:
+    project: str
     current_month: Cost
     previous_month: Cost | None
 
 
-Section = Mapping[gcp.Project, ProjectCost]
+Section = Mapping[ProjectId, ProjectCost]
 
 
 def keyfunc(x: Mapping[str, str]) -> str:
-    return x["project"]
+    return x["id"]
 
 
 def parse(string_table: StringTable) -> Section:
     query_month = datetime.datetime.strptime(json.loads(string_table[0][0])["query_month"], "%Y%m")
     all_rows = sorted([json.loads(line[0]) for line in string_table[1:]], key=keyfunc)
     section = {}
-    for project, rows in groupby(all_rows, key=keyfunc):
-        month_costs = sorted([Cost.from_dict(r) for r in rows], key=lambda c: c.month)
+    for project_id, rows in groupby(all_rows, key=keyfunc):
+        month_costs = sorted([Cost.model_validate(r) for r in rows], key=lambda c: c.month)
         if len(month_costs) > 1:
-            cost = ProjectCost(current_month=month_costs[1], previous_month=month_costs[0])
+            cost = ProjectCost(
+                current_month=month_costs[1],
+                previous_month=month_costs[0],
+                project=month_costs[0].project,
+            )
         else:
-            cost = ProjectCost(current_month=month_costs[0], previous_month=None)
+            cost = ProjectCost(
+                current_month=month_costs[0], previous_month=None, project=month_costs[0].project
+            )
         if cost.current_month.month != query_month:
             continue
-        section[project] = cost
+        section[project_id] = cost
 
     return section
 
@@ -90,7 +95,7 @@ def check(item: str, params: Mapping[str, Any], section: Section) -> CheckResult
     prev_month_details = f", {previous_month.to_details()}" if previous_month else ""
     yield Result(
         state=state,
-        summary=f"Cost: {current_month.amount} {current_month.currency}",
+        summary=f"Project: {current_month.project}, Cost: {current_month.amount} {current_month.currency}",
         details=f"{current_month.to_details()}{prev_month_details}",
     )
 

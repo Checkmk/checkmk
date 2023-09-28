@@ -1,0 +1,15 @@
+Title: Filters of 'list rulesets' endpoint have no effect
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675674268
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Using various filters of the 'list rules' endpoint (GET '/domain-types/ruleset/collections/all') had
+no effect on the result.
+This is no longer the case.
+With this fix, the originally intended default behavior of the parameter such as 'used' and 'deprecated' are now
+respected and the endpoint returns only used rules unless specified otherwise.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,20 +9,21 @@ of the dashboard to render is given in the HTML variable 'name'.
 
 import copy
 import json
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.crash_handler as crash_handler
 import cmk.gui.pages
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
+from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -41,15 +42,16 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML, HTMLInput
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import get_permitted_views
+from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 from .breadcrumb import dashboard_breadcrumb
@@ -104,7 +106,7 @@ def _get_default_dashboard_name() -> str:
     They will see the dashboard that has been built for operators and is built to show only the host
     and service problems that are relevant for the user.
     """
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return "main"  # problems = main in raw edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
@@ -280,9 +282,9 @@ def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
 
 def _render_dashlet(
     board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
-) -> tuple[str | HTML, HTMLInput]:
-    content: HTMLInput = ""
-    title: str | HTML = ""
+) -> tuple[HTML | str, HTML | str]:
+    content: HTML | str = ""
+    title: HTML | str = ""
     missing_infos = visuals.missing_context_filters(
         set(board["mandatory_context_filters"]), board["context"]
     )
@@ -334,8 +336,8 @@ def _render_dashlet_content(
         return output_funnel.drain()
 
 
-def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
-    if isinstance(e, MKMissingDataError):
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | str:
+    if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
         return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):
@@ -395,10 +397,9 @@ def _fallback_dashlet(
 def _get_mandatory_filters(
     board: DashboardConfig, unconfigured_single_infos: set[str]
 ) -> Iterable[str]:
-
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
+        for info, _unused in visual_info_registry[info_key]().single_spec:
             yield info
 
     # Get required context filters set in the dashboard config
@@ -413,7 +414,6 @@ def _page_menu(
     unconfigured_single_infos: set[str],
     mode: str,
 ) -> PageMenu:
-
     html.close_ul()
     menu = PageMenu(
         dropdowns=[
@@ -465,8 +465,8 @@ def _page_menu(
     return menu
 
 
-def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-untyped-def]
-    if cmk_version.is_raw_edition():
+def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-untyped-def]
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:
         linked_dashboards = ["main", "problems", "checkmk"]
@@ -494,7 +494,6 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-un
 
 
 def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
-
     yield PageMenuTopic(
         title=_("Views"),
         entries=list(_dashboard_add_views_dashlet_entries(name)),
@@ -548,7 +547,7 @@ def _dashboard_edit_entries(
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         yield PageMenuEntry(
-            title=_("Clone builtin dashboard"),
+            title=_("Clone built-in dashboard"),
             icon_name="edit",
             item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
@@ -665,6 +664,7 @@ def _extend_display_dropdown(
     )
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
+    is_filter_set = request.var("filled_in") == "filter"
 
     display_dropdown.topics.insert(
         0,
@@ -673,7 +673,9 @@ def _extend_display_dropdown(
             entries=[
                 PageMenuEntry(
                     title=_("Filter"),
-                    icon_name="filter",
+                    icon_name={"icon": "filter", "emblem": "warning"}
+                    if is_filter_set
+                    else "filter",
                     item=PageMenuSidePopup(
                         visuals.render_filter_form(
                             info_list,
@@ -700,7 +702,7 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         # For the topology dashboard filters are retrieved from a corresponding view context.
         # This should not be needed here. Can't we load the context from the board as we usually do?
         if page_name == "topology":
-            _view, show_filters = get_topology_view_and_filters()
+            _context, show_filters = get_topology_context_and_filters()
             return {
                 f.ident: board["context"].get(f.ident, {}) for f in show_filters if f.available()
             }
@@ -708,22 +710,24 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
 
 
-def get_topology_view_and_filters() -> tuple[View, list[Filter]]:
+def get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
     view_name = "topology_filters"
-
     view_spec = get_permitted_views()[view_name]
     view = View(view_name, view_spec, view_spec.get("context", {}))
+    context = cmk.gui.visuals.active_context_from_request(
+        view.datasource.infos, view.spec["context"]
+    )
     filters = cmk.gui.visuals.filters_of_visual(
         view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
     )
     show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return view, show_filters
+    return context, show_filters
 
 
 @dataclass
 class PageMenuEntryCEEOnly(PageMenuEntry):
     def __post_init__(self) -> None:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             self.is_enabled = False
             self.disabled_tooltip = _("Enterprise feature")
 
@@ -751,7 +755,6 @@ def _dashboard_add_view_dashlet_link(
 
 
 def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title=_("New view"),
         icon_name="view",
@@ -790,7 +793,6 @@ def _dashboard_add_non_view_dashlet_link(
 
 
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Single metric graph",
         icon_name={
@@ -826,7 +828,6 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
 
 
 def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host state",
         icon_name="host_state",
@@ -859,7 +860,6 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
 
 
 def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host inventory",
         icon_name="inventory",
@@ -868,7 +868,6 @@ def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[Pa
 
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Average scatterplot",
         icon_name="scatterplot",
@@ -895,7 +894,6 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Site overview",
         icon_name="site_overview",
@@ -973,7 +971,6 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Alerts",
         icon_name={
@@ -1003,7 +1000,6 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
 
 
 def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title="Custom URL",
         icon_name="dashlet_url",
@@ -1073,7 +1069,7 @@ def get_dashlet_type(dashlet_spec: DashletConfig) -> type[Dashlet]:
     return dashlet_registry[dashlet_spec["type"]]
 
 
-def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: str | HTML) -> None:
+def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in

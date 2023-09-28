@@ -1,0 +1,15 @@
+Title: Fix "Match sites" only listing remote sites with enabled replication
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1677830230
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Since 2.0 the notification rule condition "Match sites" only listed remote
+sites if the site connection option "Enable replication" was set to "Push
+configuration to this site".
+

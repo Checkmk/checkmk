@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,24 +35,23 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
-from pathlib import Path
 
-import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
 
 
 def _auth_php():
-    return Path(cmk.utils.paths.var_dir) / "wato" / "auth" / "auth.php"
+    return wato_var_dir() / "auth" / "auth.php"
 
 
 def _create_php_file(callee, users, role_permissions, groups):
-    # Do not change WATO internal objects
+    # Do not change Setup internal objects
     nagvis_users = copy.deepcopy(users)
 
     for user in nagvis_users.values():

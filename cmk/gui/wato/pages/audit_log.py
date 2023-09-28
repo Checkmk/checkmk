@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Handling of the audit logfiles"""
 
-import re
 import time
 from collections.abc import Collection, Iterator
 
@@ -15,7 +14,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -27,15 +26,15 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -46,12 +45,16 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
-from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeAuditLog)
+
+
 class ModeAuditLog(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -64,7 +67,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
-        self._store = AuditLogStore(AuditLogStore.make_path())
+        self._store = AuditLogStore()
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self) -> str:
@@ -133,9 +136,10 @@ class ModeAuditLog(WatoMode):
                 title=_("Clear log"),
                 icon_name="delete",
                 item=make_simple_link(
-                    make_confirm_link(
+                    make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_action", "clear")]),
-                        message=_("Do you really want to clear the audit log?"),
+                        title=_("Clear audit log"),
+                        confirm_button=_("Clear"),
                     )
                 ),
             )
@@ -184,7 +188,7 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Hide details") if self._show_details else _("Show details"),
+                        title=_("Show details"),
                         icon_name="toggle_on" if self._show_details else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
@@ -437,7 +441,7 @@ class ModeAuditLog(WatoMode):
 
         for name, vs in self._audit_log_options():
 
-            def renderer(name=name, vs=vs) -> None:  # type:ignore[no-untyped-def]
+            def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
                 vs.render_input("options_" + name, self._options[name])
 
             html.render_floating_option(name, "single", vs.title(), renderer)
@@ -548,7 +552,7 @@ class ModeAuditLog(WatoMode):
                 self._options["display"][1],
             )
 
-        response.headers["Content-Disposition"] = 'attachment; filename="%s"' % filename
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
 
         titles = [
             _("Date"),
@@ -587,33 +591,12 @@ class ModeAuditLog(WatoMode):
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
-        return list(reversed([e for e in self._store.read() if self._filter_entry(e)]))
+        options: AuditLogFilterRaw = {
+            "object_type": self._options.get("object_type"),
+            "object_ident": self._options.get("object_ident"),
+            "user_id": self._options.get("user_id"),
+            "filter_regex": self._options.get("filter_regex"),
+        }
 
-    def _filter_entry(self, entry: AuditLogStore.Entry) -> bool:
-        if self._options["object_type"] != "":
-            if entry.object_ref is None and self._options["object_type"] is not None:
-                return False
-            if (
-                entry.object_ref
-                and entry.object_ref.object_type.name != self._options["object_type"]
-            ):
-                return False
-
-        if self._options["object_ident"] != "":
-            if entry.object_ref is None and self._options["object_ident"] is not None:
-                return False
-            if entry.object_ref and entry.object_ref.ident != self._options["object_ident"]:
-                return False
-
-        if self._options["user_id"] is not None:
-            if entry.user_id != self._options["user_id"]:
-                return False
-
-        filter_regex: str = self._options["filter_regex"]
-        if filter_regex:
-            return any(
-                re.search(filter_regex, val)
-                for val in [entry.user_id, entry.action, str(entry.text)]
-            )
-
-        return True
+        entries_filter = build_audit_log_filter(options)
+        return list(reversed(self._store.read(entries_filter)))

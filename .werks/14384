@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this Werk it was possible to inject livestatus commands in Checkmk's livestatus wrapper and python API.
 Attackers could add additional commands in the AuthUser query header using newline characters.
@@ -29,7 +29,7 @@ Review the logs of Nagios / CMC for suspicious commands.
 <b>Vulnerability Management</b>:
 We have rated the issue with a CVSS Score of 6.8 (Medium) with the following CVSS vector:
 <tt>CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:L</tt>.
-A CVE has been requested.
+We have assigned CVE-2022-47909 for this issue.
 
 <b>Changes</b>:
 This Werk adds sanitization for the AuthUser header field.

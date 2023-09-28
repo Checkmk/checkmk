@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,10 +31,12 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
-from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 
 
 class _IfInfo(NamedTuple):
@@ -44,10 +46,6 @@ class _IfInfo(NamedTuple):
 
 
 Section = Sequence[_IfInfo]
-
-
-INVENTORY_PATH = ["networking", "interfaces"]
-
 MAP_VLANS = {
     "1": "static",
     "2": "dynamic",
@@ -56,7 +54,6 @@ MAP_VLANS = {
 
 
 def _bitmask(raw: str) -> Sequence[int]:
-
     """
     >>> _bitmask("F")
     [1, 5, 6]
@@ -117,9 +114,9 @@ def _render_vlan_lists(vlans: Sequence[int]) -> str:
         if succ_vals and i - 1 in succ_vals[-1]:
             succ_vals[-1].add(i)
         else:
-            succ_vals.append(set((i,)))
+            succ_vals.append({i})
 
-    return ", ".join((str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals))
+    return ", ".join(str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals)
 
 
 def parse_inv_cisco_vlans(string_table: StringTable) -> Section:
@@ -145,14 +142,15 @@ register.snmp_section(
             "4",  # vmVlans
         ],
     ),
-    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    detect=DETECT_CISCO,
+    parse_function=parse_inv_cisco_vlans,
 )
 
 
 def inv_cisco_vlans(section: Section) -> InventoryResult:
     yield from (
         TableRow(
-            path=INVENTORY_PATH,
+            path=["networking", "interfaces"],
             key_columns={"index": if_info.id_},
             inventory_columns={
                 "vlans": if_info.vlans,

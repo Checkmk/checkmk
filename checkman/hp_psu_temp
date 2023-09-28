@@ -1,10 +1,10 @@
-title: HP Switches: Power Supply Temperature
+title: HPE Switches: Power Supply Temperature
 agents: SNMP
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the temperature of power supplies in HP switches.
+ This check monitors the temperature of power supplies in HPE switches.
 
  Upper and lower temperature levels are supported.
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 
 import pydantic
 from kubernetes import client  # type: ignore[import]
+from pydantic import ConfigDict
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
@@ -13,11 +14,10 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform_json import _metadata_no_namespace_from_json
 
 
-class NodeConditions(pydantic.BaseModel):
-    __root__: list[api.NodeCondition] | None
+class NodeConditions(pydantic.RootModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    root: list[api.NodeCondition] | None
 
 
 class TestAPINode:
@@ -43,7 +43,7 @@ class TestAPINode:
             "labels": labels,
             "annotations": annotations,
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.name == "k8"
         assert metadata.labels
         assert metadata.annotations == {
@@ -57,18 +57,18 @@ class TestAPINode:
             "creationTimestamp": "2021-05-04T09:01:13Z",
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
     def test_parse_metadata_datetime(self) -> None:
-        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
+        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.UTC)
         node_raw_metadata = {
             "name": "unittest",
             "creationTimestamp": now,
             "uid": "f57f3e64-2a89-11ec-bb97-3f4358ab72b2",
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:
@@ -88,7 +88,7 @@ class TestAPINode:
         client_node_info = core_client.api_client.deserialize(
             FakeResponse(node_info), "V1NodeSystemInfo"
         )
-        parsed_node_info = api.NodeInfo.from_orm(client_node_info)
+        parsed_node_info = api.NodeInfo.model_validate(client_node_info)
         assert isinstance(parsed_node_info, api.NodeInfo)
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
@@ -142,7 +142,7 @@ class TestAPINode:
         }
 
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions is not None
         assert len(conditions) == 5
         assert any(c.type_ == "DiskPressure" for c in conditions)
@@ -153,15 +153,15 @@ class TestAPINode:
     def test_parse_conditions_no_status(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"status": {}}  # type: ignore
+        node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions is None
 
     def test_parse_conditions_no_conditions(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"status": {"conditions": []}}  # type: ignore
+        node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions == []

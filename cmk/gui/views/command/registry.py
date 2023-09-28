@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,6 +33,7 @@ def register_legacy_command(spec: dict[str, Any]) -> None:
             "_spec": spec,
             "ident": property(lambda s: s._ident),
             "title": property(lambda s: s._spec["title"]),
+            "confirm_button": property(lambda s: s._spec.get("confirm_button", "Submit")),
             "permission": property(lambda s: permission_registry[s._spec["permission"]]),
             "tables": property(lambda s: s._spec["tables"]),
             "render": lambda s: s._spec["render"](),

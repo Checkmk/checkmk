@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.liebert_humidity_air import (
     check_liebert_humidity_air,
     discover_liebert_humidity_air,
     parse_liebert_humidity_air,
+    ParsedSection,
 )
+from cmk.base.plugins.agent_based.utils.liebert import SystemSection
 
 STRING_TABLE = [
     [
@@ -31,8 +40,8 @@ PARAMETERS = {
 }
 
 PARSED_SECTION = {
-    "Return Humidity": ["36.5", "% RH"],
-    "Cigar Humidity": ["Unavailable", "% RH"],
+    "Return Humidity": ("36.5", "% RH"),
+    "Cigar Humidity": ("Unavailable", "% RH"),
 }
 
 PARSED_EXTRA_SECTION = {
@@ -52,7 +61,7 @@ PARSED_EXTRA_SECTION = {
         ),
     ],
 )
-def test_parse_liebert_humidity_air(string_table, result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_liebert_humidity_air(string_table: list[StringTable], result: ParsedSection) -> None:
     parsed = parse_liebert_humidity_air(string_table)
     assert parsed == result
 
@@ -67,8 +76,8 @@ def test_parse_liebert_humidity_air(string_table, result) -> None:  # type:ignor
         )
     ],
 )
-def test_discover_liebert_humidity_air(  # type:ignore[no-untyped-def]
-    section, extra_section, result
+def test_discover_liebert_humidity_air(
+    section: ParsedSection | None, extra_section: SystemSection | None, result: DiscoveryResult
 ) -> None:
     discovered = list(discover_liebert_humidity_air(section, extra_section))
     assert discovered == result
@@ -105,8 +114,12 @@ def test_discover_liebert_humidity_air(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_liebert_humidity_air(  # type:ignore[no-untyped-def]
-    item, params, section, extra_section, result
+def test_check_liebert_humidity_air(
+    item: str,
+    params: Mapping[str, object],
+    section: ParsedSection | None,
+    extra_section: SystemSection | None,
+    result: CheckResult,
 ) -> None:
     checked = list(check_liebert_humidity_air(item, params, section, extra_section))
     assert checked == result

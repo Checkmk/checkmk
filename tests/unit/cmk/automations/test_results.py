@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,15 +7,19 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import HostLabel
+from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
-    CheckPreviewEntry,
-    DiscoveryResult,
     result_type_registry,
-    TryDiscoveryResult,
+    ServiceDiscoveryPreviewResult,
+    ServiceDiscoveryResult,
 )
+
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
 
@@ -23,10 +27,10 @@ from cmk.base.automations import automations
 def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
-    automations_missing = {"bake-agents"} if cmk_version.is_raw_edition() else set()
-    assert sorted(set(result_type_registry) - automations_missing) == sorted(
-        automations._automations
+    automations_missing = (
+        {"bake-agents"} if cmk_version.edition() is cmk_version.Edition.CRE else set()
     )
+    assert set(result_type_registry) - automations_missing == set(automations._automations)
 
 
 @dataclass
@@ -57,13 +61,13 @@ def test_serialization() -> None:
         },
     )
     assert automation_res_test == AutomationResultTest.deserialize(
-        automation_res_test.serialize(cmk_version.Version(cmk_version.__version__))
+        automation_res_test.serialize(cmk_version.Version.from_str(cmk_version.__version__))
     )
 
 
 class TestDiscoveryResult:
     HOSTS = {
-        "host_1": SingleHostDiscoveryResult(
+        HostName("host_1"): SingleHostDiscoveryResult(
             clustered_new=0,
             clustered_old=0,
             clustered_vanished=0,
@@ -76,7 +80,7 @@ class TestDiscoveryResult:
             self_total=0,
             self_total_host_labels=0,
         ),
-        "host_2": SingleHostDiscoveryResult(
+        HostName("host_2"): SingleHostDiscoveryResult(
             clustered_new=1,
             clustered_old=2,
             clustered_vanished=3,
@@ -92,19 +96,21 @@ class TestDiscoveryResult:
     }
 
     def test_serialization(self) -> None:
-        assert DiscoveryResult.deserialize(
-            DiscoveryResult(self.HOSTS).serialize(cmk_version.Version(cmk_version.__version__))
-        ) == DiscoveryResult(self.HOSTS)
+        assert ServiceDiscoveryResult.deserialize(
+            ServiceDiscoveryResult(self.HOSTS).serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            )
+        ) == ServiceDiscoveryResult(self.HOSTS)
 
 
 class TestTryDiscoveryResult:
     def test_serialization(self) -> None:
-        result = TryDiscoveryResult(
+        result = ServiceDiscoveryPreviewResult(
             output="output",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="check_source",
-                    check_plugin_name="check_plugin_name",
+                    check_source="my_check_source",
+                    check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
                     item=None,
                     discovered_parameters=None,
@@ -121,10 +127,12 @@ class TestTryDiscoveryResult:
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
         )
         assert (
-            TryDiscoveryResult.deserialize(
-                result.serialize(cmk_version.Version(cmk_version.__version__))
+            ServiceDiscoveryPreviewResult.deserialize(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
             )
             == result
         )

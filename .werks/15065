@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previous to this Werk it was possible that an authenticated user with admin rights uploads a malicious MKP leading to a file creation with an attacker controlled path.
 

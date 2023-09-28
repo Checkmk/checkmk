@@ -6,7 +6,7 @@ Date: 1655504654
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The password store is now usable in the configuration of all special agents which require a password. Specifically, the following special agents did not support the password store before:
 

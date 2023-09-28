@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ pytestmark = pytest.mark.checks
 # flushed 36479
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "info,state_expected,info_expected,perf_expected,state_expected_flush,info_expected_flush,"
     "perf_expected_flush_key,perf_expected_flush_value",
@@ -33,8 +34,8 @@ pytestmark = pytest.mark.checks
         ),
         (
             [("average_ms", "5"), ("last_ms", "121"), ("flushed", "10000")],
-            0,
-            "Average flush time over 60 minutes: 0.00 ms",
+            2,
+            "Average flush time over 60 minutes: 121.00 ms (warn/crit at 1.00 ms/4.00 ms)",
             [],
             1,
             "Last flush time: 0.12 s (warn/crit at 0.10 s/0.20 s)",

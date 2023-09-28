@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from os import path
 from typing import Any, Literal
 
-from marshmallow import validate
+from marshmallow import validate, ValidationError
 
-from cmk.utils.tags import BuiltinTagConfig
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import BuiltinTagConfig, TagID
 
-from cmk.gui.plugins.userdb import utils
+from cmk.gui.groups import load_contact_group_information
+from cmk.gui.userdb import connection_choices
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
+from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
+from cmk.fields import validators
 
 
 class RelativeUrl(fields.String):
@@ -172,7 +175,7 @@ class LDAPConnectionID(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        ldap_connection_ids = [cnx_id for cnx_id, _ in utils.connection_choices()]
+        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
 
         if self.presence == "should_exist":
             if value not in ldap_connection_ids:
@@ -187,7 +190,7 @@ class AuxTagIDField(fields.String):
     default_error_messages = {
         "should_exist": "The aux_tag {aux_tag_id!r} should exist but it doesn't.",
         "should_not_exist": "The aux_tag {aux_tag_id!r} should not exist but it does.",
-        "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing builtin aux tag but it's not.",
+        "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing built-in aux tag but it's not.",
         "should_exist_and_should_be_custom": "The aux_tag {aux_tag_id!r} should be an existing custom aux tag but it's not.",
     }
 
@@ -205,7 +208,7 @@ class AuxTagIDField(fields.String):
         super().__init__(
             description="An auxiliary tag id",
             example="ip-v4",
-            pattern="^[-a-z0-9A-Z_]*$",
+            pattern=r"^[-0-9a-zA-Z_]+\Z",
             **kwargs,
         )
         self.presence = presence
@@ -229,3 +232,193 @@ class AuxTagIDField(fields.String):
         if self.presence == "should_exist":
             if not load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
                 raise self.make_error("should_exist", aux_tag_id=tag_id)
+
+
+class ContactGroupField(fields.String):
+    default_error_messages = {
+        "should_exist": "The contact group {contact_group!r} should exist but it doesn't.",
+        "should_not_exist": "The contact group {contact_group!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description="A contact group",
+            example="all",
+            pattern="^[-a-z0-9A-Z_]*$",
+            **kwargs,
+        )
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+        cgs = list(load_contact_group_information())  # list of contact group ids
+
+        if self.presence == "should_exist":
+            if value not in cgs:
+                raise self.make_error("should_exist", contact_group=value)
+
+        if self.presence == "should_not_exist":
+            if value in cgs:
+                raise self.make_error("should_not_exist", contact_group=value)
+
+
+class TimePeriodIDField(fields.String):
+    default_error_messages = {
+        "should_exist": "The time period {time_period!r} should exist but it doesn't.",
+        "should_not_exist": "The time period {time_period!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A time period",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description=description,
+            example="24X7",
+            **kwargs,
+        )
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if not verify_timeperiod_name_exists(value):
+                raise self.make_error("should_exist", time_period=value)
+
+        if self.presence == "should_not_exist":
+            if verify_timeperiod_name_exists(value):
+                raise self.make_error("should_not_exist", time_period=value)
+
+
+class SplunkURLField(fields.URL):
+    default_error_messages = {
+        "invalid_splunk_url": "The url {url!r} must start with https://alert.victorops.com/integrations",
+    }
+
+    def __init__(
+        self,
+        description: str = "A valid splunk webhook URL",
+        **kwargs: Any,
+    ) -> None:
+        self.splunk_url_prefix = "https://alert.victorops.com/integrations"
+        super().__init__(
+            description=description,
+            example=self.splunk_url_prefix + "/example",
+            **kwargs,
+        )
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if not value.startswith(self.splunk_url_prefix):
+            raise self.make_error("invalid_splunk_url", url=value)
+
+
+class IPField(fields.String):
+    default_error_messages = {
+        "should_be_ipv4": "The IP address {ip!r} should be ipv4 but it's not.",
+        "should_be_ipv6": "The IP address {ip!r} should be ipv6 but it's not.",
+        "should_be_ipv4_or_ipv6": "The IP address {ip!r} should be ipv4 or ipv6 but it isn't either.",
+    }
+
+    def __init__(
+        self,
+        ip_type_allowed: Literal["ipv4", "ipv6", "ipv4andipv6"] = "ipv4",
+        description: str = "A valid IP address",
+        example: str = "127.0.0.1",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description=description,
+            example=example,
+            **kwargs,
+        )
+        self.ip_type_allowed = ip_type_allowed
+        self.validation_results: list[ValidationError] = []
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.ip_type_allowed == "ipv4":
+            self._validate_ip4(value)
+
+        if self.ip_type_allowed == "ipv6":
+            self._validate_ip6(value)
+
+        for error in self.validation_results:
+            raise error
+
+        if self.ip_type_allowed == "ipv4andipv6":
+            self._validate_ip4(value)
+            self._validate_ip6(value)
+
+            if len(self.validation_results) == 2:
+                raise self.make_error("should_be_ipv4_or_ipv6", ip=value)
+
+    def _validate_ip4(self, value: str) -> None:
+        try:
+            validators.ValidateIPv4()(value)
+        except ValidationError:
+            self.validation_results.append(self.make_error("should_be_ipv4", ip=value))
+
+    def _validate_ip6(self, value: str) -> None:
+        try:
+            validators.ValidateIPv6()(value)
+        except ValidationError:
+            self.validation_results.append(self.make_error("should_be_ipv6", ip=value))
+
+
+def load_passwords_for_validation():
+    return [pw_id for pw_id, _ in PasswordStore()._load_file().items()]
+
+
+class PasswordStoreIDField(fields.String):
+    default_error_messages = {
+        "should_exist": "The password store_id {store_id!r} should exist but it doesn't.",
+        "should_not_exist": "The password store_id {store_id!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A password store ID",
+        example: str = "stored_password_1",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description=description,
+            example=example,
+            **kwargs,
+        )
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+        pw_ids = load_passwords_for_validation()
+
+        if self.presence == "should_exist":
+            if value not in pw_ids:
+                raise self.make_error("should_exist", store_id=value)
+
+        if self.presence == "should_not_exist":
+            if value in pw_ids:
+                raise self.make_error("should_not_exist", store_id=value)

@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -56,13 +56,13 @@ protected:
 };
 
 TEST_P(PathContainsFixtureWithPathCreation, TestPathContains) {
-    bool expected = std::get<2>(GetParam());
+    const bool expected = std::get<2>(GetParam());
     SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
     ASSERT_EQ(expected, mk::path_contains(directory(), path()));
 }
 
 TEST_P(PathContainsFixtureWithoutPathCreation, TestPathContains) {
-    bool expected = std::get<2>(GetParam());
+    const bool expected = std::get<2>(GetParam());
     SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
     ASSERT_EQ(expected, mk::path_contains(directory(), path()));
 }

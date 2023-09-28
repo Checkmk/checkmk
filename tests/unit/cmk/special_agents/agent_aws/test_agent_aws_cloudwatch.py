@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,6 +13,7 @@ from cmk.special_agents.agent_aws import (
     AWSConfig,
     CloudwatchAlarms,
     CloudwatchAlarmsLimits,
+    NamingConvention,
     ResultDistributor,
 )
 
@@ -29,17 +30,18 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
         alarm_names: object | None,
     ) -> tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()
 
         distributor = ResultDistributor()
 
+        # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient, etc.
         cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
-            fake_cloudwatch_client, region, config, distributor
+            fake_cloudwatch_client, region, config, distributor  # type: ignore[arg-type]
         )
-        cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)
+        cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(cloudwatch_alarms_limits.name, cloudwatch_alarms)
         return cloudwatch_alarms_limits, cloudwatch_alarms

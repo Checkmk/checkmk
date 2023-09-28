@@ -1,14 +1,14 @@
 --- a/plugins/check_http.c
 +++ b/plugins/check_http.c
-@@ -148,6 +148,7 @@ char *perfd_time_transfer (double microsec);
+@@ -150,6 +150,7 @@
  char *perfd_size (int page_len);
  void print_help (void);
  void print_usage (void);
 +void replace(char *str, char from, char to);
- 
+ char *unchunk_content(const char *content);
+
  int
- main (int argc, char **argv)
-@@ -1170,8 +1171,10 @@ check_http (void)
+@@ -1179,8 +1180,10 @@
        xasprintf (&msg,
                  _("Invalid HTTP response received from host on port %d: %s\n"),
                  server_port, status_line);
@@ -19,24 +19,23 @@
 +    }
      die (STATE_CRITICAL, "HTTP CRITICAL - %s", msg);
    }
- 
-@@ -1322,8 +1325,10 @@ check_http (void)
+
+@@ -1372,8 +1375,10 @@
             perfd_time (elapsed_time),
             perfd_size (page_len));
- 
+
 -  if (show_body)
 +  if (show_body) {
 +    replace(page, '|', ' ');
      xasprintf (&msg, _("%s\n%s"), msg, page);
 +  }
- 
+
    result = max_state_alt(get_status(elapsed_time, thlds), result);
- 
-@@ -1735,3 +1740,12 @@ print_usage (void)
+
+@@ -1887,3 +1892,11 @@
    printf (" %s -H <vhost> | -I <IP-address> -C <warn_age>[,<crit_age>]\n",progname);
    printf ("       [-p <port>] [-t <timeout>] [-4|-6] [--sni]\n");
  }
-+
 +
 +void replace(char *str, char from, char to) {
 +    for (; *str != '\0'; ++str) {
@@ -45,6 +44,3 @@
 +        }
 +    }
 +}
--- 
-2.25.1
-

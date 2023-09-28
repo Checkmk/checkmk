@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -158,6 +158,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     "group_name",
                     TextInput(
                         title=_("Group name"),
+                        size=49,
                     ),
                 ),
                 (
@@ -165,6 +166,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     ListOfStrings(
                         title=_("Inclusion patterns"),
                         orientation="horizontal",
+                        size=49,
                         help=_(
                             "You can specify one or several globbing patterns containing "
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
@@ -184,6 +186,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     ListOfStrings(
                         title=_("Exclusion patterns"),
                         orientation="horizontal",
+                        size=49,
                         help=_(
                             "You can specify one or several globbing patterns containing "
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "

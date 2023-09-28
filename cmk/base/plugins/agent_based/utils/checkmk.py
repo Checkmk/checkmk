@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import Mapping, NamedTuple, Optional, Sequence
+from enum import StrEnum
+from typing import NamedTuple
 
-from pyasn1.type.useful import GeneralizedTime  # type: ignore[import]
-from pydantic import BaseModel, validator
+from pyasn1.type.useful import GeneralizedTime
+from pydantic import BaseModel, Field, validator
 
-CheckmkSection = Mapping[str, Optional[str]]
+CheckmkSection = Mapping[str, str | None]
 CmkUpdateAgentStatus = Mapping[str, str]
 
 
 class Plugin(NamedTuple):
     name: str
     version: str
-    version_int: Optional[int]
-    cache_interval: Optional[int]
+    version_int: int | None
+    cache_interval: int | None
 
 
 class PluginSection(NamedTuple):
@@ -27,25 +29,79 @@ class PluginSection(NamedTuple):
     local_checks: Sequence[Plugin]
 
 
-class Connection(NamedTuple):
-    site_id: str
-    valid_for_seconds: float
+class CachedPluginType(StrEnum):
+    PLUGIN = "plugins"
+    LOCAL = "local"
+    ORACLE = "oracle"
+    MRPE = "mrpe"
 
 
-class ControllerSection(NamedTuple):
-    # Currently this is all we need. Extend on demand...
+class CachedPlugin(NamedTuple):
+    plugin_type: CachedPluginType | None
+    plugin_name: str
+    timeout: int
+    pid: int
+
+
+class CachedPluginsSection(NamedTuple):
+    timeout: list[CachedPlugin] | None
+    killfailed: list[CachedPlugin] | None
+
+
+class CertInfoController(BaseModel):
+    to: datetime
+    issuer: str
+
+    @validator("to", pre=True)
+    @classmethod
+    def _parse_cert_validity(cls, value: str | datetime) -> datetime:
+        return (
+            value
+            if isinstance(value, datetime)
+            else datetime.strptime(value, "%a, %d %b %Y %H:%M:%S %z")
+        )
+
+
+class LocalConnectionStatus(BaseModel):
+    cert_info: CertInfoController
+
+
+class Connection(BaseModel):
+    site_id: str | None = Field(None)
+    coordinates: str | None = Field(None)  # legacy from 2.1
+    local: LocalConnectionStatus
+
+    def get_site_id(self) -> str | None:
+        if self.site_id:
+            return self.site_id
+        if self.coordinates:
+            return self._coordinates_to_site_id(self.coordinates)
+        return None
+
+    @staticmethod
+    def _coordinates_to_site_id(coordinates: str) -> str:
+        """
+        >>> Connection._coordinates_to_site_id("localhost:8000/site")
+        'localhost/site'
+        """
+        server_port, site = coordinates.split("/")
+        server, _port = server_port.split(":")
+        return f"{server}/{site}"
+
+
+class ControllerSection(BaseModel):
     allow_legacy_pull: bool
-    socket_ready: bool
-    ip_allowlist: tuple[str, ...]
+    agent_socket_operational: bool = True
+    ip_allowlist: Sequence[str] = []
     connections: Sequence[Connection]
 
 
 class CertInfo(BaseModel):
     corrupt: bool
     # if the cert is corrupt these will be None
-    not_after: datetime | None
-    signature_algorithm: str | None
-    common_name: str | None
+    not_after: datetime | None = Field(None)
+    signature_algorithm: str | None = Field(None)
+    common_name: str | None = Field(None)
 
     @validator("not_after", pre=True)
     @classmethod
@@ -79,15 +135,15 @@ class CertInfo(BaseModel):
 class CMKAgentUpdateSection(BaseModel):
     """The data of the cmk_update_agent"""
 
-    aghash: str | None
-    error: str | None
-    last_check: float | None
-    last_update: float | None
-    pending_hash: str | None
-    update_url: str | None
+    aghash: str | None = Field(None)
+    error: str | None = Field(None)
+    last_check: float | None = Field(None)
+    last_update: float | None = Field(None)
+    pending_hash: str | None = Field(None)
+    update_url: str | None = Field(None)
 
     # Added with 2.2
-    trusted_certs: dict[int, CertInfo] | None = None
+    trusted_certs: dict[int, CertInfo] | None = Field(None)
 
     @classmethod
     def parse_checkmk_section(cls, section: CheckmkSection | None) -> CMKAgentUpdateSection | None:

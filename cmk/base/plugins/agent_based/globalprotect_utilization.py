@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Mapping, NamedTuple, Optional, Tuple
+from collections.abc import Callable, Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -27,7 +28,7 @@ class Section(NamedTuple):
     active_tunnels: int
 
 
-def parse_globalprotect_utilization(string_table: StringTable) -> Optional[Section]:
+def parse_globalprotect_utilization(string_table: StringTable) -> Section | None:
     if not string_table or len(string_table[0]) < 3:
         return None
 
@@ -63,10 +64,10 @@ def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:
 def _check_levels(
     value: float,
     levels_upper: Any,
-    boundaries: Tuple[float, float],
+    boundaries: tuple[float, float],
     metric_name: str,
     label: str,
-    render_func: Optional[Callable] = None,
+    render_func: Callable | None = None,
 ) -> CheckResult:
     if isinstance(levels_upper, dict):
         yield from check_levels_predictive(

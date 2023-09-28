@@ -1,28 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
 import logging
-from typing import Any
 
-from marshmallow import fields as _fields
-from marshmallow import post_load, Schema
+from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.defines import weekday_ids
-
-import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.definitions import ensure_string
 from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
-from cmk.fields import base
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
@@ -64,7 +54,7 @@ class LinkSchema(BaseSchema):
     method = fields.String(
         description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
-        pattern="GET|PUT|POST|DELETE",
+        enum=["GET", "PUT", "POST", "DELETE"],
         example="GET",
     )
     type = fields.String(
@@ -307,102 +297,15 @@ class DomainObject(Linkable):
     )
 
 
-class HostExtensions(BaseSchema):
-    folder = gui_fields.FolderField(
-        description="The folder, in which this host resides.",
-    )
-    attributes = gui_fields.host_attributes_field(
-        "host",
-        "view",
-        "outbound",
-        description="Attributes of this host.",
-        example={"ipaddress": "192.168.0.123"},
-    )
-    effective_attributes = fields.Dict(
-        description="All attributes of this host and all parent folders. Format may change!",
-        allow_none=True,
-        example={"tag_snmp_ds": None},
-    )
-    is_cluster = fields.Boolean(
-        description="If this is a cluster host, i.e. a container for other hosts.",
-    )
-    is_offline = fields.Boolean(
-        description="Whether the host is offline",
-    )
-    cluster_nodes = fields.List(
-        gui_fields.HostField(),
-        allow_none=True,
-        load_default=None,
-        description="In the case this is a cluster host, these are the cluster nodes.",
-    )
-
-
-class FolderMembers(BaseSchema):
-    hosts = fields.Nested(
-        ObjectCollectionMember(),
-        description="A list of links pointing to the actual host-resources.",
-    )
-    move = fields.Nested(
-        ObjectActionMember(),
-        description="An action which triggers the move of this folder to another folder.",
-    )
-
-
-class FolderExtensions(BaseSchema):
-    path = fields.String(
-        description="The full path of this folder, slash delimited.",
-    )
-    attributes = gui_fields.host_attributes_field(
-        "folder",
-        "view",
-        "outbound",
-        description=(
-            "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
-        ),
-    )
-
-
-class FolderSchema(Linkable):
-    domainType = fields.Constant("folder_config", description="The domain type of the object.")
-    id = fields.String(description="The full path of the folder, tilde-separated.")
-    title = fields.String(description="The human readable title for this folder.")
-    members = fields.Nested(
-        FolderMembers(),
-        description="Specific collections or actions applicable to this object.",
-    )
-    extensions = fields.Nested(
-        FolderExtensions(),
-        description="Data and Meta-Data of this object.",
-    )
-
-
 class MoveFolder(BaseSchema):
     destination = fields.String(
         description=(
             "The folder-id of the folder to which this folder shall be moved to. May "
             "be 'root' for the root-folder."
         ),
-        pattern="[a-fA-F0-9]{32}|root",
+        pattern="^[a-fA-F0-9]{32}$|root",
         example="root",
         required=True,
-    )
-
-
-class HostGroup(DomainObject):
-    domainType = fields.Constant(
-        "host_group", required=True, description="The domain type of the object."
-    )
-
-
-class ServiceGroup(DomainObject):
-    domainType = fields.Constant(
-        "service_group", required=True, description="The domain type of the object."
-    )
-
-
-class ContactGroup(DomainObject):
-    domainType = fields.Constant(
-        "contact_group", required=True, description="The domain type of the object."
     )
 
 
@@ -417,26 +320,6 @@ class SiteStateMembers(BaseSchema):
 class SiteState(Linkable):
     domainType = fields.Constant("site-state", required=True)
     members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
-
-
-class HostMembers(BaseSchema):
-    folder_config = fields.Nested(
-        FolderSchema(),
-        description="The folder in which this host resides. It is represented by a hexadecimal "
-        "identifier which is it's 'primary key'. The folder can be accessed via the "
-        "`self`-link provided in the links array.",
-    )
-
-
-class HostConfigSchema(DomainObject):
-    domainType = fields.Constant(
-        "host_config", required=True, description="The domain type of the object."
-    )
-    members = fields.Nested(HostMembers, description="All the members of the host object.")
-    extensions = fields.Nested(
-        HostExtensions,
-        description="All the data and metadata of this host.",
-    )
 
 
 class ObjectAction(Linkable):
@@ -459,28 +342,6 @@ class CollectionItem(OneOfSchema):
     type_field_remove = False
 
 
-class HostTag(BaseSchema):
-    id = fields.String(description="The unique identifier of this host tag")
-    title = fields.String(description="The title of this host tag")
-    aux_tags = fields.List(fields.String(), description="The auxiliary tags this tag included in.")
-
-
-class HostTagExtensions(BaseSchema):
-    topic = fields.String(description="The topic this host tag group is organized in.")
-    tags = fields.List(fields.Nested(HostTag()), description="The list of tags in this group.")
-
-
-class ConcreteHostTagGroup(DomainObject):
-    domainType = fields.Constant(
-        "host_tag_group",
-        required=True,
-        description="The domain type of the object.",
-    )
-    extensions = fields.Nested(
-        HostTagExtensions(), description="Additional fields for objects of this type."
-    )
-
-
 class DomainObjectCollection(Linkable):
     id = fields.String(
         description="The name of this collection.",
@@ -498,483 +359,6 @@ class DomainObjectCollection(Linkable):
         many=True,
     )
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
-
-
-class LinkedValueDomainObjectCollection(DomainObject):
-    value: fields.Field = fields.Nested(
-        LinkSchema,
-        description="The collection itself, as links. Each entry in here is part of the collection.",
-        many=True,
-    )
-
-
-class HostConfigCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "host_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(HostConfigSchema()),
-        description="A list of host objects.",
-    )
-
-
-class FolderCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "folder_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(FolderSchema()),
-        description="A list of folder objects.",
-    )
-
-
-class HostTagGroupCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "host_tag_group",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(ConcreteHostTagGroup()),
-        description="A list of host tag group objects.",
-    )
-
-
-class DateTimeRange(BaseSchema):
-    start_time = gui_fields.Timestamp(
-        required=True,
-        example="2017-07-21T17:32:28+00:00",
-        description="The start datetime of the time period. The format conforms to the ISO 8601 profile",
-    )
-    end_time = gui_fields.Timestamp(
-        example="2017-07-21T17:32:28+00:00",
-        description="The end datetime of the time period. The format conforms to the ISO 8601 profile",
-        format="iso8601",
-    )
-
-
-class ConcreteDisabledNotifications(BaseSchema):
-    disable = fields.Boolean(
-        required=False,
-        description="Option if all notifications should be temporarily disabled",
-    )
-    timerange = fields.Nested(
-        DateTimeRange,
-        description="A custom timerange during which notifications are disabled",
-        required=False,
-    )
-
-
-class ConcreteUserInterfaceAttributes(BaseSchema):
-    interface_theme = fields.String(
-        required=False,
-        description="The theme of the interface",
-        enum=["default", "dark", "light"],
-        example="default",
-    )
-    sidebar_position = fields.String(
-        required=False,
-        description="The position of the sidebar",
-        enum=["left", "right"],
-        example="right",
-    )
-    navigation_bar_icons = fields.String(
-        required=False,
-        description="This option decides if icons in the navigation bar should show/hide the "
-        "respective titles",
-        enum=["hide", "show"],
-        example="hide",
-    )
-    mega_menu_icons = fields.String(
-        required=False,
-        description="This option decides if colored icon should be shown foe every entry in the "
-        "mega menus or alternatively only for the headlines (the 'topics')",
-        enum=["topic", "entry"],
-        example="topic",
-    )
-    show_mode = fields.String(
-        required=False,
-        description="This option decides what show mode should be used for unvisited menus."
-        " Alternatively, this option can also be used to enforce show more removing the three dots "
-        "for all menus.",
-        enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
-        example="default",
-    )
-
-
-class UserIdleOption(BaseSchema):
-    option = fields.String(
-        required=True,
-        description="This field indicates if the idle timeout uses the global configuration, is "
-        "disabled or uses an individual duration",
-        enum=["global", "disable", "individual"],
-    )
-    duration = fields.Integer(
-        required=False,
-        description="The duration in seconds of the individual idle timeout if individual is "
-        "selected as idle timeout option.",
-        example=3600,
-    )
-
-
-class ConcreteUserContactOption(BaseSchema):
-    email = fields.String(
-        required=True,
-        description="The mail address of the user.",
-        example="user@example.com",
-    )
-    fallback_contact = fields.Boolean(
-        description="In case none of the notification rules handle a certain event a notification "
-        "will be sent to the specified email",
-        required=False,
-    )
-
-
-class JobLogs(BaseSchema):
-    result = fields.List(
-        fields.String(),
-        description="The list of result related logs",
-    )
-    progress = fields.List(
-        fields.String(),
-        description="The list of progress related logs",
-    )
-
-
-class BackgroundJobStatus(BaseSchema):
-    active = fields.Boolean(
-        required=True,
-        description="This field indicates if the background job is active or not.",
-        example=True,
-    )
-    state = fields.String(
-        required=True,
-        description="This field indicates the current state of the background job.",
-        enum=["initialized", "running", "finished", "stopped", "exception"],
-        example="initialized",
-    )
-    logs = fields.Nested(
-        JobLogs,
-        required=True,
-        description="Logs related to the background job.",
-        example={"result": ["result1"], "progress": ["progress1"]},
-    )
-
-
-class DiscoveryBackgroundJobStatusObject(DomainObject):
-    domainType = fields.Constant(
-        "discovery_run",
-        description="The domain type of the object",
-    )
-    extensions = fields.Nested(
-        BackgroundJobStatus, description="The attributes of the background job"
-    )
-
-
-class AuthOption(BaseSchema):
-    auth_type = fields.String(
-        required=False,
-        example="password",
-    )
-    enforce_password_change = fields.Boolean(
-        required=False,
-        description="If set to True, the user will be forced to change his password on the next "
-        "login or access. Defaults to False",
-        example=False,
-    )
-
-
-class BaseUserAttributes(BaseSchema):
-    fullname = fields.String(required=True, description="The alias or full name of the user.")
-    customer = gui_fields.customer_field(
-        required=True,
-        should_exist=True,
-    )
-    disable_login = fields.Boolean(
-        required=False,
-        description="This field indicates if the user is allowed to login to the monitoring.",
-    )
-    contact_options = fields.Nested(
-        ConcreteUserContactOption,
-        required=False,
-        description="Contact settings for the user",
-    )
-    idle_timeout = fields.Nested(
-        UserIdleOption,
-        required=False,
-        description="Idle timeout for the user. Per default, the global configuration is used.",
-        example={"option": "global"},
-    )
-    roles = fields.List(
-        fields.String(),
-        description="The list of assigned roles to the user",
-    )
-    authorized_sites = fields.List(
-        fields.String(),
-        description="The names of the sites that this user is authorized to handle",
-        required=False,
-    )
-    contactgroups = fields.List(
-        fields.String(),
-        description="The contact groups that this user is a member of",
-        required=False,
-    )
-    pager_address = fields.String(
-        required=False,
-        description="",
-    )
-    disable_notifications = fields.Nested(
-        ConcreteDisabledNotifications,
-        required=False,
-    )
-    language = fields.String(
-        required=False,
-        description="The language used by the user in the user interface",
-    )
-    auth_option = fields.Nested(
-        AuthOption,
-        required=False,
-        description="Enforce password change attribute for the user",
-        example={"auth_type": "password", "enforce_password_change": False},
-    )
-    interface_options = fields.Nested(
-        ConcreteUserInterfaceAttributes,
-        required=False,
-    )
-
-
-class CustomUserAttributes(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(
-        base.String(description="Each tag is a mapping of string to string", validate=ensure_string)
-    )
-
-    @post_load
-    def _valid(self, user_attributes: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        # NOTE
-        # If an attribute gets deleted AFTER it has already been set,
-        # this would break here. We therefore can't validate outbound data as thoroughly
-        # because our own data can be inherently inconsistent.
-
-        # use the user_attribute_registry directly?
-        db_user_attributes = dict(userdb.get_user_attributes())
-        for name, value in user_attributes.items():
-            try:
-                attribute = db_user_attributes[name].valuespec()
-            except KeyError:
-                _logger.error("No such attribute: %s", name)
-                return user_attributes
-
-            try:
-                attribute.validate_value(value, f"ua_{name}")
-            except MKUserError as exc:
-                _logger.error("Error validating %s: %s", name, str(exc))
-
-        return user_attributes
-
-
-def user_attributes_field(
-    description: str | None = None, example: Any | None = None
-) -> _fields.Field:
-    """Build an Attribute Field
-
-    Args:
-        direction:
-            If the data is *coming from* the user (inbound) or *going to* the user (outbound).
-
-        description:
-            A descriptive text of this field. Required.
-
-        example:
-            An example for the OpenAPI documentation. Required.
-    """
-    if description is None:
-        # SPEC won't validate without description, though the error message is very obscure, so we
-        # clarify this here by force.
-        raise ValueError("description is necessary.")
-
-    return MultiNested(
-        [BaseUserAttributes, CustomUserAttributes],
-        merged=True,  # to unify both models
-        description=description,
-        example=example,
-        many=False,
-        load_default=dict,
-        required=False,
-    )
-
-
-class UserObject(DomainObject):
-    domainType = fields.Constant(
-        "user_config",
-        description="The domain type of the object.",
-    )
-    extensions = user_attributes_field(description="The attributes of the user")
-
-
-class UserCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "user_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(UserObject),
-        description="A list of user objects.",
-    )
-
-
-class UserRoleAttributes(BaseSchema):
-    alias = fields.String(required=True, description="The alias of the user role.")
-    permissions = fields.List(
-        fields.String(),
-        required=True,
-        description="A list of permissions for the user role. ",
-    )
-    builtin = fields.Boolean(
-        required=True,
-        description="True if it's a builtin user role, otherwise False.",
-    )
-    basedon = fields.String(
-        enum=builtin_role_ids,
-        required=False,
-        description="The builtin user role id that the user role is based on.",
-    )
-
-
-class UserRoleObject(DomainObject):
-    domainType = fields.Constant(
-        "user_role",
-        description="The domain type of the object.",
-    )
-    extensions = fields.Nested(UserRoleAttributes, description="All the attributes of a user role.")
-
-
-class UserRoleCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "user_role",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(UserRoleObject),
-        description="A list of user role objects.",
-    )
-
-
-TIME_FIELD = fields.String(
-    example="14:00",
-    format="time",
-    description="The hour of the time period.",
-)
-
-
-class ConcreteTimeRange(BaseSchema):
-    start = TIME_FIELD
-    end = TIME_FIELD
-
-
-class ConcreteTimeRangeActive(BaseSchema):
-    day = fields.String(
-        description="The day for which the time ranges are specified",
-        pattern=f"{'|'.join(weekday_ids())}",
-    )
-    time_ranges = fields.List(fields.Nested(ConcreteTimeRange))
-
-
-class ConcreteTimePeriodException(BaseSchema):
-    date = fields.String(
-        example="2020-01-01",
-        format="date",
-        description="The date of the time period exception." "8601 profile",
-    )
-    time_ranges = fields.List(
-        fields.Nested(ConcreteTimeRange),
-        example="[{'start': '14:00', 'end': '18:00'}]",
-    )
-
-
-class ConcreteTimePeriod(BaseSchema):
-    alias = fields.String(description="The alias of the time period", example="alias")
-    active_time_ranges = fields.List(
-        fields.Nested(ConcreteTimeRangeActive),
-        description="The days for which time ranges were specified",
-        example={"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]},
-    )
-    exceptions = fields.List(
-        fields.Nested(ConcreteTimePeriodException),
-        description="Specific day exclusions with their list of time ranges",
-        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
-    )
-    exclude = fields.List(  # type: ignore[assignment]
-        fields.String(description="Name of excluding time period", example="holidays"),
-        description="The collection of time period aliases whose periods are excluded",
-    )
-
-
-class PasswordExtension(BaseSchema):
-    ident = fields.String(
-        example="pass",
-        description="The unique identifier for the password",
-    )
-    title = fields.String(
-        example="Kubernetes login",
-        description="The title for the password",
-    )
-    comment = fields.String(
-        example="Kommentar",
-        description="A comment for the password",
-    )
-    documentation_url = fields.String(
-        example="localhost",
-        attribute="docu_url",
-        description="The URL pointing to documentation or any other page.",
-    )
-    password = fields.String(
-        required=True,
-        example="password",
-        description="The password string",
-    )
-    owned_by = fields.String(
-        example="admin",
-        description="The owner of the password who is able to edit, delete and use existing passwords.",
-    )
-
-    shared = fields.List(
-        fields.String(
-            example="all",
-            description="The member the password is shared with",
-        ),
-        example=["all"],
-        attribute="shared_with",
-        description="The list of members the password is shared with",
-    )
-    customer = gui_fields.customer_field(
-        required=True,
-        should_exist=True,
-    )
-
-
-class PasswordObject(DomainObject):
-    domainType = fields.Constant(
-        "password",
-        description="The type of the domain-object.",
-    )
-    extensions = fields.Nested(
-        PasswordExtension,
-        description="All the attributes of the domain object.",
-    )
-
-
-class InstalledVersions(BaseSchema):
-    site = fields.String(
-        description="The site where this API call was made on.", example="production"
-    )
-    group = fields.String(
-        description="The Apache WSGI application group this call was made on.", example="de"
-    )
-    rest_api = fields.Dict(description="The REST-API version", example={"revision": "1.0.0"})
-    versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
-    edition = fields.String(description="The Checkmk edition.", example="raw")
-    demo = fields.Boolean(description="Whether this is a demo version or not.", example=False)
 
 
 class VersionCapabilities(BaseSchema):
@@ -1020,66 +404,19 @@ class Version(LinkSchema):
     additionalCapabilities = fields.Nested(VersionCapabilities)
 
 
-class X509PEM(BaseSchema):
-    cert = fields.String(
-        required=True,
-        description="PEM-encoded X.509 certificate.",
-    )
-
-
-class HostConfigSchemaInternal(BaseSchema):
-    site = fields.String(
-        required=True,
-        description="The site the host is monitored on.",
-    )
-    is_cluster = fields.Boolean(
-        required=True,
-        description="Indicates if the host is a cluster host.",
-    )
-
-
-class CommentAttributes(BaseSchema):
-    host_name = fields.String(required=True, description="The host name.")
-
-    id = fields.Integer(
-        required=True,
-        description="The comment ID",
-    )
-    author = fields.String(
-        required=True,
-        description="The author of the comment",
-    )
-    comment = fields.String(required=True, description="The comment itself")
-
-    persistent = fields.Boolean(required=True, description="If true, the comment will be persisted")
-
-    entry_time = fields.String(
-        required=True, description="The timestamp from when the comment was created."
-    )
-    service_description = fields.String(
-        required=False, description="The service description the comment belongs to."
-    )
-    is_service = fields.Boolean(
-        required=True, description="True if the comment is from a service or else it's False."
-    )
-
-
-class CommentObject(DomainObject):
+class AgentObject(DomainObject):
     domainType = fields.Constant(
-        "comment",
+        "agent",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(
-        CommentAttributes, description="The attributes of a service/host comment."
-    )
 
 
-class CommentCollection(DomainObjectCollection):
+class AgentCollection(DomainObjectCollection):
     domainType = fields.Constant(
-        "comment",
+        "agent",
         description="The domain type of the objects in the collection.",
     )
     value = fields.List(
-        fields.Nested(CommentObject),
-        description="A list of comment objects.",
+        fields.Nested(AgentObject),
+        description="A list of agent objects.",
     )

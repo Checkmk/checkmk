@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -23,7 +23,7 @@ TEST(SectionProviderSkype, Counters) {
     }
 }
 
-TEST(SectionProviderSkype, StandardRunIntegration) {
+TEST(SectionProviderSkype, StandardRunComponent) {
     SkypeProvider skype;
     EXPECT_TRUE(skype.generateContent().empty());
 }
@@ -32,7 +32,7 @@ TEST(SectionProviderSkype, StandardRunIntegration) {
 // We have no possibilities to install Skype Business on testing, dev and
 // integration machines.
 // We will use first best Windows counters as a base for our Skype provider
-TEST(SectionProviderSkype, SimulatedIntegration) {
+TEST(SectionProviderSkype, SimulatedComponent) {
     constexpr size_t base_size = 2U + 2U * 3U;
     constexpr size_t asp_size = 3U;
     constexpr size_t full_size = base_size + asp_size;
@@ -65,8 +65,8 @@ TEST(SectionProviderSkype, SimulatedIntegration) {
     auto hdr1 = tools::SplitString(table[1], ",");
     ASSERT_EQ(hdr1.size(), 3);
     EXPECT_EQ(hdr1[0], "sampletime");
-    EXPECT_TRUE(std::stoll(hdr1[1].c_str()) > 0);
-    EXPECT_TRUE(std::stoll(hdr1[2].c_str()) > 0);
+    EXPECT_TRUE(std::stoll(hdr1[1]) > 0);
+    EXPECT_TRUE(std::stoll(hdr1[2]) > 0);
     EXPECT_EQ(table[2],
               fmt::format("[{}]", wtools::ToUtf8((*skype_counters)[0])));
     EXPECT_EQ(table[5],

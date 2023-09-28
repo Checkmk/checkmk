@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -33,13 +33,13 @@ private:
 
 class StatsColumnOp : public StatsColumn {
 public:
-    StatsColumnOp(AggregationFactory factory, Column *column);
+    StatsColumnOp(AggregationFactory factory, std::shared_ptr<Column> column);
     std::unique_ptr<Filter> stealFilter() override;
     std::unique_ptr<Aggregator> createAggregator(Logger *logger) const override;
 
 private:
     AggregationFactory _factory;
-    Column *_column;
+    std::shared_ptr<Column> _column;
     std::unique_ptr<Filter> _filter;
 };
 

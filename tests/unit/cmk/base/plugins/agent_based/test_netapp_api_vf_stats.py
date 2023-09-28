@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based import netapp_api_cpu, netapp_api_vf_stats
+from cmk.base.plugins.agent_based import netapp_api_vf_stats
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     Result,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.utils.netapp_api import CPUSection
 
 SECTION_NETAPP_API_VF_STATS = {
     "vfiler0": {
@@ -35,9 +38,7 @@ SECTION_NETAPP_API_VF_STATS = {
     }
 }
 
-SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
-    "7mode": {"num_processors": "2", "cpu_busy": "153993540928"}
-}
+SECTION_NETAPP_API_CPU: CPUSection = {"7mode": {"num_processors": "2", "cpu_busy": "153993540928"}}
 
 
 @pytest.mark.parametrize(
@@ -69,7 +70,7 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
         ),
     ],
 )
-def test_check_netapp_api_vf_stats(params, exp_res) -> None:  # type:ignore[no-untyped-def]
+def test_check_netapp_api_vf_stats(params: Mapping[str, object], exp_res: CheckResult) -> None:
     now = 0.0
     value_store: dict[str, Any] = {}
     # initialize counters
@@ -103,16 +104,13 @@ def test_check_netapp_api_vf_stats_traffic() -> None:
     now = 0.0
     value_store: dict[str, Any] = {}
     # initialize counters
-    assert (
-        list(
-            netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(
-                "vfiler0",
-                SECTION_NETAPP_API_VF_STATS,
-                now=now,
-                value_store=value_store,
-            )
+    assert not list(
+        netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(
+            "vfiler0",
+            SECTION_NETAPP_API_VF_STATS,
+            now=now,
+            value_store=value_store,
         )
-        == []
     )
     assert list(
         netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,10 @@ import collections
 import functools
 import typing
 from collections.abc import Callable
-from typing import Any, cast, Literal, NamedTuple, TypedDict, TypeVar
+from typing import Any, cast, Literal, NamedTuple, TypeVar
 
 from marshmallow import ValidationError
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -25,10 +26,10 @@ from cmk.utils.livestatus_helpers.expressions import (
     UnaryExpression,
 )
 from cmk.utils.livestatus_helpers.types import Table
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
 
 from cmk.gui import site_config
-from cmk.gui.fields.base import BaseSchema
+from cmk.gui.fields.base import BaseSchema as BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,
@@ -44,8 +45,9 @@ class Attr(NamedTuple):
     mandatory: bool
     section: str
     description: str
-    enum: list[str | None] | None = None
+    enum: list[TagID | None] | None = None
     field: fields.Field | None = None
+    allow_none: bool = False
 
 
 ObjectType = Literal["host", "folder", "cluster"]
@@ -65,7 +67,7 @@ def collect_attributes(
             Either 'host', 'folder' or 'cluster'
 
         context:
-            Either 'create' or 'update'
+            Either 'create' or 'update' or 'view'
 
     Returns:
         A list of attribute describing named-tuples.
@@ -158,6 +160,28 @@ def collect_attributes(
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
+        tag_name = _ensure(f"tag_{tag_group.id}")
+        section = tag_group.topic or "No topic"
+        mandatory = False
+        field = None
+
+        allowed_ids = [tag.id for tag in tag_group.tags]
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.insert(0, None)
+
+        if context == "view":
+            result.append(
+                Attr(
+                    name=tag_name,
+                    section=section,
+                    mandatory=mandatory,
+                    description="" if tag_group.help is None else tag_group.help,
+                    allow_none=None in allowed_ids,
+                    field=field,
+                )
+            )
+            continue
+
         description: list[str] = []
         if tag_group.help:
             description.append(tag_group.help)
@@ -167,21 +191,17 @@ def collect_attributes(
             for tag in tag_group.tags:
                 description.append(f" * {_format(tag.id)}: {tag.title}")
 
-        allowed_ids = [tag.id for tag in tag_group.tags]
-        if tag_group.is_checkbox_tag_group:
-            allowed_ids.insert(0, None)
-
         result.append(
             Attr(
-                name=_ensure(f"tag_{tag_group.id}"),
-                section=tag_group.topic or "No topic",
-                mandatory=False,
+                name=tag_name,
+                section=section,
+                mandatory=mandatory,
                 description="\n\n".join(description),
                 enum=allowed_ids,
-                field=None,
+                allow_none=None in allowed_ids,
+                field=field,
             )
         )
-
     return result
 
 
@@ -251,8 +271,9 @@ def _field_from_attr(attr):
     # If we assigned None to enum, this would lead to a broken OpenApi specification!
     if attr.enum is not None:
         kwargs["enum"] = attr.enum
-        if None in attr.enum:
-            kwargs["allow_none"] = True
+
+    if attr.allow_none is True:
+        kwargs["allow_none"] = True
 
     if attr.name in validators:
         kwargs["validate"] = validators[attr.name]
@@ -260,7 +281,7 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type:ignore[no-untyped-def]
+def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
     dict_ = schema_dict.copy()
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
@@ -294,14 +315,17 @@ def attr_openapi_schema(
 
         Unknown attributes lead to an error:
 
-            >>> import pytest
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'foo': 'bar'})
+            >>> schema_obj.load({'foo': 'bar'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
 
         Wrong values on tag groups also lead to an error:
 
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            >>> schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'tag_address_family': ["'ip-v5-only' is not one of the enum values: ['ip-v4-only', 'ip-v6-only', 'ip-v4v6', 'no-ip']"]}
 
     Args:
         object_type:
@@ -322,7 +346,7 @@ def attr_openapi_schema(
     return _schema_from_dict(class_name, schema)
 
 
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ignore[no-untyped-def]
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ignore[no-untyped-def]
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -338,7 +362,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ign
 
         >>> tree_to_expr({'op': 'and', \
                           'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
-                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
+                          {'op': '=', 'left': 'hosts.state', 'right': '0'}]})
         And(Filter(name = example.com), Filter(state = 0))
 
         >>> tree_to_expr({'op': 'or', \

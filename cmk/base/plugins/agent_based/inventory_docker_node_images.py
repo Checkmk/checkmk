@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Mapping
+from collections.abc import Mapping
 
 import cmk.base.plugins.agent_based.utils.docker as docker
 
@@ -31,9 +31,9 @@ def parse_docker_node_images(string_table: StringTable) -> Section:
     return {"images": images, "containers": containers}
 
 
-def _split_subsections(string_table: StringTable) -> Dict[str, List[List[str]]]:
+def _split_subsections(string_table: StringTable) -> dict[str, list[list[str]]]:
     subname = ""
-    subsections: Dict[str, List[List[str]]] = {}
+    subsections: dict[str, list[list[str]]] = {}
     for row in string_table:
         if not row:
             continue
@@ -52,12 +52,11 @@ register.agent_section(
 
 def inventory_docker_node_images(section: Section) -> InventoryResult:
     images = section.get("images", {})
-    images_path = ["software", "applications", "docker", "images"]
     for image_id, image in sorted(images.items()):
         repodigests = ", ".join(image.get("RepoDigests", []))
         fallback_repotag = repodigests.split("@", 1)[:1] if "@" in repodigests else []
         yield TableRow(
-            path=images_path,
+            path=["software", "applications", "docker", "images"],
             key_columns={
                 "id": docker.get_short_id(image_id),
             },
@@ -74,10 +73,9 @@ def inventory_docker_node_images(section: Section) -> InventoryResult:
         )
 
     containers = section.get("containers", {})
-    containers_path = ["software", "applications", "docker", "containers"]
     for container_id, container in sorted(containers.items()):
         yield TableRow(
-            path=containers_path,
+            path=["software", "applications", "docker", "containers"],
             key_columns={
                 "id": docker.get_short_id(container_id),
             },

@@ -1,24 +1,31 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """The user profile mega menu and related AJAX endpoints"""
 
 
+import cmk.utils.version as cmk_version
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.userdb.utils import validate_start_url
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.userdb import remove_custom_attr
+from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
+    page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
+    page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
 
 
 def _get_current_theme_title() -> str:
@@ -72,28 +79,38 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             sort_index=10,
             icon="topic_profile",
         ),
-        TopicMenuItem(
-            name="change_password",
-            title=_("Change password"),
-            url="user_change_pw.py",
-            sort_index=30,
-            icon="topic_change_password",
-        ),
-        TopicMenuItem(
-            name="two_factor",
-            title=_("Two-factor authentication"),
-            url="user_two_factor_overview.py",
-            sort_index=30,
-            icon="topic_two_factor",
-        ),
+    ]
+
+    if cmk_version.edition() != cmk_version.Edition.CSE:
+        items.extend(
+            [
+                TopicMenuItem(
+                    name="change_password",
+                    title=_("Change password"),
+                    url="user_change_pw.py",
+                    sort_index=30,
+                    icon="topic_change_password",
+                ),
+                TopicMenuItem(
+                    name="two_factor",
+                    title=_("Two-factor authentication"),
+                    url="user_two_factor_overview.py",
+                    sort_index=30,
+                    icon="topic_two_factor",
+                ),
+            ]
+        )
+
+    items.append(
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
             sort_index=40,
             icon="sidebar_logout",
-        ),
-    ]
+            target="_self",
+        )
+    )
 
     if user.may("general.edit_notifications"):
         items.insert(
@@ -135,7 +152,6 @@ mega_menu_registry.register(
 )
 
 
-@page_registry.register_page("ajax_ui_theme")
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
@@ -157,7 +173,6 @@ class ModeAjaxCycleThemes(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_sidebar_position")
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
@@ -170,7 +185,6 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_set_dashboard_start_url")
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
 
@@ -186,7 +200,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         return {}
 
 
-def _set_user_attribute(key: str, value: str | None):  # type:ignore[no-untyped-def]
+def _set_user_attribute(key: str, value: str | None):  # type: ignore[no-untyped-def]
     assert user.id is not None
     user_id = user.id
 

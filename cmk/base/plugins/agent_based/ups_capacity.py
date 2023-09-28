@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package
 
-from typing import Optional
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -17,7 +16,7 @@ from .utils.ups import (
 )
 
 
-def parse_ups_capacity(string_table: StringTable) -> Optional[Battery]:
+def parse_ups_capacity(string_table: StringTable) -> Battery | None:
     return (
         Battery(
             seconds_left=optional_int(string_table[0][0], factor=60),
@@ -28,7 +27,7 @@ def parse_ups_capacity(string_table: StringTable) -> Optional[Battery]:
     )
 
 
-def parse_ups_seconds_on_battery(string_table: StringTable) -> Optional[Battery]:
+def parse_ups_seconds_on_battery(string_table: StringTable) -> Battery | None:
     return (
         Battery(
             seconds_on_bat=optional_int(string_table[0][0]),

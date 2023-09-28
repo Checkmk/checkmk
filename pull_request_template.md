@@ -1,5 +1,5 @@
 Thank you for your interest in contributing to Checkmk!
-Consider looking into [Readme](https://github.com/tribe29/checkmk#want-to-contribute) regarding process details.
+Consider looking into [Readme](https://github.com/Checkmk/checkmk#want-to-contribute) regarding process details.
 
 ## General information
 

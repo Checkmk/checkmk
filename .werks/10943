@@ -9,4 +9,4 @@ Level: 1
 Version: 2.0.0i1
 
 You can now monitor the netdata of SAP HANA volumes. This adjustment results in
-services like "SAP HANA Volume <SID> <SYSNR> - DATA <NR> Disk Net Data".
+services like `SAP HANA Volume <SID> <SYSNR> - DATA <NR> Disk Net Data`.

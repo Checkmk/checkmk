@@ -1,0 +1,24 @@
+Title: Interface checks: re-work misleading bandwidth levels configuration
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674459923
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+When configuring bandwidth levels, users previously configured
+
+NL: Traffic direction: in / out / both
+NL: Are the tresholds upper or lower thresholds?
+NL: Threshold type: absolute / relative to interface speed / predictive
+NL: Specific settings for selected threshold type
+
+However, when selecting predictive levels, users had to again configure settings for upper and/or
+lower thresholds. In this case, the outer setting (number 2 from the list above) had no effect.
+Hence, the new configuration looks like this:
+
+NL: Traffic direction: in / out / both
+NL: Threshold type: absolute / relative to interface speed / predictive
+NL: Specific settings for selected threshold type, including upper/lower setting

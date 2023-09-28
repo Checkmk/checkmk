@@ -1,0 +1,16 @@
+Title: DCD: fix REST API authentication problems
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1673534490
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this werk, the DCD raised a REST API authentication error
+when the user's automation password was changed after it was started.
+In addition, the same error was also raised when the "Individual
+automation user credentials" option in the "Connection to the REST API"
+global setting was configured. This werk fixes both error sources.
+

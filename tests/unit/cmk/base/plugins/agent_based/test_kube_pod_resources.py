@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -514,4 +514,4 @@ def test_pod_resource_fields() -> None:
     _POD_RESOURCES_FIELDS is used, if do not have an instance of type PodResources. Instead, we
     could use the method below, but we don't want to rely on it's behaviour.
     """
-    assert _POD_RESOURCES_FIELDS == tuple(PodResources.__fields__)
+    assert _POD_RESOURCES_FIELDS == tuple(PodResources.model_fields)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,7 +26,8 @@
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
@@ -50,7 +51,7 @@ from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensorSectio
 from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
 
-def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
+def parse_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:
     return utils.parse_entity_sensors(string_table)
 
 

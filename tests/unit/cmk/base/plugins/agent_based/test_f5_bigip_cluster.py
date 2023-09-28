@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.f5_bigip_cluster import (
     check_f5_bigip_config_sync_pre_v11,
     check_f5_bigip_config_sync_v11_plus,
@@ -30,8 +33,8 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster import (
         ([[["0 - Synchronized"]]], ("0", "Synchronized")),
     ],
 )
-def test_parse_f5_bigip_config_sync_pre_v11(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_f5_bigip_config_sync_pre_v11(
+    string_table: list[StringTable], expected_parsed_data: NodeState | None
 ) -> None:
     assert parse_f5_bigip_config_sync_pre_v11(string_table) == expected_parsed_data
 
@@ -44,8 +47,8 @@ def test_parse_f5_bigip_config_sync_pre_v11(  # type:ignore[no-untyped-def]
         ([[["6", "Standalone"]]], ("6", "Standalone")),
     ],
 )
-def test_parse_f5_bigip_config_sync_v11_plus(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_f5_bigip_config_sync_v11_plus(
+    string_table: list[StringTable], expected_parsed_data: NodeState | None
 ) -> None:
     assert parse_f5_bigip_config_sync_v11_plus(string_table) == expected_parsed_data
 
@@ -72,7 +75,7 @@ def test_parse_f5_bigip_config_sync_v11_plus(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_f5_bigip_config_sync_pre_v11(section, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_f5_bigip_config_sync_pre_v11(section: Sequence[str], result: CheckResult) -> None:
     assert list(check_f5_bigip_config_sync_pre_v11(NodeState(*section))) == result
 
 
@@ -93,9 +96,7 @@ def test_check_f5_bigip_config_sync_pre_v11(section, result) -> None:  # type:ig
         ),
     ],
 )
-def test_check_f5_bigip_config_sync_v11_plus(  # type:ignore[no-untyped-def]
-    section, result
-) -> None:
+def test_check_f5_bigip_config_sync_v11_plus(section: Sequence[str], result: CheckResult) -> None:
     assert (
         list(
             check_f5_bigip_config_sync_v11_plus(

@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.urls import is_allowed_url
+
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import show_mode_choices, UserAttribute, validate_start_url
+from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -18,6 +24,73 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from ._user_attribute import UserAttribute, UserAttributeRegistry
+
+
+def register(user_attribute_registry: UserAttributeRegistry) -> None:
+    user_attribute_registry.register(TemperatureUnitUserAttribute)
+    user_attribute_registry.register(ForceAuthUserUserAttribute)
+    user_attribute_registry.register(DisableNotificationsUserAttribute)
+    user_attribute_registry.register(StartURLUserAttribute)
+    user_attribute_registry.register(UIThemeUserAttribute)
+    user_attribute_registry.register(UISidebarPosition)
+    user_attribute_registry.register(UIIconTitle)
+    user_attribute_registry.register(UIIconPlacement)
+    user_attribute_registry.register(UIBasicAdvancedToggle)
+
+
+class TemperatureUnitUserAttribute(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "temperature_unit"
+
+    def topic(self) -> str:
+        return "personal"
+
+    def valuespec(self) -> Alternative:
+        return Alternative(
+            title=_("Temperature unit"),
+            orientation="horizontal",
+            help=_(
+                "Set the temperature unit used for graphs and perfometers. The default unit can be "
+                "configured <a href='%s'>here</a>. Note that this setting does not affect the "
+                "temperature unit used in service outputs, which can however be configured in "
+                "<a href='%s'>this ruleset</a>."
+            )
+            % (
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "default_temperature_unit"),
+                    ],
+                    filename="wato.py",
+                ),
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_ruleset"),
+                        (
+                            "varname",
+                            RuleGroup.CheckgroupParameters("temperature"),
+                        ),
+                    ],
+                    filename="wato.py",
+                ),
+            ),
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Use the default temperature unit"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom temperature unit"),
+                    choices=temperature_unit_choices(),
+                ),
+            ],
+        )
 
 
 class ForceAuthUserUserAttribute(UserAttribute):
@@ -115,7 +188,7 @@ class StartURLUserAttribute(UserAttribute):
                     TextInput(
                         title=_("Use this custom start URL"),
                         help=_(
-                            "When you point your browser to the Check_MK GUI, usually the dashboard "
+                            "When you point your browser to the Checkmk GUI, usually the dashboard "
                             "is shown in the main (right) frame. You can replace this with any other "
                             "URL you like here."
                         ),
@@ -131,6 +204,17 @@ class StartURLUserAttribute(UserAttribute):
 
     def domain(self) -> str:
         return "multisite"
+
+
+def validate_start_url(value: str, varprefix: str) -> None:
+    if not is_allowed_url(value):
+        raise MKUserError(
+            varprefix,
+            _(
+                "The given value is not allowed. You may only configure "
+                "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."
+            ),
+        )
 
 
 class UIThemeUserAttribute(UserAttribute):
@@ -262,3 +346,11 @@ class UIBasicAdvancedToggle(UserAttribute):
 
     def domain(self) -> str:
         return "multisite"
+
+
+def show_mode_choices() -> list[tuple[str | None, str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]

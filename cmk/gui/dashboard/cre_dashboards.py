@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
@@ -19,7 +19,7 @@ def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -
 
     # CEE uses specific "main" dashboard with new CEE specific dashlets.
     # CRE should use the problem dashboard as main dashboard
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         main_dashboard = builtin["main"] = builtin.pop("problems")
         main_dashboard["title"] = _l("Main dashboard")
         main_dashboard["icon"] = "dashboard_main"
@@ -79,7 +79,6 @@ ProblemsDashboard = DashboardConfig(
                     "type": "view",
                     "title": _("Host Problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
-                    "description": "",
                     "position": (-1, 1),
                     "size": (GROW, 18),
                     "show_title": True,
@@ -98,13 +97,10 @@ ProblemsDashboard = DashboardConfig(
                         "host_acknowledged": {"is_host_acknowledged": "0"},
                         "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
                     },
-                    "hidden": True,
-                    "hidebutton": True,
                     "layout": "table",
                     "mustsearch": False,
                     "name": "dashlet_2",
                     "num_columns": 1,
-                    "owner": UserId.builtin(),
                     "painters": [
                         ColumnSpec(name="host_state"),
                         ColumnSpec(
@@ -115,11 +111,7 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="host_state_age"),
                         ColumnSpec(name="host_plugin_output"),
                     ],
-                    "public": True,
                     "sorters": [SorterSpec(sorter="hoststate", negate=True)],
-                    "topic": "",
-                    "link_from": {},
-                    "icon": None,
                     "add_context_to_title": True,
                     "sort_index": 99,
                     "is_show_more": False,
@@ -130,7 +122,6 @@ ProblemsDashboard = DashboardConfig(
                     "type": "view",
                     "title": _("Service Problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
-                    "description": "",
                     "position": (1, 19),
                     "size": (GROW, MAX),
                     "show_title": True,
@@ -151,13 +142,10 @@ ProblemsDashboard = DashboardConfig(
                             "stp": "",
                         },
                     },
-                    "hidden": True,
-                    "hidebutton": False,
                     "layout": "table",
                     "mustsearch": False,
                     "name": "dashlet_3",
                     "num_columns": 1,
-                    "owner": UserId.builtin(),
                     "painters": [
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
@@ -174,15 +162,11 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="svc_check_age"),
                     ],
                     "play_sounds": True,
-                    "public": True,
                     "sorters": [
                         SorterSpec(sorter="svcstate", negate=True),
                         SorterSpec(sorter="stateage", negate=False),
                         SorterSpec(sorter="svcdescr", negate=False),
                     ],
-                    "link_from": {},
-                    "topic": "",
-                    "icon": None,
                     "add_context_to_title": True,
                     "sort_index": 99,
                     "is_show_more": False,
@@ -193,7 +177,6 @@ ProblemsDashboard = DashboardConfig(
                     "type": "view",
                     "title": _("Events of recent 4 hours"),
                     "title_url": "view.py?view_name=events_dash",
-                    "description": "",
                     "position": (-1, -1),
                     "size": (GROW, GROW),
                     "show_title": True,
@@ -208,13 +191,10 @@ ProblemsDashboard = DashboardConfig(
                             "logtime_from": "4",
                         },
                     },
-                    "hidden": True,
-                    "hidebutton": False,
                     "layout": "table",
                     "mustsearch": False,
                     "name": "dashlet_4",
                     "num_columns": 1,
-                    "owner": UserId("admin"),
                     "painters": [
                         ColumnSpec(name="log_icon"),
                         ColumnSpec(name="log_time"),
@@ -229,11 +209,7 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="log_plugin_output"),
                     ],
                     "play_sounds": False,
-                    "public": True,
                     "sorters": [SorterSpec(sorter="log_time", negate=True)],
-                    "link_from": {},
-                    "topic": "",
-                    "icon": None,
                     "add_context_to_title": True,
                     "sort_index": 99,
                     "is_show_more": False,
@@ -247,6 +223,7 @@ ProblemsDashboard = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -271,7 +248,6 @@ SimpleProblemsDashboard = DashboardConfig(
                     "type": "view",
                     "title": _("Host Problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
-                    "description": "",
                     "show_title": True,
                     "position": (1, 1),
                     "size": (GROW, 18),
@@ -285,13 +261,10 @@ SimpleProblemsDashboard = DashboardConfig(
                         "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
                         "hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""},
                     },
-                    "hidden": True,
-                    "hidebutton": True,
                     "layout": "table",
                     "mustsearch": False,
                     "name": "dashlet_0",
                     "num_columns": 1,
-                    "owner": UserId.builtin(),
                     "painters": [
                         ColumnSpec(name="host_state"),
                         ColumnSpec(
@@ -302,11 +275,7 @@ SimpleProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="host_state_age"),
                         ColumnSpec(name="host_plugin_output"),
                     ],
-                    "public": True,
                     "sorters": [SorterSpec(sorter="hoststate", negate=True)],
-                    "topic": "",
-                    "link_from": {},
-                    "icon": None,
                     "add_context_to_title": True,
                     "sort_index": 99,
                     "is_show_more": False,
@@ -317,7 +286,6 @@ SimpleProblemsDashboard = DashboardConfig(
                     "type": "view",
                     "title": _("Service Problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
-                    "description": "",
                     "show_title": True,
                     "position": (1, 19),
                     "size": (GROW, MAX),
@@ -338,13 +306,10 @@ SimpleProblemsDashboard = DashboardConfig(
                             "stp": "",
                         },
                     },
-                    "hidden": True,
-                    "hidebutton": False,
                     "layout": "table",
                     "mustsearch": False,
                     "name": "dashlet_1",
                     "num_columns": 1,
-                    "owner": UserId.builtin(),
                     "painters": [
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
@@ -361,15 +326,11 @@ SimpleProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="svc_check_age"),
                     ],
                     "play_sounds": True,
-                    "public": True,
                     "sorters": [
                         SorterSpec(sorter="svcstate", negate=True),
                         SorterSpec(sorter="stateage", negate=False),
                         SorterSpec(sorter="svcdescr", negate=False),
                     ],
-                    "link_from": {},
-                    "topic": "",
-                    "icon": None,
                     "add_context_to_title": True,
                     "sort_index": 99,
                     "is_show_more": False,
@@ -383,6 +344,7 @@ SimpleProblemsDashboard = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -433,5 +395,6 @@ CheckmkOverviewDashboard = DashboardConfig(
         "public": True,
         "name": "checkmk",
         "is_show_more": False,
+        "packaged": False,
     }
 )

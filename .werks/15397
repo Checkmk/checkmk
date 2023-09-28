@@ -1,0 +1,24 @@
+Title: check_mk: Fix missing Checkmk agent specific inventory entries
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1685452821
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+During inventory plugin migration the following fields and the related view columns were thrown away:
+<ul>
+<li>Checkmk Agent Version</li>
+<li>Agent directory</li>
+<li>Data directory</li>
+<li>Spool directory</li>
+<li>Plugins directory</li>
+<li>Local directory</li>
+<li>Agent Controller</li>
+</ul>
+
+
+

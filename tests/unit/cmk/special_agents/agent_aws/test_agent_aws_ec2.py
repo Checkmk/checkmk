@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,6 +16,7 @@ from cmk.special_agents.agent_aws import (
     EC2Limits,
     EC2SecurityGroups,
     EC2Summary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -123,7 +124,7 @@ def get_ec2_sections() -> EC2Sections:
         skip_entities: Mapping[str, object] | None = None,
     ) -> tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)
@@ -132,13 +133,14 @@ def get_ec2_sections() -> EC2Sections:
 
         distributor = ResultDistributor()
 
+        # TODO: FakeEC2Client shoud actually subclass EC2Client, etc.
         ec2_limits = EC2Limits(
-            fake_ec2_client, region, config, distributor, fake_service_quotas_client
+            fake_ec2_client, region, config, distributor, fake_service_quotas_client  # type: ignore[arg-type]
         )
-        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
-        ec2_labels = EC2Labels(fake_ec2_client, region, config)
-        ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)
-        ec2 = EC2(fake_cloudwatch_client, region, config)
+        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
+        ec2_labels = EC2Labels(fake_ec2_client, region, config)  # type: ignore[arg-type]
+        ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)  # type: ignore[arg-type]
+        ec2 = EC2(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(ec2_limits.name, ec2_summary)
         distributor.add(ec2_summary.name, ec2_labels)

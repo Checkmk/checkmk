@@ -1,28 +1,51 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
 
+import dataclasses
 import logging
 import os
-import pwd
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+import textwrap
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from unittest import mock
+from pprint import pformat
+
+import pexpect  # type: ignore[import]
 
 from cmk.utils.version import Edition
 
-logger = logging.getLogger()
+LOGGER = logging.getLogger()
+
+
+@dataclasses.dataclass
+class PExpectDialog:
+    """An expected dialog for spawn_expect_message.
+
+    Attributes:
+    expect    The expected dialog message.
+    send      The string/keys sent to the CLI.
+    count     The expected number of occurrences (default: 1).
+    optional  Specifies if the dialog message is optional.
+    """
+
+    expect: str
+    send: str
+    count: int = 1
+    optional: bool = False
 
 
 def repo_path() -> Path:
     return Path(__file__).resolve().parent.parent.parent
+
+
+def qa_test_data_path() -> Path:
+    return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
 def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
@@ -37,8 +60,12 @@ def cme_path() -> str:  # TODO: Use Path
     return str(repo_path() / "managed")
 
 
-def cpe_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "plus")
+def cce_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "cloud")
+
+
+def cse_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "saas")
 
 
 def is_enterprise_repo() -> bool:
@@ -49,8 +76,12 @@ def is_managed_repo() -> bool:
     return os.path.exists(cme_path())
 
 
-def is_plus_repo() -> bool:
-    return os.path.exists(cpe_path())
+def is_cloud_repo() -> bool:
+    return os.path.exists(cce_path())
+
+
+def is_saas_repo() -> bool:
+    return os.path.exists(cse_path())
 
 
 def is_containerized() -> bool:
@@ -141,7 +172,7 @@ def current_base_branch_name() -> str:
             if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
                 return head[7:]
 
-    logger.warning("Could not determine base branch, using %s", branch_name)
+    LOGGER.warning("Could not determine base branch, using %s", branch_name)
     return branch_name
 
 
@@ -171,7 +202,7 @@ def site_id() -> str:
     if site_id is not None:
         return site_id
 
-    branch_name = branch_from_env(current_branch_name)
+    branch_name = branch_from_env(env_var="BRANCH", fallback=current_branch_name)
 
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
@@ -181,29 +212,16 @@ def site_id() -> str:
     return site_id
 
 
-def is_running_as_site_user() -> bool:
-    try:
-        return pwd.getpwuid(os.getuid()).pw_name == site_id()
-    except KeyError:
-        # Happens when no user with current UID exists (experienced in container with not existing
-        # "-u" run argument set)
-        return False
-
-
 def add_python_paths() -> None:
-    # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
-
-    # if not running as site user, make the livestatus module available
-    if not is_running_as_site_user():
-        if is_enterprise_repo():
-            sys.path.insert(0, os.path.join(cmc_path()))
-        sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
-        sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
+    if is_enterprise_repo():
+        sys.path.insert(0, os.path.join(cmc_path()))
+    sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
+    sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
 def package_hash_path(version: str, edition: Edition) -> Path:
-    return Path(f"/tmp/cmk_package_hash_{version}_{edition.name}")
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition.long}")
 
 
 def version_spec_from_env(fallback: str | None = None) -> str:
@@ -219,7 +237,7 @@ def _parse_raw_edition(raw_edition: str) -> Edition:
         return Edition[raw_edition.upper()]
     except KeyError:
         for edition in Edition:
-            if edition.name == raw_edition:
+            if edition.long == raw_edition:
                 return edition
     raise ValueError(f"Unknown edition: {raw_edition}")
 
@@ -232,18 +250,137 @@ def edition_from_env(fallback: Edition | None = None) -> Edition:
     raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
 
 
-def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
-    if branch := os.environ.get("BRANCH"):
+def branch_from_env(*, env_var: str, fallback: str | Callable[[], str] | None = None) -> str:
+    if branch := os.environ.get(env_var):
         return branch
     if fallback:
-        return fallback if isinstance(fallback, str) else fallback()
-    raise RuntimeError("BRANCH environment variable, e.g. master, is missing")
+        return fallback() if callable(fallback) else fallback
+    raise RuntimeError(f"{env_var} environment variable, e.g. master, is missing")
 
 
-@contextmanager
-def no_search_index_update_background() -> Iterator[None]:
-    with mock.patch(
-        "cmk.gui.watolib.search.update_index_background",
-        lambda _change_action_name: ...,
-    ):
-        yield
+def spawn_expect_process(
+    args: list[str],
+    dialogs: list[PExpectDialog],
+    logfile_path: str = "/tmp/sep.out",
+    auto_wrap_length: int = 49,
+    break_long_words: bool = False,
+) -> int:
+    """Spawn an interactive CLI process via pexpect and process supplied expected dialogs
+    "dialogs" must be a list of objects with the following format:
+    {"expect": str, "send": str, "count": int, "optional": bool}
+
+    Return codes:
+    0: success
+    1: unexpected EOF
+    2: unexpected timeout
+    3: any other exception
+    """
+    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    with open(logfile_path, "w") as logfile:
+        p = pexpect.spawn(" ".join(args), encoding="utf-8", logfile=logfile)
+        try:
+            for dialog in dialogs:
+                counter = 0
+                while True:
+                    counter += 1
+                    if auto_wrap_length > 0:
+                        dialog.expect = r".*".join(
+                            textwrap.wrap(
+                                dialog.expect,
+                                width=auto_wrap_length,
+                                break_long_words=break_long_words,
+                            )
+                        )
+                    LOGGER.info("Expecting: '%s'", dialog.expect)
+                    rc = p.expect(
+                        [
+                            dialog.expect,  # rc=0
+                            pexpect.EOF,  # rc=1
+                            pexpect.TIMEOUT,  # rc=2
+                        ]
+                    )
+                    if rc == 0:
+                        # msg found; sending input
+                        LOGGER.info(
+                            "%s; sending: %s",
+                            "Optional message found"
+                            if dialog.optional
+                            else "Required message found",
+                            repr(dialog.send),
+                        )
+                        p.send(dialog.send)
+                    elif dialog.optional:
+                        LOGGER.info("Optional message not found; ignoring!")
+                        break
+                    else:
+                        LOGGER.error(
+                            "Required message not found. "
+                            "The following has been found instead:\n"
+                            "%s",
+                            p.before,
+                        )
+                        break
+                    if counter >= dialog.count >= 1:
+                        # max count reached
+                        break
+            if p.isalive():
+                rc = p.expect(pexpect.EOF)
+            else:
+                rc = p.status
+        except Exception as e:
+            LOGGER.exception(e)
+            LOGGER.debug(p)
+            rc = 3
+
+    assert isinstance(rc, int)
+    return rc
+
+
+def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    try:
+        proc = subprocess.run(
+            args,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            close_fds=True,
+            check=check,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
+        ) from e
+    return proc
+
+
+def restart_httpd() -> None:
+    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
+    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
+    e.g. the controller from querying the agent receiver port.
+
+    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
+    see e.g. sles-15sp4.
+    """
+
+    # When executed locally and un-dockerized, DISTRO may not be set
+    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
+        execute(["sudo", "httpd", "-k", "restart"])
+
+
+def get_services_with_status(
+    host_data: dict, service_status: int, skipped_services: list | tuple = ()
+) -> list:
+    """Return a list of services in the given status which are not in the 'skipped' list."""
+    services_list = []
+    for service in host_data:
+        if host_data[service] == service_status and service not in skipped_services:
+            services_list.append(service)
+
+    LOGGER.debug(
+        "%s service(s) found in state %s:\n%s",
+        len(services_list),
+        service_status,
+        pformat(services_list),
+    )
+    return services_list

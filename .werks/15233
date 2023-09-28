@@ -1,0 +1,20 @@
+Title: Discovery: Improve performance and prevent apache timeout
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674827483
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This Werk prevents an undesired SNMP scanning process during service discovery.
+
+This additional scan increased the time the discovery took by a factor of two.
+In addition, no progress was reported for the first of the scans, which could result in an apache timeout after 110 seconds.
+In that case the message shown was
+<i>
+Your request timed out after 110 seconds.
+This issue may be related to a local configuration problem or a request which works with a too large number of objects.
+But if you think this issue is a bug, please send a crash report
+</i>.

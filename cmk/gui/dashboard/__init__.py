@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,7 +17,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
+from cmk.gui.visuals.type import VisualTypeRegistry
 
 from .builtin_dashboards import builtin_dashboards, GROW, MAX
 from .cre_dashboards import register_builtin_dashboards
@@ -47,7 +47,7 @@ from .page_edit_dashlet import EditDashletPage
 from .page_show_dashboard import (
     ajax_dashlet,
     AjaxInitialDashboardFilters,
-    get_topology_view_and_filters,
+    get_topology_context_and_filters,
     page_dashboard,
 )
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
@@ -68,7 +68,7 @@ __all__ = [
     "ViewDashletConfig",
     "StaticTextDashletConfig",
     "get_dashlet",
-    "get_topology_view_and_filters",
+    "get_topology_context_and_filters",
     "get_all_dashboards",
     "get_permitted_dashboards",
     "render_title_with_macros_string",
@@ -136,9 +136,9 @@ def load_plugins() -> None:
         # the individual user permissions. Only the problem graphs are not able to respect these
         # permissions. To not confuse the users we make the "main" dashboard in the enterprise
         # editions only visible to the roles that have the "general.see_all" permission.
-        if name == "main" and not cmk_version.is_raw_edition():
+        if name == "main" and cmk_version.edition() is not cmk_version.Edition.CRE:
             # Please note: This permitts the following roles: ["admin", "guest"]. Even if the user
-            # overrides the permissions of these builtin roles in his configuration , this can not
+            # overrides the permissions of these built-in roles in his configuration , this can not
             # be respected here. This is because the config of the user is not loaded yet. The user
             # would have to manually adjust the permissions on the main dashboard on his own.
             default_permissions = permission_registry["general.see_all"].defaults
@@ -154,18 +154,21 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
+    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("dashboards"))
 
 
 def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plugin API"
 
-    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
     In the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.dashboard as api_module

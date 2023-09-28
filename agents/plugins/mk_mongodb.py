@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Monitor MongoDB on Linux
@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
 import argparse
 import configparser
@@ -37,10 +37,11 @@ import types
 from collections import defaultdict
 from urllib.parse import quote_plus
 
-PY2 = sys.version_info[0] == 2
-
 try:
-    from typing import Any, Dict, Iterable, List, Union
+    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import,ungrouped-imports
+        Iterable,
+    )
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -70,7 +71,7 @@ def get_database_info(client):
     else:
         db_names = []
 
-    databases = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
+    databases = defaultdict(dict)  # type: dict[str, dict[str, Any]]
     for name in db_names:
         database = client[name]
         databases[name]["collections"] = list(get_collection_names(database))
@@ -83,7 +84,7 @@ def get_database_info(client):
 
 def get_collection_names(database):  # type:(pymongo.database.Database) -> Iterable[str]
     if PYMONGO_VERSION <= (3, 6, 0):
-        collection_names = database.collection_names()  # type: List[str]
+        collection_names = database.collection_names()  # type: list[str]
     else:
         collection_names = database.list_collection_names()
 
@@ -216,6 +217,11 @@ def _get_replication_info(client, databases):
     oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
     result = {}
 
+    # this is basically "db.getReplicationInfo()" but it's not implemented in the python driver:
+    # https://jira.mongodb.org/browse/PYTHON-1717
+    # see also: https://gist.github.com/konstruktoid/bcb9daefab6beca67de833b5f547be91
+    # and: https://github.com/mongodb/mongo/blob/20d43f94ce5e943971904f65f8abff1e8b67521f/src/mongo/shell/db.js#L868-L933
+
     # Returns the total size of the oplog in bytes
     # This refers to the total amount of space allocated to the oplog rather than
     # the current size of operations stored in the oplog.
@@ -232,8 +238,8 @@ def _get_replication_info(client, databases):
     # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
     # Compare this value to the last write operation issued against the server.
     # Timestamp is time in seconds since epoch UTC
-    firstc = client.local.oplog.rs.find().sort("{$natural: 1}").limit(1)
-    lastc = client.local.oplog.rs.find().sort("{$natural: -1}").limit(1)
+    firstc = client.local.oplog.rs.find().sort([("$natural", 1)]).limit(1)
+    lastc = client.local.oplog.rs.find().sort([("$natural", -1)]).limit(1)
     if firstc and lastc:
         timestamp_first_operation = firstc.next().get("ts", None)
         timestamp_last_operation = lastc.next().get("ts", None)
@@ -521,7 +527,6 @@ def _count_chunks_per_shard(client, databases):
     chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
     database_set = set()
     for chunk in chunks_list:
-
         # get database, collection and shard names
         shard_name = chunk.get("shard", None)
         database_name, collection_name = _split_namespace(chunk.get("ns"))
@@ -746,7 +751,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 def parse_arguments(argv):
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
@@ -791,7 +795,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
             LOGGER.warning("config file %s does not exist!", filename)
         else:
             with open(filename, "r") as cfg:
-                if PY2:
+                if sys.version_info[0] == 2:
                     self.readfp(cfg)  # pylint: disable=deprecated-method
                 else:
                     self.read_file(cfg)
@@ -819,6 +823,7 @@ class Config:
         self.tls_enable = config.get_mongodb_bool("tls_enable")
         self.tls_verify = config.get_mongodb_bool("tls_verify")
         self.tls_ca_file = config.get_mongodb_str("tls_ca_file")
+        self.tls_cert_key_file = config.get_mongodb_str("tls_cert_key_file")
 
         self.auth_mechanism = config.get_mongodb_str("auth_mechanism")
         self.auth_source = config.get_mongodb_str("auth_source")
@@ -829,12 +834,12 @@ class Config:
         self.password = config.get_mongodb_str("password")
 
     def get_pymongo_config(self):
-        # type:() -> Dict[str, Union[str, bool]]
+        # type:() -> dict[str, str | bool]
         """
         return config for latest pymongo (3.12.X)
         """
         pymongo_config = {}
-        if self.username:
+        if self.username and self.auth_mechanism != "MONGODB-X509":
             pymongo_config["username"] = self.username
             if self.password:
                 pymongo_config["password"] = self.password
@@ -846,10 +851,11 @@ class Config:
                     pymongo_config["tlsInsecure"] = not self.tls_verify
                 if self.tls_ca_file is not None:
                     pymongo_config["tlsCAFile"] = self.tls_ca_file
-
+                if self.tls_cert_key_file is not None:
+                    pymongo_config["tlsCertificateKeyFile"] = self.tls_cert_key_file
         if self.auth_mechanism is not None:
             pymongo_config["authMechanism"] = self.auth_mechanism
-        if self.auth_source is not None:
+        if self.auth_source is not None and self.auth_mechanism != "MONGODB-X509":
             pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
             pymongo_config["host"] = self.host
@@ -892,7 +898,7 @@ class PyMongoConfigTransformer:
         return pymongo_config
 
     def _transform_tls_to_ssl(self, pymongo_config):
-        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
+        # type:(dict[str, str | bool]) -> dict[str, str | bool]
         if pymongo_config.get("tlsInsecure") is True:
             sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
             sys.stdout.write(
@@ -915,7 +921,7 @@ class PyMongoConfigTransformer:
         return pymongo_config
 
     def _transform_credentials_to_uri(self, pymongo_config):
-        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
+        # type:(dict[str, str | bool]) -> dict[str, str | bool]
         username = pymongo_config.pop("username", None)
         password = pymongo_config.pop("password", None)
         host = pymongo_config.pop("host", "localhost")
@@ -961,7 +967,7 @@ def main(argv=None):
     client = pymongo.MongoClient(**pymongo_config)  # type: pymongo.MongoClient
     try:
         # connecting is lazy, it might fail only now
-        server_status = client.admin.command("serverStatus")  # type: Dict
+        server_status = client.admin.command("serverStatus")  # type: dict
     except (pymongo.errors.OperationFailure, pymongo.errors.ConnectionFailure) as e:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tFailed to connect\n")

@@ -1,0 +1,13 @@
+Title: check_mk_agent.aix: Fix termination of agent if no profile file
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1695799312
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+

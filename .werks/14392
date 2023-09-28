@@ -6,7 +6,7 @@ Date: 1668765103
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously it was not possible to set user passwords starting with or ending on white-space characters in the Edit Users UI. This is now possible.
 

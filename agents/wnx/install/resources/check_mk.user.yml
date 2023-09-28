@@ -1,9 +1,9 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-# User Check MK configuration file
+# User Checkmk configuration file
 #
 
 # The Agent will accept YML-File as a valid configuration file
@@ -281,6 +281,7 @@ plugins:
                                              # default value is 0. Minimum positive value is 120.
         #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
         #  cmd_line    : ''                  # reserved for future use
+        #  repair_invalid_utf: yes           # agent try to repair invalid UTF input from plugin
         #
         #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_scansql.vbs'    # Plugin name or absolute path . * and ? are allowed
         #  user       : 'sql_user sql_secret' # user name(domain is allowed) and password separated with one space
@@ -352,6 +353,15 @@ mrpe:
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include some_user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+
+extensions:
+    enabled: yes
+
+    #execution:
+    #    - name        : "robot_mk"                                 # just a name
+    #      binary      : "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe"  # what to run
+    #      command_line: "daemon"                                   # command line
+    #      run         : auto                                       # yes, no or auto(run if present)
 
 modules:
     enabled: yes

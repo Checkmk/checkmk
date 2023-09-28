@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 24 28" style="enable-background:new 0 0 24 44;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#15D1A0;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+</style>
+<g id="dashboard">
+	<g id="edit_dashboard" transform="translate(0.000000, -14.000000)">
+		<g id="Logo" transform="translate(0.000000, 14.000000)">
+			<g id="icon" transform="translate(0.000000, 0.000000)">
+				<path id="Fill-3" class="st0" d="M12,0l12,7v13.9l-12,7l-12-7V7L12,0z M4.1,10.1v4.6L9.8,11v9.5l2.2,1.3l2.2-1.3V11l5.7,3.7
+					v-4.6l-7.9-5L4.1,10.1z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

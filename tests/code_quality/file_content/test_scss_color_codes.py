@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -47,11 +47,11 @@ def test_rgb_color_codes(changed_files: ChangedFiles) -> None:
     rgb_pattern = re.compile(r"rgb\([^\)]*\)")
     exclude_files = ["_variables.scss", "_variables_common.scss"]
     matches = list(_get_regex_matches_in_scss_files(rgb_pattern, changed_files, exclude_files))
-    assert matches == [], "RGB color codes found outside of variable SCSS files"
+    assert not matches, "RGB color codes found outside of variable SCSS files"
 
 
 def test_hex_color_codes(changed_files: ChangedFiles) -> None:
     """No hex color codes allowed at all"""
     hex_pattern = re.compile(r":.*#[a-fA-F1-9]{3,6}")
     matches = list(_get_regex_matches_in_scss_files(hex_pattern, changed_files))
-    assert matches == [], "Hex color codes found"
+    assert not matches, "Hex color codes found"

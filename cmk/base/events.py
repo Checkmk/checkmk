@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -20,9 +20,13 @@ import livestatus
 
 import cmk.utils.daemon
 import cmk.utils.debug
+from cmk.utils.hostaddress import HostName
+from cmk.utils.notify_types import EventContext, EventRule
 from cmk.utils.regex import regex
+from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
+from cmk.utils.tags import TagID
+from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
 import cmk.base.config as config
 import cmk.base.core
@@ -61,7 +65,7 @@ def event_keepalive(  # pylint: disable=too-many-branches
     while True:
         try:
             # Invalidate timeperiod caches
-            cmk.base.core.cleanup_timeperiod_caches()
+            cleanup_timeperiod_caches()
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must
@@ -203,7 +207,7 @@ def expand_backslashes(value: str) -> str:
 
 def render_context_dump(raw_context: EventContext) -> str:
     return "Raw context:\n" + "\n".join(
-        "                    %s=%s" % v for v in sorted(raw_context.items())  #
+        "                    %s=%s" % v for v in sorted(raw_context.items())
     )
 
 
@@ -221,10 +225,7 @@ def find_host_service_in_context(context: EventContext) -> str:
 def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> ContactList | None:
     try:
         if service:
-            query = (
-                "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts"
-                % (host, service)
-            )
+            query = f"GET services\nFilter: host_name = {host}\nFilter: service_description = {service}\nColumns: contacts"
         else:
             query = "GET hosts\nFilter: host_name = %s\nColumns: contacts" % host
 
@@ -248,10 +249,10 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return None  # We must allow notifications without Livestatus access
 
 
-def add_rulebased_macros(raw_context: EventContext) -> None:
+def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> None:
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
-    if "CONTACTS" not in raw_context:
+    if "CONTACTS" not in raw_context and contacts_needed:
         # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
         # with the Microcore might result in dead locks.
         if config.is_cmc():
@@ -279,6 +280,7 @@ def add_rulebased_macros(raw_context: EventContext) -> None:
 def complete_raw_context(  # pylint: disable=too-many-branches
     raw_context: EventContext,
     with_dump: bool,
+    contacts_needed: bool,
 ) -> None:
     """Extend the raw notification context
 
@@ -349,7 +351,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         if (value := raw_context.get("LASTSERVICEOK")) is not None:
             raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        add_rulebased_macros(raw_context)
+        add_rulebased_macros(raw_context, contacts_needed)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
@@ -540,8 +542,8 @@ def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
 def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
     required = rule.get("match_hosttags")
     if required:
-        tags = context.get("HOSTTAGS", "").split()
-        if not config.hosttags_match_taglist(tags, required):
+        tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
+        if not config.hosttags_match_taglist(tags, (TagID(_) for _ in required)):
             return "The host's tags {} do not match the required tags {}".format(
                 "|".join(tags),
                 "|".join(required),
@@ -613,8 +615,9 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
                 )
 
             return (
-                "The service is only in the groups %s. None of these patterns match: %s"
-                % ('"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups))
+                "The service is only in the groups {}. None of these patterns match: {}".format(
+                    '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)
+                )
                 + '"'
             )
 
@@ -665,13 +668,7 @@ def _event_match_exclude_servicegroups(
                     )
 
                     if r.search(match_value):
-                        return (
-                            'The service group "{}" ({}) is excluded per regex pattern: {}'.format(
-                                match_value,
-                                match_value_inverse,
-                                group,
-                            )
-                        )
+                        return f'The service group "{match_value}" ({match_value_inverse}) is excluded per regex pattern: {group}'
             elif group in servicegroups:
                 return "The service group %s is excluded" % group
     return None
@@ -829,7 +826,7 @@ def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
 def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | None:
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
-        if timeperiod != "24X7" and not cmk.base.core.check_timeperiod(timeperiod):
+        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
     return None
 

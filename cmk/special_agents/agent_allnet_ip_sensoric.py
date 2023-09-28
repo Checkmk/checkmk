@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,11 +22,9 @@ _DEFAULT_TIMEOUT = 10
 
 
 def parse_response_data(contents: str) -> Mapping[str, Mapping[str, str]]:
-
     parsed: dict[str, dict[str, str]] = {}
     context = None
     for line in contents.splitlines():
-
         match = re.search("<(sensor[0-9]+|system)>", line)
         if match:
             context = match.group(1)
@@ -63,7 +61,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def _fetch_and_output_data(args: Args) -> int:
-
     url = f"http://{args.host}/xml/sensordata.xml"
     try:
         response = requests.get(

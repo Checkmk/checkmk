@@ -1,0 +1,19 @@
+Title: SAML: response signature is optional
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1679481270
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Checkmk required both the response and the assertion statement to be signed in
+order to accept an authentication request response from the identity provider.
+However, as per the SAML specifications, only the assertion statement signature
+is required and the response signature is optional. For this reason,
+authentication request responses that only have the assertion statement signed
+are now accepted.
+
+See section 4.1.3.5 in:
+http://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf

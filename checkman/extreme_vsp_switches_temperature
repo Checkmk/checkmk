@@ -1,0 +1,14 @@
+title: Extreme VSP Switch: Temperature
+agents: snmp
+catalog: hw/network/netextreme
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of Extreme VSP Switches.
+ Upper default levels are 50, 60 measured in Celsius.
+
+item:
+ The name of the VSP Switch is the item.
+
+discovery:
+ One service is created for every VSP Switch available.

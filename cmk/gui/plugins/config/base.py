@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Default configuration settings for the Check_MK GUI"""
+"""Default configuration settings for the Checkmk GUI"""
 
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from livestatus import SiteConfigurations
 
-from cmk.utils.type_defs import TagConfigSpec
+from cmk.utils.tags import TagConfigSpec
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
@@ -290,7 +292,7 @@ class CREConfig:
     # the table.py module
     table_row_limit: int = 100
 
-    # Add an icon pointing to the WATO rule to each service
+    # Add an icon pointing to the Setup rule to each service
     multisite_draw_ruleicon: bool = True
 
     # Default downtime configuration
@@ -339,6 +341,13 @@ class CREConfig:
         ]
     )
 
+    agent_controller_certificates: dict[str, int] = field(
+        default_factory=lambda: {"lifetime_in_months": 60}
+    )
+
+    # Default temperature unit
+    default_temperature_unit: str = TemperatureUnit.CELSIUS.value
+
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )
     #    | | | / __|/ _ \ '__| | | |  _ \
@@ -346,9 +355,9 @@ class CREConfig:
     #     \___/|___/\___|_|  |____/|____/
     #
 
-    # This option can not be configured through WATO anymore. Config has been
+    # This option can not be configured through Setup anymore. Config has been
     # moved to the sites configuration. This might have been configured in master/remote
-    # in previous versions and is set on remote sites during WATO synchronization.
+    # in previous versions and is set on remote sites during Setup synchronization.
     userdb_automatic_sync: str | None = "master"
 
     # Permission to login to the web gui of a site (can be changed in sites
@@ -360,10 +369,18 @@ class CREConfig:
 
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
-    lock_on_logon_failures: int | None = None
-    user_idle_timeout: int | None = 5400
+    lock_on_logon_failures: int | None = 10
+    session_mgmt: dict[str, Any] = field(
+        default_factory=lambda: {
+            "user_idle_timeout": 5400,
+        }
+    )
     single_user_session: int | None = None
-    password_policy: dict = field(default_factory=dict)
+    password_policy: dict[str, Any] = field(
+        default_factory=lambda: {
+            "min_length": 12,
+        }
+    )
 
     user_localizations: dict[str, dict[str, str]] = field(
         default_factory=lambda: {
@@ -385,8 +402,8 @@ class CREConfig:
             "Do not monitor this host": {
                 "de": "Diesen Host nicht überwachen",
             },
-            "Dual: Check_MK Agent + SNMP": {
-                "de": "Dual: Check_MK Agent + SNMP",
+            "Dual: Checkmk Agent + SNMP": {
+                "de": "Dual: Checkmk Agent + SNMP",
             },
             "Legacy SNMP device (using V1)": {
                 "de": "Alte SNMP-Geräte (mit Version 1)",
@@ -409,8 +426,8 @@ class CREConfig:
             "WAN (high latency)": {
                 "de": "WAN (hohe Latenz)",
             },
-            "monitor via Check_MK Agent": {
-                "de": "Überwachung via Check_MK Agent",
+            "monitor via Checkmk Agent": {
+                "de": "Überwachung via Checkmk Agent",
             },
             "monitor via SNMP": {
                 "de": "Überwachung via SNMP",
@@ -437,7 +454,7 @@ class CREConfig:
         ]
     )
 
-    # Override toplevel and sort_index settings of builtin icons
+    # Override toplevel and sort_index settings of built-in icons
     builtin_icon_visibility: dict = field(default_factory=dict)
 
     trusted_certificate_authorities: dict[str, Any] = field(
@@ -457,7 +474,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled: bool = True
+    mkeventd_enabled: bool = edition() is not Edition.CSE  # disabled in CSE
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16
@@ -505,7 +522,6 @@ class CREConfig:
     wato_upload_insecure_snapshots: bool = False
     wato_hide_varnames: bool = True
     wato_hide_help_in_lists: bool = True
-    wato_activate_changes_concurrency: str = "auto"
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
@@ -588,3 +604,6 @@ class CREConfig:
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
+
+    # Experimental feature flags
+    experimental_features: dict[str, Any] = field(default_factory=dict)

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 import json
-from typing import List, Literal, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -14,6 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    COLLECTOR_SERVICE_NAME,
     CollectorComponentsMetadata,
     CollectorDaemons,
     CollectorHandlerLog,
@@ -58,9 +60,9 @@ register.agent_section(
 
 
 def discover(
-    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
-    section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
-    section_kube_collector_daemons: Optional[CollectorDaemons],
+    section_kube_collector_metadata: CollectorComponentsMetadata | None,
+    section_kube_collector_processing_logs: CollectorProcessingLogs | None,
+    section_kube_collector_daemons: CollectorDaemons | None,
 ) -> DiscoveryResult:
     if section_kube_collector_metadata is not None and section_kube_collector_daemons is not None:
         yield Service()
@@ -69,7 +71,7 @@ def discover(
 def _component_check(
     params: Mapping[str, int],
     component: Literal["container_metrics", "machine_metrics"],
-    component_log: Optional[CollectorHandlerLog],
+    component_log: CollectorHandlerLog | None,
 ) -> CheckResult:
     component_name = {
         "container_metrics": "Container Metrics",
@@ -101,7 +103,7 @@ def _collector_component_versions(components: Sequence[NodeComponent]) -> str:
         ... collector_type=CollectorType.CONTAINER_METRICS)])
         'Container Metrics: Checkmk_kube_agent v1, component 1'
     """
-    formatted_components: List[str] = []
+    formatted_components: list[str] = []
     for component in sorted(components, key=lambda c: c.collector_type.value):
         formatted_components.append(
             f"{component.collector_type.value}: Checkmk_kube_agent v{component.checkmk_kube_agent.project_version}, {component.name} {component.version}"
@@ -159,9 +161,9 @@ def _check_collector_daemons(collector_daemons: CollectorDaemons) -> CheckResult
 
 def check(
     params: Mapping[str, int],
-    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
-    section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
-    section_kube_collector_daemons: Optional[CollectorDaemons],
+    section_kube_collector_metadata: CollectorComponentsMetadata | None,
+    section_kube_collector_processing_logs: CollectorProcessingLogs | None,
+    section_kube_collector_daemons: CollectorDaemons | None,
 ) -> CheckResult:
     if section_kube_collector_metadata is None or section_kube_collector_daemons is None:
         return
@@ -212,7 +214,7 @@ def check(
 
 register.check_plugin(
     name="kube_collector_info",
-    service_name="Cluster collector",
+    service_name=COLLECTOR_SERVICE_NAME,
     sections=[
         "kube_collector_metadata",
         "kube_collector_processing_logs",

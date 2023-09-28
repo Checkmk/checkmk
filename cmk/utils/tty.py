@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains constants and functions for neat output formating
@@ -124,14 +124,13 @@ def get_size() -> tuple[int, int]:
     except io.UnsupportedOperation:
         pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
     except OSError as e:
-        if e.errno == errno.ENOTTY:
-            # Inappropriate ioctl for device: Occurs when redirecting output
-            pass
-        elif e.errno == errno.EINVAL:
-            # Invalid argument: Occurs e.g. when executing from cron
-            pass
-        else:
-            raise
+        match e.errno:
+            case errno.ENOTTY:  # Inappropriate ioctl for device: Occurs when redirecting output
+                pass
+            case errno.EINVAL:  # Invalid argument: Occurs e.g. when executing from cron
+                pass
+            case _:
+                raise
 
     return (24, 80)
 

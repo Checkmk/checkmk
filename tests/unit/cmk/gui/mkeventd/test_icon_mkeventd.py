@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,7 +33,7 @@ class IconRenderResult(NamedTuple):
         #         Hostname
         #         IP address
         #         Alias
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -49,10 +49,11 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Hostname, IP address, Alias",
         ),
         # Host specification:
         #     Specify host explicitly
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -68,11 +69,12 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Specify host explicitly",
         ),
         # Host specification:
         #   Specify host explicitly
         # Application (regular expression)
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -88,6 +90,7 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host heute',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Specify host explicitly and application by regular expression",
         ),
         # Host specification:
         #     Match host with
@@ -95,7 +98,7 @@ class IconRenderResult(NamedTuple):
         #         IP address
         #         Alias
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -111,13 +114,14 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Hostname, IP address, Alias and ignore Acknowledged events",
         ),
         # Host specification:
         #     Match host with
         #         Alias
         # Application (regular expression)
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -133,13 +137,14 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host my_alias',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with Alias, application by regular expression ignore ack events",
         ),
         # Host specification:
         #        Match host with
         #            IP address
         # Application (regular expression)
         # Ignore Acknowledged events
-        (
+        pytest.param(
             IconRenderArgs(
                 what="service",
                 row={
@@ -156,11 +161,31 @@ class IconRenderResult(NamedTuple):
                 title='Events of Application "^my_apps*" on Host 127.0.0.1',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
+            id="Match host with IP address, application by regular expression ignore ack events",
+        ),
+        # Check how the parser handles the -L parameter in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!-L '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="-L parameter handling",
         ),
     ],
 )
-def test_icon_options(  # type:ignore[no-untyped-def]
-    args, result, request_context, monkeypatch
+def test_icon_options(
+    args: IconRenderArgs, result: IconRenderResult, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Creation of title and url for links to event console entries of host"""
     icon = icon_and_action_registry["mkeventd"]()

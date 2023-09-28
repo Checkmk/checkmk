@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+# Supporters create "releases" quite rarely.
+# Also, for now we have to use zip, planned to be fixed.
+
+TAG=0.9.6
+
+curl --silent \
+    --show-error \
+    --fail \
+    --location \
+    -o openhardwaremonitor-${TAG}.zip \
+    https://github.com/openhardwaremonitor/openhardwaremonitor/archive/refs/tags/${TAG}.zip

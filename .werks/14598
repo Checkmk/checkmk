@@ -1,0 +1,16 @@
+Title: Bulk create Hosts: Update Redoc to reflect response
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1679990469
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If the REST API call 
+C+:
+POST /domain-types/host_config/actions/bulk-create/invoke
+C-:
+returned a 400 Bad Request, the field ext.failed_hosts did not match the documentation. The
+documentation has been updated.

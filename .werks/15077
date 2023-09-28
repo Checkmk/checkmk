@@ -1,0 +1,13 @@
+Title: Explicit naming of regex and exact match view filters
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1686046089
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Several view filters, which perform either regex or exact match queries, did not indicate the match type in their filter title.
+This is fixed to all such filters being named "<i>filter_name</i> (regex)" or "<i>filter_name</i> (exact match)" respectively.
+

@@ -6,7 +6,7 @@ Date: 1652366202
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk adds the check plugin for the Kubernetes
 Resource Quota CPU resources.

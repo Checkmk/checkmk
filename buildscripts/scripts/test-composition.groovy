@@ -22,16 +22,11 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
-    def excluded_distros = [
-        "sles-15", /// CMK-1705: SLES-15 is missing xinitd and should therefore not be tested
-        'cma',     /// Testing CMA is not needed
-    ];
-
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS) - excluded_distros;
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
 
     def branch_name = versioning.safe_branch_name(scm);
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Run composition tests for<br>
         |VERSION: ${VERSION}<br>
@@ -55,7 +50,7 @@ def main() {
             VERSION: VERSION,
             DOCKER_TAG: versioning.select_docker_tag(
                 branch_name,
-                DOCKER_TAG, 
+                DOCKER_TAG,
                 DOCKER_TAG),   // FIXME was DOCKER_TAG_DEFAULT before
             MAKE_TARGET: "test-composition-docker",
             BRANCH: branch_name,  // FIXME was BRANCH before
@@ -63,5 +58,5 @@ def main() {
         )
     }
 }
-return this;
 
+return this;

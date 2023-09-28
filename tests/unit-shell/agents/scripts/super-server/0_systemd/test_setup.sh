@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -41,6 +41,7 @@ test_destination_ok() {
 
 }
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 test_systemd_version() {
 
     systemctl() {
@@ -53,6 +54,7 @@ HERE
     assertEquals "245" "$(_systemd_version)"
 }
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 test_systemd_sufficient_fail_for_218() {
     systemctl() { echo "systemd 218 (foobar)"; }
     _systemd_present() { :; }
@@ -64,6 +66,7 @@ test_systemd_sufficient_fail_for_218() {
     assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
 }
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 test_deploy_fail_for_219() {
     systemctl() { echo "systemd 219 (foobar)"; }
     _systemd_present() { :; }
@@ -77,6 +80,7 @@ test_deploy_fail_for_219() {
     assertContains "${ERRMSG}" $'The Checkmk agent may need to know the IP address of the querying site.'
 }
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 test_deploy_ok_for_219() {
     systemctl() { echo "systemd 219 (foobar)"; }
     _systemd_present() { :; }

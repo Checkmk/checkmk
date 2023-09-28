@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -53,7 +53,11 @@ def process_level_elements():
             # xgettext: no-python-format
             _("100% is all cores at full load"),
         ),
-        (False, _("N * 100% as each core contributes with 100% at full load")),
+        (
+            False,
+            # xgettext: no-python-format
+            _("N * 100% as each core contributes with 100% at full load"),
+        ),
     ]
     return [
         (
@@ -61,6 +65,7 @@ def process_level_elements():
             DropdownChoice[bool](
                 title=_("CPU rescale maximum load"),
                 help=_(
+                    # xgettext: no-python-format
                     "CPU utilization is delivered by the Operating "
                     "System as a per CPU core basis. Thus each core contributes "
                     "with a 100% at full utilization, producing a maximum load "
@@ -136,10 +141,10 @@ def process_level_elements():
         (
             "cpu_average",
             Integer(
-                title=_("CPU Averaging"),
+                title=_("CPU averaging"),
                 help=_(
-                    "By activating averaging, Check_MK will compute the average of "
-                    "the total CPU utilization over a given interval. If you have defined "
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the total CPU utilization. If you have defined "
                     "alerting levels then these will automatically be applied on the "
                     "averaged value. This helps to mask out short peaks. "
                 ),
@@ -154,7 +159,7 @@ def process_level_elements():
                 title=_("Levels on CPU utilization of a single process"),
                 help=_(
                     "Here you can define levels on the CPU utilization of single "
-                    "processes. For performance reasons CPU Averaging will not be "
+                    "processes. For performance reasons CPU averaging will not be "
                     "applied to to the levels of single processes."
                 ),
                 elements=[
@@ -202,9 +207,69 @@ def process_level_elements():
             ),
         ),
         (
+            "virtual_average",
+            Integer(
+                title=_("Virtual memory averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the virtual memory utilization. If you have defined "
+                    "alerting levels then these will automatically be applied on the "
+                    "averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_virtual_levels",
+            Tuple(
+                title=_("Virtual memory utilization of a single process"),
+                help=_(
+                    "Here you can define levels on the virtual memory utilization of single "
+                    "processes. For performance reasons virtual memory averaging will not be "
+                    "applied to to the levels of single processes."
+                ),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=1000 * 1024 * 1024 * 1024),
+                    Filesize(title=_("Critical at"), default_value=2000 * 1024 * 1024 * 1024),
+                ],
+            ),
+        ),
+        (
             "resident_levels",
             Tuple(
-                title=_("Physical memory usage"),
+                title=_("Resident memory usage"),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=100 * 1024 * 1024),
+                    Filesize(title=_("Critical at"), default_value=200 * 1024 * 1024),
+                ],
+            ),
+        ),
+        (
+            "resident_average",
+            Integer(
+                title=_("Resident memory averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the resident memory utilization. If you have defined "
+                    "alerting levels then these will automatically be applied on the "
+                    "averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_resident_levels",
+            Tuple(
+                title=_("Resident memory utilization of a single process"),
+                help=_(
+                    "Here you can define levels on the resident memory utilization of single "
+                    "processes. For performance reasons resident memory averaging will not be "
+                    "applied to to the levels of single processes."
+                ),
                 elements=[
                     Filesize(title=_("Warning at"), default_value=100 * 1024 * 1024),
                     Filesize(title=_("Critical at"), default_value=200 * 1024 * 1024),
@@ -214,7 +279,37 @@ def process_level_elements():
         (
             "resident_levels_perc",
             Tuple(
-                title=_("Physical memory usage, in percentage of total RAM"),
+                title=_("Resident memory usage, in percentage of total RAM"),
+                elements=[
+                    Percentage(title=_("Warning at"), default_value=25.0),
+                    Percentage(title=_("Critical at"), default_value=50.0),
+                ],
+            ),
+        ),
+        (
+            "resident_perc_average",
+            Integer(
+                title=_("Resident memory usage (in percentage of total RAM) averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the resident memory utilization, in percentage of total RAM. "
+                    "If you have defined alerting levels then these will automatically be "
+                    "applied on the averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_resident_levels_perc",
+            Tuple(
+                title=_("Resident memory usage (in percentage of total RAM) of a single process"),
+                help=_(
+                    "Here you can define levels on the resident memory utilization (in percentage "
+                    "of total RAM) of single processes. For performance reasons resident memory "
+                    "averaging will not be applied to to the levels of single processes."
+                ),
                 elements=[
                     Percentage(title=_("Warning at"), default_value=25.0),
                     Percentage(title=_("Critical at"), default_value=50.0),
@@ -267,6 +362,15 @@ def process_level_elements():
                     ("html", _("HTML output")),
                 ],
                 default_value=None,
+            ),
+        ),
+        (
+            "process_usernames",
+            Checkbox(
+                title="Include usernames in service details",
+                label="Acquire and show usernames",
+                help=_("If enabled, the service details will contain username of a process owner."),
+                default_value=True,
             ),
         ),
         (
@@ -333,7 +437,8 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 def process_discovery_descr_option():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
+        size=49,
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
         help=_(
@@ -364,7 +469,7 @@ def process_match_options():
             TextInput(
                 title=_("Exact name of the process without arguments"),
                 label=_("Executable:"),
-                size=50,
+                size=86,
             ),
             Transform(
                 valuespec=RegExp(
@@ -411,7 +516,7 @@ def user_match_options(extra_elements=None):
             ),
             Transform(
                 valuespec=RegExp(
-                    size=50,
+                    size=86,
                     mode=RegExp.prefix,
                 ),
                 title=_("Regular expression matching username"),
@@ -453,7 +558,7 @@ def cgroup_match_options():
                     ),
                     Transform(
                         valuespec=RegExp(
-                            size=50,
+                            size=86,
                             mode=RegExp.prefix,
                         ),
                         title=_("Regular expression matching control group info"),
@@ -495,7 +600,12 @@ def _item_spec_ps():
 def _parameter_valuespec_ps() -> Dictionary:
     return Dictionary(
         elements=process_level_elements(),
-        ignored_keys=["match_groups", "cgroup"],
+        ignored_keys=[
+            "process",
+            "match_groups",
+            "user",
+            "cgroup",
+        ],
         required_keys=["cpu_rescale_max"],
     )
 
@@ -515,7 +625,7 @@ rulespec_registry.register(
 # Rule for static process checks
 def _manual_item_spec_ps():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _./-]*$",
@@ -558,6 +668,10 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             "done. These services will be created with default parameters. They will get "
             "critical when no process is running and OK otherwise. You can parameterize "
             "the check with the ruleset <i>State and count of processes</i>."
+            "Care should be taken when removing vanished services, for example via "
+            "<i>Bulk Discovery</i>. When a process vanishes, so does the corresponding "
+            "service. So despite that the service is critical, it can be removed by discovery, "
+            "effectively turning off monitoring."
         ),
         elements=[
             ("descr", process_discovery_descr_option()),
@@ -649,16 +763,16 @@ def match_hr_alternative(x):
 
 def hr_process_match_name_option():
     return Alternative(
-        title=_("Process Name Matching"),
+        title=_("Process name matching"),
         elements=[
             TextInput(
                 title=_("Exact name of the textual description"),
-                size=50,
+                size=86,
                 allow_empty=False,
             ),
             Transform(
                 valuespec=RegExp(
-                    size=50,
+                    size=86,
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
                     allow_empty=False,
@@ -879,7 +993,7 @@ rulespec_registry.register(
 # Rule for static process checks
 def _manual_item_spec_hr_ps():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _./-]*$",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -88,78 +88,64 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
     host_address = None
     user = None
-    mortypes = ["all"]
 
     command_options = {
-        "lshost": {"section_header": "ibm_svc_host", "active": False, "command": "lshost -delim :"},
+        "lshost": {"section_header": "ibm_svc_host", "command": "lshost -delim :"},
         "lslicense": {
             "section_header": "ibm_svc_license",
-            "active": False,
             "command": "lslicense -delim :",
         },
         "lsmdisk": {
             "section_header": "ibm_svc_mdisk",
-            "active": False,
             "command": "lsmdisk -delim :",
         },
         "lsmdiskgrp": {
             "section_header": "ibm_svc_mdiskgrp",
-            "active": False,
             "command": "lsmdiskgrp -delim :",
         },
-        "lsnode": {"section_header": "ibm_svc_node", "active": False, "command": "lsnode -delim :"},
+        "lsnode": {"section_header": "ibm_svc_node", "command": "lsnode -delim :"},
         "lsnodestats": {
             "section_header": "ibm_svc_nodestats",
-            "active": False,
             "command": "lsnodestats -delim :",
         },
         "lssystem": {
             "section_header": "ibm_svc_system",
-            "active": False,
             "command": "lssystem -delim :",
         },
         "lssystemstats": {
             "section_header": "ibm_svc_systemstats",
-            "active": False,
             "command": "lssystemstats -delim :",
         },
         "lseventlog": {
             "section_header": "ibm_svc_eventlog",
-            "active": False,
             "command": "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr",
         },
         "lsportfc": {
             "section_header": "ibm_svc_portfc",
-            "active": False,
             "command": "lsportfc -delim :",
         },
         "lsenclosure": {
             "section_header": "ibm_svc_enclosure",
-            "active": False,
             "command": "lsenclosure -delim :",
         },
         "lsenclosurestats": {
             "section_header": "ibm_svc_enclosurestats",
-            "active": False,
             "command": "lsenclosurestats -delim :",
         },
         "lsarray": {
             "section_header": "ibm_svc_array",
-            "active": False,
             "command": "lsarray -delim :",
         },
         "lsportsas": {
             "section_header": "ibm_svc_portsas",
-            "active": False,
             "command": "lsportsas -delim :",
         },
         "disks": {
             "section_header": "ibm_svc_disks",
-            "active": False,
             "command": "svcinfo lsdrive -delim :",
         },
     }
-
+    mortypes = set(command_options)
     for o, a in opts:
         if o in ["--debug"]:
             opt_debug = True
@@ -169,7 +155,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         elif o in ["-u", "--user"]:
             user = a
         elif o in ["-i", "--modules"]:
-            mortypes = a.split(",")
+            provided_modules = set(a.split(","))
+            mortypes = (
+                mortypes if provided_modules == {"all"} else provided_modules.intersection(mortypes)
+            )
         elif o in ["-t", "--timeout"]:
             opt_timeout = int(a)
         elif o in ["-k", "--accept-any-hostkey"]:
@@ -191,61 +180,27 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         sys.stderr.write("ERROR: No user name given.\n")
         return 1
 
-    for module in command_options:
-        try:
-            if mortypes.index("all") >= 0:
-                command_options[module]["active"] = True
-        except ValueError:
-            pass
-
-        try:
-            if mortypes.index(module) >= 0:
-                command_options[module]["active"] = True
-        except ValueError:
-            pass
-
     #############################################################################
     # fetch information by ssh
     #############################################################################
 
-    cmd = "ssh -o ConnectTimeout={} {} {}@{} '".format(
-        opt_timeout,
-        opt_any_hostkey,
-        shlex.quote(user),
-        shlex.quote(host_address),
+    remote_command = ""
+    for module in mortypes:
+        remote_command += (
+            r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
+        )
+        remote_command += "%s || true;" % command_options[module]["command"]
+
+    result = _execute_ssh_command(
+        remote_command=remote_command,
+        opt_timeout=opt_timeout,
+        opt_any_hostkey=opt_any_hostkey,
+        user=user,
+        host_address=host_address,
+        opt_debug=opt_debug,
     )
 
-    for module in command_options:
-        if command_options[module]["active"]:
-            cmd += r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
-            cmd += "%s || true;" % command_options[module]["command"]
-    cmd += "'"
-
-    if opt_debug:
-        sys.stderr.write("executing external command: %s\n" % cmd)
-
-    result = subprocess.run(  # nosec B602 # BNS:67522a
-        cmd,
-        shell=True,
-        capture_output=True,
-        stdin=None,
-        encoding="utf-8",
-        check=False,
-    )
-
-    if result.returncode not in [0, 1]:
-        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
-        sys.exit(2)
-
-    lines = result.stdout.split("\n")
-
-    if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(result.stdout)
-        sys.exit(2)
-
-    # Quite strange.. Why not simply print stdout?
-    for line in lines:
-        print(line)
+    _check_ssh_result(result)
 
     if g_profile:
         g_profile_path = Path("ibmsvc_profile.out")
@@ -262,3 +217,48 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
         sys.stderr.write(f"Profile '{g_profile_path}' written. Please run {show_profile}.\n")
     return None
+
+
+def _execute_ssh_command(
+    remote_command: str,
+    opt_timeout: int,
+    opt_any_hostkey: str,
+    user: str,
+    host_address: str,
+    opt_debug: bool,
+) -> subprocess.CompletedProcess:
+    cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
+        opt_timeout,
+        opt_any_hostkey,
+        shlex.quote(user),
+        shlex.quote(host_address),
+        remote_command,
+    )
+
+    if opt_debug:
+        sys.stderr.write(f"executing external command: {cmd}\n")
+
+    return subprocess.run(  # nosec B602 # BNS:67522a
+        cmd,
+        shell=True,
+        capture_output=True,
+        stdin=None,
+        encoding="utf-8",
+        check=False,
+    )
+
+
+def _check_ssh_result(result: subprocess.CompletedProcess) -> None:
+    if result.returncode not in [0, 1]:
+        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
+        sys.exit(2)
+
+    lines = result.stdout.split("\n")
+
+    if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
+        sys.stderr.write(result.stdout)
+        sys.exit(2)
+
+    # Quite strange.. Why not simply print stdout?
+    for line in lines:
+        print(line)

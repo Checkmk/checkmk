@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,16 +7,21 @@ import urllib
 
 import pytest
 
+from tests.testlib.rest_api_client import ClientRegistry
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils import version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_livestatus_service(  # type:ignore[no-untyped-def]
+def test_openapi_livestatus_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     live.add_table(
@@ -97,10 +102,10 @@ def test_openapi_livestatus_service(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_livestatus_collection_link(  # type:ignore[no-untyped-def]
+def test_openapi_livestatus_collection_link(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     live.add_table(
@@ -150,10 +155,10 @@ def test_openapi_livestatus_collection_link(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_specific_service(  # type:ignore[no-untyped-def]
+def test_openapi_specific_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     live.add_table(
@@ -208,10 +213,10 @@ def test_openapi_specific_service(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_service_with_slash_character(  # type:ignore[no-untyped-def]
+def test_openapi_service_with_slash_character(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     live.add_table(
@@ -268,10 +273,10 @@ def test_openapi_service_with_slash_character(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_non_existing_service(  # type:ignore[no-untyped-def]
+def test_openapi_non_existing_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     live.add_table(
@@ -317,3 +322,55 @@ def test_openapi_non_existing_service(  # type:ignore[no-untyped-def]
             headers={"Accept": "application/json"},
             status=404,
         )
+
+
+@managedtest
+def test_openapi_get_host_services_with_guest_user(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    clients: ClientRegistry,
+    base: str,
+) -> None:
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem /opt/omd/sites/heute/tmp",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+            },
+        ],
+    )
+
+    clients.HostConfig.create(host_name="heute", folder="/")
+
+    clients.User.create(
+        username="guest_user1",
+        fullname="guest_user1_alias",
+        contactgroups=["all"],
+        customer="provider",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["guest"],
+    )
+
+    clients.HostConfig.set_credentials("guest_user1", "supersecretish")
+
+    mock_livestatus.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+            "Filter: host_name = heute",
+        ]
+    )
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            base + "/objects/host/heute/collections/services",
+            headers={"Accept": "application/json"},
+            status=200,
+        )
+        assert len(resp.json["value"]) == 1

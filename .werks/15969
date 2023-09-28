@@ -1,0 +1,14 @@
+Title: cisco_temperature: Correct warning threshold for environment temperature
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1690203317
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Currently only the threshold specified by OID 1.3.6.1.4.1.9.9.13.1.3.1.4 (ciscoEnvMonTemperatureThreshold) is considered when checking the temperature of a Cisco switch. As only one threshold is given here, it is used as both WARN and CRIT threshold, causing confusion when the device itself reports a warning state based on a warning threshold not given via this OID.
+Now the upper thresholds specified in OID 1.3.6.1.4.1.9.9.91.1.2.1.1 (entSensorThresholdTable) will be used as WARN and CRIT thresholds if an entry for the relevant switch can be found.
+For this, the threshold relation and severity will be used to determine if the threshold can be applied in Checkmk, otherwise the threshold will be ignored.
+If no thresholds from the entSensorThresholdTable apply, the ciscoEnvMonTemperatureThreshold is used as a fallback.

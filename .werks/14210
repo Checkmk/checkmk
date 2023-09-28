@@ -1,0 +1,14 @@
+Title: Frozen BI aggregations: Improved performance when rendering multiple aggregations at the same time
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1693312244
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

@@ -1,0 +1,15 @@
+Title: dcd: phase 2.3 updating config now calling the update host endpoint with the correct data
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1694767693
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Due to a recent change in the update_host rest-api endpoint, we inadvertently
+broke the dcd functionality.  This werk addresses this issue by calling the
+update_host endpoint with the correct data format when performing the dcd step
+phase 2.3 updating config.
+

@@ -4,6 +4,7 @@ catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- counts number of buckets
+ This service counts number of buckets
+
 discovery:
- One service is created
+ One service is created for all buckets in this project.

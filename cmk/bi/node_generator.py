@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -34,7 +34,7 @@ class BINodeGenerator(ABCBINodeGenerator):
             filtered_search_results = []
             for search_result in search_results:
                 action_arguments = dict(macros)
-                action_arguments.update(search_result)
+                action_arguments |= search_result
                 if self.restrict_rule_title == self.action.preview_rule_title(action_arguments):
                     filtered_search_results.append(search_result)
             search_results = filtered_search_results

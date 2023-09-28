@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -94,7 +95,12 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 
 def discover_hr_fs(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     yield from df_discovery(
-        params, [descr for descr, *_unused in section if descr not in EXCLUDED_MOUNTPOINTS]
+        params,
+        [
+            descr
+            for descr, size, *_unused in section
+            if descr not in EXCLUDED_MOUNTPOINTS and size != 0
+        ],
     )
 
 

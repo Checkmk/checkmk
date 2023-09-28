@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,21 +7,22 @@ import copy
 import time
 from typing import Any
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.views.store import internal_view_to_runtime_view
 
+from ...utils.exceptions import MKGeneralException
 from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 
 
-# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
+# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore and ReportStore, centralize implementation?
 class DashboardStore:
     @classmethod
     @request_memoize()
@@ -49,10 +50,11 @@ class DashboardStore:
 
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
+    raw_dashboard["packaged"] = False
     return {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
-        **raw_dashboard,  # type: ignore[misc]
+        **raw_dashboard,  # type: ignore[typeddict-item]
         "dashlets": [
             internal_view_to_runtime_view(dashlet_spec)
             if dashlet_spec["type"] == "view"
@@ -79,7 +81,6 @@ def load_dashboard_with_cloning(
     name: DashboardName,
     edit: bool = True,
 ) -> DashboardConfig:
-
     all_dashboards = get_all_dashboards()
     board = visuals.get_permissioned_visual(
         name,
@@ -89,7 +90,7 @@ def load_dashboard_with_cloning(
         all_dashboards,
     )
     if edit and board["owner"] == UserId.builtin():
-        # Trying to edit a builtin dashboard results in doing a copy
+        # Trying to edit a built-in dashboard results in doing a copy
         active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)

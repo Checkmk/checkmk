@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 After rework of WebAPI get_bi_aggregations endpoint in v2.0,
 output of the aggregation was no longer returned. Now, it's

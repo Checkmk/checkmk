@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,8 +22,17 @@ def _parameter_valuespec():
                     _("Time until alert, if latest CronJob job is in pending state")
                 ),
             ),
+            (
+                "running",
+                age_levels_dropdown(
+                    _(
+                        "Time until alert, if the latest CronJob job has been running for "
+                        "longer than set time"
+                    )
+                ),
+            ),
         ],
-        optional_keys=["pending"],
+        optional_keys=["pending", "running"],
     )
 
 

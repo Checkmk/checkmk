@@ -1,0 +1,15 @@
+Title: Enforce password policy in REST API and user management
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1675411254
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this Werk both the REST API and the user management UI (Setup > Users) did not correctly enforce the password policy for local accounts.
+
+As a result, administrators with the "User management" permission could set passwords that don't comply with the policy for their own or other users' accounts.
+
+Note that the "Change password" option in the user profile menu was not affected by the issue and correctly checked the password policy.

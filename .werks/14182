@@ -1,0 +1,21 @@
+Title: BI aggregations: Introduced option to freeze aggregation structure
+Class: feature
+Compatible: compat
+Component: bi
+Date: 1676215804
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+You can now choose to freeze the structure of an aggregation group.
+Once created, aggregations will never change their structure unless the user triggers a rebuild.
+
+To enable frozen aggregations, you have to set the new option <tt>New aggregations are frozen</tt> in the aggregation configuration page.
+If this option is set, all aggregation trees created from this aggregation are considered frozen right after their creation.
+It is still possible to re-freeze single trees of such an aggregation group.
+
+A snowflake icon has been introduced to indicate that an aggregation is frozen.
+If you click on this icon, an additional view will show the difference between the frozen aggregate and its live version.
+On this page you can also send a command to refreeze the frozen aggregation.
+

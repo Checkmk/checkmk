@@ -1,0 +1,16 @@
+Title: BI state computation: Removed superfluous and expensive livestatus queries
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1689847196
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+It is possible to restrict the number of computed BI aggregation via filters.
+If a filter was specified and no matching aggregation was found, a livestatus query over all aggregations was generated and sent to the core.
+A huge response came back to the apache server, which dutifully parsed the response and threw it straight into the bin.
+
+

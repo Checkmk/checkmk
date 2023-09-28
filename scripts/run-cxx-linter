@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -50,8 +50,8 @@ execute_test() {
     make "${TARGET}" FILES_TO_CHECK="$(echo $FILES_TO_CHECK)"
 }
 
-if [ "$PWD" != "$REPO_DIR/livestatus/src" ] && [ "$PWD" != "$REPO_DIR/enterprise/core/src" ]; then
-    echo "ERROR: Wrong working directory (go to $REPO_DIR/livestatus/src or $REPO_DIR/enterprise/core/src)"
+if [ "$PWD" != "$REPO_DIR/packages/cmc" ]; then
+    echo "ERROR: Wrong working directory (go to $REPO_DIR/packages/cmc)"
     exit 1
 fi
 

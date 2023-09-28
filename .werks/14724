@@ -1,0 +1,18 @@
+Title: Improve EC performance when processing large logwatch.ec spool files
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1674633112
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+The performance and stability of the event console is now improved when
+processing large logwatch.ec generated spool files.
+
+logwatch.ec used to be able to generate spool files with unlimited size.
+
+The size of the spool files is now limited to 1 MiB. In case this limit
+is reached the multiple spool files are created.
+

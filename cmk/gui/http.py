@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
@@ -9,7 +9,8 @@ import json
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, cast, overload, Protocol, TypeVar
+from enum import auto, StrEnum
+from typing import Any, cast, Literal, overload, Protocol, TypeVar
 
 import flask
 from flask import request as flask_request
@@ -17,16 +18,51 @@ from pydantic import BaseModel
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import url_prefix
+from cmk.utils.urls import is_allowed_url
 
-import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
 UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")
 Value = TypeVar("Value")
+
+HTTPMethod = Literal["get", "put", "post", "delete"]
+
+
+class ContentDispositionType(StrEnum):
+    """
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+
+    Form data currently not supported by us.
+    """
+
+    INLINE = auto()
+    ATTACHMENT = auto()
+
+
+# This is used to match content-type to file ending (file extension) in
+# set_content_disposition. Feel free to add more extensions and content-types.
+# However please make sure that the added types are precise as we are
+# restricting types mitigate risk.
+FILE_EXTENSIONS = {
+    "application/javascript": [".js"],
+    "application/json": [".json"],
+    "application/pdf": [".pdf"],
+    "application/x-deb": [".deb"],
+    "application/x-rpm": [".rpm"],
+    "application/x-pkg": [".pkg"],
+    "application/x-tgz": [".tar.gz"],
+    "application/x-msi": [".msi"],
+    "application/x-mkp": [".mkp"],
+    "image/png": [".png"],
+    "text/csv": [".csv"],
+    "text/plain": [".txt"],
+    "application/x-pem-file": [".pem"],
+}
 
 
 class ValidatedClass(Protocol):
@@ -277,12 +313,20 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    # TODO investigate why there are so many form_parts
+    max_form_parts = 10000
+    meta: dict[str, Any]
+
     # pylint: disable=too-many-ancestors
 
-    def __init__(  # type:ignore[no-untyped-def]
-        self, environ, populate_request=True, shallow=False
-    ) -> None:
+    def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
+        # Modify the environment to fix double URLs in some apache configurations, only once.
+        if "apache.version" in environ and environ.get("SCRIPT_NAME"):
+            environ["PATH_INFO"] = environ["SCRIPT_NAME"]
+            del environ["SCRIPT_NAME"]
+
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self.meta = {}
         self._verify_not_using_threaded_mpm()
 
     def _verify_not_using_threaded_mpm(self) -> None:
@@ -438,7 +482,6 @@ class Request(
         return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
 
     def get_integer_input(self, varname: str, deflt: int | None = None) -> int | None:
-
         value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
             return None
@@ -452,7 +495,6 @@ class Request(
         return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
 
     def get_float_input(self, varname: str, deflt: float | None = None) -> float | None:
-
         value = self.var(varname, "%s" % deflt if deflt is not None else None)
         if value is None:
             return None
@@ -495,7 +537,7 @@ class Request(
         url = self.var(varname)
         assert url is not None
 
-        if not utils.is_allowed_url(url):
+        if not is_allowed_url(url):
             if deflt:
                 return deflt
             raise MKUserError(varname, _('The parameter "%s" is not a valid URL.') % varname)
@@ -595,6 +637,37 @@ class Response(flask.Response):
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+
+    def set_csp_form_action(self, form_action: str) -> None:
+        """If you have a form action that is not within the site, the
+        Content-Security-Policy will block it. So you can add it here, Apache
+        will then take this value and complete the CSP"""
+
+        self.headers[
+            "Content-Security-Policy"
+        ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+
+    def set_content_disposition(self, header_type: ContentDispositionType, filename: str) -> None:
+        """Define the Content-Disposition header here, this HTTP header controls how
+        browsers present download data. If you are providing custom meta data for
+        the filename and process (such as attachment, inline etc) by which a browser
+        should make use when downloading.
+        """
+
+        if '"' in filename or "\\" in filename:
+            raise ValueError("Invalid character in filename")
+        for extensions in FILE_EXTENSIONS.get(str(self.mimetype), []):
+            if filename.endswith(extensions):
+                break
+        else:
+            raise ValueError("Invalid file extension: Have you set the Content-Type header?")
+        self.headers["Content-Disposition"] = f'{header_type}; filename="{filename}"'
+
+    def set_caching_headers(self) -> None:
+        if "Cache-Control" in self.headers:
+            # Do not override previous set settings
+            return
+        self.headers["Cache-Control"] = "no-store"
 
 
 # From request context

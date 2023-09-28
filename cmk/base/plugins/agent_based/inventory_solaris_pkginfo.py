@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@
 #                8862 blocks used (approx)
 
 import time
-from typing import Dict, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -37,7 +37,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
     # - make package fields explicit - similar to lnx_packages.
     # - type hints will also be better
 
-    entry: Dict = {}
+    entry: dict = {}
     translation_dict = {
         "ARCH": "arch",
         "CATEGORY": "package_type",
@@ -60,7 +60,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
         elif key == "NAME":
             # build a dict for each package initiator = PKGINST
             # concat solaris pkginst and name to mk inventory name and write to dict
-            entry = {"name": "%s - %s" % (pkginst, value)}
+            entry = {"name": f"{pkginst} - {value}"}
         elif key == "INSTDATE":
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server
@@ -86,10 +86,9 @@ register.agent_section(
 
 
 def inventory_solaris_pkginfo(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for package in section:
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": package.get("name"),
             },

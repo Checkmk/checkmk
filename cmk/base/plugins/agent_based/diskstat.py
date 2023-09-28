@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -68,7 +68,8 @@
 
 import re
 import time
-from typing import Any, Mapping, MutableMapping, Sequence, TypeVar
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, TypeVar
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat, multipath
@@ -252,7 +253,7 @@ def diskstat_extract_name_info(
                 major = int(line[0], 16)
                 minor = int(line[1], 16)
                 group, disk = line[2].split("/")[-2:]
-                name = "VxVM %s-%s" % (group, disk)
+                name = f"VxVM {group}-{disk}"
                 name_info[major, minor] = name
     return timestamp, info_plain, name_info
 
@@ -277,7 +278,6 @@ def diskstat_convert_info(
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if section_multipath:
         for uuid, group in section_multipath.items():
-
             if (
                 group.device in converted_disks
                 or group.alias is not None
@@ -325,7 +325,6 @@ def _compute_rates_single_disk(
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-
     raised_ignore_res_excpt = False
     disk_with_rates = {k: disk[k] for k in ("queue_length",) if k in disk}
 

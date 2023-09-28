@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,9 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
@@ -15,8 +17,6 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.utils import format_php
 
 
@@ -33,7 +33,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
@@ -44,7 +44,6 @@ def test_registered_config_domains() -> None:
 
 
 def test_registered_automation_commands() -> None:
-
     expected_automation_commands = [
         "activate-changes",
         "push-profiles",
@@ -62,15 +61,18 @@ def test_registered_automation_commands() -> None:
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
         "remove-tls-registration",
-        "get-audit-logs",
+        "sync-remote-site",
+        "clear-site-changes",
         "hosts-for-auto-removal",
+        "rename-hosts-uuid-link",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
             "update-agent-requests",
+            "distribute-verification-response",
         ]
 
     registered = sorted(automation_command_registry.keys())
@@ -149,6 +151,7 @@ def test_registered_configvars() -> None:
         "rule_optimizer",
         "selection_livetime",
         "service_view_grouping",
+        "session_mgmt",
         "show_livestatus_errors",
         "show_mode",
         "sidebar_notify_interval",
@@ -177,12 +180,10 @@ def test_registered_configvars() -> None:
         "use_new_descriptions_for",
         "user_downtime_timeranges",
         "user_icons_and_actions",
-        "user_idle_timeout",
         "user_localizations",
         "view_action_defaults",
         "virtual_host_trees",
         "wato_activation_method",
-        "wato_activate_changes_concurrency",
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
@@ -195,13 +196,16 @@ def test_registered_configvars() -> None:
         "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
+        "agent_controller_certificates",
         "rest_api_etag_locking",
         "enable_login_via_get",
         "enable_community_translations",
         "default_language",
+        "default_temperature_unit",
+        "experimental_features",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -212,6 +216,7 @@ def test_registered_configvars() -> None:
             "alert_handler_timeout",
             "alert_logging",
             "bake_agents_on_restart",
+            "apply_bake_revision",
             "cmc_authorization",
             "cmc_check_helpers",
             "cmc_check_timeout",
@@ -295,7 +300,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

@@ -4,7 +4,7 @@ catalog: hw/storagehw/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This checks about Catalyst Stores on a HP StoreOnce system. The service gets CRIT in case the Store
+ This checks about Catalyst Stores on a HPE StoreOnce system. The service gets CRIT in case the Store
  state is not {{Online}}.
 
 item:

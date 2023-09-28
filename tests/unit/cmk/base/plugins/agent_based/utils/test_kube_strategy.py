@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.utils.kube import (
-    DisplayableStrategy,
     OnDelete,
     Recreate,
     RollingUpdate,
@@ -24,14 +23,3 @@ def test_strategy_text() -> None:
         strategy_text(StatefulSetRollingUpdate(partition=0, max_unavailable="2"))
         == "RollingUpdate (partitioned at: 0, max unavailable: 2)"
     )
-
-
-def test_strategy_is_displayable() -> None:
-    """
-
-    Any entry of DisplayableStrategy needs to be handled by strategy_text. By
-    default, strategy_text will simply display type_. If this is the intended
-    behaviour or you have reworked strategy_text to handle the new strategy,
-    then you may add it here.
-    """
-    assert DisplayableStrategy == RollingUpdate | Recreate | OnDelete | StatefulSetRollingUpdate

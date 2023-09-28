@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -40,7 +41,6 @@ def check(
     params: Mapping[str, tuple[float, float]],
     section: _Section,
 ) -> CheckResult:
-
     yield from check_levels(
         levels_upper=params.get("levels"),
         value=section.db_usage,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     type_defs,
 )
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 STRING_TABLE = [
     ['<?xml version="1.0" ?>'],
@@ -219,7 +220,7 @@ SECTION = nvidia_smi.Section(
     cuda_version="11.7",
     attached_gpus=1,
     gpus={
-        "0B:00.0": nvidia_smi.GPU(
+        "00000000:0B:00.0": nvidia_smi.GPU(
             id="00000000:0B:00.0",
             product_name="NVIDIA GeForce RTX 2070 SUPER",
             product_brand="GeForce",
@@ -284,7 +285,7 @@ def test_parse_nvidia_smi(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -295,16 +296,17 @@ def test_discover_nvidia_smi_temperature(
     assert list(nvidia_smi.discover_nvidia_smi_temperature(section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -315,7 +317,7 @@ def test_discover_nvidia_smi_temperature(
 )
 def test_check_nvidia_smi_temperature(
     item: str,
-    params: nvidia_smi.TempParamType,
+    params: TempParamType,
     section: nvidia_smi.Section,
     expected_result: type_defs.CheckResult,
 ) -> None:
@@ -327,7 +329,7 @@ def test_check_nvidia_smi_temperature(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -342,7 +344,7 @@ def test_discover_nvidia_smi_gpu_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -351,7 +353,7 @@ def test_discover_nvidia_smi_gpu_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.GenericLevelsParam(levels=(2.0, 4.0)),
             SECTION,
             [
@@ -375,7 +377,7 @@ def test_check_nvidia_smi_gpu_util(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -390,7 +392,7 @@ def test_discover_nvidia_smi_en_de_coder_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -401,7 +403,7 @@ def test_discover_nvidia_smi_en_de_coder_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.DeEnCoderParams(encoder_levels=(2.5, 3.5), decoder_levels=(5.0, 10.0)),
             SECTION,
             [
@@ -429,7 +431,7 @@ def test_check_nvidia_smi_en_de_coder_util(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -444,7 +446,7 @@ def test_discover_nvidia_smi_power(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -456,7 +458,7 @@ def test_discover_nvidia_smi_power(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.GenericLevelsParam(levels=(30.0, 40.0)),
             SECTION,
             [
@@ -485,7 +487,7 @@ def test_check_nvidia_smi_power(
     [
         (
             SECTION,
-            [Service(item="0B:00.0")],
+            [Service(item="00000000:0B:00.0")],
         ),
     ],
 )
@@ -500,7 +502,7 @@ def test_discover_nvidia_smi_memory_util(
     "item, params, section, expected_result",
     [
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             {},
             SECTION,
             [
@@ -517,7 +519,7 @@ def test_discover_nvidia_smi_memory_util(
             ],
         ),
         (
-            "0B:00.0",
+            "00000000:0B:00.0",
             nvidia_smi.MemoryParams(
                 levels_total=(10.0, 20.0),
                 levels_bar1=(0.5, 1.0),

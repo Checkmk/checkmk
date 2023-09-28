@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -103,7 +103,9 @@ from .utils import hp_msa, interfaces
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
 
-def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_hp_msa_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     parsed = []
     for idx, (_key, values) in enumerate(sorted(hp_msa.parse_hp_msa(string_table).items())):
         try:

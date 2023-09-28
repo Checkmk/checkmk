@@ -1,0 +1,17 @@
+Title: mssql_availability_groups: crash when sync state is PARTIALLY_HEALTHY
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681833635
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The check mssql_availability_groups would crash when a replica's sync state is
+"PARTIALLY_HEALTHY". This would be shown in the "Check_MK Discovery" service of
+the relevant host with the error message
+
+"ValueError ('PARTIALLY_HEALTHY' is not a valid SyncState)".
+
+This has been fixed and the Checkmk state of the corresponding service is WARN.

@@ -1,0 +1,76 @@
+Title: password: return better responses for GET collection
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678278247
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously when calling the password GET collection endpoint, the
+value attribute would only contain the following information for
+each password
+
+
+C+:
+{
+    "domainType": "dict",
+    "title": "Kubernetes login"
+}
+C-:
+
+It now contains links + the expected password information.
+
+C+:
+{
+    'domainType': 'password',
+    'extensions': {
+        'comment': 'comment1\n',
+        'documentation_url': '',
+        'owned_by': None,
+        'shared': ['all']
+        },
+    'id': 'password_1',
+    'links': [
+        {
+            'domainType': 'link',
+            'href': 'http://localhost/heute/check_mk/api/1.0/objects/password/password_1',
+            'method': 'GET',
+            'rel': 'self',
+            'type': 'application/json'
+        },
+        {
+            'domainType': 'link',
+            'href': 'http://localhost/heute/check_mk/api/1.0/objects/password/password_1',
+            'method': 'PUT',
+            'rel': 'urn:org.restfulobjects:rels/update',
+            'type': 'application/json'
+        },
+        {
+            'domainType': 'link',
+            'href': 'http://localhost/heute/check_mk/api/1.0/objects/password/password_1',
+            'method': 'DELETE',
+            'rel': 'urn:org.restfulobjects:rels/delete',
+            'type': 'application/json'}
+    ],
+    'members': {
+        'title': {
+            'format': 'string',
+            'id': 'title',
+            'links': [
+                {
+                    'domainType': 'link',
+                    'href': 'http://localhost/heute/check_mk/api/1.0/objects/password/password_1/properties/title',
+                    'method': 'GET',
+                    'rel': 'self',
+                    'type': 'application/json'}
+            ],
+            'memberType': 'property',
+            'title': None,
+            'value': 'pw1'
+        }
+    },
+    'title': 'pw1'
+}
+C-:

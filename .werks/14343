@@ -6,10 +6,10 @@ Date: 1654768212
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
-Previously, the Kubernetes special agent raised the error "[special_kube] TypeError: Can not convert
-to timestamp: 'None' of type <class 'NoneType’>" when a terminated container had no information
+Previously, the Kubernetes special agent raised the error `[special_kube] TypeError: Can not convert
+to timestamp: 'None' of type <class 'NoneType’>` when a terminated container had no information
 about either its start or finish time. With this werk, the assumption that the start and finish
 times are always set is removed, and is thus consistent with the Kubernetes specification.
 The check plug-in is also modified to display the time-related information depending on what

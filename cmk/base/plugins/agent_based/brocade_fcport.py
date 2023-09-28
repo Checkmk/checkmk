@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import (
     get_average,
@@ -46,8 +47,13 @@ _BROCADE_FCPORT_PHYSTATES = {
     9: "lock ref",
     10: "validating",
     11: "invalid module",
-    12: "no sig det",
-    13: "unknown",
+    12: "remote fault",
+    13: "local fault",
+    14: "no sig det",
+    15: "hard fault",
+    16: "unsupported module",
+    17: "module fault",
+    255: "unknown",
 }
 
 # Taken from swFCPortOpStatus
@@ -132,7 +138,19 @@ def _get_if_table_offset(speed_info: StringTable, offset: int) -> int | None:
     return None
 
 
-def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-untyped-def]
+def _get_relevant_part_of_speed_info(speed_info: StringTable, offset: int) -> StringTable:
+    # if-table and brocade-if-table do NOT have same length
+    # first remove interfaces at the beginning of the speed info table:
+    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+
+    # but there may also be some vlan (or other non fc) interfaces at the bottom of speed_info:
+    while speed_info and speed_info[-1] and speed_info[-1][0] != "56":
+        speed_info.pop()
+
+    return speed_info
+
+
+def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-untyped-def]
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
     speed_info: StringTable = string_table[2]
@@ -144,8 +162,7 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
         return None
 
     isl_ports = dict(link_info)
-    # if-table and brocade-if-table do NOT have same length
-    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+    speed_info = _get_relevant_part_of_speed_info(speed_info, offset)
 
     if len(if_info) == len(speed_info):
         # extract the speed from IF-MIB::ifHighSpeed.
@@ -179,7 +196,6 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
         porttype,
         ifspeed,
     ) in if_table:
-
         # Since FW v8.0.1b [rx/tx]words are no longer available
         # Use 64bit counters if available
         bbcredits = None
@@ -232,7 +248,7 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
                 "ifspeed": _try_int(ifspeed),
                 "is_isl": index in isl_ports,
                 "islspeed": islspeed,  # Might be None
-                "bbcredits": bbcredits,  # Might be None
+                "bbcredits": int(bbcredits) if bbcredits is not None else None,
             }
         except ValueError:
             continue
@@ -425,13 +441,13 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
-        output.append("%s: %s" % (what, render.iobandwidth(value)))
+        output.append(f"{what}: {render.iobandwidth(value)}")
         perfdata.append(
             Metric(what.lower(), value, levels=(warn_bytes, crit_bytes), boundaries=(0, wirespeed))
         )
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            value = get_average(value_store, "%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(value_store, f"{what}.{item}.avg", this_time, value, average)
             output.append("Average (%d min): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
                 Metric(
@@ -460,7 +476,7 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
     for what, value in [("rxframes", rxframes_rate), ("txframes", txframes_rate)]:
         perfdata.append(Metric(what, value))
         if average:
-            value = get_average(value_store, "%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(value_store, f"{what}.{item}.avg", this_time, value, average)
             perfdata.append(Metric("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
@@ -472,13 +488,13 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
         ("C3 discards", "c3discards", c3discards, txframes_rate),
         ("No TX buffer credits", "notxcredits", notxcredits, txframes_rate),
     ]:
-        per_sec = get_rate(value_store, "%s.%s" % (counter, index), this_time, value)
+        per_sec = get_rate(value_store, f"{counter}.{index}", this_time, value)
         perfdata.append(Metric(counter, per_sec))
 
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                value_store, ".%s.%s.avg" % (counter, item), this_time, per_sec, average
+                value_store, f".{counter}.{item}.avg", this_time, per_sec, average
             )
             perfdata.append(Metric("%s_avg" % counter, per_sec_avg))
 
@@ -487,13 +503,11 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
             rate = per_sec / (ref + per_sec)  # fixed: true-division
         else:
             rate = 0
-        text = "%s: %.2f%%" % (descr, rate * 100.0)
+        text = f"{descr}: {rate * 100.0:.2f}%"
 
         # Honor averaging of error rate
         if average:
-            rate = get_average(
-                value_store, "%s.%s.avgrate" % (counter, item), this_time, rate, average
-            )
+            rate = get_average(value_store, f"{counter}.{item}.avgrate", this_time, rate, average)
             text += ", Average: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0
@@ -527,7 +541,7 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
             else:
                 errorflag = "(!!)"
                 summarystate = 2
-        output.append("%s: %s%s" % (state_info, state_map[dev_state], errorflag))
+        output.append(f"{state_info}: {state_map[dev_state]}{errorflag}")
 
     if bbcredits is not None:
         bbcredit_rate = get_rate(value_store, "bbcredit.%s" % (item), this_time, bbcredits)

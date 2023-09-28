@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -11,8 +11,22 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = Mapping[str, Mapping[str, str]]
 
 
+MSSQL_VERSION_MAPPING = {
+    "8": "2000",
+    "9": "2005",
+    "10": "2008",
+    "10.50": "2008R2",
+    "11": "2012",
+    "12": "2014",
+    "13": "2016",
+    "14": "2017",
+    "15": "2019",
+    "16": "2022",
+}
+
+
 def parse_mssql_instance(string_table: StringTable) -> Section:
-    parsed: Dict[str, Dict[str, str]] = {}
+    parsed: dict[str, dict[str, str]] = {}
     for line in string_table:
         if (
             line[0].startswith("ERROR:")
@@ -39,7 +53,7 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
         if line[1] == "config":
             instance.update(
                 {
-                    "version_info": "%s - %s" % (line[2], line[3]),
+                    "version_info": f"{line[2]} - {line[3]}",
                     "cluster_name": line[4],
                     "config_version": line[2],
                     "config_edition": line[3],
@@ -56,8 +70,7 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
         elif line[1] == "details":
             instance.update(
                 {
-                    "prod_version_info": "%s (%s) (%s) - %s"
-                    % (_parse_prod_version(line[2]), line[3], line[2], line[4]),
+                    "prod_version_info": f"{_parse_prod_version(line[2])} ({line[3]}) ({line[2]}) - {line[4]}",
                     "details_version": line[2],
                     "details_product": _parse_prod_version(line[2]),
                     "details_edition": line[3],
@@ -69,27 +82,15 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
 
 
 def _parse_prod_version(entry: str) -> str:
-    if entry.startswith("8."):
-        version = "2000"
-    elif entry.startswith("9."):
-        version = "2005"
-    elif entry.startswith("10.0"):
-        version = "2008"
-    elif entry.startswith("10.50"):
-        version = "2008R2"
-    elif entry.startswith("11."):
-        version = "2012"
-    elif entry.startswith("12."):
-        version = "2014"
-    elif entry.startswith("13."):
-        version = "2016"
-    elif entry.startswith("14."):
-        version = "2017"
-    elif entry.startswith("15."):
-        version = "2019"
-    else:
-        return "unknown[%s]" % entry
-    return "Microsoft SQL Server %s" % version
+    major_version, minor_version = entry.split(".", 2)[:2]
+    if not (
+        version := MSSQL_VERSION_MAPPING.get(
+            f"{major_version}.{minor_version}",
+            MSSQL_VERSION_MAPPING.get(major_version),
+        )
+    ):
+        return f"unknown[{entry}]"
+    return f"Microsoft SQL Server {version}"
 
 
 register.agent_section(
@@ -99,11 +100,10 @@ register.agent_section(
 
 
 def inventory_mssql_instance(section: Section) -> InventoryResult:
-    path = ["software", "applications", "mssql", "instances"]
     for instance_id, attrs in section.items():
         cluster_name = attrs.get("cluster_name")
         yield TableRow(
-            path=path,
+            path=["software", "applications", "mssql", "instances"],
             key_columns={
                 "name": instance_id,
             },
@@ -118,7 +118,7 @@ def inventory_mssql_instance(section: Section) -> InventoryResult:
         )
 
 
-def _get_info(key: str, alt_key: str, attrs: Mapping[str, str]) -> Optional[str]:
+def _get_info(key: str, alt_key: str, attrs: Mapping[str, str]) -> str | None:
     return attrs.get(key, attrs.get(alt_key))
 
 

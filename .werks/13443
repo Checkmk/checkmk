@@ -1,0 +1,16 @@
+Title: list rules endpoint failed to list rulesets containing a hyphen
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1675758119
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Before this change it was possible to query rules prefixed with active_checks:
+or static_checks: with a hyphen instead of a colon.
+For example "static_checks-inotify" was valid and returned the rules for
+"static_checks:notify".
+
+This is no longer possible.

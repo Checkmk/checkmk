@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -20,13 +17,15 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_active_checks_bi_aggr() -> Dictionary:
     return Dictionary(
         title=_("Check State of BI Aggregation"),
         help=_(
-            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+            "Connect to the local or a remote monitoring host, which uses Checkmk BI to aggregate "
             "several states to a single BI aggregation, which you want to show up as a single "
             "service."
         ),
@@ -172,7 +171,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupIntegrateOtherServices,
         match_type="all",
-        name="active_checks:bi_aggr",
+        name=RuleGroup.ActiveChecks("bi_aggr"),
         valuespec=_valuespec_active_checks_bi_aggr,
     )
 )

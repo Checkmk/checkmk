@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import csv
 import json
+import os
 import shutil
 from pathlib import Path, PurePath
-from typing import NamedTuple, Type
+from typing import NamedTuple
 
 import pytest
 import requests
 
 import livestatus
 
-import cmk.utils.packaging as packaging
 import cmk.utils.paths
 
 import cmk.base.diagnostics as diagnostics
@@ -165,207 +165,11 @@ def test_diagnostics_element_hw_info_content(
         "cpuinfo",
         "loadavg",
         "meminfo",
+        "vendorinfo",
     ]
     content = json.loads(filepath.open().read())
 
     assert sorted(content.keys()) == sorted(info_keys)
-
-
-def test_diagnostics_element_local_files_json() -> None:
-    diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
-    assert diagnostics_element.ident == "local_files"
-    assert diagnostics_element.title == "Local Files"
-    assert diagnostics_element.description == (
-        "List of installed, unpacked, optional files below $OMD_ROOT/local. "
-        "This also includes information about installed MKPs."
-    )
-
-
-def _create_test_package(name: str) -> packaging.Manifest:
-    check_dir = packaging.PackagePart.CHECKS.path
-    check_dir.mkdir(parents=True, exist_ok=True)
-
-    (check_dir / name).touch()
-
-    manifest = packaging.manifest_template(
-        packaging.PackageName(name),
-        files={
-            packaging.PackagePart.CHECKS: [Path(name)],
-        },
-    )
-
-    packaging.create(manifest)
-    return manifest
-
-
-def test_diagnostics_element_local_files_json_content(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-
-    monkeypatch.setattr(
-        cmk.utils.paths, "local_optional_packages_dir", tmp_path / "local_optional_packages_dir"
-    )
-    monkeypatch.setattr(
-        cmk.utils.paths, "local_enabled_packages_dir", tmp_path / "local_enabled_packages_dir"
-    )
-
-    diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
-
-    packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
-    manifest = _create_test_package("test-package-json")
-
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("local_files.json")
-
-    with filepath.open() as fh:
-        content = json.loads(fh.read())
-
-    assert set(content) == {
-        "installed",
-        "unpackaged",
-        "parts",
-        "optional_packages",
-        "enabled_packages",
-    }
-
-    assert content["installed"] == [manifest.json()]
-
-    unpackaged_keys = [
-        "agent_based",
-        "agents",
-        "alert_handlers",
-        "bin",
-        "checkman",
-        "checks",
-        "doc",
-        "ec_rule_packs",
-        "inventory",
-        "lib",
-        "locales",
-        "mibs",
-        "notifications",
-        "pnp-templates",
-        "web",
-        "gui",
-    ]
-    assert sorted(content["unpackaged"].keys()) == sorted(unpackaged_keys)
-    for key in unpackaged_keys:
-        assert content["unpackaged"][key] == []
-
-    parts_keys = [
-        "agent_based",
-        "agents",
-        "alert_handlers",
-        "bin",
-        "checkman",
-        "checks",
-        "doc",
-        "ec_rule_packs",
-        "inventory",
-        "lib",
-        "locales",
-        "mibs",
-        "notifications",
-        "pnp-templates",
-        "web",
-        "gui",
-    ]
-    assert sorted(content["parts"].keys()) == sorted(parts_keys)
-    part_keys = [
-        "files",
-        "path",
-        "permissions",
-        "title",
-    ]
-    for key in parts_keys:
-        assert sorted(content["parts"][key].keys()) == sorted(part_keys)
-        if key == "checks":
-            assert content["parts"][key]["files"] == [str(manifest.name)]
-            assert content["parts"][key]["permissions"] == [420]
-        else:
-            assert content["parts"][key]["files"] == []
-            assert content["parts"][key]["permissions"] == []
-
-    assert content["optional_packages"] == [[manifest.json(), True]]
-
-    shutil.rmtree(str(packaging._installed.PACKAGES_DIR))
-    shutil.rmtree(str(cmk.utils.paths.local_share_dir))
-
-
-def test_diagnostics_element_local_files_csv() -> None:
-    diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
-    assert diagnostics_element.ident == "local_files"
-    assert diagnostics_element.title == "Local Files"
-    assert diagnostics_element.description == (
-        "List of installed, unpacked, optional files below $OMD_ROOT/local. "
-        "This also includes information about installed MKPs."
-    )
-
-
-def test_diagnostics_element_local_files_csv_content(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-
-    monkeypatch.setattr(
-        cmk.utils.paths, "local_optional_packages_dir", tmp_path / "local_optional_packages_dir"
-    )
-    monkeypatch.setattr(
-        cmk.utils.paths, "local_enabled_packages_dir", tmp_path / "local_enabled_packages_dir"
-    )
-
-    diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
-    check_dir = cmk.utils.paths.local_checks_dir
-
-    packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
-    name = "test-package-csv"
-    _manifest = _create_test_package(name)
-
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("local_files.csv")
-
-    column_headers = [
-        "path",
-        "exists",
-        "package",
-        "author",
-        "description",
-        "download_url",
-        "name",
-        "title",
-        "version",
-        "version.min_required",
-        "version.packaged",
-        "version.usable_until",
-        "permissions",
-        "installed",
-        "optional_packages",
-        "unpackaged",
-    ]
-
-    with open(filepath, newline="") as csvfile:
-        csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
-        csvdata = {}
-        for row in csvreader:
-            csvdata[row["path"]] = row
-            last_row = row
-
-    assert sorted(last_row.keys()) == sorted(column_headers)
-
-    path = check_dir.joinpath(name)
-    assert str(path) in csvdata
-
-    assert csvdata[str(path)]["permissions"] == "420"
-    assert csvdata[str(path)]["unpackaged"] == "N/A"
-    assert csvdata[str(path)]["exists"] == "file"
-    assert csvdata[str(path)]["installed"] == "YES"
-
-    shutil.rmtree(str(packaging._installed.PACKAGES_DIR))
 
 
 def test_diagnostics_element_environment() -> None:
@@ -378,7 +182,6 @@ def test_diagnostics_element_environment() -> None:
 def test_diagnostics_element_environment_content(
     monkeypatch: pytest.MonkeyPatch, tmp_path: PurePath
 ) -> None:
-
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
     with monkeypatch.context() as m:
@@ -410,7 +213,6 @@ def test_diagnostics_element_filesize() -> None:
 
 @pytest.mark.usefixtures("monkeypatch")
 def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
-
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
     test_dir = cmk.utils.paths.local_checks_dir
@@ -482,7 +284,6 @@ CONFIG_MKEVENTD_SYSLOG='on'
 CONFIG_MKEVENTD_SYSLOG_TCP='off'
 CONFIG_MULTISITE_AUTHORISATION='on'
 CONFIG_MULTISITE_COOKIE_AUTH='on'
-CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
@@ -513,7 +314,6 @@ CONFIG_TMPFS='on'"""
         "CONFIG_MKEVENTD_SYSLOG_TCP",
         "CONFIG_MULTISITE_AUTHORISATION",
         "CONFIG_MULTISITE_COOKIE_AUTH",
-        "CONFIG_NAGIOS_THEME",
         "CONFIG_NSCA",
         "CONFIG_NSCA_TCP_PORT",
         "CONFIG_PNP4NAGIOS",
@@ -542,7 +342,6 @@ CONFIG_TMPFS='on'"""
             "off",
             "on",
             "on",
-            "classicui",
             "off",
             "5667",
             "on",
@@ -657,7 +456,6 @@ def test_diagnostics_element_checkmk_overview_error(
 def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
-
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -689,7 +487,9 @@ def test_diagnostics_element_checkmk_overview_content(
         },
     ]
 
-    assert content["Nodes"]["versions"]["Table"]["Rows"] == [
+    rows = content["Nodes"]["versions"]["Table"]["Rows"]
+    assert len(rows) == 2
+    for row in [
         {
             "demo": False,
             "edition": "cee",
@@ -704,7 +504,8 @@ def test_diagnostics_element_checkmk_overview_content(
             "number": "2020.06.09",
             "version": "2020.06.09.cee",
         },
-    ]
+    ]:
+        assert row in rows
 
     shutil.rmtree(str(inventory_dir))
 
@@ -727,7 +528,7 @@ def test_diagnostics_element_checkmk_overview_content(
     ],
 )
 def test_diagnostics_element_checkmk_files(
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
     ident: str,
     title: str,
     description: str,
@@ -748,8 +549,8 @@ def test_diagnostics_element_checkmk_files(
 )
 def test_diagnostics_element_checkmk_files_error(
     tmp_path: PurePath,
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
-    | Type[diagnostics.CheckmkLogFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
+    | type[diagnostics.CheckmkLogFilesDiagnosticsElement],
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
@@ -834,7 +635,6 @@ def test_diagnostics_element_performance_graphs_error(
     content,
     error,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -887,7 +687,6 @@ def test_diagnostics_element_performance_graphs_content(
     text,
     content,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -923,3 +722,43 @@ CONFIG_APACHE_TCP_PORT='5000'"""
 
     shutil.rmtree(str(automation_dir))
     shutil.rmtree(str(etc_omd_dir))
+
+
+def test_diagnostics_element_se_linux():
+    diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
+    assert diagnostics_element.ident == "selinux"
+    assert diagnostics_element.title == "SELinux information"
+    assert diagnostics_element.description == (
+        "Output of `sestatus`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("sestatus")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "SELinux status:                 enabled"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", str(test_bin_dir))
+
+        diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("selinux.json")
+
+        content = json.loads(filepath.open().read())
+
+        assert content["SELinux status"] == "enabled"
+
+        shutil.rmtree(str(test_bin_dir))

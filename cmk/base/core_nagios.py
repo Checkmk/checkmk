@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for support of Nagios (and compatible) cores"""
@@ -9,6 +9,7 @@ import os
 import py_compile
 import socket
 import sys
+from collections import Counter
 from collections.abc import Mapping
 from io import StringIO
 from pathlib import Path
@@ -23,33 +24,26 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
+from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    CheckPluginNameStr,
-    ContactgroupName,
-    HostAddress,
-    HostgroupName,
-    HostName,
-    HostsToUpdate,
-    InventoryPluginName,
-    ServicegroupName,
-    ServiceName,
-    TimeperiodName,
-)
+from cmk.utils.servicename import ServiceName
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.checkers.check_table import FilterMode
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.command_config as command_config
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -58,12 +52,9 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     write_notify_host_file,
 )
+from cmk.base.ip_lookup import AddressFamily
 
 ObjectSpec = dict[str, Any]
-
-CHECK_INFO_BY_MIGRATED_NAME = {
-    k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
-}
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -75,16 +66,21 @@ class NagiosCore(core_config.MonitoringCore):
     def is_cmc() -> Literal[False]:
         return False
 
-    def create_config(
+    def _create_config(
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        hosts_to_update: HostsToUpdate = None,
+        licensing_handler: LicensingHandler,
+        hosts_to_update: set[HostName] | None = None,
     ) -> None:
-        self._create_core_config(config_path)
+        self._create_core_config(config_path, licensing_handler)
         self._precompile_hostchecks(config_path)
 
-    def _create_core_config(self, config_path: VersionedConfigPath) -> None:
+    def _create_core_config(
+        self,
+        config_path: VersionedConfigPath,
+        licensing_handler: LicensingHandler,
+    ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -93,8 +89,14 @@ class NagiosCore(core_config.MonitoringCore):
         The user can then start the site with the old configuration and fix the configuration issue
         while the monitoring is running.
         """
+
         config_buffer = StringIO()
-        create_config(config_buffer, config_path, hostnames=None)
+        create_config(
+            config_buffer,
+            config_path,
+            hostnames=None,
+            licensing_handler=licensing_handler,
+        )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
@@ -135,17 +137,25 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
+def _validate_licensing(licensing_handler: LicensingHandler, licensing_counter: Counter) -> None:
+    if block_effect := licensing_handler.effect_core(
+        licensing_counter["services"], len(config.get_shadow_hosts())
+    ).block:
+        raise MKGeneralException(block_effect.message_raw)
+
+
 def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     hostnames: list[HostName] | None,
+    licensing_handler: LicensingHandler,
 ) -> None:
-    if config.host_notification_periods != []:
+    if config.host_notification_periods:
         config_warnings.warn(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
         )
 
-    if config.service_notification_periods != []:
+    if config.service_notification_periods:
         config_warnings.warn(
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
@@ -169,11 +179,15 @@ def create_config(
     _output_conf_header(cfg)
 
     stored_passwords = cmk.utils.password_store.load()
+
+    licensing_counter = Counter("services")
     all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in sorted(hostnames):
         all_host_labels[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, stored_passwords
+            cfg, config_cache, hostname, stored_passwords, licensing_counter
         )
+
+    _validate_licensing(licensing_handler, licensing_counter)
 
     write_notify_host_file(config_path, all_host_labels)
 
@@ -204,6 +218,7 @@ def _create_nagios_config_host(
     config_cache: ConfigCache,
     hostname: HostName,
     stored_passwords: Mapping[str, str],
+    license_counter: Counter,
 ) -> CollectedHostLabels:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
@@ -217,11 +232,7 @@ def _create_nagios_config_host(
     return CollectedHostLabels(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=_create_nagios_servicedefs(
-            cfg,
-            config_cache,
-            hostname,
-            host_attrs,
-            stored_passwords,
+            cfg, config_cache, hostname, host_attrs, stored_passwords, license_counter
         ),
     )
 
@@ -333,12 +344,27 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     return host_spec
 
 
+def transform_active_service_command(
+    cfg: NagiosConfig, service_data: command_config.ActiveServiceData
+) -> str:
+    if config.simulation_mode:
+        cfg.custom_commands_to_define.add("check-mk-simulation")
+        return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
+
+    if service_data.command == "check-mk-custom":
+        cfg.custom_commands_to_define.add("check-mk-custom")
+        return f"{service_data.command}!{service_data.command_line}"
+
+    return service_data.command_display
+
+
 def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
+    license_counter: Counter,
 ) -> dict[ServiceName, Labels]:
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
@@ -349,15 +375,15 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     #  |____/   3. Services
 
     def do_omit_service(hostname: HostName, description: ServiceName) -> bool:
-        if config.service_ignored(hostname, None, description):
+        if config_cache.service_ignored(hostname, description):
             return True
-        if hostname != config_cache.host_of_clustered_service(hostname, description):
+        if hostname != config_cache.effective_host(hostname, description):
             return True
         return False
 
     def get_dependencies(hostname: HostName, servicedesc: ServiceName) -> str:
         result = ""
-        for dep in config.service_depends_on(hostname, servicedesc):
+        for dep in config.service_depends_on(config_cache, hostname, servicedesc):
             result += _format_nagios_object(
                 "servicedependency",
                 {
@@ -371,15 +397,14 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         return result
 
-    host_check_table = config.get_check_table(config_cache, hostname)
+    host_check_table = config_cache.check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
         if not service.description:
             config_warnings.warn(
-                "Skipping invalid service with empty description (plugin: %s) on host %s"
-                % (service.check_plugin_name, hostname)
+                f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
             )
             continue
 
@@ -394,23 +419,11 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             continue
         used_descriptions[service.description] = service.id()
 
-        # TODO: CMK-1125
-        # For now, for every check plugin developed against the new check API
-        # we just assume that it may have metrics. The careful review of this
-        # mechanism is subject of issue CMK-1125
-        check_info_value = CHECK_INFO_BY_MIGRATED_NAME.get(
-            service.check_plugin_name, {"has_perfdata": True}
-        )
-        if check_info_value.get("has_perfdata", False):
-            template = config.passive_service_template_perf
-        else:
-            template = config.passive_service_template
-
         # Services Dependencies for autochecks
         cfg.write(get_dependencies(hostname, service.description))
 
         service_spec = {
-            "use": template,
+            "use": config.passive_service_template_perf,
             "host_name": hostname,
             "service_description": service.description,
             "check_command": "check_mk-%s" % service.check_plugin_name,
@@ -431,6 +444,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         )
 
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
         cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
@@ -445,88 +459,67 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         service_spec.update(check_mk_attrs)
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
     # legacy checks via active_checks
-    actchecks = []
-    for plugin_name, entries in config_cache.active_checks(hostname):
-        cfg.active_checks_to_define.add(plugin_name)
-        act_info = config.active_check_info[plugin_name]
-        for params in entries:
-            actchecks.append((plugin_name, act_info, params))
+    active_services = []
+
+    active_check_config = command_config.ActiveCheckConfig(
+        hostname,
+        host_attrs,
+        stored_passwords=stored_passwords,
+        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
+    )
+
+    active_checks = config_cache.active_checks(hostname)
+    actchecks = [name for name, params in active_checks if params]
+    for service_data in active_check_config.get_active_service_data(
+        config_cache.ruleset_matcher, active_checks
+    ):
+        if do_omit_service(hostname, service_data.description):
+            continue
+
+        if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
+            core_config.duplicate_service_warning(
+                checktype="active",
+                description=service_data.description,
+                host_name=hostname,
+                first_occurrence=existing_plugin,
+                second_occurrence=(f"active({service_data.plugin_name})", None),
+            )
+            continue
+
+        used_descriptions[service_data.description] = (
+            f"active({service_data.plugin_name})",
+            service_data.description,
+        )
+
+        service_spec = {
+            "use": "check_mk_perf,check_mk_default",
+            "host_name": hostname,
+            "service_description": service_data.description,
+            "check_command": transform_active_service_command(cfg, service_data),
+            "active_checks_enabled": str(1),
+        }
+        service_spec.update(
+            core_config.get_service_attributes(hostname, service_data.description, config_cache)
+        )
+        service_spec.update(
+            _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
+        )
+
+        cfg.active_checks_to_define.add(service_data.plugin_name)
+        active_services.append(service_spec)
 
     if actchecks:
         cfg.write("\n\n# Active checks\n")
-        for acttype, act_info, params in actchecks:
 
-            has_perfdata = act_info.get("has_perfdata", False)
+        for service_spec in active_services:
+            cfg.write(_format_nagios_object("service", service_spec))
+            license_counter["services"] += 1
 
-            # Make hostname available as global variable in argument functions
-            with plugin_contexts.current_host(hostname):
-                for description, args in core_config.iter_active_check_services(
-                    acttype, act_info, hostname, host_attrs, params, stored_passwords
-                ):
-
-                    if not description:
-                        config_warnings.warn(
-                            f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
-                        )
-                        continue
-
-                    if do_omit_service(hostname, description):
-                        continue
-
-                    # quote ! and \ for Nagios
-                    escaped_args = args.replace("\\", "\\\\").replace("!", "\\!")
-
-                    if description in used_descriptions:
-                        cn, _ = used_descriptions[description]
-                        # If we have the same active check again with the same description,
-                        # then we do not regard this as an error, but simply ignore the
-                        # second one. That way one can override a check with other settings.
-                        if cn == "active(%s)" % acttype:
-                            continue
-
-                        core_config.duplicate_service_warning(
-                            checktype="active",
-                            description=description,
-                            host_name=hostname,
-                            first_occurrence=used_descriptions[description],
-                            second_occurrence=("active(%s)" % acttype, None),
-                        )
-                        continue
-
-                    # TODO: is this right? description on the right, not item?
-                    used_descriptions[description] = ("active(" + acttype + ")", description)
-
-                    template = "check_mk_perf," if has_perfdata else ""
-
-                    if host_attrs["address"] in ["0.0.0.0", "::"]:
-                        command_name = "check-mk-custom"
-                        command = (
-                            command_name
-                            + '!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2'
-                        )
-                        cfg.custom_commands_to_define.add(command_name)
-                    else:
-                        command = f"check_mk_active-{acttype}!{escaped_args}"
-
-                    service_spec = {
-                        "use": "%scheck_mk_default" % template,
-                        "host_name": hostname,
-                        "service_description": description,
-                        "check_command": _simulate_command(cfg, command),
-                        "active_checks_enabled": str(1),
-                    }
-                    service_spec.update(
-                        core_config.get_service_attributes(hostname, description, config_cache)
-                    )
-                    service_spec.update(
-                        _extra_service_conf_of(cfg, config_cache, hostname, description)
-                    )
-                    cfg.write(_format_nagios_object("service", service_spec))
-
-                    # write service dependencies for active checks
-                    cfg.write(get_dependencies(hostname, description))
+            # write service dependencies for active checks
+            cfg.write(get_dependencies(hostname, service_spec["service_description"]))
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)
@@ -539,11 +532,9 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             #                              If this is missing, we create a passive check
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
-            # "has_perfdata"  (optional)   If present and True, we activate perf_data
             description = config.get_final_service_description(
-                hostname, entry["service_description"]
+                config_cache.ruleset_matcher, hostname, entry["service_description"]
             )
-            has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
 
@@ -593,11 +584,10 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
             used_descriptions[description] = ("custom(%s)" % command_name, description)
 
-            template = "check_mk_perf," if has_perfdata else ""
             command = f"{command_name}!{command_line}"
 
             service_spec = {
-                "use": "%scheck_mk_default" % template,
+                "use": "check_mk_perf,check_mk_default",
                 "host_name": hostname,
                 "service_description": description,
                 "check_command": _simulate_command(cfg, command),
@@ -609,6 +599,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             )
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             cfg.write(_format_nagios_object("service", service_spec))
+            license_counter["services"] += 1
 
             # write service dependencies for custom checks
             cfg.write(get_dependencies(hostname, description))
@@ -638,6 +629,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         )
 
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
         if have_at_least_one_service:
             cfg.write(
@@ -660,21 +652,23 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             config_cache,
             hostname,
             host_attrs["address"],
-            config_cache.is_ipv6_primary(hostname) and 6 or 4,
+            config_cache.default_address_family(hostname),
             "PING",
             host_attrs.get("_NODEIPS"),
+            license_counter,
         )
 
-    if ConfigCache.is_ipv4v6_host(hostname):
-        if config_cache.is_ipv6_primary(hostname):
+    if ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK:
+        if config_cache.default_address_family(hostname) is socket.AF_INET6:
             _add_ping_service(
                 cfg,
                 config_cache,
                 hostname,
                 host_attrs["_ADDRESS_4"],
-                4,
+                socket.AF_INET,
                 "PING IPv4",
                 host_attrs.get("_NODEIPS_4"),
+                license_counter,
             )
         else:
             _add_ping_service(
@@ -682,9 +676,10 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 config_cache,
                 hostname,
                 host_attrs["_ADDRESS_6"],
-                6,
+                socket.AF_INET6,
                 "PING IPv6",
                 host_attrs.get("_NODEIPS_6"),
+                license_counter,
             )
 
     return service_labels
@@ -695,9 +690,10 @@ def _add_ping_service(
     config_cache: ConfigCache,
     host_name: HostName,
     ipaddress: HostAddress,
-    family: int,
+    family: socket.AddressFamily,
     descr: ServiceName,
     node_ips: str | None,
+    licensing_counter: Counter,
 ) -> None:
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
@@ -717,6 +713,7 @@ def _add_ping_service(
     service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
     service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
     cfg.write(_format_nagios_object("service", service_spec))
+    licensing_counter["services"] += 1
 
 
 def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
@@ -1086,7 +1083,7 @@ class HostCheckStore:
                 dfile=str(compiled_filename),
                 doraise=True,
             )
-            os.chmod(compiled_filename, 0o750)
+            os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
@@ -1217,10 +1214,9 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
     output.write("from cmk.utils.log import console\n")
-    output.write("import cmk.base.agent_based.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
-    output.write("from cmk.checkers.submitters import get_submitter\n")
+    output.write("from cmk.checkengine.submitters import get_submitter\n")
     output.write("\n")
     for module in _get_needed_agent_based_modules(
         needed_agent_based_check_plugin_names,
@@ -1265,7 +1261,10 @@ if '-d' in sys.argv:
     output.write("config.load_packed_config(LATEST_CONFIG)\n")
 
     # IP addresses
-    needed_ipaddresses, needed_ipv6addresses, = (
+    (
+        needed_ipaddresses,
+        needed_ipv6addresses,
+    ) = (
         {},
         {},
     )
@@ -1275,18 +1274,18 @@ if '-d' in sys.argv:
             raise TypeError()
 
         for node in nodes:
-            if ConfigCache.is_ipv4_host(node):
+            if AddressFamily.IPv4 in ConfigCache.address_family(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AF_INET
                 )
 
-            if ConfigCache.is_ipv6_host(node):
+            if AddressFamily.IPv6 in ConfigCache.address_family(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AF_INET6
                 )
 
         try:
-            if ConfigCache.is_ipv4_host(hostname):
+            if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AF_INET
                 )
@@ -1294,46 +1293,37 @@ if '-d' in sys.argv:
             pass
 
         try:
-            if ConfigCache.is_ipv6_host(hostname):
+            if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AF_INET6
                 )
         except Exception:
             pass
     else:
-        if ConfigCache.is_ipv4_host(hostname):
+        if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AF_INET
             )
 
-        if ConfigCache.is_ipv6_host(hostname):
+        if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AF_INET6
             )
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
-
-    # perform actual check with a general exception handler
     output.write("try:\n")
-    output.write(
-        "    sys.exit(\n"
-        "        checking.commandline_checking(\n"
-        "            %r,\n"
-        "            None,\n"
-        "            submitter=get_submitter(\n"
-        "                check_submission=config.check_submission,\n"
-        '                monitoring_core="nagios",\n'
-        "                host_name=%r,\n"
-        "                dry_run=False,\n"
-        '                perfdata_format="standard",\n'
-        "                show_perfdata=False,\n"
-        "            ),\n"
-        "           active_check_handler=lambda *args: None,\n"
-        "           keepalive=False,\n"
-        "        )\n"
-        "    )\n" % (hostname, hostname)
-    )
+    output.write("    # mode_check is `mode --check hostname`\n")
+    output.write("    from cmk.base.modes.check_mk import mode_check\n")
+    output.write("    sys.exit(\n")
+    output.write("        mode_check(\n")
+    output.write("            get_submitter,\n")
+    output.write("            {},\n")
+    output.write(f"           [{hostname!r}],\n")
+    output.write("            active_check_handler=lambda *args: None,\n")
+    output.write("            keepalive=False,\n")
+    output.write("        )\n")
+    output.write("    )\n")
     output.write("except MKTerminate:\n")
     output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")
@@ -1370,10 +1360,9 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = config.get_check_table(
-        config_cache,
+    needed_agent_based_check_plugin_names = config_cache.check_table(
         host_name,
-        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+        filter_mode=config.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()
 
@@ -1429,25 +1418,10 @@ def _get_legacy_check_file_names_to_load(
     # check table.
     filenames: list[str] = []
     for check_plugin_name in needed_check_plugin_names:
-        section_name = section_name_of(check_plugin_name)
-        # Add library files needed by check (also look in local)
-        for lib in set(config.check_includes.get(section_name, [])):
-            local_path = cmk.utils.paths.local_checks_dir / lib
-            if local_path.exists():
-                to_add = str(local_path)
-            else:
-                to_add = cmk.utils.paths.checks_dir + "/" + lib
-
-            if to_add not in filenames:
-                filenames.append(to_add)
-
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
         if not paths:
-            raise MKGeneralException(
-                "Cannot find check file %s needed for check type %s"
-                % (section_name, check_plugin_name)
-            )
+            raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
         for path in paths:
             if path not in filenames:
@@ -1460,7 +1434,6 @@ def _get_needed_agent_based_modules(
     check_plugin_names: set[CheckPluginName],
     inventory_plugin_names: set[InventoryPluginName],
 ) -> list[str]:
-
     modules = {
         plugin.module
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]

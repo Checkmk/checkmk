@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from math import ceil
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
+from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
-    MKCounterWrapped,
+    get_value_store,
+    IgnoreResultsError,
+    render,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import (
-    required_tables_missing,
-    StringTable,
-    WMISection,
-    WMITable,
-)
+from cmk.base.plugins.agent_based.utils.wmi import required_tables_missing, WMISection, WMITable
+
+_Metric = tuple[str, float, float | None, float | None, float | None, float | None]
+LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -48,14 +47,14 @@ class WMITableLegacy(WMITable):
     Needed since WMITable.get raises IgnoreResultsError
     """
 
-    def get(  # type:ignore[no-untyped-def]
+    def get(  # type: ignore[no-untyped-def]
         self,
         row: str | int,
         column: str | int,
         silently_skip_timed_out=False,
     ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
-            raise MKCounterWrapped("WMI query timed out")
+            raise IgnoreResultsError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
 
@@ -106,11 +105,11 @@ def wmi_filter_global_only(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
+def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -133,11 +132,11 @@ def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
     return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-def inventory_wmi_table_total(  # type:ignore[no-untyped-def]
+def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -180,18 +179,18 @@ def get_levels_quadruple(params):
     return upper + lower
 
 
-def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str | int,
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     if table is None:
-        # This case may be when a check was discovered with a table which subsequently
-        # disappeared again. We expect to get None in this case and return some "nothing happened"
-        return 0, "", []
+        # This case may be when a check was discovered with a table which subsequently disappeared again.
+        # We expect to get `None` in this case.
+        return
 
     if row == "":
         row = 0
@@ -200,11 +199,17 @@ def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
         value = table.get(row, column)
         assert value
     except KeyError:
-        return 3, "Item not present anymore", []
+        return
 
-    value_per_sec = get_rate(f"{column}_{table.name}", get_wmi_time(table, row), int(value))
+    value_per_sec = get_rate(
+        get_value_store(),
+        f"{column}_{table.name}",
+        get_wmi_time(table, row),
+        int(value),
+        raise_overflow=True,
+    )
 
-    return check_levels(
+    yield check_levels(
         value_per_sec,
         perfvar,
         get_levels_quadruple(levels),
@@ -212,7 +217,7 @@ def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_counter(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str | int,
@@ -220,7 +225,7 @@ def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
     perfvar: str | None,
     levels=None,
     unit: str = "",
-):
+) -> LegacyCheckFunctionGenerator:
     if row == "":
         row = 0
 
@@ -228,9 +233,9 @@ def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
         value = table.get(row, column)
         assert value
     except KeyError:
-        return 3, f"counter {(row, column)!r} not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         int(value),
         perfvar,
         get_levels_quadruple(levels),
@@ -292,15 +297,23 @@ def wmi_calculate_raw_average_time(
 
     sample_time = get_wmi_time(table, row)
 
-    measure_per_sec = get_rate(f"{column}_{table.name}", sample_time, int(measure))
-    base_per_sec = get_rate(f"{column}_{table.name}_Base", sample_time, int(base))
+    measure_per_sec = get_rate(
+        get_value_store(), f"{column}_{table.name}", sample_time, int(measure), raise_overflow=True
+    )
+    base_per_sec = get_rate(
+        get_value_store(),
+        f"{column}_{table.name}_Base",
+        sample_time,
+        int(base),
+        raise_overflow=True,
+    )
 
     if base_per_sec == 0:
         return 0
     return measure_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,
@@ -308,13 +321,13 @@ def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
     perfvar: str | None,
     levels=None,
     perfscale: float = 1.0,
-):
+) -> LegacyCheckFunctionGenerator:
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),
@@ -323,14 +336,14 @@ def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_average_timer(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     assert table.frequency
     try:
         average = (
@@ -342,9 +355,9 @@ def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
             / table.frequency
         )  # fixed: true-division
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),
@@ -352,25 +365,25 @@ def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_fraction(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),
         infoname=infoname,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )
 

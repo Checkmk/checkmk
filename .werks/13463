@@ -6,7 +6,7 @@ Date: 1649926904
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Until now, Linux and OpenWrt agents wouldn't write a multipath
 section if there was no /etc/multipath.conf file.

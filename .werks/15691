@@ -1,0 +1,35 @@
+Title: Fix XSS in business intelligence
+Class: security
+Compatible: compat
+Component: wato
+Date: 1690298990
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk it was possible to inject HTML or Javascript (Reflected XSS).
+A legitimate user tricked to click on a prepared link would then run arbitrary Javascript code in a valid session.
+
+This vulnerability is only triggerable if another <i>Business Intelligence</i> <i>BI pack</i> (next to the default) was created.
+
+We found this vulnerability internally.
+
+<b>Affected Versions</b>:
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0
+LI: 1.6.0 (probably older versions as well)
+
+<b>Indicators of Compromise</b>:
+To check for exploitation one can check the site apache access log <tt>var/log/apache/access_log</tt> for entries like <tt>/$SITENAME/check_mk/wato.py?mode=bi_aggregations&bulk_moveto=</tt>.
+The order of the URL paramters can be changed by an attacker.
+Potential injected code would be in the parameter <tt>bulk_moveto</tt>.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 5.4 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N</tt>.
+We assigned CVE-2023-23548 to this vulnerability.
+
+<b>Changes</b>:
+This Werk introduces escaping for the vulnerable parameter.

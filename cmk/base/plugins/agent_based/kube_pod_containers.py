@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 import time
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 
 
-def parse(string_table: StringTable) -> Optional[PodContainers]:
+def parse(string_table: StringTable) -> PodContainers | None:
     """Parses `string_table` into a PodContainers isinstance
     >>> section_kube_pod_containers_v1 = '{"containers": {"busybox": {"container_id": null, "image_id": "", "name": "busybox", "image": "busybox", "ready": false, "state": {"type": "waiting", "reason": "PodInitializing", "detail": null}, "restart_count": 0}}}'
     >>> parse([[section_kube_pod_containers_v1]])

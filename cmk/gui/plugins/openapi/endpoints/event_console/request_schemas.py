@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -79,6 +79,12 @@ ec_filters = fields.Nested(
 
 
 class DeleteFilterBase(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     filter_type = fields.String(
         enum=["by_id", "query", "params"],
         required=True,
@@ -114,17 +120,31 @@ class DeleteECEvents(OneOfSchema):
 
 
 class ChangeEventState(BaseSchema):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     new_state = StateField(
         required=True,
     )
 
 
-class ChangeStateFilter(ChangeEventState):
+class ChangeStateFilter(BaseSchema):
     filter_type = fields.String(
         enum=["query", "params"],
         required=True,
         example="params",
         description="The way you would like to filter events.",
+    )
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+    )
+    new_state = StateField(
+        required=True,
     )
 
 
@@ -146,6 +166,13 @@ class ChangeEventStateSelector(OneOfSchema):
 
 
 class UpdateAndAcknowledgeEvent(BaseSchema):
+    phase = fields.String(
+        enum=["ack", "open"],
+        required=False,
+        example="ack",
+        description="To change the phase of an event",
+        load_default="ack",
+    )
     change_comment = fields.String(
         required=False,
         example="Comment now acked",
@@ -158,12 +185,26 @@ class UpdateAndAcknowledgeEvent(BaseSchema):
     )
 
 
+class UpdateAndAcknowledeEventSiteIDRequired(UpdateAndAcknowledgeEvent):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
+
+
 class UpdateAndAcknowledgeFilter(UpdateAndAcknowledgeEvent):
     filter_type = fields.String(
-        enum=["query", "params"],
+        enum=["query", "params", "all"],
         required=True,
-        example="by_id",
+        example="all",
         description="The way you would like to filter events.",
+    )
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
     )
 
 
@@ -184,4 +225,5 @@ class UpdateAndAcknowledgeSelector(OneOfSchema):
     type_schemas = {
         "query": UpdateAndAcknowledgeWithQuery,
         "params": UpdateAndAcknowledgeWithParams,
+        "all": UpdateAndAcknowledgeFilter,
     }

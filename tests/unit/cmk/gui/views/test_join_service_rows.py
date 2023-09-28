@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,7 +19,7 @@ def test_get_needed_join_columns(view: View) -> None:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"] = [
         *view_spec["painters"],
-        ColumnSpec(name="service_description", join_index="CPU load"),
+        ColumnSpec(name="service_description", join_value="CPU load"),
     ]
     view = View(view.name, view_spec, view_spec.get("context", {}))
 
@@ -30,7 +30,7 @@ def test_get_needed_join_columns(view: View) -> None:
         "service_description",
     ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_columns += [
             "host_custom_variable_names",
             "host_custom_variable_values",

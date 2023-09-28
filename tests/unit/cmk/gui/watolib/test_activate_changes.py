@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-import tests.testlib as testlib
+import tests.testlib.utils as testlibutils
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -54,8 +54,24 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="etc/check_mk/conf.d/distributed_wato.mk",
             excludes=[],
         ),
+        ReplicationPath(ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf"]),
         ReplicationPath(
-            ty="dir", ident="omd", site_path="etc/omd", excludes=["allocated_ports", "site.conf"]
+            ty="dir",
+            ident="frozen_aggregations",
+            site_path="var/check_mk/frozen_aggregations",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="topology",
+            site_path="var/check_mk/topology",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="apache_proccess_tuning",
+            site_path="etc/check_mk/apache.d/wato",
+            excludes=[],
         ),
     ]
 
@@ -123,7 +139,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if testlib.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+    if testlibutils.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
         # CEE paths are added when the CEE plugins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
@@ -132,7 +148,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
         ]
 
-    if testlib.is_managed_repo() and edition is not cmk_version.Edition.CME:
+    if testlibutils.is_managed_repo() and edition is not cmk_version.Edition.CME:
         # CME paths are added when the CME plugins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
@@ -183,7 +199,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     return expected
 
 
-@pytest.mark.usefixtures("monkeypatch")
 def test_get_replication_paths_defaults(edition: cmk_version.Edition) -> None:
     expected = _expected_replication_paths(edition)
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
@@ -256,9 +271,9 @@ def test_automation_get_config_sync_state() -> None:
             ),
             "etc/omd/site.conf": (
                 33200,
-                677,
+                645,
                 None,
-                "d20618bd8e3d002617b76f55eeba48bb4b73b530c6bc198edf280d136efcb9bc",
+                "e11653ce3fab73dd5aa8d45d0361eb0a01bcaa6e1c6d5b2d18d827f52a793479",
             ),
         },
         0,
@@ -344,7 +359,7 @@ def test_get_config_sync_file_infos() -> None:
     }
 
 
-def _create_get_config_sync_file_infos_test_config(base_dir):
+def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
     base_dir.joinpath("etc/d1").mkdir(parents=True, exist_ok=True)
 
     base_dir.joinpath("etc/d3").mkdir(parents=True, exist_ok=True)
@@ -382,15 +397,16 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
 
 def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
-    to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
+    sync_delta = activate_changes.get_file_names_to_sync(
         site_id=SiteId("remote"),
         site_logger=logger,
-        central_file_infos=central,
-        remote_file_infos=remote,
+        sync_state=activate_changes.SyncState(
+            central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
+        ),
         file_filter_func=None,
     )
 
-    assert sorted(to_sync_new + to_sync_changed) == sorted(
+    assert sorted(sync_delta.to_sync_new + sync_delta.to_sync_changed) == sorted(
         [
             "both-differ-mode",
             "both-differ-size",
@@ -403,7 +419,7 @@ def test_get_file_names_to_sync() -> None:
         ]
     )
 
-    assert sorted(to_delete) == sorted(
+    assert sorted(sync_delta.to_delete) == sorted(
         [
             "remote-only",
             "central-link-remote-dir-with-file/file",
@@ -411,7 +427,7 @@ def test_get_file_names_to_sync() -> None:
     )
 
 
-def _get_test_file_infos():
+def _get_test_file_infos() -> tuple[dict[str, ConfigSyncFileInfo], dict[str, ConfigSyncFileInfo]]:
     remote = {
         "remote-only": ConfigSyncFileInfo(
             st_mode=33200,
@@ -555,7 +571,7 @@ def test_get_sync_archive(tmp_path: Path) -> None:
         )
 
 
-def _get_test_sync_archive(tmp_path):
+def _get_test_sync_archive(tmp_path: Path) -> bytes:
     tmp_path.joinpath("etc").mkdir(parents=True, exist_ok=True)
     with tmp_path.joinpath("etc/abc").open("w", encoding="utf-8") as f:
         f.write("gä")

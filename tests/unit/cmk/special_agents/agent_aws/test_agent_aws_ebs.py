@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,6 +15,7 @@ from cmk.special_agents.agent_aws import (
     EBSLimits,
     EBSSummary,
     EC2Summary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -73,7 +74,7 @@ def get_ebs_sections() -> EBSSections:
         names: object | None, tags: OverallTags
     ) -> tuple[EC2Summary, EBSLimits, EBSSummary, EBS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("ebs_names", names)
         config.add_service_tags("ebs_tags", tags)
         config.add_single_service_config("ec2_names", None)
@@ -84,10 +85,11 @@ def get_ebs_sections() -> EBSSections:
 
         distributor = ResultDistributor()
 
-        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
-        ebs_limits = EBSLimits(fake_ec2_client, region, config, distributor)
-        ebs_summary = EBSSummary(fake_ec2_client, region, config, distributor)
-        ebs = EBS(fake_cloudwatch_client, region, config)
+        # TODO: FakeEC2Client shoud actually subclass EC2Client, etc.
+        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
+        ebs_limits = EBSLimits(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
+        ebs_summary = EBSSummary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
+        ebs = EBS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(ec2_summary.name, ebs_summary)
         distributor.add(ebs_limits.name, ebs_summary)

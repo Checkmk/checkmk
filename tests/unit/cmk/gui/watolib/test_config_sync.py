@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -13,16 +14,20 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
-from livestatus import SiteId
+from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
 import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
+import cmk.gui.watolib.mkeventd
 from cmk.gui.config import active_config
+from cmk.gui.nodevis_lib import topology_dir
+
+from cmk.bi.type_defs import frozen_aggregations_dir
 
 
 @pytest.fixture(name="mocked_responses")
@@ -57,7 +62,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> No
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "_get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "get_rule_stats_from_ec", lambda: {})
 
 
 @pytest.fixture(autouse=True)
@@ -70,31 +75,25 @@ def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def fixture_disable_build_setup_search_index_background(monkeypatch):
-    # init-redis is not availabe...
-    monkeypatch.setattr(cmk.utils.packaging, "_build_setup_search_index_background", lambda: None)
-
-
+@contextmanager
 def _create_sync_snapshot(
     activation_manager: activate_changes.ActivateChangesManager,
-    snapshot_data_collector_class: str,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     remote_site: SiteId,
     edition: cmk_version.Edition,
-) -> activate_changes.SnapshotSettings:
-    _create_test_sync_config(monkeypatch)
-    return _generate_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        tmp_path,
-        remote_site=remote_site,
-        edition=edition,
-    )
+) -> Iterator[config_sync.SnapshotSettings]:
+    with _create_test_sync_config(monkeypatch):
+        yield _generate_sync_snapshot(
+            activation_manager,
+            tmp_path,
+            remote_site=remote_site,
+            edition=edition,
+        )
 
 
-def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
+@contextmanager
+def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Create some config files to be synchronized"""
     conf_dir = Path(cmk.utils.paths.check_mk_config_dir, "wato")
     conf_dir.mkdir(parents=True, exist_ok=True)
@@ -103,6 +102,8 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
 
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
+    frozen_aggregations_dir.mkdir(parents=True, exist_ok=True)
+    topology_dir.mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"
     gui_conf_dir.mkdir(parents=True, exist_ok=True)
@@ -113,48 +114,47 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
     with stored_passwords_dir.joinpath("stored_passwords").open("w", encoding="utf-8") as f:
         f.write("DUMMY_PWD_ENTRY \n")
 
-    if cmk_version.is_managed_edition():
-        monkeypatch.setattr(
-            active_config,
-            "customers",
-            {
-                "provider": {
-                    "name": "Provider",
-                },
-            },
-            raising=False,
-        )
-        dummy_password: dict[str, dict[str, None | str | list]] = {
-            "password_1": {
-                "title": "testpwd",
-                "comment": "",
-                "docu_url": "",
-                "password": "",
-                "owned_by": None,
-                "shared_with": [],
-                "customer": "provider",
+    with monkeypatch.context() as m:
+        if cmk_version.edition() is cmk_version.Edition.CME:
+            m.setattr(
+                active_config,
+                "customers",
+                {"provider": {"name": "Provider"}},
+                raising=False,
+            )
+            dummy_password: dict[str, dict[str, None | str | list]] = {
+                "password_1": {
+                    "title": "testpwd",
+                    "comment": "",
+                    "docu_url": "",
+                    "password": "",
+                    "owned_by": None,
+                    "shared_with": [],
+                    "customer": "provider",
+                }
             }
-        }
-        monkeypatch.setattr(
-            cmk.gui.watolib.password_store.PasswordStore,
-            "load_for_reading",
-            lambda x: dummy_password,
-        )
+            m.setattr(
+                cmk.gui.watolib.password_store.PasswordStore,
+                "load_for_reading",
+                lambda x: dummy_password,
+            )
+        yield
 
 
-def _get_activation_manager(
-    monkeypatch: pytest.MonkeyPatch, remote_site: SiteId = SiteId("unit_remote_1")
-) -> activate_changes.ActivateChangesManager:
+def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
     # TODO: Make this better testable: Extract site snapshot setting calculation
-    remote_sites = {
-        "unit_remote_1": {
+    if remote_site == SiteId("unit_remote_1"):
+        return {
             "customer": "provider",
             "url_prefix": "/unit_remote_1/",
             "status_host": None,
             "user_sync": None,
             "socket": (
                 "tcp",
-                {"tls": ("encrypted", {"verify": True}), "address": ("127.0.0.1", 6790)},
+                NetworkSocketDetails(
+                    address=("127.0.0.1", 6790),
+                    tls=("encrypted", TLSParams(verify=True)),
+                ),
             ),
             "replication": "slave",
             "user_login": True,
@@ -169,15 +169,19 @@ def _get_activation_manager(
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
-        },
-        "unit_remote_2": {
+        }
+    if remote_site == SiteId("unit_remote_2"):
+        return {
             "customer": "provider",
             "url_prefix": "/unit_remote_1/",
             "status_host": None,
             "user_sync": None,
             "socket": (
                 "tcp",
-                {"tls": ("encrypted", {"verify": True}), "address": ("127.0.0.1", 6790)},
+                NetworkSocketDetails(
+                    address=("127.0.0.1", 6790),
+                    tls=("encrypted", TLSParams(verify=True)),
+                ),
             ),
             "replication": "slave",
             "user_login": True,
@@ -192,45 +196,55 @@ def _get_activation_manager(
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
-        },
-    }
+        }
+    raise ValueError(remote_site)
 
-    monkeypatch.setattr(
-        active_config,
-        "sites",
-        {
-            "unit": {
-                "alias": "Der Master",
-                "disable_wato": True,
-                "disabled": False,
-                "insecure": False,
-                "multisiteurl": "",
-                "persist": False,
-                "replicate_ec": False,
-                "replication": "",
-                "timeout": 10,
-                "user_login": True,
-                "proxy": None,
+
+@contextmanager
+def _get_activation_manager(
+    monkeypatch: pytest.MonkeyPatch, remote_site: SiteId
+) -> Iterator[activate_changes.ActivateChangesManager]:
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "sites",
+            {
+                "unit": {
+                    "alias": "Der Master",
+                    "disable_wato": True,
+                    "disabled": False,
+                    "insecure": False,
+                    "multisiteurl": "",
+                    "persist": False,
+                    "replicate_ec": False,
+                    "replication": "",
+                    "timeout": 10,
+                    "user_login": True,
+                    "proxy": None,
+                },
+                remote_site: _get_site_configuration(remote_site),
             },
-            remote_site: remote_sites[remote_site],
-        },
-    )
+        )
 
-    activation_manager = activate_changes.ActivateChangesManager()
-    activation_manager._sites = [remote_site]
-    activation_manager._changes_by_site = {remote_site: []}
-    activation_manager._activation_id = "123"
-    return activation_manager
+        activation_manager = activate_changes.ActivateChangesManager()
+        activation_manager._sites = [remote_site]
+        activation_manager._changes_by_site = {remote_site: []}
+        activation_manager._activation_id = "123"
+        yield activation_manager
 
 
 def _generate_sync_snapshot(
     activation_manager: activate_changes.ActivateChangesManager,
-    snapshot_data_collector_class: str,
     tmp_path: Path,
     remote_site: SiteId,
     *,
     edition: cmk_version.Edition,
-) -> activate_changes.SnapshotSettings:
+) -> config_sync.SnapshotSettings:
+    snapshot_data_collector_class = (
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
+    )
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._activation_id, activation_manager._sites
@@ -282,6 +296,7 @@ def _get_expected_paths(
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
         "var/check_mk/stored_passwords",
+        "var/check_mk/frozen_aggregations",
     ]
 
     # The new sync directories create all needed files on the central site now
@@ -324,6 +339,7 @@ def _get_expected_paths(
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "local",
             "var/check_mk/packages",
+            "var/check_mk/topology",
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?
@@ -346,7 +362,9 @@ def _get_expected_paths(
                 "var/check_mk/packages",
             ]
 
-        expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
+        expected_paths = [
+            p for p in expected_paths if p not in {"etc/check_mk/conf.d/wato/hosts.mk"}
+        ]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -403,107 +421,35 @@ def test_generate_snapshot(
     with_user_login: UserId,
     remote_site: SiteId,
 ) -> None:
-    snapshot_data_collector_class = (
-        "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
-        else "CRESnapshotDataCollector"
-    )
+    with _get_activation_manager(monkeypatch, remote_site) as activation_manager:
+        with _create_sync_snapshot(
+            activation_manager,
+            monkeypatch,
+            tmp_path,
+            remote_site=remote_site,
+            edition=edition,
+        ) as snapshot_settings:
+            expected_paths = _get_expected_paths(
+                user_id=with_user_login,
+                with_local=active_config.sites[remote_site].get("replicate_mkps", False),
+                edition=edition,
+            )
 
-    activation_manager = _get_activation_manager(monkeypatch, remote_site)
-
-    snapshot_settings = _create_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        monkeypatch,
-        tmp_path,
-        remote_site=remote_site,
-        edition=edition,
-    )
-
-    expected_paths = _get_expected_paths(
-        user_id=with_user_login,
-        with_local=active_config.sites[remote_site].get("replicate_mkps", False),
-        edition=edition,
-    )
-
-    work_dir = Path(snapshot_settings.work_dir)
-    paths = [str(p.relative_to(work_dir)) for p in work_dir.glob("**/*")]
-    assert sorted(paths) == sorted(expected_paths)
-
-
-@pytest.mark.parametrize(
-    "master, slave, result",
-    [
-        pytest.param(
-            {"first": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}, "second": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}},
-            id="Delete user from master",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {},
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            id="New users",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            id="Update Global user notifications. Retain Customer user notifications",
-        ),
-    ],
-)
-def test_update_contacts_dict(master: dict, slave: dict, result: dict) -> None:
-    assert config_sync._update_contacts_dict(master, slave) == result
+            work_dir = Path(snapshot_settings.work_dir)
+            paths = [str(p.relative_to(work_dir)) for p in work_dir.glob("**/*")]
+            assert sorted(paths) == sorted(expected_paths)
 
 
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
-def test_synchronize_site(  # type:ignore[no-untyped-def]
+def test_synchronize_site(
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
     edition: cmk_version.Edition,
     tmp_path: Path,
     mocker: MockerFixture,
-):
+) -> None:
     if edition is cmk_version.Edition.CME:
         pytest.skip("Seems faked site environment is not 100% correct")
 
@@ -543,34 +489,60 @@ def test_synchronize_site(  # type:ignore[no-untyped-def]
         body="True",
     )
 
-    snapshot_data_collector_class = (
-        "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
-        else "CRESnapshotDataCollector"
-    )
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
 
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
+    file_filter_func = None
+    site_id = SiteId("unit_remote_1")
+    with _get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
+        assert activation_manager._activation_id is not None
+        with _create_sync_snapshot(
+            activation_manager,
+            monkeypatch,
+            tmp_path,
+            remote_site=SiteId("unit_remote_1"),
+            edition=edition,
+        ) as snapshot_settings:
+            _synchronize_site(activation_manager, site_id, snapshot_settings, file_filter_func)
 
-    activation_manager = _get_activation_manager(monkeypatch)
+
+def _synchronize_site(
+    activation_manager: activate_changes.ActivateChangesManager,
+    site_id: SiteId,
+    snapshot_settings: config_sync.SnapshotSettings,
+    file_filter_func: Callable[[str], bool] | None,
+) -> None:
     assert activation_manager._activation_id is not None
-    snapshot_settings = _create_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        monkeypatch,
-        tmp_path,
-        remote_site=SiteId("unit_remote_1"),
-        edition=edition,
+    site_activation_state = activate_changes._initialize_site_activation_state(
+        site_id, activation_manager._activation_id, activation_manager, time.time()
     )
 
-    site_activation = activate_changes.ActivateChangesSite(
-        SiteId("unit_remote_1"),
-        snapshot_settings,
-        activation_manager._activation_id,
-        prevent_activate=True,
+    fetch_state_result = activate_changes.fetch_sync_state(
+        snapshot_settings.snapshot_components,
+        site_activation_state,
+        {},
     )
 
-    site_activation._time_started = time.time()
-    site_activation._synchronize_site()
+    assert fetch_state_result is not None
+    (
+        sync_state,
+        site_activation_state,
+        sync_start,
+    ) = fetch_state_result
+
+    calc_delta_result = activate_changes.calc_sync_delta(
+        sync_state,
+        file_filter_func,
+        site_activation_state,
+        sync_start,
+    )
+    assert calc_delta_result is not None
+    sync_delta, site_activation_state, sync_start = calc_delta_result
+
+    sync_result = activate_changes.synchronize_files(
+        sync_delta,
+        sync_state.remote_config_generation,
+        Path(snapshot_settings.work_dir),
+        site_activation_state,
+        sync_start,
+    )
+    assert sync_result is not None

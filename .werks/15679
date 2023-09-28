@@ -1,0 +1,16 @@
+Title: host_config: moving a host to a different folder only permitted if user has permission
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1682090670
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue that allowed an api user to move a host from one
+folder to another when the user didn't belong to the same contact group. The api
+user now has to be part of the same contact group as the source folder, target
+folder and the host in order to be able to move the host. Please update any client
+scripts accordingly.
+

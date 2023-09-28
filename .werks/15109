@@ -1,0 +1,33 @@
+Title: Cluster modes for WMI based plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673862563
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The builtin cluster modes of various WMI based check plugins did not work correclty.
+They would incorrectly report "<i>item not present anymore</i>" (and go to UNKNOWN).
+
+Affected plugins were
+
+LI: <tt>dotnet_clrmemory</tt>
+LI: <tt>msexch_activesync</tt>
+LI: <tt>msexch_autodiscovery</tt>
+LI: <tt>msexch_availability</tt>
+LI: <tt>msexch_isclienttype</tt>
+LI: <tt>msexch_owa</tt>
+LI: <tt>msexch_rpcclientaccess</tt>
+LI: <tt>skype</tt>
+LI: <tt>skype_mcu</tt>
+LI: <tt>skype_conferencing</tt>
+LI: <tt>skype_sip_stack</tt>
+LI: <tt>skype_mediation_server</tt>
+LI: <tt>skype_edge_auth</tt>
+LI: <tt>skype_edge</tt>
+LI: <tt>skype_data_proxy</tt>
+LI: <tt>skype_xmpp_proxy</tt>
+LI: <tt>skype_mobile</tt>
+LI: <tt>wmi_webservices</tt>

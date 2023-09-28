@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -35,11 +35,11 @@ register.agent_section(
 
 
 def inventory_kube_pod(
-    section_kube_pod_info: Optional[PodInfo],
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_init_containers: Optional[PodContainers],
-    section_kube_pod_container_specs: Optional[ContainerSpecs],
-    section_kube_pod_init_container_specs: Optional[ContainerSpecs],
+    section_kube_pod_info: PodInfo | None,
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_init_containers: PodContainers | None,
+    section_kube_pod_container_specs: ContainerSpecs | None,
+    section_kube_pod_init_container_specs: ContainerSpecs | None,
 ) -> InventoryResult:
     if (
         section_kube_pod_info is None
@@ -75,7 +75,7 @@ def inventory_kube_pod(
 
 
 def _containers_to_table(
-    container_specs: ContainerSpecs, container_statuses: Optional[PodContainers]
+    container_specs: ContainerSpecs, container_statuses: PodContainers | None
 ) -> Iterable[TableRow]:
     if container_statuses is not None:
         for name, container_spec in container_specs.containers.items():

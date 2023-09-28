@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from tests.unit.conftest import FixRegister
 
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 _PLUGIN = CheckPluginName("fireeye_mailq")
@@ -16,39 +20,35 @@ _PLUGIN = CheckPluginName("fireeye_mailq")
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
+def _get_plugin(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[_PLUGIN]
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"discover_{_PLUGIN}")
-def _get_discovery_function(plugin):
+def _get_discovery_function(plugin: CheckPlugin) -> DiscoveryFunction:
     return lambda s: plugin.discovery_function(section=s)
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"check_{_PLUGIN}")
-def _get_check_function(plugin):
+def _get_check_function(plugin: CheckPlugin) -> CheckFunction:
     return lambda p, s: plugin.check_function(params=p, section=s)
 
 
 @pytest.fixture(scope="module", name="section")
-def _get_section(fix_register) -> Mapping[str, str]:  # type:ignore[no-untyped-def]
+def _get_section(fix_register: FixRegister) -> object:
     parse_fireeye_mailq = fix_register.snmp_sections[SectionName("fireeye_mailq")].parse_function
     return parse_fireeye_mailq([[["0", "0", "0", "3", "5"]]])
 
 
-def test_discover_somehting(  # type:ignore[no-untyped-def]
-    discover_fireeye_mailq, section: Mapping[str, str]
-) -> None:
+def test_discover_somehting(discover_fireeye_mailq: DiscoveryFunction, section: object) -> None:
     assert list(discover_fireeye_mailq(section)) == [
         Service(),
     ]
 
 
-def test_check(  # type:ignore[no-untyped-def]
-    check_fireeye_mailq, section: Mapping[str, str]
-) -> None:
+def test_check(check_fireeye_mailq: CheckFunction, section: object) -> None:
     params = {
         # deferred not present
         "hold": (1, 5),  # OK case

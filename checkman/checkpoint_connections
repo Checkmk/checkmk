@@ -1,10 +1,10 @@
-title: Checkpoint Firewalls: Current Number of Connections
+title: Check Point Firewalls: Current Number of Connections
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the current number of connections on an Checkpoint
+ This check monitors the current number of connections on an Check Point
  Firewall. Warning and critical levels for the number of connections
  may be configured.
 

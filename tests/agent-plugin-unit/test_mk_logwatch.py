@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,15 +12,15 @@ import locale
 import os
 import re
 import sys
+from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
 
-import agents.plugins.mk_logwatch as lw
-
-try:
-    from typing import Sequence
-except ImportError:
-    pass  # only needed for type comments
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_logwatch_2 as lw  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_logwatch as lw
+    unicode=str
 
 _SEP = os.sep.encode()
 _SEP_U = _SEP.decode("utf-8")
@@ -44,8 +44,8 @@ if os.name == "nt":
     _OH_NO_BYTES = _OH_NO.encode()
     _WAT_BAD_BYTES = _WAT_BAD.encode()
 else:
-    _OH_NO_STR = u"oh-no-\uFFFD"  # replace char
-    _WAT_BAD_STR = u"wat\u203D"  # actual interobang
+    _OH_NO_STR = u"oh-no-\\x89"  # backslash replace
+    _WAT_BAD_STR = u"wat\u203D"  # actual interrobang
     _OH_NO_BYTES = _OH_NO
     _WAT_BAD_BYTES = _WAT_BAD
 
@@ -100,15 +100,11 @@ def _get_parsed_config():
 
 
 def text_type():
-    if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable
-    return str
+    return unicode if sys.version_info[0] == 2 else str
 
 
 def binary_type():
-    if sys.version_info[0] == 2:
-        return str  # pylint: disable=undefined-variable
-    return bytes
+    return str if sys.version_info[0] == 2 else bytes
 
 
 def ensure_text(s, encoding='utf-8', errors='strict'):
@@ -153,7 +149,7 @@ def test_options_defaults() -> None:
     ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
     ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
 ])
-def test_options_setter(option_string, key, expected_value) -> None:  # type:ignore[no-untyped-def]
+def test_options_setter(option_string:str, key:str, expected_value:object) -> None:
     opt = lw.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
@@ -173,7 +169,7 @@ def test_options_setter_regex(option_string: str, expected_pattern: str,
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(tmpdir) -> None:  # type:ignore[no-untyped-def]
+def test_get_config_files(tmpdir: Union[str, bytes]) -> None:
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
@@ -283,7 +279,7 @@ def test_read_config_logfiles(parsed_config):
         ("local", os.path.join("/path/to/config", "logwatch.state.local")),
         ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
     ])
-def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_status_filename(env_var: str, expected_status_filename: str, monkeypatch ) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -353,7 +349,7 @@ def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> 
         },
     }),
 ])
-def test_state_load(tmpdir, state_data, state_dict) -> None:  # type:ignore[no-untyped-def]
+def test_state_load(tmpdir: Union[str, bytes], state_data: str, state_dict: Mapping[str,Mapping[str,object]]) -> None:
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
@@ -369,6 +365,7 @@ def test_state_load(tmpdir, state_data, state_dict) -> None:  # type:ignore[no-u
     assert state._data == state_dict
     for expected_data in state_dict.values():
         key = expected_data['file']
+        assert isinstance(key,(unicode,str))
         assert state.get(key) == expected_data
 
 
@@ -391,7 +388,7 @@ def test_state_load(tmpdir, state_data, state_dict) -> None:  # type:ignore[no-u
         }
     },
 ])
-def test_state_write(tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
+def test_state_write(tmpdir: Union[str, bytes], state_dict: Mapping[str,Mapping[str,object]]) -> None:
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = lw.State(file_path)
@@ -400,6 +397,7 @@ def test_state_write(tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
     # writing
     for data in state_dict.values():
         key = data['file']
+        assert isinstance(key,str)
         filestate = state.get(key)
         # should work w/o setting 'file'
         filestate['offset'] = data['offset']
@@ -423,7 +421,7 @@ STAR_FILES = [
 def _fix_for_os(pairs):
     # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
     def symlink_in_windows(s: str) -> bool:
-        return os.name == "nt" and s.find("symlink") != -1
+        return os.name == "nt" and "symlink" in s
 
     return [(os.sep.encode() + b, os.sep + s) for b, s in pairs if not symlink_in_windows(s)]
 
@@ -433,7 +431,7 @@ def _cvt(path):
 
 
 # NOTE: helper for mypy
-def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
+def _end_with(actual: Union[str, bytes], *, expected:bytes) -> bool:
     if isinstance(actual, str):
         assert isinstance(expected, str)
         return actual.endswith(expected)
@@ -449,7 +447,7 @@ def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
         (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
     ]),
 ])
-def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes) -> None:  # type:ignore[no-untyped-def]
+def test_find_matching_logfiles(fake_filesystem:str, pattern_suffix:unicode, file_suffixes:Iterable[Tuple[bytes,unicode]]) -> None:
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
     files = lw.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
@@ -479,7 +477,7 @@ def test_ip_in_subnetwork() -> None:
     (b'\xFF\xFE', 'utf_16', 2),
     (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
-def test_log_lines_iter_encoding(monkeypatch, buff, encoding, position) -> None:  # type:ignore[no-untyped-def]
+def test_log_lines_iter_encoding(monkeypatch, buff:bytes, encoding:str, position:int) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
@@ -702,7 +700,7 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
                           (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
                             ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
                           (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
-def test_filter_maxcontextlines(input_lines, before, after, expected_output) -> None:  # type:ignore[no-untyped-def]
+def test_filter_maxcontextlines(input_lines:Sequence[str], before:int, after:int, expected_output:Sequence[str]) -> None:
     assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))
 
 
@@ -722,7 +720,7 @@ def test_filter_maxcontextlines(input_lines, before, after, expected_output) -> 
                            ((str(i) for i in range(3)),
                            False,
                            ["0", "1", "2"])])
-def test_filter_consecutive_duplicates(input_lines, nocontext, expected_output) -> None:  # type:ignore[no-untyped-def]
+def test_filter_consecutive_duplicates(input_lines: Sequence[str], nocontext: Optional[bool], expected_output: Sequence[str]) -> None:
     assert expected_output == list(
         lw._filter_consecutive_duplicates(input_lines, nocontext)
     )
@@ -811,8 +809,8 @@ def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
 
 def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
     info = [_get_file_info(tmpdir, f) for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log" )]
-    assert {s for(_, s) in info} == {0}
-    assert len({i for(i, _) in info}) == 2
+    assert {s for (_, s) in info} == {0}
+    assert len({i for (i, _) in info}) == 2
     assert info[0][0] != info[1][0]
     assert info[1][0] == info[2][0]
 

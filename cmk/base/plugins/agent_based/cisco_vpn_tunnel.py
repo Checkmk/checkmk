@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from time import time
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     any_of,
@@ -37,9 +40,9 @@ class Phase:
         value_store: MutableMapping[str, Any],
         value_store_key_prefix: str,
         now: float,
-    ) -> Optional["Phase"]:
+    ) -> "Phase | None":
         try:
-            rate_input: Optional[float] = get_rate(
+            rate_input: float | None = get_rate(
                 value_store,
                 f"{value_store_key_prefix}_input",
                 now,
@@ -49,7 +52,7 @@ class Phase:
         except GetRateError:
             rate_input = None
         try:
-            rate_output: Optional[float] = get_rate(
+            rate_output: float | None = get_rate(
                 value_store,
                 f"{value_store_key_prefix}_output",
                 now,
@@ -71,7 +74,7 @@ class Phase:
 @dataclass
 class VPNTunnel:
     phase_1: Phase
-    phase_2: Optional[Phase] = None
+    phase_2: Phase | None = None
 
     def rates(
         self,
@@ -102,8 +105,8 @@ class VPNTunnel:
 Section = Mapping[str, VPNTunnel]
 
 
-def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type:ignore[no-untyped-def]
-    phase_2_data: Dict[str, Phase] = {}
+def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type: ignore[no-untyped-def]
+    phase_2_data: dict[str, Phase] = {}
     for index, state, phase_2_in, phase_2_out in table_phase_2:
         if state == "2":
             continue
@@ -118,10 +121,10 @@ def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type:ignore[no-unty
     return phase_2_data
 
 
-def parse_cisco_vpn_tunnel(string_table: List[StringTable]) -> Section:
+def parse_cisco_vpn_tunnel(string_table: list[StringTable]) -> Section:
     phase_2_data = _parse_phase_2(string_table[1])
 
-    section: Dict[str, VPNTunnel] = {}
+    section: dict[str, VPNTunnel] = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in string_table[0]:
         if not remote_ip:
             continue
@@ -172,7 +175,7 @@ class CheckParameters(
     total=False,
 ):
     state: int
-    tunnels: Sequence[Tuple[str, str, int]]
+    tunnels: Sequence[tuple[str, str, int]]
 
 
 def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
@@ -182,7 +185,7 @@ def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
 def _state_missing_and_aliases(
     item: str,
     params: CheckParameters,
-) -> Tuple[State, str]:
+) -> tuple[State, str]:
     revelant_tunnel_settings = [
         (
             alias,
@@ -209,7 +212,6 @@ def check_cisco_vpn_tunnel(
     params: CheckParameters,
     section: Section,
 ) -> CheckResult:
-
     state_missing, aliases = _state_missing_and_aliases(
         item,
         params,

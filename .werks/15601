@@ -1,0 +1,12 @@
+Title: KUBE: Reenable filtering Pods by Namespace
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680687582
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The Kubernetes special agent would show the piggyback data for Pods, which should have been excluded
+based on their namespace via the <tt>Kubernetes</tt> rule.

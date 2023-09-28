@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -101,10 +101,10 @@ def to_openapi(
     if not isinstance(params, list):
         raise ValueError("Needs to be a sequence of parameters.")
 
-    def _is_field_param(dict_) -> bool:  # type:ignore[no-untyped-def]
+    def _is_field_param(dict_) -> bool:  # type: ignore[no-untyped-def]
         return all(isinstance(value, fields.Field) for value in dict_.values())
 
-    def _is_schema_class(klass) -> bool:  # type:ignore[no-untyped-def]
+    def _is_schema_class(klass) -> bool:  # type: ignore[no-untyped-def]
         try:
             return issubclass(klass, Schema)
         except TypeError:

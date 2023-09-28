@@ -3,7 +3,10 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.20.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 5
+PROTOBUF_BUILD_ID := 6
+# The cached package contains the python major/minor version, so include this in the cache name in order to trigger
+# a rebuild on a python version change.
+PROTOBUF_BUILD_ID := $(PROTOBUF_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_CONFIGURE := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-configure
@@ -33,8 +36,6 @@ PACKAGE_PROTOBUF_LD_LIBRARY_PATH := $(PACKAGE_PROTOBUF_DESTDIR)/lib
 PACKAGE_PROTOBUF_INCLUDE_PATH    := $(PACKAGE_PROTOBUF_DESTDIR)/include/google/protobuf
 PACKAGE_PROTOBUF_PROTOC_BIN      := $(PACKAGE_PROTOBUF_DESTDIR)/bin/protoc
 
-# Executed from enterprise/core/src/Makefile.am, enterprise/core/src/.f12
-# and ./enterprise/Makefile
 $(PROTOBUF)-build-library: $(BUILD_HELPER_DIR) $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 
 # We have a globally defined $(PROTOBUF_UNPACK) target, but we need some special
@@ -46,10 +47,13 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
+# NOTE: We can probably remove the CXXFLAGS hack below when we use a more recent
+# protobuf version. Currently -Wall is enabled for builds with GCC, and newer
+# GCC versions complain.
 $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    ./configure --prefix=""
+	    CXXFLAGS="-Wno-stringop-overflow" ./configure --prefix=""
 	$(TOUCH) $@
 
 $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)

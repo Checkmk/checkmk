@@ -12,6 +12,7 @@ When having the export of the software packages list via CSV enabled while execu
 of the HW/SW inventory, an exception could happen in case the inventory data contained
 special characters. The exception looked like this on the command line:
 
+```
 Traceback (most recent call last):
   File "/omd/sites/stable/share/check_mk/modules/check_mk.py", line 4811, in <module>
     do_inv(hostnames)
@@ -24,4 +25,5 @@ Traceback (most recent call last):
   File "/omd/sites/stable/share/check_mk/inventory/export_software_csv", line 67, in inv_export_software_csv
     out.write("%s\n" % separator.join(line))
 UnicodeEncodeError: 'ascii' codec can't encode character u'\xf6' in position 1: ordinal not in range(128)
+```
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
 import contextlib
 import datetime
-from typing import TypedDict
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -38,7 +39,6 @@ def _try_calculation_age(date_string: str) -> int:
 
 
 def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
-
     level_days = int(datetime.timedelta(seconds=params["patchlevel_age"]).total_seconds())
     try:
         age = _try_calculation_age(patch_level)
@@ -99,7 +99,6 @@ def _check_os_version(section: Section, user_regex: str) -> Result:
 
 
 def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
-
     yield Result(
         state=State.OK,
         summary=f"Client version: {section.client_version}",

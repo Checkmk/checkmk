@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,12 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import cmk_path, cpe_path
+from tests.testlib.utils import cce_path, cmk_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
-from cmk.utils.type_defs import CheckPluginName
+
+from cmk.checkengine.checking import CheckPluginName
 
 ManPages = Mapping[str, man_pages.ManPage | None]
 
@@ -25,7 +26,7 @@ def patch_man_page_dir_paths(monkeypatch, tmp_path):
         "_get_man_page_dirs",
         lambda: [
             tmp_path,
-            Path(cpe_path(), "checkman"),
+            Path(cce_path(), "checkman"),
             Path(cmk_path(), "checkman"),
         ],
     )
@@ -34,7 +35,7 @@ def patch_man_page_dir_paths(monkeypatch, tmp_path):
 @pytest.fixture(scope="module", name="all_pages")
 def get_all_pages() -> ManPages:
     base_dirs = [
-        Path(cpe_path(), "checkman"),
+        Path(cce_path(), "checkman"),
         Path(cmk_path(), "checkman"),
     ]
     return {
@@ -53,7 +54,7 @@ def test_man_page_path_only_shipped() -> None:
     assert man_pages.man_page_path("not_existant") is None
 
 
-def test_man_page_path_both_dirs(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_man_page_path_both_dirs(tmp_path: Path) -> None:
     f1 = tmp_path / "file1"
     f1.write_text("x", encoding="utf-8")
 
@@ -73,7 +74,7 @@ def test_all_manpages_migrated(all_pages: ManPages) -> None:
         assert CheckPluginName(name)
 
 
-def test_all_man_pages(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_all_man_pages(tmp_path: Path) -> None:
     (tmp_path / ".asd").write_text("", encoding="utf-8")
     (tmp_path / "asd~").write_text("", encoding="utf-8")
     (tmp_path / "if").write_text("", encoding="utf-8")
@@ -93,7 +94,7 @@ def test_load_all_man_pages(all_pages: ManPages) -> None:
         assert isinstance(man_page, man_pages.ManPage)
 
 
-def test_print_man_page_table(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
     man_pages.print_man_page_table()
     out, err = capsys.readouterr()
     assert err == ""
@@ -110,7 +111,7 @@ def man_page_catalog_titles():
     assert man_pages.CATALOG_TITLES["os"]
 
 
-def test_load_man_page_catalog(catalog) -> None:  # type:ignore[no-untyped-def]
+def test_load_man_page_catalog(catalog: man_pages.ManPageCatalog) -> None:
     assert isinstance(catalog, dict)
 
     for path, entries in catalog.items():
@@ -164,10 +165,10 @@ def test_find_missing_plugins(
     ), f"The following manpages have no corresponding plugins: {', '.join(missing_plugins)}"
 
 
-def test_cluster_check_functions_match_manpages_cluster_sections(  # type:ignore[no-untyped-def]
+def test_cluster_check_functions_match_manpages_cluster_sections(
     fix_register: FixRegister,
     all_pages: ManPages,
-):
+) -> None:
     missing_cluster_description: set[str] = set()
     unexpected_cluster_description: set[str] = set()
 
@@ -177,7 +178,10 @@ def test_cluster_check_functions_match_manpages_cluster_sections(  # type:ignore
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
-            (missing_cluster_description, unexpected_cluster_description,)[
+            (
+                missing_cluster_description,
+                unexpected_cluster_description,
+            )[
                 has_cluster_doc
             ].add(str(plugin.name))
 
@@ -185,10 +189,10 @@ def test_cluster_check_functions_match_manpages_cluster_sections(  # type:ignore
     assert not unexpected_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level(catalog) -> None:  # type:ignore[no-untyped-def]
+def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog) -> None:
     for category, entries in catalog.items():
-        has_entries = entries != []
-        has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
+        has_entries = bool(entries)
+        has_categories = bool(man_pages._manpage_catalog_subtree_names(catalog, category))
         assert (
             has_entries != has_categories
         ), "A category must only have entries or categories, not both"
@@ -201,7 +205,7 @@ def test_load_man_page_not_existing() -> None:
     assert man_pages.load_man_page("not_existing") is None
 
 
-def test_print_man_page_nowiki_index(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str]) -> None:
     renderer = man_pages.NowikiManPageRenderer("if64")
     index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
@@ -212,7 +216,7 @@ def test_print_man_page_nowiki_index(capsys) -> None:  # type:ignore[no-untyped-
     assert "[check_if64|" in index_entry
 
 
-def test_print_man_page_nowiki_content(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str]) -> None:
     renderer = man_pages.NowikiManPageRenderer("if64")
     content = renderer.render()
     out, err = capsys.readouterr()
@@ -224,7 +228,7 @@ def test_print_man_page_nowiki_content(capsys) -> None:  # type:ignore[no-untype
     assert "License:" in content
 
 
-def test_print_man_page(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_print_man_page(capsys: pytest.CaptureFixture[str]) -> None:
     man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""

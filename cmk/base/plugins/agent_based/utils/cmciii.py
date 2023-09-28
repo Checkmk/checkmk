@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
-from ..agent_based_api.v1 import Service, type_defs
+from ..agent_based_api.v1 import all_of, Service, startswith, type_defs
 
-Variable = List[str]
+Variable = list[str]
 DiscoveryParams = Mapping[str, bool]
 CheckParams = Mapping[str, Any]
 
-Devices = Dict[str, str]
+Devices = dict[str, str]
 SensorType = str
-Sensor = Dict[str, Any]
-Sensors = Dict[str, Sensor]
-Section = Dict[SensorType, Sensors]
+Sensor = dict[str, Any]
+Sensors = dict[str, Sensor]
+Section = dict[SensorType, Sensors]
+
+
+DETECT_CMCIII_LCP = all_of(
+    startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
+    startswith(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6", "Air.Temperature.DescName"),
+)
 
 
 def discovery_default_parameters() -> DiscoveryParams:
@@ -31,11 +38,11 @@ def discover_cmciii_sensors(
 
 def get_item(id_: str, params: DiscoveryParams, sensor: Sensor) -> str:
     if params.get("use_sensor_description", False):
-        return "%s-%s %s" % (sensor["_location_"], sensor["_index_"], sensor["DescName"])
+        return "{}-{} {}".format(sensor["_location_"], sensor["_index_"], sensor["DescName"])
     return id_
 
 
-def get_sensor(item: str, params: CheckParams, sensors: Sensors) -> Optional[Sensor]:
+def get_sensor(item: str, params: CheckParams, sensors: Sensors) -> Sensor | None:
     # This function is used for compatibility whith discovered services that do
     # not use _item_key in the params (yet).
     if params and (params_key := params.get("_item_key")):

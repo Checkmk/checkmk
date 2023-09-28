@@ -1,0 +1,30 @@
+Title: Prometheus & Alertmanager: Deprecation of `IP Address` and `Host name` options
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1673533179
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The rules <tt>Prometheus</tt> and <tt>Alertmanager</tt> both allowed omitting the server address
+from the connection option by specifying <tt>IP Address</tt> or <tt>Host name</tt>. The
+corresponding agents would then generate URLs based on the host configuration.
+
+These options add complexity, are incompatible with proxy setups and less transparent than simply
+specifying the relevant URL.
+
+Therefore, these options will be removed in Checkmk 2.3.0.
+
+Affected users need to use the <tt>Custom URL</tt> option to specify the server address. For
+instance, assume your rule specifies
+<ul>
+  <li><tt>IP Address</tt> </li>
+  <li><tt>Port</tt>: <tt>9000</tt></li>
+  <li><tt>Custom path prefix</tt>: <tt>my_prefix</tt></li>
+</ul>
+and your host has the address <tt>1.2.3.4</tt>. Then the new rule needs to specify
+C+:
+https://1.2.3.4:9000/my_prefix/api/v1/status/buildinfo
+C-:

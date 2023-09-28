@@ -1,0 +1,24 @@
+Title: Changelog will only contain Werks from current major version
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1693224813
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Checkmk has a built in changelog viewer that shows Changelog items called
+"Werks". For previous versions of checkmk it showed "Werks" for all versions of
+Checkmk.
+
+It turned out that the changelog was not complete: For previous major versions
+of Checkmk not all Werks were displayed. As there is little benefit to display
+Werks of previous major versions of checkmk we decided to remove those.
+
+The whole list of all Werks is available on our homepage:
+https://checkmk.com/werks
+
+When updating to a new major version, the update process will check if there
+are unacknowledged werks and tell the user about this, as this list will no
+longer be available after the update.

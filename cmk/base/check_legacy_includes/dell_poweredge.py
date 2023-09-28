@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -73,7 +73,6 @@ def inventory_dell_poweredge_mem(info):
 def check_dell_poweredge_mem(item, _no_params, info):
     di = {}
     for status, location, size, di["Speed"], di["MFR"], di["P/N"], di["S/N"] in info:
-
         di["Size"] = str(int((saveint(size) / 1024.0) / 1024.0)) + "GB"
         if item == location:
             state_table = {
@@ -173,7 +172,6 @@ def inventory_dell_poweredge_pci(info):
 def check_dell_poweredge_pci(item, _no_params, info):
     di = {}
     for status, di["BusWidth"], di["MFR"], di["Desc."], fqdd in info:
-
         if item == fqdd:
             state_table = {
                 "1": ("other", 1),
@@ -278,7 +276,6 @@ def check_dell_poweredge_amperage(item, _no_params, info):
         UpperCritical,
         UpperNonCritical,
     ) in info:
-
         if item == LocationName:
             if StateSettings == "1":  # unknown
                 return 3, "Object's state is unknown"

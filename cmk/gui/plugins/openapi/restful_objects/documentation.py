@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
@@ -54,7 +54,7 @@ def defaults_bold(text: str) -> str:
 
 @functools.lru_cache
 def _jinja_env():
-    env = jinja2.Environment(  # nosec
+    env = jinja2.Environment(  # nosec B701 # BNS:bbfc92
         extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.DictLoader(TEMPLATES),
@@ -73,7 +73,7 @@ HOST_COLUMNS = tables.Hosts.__columns__()
 SERVICE_COLUMNS = tables.Services.__columns__()
 
 
-def is_adjacent_column(column) -> bool:  # type:ignore[no-untyped-def]
+def is_adjacent_column(column) -> bool:  # type: ignore[no-untyped-def]
     return (column.name.startswith("host_") and column.name[5:] in HOST_COLUMNS) or (
         column.name.startswith("service_") and column.name[8:] in SERVICE_COLUMNS
     )
@@ -82,7 +82,7 @@ def is_adjacent_column(column) -> bool:  # type:ignore[no-untyped-def]
 def table_definitions() -> list[str]:
     result = []
     table_tmpl = _jinja_env().get_template("table")
-    for table_name in tables.__all__:
+    for table_name in tables.REST_API_DOC_TABLES:
         table = getattr(tables, table_name)
         columns = []
         adjacent_columns = []

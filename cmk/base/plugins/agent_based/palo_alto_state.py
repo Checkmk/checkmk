@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -77,7 +77,6 @@ def check(
     params: Mapping[str, int],
     section: SectionPaloAlto,
 ) -> CheckResult:
-
     yield Result(state=State.OK, summary=f"Firmware Version: {section.firmware_version}")
     yield Result(
         state=State(params[f"mode_{_uniform_format(section.ha_mode)}"]),

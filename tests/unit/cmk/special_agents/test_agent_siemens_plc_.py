@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from snap7.types import Areas
 
 from cmk.special_agents.agent_siemens_plc import (
     _addresses_from_area_values,
@@ -103,11 +104,11 @@ def test_parse_spec(
 @pytest.mark.parametrize(
     "area_name, expected_id",
     [
-        ("merker", 131),
+        ("merker", Areas.MK),
     ],
 )
-def test__area_name_to_area_id(area_name: str, expected_id: int) -> None:
-    assert _area_name_to_area_id(area_name) == expected_id
+def test__area_name_to_area_id(area_name: str, expected_id: Areas) -> None:
+    assert _area_name_to_area_id(area_name) is expected_id
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 --- a/bindings/python/rrdtoolmodule.c.orig	2018-06-25 18:25:52.726510964 +0200
 +++ b/bindings/python/rrdtoolmodule.c	2018-06-25 18:26:11.341983601 +0200
-@@ -213,11 +213,9 @@
+@@ -210,11 +210,9 @@
 
          switch (data->type) {
              case RD_I_VAL:

@@ -1,0 +1,15 @@
+Title: Exclude agent bakery file cache from omd backups
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1690976567
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Temporary files created by the agent bakery when baking agents are now no longer included in backups.
+These files needlessly took up space in the backups, although they are not needed.
+Specifically, this affects files in the directory <tt>var/check_mk/agents/.files_cache</tt>.
+
+Baked agents are still included in backups.

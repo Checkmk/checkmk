@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
@@ -10,10 +10,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.scaleio_volume import (
     check_scaleio_volume,
     discover_scaleio_volume,
-    DiskReadWrite,
     ScaleioVolume,
 )
-from cmk.base.plugins.agent_based.utils.scaleio import StorageConversionError
+from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "c07a5f6c00000001": ScaleioVolume(
@@ -66,8 +65,8 @@ def test_inventory_scaleio_volume(
     assert list(discover_scaleio_volume(parsed_section)) == discovered_services
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_scaleio_volume() -> None:
-
     check_result = list(check_scaleio_volume(item=ITEM, params={}, section=SECTION))
     assert check_result[0] == Result(state=State.OK, summary="Name: CF1SIOVCD001, Size: 2.0 TB")
     assert len(check_result) == 9

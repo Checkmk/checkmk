@@ -11,10 +11,12 @@ Version: 2.1.0b1
 Openlog did not display the logfile with the Error:<br>
 <b>Logfile does not exist</b><br>
 
+<ul>
 <li> Logwatch did not retrieve information from path <b>var/check_mk/logwatch/HOST</b> rather from
-<b>var/check_mk/logwatch/</b>.
+<b>var/check_mk/logwatch/</b>.</li>
 <li> Logwatch Livestatus request did not support retrieving information from the basepath subfolder.
-Now this possible by adding <b>subfolder/filename</b> to your livestatus query.
-<li> The log data retrieved via Livestatus was not decoded properly.
-Thats why no data was found for this logfile.
+Now this possible by adding <b>subfolder/filename</b> to your livestatus query.</li>
+<li> The log data retrieved via Livestatus was not decoded properly.</li>
+</ul>
 
+Thats why no data was found for this logfile.

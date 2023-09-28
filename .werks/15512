@@ -1,0 +1,14 @@
+Title: Cloud VM Dashboards: replace host summary dashlet with service summary dashlet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1680530680
+Edition: cce
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+As piggyback hosts currently do not have a host state (except UP), the overview
+dashlet is replaced by an overview of the VM specfic services of the particular
+cloud special agent.
+

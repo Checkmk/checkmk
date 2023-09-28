@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 def inventory_netapp_api_info(section: StringTable) -> InventoryResult:
-    info_dict = dict((x[0], x[1]) for x in section if x[0] != "node")
+    info_dict = {x[0]: x[1] for x in section if x[0] != "node"}
 
     sw_os: dict[str, str] = {}
     hw_chassis: dict[str, str] = {}

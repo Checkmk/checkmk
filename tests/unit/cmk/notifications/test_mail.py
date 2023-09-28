@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -301,16 +301,14 @@ def mock_service_context():
 
 
 SERVICE_CONTENT_TXT = """\
-Host:                heute (heute)
+Host:                heute
 Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
-Date / Time:         Wed Mar 20 16:51:46 CET 2019
+Time:                Wed Mar 20 16:51:46 CET 2019
 Summary:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
 Details:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
 another line\\nlast line
-Host Metrics:        \n\
-Service Metrics:     \n\
 """
 
 
@@ -342,7 +340,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["HOSTOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING <b class="stmarkWARNING">WARN</b>'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING <b class="stmark state1">WARN</b>'
     )
     assert (
         content.context["SERVICEOUTPUT"]
@@ -350,7 +348,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["SERVICEOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok <b class="stmark state1">WARN</b>'
     )
     assert (
         content.context["LONGSERVICEOUTPUT"]
@@ -358,7 +356,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["LONGSERVICEOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;<b class="stmark state1">WARN</b><br>another line<br>last line'
     )
 
     assert (
@@ -447,12 +445,11 @@ def mock_host_context():
 
 
 HOST_CONTENT_TXT = """\
-Host:                heute (heute)
+Host:                heute
 Event:               DOWN -> UP
 Address:             127.0.0.1
-Date / Time:         Fri Aug 23 11:13:17 CEST 2019
+Time:                Fri Aug 23 11:13:17 CEST 2019
 Summary:             Packet received via smart PING
-Metrics:             \n\
 """
 
 

@@ -1,0 +1,22 @@
+Title: host_config: introduction of background job for host_rename endpoint
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1685714113
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the host_rename endpoint occasionally ran into a timeout if
+the renaming process took too long. This werk introduces a background job
+to resolve this issue. The endpoint now returns a redirect response instead of
+the host details. An associating wait-for-completion endpoint is also introduced
+to accompany the rename endpoint. Scripts should be adjusted accordingly.
+
+Prior to this werk, the rename process was initiated by calling the endpoint:
+/objects/host_config/<i>host_id</i>/actions/rename/invoke
+
+This endpoint remains the same but the werk introduces the additional endpoint to
+wait for the process' completion:
+/domain-types/host_config/actions/actions/wait-for-completion/invoke

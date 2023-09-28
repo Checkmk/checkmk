@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,27 +9,33 @@ import os
 import tempfile
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NamedTuple
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.translations
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
-from cmk.utils.type_defs import AgentRawData, HostName
 
 logger = logging.getLogger("cmk.base")
 
 
-class PiggybackFileInfo(NamedTuple):
+@dataclass(frozen=True)
+class PiggybackFileInfo:
     source_hostname: HostName
     file_path: Path
     successfully_processed: bool
     message: str
     status: int
+
+    def __post_init__(self) -> None:
+        if not self.message:
+            raise ValueError(self.message)
 
 
 class PiggybackRawDataInfo(NamedTuple):
@@ -62,7 +68,7 @@ _PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: HostName | None,
+    piggybacked_hostname: HostName | HostAddress | None,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
@@ -92,7 +98,7 @@ def get_piggyback_raw_data(
             raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
 
         except OSError as e:
-            reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
+            reason = f"Cannot read piggyback raw data from source '{file_info.source_hostname}'"
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
                     source_hostname=file_info.source_hostname,
@@ -164,7 +170,7 @@ class _TimeSettingsMap:
     def __init__(
         self,
         source_hostnames: Container[HostName],
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
         time_settings: PiggybackTimeSettings,
     ) -> None:
         matching_time_settings: dict[tuple[str | None, str], int] = {}
@@ -182,7 +188,9 @@ class _TimeSettingsMap:
 
         self._expanded_settings: Final = matching_time_settings
 
-    def _match(self, key: str, source_hostname: HostName, piggybacked_hostname: HostName) -> int:
+    def _match(
+        self, key: str, source_hostname: HostName, piggybacked_hostname: HostName | HostAddress
+    ) -> int:
         with suppress(KeyError):
             return self._expanded_settings[(piggybacked_hostname, key)]
         with suppress(KeyError):
@@ -192,14 +200,14 @@ class _TimeSettingsMap:
     def max_cache_age(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int:
         return self._match("max_cache_age", source_hostname, piggybacked_hostname)
 
     def validity_period(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int | None:
         try:
             return self._match("validity_period", source_hostname, piggybacked_hostname)
@@ -209,7 +217,7 @@ class _TimeSettingsMap:
     def validity_state(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int:
         try:
             return self._match("validity_state", source_hostname, piggybacked_hostname)
@@ -218,7 +226,7 @@ class _TimeSettingsMap:
 
 
 def _get_piggyback_processed_file_infos(
-    piggybacked_hostname: HostName,
+    piggybacked_hostname: HostName | HostAddress,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackFileInfo]:
     """Gather a list of piggyback files to read for further processing.
@@ -233,9 +241,9 @@ def _get_piggyback_processed_file_infos(
     return [
         _get_piggyback_processed_file_info(
             source_hostname,
-            piggybacked_hostname,
-            _get_piggybacked_file_path(source_hostname, piggybacked_hostname),
-            expanded_time_settings,
+            piggybacked_hostname=piggybacked_hostname,
+            piggyback_file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname),
+            settings=expanded_time_settings,
         )
         for source_hostname in source_hostnames
         if not source_hostname.startswith(".")
@@ -244,11 +252,11 @@ def _get_piggyback_processed_file_infos(
 
 def _get_piggyback_processed_file_info(
     source_hostname: HostName,
-    piggybacked_hostname: HostName,
+    *,
+    piggybacked_hostname: HostName | HostAddress,
     piggyback_file_path: Path,
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
-
     try:
         file_age = cmk.utils.cachefile_age(piggyback_file_path)
     except FileNotFoundError:
@@ -261,7 +269,7 @@ def _get_piggyback_processed_file_info(
             source_hostname,
             piggyback_file_path,
             False,
-            "Piggyback file too old: %s" % Age(outdated),
+            f"Piggyback file too old: {Age(outdated)}",
             0,
         )
 
@@ -345,7 +353,7 @@ def store_piggyback_raw_data(
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
         logger.log(
             VERBOSE,
-            "Storing piggyback data for: %s",
+            "Storing piggyback data for: %r",
             piggybacked_hostname,
         )
         # Raw data is always stored as bytes. Later the content is
@@ -382,13 +390,9 @@ def _store_status_file_of(
     # - status file is newer (before utime of piggybacked host files is set)
     # => piggybacked host file is outdated
     with tempfile.NamedTemporaryFile(
-        "wb",
-        dir=str(status_file_path.parent),
-        prefix=".%s.new" % status_file_path.name,
-        delete=False,
+        "wb", dir=str(status_file_path.parent), prefix=f".{status_file_path.name}.new", delete=False
     ) as tmp:
         tmp_path = tmp.name
-        os.chmod(tmp_path, 0o660)
         tmp.write(b"")
 
         tmp_stats = os.stat(tmp_path)
@@ -415,7 +419,9 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def get_source_hostnames(piggybacked_hostname: HostName | None = None) -> Sequence[HostName]:
+def get_source_hostnames(
+    piggybacked_hostname: HostName | HostAddress | None = None,
+) -> Sequence[HostName]:
     if piggybacked_hostname is None:
         return [
             HostName(source_host.name)
@@ -448,7 +454,7 @@ def _get_source_status_file_path(source_hostname: HostName) -> Path:
 
 def _get_piggybacked_file_path(
     source_hostname: HostName,
-    piggybacked_hostname: HostName,
+    piggybacked_hostname: HostName | HostAddress,
 ) -> Path:
     return cmk.utils.paths.piggyback_dir / piggybacked_hostname / source_hostname
 
@@ -517,10 +523,7 @@ def _cleanup_old_source_status_files(
             )
 
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
-            if max_cache_age_of_source is None:
-                max_cache_age_by_sources[source_host.name] = max_cache_age
-
-            elif max_cache_age >= max_cache_age_of_source:
+            if max_cache_age_of_source is None or max_cache_age_of_source <= max_cache_age:
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
     for source_state_file in _get_source_state_files():
@@ -558,9 +561,9 @@ def _cleanup_old_piggybacked_files(
         for piggybacked_host_source in source_hosts:
             file_info = _get_piggyback_processed_file_info(
                 HostName(piggybacked_host_source.name),
-                HostName(piggybacked_host_folder.name),
-                piggybacked_host_source,
-                time_settings,
+                piggybacked_hostname=HostName(piggybacked_host_folder.name),
+                piggyback_file_path=piggybacked_host_source,
+                settings=time_settings,
             )
 
             if not file_info.successfully_processed:
@@ -579,9 +582,8 @@ def _cleanup_old_piggybacked_files(
             if e.errno == errno.ENOTEMPTY:
                 continue
             raise
-        else:
-            logger.log(
-                VERBOSE,
-                "Piggyback folder '%s' is empty. Removed it.",
-                piggybacked_host_folder,
-            )
+        logger.log(
+            VERBOSE,
+            "Piggyback folder '%s' is empty. Removed it.",
+            piggybacked_host_folder,
+        )

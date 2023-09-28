@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import importlib
 import sys
+import traceback
 from collections.abc import Iterator
+from contextlib import suppress
+from pathlib import Path
 from types import ModuleType
 
 import cmk.utils.version as cmk_version
@@ -14,21 +17,21 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
-# The following imports trigger loading of builtin main modules
-# isort: off
-import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_raw_edition():
+# The following imports trigger loading of built-in main modules.
+# Note: They are loaded once more in `_import_main_module_plugins()` and
+# possibly a third time over the plugin discovery mechanism.
+with suppress(ModuleNotFoundError):
+    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+with suppress(ModuleNotFoundError):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
-else:
+with suppress(ModuleNotFoundError):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_managed_edition():
+with suppress(ModuleNotFoundError):
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_plus_edition():
-    import cmk.gui.cpe.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
-# isort: on
+with suppress(ModuleNotFoundError):
+    import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+with suppress(ModuleNotFoundError):
+    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 
 
 def _imports() -> Iterator[str]:
@@ -40,7 +43,7 @@ def _imports() -> Iterator[str]:
 
 def load_plugins() -> None:
     """Loads and initializes main modules and plugins into the application
-    Only builtin main modules are already imported."""
+    Only built-in main modules are already imported."""
     local_main_modules = _import_local_main_modules()
     main_modules = _cmk_gui_top_level_modules() + local_main_modules
     _import_main_module_plugins(main_modules)
@@ -53,8 +56,8 @@ def _import_local_main_modules() -> list[ModuleType]:
     We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
     which are expected to contain the actual imports of the main modules.
 
-    Please note that the builtin main modules are already loaded by the imports of
-    `cmk.gui.{cee.,cme.,cpe.}plugins.main_modules` above.
+    Please note that the built-in main modules are already loaded by the imports of
+    `cmk.gui.{cee.,cme.,cce.}plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
@@ -83,7 +86,12 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
                 logger.error(
                     "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
                 )
-                utils.add_failed_plugin(main_module_name, plugin_name, exc)
+                utils.add_failed_plugin(
+                    Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
+                    main_module_name,
+                    plugin_name,
+                    exc,
+                )
 
     logger.debug("Main module plugins imported")
 
@@ -93,14 +101,20 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         yield f"cmk.gui.cee.plugins.{main_module_name}"
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         yield f"cmk.gui.cme.plugins.{main_module_name}"
 
-    if cmk_version.is_plus_edition():
-        yield f"cmk.gui.cpe.plugins.{main_module_name}"
+    if (
+        cmk_version.edition() is cmk_version.Edition.CCE
+        or cmk_version.edition() is cmk_version.Edition.CSE
+    ):
+        yield f"cmk.gui.cce.plugins.{main_module_name}"
+
+    if cmk_version.edition() is cmk_version.Edition.CSE:
+        yield f"cmk.gui.cse.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
@@ -161,7 +175,9 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cme.")
             and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cpe.")
+            or name.startswith("cmk.gui.cce.")
+            and len(name.split(".")) == 4
+            or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4
         )
     ]

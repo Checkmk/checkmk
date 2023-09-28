@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
 
-from .agent_based_api.v1 import all_of, equals, exists, OIDEnd, register, SNMPTree, type_defs
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, type_defs
 from .utils import interfaces
+from .utils.emc import DETECT_VPLEX
 
 
-def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
+def parse_emc_vplex_if(
+    string_table: list[type_defs.StringTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     directors = {}
     for director, ip in string_table[0]:
         directors[ip] = director
@@ -18,7 +20,9 @@ def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.
             interfaces.Attributes(
                 index=str(idx + 1),
                 descr=frontend_info[0],
-                alias="%s %s" % (directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]),
+                alias="{} {}".format(
+                    directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]
+                ),
                 type="",
                 oper_status="1",
             ),
@@ -62,9 +66,6 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=all_of(
-        equals(".1.3.6.1.2.1.1.1.0", ""),
-        exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
-    ),
+    detect=DETECT_VPLEX,
     supersedes=["if", "if64"],
 )

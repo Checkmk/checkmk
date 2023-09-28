@@ -18,11 +18,11 @@ def main() {
         VERSION: "git",
         DOCKER_TAG: versioning.select_docker_tag(
             branch_name,
-            "", 
+            "",
             ""),   // FIXME was DOCKER_TAG_DEFAULT before
         MAKE_TARGET: "test-integration-docker",
         BRANCH: branch_name,
-        cmk_version: versioning.get_cmk_version(branch_name, "git"),
+        cmk_version: versioning.get_cmk_version(branch_name, "daily"),
     );
 }
 return this;

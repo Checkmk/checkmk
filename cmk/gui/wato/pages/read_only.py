@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""WATO can be set into read only mode manually using this mode"""
+"""Setup can be set into read only mode manually using this mode"""
 
 import time
 from collections.abc import Collection
@@ -16,8 +16,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -27,10 +27,14 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeManageReadOnly)
+
+
 class ModeManageReadOnly(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -72,7 +76,7 @@ class ModeManageReadOnly(WatoMode):
     def page(self) -> None:
         html.p(
             _(
-                "The WATO configuration can be set to read only mode for all users that are not "
+                "The Setup configuration can be set to read only mode for all users that are not "
                 "permitted to ignore the read only mode. All users that are permitted to set the "
                 "read only can disable it again when another permitted user enabled it before."
             )

@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.crypto import Password, password_hashing, PasswordHash
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.htpasswd import Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import (
     CheckCredentialsResult,
+    ConnectorType,
     user_connector_registry,
     UserConnector,
 )
-from cmk.gui.type_defs import UserSpec
 
 
 # Checkmk supports different authentication frontends for verifying the
@@ -35,7 +38,7 @@ from cmk.gui.type_defs import UserSpec
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 # - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
-def hash_password(password: Password[str]) -> PasswordHash:
+def hash_password(password: Password) -> PasswordHash:
     """Hash a password
 
     Invalid inputs raise MKUserError.
@@ -55,7 +58,7 @@ def hash_password(password: Password[str]) -> PasswordHash:
 class HtpasswdUserConnector(UserConnector):
     @classmethod
     def type(cls) -> str:
-        return "htpasswd"
+        return ConnectorType.HTPASSWD
 
     @property
     def id(self) -> str:
@@ -69,7 +72,7 @@ class HtpasswdUserConnector(UserConnector):
     def short_title(cls) -> str:
         return _("htpasswd")
 
-    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
         super().__init__(cfg)
         self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
 
@@ -80,36 +83,30 @@ class HtpasswdUserConnector(UserConnector):
     def is_enabled(self) -> bool:
         return True
 
-    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
         if not (pw_hash := self._htpasswd.get_hash(user_id)):
             return None  # not user in htpasswd, skip so other connectors can try
 
         if self._is_automation_user(user_id):
             raise MKUserError(None, _("Automation user rejected"))
 
+        if pw_hash.startswith("!"):
+            raise MKUserError(None, _("User is locked"))
+
         try:
             password_hashing.verify(password, pw_hash)
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
-        else:
-            if password_hashing.needs_update(pw_hash):
-                # The password is valid, but the currently stored hash uses a deprecated
-                # algorithm. Replace the hash.
-                # Since the old algorithm might have allowed passwords longer than 72 bytes
-                # (which bcrypt doesn't), we have to allow truncation here.
-                new_hash = password_hashing.hash_password(password, allow_truncation=True)
-                self._htpasswd.save(user_id, new_hash)
-
-            return user_id
+        return user_id
 
     def _is_automation_user(self, user_id: UserId) -> bool:
-        return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
+        return AutomationUserSecret(user_id).exists()
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During
         # loading we created entries for all admin users we know. Other
         # users from htpasswd are lost. If you start managing users with
-        # WATO, you should continue to do so or stop doing to for ever...
+        # Setup, you should continue to do so or stop doing to for ever...
         # Locked accounts get a '!' before their password. This disable it.
         entries = {}
 

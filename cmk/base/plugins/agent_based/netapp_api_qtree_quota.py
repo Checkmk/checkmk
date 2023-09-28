@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,8 @@
 # quota fdo01   quota-type tree disk-limit 4294967296   volume vol_bronze1_fdo1 disk-used 3544121572
 # quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
 
-from typing import Any, Generator, Mapping, NamedTuple, Tuple
+from collections.abc import Generator, Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -33,7 +34,7 @@ Section = Mapping[str, Qtree]
 
 def iter_netapp_api_qtree_quota(
     string_table: StringTable,
-) -> Generator[Tuple[str, Qtree], None, None]:
+) -> Generator[tuple[str, Qtree], None, None]:
     for item, instances in netapp_api.parse_netapp_api_multiple_instances(
         string_table, custom_keys=["quota", "quota-users"]
     ).items():
@@ -64,7 +65,7 @@ def parse_netapp_api_qtree_quota(string_table: StringTable) -> Section:
     return dict(iter_netapp_api_qtree_quota(string_table))
 
 
-def get_item_names(qtree: Qtree):  # type:ignore[no-untyped-def]
+def get_item_names(qtree: Qtree):  # type: ignore[no-untyped-def]
     short_name = ".".join([n for n in [qtree.quota, qtree.quota_users] if n])
     long_name = f"{qtree.volume}/{short_name}" if qtree.volume else short_name
     return short_name, long_name

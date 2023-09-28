@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,7 +23,7 @@ class TestCpuTracking:
     def now(self) -> Snapshot:
         return Snapshot.take()
 
-    def test_eq_neq(self, null: Snapshot, now) -> None:  # type:ignore[no-untyped-def]
+    def test_eq_neq(self, null: Snapshot, now: Snapshot) -> None:
         assert null == Snapshot.null()
         assert null != now
         assert now != null
@@ -33,7 +33,7 @@ class TestCpuTracking:
     def test_add_null_null(self, null: Snapshot) -> None:
         assert null + null == null
 
-    def test_add_null_now(self, null: Snapshot, now) -> None:  # type:ignore[no-untyped-def]
+    def test_add_null_now(self, null: Snapshot, now: Snapshot) -> None:
         assert null + now == now
 
     def test_sub_null_null(self, null: Snapshot) -> None:
@@ -48,5 +48,5 @@ class TestCpuTracking:
     def test_json_serialization_null(self, null: Snapshot) -> None:
         assert Snapshot.deserialize(json_identity(null.serialize())) == null
 
-    def test_json_serialization_now(self, now) -> None:  # type:ignore[no-untyped-def]
+    def test_json_serialization_now(self, now: Snapshot) -> None:
         assert Snapshot.deserialize(json_identity(now.serialize())) == now

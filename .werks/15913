@@ -1,0 +1,21 @@
+Title: check_disk_smb: Fix rule transform when updating from 2.1.0p30 and lower
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692788977
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If the rule 'Check SMB share access' was configured with a defined 'NetBIOS name of the server' in 2.1.0p30 and lower and an update to a higher version was attempted, it caused a rule transform error.
+The error looks similar to this:
+C+:
+-| ERROR: Failed to transform rule: (Ruleset: active_checks:disk_smb, ...) ... is not an allowed value
+-| WARNING: Invalid rule configuration detected (Ruleset: active_checks:disk_smb, Title: Check SMB share access, ...)
+C-:
+
+This has now been fixed and the transformation of the rule will not cause any problems while updating.
+
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -105,8 +105,9 @@ def check_hp_proliant_da_cntlr(item, params, info):
                 output.append(f"{label}: {map_[val][1]}{state_txt}")
 
             output.append(
-                "(Role: %s, Model: %s, Slot: %s, Serial: %s)"
-                % (hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial)
+                "(Role: {}, Model: {}, Slot: {}, Serial: {})".format(
+                    hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial
+                )
             )
 
             return (sum_state, ", ".join(output))
@@ -213,8 +214,7 @@ def check_hp_proliant_fans(item, params, info):
 
             return (
                 status,
-                'FAN Sensor %s "%s", Speed is %s, State is %s%s'
-                % (index, label, hp_proliant_speed_map[int(speed)], snmp_status, detailOutput),
+                f'FAN Sensor {index} "{label}", Speed is {hp_proliant_speed_map[int(speed)]}, State is {snmp_status}{detailOutput}',
                 perfdata,
             )
     return (3, "item not found in snmp data")
@@ -266,28 +266,6 @@ def check_hp_proliant_temp(item, params, info):
                 dev_status_name="Unit: %s" % snmp_status,
             )
     return 3, "item not found in snmp data"
-
-
-# .
-#   .--scan function-------------------------------------------------------.
-#   |                           __                  _   _                  |
-#   |    ___  ___ __ _ _ __    / _|_   _ _ __   ___| |_(_) ___  _ __       |
-#   |   / __|/ __/ _` | '_ \  | |_| | | | '_ \ / __| __| |/ _ \| '_ \      |
-#   |   \__ \ (_| (_| | | | | |  _| |_| | | | | (__| |_| | (_) | | | |     |
-#   |   |___/\___\__,_|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def hp_proliant_scan_function(oid):
-    # migrated!
-    return (
-        "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-        or "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-        or "synergy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-    )
 
 
 # .

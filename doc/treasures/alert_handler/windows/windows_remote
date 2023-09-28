@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # PowerShell Remoting Protocol Client
 
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ import sys
 try:
     from pypsrp.client import Client
 except:
-    print("Python module ""pypsrp"" not available. Please install with: pip3 install pypsrp")
+    print("Python module " "pypsrp" " not available. Please install with: pip3 install pypsrp")
     sys.exit(2)
 
 import cmk.utils.password_store
@@ -56,5 +56,5 @@ def main(argv=None):
     return rc
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

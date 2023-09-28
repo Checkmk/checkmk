@@ -1,7 +1,0 @@
-title: Java Virtual Machine: Number of Threads (deprecated)
-agents: linux
-catalog: app/java
-license: GPLv2
-distribution: check_mk
-description:
- This check is deprecated and has been replaced by 'jolokia_jvm_threading'.

@@ -6,7 +6,10 @@ Date: 1661759035
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, Systemd's services could be monitored as single service only.
 With this werk, Systemd's sockets can be monitored as a single check, similar to Systemd's services.
+
+<b>Note:</b>
+This feature needs an update of the agent as it needs to use '--type socket' for 'systemctl'.

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -20,7 +20,7 @@ class WLCAp(NamedTuple):
     sys_location: str
 
 
-Section = Dict[str, WLCAp]
+Section = dict[str, WLCAp]
 
 _MAP_AP_PRODUCTS = {
     "1": "a50",
@@ -189,10 +189,9 @@ register.check_plugin(
 
 
 def inventory_aruba_wlc_aps(section: Section) -> InventoryResult:
-    path = ["networking", "wlan", "controller", "accesspoints"]
     for ap_name, ap_data in section.items():
         yield TableRow(
-            path=path,
+            path=["networking", "wlan", "controller", "accesspoints"],
             key_columns={"name": ap_name},
             inventory_columns={
                 "ip_addr": ap_data.ip_addr,

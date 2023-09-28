@@ -1,0 +1,13 @@
+Title: Fix KeyError on usage of filter 'Host has software package'
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1675864625
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+If you used the filter "Host has software package" in views, the error
+"KeyError (invswpac_host_from_version)" occurred.
+

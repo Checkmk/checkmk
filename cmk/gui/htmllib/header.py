@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import HTMLGenerator
@@ -18,7 +17,6 @@ def make_header(
     breadcrumb: Breadcrumb,
     page_menu: PageMenu | None = None,
     page_state: PageState | None = None,
-    javascripts: Sequence[str] | None = None,
     force: bool = False,
     show_body_start: bool = True,
     show_top_heading: bool = True,
@@ -28,7 +26,7 @@ def make_header(
 
     if not writer._header_sent:
         if show_body_start:
-            writer.body_start(title, javascripts=javascripts, force=force)
+            writer.body_start(title, force=force)
 
         writer._header_sent = True
 

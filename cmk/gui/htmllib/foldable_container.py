@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Foldable containers for pages"""
@@ -89,11 +89,11 @@ def foldable_container(
     html.open_ul(
         id_=container_id, class_=["treeangle", "open" if isopen else "closed"], style=indent_style
     )
-
-    yield isopen
-
-    html.close_ul()
-    html.close_div()
+    try:
+        yield isopen
+    finally:
+        html.close_ul()
+        html.close_div()
 
 
 def foldable_container_onclick(

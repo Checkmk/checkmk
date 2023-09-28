@@ -1,0 +1,32 @@
+Title: Dedicated CA for agent certificates
+Class: security
+Compatible: compat
+Component: checks
+Date: 1676456434
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+On agent registration, the contacted site issues an x509 certificate to the requesting agent controller.<br>
+Previously, this agent certificate has been signed by the site-local CA, that's also used to issue certificates used for distributed monitoring, and to issue the agent receiver's certificate.
+
+Starting with this Werk, each Checkmk site will use a dedicated agent CA to issue certificates to requesting agent controllers.
+
+This change slighly improves security, as agent receiver and agent controller can't be authenticated with the same root certificate anymore, making it impossible to act as each other.<br>
+While this situation has effectively been prevented before, this is now assured already on transport level, rather than on application level.
+
+To prevent locking out registered agents, preexisting (Created with a Checkmk version prior to this Werk) Checkmk sites will still accept certificates issued by the site CA in parallel to the new agent CA.<br>
+New sites will only accept certificates issued by the agent CA.<br>
+
+This change is also loosely coupled with the new certificate lifetime mentioned in Werk #14964.<br>
+Since active agent controllers will automatically renew their certificate to a new lifetime-limited one, this also means that they will migrate to new new CA automatically.
+
+As an additional benefit, experienced users now can replace the agent signing CA with their own one. This has to be done directly at the site's home directory, though.<br>
+The new agent CA is located at <tt>~/etc/ssl/agents/ca.pem</tt> and can be replaced with a new one in the same format.<br>
+To migrate from one CA to another, it's also possible to add additional trusted root certificates to <tt>~/etc/ssl/agents/</tt>.
+
+Even though this Werk is related to security, it does not fix any exploitable
+issue.<br>
+To aid automatic scanners, we assign a CVSS score of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).

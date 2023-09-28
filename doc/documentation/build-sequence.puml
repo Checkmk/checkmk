@@ -5,7 +5,7 @@ participant git as "Central git repo"
 participant winnode as "Windows build node"
 
 ' 3rd party components
-database pypi as "pypi.python.org" #red
+database pypi as "pypi.org" #red
 database choco as "community.chocolatey.org" #red
 database win as "visualstudio.microsoft.com" #red
 database reportlab as "reportlab.com" #red

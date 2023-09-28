@@ -1,0 +1,20 @@
+Title: Abort update if incompatible user IDs are found
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1673885485
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+In Checkmk 2.2.0 the use of certain special characters in user IDs is no longer allowed.
+As a result, some user IDs that were previously valid in Checkmk version 2.1.0 will become invalid in version 2.2.0.
+The validation affects both local users and users from external connections such as LDAP.
+However, local users created in the Web UI are guaranteed to be compatible as the same restrictions were already applied there.
+
+Since Checkmk 2.2.0 will not work if any incompatible user ID is present, <tt>omd update</tt> will look for them and abort if any incompatible user ID is found.
+
+To be compatible with Checkmk version 2.2.0 please ensure that all user IDs adhere to the following restrictions:
+The first character of a user ID must be a digit, a letter, an underscore (<tt>_</tt>), or a dollar sign (<tt>$</tt>).
+The rest of the user ID may additionally contain dash (<tt>-</tt>), at (<tt>@</tt>), and dot (<tt>.</tt>).

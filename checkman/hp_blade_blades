@@ -1,10 +1,10 @@
-title: HP BladeSystem Enclosures: Health of Blades
+title: HPE BladeSystem Enclosures: Health of Blades
 agents: snmp
-catalog: hw/server/hp
+catalog: hw/server/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the health of blades in HP BladeSysten enclosures.
+ This check monitors the health of blades in HPE BladeSysten enclosures.
 
  It uses the state reported by SNMP and prints the product name and serial
  number reported of each blade.

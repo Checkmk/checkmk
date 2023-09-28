@@ -1,0 +1,15 @@
+Title: mk_postgres.py: Improved instance process detection
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675680273
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+This werk affects the monitoring of one or more PostgreSQL instances via the Postgres agent plugin for Linux. The changes to the process filtering introduced in werk #15085 could lead to an empty "postgres_instances" section if the instance name contained capital letters.
+Now, a case-sensitive filter is applied first, allowing case-insensitive filtering only if no processes could be found.
+In order to apply this change you will need to reinstall the agent plugin.
+

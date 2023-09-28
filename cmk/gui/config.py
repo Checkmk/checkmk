@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import errno
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
@@ -28,7 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig
 from cmk.gui.type_defs import Key, RoleName
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
 else:
     # Stub needed for non enterprise edition
@@ -36,10 +35,9 @@ else:
         pass
 
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
 else:
-
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]
         pass
@@ -58,9 +56,7 @@ else:
 
 # hard coded in various permissions
 default_authorized_builtin_role_ids: Final[list[RoleName]] = ["user", "admin", "guest"]
-default_unauthorized_builtin_role_ids: Final[list[RoleName]] = (
-    ["agent_registration"] if cmk_version.is_plus_edition() else []
-)
+default_unauthorized_builtin_role_ids: Final[list[RoleName]] = ["agent_registration"]
 builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,
@@ -72,7 +68,7 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
-    For builtin config variables type checking and code completion works.
+    For built-in config variables type checking and code completion works.
 
     This class is extended by `load_config` to support custom config variables which may
     be introduced by 3rd party extensions. For these variables we don't have the features
@@ -98,18 +94,41 @@ active_config = request_local_attr("config", Config)
 #   '----------------------------------------------------------------------'
 
 
+def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, int]:
+    """Note this sets the log level for the pysaml2 client, an external
+    dependency used by SAML.
+
+    The SAML log level is missing in the CRE editions, and at the time when
+    cmk-update-config is run after an update from Checmk version 2.1.
+
+    The log level of the pysaml2 package should be set to debug if the
+    logging for SAML has been set to debug in the global settings. Otherwise it
+    should be kept to a minimum as it spams the web.log
+
+    >>> _determine_pysaml2_log_level({"cmk.web.saml2": 30})
+    {'saml2': 50}
+    >>> _determine_pysaml2_log_level({"cmk.web.saml2": 10})
+    {'saml2': 10}
+    >>> _determine_pysaml2_log_level({})
+    {}
+
+    """
+    match log_levels.get("cmk.web.saml2"):
+        case None:
+            return {}
+        case 10:
+            return {"saml2": 10}
+        case _:
+            return {"saml2": 50}
+
+
 def initialize() -> None:
     load_config()
-    log.set_log_levels(active_config.log_levels)
-
-    # The log level of the pysaml2 package should be set to debug if the logging for SAML has been
-    # set to debug in the global settings. Otherwise it should be kept to a minimum as it spams the
-    # web.log
-    if active_config.log_levels["cmk.web.saml2"] == 10:
-        log.set_log_levels({"saml2": 10})
-    else:
-        log.set_log_levels({"saml2": 50})
-
+    log_levels = {
+        **active_config.log_levels,
+        **_determine_pysaml2_log_level(active_config.log_levels),
+    }
+    log.set_log_levels(log_levels)
     cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
 
 
@@ -117,10 +136,9 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
     """Load the given GUI configuration file"""
     try:
         with Path(path).open("rb") as f:
-            exec(f.read(), {}, raw_config)
-    except OSError as e:
-        if e.errno != errno.ENOENT:  # No such file or directory
-            raise
+            exec(f.read(), {}, raw_config)  # nosec B102 # BNS:aee528
+    except FileNotFoundError:
+        pass
     except Exception as e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (path, e))
 
@@ -171,7 +189,7 @@ def load_config() -> None:
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 
-    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    # Make sure, built-in roles are present, even if not modified and saved with Setup.
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
@@ -218,7 +236,7 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def get_default_config() -> dict[str, Any]:
-    default_config = asdict(Config())  # First apply the builtin config
+    default_config = asdict(Config())  # First apply the built-in config
     default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config

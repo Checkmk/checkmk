@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -212,24 +212,22 @@ def test_discover_ups_modulys_battery_temp_is_zero() -> None:
 
 
 def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
-    assert list(discover_ups_modulys_battery_temp(None)) == []
+    assert not list(discover_ups_modulys_battery_temp(None))
 
-    assert (
-        list(
-            discover_ups_modulys_battery_temp(
-                UPSBattery(
-                    health=0,
-                    uptime=0,
-                    remaining_time_in_min=10.0,
-                    capacity=100.0,
-                    temperature=None,
-                )
+    assert not list(
+        discover_ups_modulys_battery_temp(
+            UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
+                temperature=None,
             )
         )
-        == []
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_ok_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
@@ -245,7 +243,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
         ),
     ) == [
         Metric("temp", 45.0, levels=(90.0, 95.0)),
-        Result(state=State.OK, summary="Temperature: 45.0°C"),
+        Result(state=State.OK, summary="Temperature: 45.0 °C"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -253,6 +251,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_warn_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
@@ -268,7 +267,7 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
         ),
     ) == [
         Metric("temp", 92.0, levels=(90.0, 95.0)),
-        Result(state=State.WARN, summary="Temperature: 92.0°C (warn/crit at 90°C/95°C)"),
+        Result(state=State.WARN, summary="Temperature: 92.0 °C (warn/crit at 90 °C/95 °C)"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -276,6 +275,7 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_crit_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
@@ -291,7 +291,7 @@ def test_check_ups_modulys_battery_temp_crit_state() -> None:
         ),
     ) == [
         Metric("temp", 96.0, levels=(90.0, 95.0)),
-        Result(state=State.CRIT, summary="Temperature: 96.0°C (warn/crit at 90°C/95°C)"),
+        Result(state=State.CRIT, summary="Temperature: 96.0 °C (warn/crit at 90 °C/95 °C)"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

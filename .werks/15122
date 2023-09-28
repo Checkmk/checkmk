@@ -1,0 +1,21 @@
+Title: New option to make customizations available to users of selected sites
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1674557899
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0b1
+
+You can now make customized views, dashboards, etc. available for users on
+selected sites.
+
+Therefore new permissions like "Publish views to users of allowed sites" are
+introduced and assigned to the "admin" role.
+With this permission you can use the option "Make this view available for other
+users" - "Publish to users of sites" on the "Edit" page of the customization.
+
+Please note that the customizations will be available on the selected sites
+after the next activation of changes for these sites.
+

@@ -5,12 +5,12 @@
 
 #include <thread>
 
-#include "asio.h"
-#include "cfg.h"
 #include "common/cfg_info.h"
-#include "realtime.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
+#include "wnx/asio.h"
+#include "wnx/cfg.h"
+#include "wnx/realtime.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view str) {
@@ -131,7 +131,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::stoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp);
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
     }
@@ -150,7 +150,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::stoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp);
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
 
@@ -180,13 +180,12 @@ void WaitFor(const std::function<bool()> &predicat,
     }
 }
 
-TEST(RealtimeTest, Base_Long) {
+TEST(RealtimeTest, Base_Simulation) {
     // stub
     using namespace std::chrono;
 
-    cma::OnStart(cma::AppType::test);
-    ON_OUT_OF_SCOPE(
-        cma::OnStart(cma::AppType::test));  // restore original config
+    OnStartTest();
+    ON_OUT_OF_SCOPE( OnStartTest());  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled

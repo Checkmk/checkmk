@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,8 @@ from logging import getLogger
 from pathlib import Path
 
 from cmk.utils.backup.config import CMASystemConfig, Config, SiteConfig
-from cmk.utils.backup.type_defs import TargetId
+from cmk.utils.backup.targets import TargetId
+from cmk.utils.backup.targets.local import LocalTargetParams
 from cmk.utils.paths import default_config_dir
 
 from cmk.update_config.plugins.actions.backup import UpdateBackupConfig
@@ -19,7 +20,13 @@ def test_update_backup_config() -> None:
             targets={
                 TargetId("t1"): {
                     "title": "Target1",
-                    "remote": ("local", {"path": "/tmp/heute_backup", "is_mountpoint": False}),
+                    "remote": (
+                        "local",
+                        LocalTargetParams(
+                            path="/tmp/heute_backup",
+                            is_mountpoint=False,
+                        ),
+                    ),
                 }
             },
             jobs={
@@ -31,7 +38,7 @@ def test_update_backup_config() -> None:
                         "period": ("week", 2),
                         "timeofday": [
                             (0, 0),
-                            None,  # type: ignore[list-item]
+                            None,
                         ],
                     },
                     "compress": False,

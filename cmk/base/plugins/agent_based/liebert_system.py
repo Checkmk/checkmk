@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,39 +13,36 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5074 Unit Operating State Reason
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5074 Reason Unknown
 
-from typing import Dict, List
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit
-
-ParsedSection = Dict[str, str]
+from .utils import liebert
 
 
-def parse_liebert_system(string_table: List[StringTable]) -> ParsedSection:
-    return parse_liebert_without_unit(string_table, str)
+def parse_liebert_system(string_table: list[StringTable]) -> liebert.SystemSection:
+    return liebert.parse_liebert_without_unit(string_table, str)
 
 
-def discover_liebert_system(section: ParsedSection) -> DiscoveryResult:
+def discover_liebert_system(section: liebert.SystemSection) -> DiscoveryResult:
     model = section.get("System Model Number")
     if model:
         yield Service(item=model)
 
 
-def check_liebert_system(item: str, section: ParsedSection) -> CheckResult:
+def check_liebert_system(item: str, section: liebert.SystemSection) -> CheckResult:
     # Variable 'item' is used to generate the service description.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.
     for key, value in sorted(section.items()):
         if key == "System Status" and "Normal Operation" not in value:
-            yield Result(state=State.CRIT, summary="%s: %s" % (key, value))
+            yield Result(state=State.CRIT, summary=f"{key}: {value}")
         else:
-            yield Result(state=State.OK, summary="%s: %s" % (key, value))
+            yield Result(state=State.OK, summary=f"{key}: {value}")
 
 
 register.snmp_section(
     name="liebert_system",
-    detect=DETECT_LIEBERT,
+    detect=liebert.DETECT_LIEBERT,
     parse_function=parse_liebert_system,
     fetch=[
         SNMPTree(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,8 @@
 
 import re
 import time
-from typing import List, NamedTuple, Optional, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -24,7 +25,7 @@ class Package(NamedTuple):
     name: str
     version: str
     vendor: str
-    install_date: Optional[int]
+    install_date: int | None
     language: str
     package_type: str
 
@@ -33,7 +34,7 @@ Section = Sequence[Package]
 
 
 def parse_win_wmi_software(string_table: StringTable) -> Section:
-    parsed_packages: List[Package] = []
+    parsed_packages: list[Package] = []
     for line in string_table:
         if len(line) < 3:
             continue
@@ -68,10 +69,9 @@ register.agent_section(
 
 
 def inventory_win_wmi_software(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for package in section:
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": package.name,
             },

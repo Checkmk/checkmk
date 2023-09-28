@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to set comments for host and service.
@@ -16,9 +16,11 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+
+SHORT_COLUMNS = [Comments.id, Comments.is_service]
 
 
 class CommentQueryException(Exception):
@@ -45,6 +47,7 @@ class Comment:
     entry_time: str
     service_description: str
     is_service: bool
+    site: str
 
     def __post_init__(self):
         self.persistent = bool(self.persistent)
@@ -81,7 +84,6 @@ def get_comments(
     query: QueryExpression | None,
     collection_name: CollectionName = CollectionName.all,
 ) -> Mapping[int, Comment]:
-
     # When the user tries to filter for service_descriptions on host only comments.
     if collection_name is CollectionName.host and service_description:
         raise CommentParamException
@@ -101,6 +103,8 @@ def get_comments(
     if service_description:
         q = q.filter(Comments.service_description == service_description)
 
+    connection.prepend_site = True
+
     results = {com["id"]: Comment(**com) for com in q.iterate(connection)}
 
     return results
@@ -113,7 +117,6 @@ def add_host_comment_by_query(
     user: UserId = UserId.builtin(),
     persistent: bool = False,
 ) -> None:
-
     q = Query([Hosts.name]).filter(query)
 
     with detailed_connection(connection) as conn:
@@ -178,7 +181,6 @@ def add_service_comment_by_query(
     persistent: bool = False,
     user: UserId = UserId.builtin(),
 ) -> None:
-
     q = Query([Services.description, Services.host_name], query)
 
     with detailed_connection(connection) as conn:
@@ -200,7 +202,6 @@ def add_service_comment(
     persistent: bool = False,
     user: UserId = UserId.builtin(),
 ) -> None:
-
     """Add service comment
 
     Args:
@@ -245,15 +246,21 @@ def add_service_comment(
     )
 
 
-def delete_comments(connection: MultiSiteConnection, query: Query) -> None:
+def delete_comments(
+    connection: MultiSiteConnection, query: QueryExpression, site_id: SiteId
+) -> None:
+    """Delete a comment"""
+    prev = connection.only_sites[:] if isinstance(connection.only_sites, list) else None
+    connection.only_sites = [site_id]
     with detailed_connection(connection) as conn:
-        results = [(row["id"], row["is_service"], row["site"]) for row in query.iterate(conn)]
+        comments = Query(SHORT_COLUMNS, query).fetchall(conn)
 
-    for comment_id, is_service, site in results:
-        if is_service:
-            delete_service_comment(connection, comment_id, site)
+    for comment in comments:
+        if comment["is_service"]:
+            delete_service_comment(connection, comment["id"], comment["site"])
         else:
-            delete_host_comment(connection, comment_id, site)
+            delete_host_comment(connection, comment["id"], comment["site"])
+    connection.only_sites = prev
 
 
 def delete_host_comment(connection: MultiSiteConnection, comment_id: int, site_id: SiteId) -> None:

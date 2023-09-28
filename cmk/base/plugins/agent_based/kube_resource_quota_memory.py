@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
 
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     check_resource_quota_resource,
@@ -32,16 +31,16 @@ register.agent_section(
 
 
 def discovery_kube_resource_quota_memory(
-    section_kube_resource_quota_performance_memory: Optional[PerformanceUsage],
-    section_kube_resource_quota_memory_resources: Optional[HardResourceRequirement],
+    section_kube_resource_quota_performance_memory: PerformanceUsage | None,
+    section_kube_resource_quota_memory_resources: HardResourceRequirement | None,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check_kube_resource_quota_memory(
     params: Params,
-    section_kube_resource_quota_performance_memory: Optional[PerformanceUsage],
-    section_kube_resource_quota_memory_resources: Optional[HardResourceRequirement],
+    section_kube_resource_quota_performance_memory: PerformanceUsage | None,
+    section_kube_resource_quota_memory_resources: HardResourceRequirement | None,
 ) -> CheckResult:
     yield from check_resource_quota_resource(
         params=params,

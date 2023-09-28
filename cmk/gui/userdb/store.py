@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
 
 import ast
 import copy
@@ -10,24 +12,28 @@ import os
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.crypto import Password, password_hashing, PasswordHash
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.store import (
     acquire_lock,
     load_from_mk_file,
     load_text_from_file,
     mkdir,
+    release_lock,
     save_text_to_file,
     save_to_mk_file,
 )
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.store.htpasswd import Htpasswd
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.pages
@@ -36,57 +42,16 @@ from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    add_internal_attributes,
-    get_connection,
-    get_user_attributes,
-    load_cached_profile,
-    release_users_lock,
-    save_cached_profile,
-    UserConnector,
-)
+from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
-from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
+from ._connections import active_connections, get_connection
+from ._connector import UserConnector
+from ._user_attribute import get_user_attributes
+from ._user_spec import add_internal_attributes
+
 T = TypeVar("T")
-
-
-class OpenFileMode(Enum):
-    READ = "read"
-    WRITE = "write"
-
-
-class UserStore:
-    def __init__(self, mode: OpenFileMode = OpenFileMode.READ) -> None:
-        self.mode = mode
-
-        try:
-            self.users = load_users(mode is OpenFileMode.WRITE)
-        finally:
-            release_users_lock()
-
-        self.__unchanged_users = copy.deepcopy(self.users)
-
-    def __enter__(self) -> Users:
-        return self.users
-
-    def __exit__(self, *exc_info: object) -> None:
-        if self.mode is OpenFileMode.READ:
-            return
-
-        if self.users == self.__unchanged_users:
-            # only write when really needed, because:
-            # - writing users may be a performance issue
-            # - it invalidates the cache
-            release_users_lock()
-            return
-
-        try:
-            save_users(self.users, datetime.utcnow())  # Implicitly releases the lock
-        finally:
-            release_users_lock()
 
 
 def load_custom_attr(
@@ -141,7 +106,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+    users = load_multisite_users()
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -152,7 +117,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
         profile = contacts.get(uid, {})
         profile.update(user)
-        result[uid] = profile
+        result[UserId(uid)] = profile
 
         # Convert non unicode mail addresses
         if "email" in profile:
@@ -164,12 +129,11 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
-
-        if uid not in result:
+        if (uid := UserId(uid)) not in result:
             result[uid] = contact
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
-            result[uid]["password"] = ""
+            result[uid]["password"] = PasswordHash("")
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
@@ -210,12 +174,28 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
         for line in serials_file.read_text(encoding="utf-8").splitlines():
             if ":" in line:
                 user_id, serial = line.split(":")[:2]
-                if user_id in result:
+                if (user_id := UserId(user_id)) in result:
                     result[user_id]["serial"] = utils.saveint(serial)
     except OSError:  # file not found
         pass
 
-    attributes: list[tuple[str, Callable]] = [
+    attributes: list[
+        tuple[
+            # This verbose type is required for accessing `result[uid][attr]` below
+            Literal[
+                "num_failed_logins",
+                "last_pw_change",
+                "enforce_pw_change",
+                "idle_timeout",
+                "session_info",
+                "start_url",
+                "ui_theme",
+                "two_factor_credentials",
+                "ui_sidebar_position",
+            ],
+            Callable,
+        ]
+    ] = [
         ("num_failed_logins", utils.saveint),
         ("last_pw_change", utils.saveint),
         ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
@@ -228,8 +208,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     ]
 
     # Now read the user specific files
-    directory = cmk.utils.paths.var_dir + "/web/"
-    for user_dir in os.listdir(directory):
+    for user_dir in os.listdir(cmk.utils.paths.profile_dir):
         if user_dir[0] == ".":
             continue
 
@@ -242,23 +221,19 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 if val is not None:
                     result[uid][attr] = val
 
-        # read automation secrets and add them to existing
-        # users or create new users automatically
+        # read automation secrets and add them to existing users or create new users automatically
         try:
-            user_secret_path = Path(directory) / user_dir / "automation.secret"
-            with user_secret_path.open(encoding="utf-8") as f:
-                secret: str | None = f.read().strip()
-        except OSError:
-            secret = None
+            secret = AutomationUserSecret(uid).read()
+            if uid not in result:
+                # new guest automation user
+                result[uid] = {"roles": ["guest"]}
 
-        if secret:
-            if uid in result:
-                result[uid]["automation_secret"] = secret
-            else:
-                result[uid] = {
-                    "roles": ["guest"],
-                    "automation_secret": secret,
-                }
+            result[uid]["automation_secret"] = secret
+        except OSError:
+            # no secret; nothing to do
+            pass
+        # Empty secret files will raise a value error that we don't want to ignore here. Otherwise
+        # checking if a user is an automation user via existence of the file will go wrong.
 
     return result
 
@@ -340,15 +315,14 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id
-        mkdir(user_dir)
+        mkdir(cmk.utils.paths.profile_dir / user_id)
 
         # authentication secret for local processes
-        auth_file = user_dir + "/automation.secret"
+        secret = AutomationUserSecret(user_id)
         if "automation_secret" in user:
-            save_text_to_file(auth_file, "%s\n" % user["automation_secret"])
-        elif os.path.exists(auth_file):
-            os.unlink(auth_file)
+            secret.save(user["automation_secret"])
+        else:
+            secret.delete()
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
@@ -585,7 +559,11 @@ def _save_cached_profile(
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
             cache[key] = user[key]  # type: ignore[literal-required]
 
-    save_cached_profile(user_id, cache)
+    save_user_file("cached_profile", cache, user_id=user_id)
+
+
+def load_cached_profile(user_id: UserId) -> UserSpec | None:
+    return LoggedInUser(user_id).load_file("cached_profile", None)
 
 
 def contactgroups_of_user(user_id: UserId) -> list[ContactgroupName]:
@@ -605,6 +583,10 @@ def load_contacts() -> dict[str, Any]:
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
+
+
+def load_multisite_users() -> dict[str, Any]:
+    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:
@@ -679,3 +661,7 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
             flashes=[],
         ),
     }
+
+
+def release_users_lock() -> None:
+    release_lock(cmk.utils.paths.check_mk_config_dir + "/wato/contacts.mk")

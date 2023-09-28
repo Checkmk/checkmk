@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.config import active_check_info
+
+
+def check_ftp_arguments(params):  # pylint: disable=too-many-branches
+    if isinstance(params, tuple):
+        host, settings = params
+    else:
+        host = "$HOSTADDRESS$"
+        settings = params
+
+    args = ["-H", host]
+
+    if "port" in settings:
+        args += ["-p", settings["port"]]
+
+    if "response_time" in settings:
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % (warn / 1000.0)]
+        args += ["-c", "%f" % (crit / 1000.0)]
+
+    if "timeout" in settings:
+        args += ["-t", settings["timeout"]]
+
+    if "refuse_state" in settings:
+        args += ["-r", settings["refuse_state"]]
+
+    if settings.get("escape_send_string"):
+        args.append("--escape")
+
+    if "send_string" in settings:
+        args += ["-s", settings["send_string"]]
+
+    if "expect" in settings:
+        for s in settings["expect"]:
+            args += ["-e", s]
+
+    if settings.get("ssl"):
+        args.append("--ssl")
+
+    if "cert_days" in settings:
+        # legacy behavior
+        if isinstance(settings["cert_days"], int):
+            args += ["-D", settings["cert_days"]]
+        else:
+            warn, crit = settings["cert_days"]
+            args += ["-D", warn, crit]
+
+    return args
+
+
+def check_ftp_get_item(params):
+    if isinstance(params, tuple):
+        return "FTP " + params[0]
+
+    if "port" in params and params["port"] != 21:
+        return "FTP Port " + str(params["port"])
+    return "FTP"
+
+
+active_check_info["ftp"] = {
+    "command_line": "check_ftp $ARG1$",
+    "argument_function": check_ftp_arguments,
+    "service_description": check_ftp_get_item,
+}

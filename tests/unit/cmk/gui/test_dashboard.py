@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.dashboard import DashboardConfig, Dashlet, dashlet_registry, DashletConfig
+from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
+from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
 
 
@@ -58,7 +59,6 @@ def test_dashlet_registry_plugins() -> None:
         "notify_failed_notifications",
         "mk_logo",
         "url",
-        "overview",
         "pnpgraph",
         "view",
         "linked_view",
@@ -67,7 +67,7 @@ def test_dashlet_registry_plugins() -> None:
         "snapin",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -101,7 +101,6 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("nodata", False),
         ("notify_failed_notifications", 60),
         ("user_messages", False),
-        ("overview", False),
         ("pnpgraph", 60),
         ("servicestats", False),
         ("snapin", 30),
@@ -110,7 +109,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),
@@ -142,6 +141,7 @@ TEST_DASHBOARD = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -163,10 +163,10 @@ def test_dashlet_refresh_intervals(
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
     if type_name in ["pnpgraph", "custom_graph"]:
-        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
+        monkeypatch.setattr(dashlet_type, "graph_specification", lambda s, c: None)
         monkeypatch.setattr(
-            "cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
-            lambda g, d: [{"title": "1"}],
+            "cmk.gui.graphing._graph_recipe_builder.build_graph_recipes",
+            lambda g: [{"title": "1"}],
         )
 
     monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})
@@ -183,7 +183,7 @@ def test_dashlet_refresh_intervals(
 
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
-    assert Dashlet.single_infos() == []
+    assert not Dashlet.single_infos()
     assert Dashlet.is_selectable() is True
     assert Dashlet.is_resizable() is True
     assert Dashlet.is_iframe_dashlet() is False
@@ -204,7 +204,7 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=1, dashlet=dummy_config
     )
-    assert dashlet.infos() == []
+    assert not dashlet.infos()
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"type": "dummy"}
     assert dashlet.dashboard_name == "main"

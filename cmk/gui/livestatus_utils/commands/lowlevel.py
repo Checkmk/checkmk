@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
@@ -13,7 +13,7 @@ from cmk.utils.site import omd_site
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 
-def send_command(  # type:ignore[no-untyped-def]
+def send_command(  # type: ignore[no-untyped-def]
     connection,
     command: LivestatusCommand,
     params: list[Any],

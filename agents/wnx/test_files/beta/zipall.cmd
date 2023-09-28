@@ -1,1 +1,0 @@
-@7z\7z a -r -tzip wnx_all "%ProgramData%\CheckMK" "%ProgramFiles(x86)%\check_mk_service" "%Public%\check_mk.*" 2> nul > nul

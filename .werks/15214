@@ -1,0 +1,14 @@
+Title: rest_api: aux_tag creation/updating could set the title to None
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675350802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Aux tag creation or updating could result in the title being
+set to None or even an empty string. This change prevents that
+by setting a min length of 1 for this field.
+

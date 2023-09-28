@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP Commons
@@ -19,7 +19,9 @@ False
 True
 """
 
-from typing import Dict, Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import all_of, contains, matches, not_matches
 
@@ -55,4 +57,4 @@ class _F5BigipClusterStatusVSResultRequired(TypedDict, total=False):
 
 
 class F5BigipClusterStatusVSResult(_F5BigipClusterStatusVSResultRequired):
-    v11_2_states: Dict[AllStates, AllStates]
+    v11_2_states: dict[AllStates, AllStates]

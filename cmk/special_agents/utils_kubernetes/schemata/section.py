@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,11 +13,10 @@ except the python standard library or pydantic.
 import enum
 import json
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType
+from typing import assert_never, Literal, NewType
 
 import requests
-from pydantic import BaseModel, Field, ValidationError
-from typing_extensions import assert_never
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from cmk.special_agents.utils_kubernetes import prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -40,8 +39,7 @@ objects and that options from the `Kubernetes` rule have been taken into account
 
 
 class Section(BaseModel):
-    class Config:
-        allow_mutation = False
+    model_config = ConfigDict(frozen=True)
 
 
 class PerformanceMetric(BaseModel):
@@ -65,7 +63,7 @@ class CollectorState(enum.Enum):
 class CollectorHandlerLog(BaseModel):
     status: CollectorState
     title: str
-    detail: str | None
+    detail: str | None = None
 
 
 class PlatformMetadata(BaseModel):
@@ -98,15 +96,15 @@ class CollectorType(enum.Enum):
 
 
 class Components(BaseModel):
-    cadvisor_version: Version | None
-    checkmk_agent_version: Version | None
+    cadvisor_version: Version | None = None
+    checkmk_agent_version: Version | None = None
 
 
 class NamespaceInfo(Section):
     """section: kube_namespace_info_v1"""
 
     name: api.NamespaceName
-    creation_timestamp: api.Timestamp | None
+    creation_timestamp: api.Timestamp | None = None
     labels: api.Labels
     annotations: FilteredAnnotations
     cluster: str
@@ -118,7 +116,7 @@ class CronJobInfo(Section):
 
     name: str
     namespace: api.NamespaceName
-    creation_timestamp: api.Timestamp | None
+    creation_timestamp: api.Timestamp | None = None
     labels: api.Labels
     annotations: FilteredAnnotations
     schedule: str
@@ -133,16 +131,16 @@ class CronJobInfo(Section):
 class CronJobStatus(Section):
     """section: kube_cron_job_status_v1"""
 
-    active_jobs_count: int | None
-    last_duration: float | None  # duration of the last completed job
-    last_successful_time: api.Timestamp | None
-    last_schedule_time: api.Timestamp | None
+    active_jobs_count: int | None = None
+    last_duration: float | None = None  # duration of the last completed job
+    last_successful_time: api.Timestamp | None = None
+    last_schedule_time: api.Timestamp | None = None
 
 
 class JobStatus(BaseModel):
     conditions: Sequence[api.JobCondition]
-    start_time: api.Timestamp | None
-    completion_time: api.Timestamp | None
+    start_time: api.Timestamp | None = None
+    completion_time: api.Timestamp | None = None
 
 
 class JobPod(BaseModel):
@@ -184,8 +182,8 @@ class CollectorComponentsMetadata(Section):
     """section: kube_collector_metadata_v1"""
 
     processing_log: CollectorHandlerLog
-    cluster_collector: ClusterCollectorMetadata | None
-    nodes: Sequence[NodeMetadata] | None
+    cluster_collector: ClusterCollectorMetadata | None = None
+    nodes: Sequence[NodeMetadata] | None = None
 
 
 class CollectorProcessingLogs(Section):
@@ -227,18 +225,18 @@ ControlChain = Sequence[Controller]
 class PodInfo(Section):
     """section: kube_pod_info_v1"""
 
-    namespace: api.NamespaceName | None
+    namespace: api.NamespaceName | None = None
     name: str
-    creation_timestamp: api.Timestamp | None
+    creation_timestamp: api.Timestamp | None = None
     labels: api.Labels  # used for host labels
     annotations: FilteredAnnotations  # used for host labels
-    node: api.NodeName | None  # this is optional, because there may be pods, which are not
+    node: api.NodeName | None = None  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
-    host_network: str | None
-    dns_policy: str | None
-    host_ip: api.IpAddress | None
-    pod_ip: api.IpAddress | None
-    qos_class: api.QosClass | None  # can be None, if the Pod was evicted.
+    host_network: str | None = None
+    dns_policy: str | None = None
+    host_ip: api.IpAddress | None = None
+    pod_ip: api.IpAddress | None = None
+    qos_class: api.QosClass | None = None  # can be None, if the Pod was evicted.
     restart_policy: api.RestartPolicy
     uid: api.PodUID
     # TODO: see CMK-9901
@@ -270,18 +268,20 @@ class PodLifeCycle(BasePodLifeCycle, Section):
 
 class PodCondition(BaseModel):
     status: bool
-    reason: str | None
-    detail: str | None
-    last_transition_time: int | None
+    reason: str | None = Field(None)
+    detail: str | None = Field(None)
+    last_transition_time: int | None = Field(None)
 
 
 class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
-    initialized: PodCondition | None
+    initialized: PodCondition | None = Field(None)
+    hasnetwork: PodCondition | None = Field(None)
     scheduled: PodCondition
-    containersready: PodCondition | None
-    ready: PodCondition | None
+    containersready: PodCondition | None = Field(None)
+    ready: PodCondition | None = Field(None)
+    disruptiontarget: PodCondition | None = Field(None)
 
 
 class PodContainers(Section):
@@ -313,20 +313,15 @@ class ThinContainers(BaseModel):
     names: Sequence[api.ContainerName]
 
 
-class ReadyCount(BaseModel):
-    ready: int = 0
-    not_ready: int = 0
-
-    @property
-    def total(self) -> int:
-        return self.ready + self.not_ready
+class CountableNode(BaseModel):
+    ready: bool
+    roles: Sequence[str]
 
 
 class NodeCount(Section):
     """section: kube_node_count_v1"""
 
-    worker: ReadyCount = ReadyCount()
-    control_plane: ReadyCount = ReadyCount()
+    nodes: Sequence[CountableNode]
 
 
 class NodeInfo(Section):
@@ -350,30 +345,20 @@ class NodeInfo(Section):
 
 class NodeCondition(BaseModel):
     status: api.NodeConditionStatus
-    reason: str | None
-    detail: str | None
-    last_transition_time: int | None
+    reason: str | None = None
+    detail: str | None = None
+    last_transition_time: int | None = None
 
 
-class TruthyNodeCondition(NodeCondition):
-    """TruthyNodeCondition has an "OK" state when its status is True"""
-
-    def is_ok(self) -> bool:
-        return self.status == api.NodeConditionStatus.TRUE
-
-
-class FalsyNodeCondition(NodeCondition):
-    """FalsyNodeCondition has an "OK" state when its status is False"""
-
-    def is_ok(self) -> bool:
-        return self.status == api.NodeConditionStatus.FALSE
-
-
-class FalsyNodeCustomCondition(FalsyNodeCondition):
-    """FalsyNodeCustomCondition mainly come from Node Problem Detector.
+class NodeCustomCondition(NodeCondition):
+    """NodeCustomCondition mainly come from Node Problem Detector.
     Its type can be user-defined, hence it being a string."""
 
     type_: str
+
+
+TruthyNodeCondition = NodeCondition
+FalsyNodeCondition = NodeCondition
 
 
 class NodeConditions(Section):
@@ -383,13 +368,13 @@ class NodeConditions(Section):
     memorypressure: FalsyNodeCondition
     diskpressure: FalsyNodeCondition
     pidpressure: FalsyNodeCondition
-    networkunavailable: FalsyNodeCondition | None
+    networkunavailable: FalsyNodeCondition | None = None
 
 
 class NodeCustomConditions(Section):
     """section: kube_node_custom_conditions_v1"""
 
-    custom_conditions: Sequence[FalsyNodeCustomCondition]
+    custom_conditions: Sequence[NodeCustomCondition]
 
 
 class DeploymentInfo(Section):
@@ -437,9 +422,9 @@ class StatefulSetInfo(Section):
 class DeploymentConditions(Section):
     """section: kube_deployment_conditions_v1"""
 
-    available: api.DeploymentCondition | None
-    progressing: api.DeploymentCondition | None
-    replicafailure: api.DeploymentCondition | None
+    available: api.DeploymentCondition | None = None
+    progressing: api.DeploymentCondition | None = None
+    replicafailure: api.DeploymentCondition | None = None
 
 
 class ContainerCount(Section):
@@ -459,21 +444,29 @@ class UpdateStrategy(Section):
     strategy: DisplayableStrategy = Field(discriminator="type_")
 
 
+class ControllerSpec(Section):
+    """section: kube_controller_spec_v1"""
+
+    min_ready_seconds: int
+
+
 class Memory(BaseModel):
-    type_: Literal["memory"] = Field("memory", const=True)
+    type_: Literal["memory"] = Field("memory")
     usage: float
 
 
 class Cpu(BaseModel):
-    type_: Literal["cpu"] = Field("cpu", const=True)
+    type_: Literal["cpu"] = Field("cpu")
     usage: float
 
 
 class AttachedVolume(BaseModel):
+    """The PV from a kubelet metrics representation"""
+
     capacity: float
     free: float
     persistent_volume_claim: str
-    namespace: str
+    namespace: api.NamespaceName
 
 
 class PerformanceUsage(Section):
@@ -508,6 +501,7 @@ class CommonReplicas(BaseModel):
     a Pod can sometimes still be claimed, if the DaemonSet has been deleted.
     """
 
+    available: int
     desired: int
     ready: int
     updated: int
@@ -556,8 +550,6 @@ class StatefulSetReplicas(Section, CommonReplicas):
     # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
     # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
     # creation, this behaviour can't be configured as of v1.23.
-
-    available: int | None = None
 
 
 class DeploymentReplicas(Section, CommonReplicas):
@@ -610,8 +602,8 @@ class CollectorDaemons(Section):
     corresponding DaemonSet is not among the API data.
     """
 
-    machine: NodeCollectorReplica | None
-    container: NodeCollectorReplica | None
+    machine: NodeCollectorReplica | None = None
+    container: NodeCollectorReplica | None = None
     errors: IdentificationError
 
 
@@ -648,7 +640,7 @@ class PrometheusResult(BaseModel):
 
     query_: str
     type_: ResultType
-    details: str | None
+    details: str | None = None
 
     @classmethod
     def from_response(cls, response: query.HTTPResponse) -> "PrometheusResult":
@@ -687,12 +679,12 @@ class OpenShiftEndpoint(Section):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
 
 class PersistentVolumeClaimStatus(BaseModel):
-    phase: api.PersistentVolumeClaimPhase | None
-    capacity: StorageRequirement | None
+    phase: api.PersistentVolumeClaimPhase | None = None
+    capacity: StorageRequirement | None = None
 
 
 class PersistentVolumeClaimMetaData(BaseModel):
@@ -703,6 +695,7 @@ class PersistentVolumeClaimMetaData(BaseModel):
 class PersistentVolumeClaim(BaseModel):
     metadata: PersistentVolumeClaimMetaData
     status: PersistentVolumeClaimStatus
+    volume_name: str | None = None
 
 
 class PersistentVolumeClaims(Section):
@@ -715,3 +708,14 @@ class PersistentVolumeClaimAttachedVolumes(Section):
     """section: kube_pvc_volumes_v1"""
 
     volumes: Mapping[str, AttachedVolume]
+
+
+class PersistentVolume(BaseModel):
+    name: str
+    spec: api.PersistentVolumeSpec
+
+
+class AttachedPersistentVolumes(Section):
+    """section: kube_pvc_pvs_v1"""
+
+    volumes: Mapping[str, PersistentVolume]

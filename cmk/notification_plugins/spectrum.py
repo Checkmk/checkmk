@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -66,8 +66,9 @@ def main() -> NoReturn:
         base_oid + ".11": "Call number 123456",  # CALLOUT STRING
         base_oid + ".12": complete_url,
         base_oid
-        + ".13": "%s alarm on host %s"
-        % (context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]),
+        + ".13": "{} alarm on host {}".format(
+            context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]
+        ),
         base_oid + ".14": context.get("SERVICEGROUPNAMES", ""),
     }
 

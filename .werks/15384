@@ -1,0 +1,14 @@
+Title: check_mk_agent: handle tabs when reading definitions from mrpe.cfg
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1676903246
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the Checkmk agent for linux, solaris and aix was not able to handle
+tabs in the service definitions in the mrpe.cfg file. This werk resolves this issue and
+correctly identifies the service description, command and optionally the time interval.
+

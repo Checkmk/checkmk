@@ -6,7 +6,7 @@ Date: 1655802082
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When calling the /api/v1/resourcequotas endpoint, the Kubernetes special agent would send a HTTP
 request, which ignored the TCP timeout options specified in the Kubernetes rule. This could lead to

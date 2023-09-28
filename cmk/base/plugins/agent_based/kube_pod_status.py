@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 import time
-from typing import Any, MutableMapping, Optional, Sequence, Tuple, TypedDict
+from collections.abc import MutableMapping, Sequence
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -33,7 +36,7 @@ DESIRED_PHASE = [
     "Succeeded",
 ]
 
-Group = Tuple[VSResultAge, Sequence[str]]
+Group = tuple[VSResultAge, Sequence[str]]
 
 ValueStore = MutableMapping[str, Any]
 
@@ -63,7 +66,7 @@ def _get_group_from_params(status_message: str, params: Params) -> Group:
     return "no_levels", []
 
 
-def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[ContainerStatus]:
+def _pod_containers(pod_containers: PodContainers | None) -> Sequence[ContainerStatus]:
     """Return a sequence of containers with their associated status information.
 
     Kubernetes populates the sequence of containers and container status
@@ -91,9 +94,9 @@ def _container_status_details(containers: Sequence[ContainerStatus]) -> CheckRes
 
 
 def discovery_kube_pod_status(
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_init_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_init_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
 ) -> DiscoveryResult:
     yield Service()
 
@@ -102,9 +105,9 @@ def _check_kube_pod_status(
     now: float,
     value_store: ValueStore,
     params: Params,
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_init_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_init_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
 ) -> CheckResult:
     assert section_kube_pod_lifecycle is not None, "Missing Api data"
 
@@ -135,7 +138,7 @@ def _check_kube_pod_status(
         yield Result(state=State.OK, summary=status_message)
     else:
         for result in check_levels(
-            sum(time for time in value_store["duration_per_status"].values()),
+            sum(value_store["duration_per_status"].values()),
             render_func=render.timespan,
             levels_upper=levels,
         ):
@@ -153,9 +156,9 @@ def _check_kube_pod_status(
 
 def check_kube_pod_status(
     params: Params,
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_init_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_init_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
 ) -> CheckResult:
     yield from _check_kube_pod_status(
         time.time(),

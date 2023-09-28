@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
@@ -25,11 +25,10 @@ def check(section: ClusterDetails) -> CheckResult:
             yield Result(state=State.OK, summary=name.title())
             continue
         yield Result(state=State.CRIT, summary=f"Not {name}")
-        if health.verbose_response:
-            yield Result(
-                state=State.OK,
-                notice=f"{name.title()} verbose response:\n{health.verbose_response}",
-            )
+        yield Result(
+            state=State.OK,
+            notice=f"{name.title()} response:\n{health.response}",
+        )
 
     if not all(h.status_code == 200 for _, h in name_and_health):
         yield Result(state=State.OK, summary="See service details for more information")

@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
+from cmk.base.config import special_agent_info
+
+
+def _to_text_args(pairs: Sequence[tuple[str, str]]) -> list[str]:
+    return [f"{name}:{key}" for name, key in pairs]
+
+
+def agent_datadog_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+) -> Sequence[str | tuple[str, str, str]]:
+    args = [
+        hostname,
+        passwordstore_get_cmdline("%s", params["instance"]["api_key"]),
+        passwordstore_get_cmdline("%s", params["instance"]["app_key"]),
+        params["instance"]["api_host"],
+    ]
+
+    if proxy_setting := params.get("proxy"):
+        args += [
+            "--proxy",
+            get_http_proxy(proxy_setting).serialize(),
+        ]
+
+    sections = []
+
+    if (monitors_config := params.get("monitors")) is not None:
+        sections.append("monitors")
+        args += [
+            "--monitor_tags",
+            *monitors_config.get(
+                "tags",
+                [],
+            ),
+            "--monitor_monitor_tags",
+            *monitors_config.get(
+                "monitor_tags",
+                [],
+            ),
+        ]
+
+    if (events_config := params.get("events")) is not None:
+        sections.append("events")
+        args += [
+            "--event_max_age",
+            str(events_config["max_age"]),
+            "--event_tags",
+            *events_config.get(
+                "tags",
+                [],
+            ),
+            "--event_tags_show",
+            *events_config.get(
+                "tags_to_show",
+                [],
+            ),
+            "--event_syslog_facility",
+            str(events_config["syslog_facility"]),
+            "--event_syslog_priority",
+            str(events_config["syslog_priority"]),
+            "--event_service_level",
+            str(events_config["service_level"]),
+            *(["--event_add_text"] if events_config["add_text"] else []),
+        ]
+
+    if (logs_config := params.get("logs")) is not None:
+        sections.append("logs")
+        args += [
+            "--log_max_age",
+            str(logs_config["max_age"]),
+            "--log_query",
+            logs_config["query"],
+            "--log_indexes",
+            *logs_config["indexes"],
+            "--log_text",
+            *_to_text_args(logs_config["text"]),
+            "--log_syslog_facility",
+            str(logs_config["syslog_facility"]),
+            "--log_service_level",
+            str(logs_config["service_level"]),
+        ]
+
+    args += ["--sections"] + sections
+
+    return args
+
+
+special_agent_info["datadog"] = agent_datadog_arguments

@@ -1,0 +1,15 @@
+Title: Improved speed of cmk-update-config which runs during software update
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1684332375
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Configurations which lots of static checks called some functions needlessly often,
+thus resulting in <tt>cmk-update-config</tt> times of 10+ minutes.
+
+

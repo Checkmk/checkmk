@@ -6,7 +6,7 @@ Date: 1660032339
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The vsphere agent can now query the esxi host information via the vsphere server.
 Host information is made available via piggy back hosts. This is for useful if your

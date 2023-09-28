@@ -1,0 +1,21 @@
+Title: Combined graphs from views: Take view context into account
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1684752947
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When rendering combined graphs from views via the dropdowns <i>Hosts / Services > All metrics of
+same type in one graph</i>, the context of the view was not taken into account. For example, views
+can be restricted to only include services whose descriptions match a regular expression. When
+rendering combined graphs from such a view, this restriction was not taken into account. Hence, the
+combined graph included more objects than the original view or even reported that the object limit
+for combined graphs was reached, even if the number of rows in the original view was below the
+limit.
+
+Note that this error did not occur if additional filters were applied to the view before rendering
+the combined graph. In that case, the original context and the additional filters were correctly
+applied to the combined graph.

@@ -1,0 +1,15 @@
+Title: Support more reference clocks for Meinberg Lanman NTP devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1671790468
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Newer version of the Meinberg Lanman NTP devices support additional
+reference clocks. The new reference clocks are now also monitored.
+
+To monitor the new clocks you need to run a service discovery.
+

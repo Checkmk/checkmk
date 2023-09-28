@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
@@ -19,17 +19,19 @@ import time
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import lru_cache
+from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, Type, TypedDict
+from typing import Any, Literal, NamedTuple, NewType
+
+from typing_extensions import TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
 
 
 class TLSParams(TypedDict, total=False):
-    verify: bool
-    ca_file_path: str | None
+    verify: bool  # missing key means: True
+    ca_file_path: str | None  # missing key means: None, but where on earth is this set???
 
 
 TLSInfo = tuple[Literal["encrypted", "plain_text"], TLSParams]
@@ -97,7 +99,7 @@ class SiteConfiguration(TypedDict, total=False):
     user_login: bool
     user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
 
-    # Thanks to SingleSiteConnection we need str here. The convertion can
+    # Thanks to SingleSiteConnection we need str here. The conversion can
     # probably be moved into the SingleSiteConnection
     socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
 
@@ -143,14 +145,14 @@ class LivestatusTestingError(RuntimeError):
 #   '----------------------------------------------------------------------'
 
 # TODO: This mechanism does not take different connection options into account
-# Keep a global array of persistant connections
+# Keep a global array of persistent connections
 persistent_connections: dict[str, socket.socket] = {}
 
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 # Pattern for allowed UserId values
-validate_user_id_regex = re.compile(r"^[\w_$][-\w.@_$]*$")
+validate_user_id_regex = re.compile(r"^[\w$][-@.\w$]*$", re.UNICODE)
 
 
 class MKLivestatusException(Exception):
@@ -236,7 +238,7 @@ def create_client_socket(
     try:
         context.load_verify_locations(ca_file_path)
     except Exception as e:
-        raise MKLivestatusConfigError("Failed to load CA file '%s': %s" % (ca_file_path, e))
+        raise MKLivestatusConfigError(f"Failed to load CA file '{ca_file_path}': {e}")
 
     return context.wrap_socket(sock, do_handshake_on_connect=do_handshake_on_connect)
 
@@ -263,6 +265,7 @@ def intercept_queries() -> Iterator[list[str]]:
         yield SingleSiteConnection.collect_queries.queries
     finally:
         SingleSiteConnection.collect_queries.active = False
+        SingleSiteConnection.collect_queries.queries = []
 
 
 class Helpers:
@@ -352,7 +355,7 @@ class Helpers:
         return [sum(column) for column in zip(*data)]
 
 
-@lru_cache
+@cache
 def get_livestatus_blob_columns() -> set[LivestatusColumn]:
     # These columns should get queried from the core
     return {
@@ -411,12 +414,12 @@ class Query:
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions: tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
+    default_suppressed_exceptions: tuple[type[Exception], ...] = (MKLivestatusTableNotFoundError,)
 
     def __init__(
         self,
         query: str | QuerySpecification,
-        suppress_exceptions: tuple[Type[Exception], ...] | None = None,
+        suppress_exceptions: tuple[type[Exception], ...] | None = None,
     ) -> None:
         self._query = query
         if suppress_exceptions is None:
@@ -496,7 +499,6 @@ def _parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, 
 
 
 class SingleSiteConnection(Helpers):
-
     # So we only collect in a specific thread, and not in all of them. We also use
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
@@ -606,7 +608,7 @@ class SingleSiteConnection(Helpers):
                     site_socket.close()
                 except OSError:
                     pass
-                raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
+                raise MKLivestatusSocketError(f"Cannot connect to '{self.socketurl}': {e}")
 
         return site_socket
 
@@ -715,7 +717,7 @@ class SingleSiteConnection(Helpers):
             self.socket.sendall(query.encode("utf-8") + b"\n\n")
             if getattr(self.collect_queries, "active", False):
                 self.collect_queries.queries.append(query)
-        except IOError as e:
+        except OSError as e:
             self._close_socket()
 
             if do_reconnect:
@@ -732,7 +734,7 @@ class SingleSiteConnection(Helpers):
     def receive_raw_response(
         self,
         query: str,
-        suppress_exceptions: tuple[Type[Exception], ...],
+        suppress_exceptions: tuple[type[Exception], ...],
         timeout_at: float | None = None,
     ) -> bytes:
         try:
@@ -744,8 +746,7 @@ class SingleSiteConnection(Helpers):
             except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
-                    "Malformed output. Livestatus TCP socket might be unreachable or wrong"
-                    "encryption settings are used."
+                    f"Malformed response header {resp!r}. Livestatus TCP socket might be unreachable or wrong encryption settings are used."
                 )
 
             # Apply a lower timeout for the content because the data is already available
@@ -759,14 +760,14 @@ class SingleSiteConnection(Helpers):
 
             error_info = data.decode("utf-8")
             if code == "404":
-                raise MKLivestatusTableNotFoundError("Not Found (%s): %r" % (code, error_info))
+                raise MKLivestatusTableNotFoundError(f"Not Found ({code}): {error_info!r}")
 
             if code == "502":
                 raise MKLivestatusBadGatewayError(error_info)
 
-            raise MKLivestatusQueryError("%s: %s" % (code, error_info))
+            raise MKLivestatusQueryError(f"{code}: {error_info}")
 
-        except (MKLivestatusSocketClosed, IOError) as e:
+        except (MKLivestatusSocketClosed, OSError) as e:
             # In case of an IO error or the other side having
             # closed the socket do a reconnect and try again
             self.disconnect()
@@ -860,7 +861,7 @@ class SingleSiteConnection(Helpers):
 
         try:
             self.socket.sendall(command.encode("utf-8") + b"\n\n")
-        except IOError as e:
+        except OSError as e:
             self._close_socket()
             raise MKLivestatusSocketError(str(e))
 
@@ -971,8 +972,7 @@ class MultiSiteConnection(Helpers):
             if status_host:
                 if not isinstance(status_host, tuple) or len(status_host) != 2:
                     raise MKLivestatusConfigError(
-                        "Status host of site %s is %r, but must be pair of site and host"
-                        % (sitename, status_host)
+                        f"Status host of site {sitename} is {status_host!r}, but must be pair of site and host"
                     )
                 s, h = status_host
                 status_hosts[s] = status_hosts.get(s, []) + [h]
@@ -1038,7 +1038,7 @@ class MultiSiteConnection(Helpers):
                     elif shs == 3:
                         ex = "The remote monitoring host's state it not yet determined"
                     elif shs == 4:
-                        ex = "Invalid status host: site %s has no host %r" % (
+                        ex = "Invalid status host: site {} has no host {!r}".format(
                             status_host[0],
                             status_host[1],
                         )
@@ -1057,7 +1057,7 @@ class MultiSiteConnection(Helpers):
         url = site["socket"]
         assert isinstance(url, str)
         persist = not temporary and site.get("persist", False)
-        tls_type, tls_params = site.get("tls", ("plain_text", {}))
+        tls_type, tls_params = site.get("tls", ("plain_text", TLSParams()))
 
         connection = SingleSiteConnection(
             socketurl=url,
@@ -1115,9 +1115,7 @@ class MultiSiteConnection(Helpers):
                 return True
         return False
 
-    def set_output_format(  # type:ignore[no-untyped-def]
-        self, output_format: LivestatusOutputFormat
-    ):
+    def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
         for connected_site in self.connections:
             connected_site.connection.set_output_format(output_format)
 
@@ -1267,8 +1265,7 @@ class MultiSiteConnection(Helpers):
     def command(self, command: str, sitename: SiteId | None = SiteId("local")) -> None:
         if sitename in self.deadsites:
             raise MKLivestatusSocketError(
-                "Connection to site %s is dead: %s"
-                % (sitename, self.deadsites[sitename]["exception"])
+                f"Connection to site {sitename} is dead: {self.deadsites[sitename]['exception']}"
             )
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:
@@ -1297,9 +1294,9 @@ def _livestatus_output_format_switcher(
     query: Query, connection: MultiSiteConnection | SingleSiteConnection
 ) -> Iterator[None]:
     previous_format = connection.get_output_format()
+    if query.supports_json_format():
+        connection.set_output_format(LivestatusOutputFormat.JSON)
     try:
-        if query.supports_json_format():
-            connection.set_output_format(LivestatusOutputFormat.JSON)
         yield
     finally:
         connection.set_output_format(previous_format)

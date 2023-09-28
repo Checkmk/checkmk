@@ -1,0 +1,12 @@
+Title: custom notes for host and services: Fix multiple note display and fix note search path for services
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1693229413
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk adds the hr tag to the list of allowed tags, solving the problem of showing multiple notes for a host or service in the gui.
+It also fixes the problem that caused service notes stored in a path with a wildcard hostname to not be displayed.

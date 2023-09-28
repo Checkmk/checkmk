@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
@@ -17,8 +16,8 @@ from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
 
 
 def inventory_kube_daemonset(
-    section_kube_daemonset_info: Optional[DaemonSetInfo],
-    section_kube_update_strategy: Optional[UpdateStrategy],
+    section_kube_daemonset_info: DaemonSetInfo | None,
+    section_kube_update_strategy: UpdateStrategy | None,
 ) -> InventoryResult:
     if section_kube_daemonset_info is None or section_kube_update_strategy is None:
         return

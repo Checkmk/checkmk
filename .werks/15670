@@ -1,0 +1,15 @@
+Title: mk-job.{aix,solaris}: removal of stale running files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682075968
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This is a follow-up to werk 15602.
+
+Occasionally, there would be stale mk-job files of running jobs on the system.
+This could happen after a system reboot, for example. These files are now
+cleaned up.

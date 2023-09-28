@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-#include "cma_yml.h"
+#include "common/cma_yml.h"
 
 #include <string>
 
-#include "logger.h"
+#include "wnx/logger.h"
 
 namespace cma::yml {
 

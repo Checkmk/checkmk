@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -133,6 +133,9 @@ an "optimistic lock" and allows read access even when writes are happening. It w
    which contains the value of the previously fetched `ETag`. This ensures that the writer has seen
    the object to be modified. If any modifications by someone else were to happen between the
    request (1) and the update (3) these values would not match and the update would fail.
+4. If you are sure you are not updating objects simultaneously and want to avoid first fetching the
+   object in order to obtain its ETag value, you can bypass this step by providing a "*" for the
+   the 'If-Match' header like so.  `"If-Match": "*"`
 
 This scheme is used for most `PUT` requests throughout the REST API and always works the same way.
 Detailed documentation of the various involved fields as well as the possible error messages can
@@ -240,13 +243,15 @@ some users are already created. You can configure them in Checkmk at *Setup* > *
 
 For the various authentication methods that can be used please consult the following descriptions,
 which occur in the order of precedence. This means that on a request which receives multiple
-authentication methods, the one with the hightes priority "wins" and is used. This is especially
+authentication methods, the one with the highest priority "wins" and is used. This is especially
 convenient when developing automation scripts, as these can directly be used with either the
 currently logged in GUI user, or the "Bearer" authentication method which takes precedence over the
 GUI authentication method. The result is that the user doesn't have to log out to check that the
 scripts works with the other method.
 
 <SecurityDefinitions />
+
+
 
 # Compatibility
 
@@ -259,11 +264,11 @@ such a method. In these cases the HTTP method to use has to be POST. You cannot 
 ## Compatibility policy
 
 It is our policy to keep all documented parts backwards compatible, as long as there is no
-compelling reason (like security, etc) to break compatibility.
+compelling reason (like security, etc.) to break compatibility.
 
 In the event of a break in backwards compatibility, these changes are documented and, if possible,
 announced by deprecating the field or endpoint in question beforehand. Please understand that this
-can't be promised for all cases (security, etc) though.
+can't be promised for all cases (security, etc.) though.
 
 ## Versioning
 
@@ -306,11 +311,12 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
-from typing import Literal, TypedDict
+from typing import Literal
 
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
 import apispec_oneofschema  # type: ignore[import]
+from typing_extensions import TypedDict
 
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions
@@ -323,17 +329,15 @@ SECURITY_SCHEMES = {
         "scheme": "bearer",
         "description": "Use user credentials in the `Authorization` HTTP header. "
         "The format of the header value is `$user $password`. This method has the "
-        "highest precedence. If it succeeds, all other authentication methods are "
-        "skipped.",
+        "highest precedence. If authentication succeeds, `cookieAuth` will be skipped.",
         "bearerFormat": "username password",
     },
     "webserverAuth": {
         "type": "http",
         "scheme": "basic",
         "description": "Use the authentication method of the webserver ('basic' or 'digest'). To "
-        "use this, you'll either have to re-configure the site's Apache instance "
-        "yourself, or disable multi-site logins via `omd config`. This method "
-        "takes precedence over the `cookieAuth` method.",
+        "use this, you'll either have to re-configure the site's Apache instance by yourself. "
+        "If authentication succeeds, `cookieAuth` will be skipped.",
     },
 }
 
@@ -404,7 +408,7 @@ OPTIONS: ReDocSpec = {
 __version__ = "1.0"
 
 
-def make_spec(options: ReDocSpec):  # type:ignore[no-untyped-def]
+def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
     return apispec.APISpec(
         "Checkmk REST-API",
         __version__,

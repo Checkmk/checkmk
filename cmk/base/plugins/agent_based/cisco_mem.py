@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP Commons
@@ -25,8 +25,9 @@ True
 False
 """
 
+from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import (
     all_of,
@@ -39,9 +40,10 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 from .utils.cisco_mem import check_cisco_mem_sub
 
-Section = Dict[str, Sequence[str]]
+Section = dict[str, Sequence[str]]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 CISCO_ASA_PRE_V9_PATTERN = r"^[Cc]isco [Aa]daptive [Ss]ecurity.*Version [0-8]\..*"
 
@@ -50,7 +52,7 @@ CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def parse_cisco_mem(string_table: List[StringTable]) -> Optional[Section]:
+def parse_cisco_mem(string_table: list[StringTable]) -> Section | None:
     """
     >>> for item, values in parse_cisco_mem([
     ...         [['System memory', '319075344', '754665920', '731194056']],
@@ -84,7 +86,7 @@ def parse_cisco_mem(string_table: List[StringTable]) -> Optional[Section]:
 register.snmp_section(
     name="cisco_mem_legacy",
     parsed_section_name="cisco_mem",
-    detect=contains(OID_SysDesc, "cisco"),
+    detect=DETECT_CISCO,
     parse_function=parse_cisco_mem,
     fetch=[
         SNMPTree(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ def parse_arguments(argv):
 
 def get_client_connection(args):
     try:
-        import paramiko  # type: ignore[import] # pylint: disable=import-outside-toplevel
+        import paramiko  # pylint: disable=import-outside-toplevel
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

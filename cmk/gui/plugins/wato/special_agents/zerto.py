@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _factory_default_special_agents_zerto():
@@ -52,7 +50,7 @@ def _valuespec_special_agents_zerto():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:zerto",
+        name=RuleGroup.SpecialAgents("zerto"),
         valuespec=_valuespec_special_agents_zerto,
     )
 )

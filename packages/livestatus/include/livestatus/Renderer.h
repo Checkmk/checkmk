@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -7,6 +7,8 @@
 #define Renderer_h
 
 #include <chrono>
+#include <compare>
+#include <cstdint>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -15,9 +17,12 @@
 #include <vector>
 
 #include "livestatus/OStreamStateSaver.h"
-enum class Encoding;
+
+enum class CommentType : int32_t;
 class CSVSeparators;
+enum class Encoding;
 class Logger;
+enum class RecurringKind : int32_t;
 
 enum class OutputFormat { csv, broken_csv, json, python3 };
 
@@ -49,6 +54,8 @@ public:
     void output(const std::vector<char> &value);
     void output(const std::string &value);
     void output(std::chrono::system_clock::time_point value);
+    void output(CommentType value);
+    void output(RecurringKind value);
 
     void outputUnicodeChar(char32_t value);
 

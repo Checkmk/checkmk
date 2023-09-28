@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # <<<mssql_clusters>>>
 # MSSQL_VIM_SQLEXP node1 node1,node2
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -51,10 +52,9 @@ register.agent_section(
 
 
 def inventory_mssql_clusters(section: Section) -> InventoryResult:
-    path = ["software", "applications", "mssql", "instances"]
     for inst in section:
         yield TableRow(
-            path=path,
+            path=["software", "applications", "mssql", "instances"],
             key_columns={
                 "name": inst.instance_id,
             },

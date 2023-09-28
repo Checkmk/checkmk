@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from tests.testlib.playwright.helpers import expect, PPage
+
+
+import re
+
+from playwright.sync_api import expect
+
+from tests.testlib.playwright.helpers import PPage
 
 _backup_passphrase = "cmk"
 
@@ -21,6 +27,7 @@ def _create_backup_target(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_input("edit_target_p_title").fill("My backup target")
     logged_in_page.main_area.get_input("edit_target_p_remote_0_p_path").fill("/tmp")
     logged_in_page.main_area.get_text("Is mountpoint").uncheck()
+
     logged_in_page.main_area.get_suggestion("Save").click()
 
 
@@ -32,6 +39,9 @@ def _create_encryption_key(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_input("key_p_alias").fill("My backup key")
     logged_in_page.main_area.get_input("key_p_passphrase").fill(_backup_passphrase)
     logged_in_page.main_area.get_suggestion("Create").click()
+    logged_in_page.main_area.check_warning(
+        re.compile(".*The following keys have not been downloaded yet: My backup key.*")
+    )
 
 
 def _create_backup_job(logged_in_page: PPage) -> None:
@@ -42,6 +52,10 @@ def _create_backup_job(logged_in_page: PPage) -> None:
 
     logged_in_page.main_area.locator_via_xpath("span", "Do not encrypt the backup").click()
     logged_in_page.main_area.locator_via_xpath("li", "Encrypt the backup using the key:").click()
+    logged_in_page.click_and_wait(
+        locator=logged_in_page.main_area.locator_via_xpath("span", "My backup key"),
+        reload_on_error=True,
+    )
     logged_in_page.main_area.get_suggestion("Save").click()
 
 
@@ -59,12 +73,8 @@ def _restore_backup(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Restore").click()
     logged_in_page.main_area.get_link_from_title("Restore from this backup target").click()
     logged_in_page.main_area.get_link_from_title("Start restore of this backup").click()
-    expect(
-        logged_in_page.main_area.locator_via_xpath(
-            "div", "Do you really want to start the restore of this backup?"
-        )
-    ).to_be_visible()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    expect(logged_in_page.main_area.get_text("Start restore of backup")).to_be_visible()
+    logged_in_page.main_area.locator_via_xpath("button", "Start").click()
 
     logged_in_page.main_area.get_input("_key_p_passphrase").fill(_backup_passphrase)
 
@@ -88,21 +98,21 @@ def _cleanup(logged_in_page: PPage) -> None:
 
     # remove job
     logged_in_page.main_area.get_link_from_title("Delete this backup job").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
     # remove target
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Backup targets").click()
     logged_in_page.main_area.get_link_from_title("Delete this backup target").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
     # remove encryption key
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Backup encryption keys").click()
     logged_in_page.main_area.get_link_from_title("Delete this key").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
 

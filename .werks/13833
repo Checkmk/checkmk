@@ -7,12 +7,12 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On linux hosts new installations now allow the unencrypted pulling
 of agent data, just as the old agent did.
 This is done to ease the installation process.
 
-The <i>Check_MK Agent</tt> service will issue a warning until the
+The <i>Check_MK Agent</i> service will issue a warning until the
 connections is secured by TLS, or the service is explicitly configured
 to ignore the unencrypted connection.

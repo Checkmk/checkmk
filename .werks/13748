@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In an environment with multiple sites on one server or with multiple CMK servers added as hosts, the
 performance report was sometimes missing in the Support Diagnostics dump.

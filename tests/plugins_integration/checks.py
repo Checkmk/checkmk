@@ -1,0 +1,476 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import json
+import logging
+import os
+import re
+import shlex
+import subprocess
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from enum import IntEnum
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from tests.testlib.site import Site
+from tests.testlib.utils import execute, qa_test_data_path
+
+logger = logging.getLogger(__name__)
+
+
+class CheckModes(IntEnum):
+    DEFAULT = 0
+    ADD = 1
+    UPDATE = 2
+
+
+@dataclass
+class CheckConfig:
+    mode: CheckModes = CheckModes.DEFAULT
+    skip_masking: bool = False
+    dump_types: list[str] | None = None
+    data_dir: str | None = None
+    dump_dir: str | None = None
+    response_dir: str | None = None
+    diff_dir: str | None = None
+    host_names: list[str] | None = None
+    check_names: list[str] | None = None
+    api_services_cols: list | None = None
+
+    def load(self):
+        self.data_dir = str(
+            self.data_dir or os.getenv("DATA_DIR", str(qa_test_data_path() / "plugins_integration"))
+        )
+        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", f"{self.data_dir}/dumps"))
+        self.response_dir = str(
+            self.response_dir or os.getenv("RESPONSE_DIR", f"{self.data_dir}/responses")
+        )
+        self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
+        self.host_names = (
+            [_.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()]
+            if not self.host_names
+            else self.host_names
+        )
+        self.check_names = (
+            [_.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()]
+            if not self.check_names
+            else self.check_names
+        )
+        self.dump_types = (
+            [_.strip() for _ in str(os.getenv("DUMP_TYPES", "agent,snmp")).split(",") if _.strip()]
+            if not self.dump_types
+            else self.dump_types
+        )
+
+        # these SERVICES table columns will be returned via the get_host_services() openapi call
+        # NOTE: extending this list will require an update of the check output (--update-checks)
+        self.api_services_cols = [
+            "host_name",
+            "check_command",
+            "check_command_expanded",
+            "check_options",
+            "check_period",
+            "check_type",
+            "description",
+            "display_name",
+            "has_been_checked",
+            "labels",
+            "plugin_output",
+            "state",
+            "state_type",
+            "tags",
+        ]
+
+        # log defined values
+        for attr in (attrs := vars(self)):
+            logger.info("%s=%s", attr.upper(), attrs[attr])
+
+
+config = CheckConfig()
+
+
+def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
+    """Apply regular expressions to the canon and result objects."""
+    regexp_filepath = f"{os.path.dirname(__file__)}/regexp.yaml"
+    if not os.path.exists(regexp_filepath):
+        return
+    with open(regexp_filepath, encoding="utf-8") as regexp_file:
+        all_patterns = yaml.safe_load(regexp_file)
+    # global regexps
+    patterns = all_patterns.get("*", {})
+    # pattern matches
+    patterns.update(
+        next((item for name, item in all_patterns.items() if re.match(name, identifier)), {})
+    )
+    # exact matches
+    patterns.update(all_patterns.get(identifier, {}))
+
+    for pattern_group in all_patterns:
+        if not (pattern_group == identifier or re.match(pattern_group, identifier)):
+            continue
+        patterns = all_patterns[pattern_group]
+
+        for field_name in patterns:
+            pattern = patterns[field_name]
+            logger.debug("> Applying regexp: %s", pattern)
+            if not canon.get(field_name):
+                logger.debug(
+                    '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
+                )
+                continue
+            if not result.get(field_name):
+                logger.debug(
+                    '> Field "%s" not found in result "%s", skipping...', field_name, identifier
+                )
+                continue
+            if match := re.search(pattern, result[field_name]):
+                canon[field_name] = re.sub(
+                    pattern,
+                    match.group(),
+                    canon[field_name],
+                )
+
+
+def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
+    """Return the current check results from the API."""
+    try:
+        return {
+            check["id"]: check
+            for check in site.openapi.get_host_services(host_name, columns=config.api_services_cols)
+            if not config.check_names
+            or check["id"] in config.check_names
+            or check["id"].split(":", 1)[-1] in config.check_names
+            or any(re.fullmatch(pattern, check["id"]) for pattern in config.check_names)
+        }
+    except json.decoder.JSONDecodeError as exc:
+        raise ValueError(
+            "Could not get valid check data! Make sure the site is running "
+            "and the provided secret is correct!"
+        ) from exc
+
+
+def get_host_names(site: Site | None = None) -> list[str]:
+    """Return the list of agent/snmp hosts via filesystem or site.openapi."""
+    host_names = []
+    if site:
+        hosts = [_ for _ in site.openapi.get_hosts() if _.get("id") not in (None, "", site.id)]
+        agent_host_names = [
+            _.get("id") for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})
+        ]
+        snmp_host_names = [_.get("id") for _ in hosts if "tag_snmp_ds" in _.get("attributes", {})]
+    else:
+        agent_host_names = []
+        snmp_host_names = []
+        for dump_file_name in [_ for _ in os.listdir(config.dump_dir) if not _.startswith(".")]:
+            try:
+                dump_file_path = f"{config.dump_dir}/{dump_file_name}"
+                with open(dump_file_path, encoding="utf-8") as dump_file:
+                    if dump_file.read(1) == ".":
+                        snmp_host_names.append(dump_file_name)
+                    else:
+                        agent_host_names.append(dump_file_name)
+            except OSError:
+                logger.error('Could not access dump file "%s"!', dump_file_name)
+            except UnicodeDecodeError:
+                logger.error('Could not decode dump file "%s"!', dump_file_name)
+    if not config.dump_types or "agent" in config.dump_types:
+        host_names += agent_host_names
+    if not config.dump_types or "snmp" in config.dump_types:
+        host_names += snmp_host_names
+    host_names = [
+        _
+        for _ in host_names
+        if not config.host_names
+        or _ in config.host_names
+        or any(re.fullmatch(pattern, _) for pattern in config.host_names)
+    ]
+    return host_names
+
+
+def read_disk_dump(host_name: str) -> str:
+    """Return the content of an agent dump from the dumps folder."""
+    dump_file_path = f"{config.dump_dir}/{host_name}"
+    with open(dump_file_path, encoding="utf-8") as dump_file:
+        return dump_file.read()
+
+
+def read_cmk_dump(host_name: str, site: Site, dump_type: str) -> str:
+    """Return the current agent or snmp dump via cmk."""
+    args = ["cmk", "--snmptranslate" if dump_type == "snmp" else "-d", host_name]
+    cmk_dump, _ = site.execute(
+        args,
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    ).communicate()
+    if dump_type == "snmp":
+        cmk_dump = "\n".join([_.split("-->")[0].strip() for _ in str(cmk_dump).splitlines()])
+
+    return cmk_dump
+
+
+def _verify_check_result(
+    check_id: str,
+    canon_data: dict[str, Any],
+    result_data: dict[str, Any],
+    output_dir: Path,
+    mode: CheckModes,
+) -> tuple[bool, str]:
+    """Verify that the check result is matching the stored canon.
+
+    Optionally update the stored canon if it does not match."""
+    if mode == CheckModes.DEFAULT and not canon_data:
+        logger.error("[%s] Canon not found!", check_id)
+    safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
+    with open(
+        json_result_file_path := str(output_dir / f"{safe_name}.result.json"),
+        mode="w",
+        encoding="utf-8",
+    ) as json_file:
+        json.dump(result_data, json_file, indent=4)
+
+    if mode != CheckModes.UPDATE:
+        # ignore columns in the canon that are not supposed to be returned
+        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore
+
+    if not config.skip_masking:
+        _apply_regexps(check_id, canon_data, result_data)
+
+    if result_data and canon_data == result_data:
+        return True, ""
+
+    if mode == CheckModes.UPDATE or (mode == CheckModes.ADD and not canon_data):
+        canon_data = result_data
+        logger.info(
+            "[%s] Canon %s!",
+            check_id,
+            "updated" if mode == CheckModes.UPDATE else "added",
+        )
+        return True, ""
+
+    with open(
+        json_canon_file_path := str(output_dir / f"{safe_name}.canon.json"),
+        mode="w",
+        encoding="utf-8",
+    ) as json_file:
+        json.dump(canon_data, json_file, indent=4)
+
+    if result_data is None or len(result_data) == 0:
+        logger.error("[%s] No data returned!", check_id)
+        return False, ""
+
+    diff = execute(
+        shlex.split(os.getenv("DIFF_CMD", "diff"))
+        + [
+            json_canon_file_path,
+            json_result_file_path,
+        ],
+        check=False,
+    ).stdout
+
+    if len(canon_data) != len(result_data):
+        logger.error("[%s] Invalid field count! Data mismatch:\n%s", check_id, diff)
+    else:
+        logger.error("[%s] Data mismatch:\n%s", check_id, diff)
+
+    return False, diff
+
+
+def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
+    """Return both the cmk dump and the disk dump."""
+    disk_dump = read_disk_dump(host_name)
+    dump_type = "snmp" if disk_dump[0] == "." else "agent"
+    return disk_dump, read_cmk_dump(host_name, site, dump_type)
+
+
+def process_check_output(
+    site: Site,
+    host_name: str,
+    output_dir: Path,
+) -> bool:
+    """Process the check output and either dump or compare it."""
+    passed = True if config.mode == CheckModes.UPDATE else None
+    logger.info('> Processing agent host "%s"...', host_name)
+    diffs = {}
+
+    if os.path.exists(f"{config.response_dir}/{host_name}.json"):
+        with open(
+            f"{config.response_dir}/{host_name}.json",
+            encoding="utf-8",
+        ) as json_file:
+            check_canons = json.load(json_file)
+    else:
+        check_canons = {}
+
+    check_results = {
+        _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
+    }
+    for check_id in sorted(check_results):
+        logger.debug('> Processing check id "%s"...', check_id)
+        check_canon = check_canons.get(check_id, {})
+        check_result = check_results.get(check_id, {})
+
+        logger.debug('> Verifying check id "%s"...', check_id)
+        check_success, diff = _verify_check_result(
+            check_id,
+            check_canon,
+            check_result,
+            output_dir,
+            config.mode,
+        )
+        if check_success:
+            if passed is None:
+                passed = True
+            continue
+        passed = False
+        diffs[check_id] = diff
+    if diffs:
+        os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore
+        with open(
+            f"{config.diff_dir}/{host_name}.json",
+            mode="a",
+            encoding="utf-8",
+        ) as json_file:
+            json.dump(diffs, json_file, indent=4)
+    if config.mode != CheckModes.DEFAULT:
+        with open(
+            f"{config.response_dir}/{host_name}.json",
+            mode="w",
+            encoding="utf-8",
+        ) as json_file:
+            json.dump(check_results, json_file, indent=4)
+
+    return passed is True
+
+
+@contextmanager
+def setup_host(site: Site, host_name: str) -> Iterator:
+    logger.info('Creating host "%s"...', host_name)
+    host_attributes = {
+        "ipaddress": "127.0.0.1",
+        "tag_agent": ("no-agent" if "snmp" in host_name else "cmk-agent"),
+    }
+    if "snmp" in host_name:
+        host_attributes["tag_snmp_ds"] = "snmp-v2"
+    site.openapi.create_host(
+        hostname=host_name,
+        folder="/snmp" if "snmp" in host_name else "/agent",
+        attributes=host_attributes,
+        bake_agent=False,
+    )
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Running service discovery...")
+    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.bulk_discover_services([host_name], bulk_size=10, wait_for_completion=True)
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Scheduling checks & checking for pending services...")
+    for idx in range(3):
+        # we have to schedule the checks multiple times (twice at least):
+        # => once to get baseline data
+        # => a second time to calculate differences
+        # => a third time since some checks require it
+        site.schedule_check(host_name, "Check_MK", 0, 60)
+        pending_checks = site.openapi.get_host_services(host_name, pending=True)
+        if idx > 0 and len(pending_checks) == 0:
+            continue
+
+    if pending_checks:
+        logger.info(
+            '%s pending service(s) found on host "%s": %s',
+            len(pending_checks),
+            host_name,
+            ",".join(
+                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+            ),
+        )
+
+    try:
+        yield
+    finally:
+        logger.info('Deleting host "%s"...', host_name)
+        site.openapi.delete_host(host_name)
+
+
+def setup_hosts(site: Site, host_names: list[str]) -> None:
+    agent_host_names = [_ for _ in host_names if "snmp" not in _]
+    snmp_host_names = [_ for _ in host_names if "snmp" in _]
+    host_entries = [
+        {
+            "host_name": host_name,
+            "folder": "/agent",
+            "attributes": {
+                "ipaddress": "127.0.0.1",
+                "tag_agent": "cmk-agent",
+            },
+        }
+        for host_name in agent_host_names
+    ] + [
+        {
+            "host_name": host_name,
+            "folder": "/snmp",
+            "attributes": {
+                "ipaddress": "127.0.0.1",
+                "tag_agent": "no-agent",
+                "tag_snmp_ds": "snmp-v2",
+            },
+        }
+        for host_name in snmp_host_names
+    ]
+    logger.info("Bulk-creating %s hosts...", len(host_entries))
+    site.openapi.bulk_create_hosts(
+        host_entries,
+        bake_agent=False,
+        ignore_existing=True,
+    )
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Running service discovery...")
+    site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Checking for pending services...")
+    pending_checks = {_: site.openapi.get_host_services(_, pending=True) for _ in host_names}
+    for idx in range(3):
+        # we have to schedule the checks multiple times (twice at least):
+        # => once to get baseline data
+        # => a second time to calculate differences
+        # => a third time since some checks require it
+        for host_name in list(pending_checks.keys())[:]:
+            site.schedule_check(host_name, "Check_MK", 0, 60)
+            pending_checks[host_name] = site.openapi.get_host_services(host_name, pending=True)
+            if idx > 0 and len(pending_checks[host_name]) == 0:
+                pending_checks.pop(host_name, None)
+                continue
+
+    for host_name in pending_checks:
+        logger.info(
+            '%s pending service(s) found on host "%s": %s',
+            len(pending_checks[host_name]),
+            host_name,
+            ",".join(
+                _.get("extensions", {}).get("description", _.get("id"))
+                for _ in pending_checks[host_name]
+            ),
+        )
+
+
+def cleanup_hosts(site: Site, host_names: list[str]) -> None:
+    logger.info("Bulk-deleting %s hosts...", len(host_names))
+    site.openapi.bulk_delete_hosts(host_names)
+
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload()

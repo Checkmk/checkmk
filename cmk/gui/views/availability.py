@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,8 +12,9 @@ from collections.abc import Iterator
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import host_state_name, service_state_name
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi
@@ -37,7 +38,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -50,13 +51,14 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -71,7 +73,6 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.view import View
-from cmk.gui.views.painter.v0.helpers import format_plugin_output
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
 
 # Variable name conventions
@@ -121,7 +122,7 @@ def _show_availability_options(
 
     for name, height, _show_in_reporting, vs in valuespecs:
 
-        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type:ignore[no-untyped-def]
+        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
             vs.render_input("avo_" + name, avoptions.get(name))
 
         html.render_floating_option(name, height, vs.title(), renderer)
@@ -343,7 +344,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
         html.body_end()
 
 
-def _page_menu_availability(  # type:ignore[no-untyped-def]
+def _page_menu_availability(  # type: ignore[no-untyped-def]
     breadcrumb: Breadcrumb,
     view,
     what: AVObjectType,
@@ -432,7 +433,6 @@ def _render_avoptions_form(
 def _page_menu_entries_av_mode(
     what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
 ) -> Iterator[PageMenuEntry]:
-
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Table"),
@@ -478,7 +478,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return
 
     if not user.may("general.reporting") or not user.may("general.instant_reports"):
@@ -509,7 +509,7 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(  # type:ignore[no-untyped-def]
+def render_availability_tables(  # type: ignore[no-untyped-def]
     availability_tables, what, avoptions
 ) -> None:
     if not availability_tables:
@@ -614,7 +614,8 @@ def _render_availability_timeline(
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(
-                    _("Last known summary"), format_plugin_output(row.get("log_output", ""), row)
+                    _("Summary at last status change"),
+                    format_plugin_output(row.get("log_output", ""), row),
                 )
 
             if "timeline_long_output" in avoptions["labelling"]:
@@ -657,7 +658,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(  # type:ignore[no-untyped-def]
+def render_availability_table(  # type: ignore[no-untyped-def]
     group_title, availability_table, what, avoptions
 ) -> None:
     av_table = availability.layout_availability_table(
@@ -675,7 +676,6 @@ def render_availability_table(  # type:ignore[no-untyped-def]
         limit=None,
         omit_headers="omit_headers" in avoptions["labelling"],
     ) as table:
-
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
             table.row()
@@ -721,7 +721,7 @@ def render_availability_table(  # type:ignore[no-untyped-def]
                 )
 
 
-def render_timeline_bar(  # type:ignore[no-untyped-def]
+def render_timeline_bar(  # type: ignore[no-untyped-def]
     timeline_layout, style, timeline_nr=0
 ) -> None:
     render_date = timeline_layout["render_date"]
@@ -742,7 +742,6 @@ def render_timeline_bar(  # type:ignore[no-untyped-def]
     html.open_table(id_="timeline_%d" % timeline_nr, class_=["timeline", style])
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
-
         td_attrs = {
             "style": "width: %.3f%%" % width,
             "title": title,
@@ -1043,8 +1042,10 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
 
     with table_element(title=_("Annotations"), omit_if_empty=True) as table:
-        for (site_id, host, service), annotation in annos_to_render:
+        for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
+            table.cell("#", css=["narrow nowrap"])
+            html.write_text(nr)
             table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),
@@ -1056,9 +1057,10 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
             del_anno: HTTPVariables = [("_delete_annotation", "1")]
-            delete_url = make_confirm_link(
+            delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, del_anno + anno_vars),
-                message=_("Are you sure that you want to delete this annotation?"),
+                title=_("Delete annotation #%d") % nr,
+                message=_("Annotation: %s") % " ".join(annotation["text"].strip().split()),
             )
             html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
@@ -1117,7 +1119,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
-            if not cmk_version.is_raw_edition():
+            if cmk_version.edition() is not cmk_version.Edition.CRE:
                 table.cell(
                     _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")
                 )
@@ -1283,7 +1285,7 @@ def _vs_annotation():
     ]
     extra_elements: list[DictionaryEntry] = (
         []
-        if cmk_version.is_raw_edition()
+        if cmk_version.edition() is cmk_version.Edition.CRE
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
     )
     return Dictionary(
@@ -1483,4 +1485,5 @@ def _av_output_set_content_disposition(title: str) -> None:
         title,
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )
-    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
+    response.set_content_type("text/csv")
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)

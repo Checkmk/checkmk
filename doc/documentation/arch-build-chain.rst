@@ -24,19 +24,6 @@ Nevertheless it is our goal and we strive to achieve it.
 This involves providing source package that was used for the build.
 As well as packages and docker images for all currently supported platforms.
 
-RHEL 7
-Debian 9
-Debian 11
-SLES 12 SP4
-SLES 12 SP5
-SLES 15
-SLES 15 SP1
-SLES 15 SP2
-SLES 15 SP3
-Ubuntu 16.04 (LTS)
-Ubuntu 18.04 (LTS)
-Ubuntu 20.04 (LTS)
-
 
 3. Builds availability locally and in CI
 

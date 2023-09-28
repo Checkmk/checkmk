@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,13 +8,13 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import (
+from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
-    get_bytes_human_readable,
-    get_percent_human_readable,
     get_rate,
-    MKCounterWrapped,
-    RAISE,
+    get_value_store,
+    IgnoreResultsError,
+    render,
 )
 
 # ==================================================================================================
@@ -57,7 +57,7 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     check,
     item,
     resource,
@@ -101,6 +101,7 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
       present for the trend computation) the tuple (0, '', []) is
       returned.
     """
+    value_store = get_value_store()
 
     perfdata: list[
         (  #
@@ -121,9 +122,12 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
     # compute current rate in MB/s by computing delta since last check
     try:
         rate = get_rate(
-            f"{check}.{item}.delta", timestamp, used_mb, allow_negative=True, onwrap=RAISE
+            get_value_store(),
+            f"{check}.{item}.delta",
+            timestamp,
+            used_mb,
         )
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         # need more data for computing a trend
         return 0, "", []
 
@@ -131,7 +135,7 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
         perfdata.append(("growth", rate * H24))
 
     # average trend in MB/s, initialized with zero (by default)
-    rate_avg = get_average(f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
+    rate_avg = get_average(value_store, f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
 
     trend = rate_avg * range_sec
     sign = "+" if trend > 0 else ""
@@ -191,8 +195,8 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    get_percent_human_readable(wa_perc),
-                    get_percent_human_readable(cr_perc),
+                    render.percent(wa_perc),
+                    render.percent(cr_perc),
                     range_hours,
                 )
             )
@@ -206,7 +210,7 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
         100 * trend / size_mb,
         levels.get("trend_shrinking_perc"),
         range_hours,
-        get_percent_human_readable,
+        render.percent,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)
@@ -232,7 +236,8 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
                 return "%0.1f days" % (hours / 24)  # fixed: true-division
             return "%d hours" % hours
 
-        hours_left = (size_mb - used_mb) / trend * range_hours
+        # CMK-13217: size_mb - used_mb < 0: the device reported nonsense
+        hours_left = max((size_mb - used_mb) / trend * range_hours, 0)
         hours_txt = format_hours(hours_left)
 
         timeleft = levels.get("trend_timeleft")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from json import JSONDecodeError
 from typing import Annotated, Literal, NewType
 
-from pydantic import BaseModel, Field, parse_raw_as, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 Labels = NewType("Labels", Mapping[str, str])
 
@@ -47,9 +47,10 @@ class ValueType(str, enum.Enum):
 
 
 class ParseModel(BaseModel):
-    class Config:
-        allow_mutation = False
-        extra = "forbid"
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
 
 
 Point = tuple[datetime.datetime, float]
@@ -102,9 +103,10 @@ Response = Annotated[ResponseSuccess | ResponseError, Field(discriminator="statu
 
 
 def parse_raw_response(
-    response: bytes | str | bytearray,
+    response: bytes | str,
 ) -> Response | ValidationError | JSONDecodeError:
     try:
-        return parse_raw_as(Response, response)  # type: ignore[arg-type]
+        adapter = TypeAdapter(Response)
+        return adapter.validate_json(response)  # type: ignore[return-value]
     except (ValidationError, JSONDecodeError) as e:
         return e

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,36 +17,41 @@ from cmk.utils.i18n import _
 #   .--regions--------------------------------------------------------------
 
 AWSRegions = [
+    # Changes to the right-hand side of this list cause the following user facing changes:
+    # - Incompatible: the service name of the check `aws_status`
+    # - Compatible: in the summary of check `aws_elb_summary`
+    # - Compatible: The displayed options in the rules `Amazon Web Services (AWS)` and
+    #   `Amazon Web Services (AWS) Status` are updated.
     ("af-south-1", "Africa (Cape Town)"),
     ("ap-east-1", "Asia Pacific (Hong Kong)"),
-    ("ap-south-1", "Asia Pacific (Mumbai)"),
     ("ap-south-2", "Asia Pacific (Hyderabad)"),
+    ("ap-southeast-3", "Asia Pacific (Jakarta)"),
+    ("ap-south-1", "Asia Pacific (Mumbai)"),
     ("ap-northeast-3", "Asia Pacific (Osaka-Local)"),
     ("ap-northeast-2", "Asia Pacific (Seoul)"),
     ("ap-southeast-1", "Asia Pacific (Singapore)"),
     ("ap-southeast-2", "Asia Pacific (Sydney)"),
-    ("ap-southeast-3", "Asia Pacific (Jakarta)"),
     ("ap-northeast-1", "Asia Pacific (Tokyo)"),
     ("ca-central-1", "Canada (Central)"),
     ("cn-north-1", "China (Beijing)"),
     ("cn-northwest-1", "China (Ningxia)"),
-    ("eu-central-1", "EU (Frankfurt)"),
-    ("eu-central-2", "Europe (Zurich)"),
-    ("eu-west-1", "EU (Ireland)"),
-    ("eu-west-2", "EU (London)"),
-    ("eu-south-1", "EU (Milan)"),
+    ("eu-central-1", "Europe (Frankfurt)"),
+    ("eu-west-1", "Europe (Ireland)"),
+    ("eu-west-2", "Europe (London)"),
+    ("eu-south-1", "Europe (Milan)"),
+    ("eu-west-3", "Europe (Paris)"),
     ("eu-south-2", "Europe (Spain)"),
-    ("eu-west-3", "EU (Paris)"),
-    ("eu-north-1", "EU (Stockholm)"),
-    ("me-central-1", "Middle East (UAE)"),
+    ("eu-north-1", "Europe (Stockholm)"),
+    ("eu-central-2", "Europe (Zurich)"),
     ("me-south-1", "Middle East (Bahrain)"),
+    ("me-central-1", "Middle East (UAE)"),
     ("sa-east-1", "South America (Sao Paulo)"),
-    ("us-east-2", "US East (Ohio)"),
     ("us-east-1", "US East (N. Virginia)"),
+    ("us-east-2", "US East (Ohio)"),
     ("us-west-1", "US West (N. California)"),
     ("us-west-2", "US West (Oregon)"),
-    ("us-gov-east-1", "AWS GovCloud (US-East)"),
-    ("us-gov-west-1", "AWS GovCloud (US-West)"),
+    ("us-gov-east-1", "GovCloud (US-East)"),
+    ("us-gov-west-1", "GovCloud (US-West)"),
 ]
 
 # .

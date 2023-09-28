@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -7,7 +7,8 @@ Provides summarized insights into the fetched partitions.
 Single service per mobileiron source host.
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -26,7 +27,6 @@ from .utils.mobileiron import SourceHostSection
 def check_mobileiron_sourcehost(
     params: Mapping[str, Any], section: SourceHostSection
 ) -> CheckResult:
-
     yield Metric(
         name="mobileiron_devices_total",
         value=section.total_count,

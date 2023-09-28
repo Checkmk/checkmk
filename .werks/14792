@@ -1,0 +1,20 @@
+Title: Enable pip install of packages as site user
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1671204311
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+In case you want to install python packages with pip as a site user,
+which needs to be compiled from source, this should now be possible.
+
+One use case for this would be the installation of ibm_db which is
+needed for the active check "check_sql":
+C+:
+python3 -m pip -vvv install --user ibm_db
+C-:
+

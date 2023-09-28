@@ -1,0 +1,15 @@
+Title: audit_log: retrieve and clear the audit log
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1692353538
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+
+This werk introduces a new set of endpoints to the REST API to operate the audit log. Users can now perform the following actions via the REST API:
+
+* Get audit logs per day
+* Clear the audit log

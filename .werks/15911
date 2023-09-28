@@ -1,0 +1,12 @@
+Title: jenkins_jobs: Consider 'Override check state based on last build result' option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692361228
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the check plugin did not consider the option 'Override check state based on last build result'. This led to wrong check states.
+This has now been fixed and the option will be considered as intended.

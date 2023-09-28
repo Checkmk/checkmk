@@ -1,0 +1,13 @@
+Title: KUBE: Memory and CPU resources: allow setting higher levels on request utilization
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674031490
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Previously, the rules <tt>Kubernetes memory resource utilization</tt> and <tt>Kubernetes CPU
+resource utilization</tt> did not allow setting levels above 101.0%. This is a limitation since
+workloads above 100% are common in Kubernetes. With this werk, levels can be arbitrarily large.

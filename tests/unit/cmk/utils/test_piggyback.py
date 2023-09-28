@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
+from pytest import MonkeyPatch
 
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 _PIGGYBACK_MAX_CACHEFILE_AGE = 3600
 
@@ -24,7 +24,7 @@ _TEST_HOST_NAME = HostName("test-host")
 _PAYLOAD = b"<<<check_mk>>>\nlala\n"
 
 _REF_TIME = 1640000000.0
-_FREEZE_DATETIME = datetime.utcfromtimestamp(_REF_TIME + 10.0)
+_FREEZE_DATETIME = datetime.fromtimestamp(_REF_TIME + 10.0, tz=timezone.utc)
 
 
 @pytest.fixture(name="setup_files")
@@ -174,7 +174,7 @@ def test_get_piggyback_raw_data_not_updated() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source_hostname == HostName("source1")
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
     assert raw_data.info.message == "Piggyback file not updated by source 'source1'"
@@ -324,7 +324,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
         }
     assert len(raw_data_map) == 2
 
-    raw_data1, raw_data2 = raw_data_map["source1"], raw_data_map["source2"]
+    raw_data1, raw_data2 = raw_data_map[HostName("source1")], raw_data_map[HostName("source2")]
 
     assert raw_data1.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source1")
     assert raw_data1.info.successfully_processed is True

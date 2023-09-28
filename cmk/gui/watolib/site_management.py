@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,18 +25,23 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.utils import version
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
+from cmk.gui.config import prepare_raw_site_config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.sites import prepare_raw_site_config, SiteManagementFactory
+from cmk.gui.watolib.sites import SiteManagementFactory
+
+if version.edition() is version.Edition.CME:
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
 
 class SiteDoesNotExistException(Exception):
@@ -101,7 +106,7 @@ class Socket:
     def to_internal(self) -> NetworkSocketInfo | UnixSocketInfo | LocalSocketInfo:
         if self.socket_type in ("tcp", "tcp6"):
             if self.host and self.port:
-                tls_params: TLSParams = {}
+                tls_params = TLSParams()
 
                 if self.verify is not None:
                     tls_params["verify"] = self.verify
@@ -173,7 +178,10 @@ class ProxyParams:
     cache: bool | None = None
 
     @classmethod
-    def from_internal(cls, internal_config: ProxyConfigParams) -> ProxyParams:
+    def from_internal(cls, internal_config: ProxyConfigParams | None) -> ProxyParams:
+        if internal_config is None:
+            return cls()
+
         hb = internal_config.get("heartbeat")
         return cls(
             channels=internal_config.get("channels"),
@@ -231,7 +239,9 @@ class ProxyTcp:
         if self.port:
             proxyconfigtcp["port"] = self.port
             proxyconfigtcp["only_from"] = self.only_from
-            proxyconfigtcp["tls"] = self.tls
+
+            if self.tls:
+                proxyconfigtcp["tls"] = self.tls
 
         return proxyconfigtcp
 
@@ -246,26 +256,19 @@ class Proxy:
     @classmethod
     def from_external(cls, external_config: Mapping[str, Any]) -> Proxy:
         direct_or_with_proxy = external_config["use_livestatus_daemon"]
+        global_settings = (
+            external_config["global_settings"] if direct_or_with_proxy == "with_proxy" else None
+        )
 
-        if params := external_config.get("params"):
-            if heartbeat := params.get("heartbeat"):
-                params["heartbeat"] = Heartbeat(**heartbeat)
-            proxyparams = ProxyParams(**params)
-            global_settings = False
-        else:
-            proxyparams = ProxyParams()
-            global_settings = True
-
-        if tcp := external_config.get("tcp"):
-            tcp_val = ProxyTcp(**tcp)
-        else:
-            tcp_val = ProxyTcp()
+        params = external_config.get("params", {})
+        if heartbeat := params.get("heartbeat"):
+            params["heartbeat"] = Heartbeat(**heartbeat)
 
         return cls(
             direct_or_with_proxy=direct_or_with_proxy,
             global_settings=global_settings,
-            params=proxyparams,
-            tcp=tcp_val,
+            params=ProxyParams(**params),
+            tcp=ProxyTcp(**external_config.get("tcp", {})),
         )
 
     @classmethod
@@ -277,23 +280,11 @@ class Proxy:
             "with_proxy" if "params" in internal_config else "direct"
         )
 
-        if proxyconfigparams := internal_config.get("params"):
-            proxyparams = ProxyParams.from_internal(proxyconfigparams)
-            global_settings = False
-        else:
-            proxyparams = ProxyParams()
-            global_settings = True
-
-        if tcp := internal_config.get("tcp"):
-            tcp_val = ProxyTcp(**tcp)
-        else:
-            tcp_val = ProxyTcp()
-
         return cls(
             direct_or_with_proxy=direct_or_with_proxy,
-            global_settings=global_settings,
-            params=proxyparams,
-            tcp=tcp_val,
+            global_settings=bool(internal_config.get("params") is None),
+            params=ProxyParams.from_internal(internal_config.get("params", {})),
+            tcp=ProxyTcp(**internal_config.get("tcp", {})),
         )
 
     def to_external(self) -> Iterator[tuple[str, str | bool | None | dict]]:
@@ -315,11 +306,14 @@ class Proxy:
             return None
 
         proxyconfig: ProxyConfig = {}
+        proxyconfig["params"] = {}
+
+        if self.global_settings:
+            proxyconfig["params"] = None
+
         if self.params:
             if paramsdict := self.params.to_internal():
                 proxyconfig["params"] = paramsdict
-            else:
-                proxyconfig["params"] = None
 
         if self.tcp:
             if tcpdict := self.tcp.to_internal():
@@ -333,17 +327,29 @@ class Proxy:
 class BasicSettings:
     alias: str
     site_id: str
+    customer: str | None = None
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> BasicSettings:
+        if version.edition() is version.Edition.CME:
+            return cls(
+                alias=internal_config["alias"],
+                site_id=site_id,
+                customer=internal_config.get("customer", default_customer_id()),
+            )
         return cls(alias=internal_config["alias"], site_id=site_id)
 
     def to_external(self) -> Iterator[tuple[str, str]]:
         yield "alias", self.alias
         yield "site_id", self.site_id
+        if version.edition() is version.Edition.CME and self.customer is not None:
+            yield "customer", self.customer
 
     def to_internal(self) -> SiteConfiguration:
         configid: SiteConfiguration = {"alias": self.alias, "id": SiteId(self.site_id)}
+        if version.edition() is version.Edition.CME and self.customer is not None:
+            configid["customer"] = self.customer
+
         return configid
 
 
@@ -457,7 +463,6 @@ class ConfigurationConnection:
     def from_internal(
         cls, site_id: SiteId, internal_config: SiteConfiguration
     ) -> ConfigurationConnection:
-
         return cls(
             enable_replication=bool(internal_config["replication"]),
             url_of_remote_site=internal_config["multisiteurl"],

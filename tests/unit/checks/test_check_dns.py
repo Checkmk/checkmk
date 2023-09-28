@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -23,7 +25,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_dns_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
+def test_check_dns_argument_parsing(
+    params: Mapping[str, object], expected_args: Sequence[str]
+) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == expected_args
@@ -42,6 +46,6 @@ def test_check_dns_argument_parsing(params, expected_args) -> None:  # type:igno
         ],
     ],
 )
-def test_check_dns_desc(params, result: str) -> None:  # type:ignore[no-untyped-def]
+def test_check_dns_desc(params: Mapping[str, object], result: str) -> None:
     active_check = ActiveCheck("check_dns")
     assert active_check.run_service_description(params) == result

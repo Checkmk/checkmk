@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,7 +21,6 @@ def test_registered_pages() -> None:
         "ajax_cascading_render_painer_parameters",
         "ajax_activation_state",
         "ajax_add_visual",
-        "ajax_autocomplete_labels",
         "ajax_backup_job_state",
         "ajax_background_job_details",
         "ajax_dashlet_pos",
@@ -31,6 +30,7 @@ def test_registered_pages() -> None:
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",
         "ajax_popup_action_menu",
+        "ajax_popup_host_action_menu",
         "ajax_popup_add_visual",
         "ajax_popup_icon_selector",
         "ajax_popup_move_to_folder",
@@ -48,6 +48,7 @@ def test_registered_pages() -> None:
         "ajax_switch_help",
         "ajax_ui_theme",
         "ajax_userdb_sync",
+        "ajax_validate_filter",
         "ajax_visual_filter_list_get_choice",
         "ajax_vs_autocomplete",
         "ajax_vs_unit_resolver",
@@ -108,9 +109,6 @@ def test_registered_pages() -> None:
         "mobile_view",
         "noauth:automation",
         "noauth:run_cron",
-        "noauth:saml_acs",
-        "noauth:saml_metadata",
-        "noauth:saml_sso",
         "message",
         "prediction_graph",
         "parent_child_topology",
@@ -138,6 +136,7 @@ def test_registered_pages() -> None:
         "user_profile",
         "user_profile_replicate",
         "user_webauthn_register_begin",
+        "user_totp_register",
         "user_two_factor_overview",
         "user_two_factor_edit_credential",
         "user_webauthn_register_complete",
@@ -160,7 +159,7 @@ def test_registered_pages() -> None:
         "noauth:ajax_graph_images",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",
@@ -224,6 +223,11 @@ def test_registered_pages() -> None:
             "ajax_ntop_past_alerts",
             "ajax_ntop_flow_alerts",
             "licensing_download_verification_request",
+            "noauth:saml_acs",
+            "noauth:saml_metadata",
+            "noauth:saml_sso",
+            "noauth:cognito_sso",
+            "noauth:cognito_callback",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,7 +31,6 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict, Optional
 
 from .agent_based_api.v1 import any_of, contains, register, SNMPTree, type_defs
 
@@ -41,7 +40,7 @@ METRICS_PER_SESSION_TYPE = ["active_sessions", "cumulative_sessions", "peak_sess
 
 def parse_cisco_vpn_sessions(
     string_table: type_defs.StringTable,
-) -> Optional[Dict[str, Dict[str, int]]]:
+) -> dict[str, dict[str, int]] | None:
     if not string_table:
         return None
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Persisted sections type and store.
@@ -49,18 +49,17 @@ import abc
 import copy
 import enum
 import logging
-from collections.abc import Mapping
+import os
+from collections.abc import Mapping, Sized
 from pathlib import Path
-from typing import Any, Final, Generic, NamedTuple, TypeVar
+from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as _store
-from cmk.utils.exceptions import MKFetcherError, MKGeneralException
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKTimeout
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostName
-
-from cmk.snmplib.type_defs import TRawData
 
 from .._abstract import Mode
 
@@ -69,10 +68,12 @@ __all__ = [
     "FileCacheMode",
     "FileCacheOptions",
     "MaxAge",
+    "NoCache",
 ]
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")
+_TRawData = TypeVar("_TRawData", bound=Sized)
 
 
 class MaxAge(NamedTuple):
@@ -83,15 +84,19 @@ class MaxAge(NamedTuple):
 
     """
 
-    checking: int
-    discovery: int
-    inventory: int
+    checking: float
+    discovery: float
+    inventory: float
 
     @classmethod
-    def none(cls):
-        return cls(0, 0, 0)
+    def zero(cls) -> MaxAge:
+        return cls(0.0, 0.0, 0.0)
 
-    def get(self, mode: Mode, *, default: int = 0) -> int:
+    @classmethod
+    def unlimited(cls) -> MaxAge:
+        return cls(float("inf"), float("inf"), float("inf"))
+
+    def get(self, mode: Mode, *, default: float = 0.0) -> float:
         return self._asdict().get(mode.name.lower(), default)
 
 
@@ -103,14 +108,13 @@ class FileCacheMode(enum.IntFlag):
     READ_WRITE = READ | WRITE
 
 
-class FileCache(Generic[TRawData], abc.ABC):
+class FileCache(Generic[_TRawData], abc.ABC):
     def __init__(
         self,
         hostname: HostName,
         *,
         path_template: str,
         max_age: MaxAge,
-        use_outdated: bool,
         simulation: bool,
         use_only_cache: bool,
         file_cache_mode: FileCacheMode | int,
@@ -119,7 +123,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         self.hostname: Final = hostname
         self.path_template: Final = path_template
         self.max_age = max_age
-        self.use_outdated = use_outdated
         # TODO(ml): Make sure simulation and use_only_cache are identical
         #           and find a better, more generic name such as "force"
         #           to produce the intended behavior.
@@ -136,7 +139,6 @@ class FileCache(Generic[TRawData], abc.ABC):
                     f"{self.hostname}",
                     f"path_template={self.path_template}",
                     f"max_age={self.max_age}",
-                    f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
                     f"use_only_cache={self.use_only_cache}",
                     f"file_cache_mode={self.file_cache_mode.value}",
@@ -153,7 +155,6 @@ class FileCache(Generic[TRawData], abc.ABC):
                 self.hostname == other.hostname,
                 self.path_template == other.path_template,
                 self.max_age == other.max_age,
-                self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
                 self.use_only_cache == other.use_only_cache,
                 self.file_cache_mode == other.file_cache_mode,
@@ -165,7 +166,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             "hostname": str(self.hostname),
             "path_template": self.path_template,
             "max_age": self.max_age,
-            "use_outdated": self.use_outdated,
             "simulation": self.simulation,
             "use_only_cache": self.use_only_cache,
             "file_cache_mode": self.file_cache_mode,
@@ -179,12 +179,12 @@ class FileCache(Generic[TRawData], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _from_cache_file(raw_data: bytes) -> TRawData:
+    def _from_cache_file(raw_data: bytes) -> _TRawData:
         raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
-    def _to_cache_file(raw_data: TRawData) -> bytes:
+    def _to_cache_file(raw_data: _TRawData) -> bytes:
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
@@ -202,7 +202,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         return True
 
-    def read(self, mode: Mode) -> TRawData | None:
+    def read(self, mode: Mode) -> _TRawData | None:
         self._logger.debug("Read from cache: %r", self)
         raw_data = self._read(mode)
         if raw_data is not None:
@@ -210,10 +210,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             return raw_data
 
         if self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+            raise MKFetcherError("No cached data available (caching enforced via simulation mode)")
 
         if self.use_only_cache:
-            raise MKFetcherError("Got no data (use_only_cache)")
+            raise MKFetcherError("No cached data available")
 
         return raw_data
 
@@ -225,7 +225,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         # creation, that's fine with me.
         return Path(template.format(mode=mode.name.lower(), hostname=hostname))
 
-    def _read(self, mode: Mode) -> TRawData | None:
+    def _read(self, mode: Mode) -> _TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
@@ -236,7 +236,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             self._logger.debug("Not using cache (does not exist)")
             return None
 
-        if not self.use_outdated and cachefile_age > self.max_age.get(mode):
+        if cachefile_age > self.max_age.get(mode):
             self._logger.debug(
                 "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
                 cachefile_age,
@@ -259,21 +259,45 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger.log(VERBOSE, "Using data from cache file %s", path)
         return self._from_cache_file(cache_file)
 
-    def write(self, raw_data: TRawData, mode: Mode) -> None:
+    def write(self, raw_data: _TRawData, mode: Mode) -> None:
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
         path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
+        except MKTimeout:
+            raise
         except Exception as e:
             raise MKGeneralException(f"Cannot create directory {path.parent!r}: {e}")
 
         self._logger.debug("Write data to cache file %s", path)
         try:
             _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
+        except MKTimeout:
+            raise
         except Exception as e:
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
+
+
+class NoCache(FileCache[_TRawData]):
+    def __init__(self, hostname: HostName, *args: object, **kw: object) -> None:
+        super().__init__(
+            hostname,
+            path_template=str(os.devnull),
+            max_age=MaxAge.zero(),
+            simulation=False,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
+        )
+
+    @staticmethod
+    def _from_cache_file(raw_data: object) -> NoReturn:
+        raise TypeError("NoCache")
+
+    @staticmethod
+    def _to_cache_file(raw_data: _TRawData) -> NoReturn:
+        raise TypeError("NoCache")
 
 
 class FileCacheOptions(NamedTuple):
@@ -288,6 +312,9 @@ class FileCacheOptions(NamedTuple):
     # Set by the --no-tcp option from discovery, inventory, inventory as check,
     # and dump agent.
     tcp_use_only_cache: bool = False
+    # Currently not (yet) used
+    # I think this should be a fetcher option: "allow_live_fetching"
+    use_only_cache: bool = False
     # Set by the --force option from inventory.
     keep_outdated: bool = False
 

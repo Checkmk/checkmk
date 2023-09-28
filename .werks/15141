@@ -1,0 +1,15 @@
+Title: azure_app_registration: Monitor Azure App Registration
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674054252
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+It's now possible to monitor Azure App Registrations in Checkmk.
+A new check Microsoft Azure App Registration Secret has been added.
+
+To monitor App Registrations you have to configure the related
+special agent Microsoft Azure.

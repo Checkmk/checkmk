@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, MutableMapping, Optional
+from collections.abc import MutableMapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     check_resource_quota_resource,
@@ -35,16 +36,16 @@ register.agent_section(
 
 
 def discovery_kube_resource_quota_cpu(
-    section_kube_resource_quota_performance_cpu: Optional[PerformanceUsage],
-    section_kube_resource_quota_cpu_resources: Optional[HardResourceRequirement],
+    section_kube_resource_quota_performance_cpu: PerformanceUsage | None,
+    section_kube_resource_quota_cpu_resources: HardResourceRequirement | None,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check_kube_resource_quota_cpu(
     params: Params,
-    section_kube_resource_quota_performance_cpu: Optional[PerformanceUsage],
-    section_kube_resource_quota_cpu_resources: Optional[HardResourceRequirement],
+    section_kube_resource_quota_performance_cpu: PerformanceUsage | None,
+    section_kube_resource_quota_cpu_resources: HardResourceRequirement | None,
 ) -> CheckResult:
     yield from _check_kube_resource_quota_cpu(
         params,
@@ -57,8 +58,8 @@ def check_kube_resource_quota_cpu(
 
 def _check_kube_resource_quota_cpu(
     params: Params,
-    section_kube_resource_quota_performance_cpu: Optional[PerformanceUsage],
-    section_kube_resource_quota_cpu_resources: Optional[HardResourceRequirement],
+    section_kube_resource_quota_performance_cpu: PerformanceUsage | None,
+    section_kube_resource_quota_cpu_resources: HardResourceRequirement | None,
     current_timestamp: float,
     host_value_store: MutableMapping[str, Any],
 ) -> CheckResult:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,6 @@
 
 import logging
 import os
-import re
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
@@ -18,12 +17,13 @@ import requests
 import requests.exceptions
 from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
+from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
-from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
+from tests.testlib.utils import cmk_path
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
@@ -51,11 +51,11 @@ def client() -> docker.DockerClient:
 
 
 def _image_name(version: CMKVersion) -> str:
-    return f"docker-tests/check-mk-{version.edition.name}-{version.branch}-{version.version}"
+    return f"docker-tests/check-mk-{version.edition.long}-{version.branch}-{version.version}"
 
 
 def _package_name(version: CMKVersion) -> str:
-    return f"check-mk-{version.edition.name}-{version.version}_0.{distro_codename}_amd64.deb"
+    return f"check-mk-{version.edition.long}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build() -> None:
@@ -96,13 +96,13 @@ def _cleanup_old_packages() -> None:
 
 
 def resolve_image_alias(alias: str) -> str:
-    """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
+    """Resolves given "Docker image alias" using the common `resolve.py` and returns an image
     name which can be used with `docker run`
     >>> image = resolve_image_alias("IMAGE_CMK_BASE")
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
+        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
         text=True,
     ).split("\n", maxsplit=1)[0]
 
@@ -118,16 +118,6 @@ def _build(
     if prepare_package:
         _prepare_package(version)
 
-    logger.info("Starting helper container for build secrets")
-    secret_container = client.containers.run(
-        image="busybox",
-        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
-        detach=True,
-        remove=True,
-        volumes={get_cmk_download_credentials_file(): {"bind": "/files/secret", "mode": "ro"}},
-    )
-    request.addfinalizer(lambda: secret_container.remove(force=True))
-
     logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
         image: Image
@@ -135,10 +125,9 @@ def _build(
         image, build_logs = client.images.build(
             path=build_path,
             tag=_image_name(version),
-            network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition.name,
+                "CMK_EDITION": version.edition.long,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -172,11 +161,11 @@ def _build(
     config = attrs["Config"]
 
     assert config["Labels"] == {
-        "org.opencontainers.image.vendor": "tribe29 GmbH",
+        "org.opencontainers.image.vendor": "Checkmk GmbH",
         "org.opencontainers.image.version": version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
-        "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+        "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
         "org.opencontainers.image.title": "Checkmk",
         "org.opencontainers.image.url": "https://checkmk.com/",
     }
@@ -287,9 +276,7 @@ def _start(
         logger.error(c.logs().decode("utf-8"))
         raise
 
-    else:
-        logger.debug(c.logs().decode("utf-8"))
-
+    logger.debug(c.logs().decode("utf-8"))
     return c
 
 
@@ -301,6 +288,12 @@ def _exec_run(
 ) -> tuple[int, str]:
     exit_code, output = c.exec_run(cmd, user=user, workdir=workdir)
     return exit_code, output.decode("utf-8")
+
+
+def _get_docker_ip(container_name: str) -> str:
+    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}}' {container_name}"
+    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip() or "127.0.0.1"
+    return output
 
 
 def test_start_simple(
@@ -332,6 +325,12 @@ def test_start_simple(
     assert _exec_run(c, ["id", "-g", "cmk"])[1].rstrip() == "1000"
 
     assert exit_code == 0
+
+
+def test_needed_packages(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
+    """Ensure that important tools can be executed in the container"""
+    c = _start(request, client)
+    assert _exec_run(c, ["logrotate", "--version"])[0] == 0
 
 
 def test_start_cmkadmin_passsword(
@@ -407,49 +406,49 @@ def test_start_with_custom_command(
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
-    package_path = Path(build_path, _package_name(version))
-    package_path.write_bytes(b"")
-    with pytest.raises(docker.errors.BuildError):
-        _build(request, client, version, prepare_package=False)
-    os.unlink(str(package_path))
-    _prepare_package(version)
-
-
-# Test that the deb package from the download server is used.
-# Works only with daily enterprise builds.
-def test_build_using_package_from_download_server(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
-) -> None:
-    if not (
-        version.is_enterprise_edition() and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
-    ):
-        pytest.skip("only enterprise daily packages are available on the download server")
-    package_path = Path(build_path, _package_name(version))
-    # make sure no local package is used.
-    if package_path.exists():
-        os.unlink(str(package_path))
-    _build(request, client, version, prepare_package=False)
+    pkg_name = _package_name(version)
+    pkg_path = Path(build_path, pkg_name)
+    pkg_path_sav = Path(build_path, f"{pkg_name}.sav")
+    try:
+        os.rename(pkg_path, pkg_path_sav)
+        pkg_path.write_bytes(b"")
+        with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
+            _build(request, client, version, prepare_package=False)
+        os.unlink(pkg_path)
+        _prepare_package(version)
+    finally:
+        try:
+            os.unlink(pkg_path)
+        except FileNotFoundError:
+            pass
+        os.rename(pkg_path_sav, pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
-    pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
-    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
+    key_name = "Check_MK-pubkey.gpg"
+    key_path = Path(build_path, key_name)
+    key_path_sav = Path(build_path, f"{key_name}.sav")
     try:
-        os.rename(pkg_path, pkg_path_sav)
-
-        with open(pkg_path, "w") as f:
-            f.write("")
-
+        os.rename(key_path, key_path_sav)
+        key_path.write_text("")
         with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             _build(request, client, version)
     finally:
-        os.unlink(pkg_path)
-        os.rename(pkg_path_sav, pkg_path)
+        os.unlink(key_path)
+        os.rename(key_path_sav, key_path)
 
 
 def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
@@ -605,6 +604,9 @@ def test_redirects_work_with_custom_port(
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
+@pytest.mark.skipif(
+    build_version().is_saas_edition(), reason="Saas edition replaced the login screen"
+)
 def test_http_access_login_screen(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
@@ -626,15 +628,34 @@ def test_http_access_login_screen(
     )
 
 
+@pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
+def test_http_access_login_screen_saas(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
+    c = _start(request, client)
+
+    ip = _get_docker_ip(c.name)
+
+    resp = requests.get(
+        f"http://{ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
+        allow_redirects=False,
+        timeout=10,
+    )
+    # saas login redirects to external service
+    assert resp.status_code == 302
+    assert "cognito_sso.py" in resp.headers["location"]
+
+
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(request, client)
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
-    # Check whether or not the agent port is opened
+    # Check whether the agent port is opened
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
+@pytest.mark.skipif(build_version().is_saas_edition(), reason="Temporily disabled due to CMK-14454")
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
@@ -643,9 +664,38 @@ def test_update(
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
-        version_spec="2.1.0b3",
-        branch="2.1.0",
+        version_spec="2.2.0p8",
+        branch="2.2.0",
         edition=Edition.CRE,
+    )
+
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(version.version)
+        ),
+        VersionsCompatible,
+    )
+    # Currently, in the master branch, we can't derive the future major version from the daily
+    # build version. So we hack around a bit to gather it from the git. In the future we plan to
+    # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
+    # additional check can be removed.
+    branch_version = subprocess.check_output(
+        [
+            "make",
+            "-s",
+            "-C",
+            str(testlib.repo_path()),
+            "-f",
+            "defines.make",
+            "print-BRANCH_VERSION",
+        ],
+        encoding="utf-8",
+    ).rstrip()
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(branch_version)
+        ),
+        VersionsCompatible,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

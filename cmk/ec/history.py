@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import datetime
 import os
 import shlex
 import subprocess
@@ -12,15 +13,13 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import Any, Literal
-
-from typing_extensions import assert_never
+from typing import Any, assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
 from .config import Config
-from .event import Event
+from .event import Event, scrub_string
 from .query import OperatorName, QueryGET
 from .settings import Settings
 
@@ -44,7 +43,7 @@ HistoryWhat = Literal[
     "CHANGESTATE",
 ]
 
-Columns = Sequence[tuple[str, float | int | str | list]]
+Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
 class History:
@@ -56,7 +55,6 @@ class History:
         event_columns: Columns,
         history_columns: Columns,
     ) -> None:
-        super().__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
@@ -112,8 +110,6 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    import datetime
-
     from pymongo import DESCENDING
     from pymongo.connection import Connection  # type: ignore[import]
     from pymongo.errors import OperationFailure
@@ -123,7 +119,6 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        super().__init__()
         self.connection: Connection = None
         self.db: Any = None
 
@@ -248,7 +243,6 @@ def _get_mongodb(  # pylint: disable=too-many-branches
     # and do filtering on this data, but this would be way too inefficient.
     mongo_query = {}
     for column_name, operator_name, _predicate, argument in filters:
-
         if operator_name == "=":
             mongo_filter: str | dict[str, str] = argument
         elif operator_name == ">":
@@ -363,16 +357,15 @@ def _add_files(history: History, event: Event, what: HistoryWhat, who: str, addi
 
 
 def quote_tab(col: Any) -> bytes:
-    ty = type(col)
-    if ty in [float, int]:
-        return str(col).encode("utf-8")
-    if ty is bool:
+    if isinstance(col, bool):
         return b"1" if col else b"0"
-    if ty in [tuple, list]:
-        col = b"\1" + b"\1".join([quote_tab(e) for e in col])
-    elif col is None:
-        col = b"\2"
-    elif ty is str:
+    if isinstance(col, (float, int)):
+        return str(col).encode("utf-8")
+    if isinstance(col, (tuple, list)):
+        return b"\1" + b"\1".join(quote_tab(e) for e in col)
+    if col is None:
+        return b"\2"
+    if isinstance(col, str):
         col = col.encode("utf-8")
 
     return col.replace(b"\t", b" ")
@@ -380,7 +373,6 @@ def quote_tab(col: Any) -> bytes:
 
 class ActiveHistoryPeriod:
     def __init__(self) -> None:
-        super().__init__()
         self.value: int | None = None
 
 
@@ -396,7 +388,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     # Log period has changed or we have not computed a filename yet ->
     # compute currently active period
     if active_history_period.value is None or timestamp > active_history_period.value:
-
         # Look if newer files exist
         timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob("*.log"))
         if len(timestamps) > 0:
@@ -409,26 +400,18 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-    lt = time.localtime()
-    ts = time.mktime(
-        time.struct_time(
-            (
-                lt.tm_year,
-                lt.tm_mon,
-                lt.tm_mday,
-                0,  # tm_hour
-                0,  # tm_min
-                0,  # tm_sec
-                lt.tm_wday,
-                lt.tm_yday,
-                lt.tm_isdst,
-                lt.tm_zone,
-                lt.tm_gmtoff,
+
+    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return int(
+        (
+            today
+            - datetime.datetime(1970, 1, 1)
+            - datetime.timedelta(
+                days=today.weekday() if config["history_rotation"] == "weekly" else 0
             )
-        )
+        ).total_seconds()
     )
-    offset = lt.tm_wday * 86400 if config["history_rotation"] == "weekly" else 0
-    return int(ts) - offset
 
 
 def _expire_logfiles(
@@ -457,7 +440,7 @@ def _expire_logfiles(
             logger.warning(f"Error expiring log files: {e}")
 
 
-# Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
+# Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
 _GREPABLE_COLUMNS = {
     "event_id",
     "event_text",
@@ -479,17 +462,24 @@ def _grep_pipeline(
     Optimization: use grep in order to reduce amount of read lines based on some frequently used
     filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
     can output more lines than necessary. This is only a kind of prefiltering.
+
+    >>> _grep_pipeline([])
+    []
+
+    >>> _grep_pipeline([("event_core_host", '=', lambda x: True, '|| ping')])
+    ["grep -F -e '|| ping'"]
+
     """
     return [
         command
         for column_name, operator_name, _predicate, argument in filters
         if column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(operator_name, argument)]
+        for command in [_grep_command(operator_name, str(argument))]
         if command is not None
     ]
 
 
-def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
+def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     if operator_name == "=":
         return f"grep -F {_grep_pattern(argument)}"
     if operator_name == "=~":
@@ -501,8 +491,8 @@ def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
     return None
 
 
-def _grep_pattern(argument: Any) -> str:
-    return f"-e {shlex.quote(str(argument))}"
+def _grep_pattern(argument: str) -> str:
+    return f"-e {shlex.quote(argument)}"
 
 
 def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
@@ -620,7 +610,7 @@ def parse_history_file(
     entries: list[Any] = []
     with subprocess.Popen(
         cmd,
-        shell=True,  # nosec
+        shell=True,  # nosec B602 # BNS:67522a
         close_fds=True,
         stdout=subprocess.PIPE,
     ) as grep:
@@ -704,17 +694,3 @@ def _get_logfile_timespan(path: Path) -> tuple[float | None, float | None]:
     except Exception:
         last_entry = None
     return first_entry, last_entry
-
-
-def scrub_string(s: str) -> str:
-    """Rip out/replace any characters which have a special meaning in the UTF-8
-    encoded history files, see e.g. quote_tab. In theory this shouldn't be
-    necessary, because there are a bunch of bytes which are not contained in any
-    valid UTF-8 string, but following Murphy's Law, those are not used in
-    Checkmk. To keep backwards compatibility with old history files, we have no
-    choice and continue to do it wrong... :-/"""
-
-    return s.translate(_scrub_string_unicode_table)
-
-
-_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

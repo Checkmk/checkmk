@@ -1,0 +1,27 @@
+Title: Introduce Python 3 compatibilty for mk_sap agent plugin
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1681809951
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The mk_sap agent plugin can now be used with Python 3.
+
+ Previous to this werk, mk_sap could only be used with Python 2, as it was
+ dependent on the sapnwrfc library which is not compatible with python3.
+
+ This werk ports mk_sap to use pyrfc which is only compatible with Python 3
+
+The old mk_sap plugin can still be used with Python 2 and is now called mk_sap_2
+
+If the host this agent plugin is executed on has Python 3 installed:
+<ul>
+<li>install pyrfc on this host (for more details have a look at the mk_sap.py agent plugin source code)</li>
+<li>redeploy agent via bakery or manually</li>
+</ul>
+
+If the host this agent plugin is executed on has only Python 2 installed nothing changes. The Python 2 agent plugin
+will automatically be used in this case.

@@ -1,0 +1,17 @@
+Title: Discovery: Correctly update host labels of clusters and their nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681472138
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The only way of updating the discovered host labels of a cluster was to do it via the WATO service discovery page.
+Doing this, on the other hand, would not update the host labels of the affected nodes accordingly.
+
+Now a discovery via WATO, automation, REST API or commandline will always keep the discovered labels of nodes and their clusters synchronized.
+
+

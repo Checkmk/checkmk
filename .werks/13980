@@ -1,0 +1,12 @@
+Title: Validation for 'move rule' endpoint has been tightened
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681308047
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Before moving a rule before or after another rule, the REST API will now check if both rules belong to the same ruleset and are distinct rules.
+

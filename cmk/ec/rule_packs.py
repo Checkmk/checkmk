@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -10,7 +10,6 @@ configuration.
 
 import copy
 import logging
-import os
 import pprint
 from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
@@ -32,8 +31,6 @@ from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
 
-ECRuleSpec = dict[str, Any]
-
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     """
@@ -43,7 +40,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
         2. exported: A rule pack that is available in the Extension Packages, but not
                      yet part of a MKP.
         3. unmodified MKP: A rule pack that is packaged/provided in a MKP.
-        4. modified MKP: A rule pack that was orignially packaged/provided in a MKP but
+        4. modified MKP: A rule pack that was originally packaged/provided in a MKP but
                          was modified by a User and therefore replaced by a modified copy
                          of the rule pack.
 
@@ -130,7 +127,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
         settings.paths.config_dir.value.glob("**/*.mk")
     ):
         with open(str(path), mode="rb") as file_object:
-            exec(file_object.read(), global_context)  # pylint: disable=exec-used
+            exec(file_object.read(), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
     _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
@@ -146,7 +143,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
                 rule["livetime"] = (livetime, ["open"])
 
     # Convert legacy rules into a default rule pack. Note that we completely
-    # ignore legacy rules if there are rule packs alreday. It's a bit unclear
+    # ignore legacy rules if there are rule packs already. It's a bit unclear
     # if we really want that, but at least that's how it worked in the past...
     if config["rules"] and not config["rule_packs"]:
         config["rule_packs"] = [default_rule_pack(config["rules"])]
@@ -207,9 +204,9 @@ def save_rule_packs(
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
     if pretty_print:
-        rule_packs_text = pprint.pformat(rule_packs)
+        rule_packs_text = pprint.pformat(list(rule_packs))
     else:
-        rule_packs_text = repr(rule_packs)
+        rule_packs_text = repr(list(rule_packs))
 
     output += f"rule_packs += \\\n{rule_packs_text}\n"
 
@@ -253,16 +250,15 @@ mkp_rule_packs['{rule_pack['id']}'] = \\
     store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", output)
 
 
-def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
+def install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     """
     Adds rule pack proxy objects to the list of rule packs given a list
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs: list[ECRulePack] = []
-    rule_packs += load_rule_packs()
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
-    ids = [os.path.splitext(fn)[0] for fn in file_names]
+    ids = [fn.stem for fn in file_names]
     for id_ in ids:
         index = rule_pack_ids.get(id_)
         if index is not None and isinstance(rule_packs[index], MkpRulePackProxy):
@@ -279,14 +275,13 @@ def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) ->
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
         raise TypeError(
-            "Expected an instance of %s got %s"
-            % (MkpRulePackProxy.__name__, proxy.__class__.__name__)
+            f"Expected an instance of {MkpRulePackProxy.__name__} got {proxy.__class__.__name__}"
         )
     assert proxy.rule_pack is not None
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
-def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
+def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the rule packs
     packaged in a MKP upon release of that MKP. The following cases have
@@ -297,13 +292,9 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
         2. Upon release of a MKP package with locally modified rule packs the
            modified rule pack updates the exported version.
     """
-    if not file_names:
-        return
-
-    rule_packs: list[ECRulePack] = []
-    rule_packs += load_rule_packs()
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
+    affected_ids = [fn.stem for fn in file_names]
 
     save = False
     for id_ in affected_ids:
@@ -316,3 +307,13 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
 
     if save:
         save_rule_packs(rule_packs)
+
+
+def uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
+    """
+    This function synchronizes the rule packs in rules.mk and the packaged rule packs
+    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
+    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
+    """
+    affected_ids = {fn.stem for fn in file_names}
+    save_rule_packs(rp for rp in load_rule_packs() if rp["id"] not in affected_ids)

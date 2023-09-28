@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, TypedDict
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
 
@@ -23,13 +26,13 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 class MSSQLInstanceData(TypedDict):
     unlimited: bool
-    max_size: Optional[float]
-    allocated_size: Optional[float]
-    used_size: Optional[float]
+    max_size: float | None
+    allocated_size: float | None
+    used_size: float | None
     mountpoint: str
 
 
-SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
+SectionDatafiles = dict[tuple[str | None, str, str], MSSQLInstanceData]
 
 
 def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
@@ -98,15 +101,15 @@ class DatafileUsage:
 
 
 def _format_item_mssql_datafiles(
-    inst: Optional[str],
+    inst: str | None,
     database: str,
-    file_name: Optional[str],
+    file_name: str | None,
 ) -> str:
     if inst is None:
-        return "%s.%s" % (database, file_name)
+        return f"{database}.{file_name}"
     if file_name is None:
-        return "%s.%s" % (inst, database)
-    return "%s.%s.%s" % (inst, database, file_name)
+        return f"{inst}.{database}"
+    return f"{inst}.{database}.{file_name}"
 
 
 def _mssql_datafiles_process_sizes(
@@ -114,9 +117,9 @@ def _mssql_datafiles_process_sizes(
     datafile_usage: DatafileUsage,
 ) -> CheckResult:
     def calculate_levels(
-        levels: Tuple[float, float],
-        reference_value: Optional[float],
-    ) -> Optional[Tuple[float, float]]:
+        levels: tuple[float, float],
+        reference_value: float | None,
+    ) -> tuple[float, float] | None:
         if isinstance(levels[0], float):
             if reference_value:
                 return (
@@ -181,10 +184,9 @@ def _mssql_datafiles_process_sizes(
 
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
-
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
         yield Service(
@@ -197,9 +199,9 @@ def discover_mssql_common(
 
 
 def discover_mssql_datafiles(
-    params: List[Mapping[str, Any]],
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    params: list[Mapping[str, Any]],
+    section_mssql_datafiles: SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:
     if not section_mssql_datafiles:
         return
@@ -207,9 +209,9 @@ def discover_mssql_datafiles(
 
 
 def discover_mssql_transactionlogs(
-    params: List[Mapping[str, Any]],
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    params: list[Mapping[str, Any]],
+    section_mssql_transactionlogs: SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> DiscoveryResult:
     if not section_mssql_transactionlogs:
         return
@@ -231,12 +233,12 @@ def _datafile_usage(
         unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
-
-        max_size = instance["max_size"] or 0
-        filesystem_free_size = available_bytes.get(instance["mountpoint"])
-        if filesystem_free_size is not None and ((max_size > filesystem_free_size) or unlimited):
-            max_size = filesystem_free_size + used_size
-
+        max_size = _effective_max_size(
+            instance["max_size"],
+            available_bytes.get(instance["mountpoint"]),
+            used_size,
+            unlimited,
+        )
         max_size_sum += max_size
 
     return (
@@ -250,11 +252,30 @@ def _datafile_usage(
     )
 
 
+def _effective_max_size(
+    max_size: float | None,
+    free_size: float | None,
+    used_size: float,
+    unlimited: bool,
+) -> float:
+    max_size_float = max_size or 0
+
+    if free_size is None:
+        return max_size_float
+
+    total_size = free_size + used_size
+
+    if unlimited:
+        return total_size
+
+    return min(max_size_float, total_size)
+
+
 def check_mssql_common(
     item: str,
     params: Mapping[str, Any],
     section: SectionDatafiles,
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     instances_for_item = (
         values
@@ -287,8 +308,8 @@ def check_mssql_common(
 def check_mssql_datafiles(
     item: str,
     params: Mapping[str, Any],
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_datafiles: SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     if not section_mssql_datafiles:
         return
@@ -304,8 +325,8 @@ def check_mssql_datafiles(
 def check_mssql_transactionlogs(
     item: str,
     params: Mapping[str, Any],
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+    section_mssql_transactionlogs: SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
     if not section_mssql_transactionlogs:
         return

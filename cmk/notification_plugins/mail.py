@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,6 +27,8 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+from cmk.utils.html import replace_state_markers as format_plugin_output
+from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
 
@@ -171,7 +173,7 @@ tr.even3 { background-color: #ffefaf; }
     background-color: #00aaff; color: #ffffff;
 }
 
-b.stmarkOK {
+b.stmark.state0 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -183,7 +185,7 @@ b.stmarkOK {
     background-color: #0b3; color: #ffffff;
 }
 
-b.stmarkWARNING {
+b.stmark.state1 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -195,7 +197,7 @@ b.stmarkWARNING {
     background-color: #ffff00; color: #000000;
 }
 
-b.stmarkCRITICAL {
+b.stmark.state2 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -207,7 +209,7 @@ b.stmarkCRITICAL {
     background-color: #ff0000; color: #ffffff;
 }
 
-b.stmarkUNKNOWN {
+b.stmark.state3 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -271,8 +273,8 @@ BODY_ELEMENTS = [
         True,
         "all",
         "Host",
-        "$HOSTNAME$ ($HOSTALIAS$)",
-        "$LINKEDHOSTNAME$ ($HOSTALIAS$)",
+        "$HOSTNAME_AND_ALIAS_TXT$",
+        "$HOSTNAME_AND_ALIAS_HTML$",
     ),
     ("servicedesc", "service", True, "all", "Service", "$SERVICEDESC$", "$LINKEDSERVICEDESC$"),
     (
@@ -299,11 +301,11 @@ BODY_ELEMENTS = [
         "both",
         False,
         "all",
-        "Date / Time",
+        "Time",
         "$LONGDATETIME$",
         "$LONGDATETIME$",
     ),
-    ("omdsite", "both", False, "all", "OMD Site", "$OMD_SITE$", "$OMD_SITE$"),
+    ("omdsite", "both", False, "all", "Site", "$OMD_SITE$", "$OMD_SITE$"),
     ("hosttags", "both", False, "all", "Host Tags", "$HOST_TAGS$", "$HOST_TAGS$"),
     (
         "notification_author",
@@ -537,7 +539,7 @@ def multipart_mail(
     for what, name, contents, how in attach:
         part = (
             MIMEImage(contents, name=name)
-            if what == "img"  #
+            if what == "img"
             else MIMEApplication(contents, name=name)
         )
         part.add_header("Content-ID", "<%s>" % name)
@@ -545,11 +547,13 @@ def multipart_mail(
         part.add_header("Content-Disposition", how, filename=name)
         m.attach(part)
 
-    return utils.set_mail_headers(target, subject, from_address, reply_to, m)
+    return set_mail_headers(
+        MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
+    )
 
 
 def send_mail_smtp(  # pylint: disable=too-many-branches
-    message: Message, target: str, from_address: str, context: dict[str, str]
+    message: Message, target: MailString, from_address: MailString, context: dict[str, str]
 ) -> int:
     import smtplib  # pylint: disable=import-outside-toplevel
 
@@ -566,7 +570,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
 
         smarthost = context[host_var]
         try:
-            send_mail_smtp_impl(message, target, smarthost, from_address, context)
+            send_mail_smtp_impl(message, target, MailString(smarthost), from_address, context)
             success = True
         except socket.timeout as e:
             sys.stderr.write(f'timeout connecting to "{smarthost}": {str(e)}\n')
@@ -588,24 +592,20 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write(
-                'protocol error from "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'protocol error from "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPSenderRefused as e:
             sys.stderr.write(
-                'server didn\'t accept from-address "%s" refused: %s\n'
-                % (from_address, _ensure_str_error_message(e.smtp_error))
+                f'server didn\'t accept from-address "{from_address}" refused: {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPAuthenticationError as e:
             sys.stderr.write(
-                'authentication failed on "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'authentication failed on "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPDataError as e:
             retry_possible = True  # unexpected error - give retry a chance
             sys.stderr.write(
-                'unexpected error code from "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'unexpected error code from "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPException as e:
             retry_possible = True  # who knows what went wrong, a retry might just work
@@ -623,7 +623,11 @@ def _ensure_str_error_message(message: bytes | str) -> str:
 
 
 def send_mail_smtp_impl(
-    message: Message, target: str, smarthost: str, from_address: str, context: dict[str, str]
+    message: Message,
+    target: MailString,
+    smarthost: MailString,
+    from_address: MailString,
+    context: dict[str, str],
 ) -> None:
     import smtplib  # pylint: disable=import-outside-toplevel
     import types  # pylint: disable=import-outside-toplevel
@@ -639,7 +643,7 @@ def send_mail_smtp_impl(
 
     conn = (
         smtplib.SMTP_SSL(smarthost, port)
-        if encryption == "ssl_tls"  #
+        if encryption == "ssl_tls"
         else smtplib.SMTP(smarthost, port)
     )
 
@@ -648,7 +652,7 @@ def send_mail_smtp_impl(
     # in case of success. But we want it!
     conn.last_code = 0  # type: ignore[attr-defined]
     conn.last_repl = ""  # type: ignore[attr-defined]
-    conn.getreply = types.MethodType(getreply_wrapper, conn)  # type: ignore[assignment]
+    conn.getreply = types.MethodType(getreply_wrapper, conn)  # type: ignore[method-assign]
 
     if encryption == "starttls":
         conn.starttls()
@@ -673,8 +677,10 @@ def send_mail_smtp_impl(
 # TODO: Use EmailContent parameter.
 def send_mail(message: Message, target: str, from_address: str, context: dict[str, str]) -> int:
     if "PARAMETER_SMTP_PORT" in context:
-        return send_mail_smtp(message, target, from_address, context)
-    return utils.send_mail_sendmail(message, target, from_address)
+        return send_mail_smtp(message, MailString(target), MailString(from_address), context)
+    send_mail_sendmail(message, MailString(target), MailString(from_address))
+    sys.stdout.write("Spooled mail to local mail transmission agent\n")
+    return 0
 
 
 def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
@@ -765,7 +771,7 @@ def construct_content(
     if "PARAMETER_ELEMENTSS" in context:
         elements = context["PARAMETER_ELEMENTSS"].split()
     else:
-        elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
+        elements = ["graph", "abstime", "address", "longoutput"]
 
     if is_bulk and "graph" in elements:
         notifications_with_graphs = context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"]
@@ -817,6 +823,13 @@ def extend_context(context: dict[str, str]) -> None:
         context.get("SERVICEDESC", ""),
     )
 
+    if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
+        context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
+        context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$ ($HOSTALIAS$)"
+    else:
+        context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$"
+        context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$"
+
     event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
 
     context["EVENT_TXT"] = utils.substitute_context(
@@ -827,14 +840,14 @@ def extend_context(context: dict[str, str]) -> None:
     )
 
     if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+        context["HOSTOUTPUT_HTML"] = format_plugin_output(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+        context["SERVICEOUTPUT_HTML"] = format_plugin_output(context["SERVICEOUTPUT"])
 
         long_serviceoutput = (
             context["LONGSERVICEOUTPUT"].replace("\\n", "<br>").replace("\n", "<br>")
         )
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
+        context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(long_serviceoutput)
 
     # Compute the subject of the mail
     if context["WHAT"] == "HOST":
@@ -913,11 +926,7 @@ def body_templates(
 
         if (whence in ("both", what)) and (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
-            tmpl_html += '<tr class="{}0"><td class=left>{}</td><td>{}</td></tr>'.format(
-                even,
-                title,
-                html,
-            )
+            tmpl_html += f'<tr class="{even}0"><td class=left>{title}</td><td>{html}</td></tr>'
             even = "odd" if even == "even" else "even"
 
     return "".join(tmpl_txt), "".join(tmpl_html)
@@ -982,7 +991,7 @@ class BulkEmailContent(EmailContent):
             from_address=utils.format_address(
                 escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
                 # TODO: Correct context parameter???
-                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
             ),
             reply_to=utils.format_address(
                 escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
@@ -1010,7 +1019,7 @@ class SingleEmailContent(EmailContent):
             subject=escaped_context["SUBJECT"],
             from_address=utils.format_address(
                 escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
-                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
             ),
             reply_to=utils.format_address(
                 escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
+
+from cmk.utils.notify_types import EventContext
 
 import cmk.base.events
 from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
     _update_raw_context_with_labels,
     add_to_event_context,
-    EventContext,
     raw_context_from_string,
 )
 

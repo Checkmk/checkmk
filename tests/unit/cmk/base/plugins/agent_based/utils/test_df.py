@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -310,7 +310,7 @@ def test_df_check_filesystem_single(
             ["fake1", "fake2"],
         ),
         (
-            {  # pylint:disable= duplicate-key
+            {  # pylint: disable= duplicate-key
                 "fake_same_name": {  # noqa: F601
                     "size_mb": None,
                     "avail_mb": None,
@@ -329,8 +329,11 @@ def test_df_check_filesystem_single(
     ],
     ids=["unique", "duplicates"],
 )
-def test_mountpoints_in_group(  # type:ignore[no-untyped-def]
-    mplist, patterns_include, patterns_exclude, expected
+def test_mountpoints_in_group(
+    mplist: Iterable[str],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+    expected: Sequence[str],
 ) -> None:
     """Returns list of mountpoints without duplicates."""
 
@@ -622,8 +625,26 @@ def test_get_filesystem_levels(
             ),
             id=(
                 "Minimum levels (aka 'levels low') do not make sense when levels are specified as free space. They are "
-                "assumed to be relating to used space. TODO: fix this behaviour..."
+                "assumed to be relating to used space. This behaviour only happens when the magic factor is not equal to 1.0."
+                "TODO: fix this behaviour..."
             ),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (-40.0, -30.0),
+                "magic": 1.0,
+                "levels_low": (10.0, 20.0),
+                "magic_normsize": 100.0,
+            },
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(-40.0),
+                crit_percent=df.Percent(-30.0),
+                warn_absolute=df.Bytes(-40 * 1024**3),
+                crit_absolute=df.Bytes(-30 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
+            id=("When the magic factor is equal to 1.0, the levels are interpreted correctly."),
         ),
     ],
 )

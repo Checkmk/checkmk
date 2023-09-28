@@ -1,12 +1,11 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#include "cfg.h"
-
-#include <WinSock2.h>
+#include "wnx/cfg.h"
 
 #include <ShlObj.h>  // known path
 #include <VersionHelpers.h>
+#include <WinSock2.h>
 #include <direct.h>  // known path
 
 #include <atomic>
@@ -14,21 +13,21 @@
 #include <ranges>
 #include <string>
 
-#include "cap.h"
-#include "cfg_details.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/object_repo.h"
 #include "common/version.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
-#include "logger.h"
-#include "read_file.h"
 #include "tools/_misc.h"     // setenv
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_tgt.h"      // we need IsDebug
-#include "upgrade.h"
-#include "windows_service_api.h"
+#include "wnx/cap.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
+#include "wnx/read_file.h"
+#include "wnx/upgrade.h"
+#include "wnx/windows_service_api.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::string_literals;
@@ -73,7 +72,7 @@ InstallationType DetermineInstallationType() {
 
 std::wstring WinPerf::buildCmdLine() const {
     std::unique_lock lk(lock_);
-    auto counters = counters_;
+    const auto counters = counters_;
     lk.unlock();
 
     std::wstring cmd_line;
@@ -86,16 +85,16 @@ std::wstring WinPerf::buildCmdLine() const {
         std::string name_to_check{vars::kWinPerfPrefixDefault};
         name_to_check += '_';
         name_to_check += counter.name();
-        if (groups::global.isSectionDisabled(name_to_check)) {
+        if (groups::g_global.isSectionDisabled(name_to_check)) {
             continue;
         }
 
         // adding to command line
-        auto name = wtools::ConvertToUTF16(counter.id());
+        auto name = wtools::ConvertToUtf16(counter.id());
         rs::replace(name, L' ', L'*');
         cmd_line += name;
         cmd_line += L":";
-        cmd_line += wtools::ConvertToUTF16(counter.name());
+        cmd_line += wtools::ConvertToUtf16(counter.name());
         cmd_line += L" ";
     }
     if (!cmd_line.empty() && cmd_line.back() == L' ') {
@@ -130,7 +129,7 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
                          const std::string &name) {
     try {
         // check for source. if empty, leave
-        auto source = source_group[name];
+        const auto source = source_group[name];
         if (!source.IsDefined() || !source.IsSequence()) {
             return true;
         }
@@ -144,7 +143,7 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
         }
 
         // merging
-        auto source_array = GetArray<std::string>(source);
+        const auto source_array = GetArray<std::string>(source);
 
         for (const auto &source_entry : source_array) {
             if (std::ranges::find(target_array, source_entry) ==
@@ -213,8 +212,8 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
                 continue;
             }
 
-            if (std::ranges::none_of(target_array, [&](const YAML::Node &Node) {
-                    return source_key == GetVal(Node, key, std::string());
+            if (std::ranges::none_of(target_array, [&](const YAML::Node &node) {
+                    return source_key == GetVal(node, key, std::string());
                 })) {
                 target.push_back(source_entry);
             }
@@ -260,11 +259,10 @@ fs::path ConvertLocationToLogPath(std::string_view location) {
 }  // namespace details
 
 namespace groups {
-Global global;       // NOLINT
-WinPerf winperf;     // NOLINT
-Plugins plugins;     // NOLINT
-Plugins localGroup;  // NOLINT
-
+Global g_global;
+WinPerf g_winperf;
+Plugins g_plugins;
+Plugins g_local_group;
 }  // namespace groups
 
 // API
@@ -434,8 +432,8 @@ std::wstring StoreFileToCache(const fs::path &file_name) {
 namespace cma::cfg::details {
 
 void LoadGlobal() {
-    groups::global.loadFromMainConfig();
-    groups::global.setupLogEnvironment();
+    groups::g_global.loadFromMainConfig();
+    groups::g_global.setupLogEnvironment();
 }
 
 // test and reset function
@@ -806,7 +804,7 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
                                         Protection protection) {
     if (data_folder.empty()) {
         using tools::win::GetSomeSystemFolder;
-        auto draw_folder = [](std::wstring_view DataFolder) -> auto{
+        auto draw_folder = [](std::wstring_view DataFolder) -> auto {
             fs::path app_data = DataFolder;
             app_data /= kAppDataCompanyName;
             app_data /= kAppDataAppName;
@@ -824,7 +822,8 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
 
             security::ProtectAll(
                 fs::path(app_data_folder) / kAppDataCompanyName, commands);
-            wtools::ExecuteCommandsAsync(L"all", commands);
+            wtools::ExecuteCommands(L"all", commands,
+                                    wtools::ExecuteMode::async);
         }
 
         if (ret == 0) {
@@ -903,15 +902,15 @@ std::vector<std::wstring> DefaultConfigArray() {
 
 // API load all sections we can have in yaml
 void ProcessKnownConfigGroups() {
-    groups::global.loadFromMainConfig();
-    groups::winperf.loadFromMainConfig();
-    groups::plugins.loadFromMainConfig(groups::kPlugins);
-    groups::localGroup.loadFromMainConfig(groups::kLocal);
+    groups::g_global.loadFromMainConfig();
+    groups::g_winperf.loadFromMainConfig();
+    groups::g_plugins.loadFromMainConfig(groups::kPlugins);
+    groups::g_local_group.loadFromMainConfig(groups::kLocal);
 }
 
 // API take loaded config and use it!
 void SetupEnvironmentFromGroups() {
-    groups::global.setupLogEnvironment();  // at the moment only global
+    groups::g_global.setupLogEnvironment();  // at the moment only global
 }
 
 // Find any file, usually executable on one of the our paths
@@ -948,7 +947,7 @@ namespace cma::cfg {
 
 std::string GetCurrentLogFileName() {
     if (ConfigLoaded()) {
-        return groups::global.fullLogFileNameAsString();
+        return groups::g_global.fullLogFileNameAsString();
     }
 
     static bool s_first_start = true;
@@ -964,7 +963,7 @@ std::string GetCurrentLogFileName() {
 
 int GetCurrentDebugLevel() {
     if (ConfigLoaded()) {
-        return groups::global.debugLogLevel();
+        return groups::g_global.debugLogLevel();
     }
     return static_cast<int>(kDefaultLogLevel);
 }
@@ -975,14 +974,14 @@ XLOG::EventLevel GetCurrentEventLevel() noexcept {
 
 bool GetCurrentWinDbg() {
     if (ConfigLoaded()) {
-        return groups::global.windbgLog();
+        return groups::g_global.windbgLog();
     }
     return true;
 }
 
 bool GetCurrentEventLog() {
     if (ConfigLoaded()) {
-        return groups::global.eventLog();
+        return groups::g_global.eventLog();
     }
     return true;
 }
@@ -1031,11 +1030,11 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name) {
     return LoadAndCheckYamlFile(file_name, FallbackPolicy::kNone);
 }
 
-std::vector<std::string> StringToTable(const std::string &WholeValue) {
-    auto table = tools::SplitString(WholeValue, " ");
+std::vector<std::string> StringToTable(const std::string &value) {
+    auto table = tools::SplitString(value, " ");
 
-    for (auto &value : table) {
-        tools::AllTrim(value);
+    for (auto &v : table) {
+        tools::AllTrim(v);
     }
 
     return table;
@@ -1196,8 +1195,8 @@ void ProcessPluginEnvironment(
             //
         }};
 
-    for (const auto &d : env_pairs) {
-        func(d.first, wtools::ToUtf8(d.second()));
+    for (const auto &[name, val] : env_pairs) {
+        func(name, wtools::ToUtf8(val()));
     }
 }
 
@@ -1255,8 +1254,8 @@ void ConfigInfo::initFolders(
     // This is not very good idea, but we want
     // to start logging as early as possible
     XLOG::setup::ChangeDebugLogLevel(static_cast<int>(LogLevel::kLogDebug));
-    groups::global.setLogFolder(folders_.getData() / dirs::kLog);
-    groups::global.setupLogEnvironment();
+    groups::g_global.setLogFolder(folders_.getData() / dirs::kLog);
+    groups::g_global.setupLogEnvironment();
 
     initEnvironment();
 
@@ -1268,7 +1267,7 @@ void ConfigInfo::initFolders(
         std::vector<std::wstring> commands;
         wtools::ProtectFileFromUserWrite(exe_path, commands);
         wtools::ProtectPathFromUserAccess(root, commands);
-        wtools::ExecuteCommandsAsync(L"data", commands);
+        wtools::ExecuteCommands(L"data", commands, wtools::ExecuteMode::async);
     }
 
     if (folders_.getData().empty()) {
@@ -1480,7 +1479,7 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
     }
 }
 
-static void loadMap(std::string_view name, YAML::Node target_value,
+static void LoadMap(std::string_view name, YAML::Node target_value,
                     const YAML::Node &source_value) {
     // MAP
     if (!IsYamlMap(source_value)) {
@@ -1520,7 +1519,7 @@ bool ConfigInfo::smartMerge(YAML::Node &target, const YAML::Node &source,
         // 3. OTHER: valid is DEFINED
 
         if (IsYamlMap(target_value)) {
-            loadMap(name, target_value, source_value);
+            LoadMap(name, target_value, source_value);
         } else if (IsYamlSeq(target_value)) {
             // SEQ
             CombineSequence(name, target_value, source_value, combine);
@@ -1555,30 +1554,35 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     return yamls;
 }
 
-// declares what should be merged
-static void PreMergeSections(YAML::Node target, YAML::Node source) {
-    // plugins:
-    {
-        auto tgt_plugin = target[groups::kPlugins];
-        const auto src_plugin = source[groups::kPlugins];
+namespace {
 
-        MergeStringSequence(tgt_plugin, src_plugin, vars::kPluginsFolders);
-        MergeMapSequence(tgt_plugin, src_plugin, vars::kPluginsExecution,
-                         vars::kPluginPattern);
-    }
+void PreMergeSection(YAML::Node target, YAML::Node source,
+                     std::string_view section) {
+    const auto tgt = target[section];
+    const auto src = source[section];
 
-    // local:
-    {
-        auto tgt_local = target[groups::kLocal];
-        const auto src_local = source[groups::kLocal];
-
-        MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
-        MergeMapSequence(tgt_local, src_local, vars::kPluginsExecution,
-                         vars::kPluginPattern);
-    }
+    MergeStringSequence(tgt, src, vars::kPluginsFolders);
+    MergeMapSequence(tgt, src, vars::kPluginsExecution, vars::kPluginPattern);
 }
 
-static bool Is64BitWindows() {
+// declares what should be merged
+void PreMergeSectionPlugins(YAML::Node target, YAML::Node source) {
+    return PreMergeSection(target, source, groups::kPlugins);
+}
+
+void PreMergeSectionLocal(YAML::Node target, YAML::Node source) {
+    return PreMergeSection(target, source, groups::kLocal);
+}
+
+void PreMergeSectionExtensions(YAML::Node target, YAML::Node source) {
+    const auto tgt = target[groups::kExtensions];
+    const auto src = source[groups::kExtensions];
+
+    MergeMapSequence(tgt, src, std::string{vars::kExtensionsExecution},
+                     std::string{vars::kExecutionName});
+}
+
+bool Is64BitWindows() {
 #if defined(_WIN64)
     return true;  // 64-bit programs run only on Win64
 #elif defined(_WIN32)
@@ -1590,6 +1594,7 @@ static bool Is64BitWindows() {
     return false;  // Win64 does not support Win16
 #endif
 }
+}  // namespace
 
 // Scott Meyer method to have a safe singleton
 // static variables with block scope created only once
@@ -1663,12 +1668,14 @@ bool TryMerge(YAML::Node &config_node, const ConfigInfo::YamlData &yaml_data) {
         return false;
     }
 
-    auto bakery = YAML::LoadFile(wtools::ToUtf8(yaml_data.path_.wstring()));
-    // special cases for plugins and folder
-    PreMergeSections(bakery, config_node);
+    auto config = YAML::LoadFile(wtools::ToUtf8(yaml_data.path_.wstring()));
+
+    PreMergeSectionPlugins(config, config_node);
+    PreMergeSectionLocal(config, config_node);
+    PreMergeSectionExtensions(config, config_node);
 
     // normal cases
-    ConfigInfo::smartMerge(config_node, bakery, Combine::overwrite);
+    ConfigInfo::smartMerge(config_node, config, Combine::overwrite);
     return true;
 }
 }  // namespace
@@ -1730,7 +1737,7 @@ void ConfigInfo::mergeYamlData(YAML::Node &config_node,
     user_yaml_path_ = user_data.path_;
 
     aggregated_ = true;
-    ++g_uniq_id;
+    ++uniq_id_;
     ok_ = true;
 }
 
@@ -1745,7 +1752,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
         XLOG::l(XLOG_FLINE + " empty name");
         return LoadCfgStatus::kAllFailed;
     }
-    auto yamls = buildYamlData(config_filename);
+    const auto yamls = buildYamlData(config_filename);
 
     // check root
     auto &root = yamls[0];
@@ -1754,48 +1761,31 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
         return LoadCfgStatus::kAllFailed;
     }
 
-    bool changed = false;
-    for (auto &yd : yamls) {
-        if (yd.changed()) {
-            changed = true;
-            break;
-        }
-    }
-
-    if (!changed) {
+    if (rs::all_of(yamls, [](const auto &v) { return !v.changed(); })) {
         return LoadCfgStatus::kFileLoaded;
     }
 
-    int error_code = 0;
     try {
         auto config = YAML::LoadFile(wtools::ToUtf8(yamls[0].path_.wstring()));
-
         if (config[groups::kGlobal].IsDefined()) {
             mergeYamlData(config, yamls);
 
             if (ok_ && user_ok_ && cache_op == YamlCacheOp::update) {
                 StoreUserYamlToCache();
             }
-            return LoadCfgStatus::kFileLoaded;
         }
-        error_code = ErrorCode::kNotCheckMK;
-
+        ok_ = true;
+        return LoadCfgStatus::kFileLoaded;
     } catch (const YAML::ParserException &e) {
         XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-        error_code = ErrorCode::kMalformed;
     } catch (const YAML::BadFile &e) {
         XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-        error_code = ErrorCode::kMissing;
     } catch (...) {
         XLOG::l.crit("Strange exception");
-        error_code = ErrorCode::kWeird;
     }
 
-    if (error_code != 0) {
-        ok_ = false;
-        return LoadCfgStatus::kAllFailed;
-    }
-    return LoadCfgStatus::kFileLoaded;
+    ok_ = false;
+    return LoadCfgStatus::kAllFailed;
 }
 
 // LOOOONG operation
@@ -1837,7 +1827,7 @@ bool ConfigInfo::loadDirect(const fs::path &file) {
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;
-    ++g_uniq_id;
+    ++uniq_id_;
     return true;
 }
 
@@ -1850,7 +1840,7 @@ bool ConfigInfo::loadDirect(std::string_view text) {
     std::lock_guard lk(lock_);
     yaml_ = new_yaml;
 
-    ++g_uniq_id;
+    ++uniq_id_;
     return true;
 }
 
@@ -2006,7 +1996,7 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
 // wmic product get name,version /format:csv
 //      to get name and version
 // Run
-// wmic product where name="Check MK Agent 2.0" call uninstall /nointeractive
+// wmic product where name="Checkmk Agent 2.3" call uninstall /nointeractive
 //      to remove the product
 // Oprations ARE VERY LONG
 constexpr std::string_view g_wmic_uninstall_command =
@@ -2037,22 +2027,25 @@ fs::path CreateWmicUninstallFile(const fs::path &temp_dir,
 }
 
 bool UninstallProduct(std::string_view name) {
-    fs::path temp{GetTempDir()};
-    auto fname = CreateWmicUninstallFile(temp, name);
+    const fs::path temp{GetTempDir()};
+    const auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;
     }
     XLOG::l.i("Starting uninstallation command '{}'", fname);
-    auto pid = tools::RunStdCommand(fname.wstring(), true);
-    if (pid == 0) {
-        XLOG::l("Failed to start '{}'", fname);
-        return false;
+
+    if (const auto pid =
+            tools::RunStdCommand(fname.wstring(), tools::WaitForEnd::yes);
+        pid.has_value()) {
+        XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname,
+                  *pid);
+        return true;
     }
-    XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname, pid);
-    return true;
+    XLOG::l("Failed to start '{}'", fname);
+    return false;
 }
 
 details::ConfigInfo &GetCfg() noexcept { return details::g_config_info; }
-std::atomic<uint64_t> details::ConfigInfo::g_uniq_id = 1;
+std::atomic<uint64_t> details::ConfigInfo::uniq_id_ = 1;
 
 }  // namespace cma::cfg

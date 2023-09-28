@@ -86,7 +86,7 @@ interactions:
         name=\"_password\" id=\"input_pass\" type=\"password\" class=\"text\" value=''
         /><div id=\"button_text\"><input id=\"_login\" name=\"_login\" value=\"Login\"
         type=\"submit\" class=\"button\" /></div></div><div id=\"foot\">Version: 2019.10.01
-        - &copy; <a href=\"https://checkmk.com\" target=\"_blank\">tribe29 GmbH</a></div></form></div><script
+        - &copy; <a href=\"https://checkmk.com\" target=\"_blank\">Checkmk GmbH</a></div></form></div><script
         type=\"text/javascript\">\n<!--\nvar focus_obj = document.login._username;\nif
         (focus_obj) {\n    focus_obj.focus();\n    if (focus_obj.select)\n        focus_obj.select();\n}\n//
         -->\n\n</script>\n<script type=\"text/javascript\">\ncmk.visibility_detection.initialize();\n</script>\n</body></html>"}

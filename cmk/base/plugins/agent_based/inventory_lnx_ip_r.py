@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@
 # default via 10.10.0.1 dev wlan0  proto static
 # 10.10.0.0/16 dev wlan0  proto kernel  scope link  src 10.10.0.41  metric 9
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -54,10 +54,9 @@ register.agent_section(
 
 
 def inventory_lnx_ip_r(section: Section) -> InventoryResult:
-    path = ["networking", "routes"]
     for route in sorted(section, key=lambda r: r["target"]):
         yield TableRow(
-            path=path,
+            path=["networking", "routes"],
             key_columns={
                 "target": route["target"],
                 "gateway": route.get("gateway"),

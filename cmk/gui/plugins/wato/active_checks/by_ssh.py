@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    Integer,
+    NetworkPort,
+    TextInput,
+    Tuple,
+)
 
 
 def _valuespec_active_checks_by_ssh():
@@ -47,7 +57,7 @@ def _valuespec_active_checks_by_ssh():
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("SSH Port"),
                             help=_("Default is 22."),
                             minvalue=1,
@@ -112,7 +122,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupIntegrateOtherServices,
         match_type="all",
-        name="active_checks:by_ssh",
+        name=RuleGroup.ActiveChecks("by_ssh"),
         valuespec=_valuespec_active_checks_by_ssh,
     )
 )

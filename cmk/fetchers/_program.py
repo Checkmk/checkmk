@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,8 +12,8 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, Final
 
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -89,7 +89,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
+            self._process = subprocess.Popen(  # nosec # pylint: disable=consider-using-with
                 self.cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,

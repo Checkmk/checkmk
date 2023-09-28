@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -12,7 +12,7 @@ from .utils.fortinet import DETECT_FORTIAUTHENTICATOR
 Section = Mapping[str, str]
 
 
-def parse_fortiauthenticator_system(string_table: StringTable) -> Optional[Section]:
+def parse_fortiauthenticator_system(string_table: StringTable) -> Section | None:
     """
     >>> parse_fortiauthenticator_system([['FACVM', 'FAC-VMTM18000123']])
     {'model': 'FACVM', 'serial': 'FAC-VMTM18000123'}

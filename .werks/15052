@@ -1,0 +1,13 @@
+Title: bluenet2_powerrail: Added support for monitoring fuses, inlets and output sockets
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1673952662
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Extended the monitoring support of the bluenet2_powerrail check.
+Added support for monitoring fuses, inlets and output sockets
+

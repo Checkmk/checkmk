@@ -1,0 +1,13 @@
+Title: Fixed removal of persistent acknowledgements
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1679060071
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Due to a regression introduced in 2.1.0, it was not possible anymore to
+remove the comment part of persistent acknowledgements via the GUI.  This
+has been fixed.

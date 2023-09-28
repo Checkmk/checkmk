@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.kaspersky_av_updates import (
     check_kaspersky_av_updates,
     parse_kaspersky_av_updates,
+    Section,
 )
 
 
 @pytest.mark.parametrize(
     "string_table,expected_section",
     [
-        ([["single_field", "value"]], dict(single_field="value")),
-        ([["joined_field", "1970-01-01 00", "00", "00"]], dict(joined_field="1970-01-01 00:00:00")),
-        ([["stripped_field", "  stripped   "]], dict(stripped_field="stripped")),
+        ([["single_field", "value"]], {"single_field": "value"}),
+        ([["joined_field", "1970-01-01 00", "00", "00"]], {"joined_field": "1970-01-01 00:00:00"}),
+        ([["stripped_field", "  stripped   "]], {"stripped_field": "stripped"}),
     ],
 )
-def test_parse_kaspersky_av_updates(  # type:ignore[no-untyped-def]
-    string_table, expected_section
-) -> None:
+def test_parse_kaspersky_av_updates(string_table: StringTable, expected_section: Section) -> None:
     assert parse_kaspersky_av_updates(string_table) == expected_section
 
 
@@ -55,5 +55,5 @@ def test_parse_kaspersky_av_updates(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_kaskpersky_av_updates(section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check_kaskpersky_av_updates(section: Section, results: CheckResult) -> None:
     assert list(check_kaspersky_av_updates(section)) == results

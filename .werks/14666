@@ -6,7 +6,7 @@ Date: 1659699017
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For graphs of "ps" containing information about "Size per processes" the visual ordering of the graphs is fixed.
 Before "Resident size" and "Virtual Size" were stacked on top of each other, which was wrong.

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from __future__ import annotations
+
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from getpass import getpass
 from pathlib import Path
-from typing import Callable
 
 import cmk.utils.crypto.password_hashing as password_hashing
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.paths import htpasswd_file
 from cmk.utils.store.htpasswd import Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 HTPASSWD_FILE = Path(htpasswd_file)
 
@@ -70,7 +71,7 @@ For other tasks, such as deleting or deactivating users, use the web interface.
     return parser.parse_args(args)
 
 
-def _ask_password() -> Password[str]:
+def _ask_password() -> Password:
     """Prompt the user to enter the password and re-type it for verification"""
     pw = Password(getpass("New password: "))
     if pw.raw != getpass("Re-type new password: "):
@@ -78,13 +79,13 @@ def _ask_password() -> Password[str]:
     return pw
 
 
-def _read_password() -> Password[str]:
+def _read_password() -> Password:
     """Read password from stdin without prompt and confirmation"""
     return Password(input())
 
 
 def _run_cmkpasswd(
-    username: str, get_password: Callable[[], Password[str]], dst_file: Path | None
+    username: str, get_password: Callable[[], Password], dst_file: Path | None
 ) -> None:
     try:
         user_id = UserId(username)

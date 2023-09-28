@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import livestatus
 
@@ -181,7 +181,6 @@ def test_create_socket(
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
@@ -208,7 +207,9 @@ def test_create_socket(
 
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
-    assert len(sock.context.get_ca_certs()) == 1
+    # TODO: The assertion below is nonsense, it depends e.g. on the certificates in /etc/ssl/certs.
+    # What was the intention for the assertion, i.e. what exactly should be checked? No idea...
+    # assert len(sock.context.get_ca_certs()) == 1
     assert live.tls_ca_file_path == str(ca_file_path)
 
 

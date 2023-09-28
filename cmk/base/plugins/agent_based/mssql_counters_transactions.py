@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -48,7 +49,7 @@ def _check_common(
 
         rate = get_rate_or_none(
             value_store,
-            "mssql_counters.transactions.%s.%s.%s" % (node_name, item, counter_key),
+            f"mssql_counters.transactions.{node_name}.{item}.{counter_key}",
             now,
             counters[counter_key],
         )
@@ -60,7 +61,9 @@ def _check_common(
         yield from check_levels(
             rate,
             levels_upper=params.get(counter_key),
-            render_func=lambda v, n=node_name, t=title: "%s%s: %.1f/s" % (n and "[%s] " % n, t, v),
+            render_func=lambda v, n=node_name, t=title: "{}{}: {:.1f}/s".format(
+                n and "[%s] " % n, t, v
+            ),
             metric_name=counter_key.replace("/sec", "_per_second"),
             boundaries=(0, None),
         )

@@ -1,24 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from pytest import MonkeyPatch
+from cmk.utils.crash_reporting import CrashReportStore
+from cmk.utils.hostaddress import HostName
 
-from tests.testlib.base import Scenario
-
-import cmk.utils.crash_reporting
-from cmk.utils.type_defs import HostName
-
-import cmk.base.crash_reporting as crash_reporting
-
-
-def test_base_crash_report_registry() -> None:
-    assert (
-        cmk.utils.crash_reporting.crash_report_registry["base"]
-        == crash_reporting.CMKBaseCrashReport
-    )
+from cmk.base.errorhandling import CheckCrashReport
 
 
 def _check_generic_crash_info(crash):
@@ -43,44 +32,13 @@ def _check_generic_crash_info(crash):
         )
 
 
-def test_base_crash_report_from_exception() -> None:
-    crash = None
-    try:
-        raise ValueError("DING")
-    except Exception:
-        crash = crash_reporting.CMKBaseCrashReport.from_exception()
-
-    _check_generic_crash_info(crash)
-    assert crash.type() == "base"
-    assert isinstance(crash.crash_info["details"]["argv"], list)
-    assert isinstance(crash.crash_info["details"]["env"], dict)
-
-    assert crash.crash_info["exc_type"] == "ValueError"
-    assert crash.crash_info["exc_value"] == "DING"
-
-
-def test_base_crash_report_save() -> None:
-    store = crash_reporting.CrashReportStore()
-    try:
-        raise ValueError("DINGELING")
-    except Exception:
-        crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        store.save(crash)
-
-    crash2 = store.load_from_directory(crash.crash_dir())
-
-    assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
-    assert crash.crash_info["time"] == crash2.crash_info["time"]
-
-
-def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
+def test_check_crash_report_from_exception() -> None:
     hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
     crash = None
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception(
+        crash = CheckCrashReport.from_exception(
             details={
                 "check_output": "Output",
                 "host": hostname,
@@ -99,14 +57,13 @@ def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     assert crash.crash_info["exc_value"] == "DING"
 
 
-def test_check_crash_report_save(monkeypatch: MonkeyPatch) -> None:
+def test_check_crash_report_save() -> None:
     hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
-    store = crash_reporting.CrashReportStore()
+    store = CrashReportStore()
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception(
+        crash = CheckCrashReport.from_exception(
             details={
                 "check_output": "Output",
                 "host": hostname,

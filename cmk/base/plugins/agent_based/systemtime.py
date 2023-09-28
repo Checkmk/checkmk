@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import register, type_defs
 
+Section = Mapping[str, float]
 
-def parse_systemtime(string_table: type_defs.StringTable) -> Dict[str, float]:
+
+def parse_systemtime(string_table: type_defs.StringTable) -> Section:
     """
     >>> parse_systemtime([['12345']])
     {'foreign_systemtime': 12345.0}

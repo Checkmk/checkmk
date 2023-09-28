@@ -1,0 +1,15 @@
+Title: hp_proliant_da_phydrv: Fix inventory of physical disks
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1685456769
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The physical disks were not inventorized properly because the drive index was
+not taken into account. This led to missing disks in the inventory resp. disks
+with same the controller index were overwritten.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,7 +23,6 @@ pytestmark = pytest.mark.checks
                 "project": "test",
                 "credentials": "definitely some json",
                 "services": ["gcs", "run"],
-                "health": False,
             },
             [
                 "--project",
@@ -46,7 +45,6 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": [],
-                "health": False,
             },
             [
                 "--project",
@@ -68,7 +66,6 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": ["gcs"],
-                "health": True,
             },
             [
                 "--project",
@@ -79,7 +76,6 @@ pytestmark = pytest.mark.checks
                 "2022-01-12",
                 "--cost_table",
                 "checkmk",
-                "--monitor_health",
                 "--services",
                 "gcs",
                 "--piggy-back-prefix",
@@ -92,7 +88,6 @@ pytestmark = pytest.mark.checks
                 "project": "test",
                 "credentials": "definitely some json",
                 "services": [],
-                "health": False,
                 "piggyback": {"prefix": "custom-prefix", "piggyback_services": ["gce"]},
             },
             [

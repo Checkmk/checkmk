@@ -1,0 +1,31 @@
+@startuml
+component "Kubernetes Environment" as cmc {
+    component "Master Node" {
+        component "Kubernetes API" as kube_api
+    }
+    component "Worker Node 1" {
+        component "Cluster Collector" as cluster_collector
+        component "Node Collector" as node_collector_one {
+            component "Container Metrics"
+            component "Machine Sections"
+        }
+    }
+    component "Worker Node 2" {
+        component "Node Collector" as node_collector_two {
+            component "Node Collector - Container Metrics"
+            component "Node Collector - Machine Sections"
+        }
+    }
+}
+
+component "Checkmk" {
+    component "Kubernetes Special Agent" as agent_kube
+}
+
+
+node_collector_one --> cluster_collector : sends
+node_collector_two --> cluster_collector : sends
+
+agent_kube --* kube_api : queries
+agent_kube --* cluster_collector : queries
+@enduml

@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Tuple, TypedDict, Union
+from typing import Any, Literal
 
-from ..agent_based_api.v1 import check_levels, check_levels_predictive, Metric, Result, State
+from typing_extensions import TypedDict
+
+from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 from .cpu import ProcessorType, Section
 
 
-class CPULoadParams(TypedDict, total=False):
-    levels: Union[None, Tuple[float, float], Dict[str, Any]]
+class CPULoadParams(TypedDict):
+    levels1: None | tuple[float, float] | dict[str, Any]
+    levels5: None | tuple[float, float] | dict[str, Any]
+    levels15: None | tuple[float, float] | dict[str, Any]
 
 
 def _processor_type_info(proc_type: ProcessorType) -> str:
@@ -25,47 +29,75 @@ def _processor_type_info(proc_type: ProcessorType) -> str:
 
 
 def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
-    levels = params.get("levels")
-    num_cpus = section.num_cpus
-    label = "15 min load"
+    proc_info = _processor_type_info(section.type)
+    yield from _check_cpu_load_type(
+        params["levels15"],
+        section.load.load15,
+        "15",
+        section.num_cpus,
+        proc_info,
+        notice_only=False,
+    )
+
+    yield from _check_cpu_load_type(
+        params["levels1"],
+        section.load.load1,
+        "1",
+        section.num_cpus,
+        proc_info,
+        notice_only=True,
+    )
+
+    yield from _check_cpu_load_type(
+        params["levels5"],
+        section.load.load5,
+        "5",
+        section.num_cpus,
+        proc_info,
+        notice_only=True,
+    )
+
+
+def _check_cpu_load_type(
+    levels: dict[str, Any] | tuple[float, float] | None,
+    value: float,
+    avg: Literal["1", "5", "15"],
+    num_cpus: int,
+    proc_name: str,
+    *,
+    notice_only: bool,
+) -> CheckResult:
+    label = f"{avg} min load"
 
     if isinstance(levels, dict):
         # predictive levels
-        yield from check_levels_predictive(
-            section.load.load15,
+        for e in check_levels_predictive(
+            value,
             levels=levels,
-            metric_name="load15",
+            metric_name=f"load{avg}",
             label=label,
-        )
+            boundaries=(0, num_cpus) if avg == "1" else None,
+        ):
+            yield Result(state=e.state, notice=e.details) if notice_only and isinstance(
+                e, Result
+            ) else e
     else:
-        # fixed level thresholds
-        levels_upper = None
-        if isinstance(levels, tuple):
-            # warning and critical levels are dependent on cpu count;
-            # rule defines levels for one cpu.
-            levels_upper = (levels[0] * num_cpus, levels[1] * num_cpus)
+        # warning and critical levels are dependent on cpu count;
+        # rule defines levels for one cpu.
+        levels_upper = (
+            (levels[0] * num_cpus, levels[1] * num_cpus) if isinstance(levels, tuple) else None
+        )
         yield from check_levels(
-            section.load.load15,
-            metric_name="load15",
+            value,
+            metric_name=f"load{avg}",
             levels_upper=levels_upper,
             label=label,
+            notice_only=notice_only,
+            boundaries=(0, num_cpus) if avg == "1" else None,
         )
 
     # provide additional info text
-    yield Result(
-        state=State.OK,
-        summary=f"15 min load per core: {(section.load.load15/num_cpus):.2f} "
-        f"({num_cpus} {_processor_type_info(section.type)}cores)",
+    per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    yield Result(state=State.OK, notice=per_core_txt) if notice_only else Result(
+        state=State.OK, summary=per_core_txt
     )
-
-    for level_name, level_value in section.load._asdict().items():
-        if level_name == "load15":
-            # we already yielded this metric by check_levels or check_levels_predictive.
-            continue
-
-        yield Metric(
-            level_name,
-            level_value,
-            # upper bound of load1 is used for displaying cpu count in graph title
-            boundaries=(0, num_cpus),
-        )

@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, get_args
 
 import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.plugins.visuals.filters
-import cmk.gui.plugins.visuals.utils as utils
-import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
+from cmk.gui.inventory.filters import RangedTableFilterName
+from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
+from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter, filter_registry
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 
 
 def test_get_filter() -> None:
     f = visuals.get_filter("hostregex")
-    assert isinstance(f, utils.Filter)
+    assert isinstance(f, Filter)
 
 
 def test_get_not_existing_filter() -> None:
@@ -28,15 +32,15 @@ def test_get_not_existing_filter() -> None:
 
 # TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info() -> None:
-    allowed = dict(visuals.filters_allowed_for_info("host"))
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    allowed = dict(filters_allowed_for_info("host"))
+    assert isinstance(allowed["host"], AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos() -> None:
-    allowed = visuals.filters_allowed_for_infos(["host", "service"])
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
-    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    allowed = filters_allowed_for_infos(["host", "service"])
+    assert isinstance(allowed["host"], AjaxDropdownFilter)
+    assert isinstance(allowed["service"], AjaxDropdownFilter)
 
 
 def _expected_visual_types():
@@ -59,7 +63,7 @@ def _expected_visual_types():
         },
     }
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_visual_types.update(
             {
                 "reports": {
@@ -77,11 +81,11 @@ def _expected_visual_types():
 
 
 def test_registered_visual_types() -> None:
-    assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
+    assert sorted(visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
 def test_registered_visual_type_attributes() -> None:
-    for ident, plugin_class in utils.visual_type_registry.items():
+    for ident, plugin_class in visual_type_registry.items():
         plugin = plugin_class()
         spec = _expected_visual_types()[ident]
 
@@ -1279,6 +1283,15 @@ expected_filters: dict[str, dict[str, Any]] = {
         "link_columns": [],
         "sort_index": 800,
         "title": "Controller \u27a4 Version",
+    },
+    "inv_hardware_system_device_number": {
+        "comment": None,
+        "filter_class": "FilterInvText",
+        "htmlvars": ["inv_hardware_system_device_number"],
+        "info": "host",
+        "link_columns": [],
+        "sort_index": 800,
+        "title": "System \u27a4 Device Number",
     },
     "inv_hardware_system_expresscode": {
         "comment": None,
@@ -3609,8 +3622,8 @@ expected_filters: dict[str, dict[str, Any]] = {
     },
     "host_labels": {
         "comment": None,
-        "filter_class": "LabelFilter",
-        "htmlvars": ["host_label"],
+        "filter_class": "LabelGroupFilter",
+        "htmlvars": ["host_labels_count"],
         "info": "host",
         "link_columns": [],
         "sort_index": 301,
@@ -3618,8 +3631,8 @@ expected_filters: dict[str, dict[str, Any]] = {
     },
     "service_labels": {
         "comment": None,
-        "filter_class": "LabelFilter",
-        "htmlvars": ["service_label"],
+        "filter_class": "LabelGroupFilter",
+        "htmlvars": ["service_labels_count"],
         "info": "service",
         "link_columns": [],
         "sort_index": 301,
@@ -4859,10 +4872,10 @@ expected_filters: dict[str, dict[str, Any]] = {
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_filters() -> None:
-    names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
+    names = filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
-    for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
+    for filt in filter_registry.values():
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]
@@ -4880,7 +4893,7 @@ def test_registered_filters() -> None:
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
         if spec["filter_class"] == "FilterInvtableIDRange":
-            assert filt.ident in utils.RangedTableFilterName.__args__  # type: ignore[attr-defined]
+            assert filt.ident in get_args(RangedTableFilterName)
 
 
 expected_infos: dict[str, dict[str, Any]] = {
@@ -5025,14 +5038,14 @@ expected_infos: dict[str, dict[str, Any]] = {
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_infos() -> None:
-    assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
+    assert sorted(visual_info_registry.keys()) == sorted(expected_infos.keys())
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_info_attributes() -> None:
-    for ident, cls in utils.visual_info_registry.items():
+    for ident, cls in visual_info_registry.items():
         info = cls()
         spec = expected_infos[ident]
 
@@ -5068,7 +5081,9 @@ def test_registered_info_attributes() -> None:
         ),
     ],
 )
-def test_context_to_uri_vars(context, expected_vars) -> None:  # type:ignore[no-untyped-def]
+def test_context_to_uri_vars(
+    context: VisualContext, expected_vars: Sequence[tuple[str, str]]
+) -> None:
     context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -5127,16 +5142,13 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
 
 
 @pytest.mark.parametrize(
-    "uri_vars,visual,expected_context",
+    "uri_vars,infos,context_vis,expected_context",
     [
         # Single host context, set via URL, with some service filter, set via context
         (
             [("host", "aaa")],
-            {
-                "infos": ["host", "service"],
-                "single_infos": ["host"],
-                "context": {"service_regex": {"serviceregex": "abc"}},
-            },
+            ["host", "service"],
+            {"service_regex": {"serviceregex": "abc"}},
             {
                 "host": {"host": "aaa"},
                 "service_regex": {"serviceregex": "abc"},
@@ -5145,23 +5157,17 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         # Single host context, set via context and URL
         (
             [("host", "aaa")],
+            ["host", "service"],
             {
-                "infos": ["host", "service"],
-                "single_infos": ["host"],
-                "context": {
-                    "host": {"host": "from_context"},
-                },
+                "host": {"host": "from_context"},
             },
             {"host": {"host": "from_context"}},
         ),
         # No single context with some host & service filter
         (
             [("host", "aaa")],
-            {
-                "infos": ["host", "service"],
-                "single_infos": [],
-                "context": {"service_regex": {"serviceregex": "abc"}},
-            },
+            ["host", "service"],
+            {"service_regex": {"serviceregex": "abc"}},
             {
                 "host": {"host": "aaa"},
                 "service_regex": {"serviceregex": "abc"},
@@ -5170,21 +5176,25 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         # No single context with some host filter from URL
         (
             [("host", "aaa")],
-            {"infos": ["host", "service"], "single_infos": [], "context": {}},
+            ["host", "service"],
+            {},
             {
                 "host": {"host": "aaa"},
             },
         ),
     ],
 )
-def test_get_merged_context(  # type:ignore[no-untyped-def]
-    request_context, uri_vars, visual, expected_context
+def test_get_merged_context(
+    uri_vars: Sequence[tuple[str, str]],
+    infos: SingleInfos | None,
+    context_vis: VisualContext,
+    expected_context: VisualContext,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    url_context = visuals.get_context_from_uri_vars(visual["infos"])
-    context = visuals.get_merged_context(url_context, visual["context"])
+    url_context = visuals.get_context_from_uri_vars(infos)
+    context = visuals.get_merged_context(url_context, context_vis)
 
     assert context == expected_context
 
@@ -5200,108 +5210,8 @@ def test_get_missing_single_infos_missing_context() -> None:
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-@pytest.mark.parametrize(
-    "context, single_infos, expected_context",
-    [
-        pytest.param(
-            {
-                "discovery_state": {
-                    "discovery_state_ignored": True,
-                    "discovery_state_vanished": False,
-                    "discovery_state_unmonitored": True,
-                }
-            },
-            [],
-            {
-                "discovery_state": {
-                    "discovery_state_ignored": "on",
-                    "discovery_state_vanished": "",
-                    "discovery_state_unmonitored": "on",
-                }
-            },
-            id="1.6.0->2.1.0 CMK-6606",
-        ),
-        pytest.param(
-            {"host": {"host": "heute"}},
-            ["host"],
-            {"host": {"host": "heute"}},
-            id="-> 2.1.0 Idempotent on already transformed single_info",
-        ),
-        pytest.param(
-            {"host": "heute", "event_id": 5},
-            ["host", "history"],
-            {"host": {"host": "heute"}, "event_id": {"event_id": "5"}},
-            id="-> 2.1.0 No single_info, only FilterHTTPVariables VisualContext",
-        ),
-        pytest.param(
-            {"site": "heute", "sites": "heute|morgen", "siteopt": "heute"},
-            [],
-            {
-                "site": {"site": "heute"},
-                "siteopt": {"site": "heute"},
-                "sites": {"sites": "heute|morgen"},
-            },
-            id="-> 2.1.0 Site hint is not bound to single info",
-        ),
-        pytest.param(
-            {
-                "invinterface_last_change": {
-                    "invinterface_last_change_from_days": "1",
-                    "invinterface_last_change_until_days": "5",
-                },
-                "inv_hardware_cpu_bus_speed": {
-                    "inv_hardware_cpu_bus_speed_from": "10",
-                    "inv_hardware_cpu_bus_speed_to": "20",
-                },
-                "event_count": {"event_count_from": "1", "event_count_to": "123"},
-                # Never existed with "to", just for the test
-                "history_time": {
-                    "history_time_from": "2001-02-03",
-                    "history_time_from_range": "abs",
-                    "history_time_to": "2001-02-05",
-                    "history_time_to_range": "abs",
-                },
-                # Not range filter
-                "another_filter": {
-                    "another_filter_to": "2001-02-05",
-                    "another_filter_to_range": "abs",
-                },
-            },
-            [],
-            {
-                "invinterface_last_change": {
-                    "invinterface_last_change_from_days": "1",
-                    "invinterface_last_change_until_days": "5",
-                },
-                "inv_hardware_cpu_bus_speed": {
-                    "inv_hardware_cpu_bus_speed_from": "10",
-                    "inv_hardware_cpu_bus_speed_until": "20",
-                },
-                "event_count": {"event_count_from": "1", "event_count_until": "123"},
-                "history_time": {
-                    "history_time_from": "2001-02-03",
-                    "history_time_from_range": "abs",
-                    "history_time_until": "2001-02-05",
-                    "history_time_until_range": "abs",
-                },
-                # Not range filter
-                "another_filter": {
-                    "another_filter_to": "2001-02-05",
-                    "another_filter_to_range": "abs",
-                },
-            },
-            id="-> 2.1.0 Range Filters have homogenous request vars",
-        ),
-    ],
-)
-def test_cleanup_contexts(  # type:ignore[no-untyped-def]
-    context, single_infos, expected_context
-) -> None:
-    assert visuals.cleanup_context_filters(context, single_infos) == expected_context
-
-
 def test_get_context_specs_no_info_limit() -> None:
-    result = visuals.get_context_specs(["host"], list(utils.visual_info_registry.keys()))
+    result = visuals.get_context_specs(["host"], list(visual_info_registry.keys()))
     expected = [
         "host",
         "service",
@@ -5344,7 +5254,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invkernelconfig",
         "invswpac",
     ]
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected += ["customer"]
 
     assert sorted([r[0] for r in result]) == sorted(expected)

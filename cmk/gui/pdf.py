@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,20 +23,22 @@ import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Literal, overload, Protocol, TypedDict, Union
+from typing import Literal, NewType, overload, Protocol
 
-from PIL import Image, PngImagePlugin  # type: ignore[import]
+from PIL import PngImagePlugin
+from PIL.Image import Image
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
 
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import]
 from six import ensure_str
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 
 from cmk.gui.exceptions import MKInternalError
-from cmk.gui.http import response
+from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
@@ -46,15 +48,15 @@ RawTableColumn = tuple[Sequence[str], str | RawIconColumn | RawRendererColumn]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 SizeInternal = float
-SizeDPI = int
+SizeDPI = NewType("SizeDPI", int)
 Align = Literal["left", "right", "center"]
 VerticalAlign = Literal["bottom", "middle"]
 OddEven = Literal["even", "odd", "heading"]
-Position = Union[
-    tuple[Literal["n", "s", "w", "e"], SizeMM],
-    tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]],
-    Literal["c"],
-]
+Position = (
+    tuple[Literal["n", "s", "w", "e"], SizeMM]
+    | tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]]
+    | Literal["c"]
+)
 
 
 @overload
@@ -225,10 +227,9 @@ class Document:
     def send(cls, pdf_source: bytes, sendas: str) -> None:
         # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
-        response.headers[
-            "Content-Disposition"
-        ] = "inline; filename=" + ensure_str(  # pylint: disable= six-ensure-str-bin-call
-            sendas
+        response.set_content_disposition(
+            ContentDispositionType.INLINE,
+            ensure_str(sendas),  # pylint: disable= six-ensure-str-bin-call
         )
         response.set_data(pdf_source)
 
@@ -449,7 +450,7 @@ class Document:
         pil: Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
-        resolution: int | None,
+        resolution: SizeDPI | None,
     ) -> None:
         width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
@@ -459,7 +460,7 @@ class Document:
     # Functions for adding floating text
 
     def add_paragraph(self, txt: str) -> None:
-        lines = self.wrap_text(txt, width=(self._right - self._left))
+        lines = self.wrap_text(txt, width=self._right - self._left)
         for line in lines:
             self.add_text_line(line)
 
@@ -734,7 +735,7 @@ class Document:
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
 
-    def text_width(self, text) -> SizeMM:  # type:ignore[no-untyped-def]
+    def text_width(self, text) -> SizeMM:  # type: ignore[no-untyped-def]
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
@@ -841,7 +842,7 @@ class Document:
     def close_path(self) -> None:
         self._path.close()
 
-    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type:ignore[no-untyped-def]
+    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type: ignore[no-untyped-def]
         self.save_state()
 
         # The gradient is dramatically increasing the size of the PDFs. For example a PDF with
@@ -951,13 +952,14 @@ class Document:
         pil: Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
-        resolution_dpi: SizeDPI | None = None,
+        resolution: SizeDPI | None = None,
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()
+        assert bbox is not None  # TODO: Why is this the case here?
         pix_width, pix_height = bbox[2], bbox[3]
-        if resolution_dpi is not None:
-            resolution_mm = resolution_dpi / 2.45
+        if resolution is not None:
+            resolution_mm = resolution / 2.45
             resolution_pt = resolution_mm / mm  # now we have pixels / pt # fixed: true-division
             width = pix_width / resolution_pt  # fixed: true-division
             height = pix_height / resolution_pt  # fixed: true-division
@@ -1037,7 +1039,7 @@ class TableRenderer:
         self,
         header_texts: Sequence[str],
         raw_rows: RawTableRows,
-        font_size: SizeMM,
+        font_size: SizePT,
         show_headings: bool,
         padding: tuple[SizeMM, SizeMM],
         spacing: tuple[SizeMM, SizeMM],
@@ -1231,7 +1233,7 @@ class TableRenderer:
 
         self.pdf.restore_state()
 
-    def _paint_headers(  # type:ignore[no-untyped-def]
+    def _paint_headers(
         self,
         headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1243,7 +1245,7 @@ class TableRenderer:
         vrules: bool,
         rule_width: SizeMM,
         row_shading: RowShading,
-    ):
+    ) -> None:
         self._paint_hrule(hrules, rule_width)
         if headers:
             self._paint_row(
@@ -1263,7 +1265,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(  # type:ignore[no-untyped-def]
+    def _paint_row(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1279,7 +1281,7 @@ class TableRenderer:
         paint_header: bool,
         is_header: bool,
         row_oddeven: OddEven,
-    ):
+    ) -> None:
         # Give each cell information about its final width so it can reorganize internally.
         # This is used for text cells that do the wrapping.
         for column_width, render_object in zip(column_widths, row):
@@ -1611,8 +1613,10 @@ def is_pdf2png_possible() -> bool:
 def pdf2png(pdf_source: bytes) -> bytes:
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
+    pdf_tmp_dir = cmk.utils.paths.tmp_dir / "pdf"
+    pdf_tmp_dir.mkdir(exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        dir=cmk.utils.paths.tmp_dir,
+        dir=str(pdf_tmp_dir),
         delete=False,
     ) as temp_file:
         temp_file.write(pdf_source)

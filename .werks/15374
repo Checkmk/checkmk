@@ -1,0 +1,15 @@
+Title: crash-reporting: Improve crash reporting information
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1676973331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In the event of a crash when calling the rest-api, having more
+useful information helps find the root cause which helps
+fix the issue quicker. This werk introduces the changes to
+the data returned in a crash report.
+

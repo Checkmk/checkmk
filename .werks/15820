@@ -1,0 +1,13 @@
+Title: REST API now accepts '24:00' as a time in time ranges
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1686743192
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Unlike the GUI, the REST API rejected '24:00' as a valid time when handling time ranges.
+This is no longer the case.
+

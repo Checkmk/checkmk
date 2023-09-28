@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,5 +23,5 @@ from cmk.gui.plugins.wato.check_parameters.switch_contact import _migrate
         ),
     ],
 )
-def test_transform(entry, result) -> None:  # type:ignore[no-untyped-def]
+def test_transform(entry: str | dict[str, object], result: dict[str, object]) -> None:
     assert _migrate(entry) == result

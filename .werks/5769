@@ -30,7 +30,7 @@ If more than one value is assigned they have to be separated by one space, eg.
 <ul>
 <li>{TAGS=prod snmp}</li>
 <li>{SERVICE_CHECK_COMMANDS_sitename=kernel lnx_if}</li>
-<ul>
+</ul>
 
 
 H3:Example 1

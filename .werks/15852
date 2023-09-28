@@ -1,0 +1,19 @@
+Title: AWS S3 request metrics monitoring: Clarify prequisites
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684763867
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The AWS special agent can be configured to monitor S3 request metrics. In order for this to work,
+S3 request metrics have to specifically be enabled in the AWS/S3 console, see the
+<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-configurations.html">AWS/S3 documentation</a>.
+Note that this a paid feature. Furthermore, the filter name has to be set to <tt>EntireBucket</tt>,
+as is recommended in the
+<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/configure-request-metrics-bucket.html">documentation for a filter that applies to all objects</a>.
+The special agent will use this filter name to query S3 request metrics from the AWS API.
+
+These prequisites are now also clearly stated in the AWS special agent configuration page.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.printer_alerts import (
     check_printer_alerts,
     discovery_printer_alerts,
@@ -69,7 +70,7 @@ def test_discover_always() -> None:
         "Critical Error": State.CRIT,
     },
 )
-def test_check_printer_alerts(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_printer_alerts(info: list[StringTable], expected_result: CheckResult) -> None:
     data = parse_printer_alerts(info)
     result = check_printer_alerts(data)
     assert list(result) == expected_result

@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 import {zxcvbn, zxcvbnOptions} from "@zxcvbn-ts/core";
 
 const loadOptions = async () => {
@@ -80,10 +86,9 @@ export async function initPasswordStrength() {
 
                 // The strings are stored in the data attributes, since we currently have the
                 // translations only on the backend...
-                const score_string =
-                    meter.attributes[
-                        "data-password_strength_" + score.toString()
-                    ].value;
+                const score_string = meter.attributes.getNamedItem(
+                    "data-password_strength_" + score.toString()
+                )!.value;
                 passwordText.innerHTML = score_string;
                 meter.innerHTML = score_string;
             });

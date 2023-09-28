@@ -1,0 +1,15 @@
+Title: Agent plugin for monitoring Mailman 3 mailing lists
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1684492525
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Before this werk, Checkmk included the agent plugin <tt>mailman_lists</tt>, which monitored Mailman
+2 mailing lists. As of this werk, Checkmk includes the plugins <tt>mailman2_lists</tt> and
+<tt>mailman3_lists</tt>, which monitor Mailman 2/3 mailing lists. If the bakery is configured to
+deploy the Mailman plugin, both plugins will be installed, since only one of them will be
+operational, depending on the Mailman version installed on the target system.

@@ -19,6 +19,6 @@ no option for us.
 The way to solve this is to statically link the protobuf parts.
 
 1. The microcore will statically link with libprotobuf. This is handled by the
-   build mechanic of the Microcore (See enterprise/core/src/Makefile.am).
+   build mechanic of the Microcore.
 2. We build the python protobuf package on our own in CPP mode with statically
    linked libraries. This is done here in this OMD package.

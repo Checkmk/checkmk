@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -18,27 +18,15 @@ from pydantic import parse_obj_as
 from . import transform_json
 from .schemata import api
 from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_value
-from .transform_any import parse_annotations, parse_labels, parse_match_labels
+from .transform_any import parse_match_labels
 
 
 def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
-    return api.MetaDataNoNamespace(
-        name=metadata.name,
-        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
-        labels=parse_labels(metadata.labels),
-        annotations=parse_annotations(metadata.annotations),
-    )
+    return api.MetaDataNoNamespace.model_validate(metadata)
 
 
 def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    metadata_no_namespace: api.MetaDataNoNamespace = parse_metadata_no_namespace(metadata)
-    return api.MetaData(
-        name=metadata_no_namespace.name,
-        namespace=api.NamespaceName(metadata.namespace),
-        creation_timestamp=metadata_no_namespace.creation_timestamp,
-        labels=metadata_no_namespace.labels,
-        annotations=metadata_no_namespace.annotations,
-    )
+    return api.MetaData.model_validate(metadata)
 
 
 def container_resources(container: client.V1Container) -> api.ContainerResources:
@@ -166,10 +154,12 @@ def pod_conditions(
     conditions: Sequence[client.V1PodCondition],
 ) -> list[api.PodCondition]:
     condition_types = {
+        "PodHasNetwork": api.ConditionType.PODHASNETWORK,
         "PodScheduled": api.ConditionType.PODSCHEDULED,
         "Initialized": api.ConditionType.INITIALIZED,
         "ContainersReady": api.ConditionType.CONTAINERSREADY,
         "Ready": api.ConditionType.READY,
+        "DisruptionTarget": api.ConditionType.DISRUPTIONTARGET,
     }
     result = []
     for condition in conditions:
@@ -258,11 +248,13 @@ def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
 def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
     if deployment_spec.strategy.type == "Recreate":
         return api.DeploymentSpec(
+            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
             strategy=api.Recreate(),
             selector=parse_selector(deployment_spec.selector),
         )
     if deployment_spec.strategy.type == "RollingUpdate":
         return api.DeploymentSpec(
+            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
             strategy=api.RollingUpdate(
                 max_surge=deployment_spec.strategy.rolling_update.max_surge,
                 max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
@@ -324,12 +316,6 @@ def cron_job_from_client(
 
 
 def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
-    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
-        return api.JobCondition(
-            type_=api.JobConditionType(condition.type.capitalize()),
-            status=api.ConditionStatus(condition.status.capitalize()),
-        )
-
     return api.JobStatus(
         active=status.active,
         start_time=convert_to_timestamp(status.start_time) if status.start_time else None,
@@ -338,10 +324,41 @@ def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
         else None,
         failed=status.failed,
         succeeded=status.succeeded,
-        conditions=[_parse_job_condition(condition) for condition in status.conditions]
-        if status.conditions is not None
-        else [],
+        conditions=_parse_and_remove_duplicate_conditions(status.conditions),
     )
+
+
+def _parse_and_remove_duplicate_conditions(
+    conditions: Sequence[client.V1JobCondition] | None,
+) -> Sequence[api.JobCondition]:
+    """Parse and remove duplicate job conditions
+
+    Note:
+        For Kubernetes < 1.25, in some cases the API reports duplicate conditions, we want to
+        filter these out before they are handled on the check. This has been resolved in 1.25
+        https://github.com/kubernetes/kubernetes/issues/109904
+
+    """
+    if conditions is None:
+        return []
+
+    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
+        return api.JobCondition(
+            type_=api.JobConditionType(condition.type.capitalize()),
+            status=api.ConditionStatus(condition.status.capitalize()),
+        )
+
+    def _condition_identifier(condition: client.V1JobCondition) -> str:
+        return f"{condition.type}-{condition.last_probe_time}"
+
+    parsed_conditions: dict[str, api.JobCondition] = {}
+
+    for job_condition in conditions:
+        parsed_conditions.setdefault(
+            _condition_identifier(job_condition), _parse_job_condition(job_condition)
+        )
+
+    return list(parsed_conditions.values())
 
 
 def job_from_client(
@@ -369,11 +386,13 @@ def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetSta
 def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
     if daemonset_spec.update_strategy.type == "OnDelete":
         return api.DaemonSetSpec(
+            min_ready_seconds=daemonset_spec.min_ready_seconds or 0,
             strategy=api.OnDelete(),
             selector=parse_selector(daemonset_spec.selector),
         )
     if daemonset_spec.update_strategy.type == "RollingUpdate":
         return api.DaemonSetSpec(
+            min_ready_seconds=daemonset_spec.min_ready_seconds or 0,
             strategy=api.RollingUpdate(
                 max_surge=daemonset_spec.update_strategy.rolling_update.max_surge,
                 max_unavailable=daemonset_spec.update_strategy.rolling_update.max_unavailable,
@@ -394,49 +413,8 @@ def daemonset_from_client(
     )
 
 
-def parse_statefulset_status(status: client.V1StatefulSetStatus) -> api.StatefulSetStatus:
-    return api.StatefulSetStatus(
-        ready_replicas=status.ready_replicas or 0,
-        updated_replicas=status.updated_replicas or 0,
-    )
-
-
-def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.StatefulSetSpec:
-    if statefulset_spec.update_strategy.type == "OnDelete":
-        return api.StatefulSetSpec(
-            strategy=api.OnDelete(),
-            selector=parse_selector(statefulset_spec.selector),
-            replicas=statefulset_spec.replicas,
-        )
-    if statefulset_spec.update_strategy.type == "RollingUpdate":
-        partition = (
-            rolling_update.partition
-            if (rolling_update := statefulset_spec.update_strategy.rolling_update)
-            else 0
-        )
-        return api.StatefulSetSpec(
-            strategy=api.StatefulSetRollingUpdate(partition=partition),
-            selector=parse_selector(statefulset_spec.selector),
-            replicas=statefulset_spec.replicas,
-        )
-    raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
-
-
-def statefulset_from_client(
-    statefulset: client.V1StatefulSet, pod_uids: Sequence[api.PodUID]
-) -> api.StatefulSet:
-    return api.StatefulSet(
-        metadata=parse_metadata(statefulset.metadata),
-        spec=parse_statefulset_spec(statefulset.spec),
-        status=parse_statefulset_status(statefulset.status),
-        pods=pod_uids,
-    )
-
-
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
-    return api.Namespace(
-        metadata=api.NamespaceMetaData.parse_obj(parse_metadata_no_namespace(namespace.metadata)),
-    )
+    return api.Namespace.model_validate(namespace)
 
 
 def parse_resource_quota_spec(
@@ -523,8 +501,8 @@ def persistent_volume_claim_from_client(
 ) -> api.PersistentVolumeClaim:
     return api.PersistentVolumeClaim(
         metadata=parse_metadata(persistent_volume_claim.metadata),
-        spec=api.PersistentVolumeClaimSpec.from_orm(persistent_volume_claim.spec),
-        status=api.PersistentVolumeClaimStatus.from_orm(persistent_volume_claim.status),
+        spec=api.PersistentVolumeClaimSpec.model_validate(persistent_volume_claim.spec),
+        status=api.PersistentVolumeClaimStatus.model_validate(persistent_volume_claim.status),
     )
 
 

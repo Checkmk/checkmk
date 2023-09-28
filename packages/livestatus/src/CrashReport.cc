@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -9,7 +9,6 @@
 #include <regex>
 #include <system_error>
 #include <utility>
-#include <vector>
 
 #include "livestatus/Logger.h"
 
@@ -54,15 +53,14 @@ bool mk::crash_report::any(
 bool mk::crash_report::delete_id(const std::filesystem::path &base_path,
                                  const std::string &id, Logger *logger) {
     std::optional<CrashReport> target;
-    bool found =
-        mk::crash_report::any(base_path, [&target, &id](const CrashReport &cr) {
-            if (cr.id() == id) {
-                target = cr;
-                return true;
-            }
-            return false;
-        });
-    if (!found) {
+    mk::crash_report::any(base_path, [&target, &id](const CrashReport &cr) {
+        if (cr.id() == id) {
+            target = cr;
+            return true;
+        }
+        return false;
+    });
+    if (!target) {
         return false;
     }
     std::error_code ec;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing notification configuration"""
@@ -7,17 +7,18 @@
 import abc
 import time
 from collections.abc import Collection, Iterator, Mapping
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import EventRule
+from cmk.utils.notify_types import EventRule
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
@@ -41,20 +42,12 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    ABCEventsMode,
-    ContactGroupSelection,
-    flash,
-    make_confirm_link,
-    mode_registry,
-    notification_parameter_registry,
-)
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri
+from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -76,7 +69,9 @@ from cmk.gui.valuespec import (
     rule_option_elements,
     TextInput,
     Tuple,
+    UUID,
 )
+from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
@@ -87,13 +82,28 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+from .._group_selection import ContactGroupSelection
+from .._notification_parameter import notification_parameter_registry
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeNotifications)
+    mode_registry.register(ModeUserNotifications)
+    mode_registry.register(ModePersonalUserNotifications)
+    mode_registry.register(ModeEditNotificationRule)
+    mode_registry.register(ModeEditUserNotificationRule)
+    mode_registry.register(ModeEditPersonalNotificationRule)
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -108,11 +118,6 @@ class ABCNotificationsMode(ABCEventsMode):
 
     @classmethod
     def _notification_rule_match_conditions(cls):
-        def migrate_ec_rule_id_match(val):
-            if isinstance(val, list):
-                return val
-            return [val]
-
         return [
             (
                 "match_escalation",
@@ -181,14 +186,27 @@ class ABCNotificationsMode(ABCEventsMode):
                     mode=RegExp.prefix,
                 ),
             ),
+        ] + cls._match_event_console_elements()
+
+    @classmethod
+    def _match_event_console_elements(cls) -> list[DictionaryEntry]:
+        if edition() is Edition.CSE:  # disabled in CSE
+            return []
+
+        def migrate_ec_rule_id_match(val):
+            if isinstance(val, list):
+                return val
+            return [val]
+
+        return [
             (
                 "match_ec",
                 Alternative(
                     title=_("Event Console alerts"),
                     help=_(
-                        "The Event Console can have events create notifications in Check_MK. "
+                        "The Event Console can have events create notifications in Checkmk. "
                         "These notifications will be processed by the rule based notification "
-                        "system of Check_MK. This matching option helps you distinguishing "
+                        "system of Checkmk. This matching option helps you distinguishing "
                         "and also gives you access to special event fields."
                     ),
                     elements=[
@@ -262,7 +280,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         ),
                     ],
                 ),
-            ),
+            )
         ]
 
     def _render_notification_rules(  # pylint: disable=too-many-branches
@@ -295,11 +313,13 @@ class ABCNotificationsMode(ABCEventsMode):
                     table.cell(css=["buttons"])
                     what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
-                        html.icon("rulematch", _("This rule matches"))
+                        html.icon("checkmark", _("This rule matches"))
                     elif what == "miss":
-                        html.icon("rulenmatch", _("This rule does not match: %s") % reason)
+                        html.icon("hyphen", _("This rule does not match: %s") % reason)
 
                 if show_buttons and self._actions_allowed(rule):
+                    table.cell("#", css=["narrow nowrap"])
+                    html.write_text(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
@@ -315,9 +335,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell("", css=["narrow"])
                 if rule.get("disabled"):
-                    html.icon(
-                        "disabled", _("This rule is currently disabled and will not be applied")
-                    )
+                    html.icon("cross", _("This rule is currently disabled and will not be applied"))
                 else:
                     html.empty_icon_button()
 
@@ -330,9 +348,9 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell(_("Type"), css=["narrow"])
                 if notify_method[1] is None:
-                    html.icon("notify_cancel", _("Cancel notifications for this plugin type"))
+                    html.icon("cross_bg_white", _("Cancel notifications for this plugin type"))
                 else:
-                    html.icon("notify_create", _("Create a notification"))
+                    html.icon("checkmark", _("Create a notification"))
 
                 table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
 
@@ -387,9 +405,15 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("sl", _("Service level")),
                 ("check_type", _("Check type")),
                 ("state", _("Host/Service state")),
-                ("ec_contact", _("Event Console contact")),
-                ("ec_comment", _("Event Console comment")),
-            ],
+            ]
+            + (
+                [
+                    ("ec_contact", _("Event Console contact")),
+                    ("ec_comment", _("Event Console comment")),
+                ]
+                if edition() is not Edition.CSE  # disabled in CSE
+                else []
+            ),
             default_value=["host"],
         )
 
@@ -442,7 +466,7 @@ class ABCNotificationsMode(ABCEventsMode):
         else:
             mode = "notification_rule"
 
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=make_action_link(
                 [
                     ("mode", listmode),
@@ -450,8 +474,8 @@ class ABCNotificationsMode(ABCEventsMode):
                     ("_delete", nr),
                 ]
             ),
-            message=_("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?")
-            % (nr, rule.get("description", "")),
+            title=_("Delete notification rule #%d") % nr,
+            suffix=rule.get("description", ""),
         )
         drag_url = make_action_link(
             [
@@ -488,7 +512,6 @@ class NotificationRuleLinks(NamedTuple):
     clone: str
 
 
-@mode_registry.register
 class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -690,7 +713,7 @@ class ModeNotifications(ABCNotificationsMode):
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
 
-    def _render_bulks(self, only_ripe) -> bool:  # type:ignore[no-untyped-def]
+    def _render_bulks(self, only_ripe) -> bool:  # type: ignore[no-untyped-def]
         bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False
@@ -708,7 +731,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulk ID"), bulk_id)
                 table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
                 table.cell(_("Age (sec)"), str(age), css=["number"])
-                if interval and age >= float(interval):
+                if interval and interval != "n.a." and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Time Period"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css=["number"])
@@ -756,7 +779,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
 
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
-                    html.icon("rulematch", _("You are analysing this notification"))
+                    html.icon("checkmark", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), str(nr + 1), css=["number"])
                 if "MICROTIME" in context:
@@ -771,7 +794,7 @@ class ModeNotifications(ABCNotificationsMode):
                         or _("Unknown date")
                     )
 
-                table.cell(_("Date/Time"), date, css=["nobr"])
+                table.cell(_("Time"), date, css=["nobr"])
                 nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 
@@ -958,7 +981,6 @@ def _get_notification_sync_sites():
     return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
 
 
-@mode_registry.register
 class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -1045,7 +1067,6 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         )
 
 
-@mode_registry.register
 class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -1148,13 +1169,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         if self._new:
             if self._clone_nr >= 0 and not request.var("_clear"):
-                self._rule = EventRule()
                 try:
-                    self._rule.update(self._rules[self._clone_nr])
+                    self._rule = deepcopy(self._rules[self._clone_nr])
+                    self._rule["rule_id"] = new_notification_rule_id()
                 except IndexError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification rule")
             else:
-                self._rule = {}
+                self._rule = get_default_notification_rule()
         else:
             try:
                 self._rule = self._rules[self._edit_nr]
@@ -1379,7 +1400,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         timeperiod_entry: list[DictionaryEntry] = [
             (
                 "timeperiod",
-                watolib.timeperiods.TimeperiodSelection(
+                TimeperiodSelection(
                     title=_("Only bulk notifications during the following time period"),
                 ),
             ),
@@ -1449,6 +1470,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             + section_override
             + self._rule_match_conditions()
             + section_contacts
+            + [
+                (
+                    "rule_id",
+                    UUID(),
+                ),
+            ]
             + [
                 # Notification
                 (
@@ -1649,7 +1676,6 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         html.end_form()
 
 
-@mode_registry.register
 class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     """Edit a global notification rule"""
 
@@ -1715,7 +1741,6 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
 
 
-@mode_registry.register
 class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     """Edit notification rule of a given user"""
 
@@ -1743,7 +1768,6 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
 
 
-@mode_registry.register
 class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
     def name(cls) -> str:

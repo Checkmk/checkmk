@@ -1,0 +1,32 @@
+Title: Do not enforce password change for automation users
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1674230504
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+The <tt>enforce_pw_change</tt> flag is now ignored for automation users.
+Since automation users cannot change their passwords themselves, Checkmk will now no longer require them to do so, even if the flag is set.
+
+Note that automation users can still be prevented from logging in if the password policy for local accounts defines a maximum password age.
+
+This Werk is motivated by a fixup for Werk #14391, which could cause old automation users to be unable to log in.
+
+Since Werk #14391 <tt>omd update</tt> / <tt>cmk-update-config</tt> looks for users whose passwords are hashed with outdated hashing schemes in <tt>etc/htpasswd</tt>.
+Users whose passwords were hashed with the insecure algorithms <tt>MD5</tt> or <tt>DES Crypt</tt> are asked to change their password the next time they log in.
+Moreover, the administrator running the update will see a warning that lists the affected users.
+
+That check did not properly exclude old automation users created by Checkmk < 1.6.0, although the check does not make sense for them.
+(Automation users do not log in the same way regular users do and their password hash is irrelevant.)
+As a result, the flag to require a password change was set also for automation users, preventing automation users from logging in.
+In addition, the automation users were mistakenly listed in the warning message mentioned above.
+
+Note that automation users that have been created or had their automation secret changed with Checkmk >= 1.6.0 are not affected, as Checkmk didn't use the insecure hashing algorithms since version 1.6.0 (Werk #6846).
+
+With this fix the flag to enforce a password change will no longer be set for automation users by that check and automation users will no longer be listed in the warning message.
+Moreover, since the flag is now ignored for automation users, they will be able to log in again, even if the flag has already been set.
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ oneTimeSetUp() {
     # shellcheck disable=SC1090
     . "$MK_SAP_HANA_PLUGIN_PATH" >/dev/null 2>&1
 
-    # Mock sys calls
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     nslookup() {
         if [ "$1" = "myServer" ]; then
             cat <<"output"
@@ -37,6 +37,7 @@ Address: 192.168.1.1
 output
         fi
     }
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     ip() {
         cat <<"output"
 2: wlo1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
@@ -226,9 +227,9 @@ test_mk_sap_hana_2-0_get_role() {
 
 test_mk_sap_hana_1_connect_OK() {
 
-    # Mocks
     landscape=$(sim_landscape_1_0_worker)
     status=$'Version;;1.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     su() {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
@@ -261,9 +262,9 @@ test_mk_sap_hana_1_connect_standby_not_worker() {
 
 test_mk_sap_hana_2_connect_OK() {
 
-    # Mocks
     landscape=$(sim_landscape_2_0_worker)
     status=$'Version;;2.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     su() {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
@@ -310,7 +311,7 @@ test_mk_sap_hana_unknown_version() {
 
 test_mk_sap_hana_skip_sql_queries() {
 
-    # Mocks
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     mk_hdbsql() {
         # Return code 43 in case SQL DB is not open (see SUP-1436 for details)
         return 43
@@ -328,7 +329,7 @@ test_mk_sap_hana_skip_sql_queries() {
 
 test_mk_sap_hana_get_ssl_option_with_ssl() {
 
-    # Mocks read_global_ini
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     read_global_ini() {
         echo "sslenforce = true"
     }
@@ -339,7 +340,7 @@ test_mk_sap_hana_get_ssl_option_with_ssl() {
 
 test_mk_sap_hana_get_ssl_option_without_ssl() {
 
-    # Mocks read_global_ini
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     read_global_ini() {
         echo "sslenforce = false"
     }
@@ -361,7 +362,7 @@ test_mk_sap_hana_get_alerts_last_check_file_with_remote_host() {
 
 test_mk_sap_hana_get_last_used_check_file_new_file_exists() {
 
-    # Mocks file_exists
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     file_exists() {
         local path="$1"
 
@@ -378,7 +379,7 @@ test_mk_sap_hana_get_last_used_check_file_new_file_exists() {
 
 test_mk_sap_hana_get_last_used_check_file_old_file_exists() {
 
-    # Mocks file_exists
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     file_exists() {
         local path="$1"
 
@@ -395,7 +396,7 @@ test_mk_sap_hana_get_last_used_check_file_old_file_exists() {
 
 test_mk_sap_hana_get_last_used_check_file_no_file() {
 
-    # Mocks file_exists
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     file_exists() {
         return 1
     }

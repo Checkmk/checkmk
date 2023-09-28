@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -363,7 +363,7 @@ class CommunicationException(MKException):
 
 
 class Server:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, hostname, username, password, verify_ssl
     ) -> None:
         self._url = "https://%s/nuova" % hostname
@@ -399,7 +399,7 @@ class Server:
             attributes.update({"inCookie": self._cookie})
         self._communicate(ET.Element("aaaLogout", attrib=attributes))
 
-    def _get_bios_unit_name_from_dn(self, xml_object) -> str:  # type:ignore[no-untyped-def]
+    def _get_bios_unit_name_from_dn(self, xml_object) -> str:  # type: ignore[no-untyped-def]
         dn = self._get_attribute_data(xml_object, "dn")
         return "/".join(dn.split("/")[0:2])
 

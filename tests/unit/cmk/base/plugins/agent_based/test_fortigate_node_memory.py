@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based import fortigate_node_memory as fortigate_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 
 @pytest.mark.parametrize(
@@ -19,8 +22,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ([[["ebnfwa02-1", "21", "1"]]], [Service(item="Cluster")]),
     ],
 )
-def test_fortigate_node_memory_discover(  # type:ignore[no-untyped-def]
-    string_table, expected
+def test_fortigate_node_memory_discover(
+    string_table: list[StringTable], expected: Sequence[Service]
 ) -> None:
     section = fortigate_memory.parse_fortigate_node_memory(string_table)
     services = list(fortigate_memory.discovery_fortigate_node_memory(section))
@@ -56,8 +59,8 @@ def test_fortigate_node_memory_discover(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_fortigate_node_memory_check(  # type:ignore[no-untyped-def]
-    item, params, data, expected
+def test_fortigate_node_memory_check(
+    item: str, params: Mapping[str, object], data: list[StringTable], expected: CheckResult
 ) -> None:
     section = fortigate_memory.parse_fortigate_node_memory(data)
     result = fortigate_memory.check_fortigate_node_memory(item, params, section)

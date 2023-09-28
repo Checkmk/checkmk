@@ -6,7 +6,7 @@ Date: 1661767418
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces the implementation of the site management endpoints. These endpoints
 now allow the API user to create, delete, update and retrieve distributed monitoring

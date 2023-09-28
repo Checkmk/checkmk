@@ -1,0 +1,26 @@
+Title: Enable using Rulesets for section plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675863599
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk is relevant for you if:
+<ul>
+<li> you implemented a host label function that is configurable via WATO
+<li> you do not have a discovery function that uses the same ruleset
+</ul>
+
+Previously, this was not possible. You may have encountered the following error:
+
+C+:
+Error running automation call restart (exit code 1), error:
+Invalid configuration variable 'YOUR_RULESET'
+--> Found 1 invalid variables
+If you use own helper variables, please prefix them with _.
+C-:
+
+Anyway - this is fixed now.

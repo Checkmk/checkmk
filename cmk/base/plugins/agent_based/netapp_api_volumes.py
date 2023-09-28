@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
@@ -50,7 +51,7 @@ def parse_netapp_api_volumes(string_table: StringTable) -> Section:
 
         # Clustermode specific
         if "vserver_name" in volume:
-            name = "%s.%s" % (volume["vserver_name"], volume["name"])
+            name = "{}.{}".format(volume["vserver_name"], volume["name"])
 
         volumes[name] = volume
 
@@ -75,7 +76,7 @@ def _create_key(protocol: str, mode: str, field: str) -> str:
     return "_".join([mode, field])
 
 
-def _check_single_netapp_api_volume(  # type:ignore[no-untyped-def]
+def _check_single_netapp_api_volume(  # type: ignore[no-untyped-def]
     item: str, params: Mapping[str, Any], volume
 ) -> CheckResult:
     value_store = get_value_store()
@@ -93,6 +94,20 @@ def _check_single_netapp_api_volume(  # type:ignore[no-untyped-def]
     )
 
     yield from _generate_volume_metrics(value_store, params, volume)
+    if volume.get("is-space-enforcement-logical") == "false":
+        logical_used = volume["logical-used"]
+        size_total = volume["size-total"]
+        logical_available = size_total - logical_used
+        yield Metric(
+            name="logical_used",
+            value=logical_used,
+            boundaries=(0.0, volume["size-total"]),
+        )
+        yield Metric(
+            name="space_savings",
+            value=volume["size-available"] - logical_available,
+            boundaries=(0.0, volume["size-total"]),
+        )
 
 
 def _generate_volume_metrics(
@@ -107,7 +122,6 @@ def _generate_volume_metrics(
     for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
             for field in ["data", "ops", "latency"]:
-
                 key = _create_key(protocol, mode, field)
                 value = volume.get(key)
                 if value is None:
@@ -200,7 +214,6 @@ def _combine_netapp_api_volumes(
 # specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if "patterns" in params:
-
         volumes_in_group = mountpoints_in_group(section, *params["patterns"])
         if not volumes_in_group:
             yield Result(
@@ -215,7 +228,7 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
         )
 
         for vol, state in volumes_not_online.items():
-            yield Result(state=State.WARN, summary="Volume %s is %s" % (vol, state))
+            yield Result(state=State.WARN, summary=f"Volume {vol} is {state}")
 
         if combined_volumes:
             yield from _check_single_netapp_api_volume(item, params, combined_volumes)

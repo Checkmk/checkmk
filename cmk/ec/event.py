@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,14 +9,14 @@ from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
-from typing import TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
+from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 
 # This is far from perfect, but at least we see all possible keys.
@@ -25,7 +25,7 @@ class Event(TypedDict, total=False):
     facility: int
     priority: int
     text: str
-    host: str
+    host: HostName
     ipaddress: str
     application: str
     pid: int
@@ -48,7 +48,7 @@ class Event(TypedDict, total=False):
     live_until_phases: Iterable[str]
     match_groups: Iterable[str]
     match_groups_syslog_application: Iterable[str]
-    orig_host: str
+    orig_host: HostName
     owner: str
     phase: str
     rule_id: str | None
@@ -62,7 +62,7 @@ def _make_event(text: str, ipaddress: str) -> Event:
         facility=1,
         priority=0,
         text=text,
-        host="",
+        host=HostName(""),
         ipaddress=ipaddress,
         application="",
         pid=0,
@@ -72,21 +72,28 @@ def _make_event(text: str, ipaddress: str) -> Event:
     )
 
 
-def create_event_from_line(
-    line: str, address: tuple[str, int] | None, logger: Logger, *, verbose: bool = False
+def create_events_from_syslog_messages(
+    messages: Iterable[bytes], address: tuple[str, int] | None, logger: Logger | None
+) -> Iterable[Event]:
+    for message in messages:
+        yield create_event_from_syslog_message(message, address, logger)
+
+
+def create_event_from_syslog_message(
+    message: bytes, address: tuple[str, int] | None, logger: Logger | None
 ) -> Event:
-    if verbose:
+    if logger:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
-        logger.info(f'processing message{adr} "{line}"')
+        logger.info(f"processing message{adr} {message!r}")
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
     try:
-        event = parse_message(line, ipaddress)
+        event = parse_syslog_message_into_event(scrub_string(message.decode("utf-8")), ipaddress)
     except Exception:
-        if verbose:
-            logger.info('could not parse message "%s"', line)
-        event = _make_event(line, ipaddress)
-    if verbose:
+        if logger:
+            logger.info(f"could not parse message {message!r}")
+        event = _make_event(scrub_string(message.decode("utf-8", "replace")), ipaddress)
+    if logger:
         width = max(len(k) for k in event.keys()) + 1
         logger.info(
             "parsed message: %s",
@@ -95,7 +102,9 @@ def create_event_from_line(
     return event
 
 
-def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-many-branches
+def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
+    line: str, ipaddress: str
+) -> Event:
     """
     Variant 1: plain syslog message without priority/facility:
     May 26 13:45:01 Klapprechner CRON[8046]:  message....
@@ -105,6 +114,9 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     Variant 2: syslog message including facility (RFC 3164)
     <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
+
+    Variant 2a: forwarded message from zypper on SLES15 with brackets around application
+    <78>May 26 13:45:01 Klapprechner [CRON][8046]:  message....
 
     Variant 3: local Nagios alert posted by mkevent -n
     <154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che
@@ -145,7 +157,7 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
     """
 
     event = _make_event(line, ipaddress)
-    # Variant 2,3,4,5,6,7,7a,8
+    # Variant 2,2a,3,4,5,6,7,7a,8
     if line.startswith("<"):
         i = line.find(">")
         prio = int(line[1:i])
@@ -160,7 +172,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 7 and 7a
     if line[0] == "@" and line[11] in [" ", ";"] and line.split(" ", 1)[0].count(";") <= 1:
-        details, event["host"], line = line.split(" ", 2)
+        details, host, line = line.split(" ", 2)
+        event["host"] = HostName(host)
         detail_tokens = details.split(";")
         timestamp = detail_tokens[0]
         if len(detail_tokens) > 1:
@@ -174,7 +187,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 5
     elif len(line) > 24 and line[10] == "T":
-        timestamp, event["host"], rest = line.split(" ", 2)
+        timestamp, host, rest = line.split(" ", 2)
+        event["host"] = HostName(host)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
 
@@ -184,7 +198,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 8
     elif line[10] == "-" and line[19] == " ":
-        timestamp, event["host"], rest = line.split(" ", 2)
+        timestamp, host, rest = line.split(" ", 2)
+        event["host"] = HostName(host)
         timestamp = fix_broken_sophos_timestamp(timestamp)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
@@ -195,18 +210,19 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
         # There is no datetime information in the message, use current time
         event["time"] = _time()
         # There is no host information, use the provided address
-        event["host"] = ipaddress
+        event["host"] = HostAddress(ipaddress)
 
     # Variant 10
     elif line[4] == " " and line[:4].isdigit():
         time_part = line[:20]  # ignoring tz info
-        event["host"], application, line = line[25:].split(" ", 2)
+        host, application, line = line[25:].split(" ", 2)
+        event["host"] = HostName(host)
         event["application"] = application.rstrip(":")
         event["pid"] = 0
         event["text"] = line
         event["time"] = mktime(strptime(time_part, "%Y %b %d %H:%M:%S"))
 
-    # Variant 1,1a,2,4
+    # Variant 1,1a,2,2a,4
     else:
         month_name, day, timeofday, rest = line.split(None, 3)
 
@@ -220,14 +236,14 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
             # Use the extracted host and continue with the remaining message text
             rest = tmp_rest
 
-        event["host"] = host
+        event["host"] = HostName(host)
 
         # Variant 4
         if rest.startswith("@"):
             # TODO: host gets overwritten, strange... Is this OK?
             event.update(parse_monitoring_info(rest))
 
-        # Variant 1, 2
+        # Variant 1, 2, 2a
         else:
             event.update(parse_syslog_info(rest))
 
@@ -244,13 +260,17 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
             hours, minutes, seconds = map(int, timeofday.split(":"))
 
-            # A further problem here: we do not now whether the message is in DST or not
-            event["time"] = mktime((year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
+            # With the -1 the mktime will correctly set the DST value
+            # see: https://stackoverflow.com/questions/13464009/calculate-tm-isdst-from-date-and-timezone
+            # see: https://docs.python.org/3/library/time.html#time.mktime
+            event["time"] = mktime((year, month, iday, hours, minutes, seconds, 0, 0, -1))
 
     # The event simulator ships the simulated original IP address in the
     # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
     if isinstance(event["host"], str) and "|" in event["host"]:
-        event["host"], event["ipaddress"] = event["host"].split("|", 1)
+        host, ipaddress = event["host"].split("|", 1)
+        event["host"] = HostName(host)
+        event["ipaddress"] = str(ipaddress)
     return event
 
 
@@ -282,8 +302,12 @@ def parse_syslog_info(content: str) -> Event:
         pid = 0
         text = content.strip()
     elif "[" in parts[0]:  # TAG followed by pid
-        application, pid_str = parts[0].split("[", 1)
-        pid = int(pid_str.rstrip("]"))
+        application, pid_str = parts[0].rsplit("[", 1)
+        application = application.lstrip("[").rstrip("]")
+        try:
+            pid = int(pid_str.rstrip("]"))
+        except ValueError:
+            pid = 0
         text = parts[1].strip()
     else:  # TAG not followed by pid
         application = parts[0]
@@ -313,7 +337,7 @@ def parse_monitoring_info(line: str) -> Event:
     service, message = rest.split(": ", 1)
     event["application"] = service
     event["text"] = message.strip()
-    event["host"] = host
+    event["host"] = HostName(host)
     event["pid"] = 0
     return event
 
@@ -331,7 +355,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
     ) = line.split(" ", 6)
     nil_value = "-"  # SyslogMessage.nilvalue()
     event["time"] = _time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
-    event["host"] = "" if hostname == nil_value else hostname
+    event["host"] = HostName("" if hostname == nil_value else hostname)
     event["application"] = "" if app_name == nil_value else app_name
     event["pid"] = 0 if procid == nil_value else int(procid)
 
@@ -437,3 +461,17 @@ def _unescape_structured_data_value(v: str, /) -> str:
     for escaped_char in ("\\", '"', "]"):
         v_unescaped = v_unescaped.replace(rf"\{escaped_char}", escaped_char)
     return v_unescaped
+
+
+def scrub_string(s: str) -> str:
+    """Rip out/replace any characters which have a special meaning in the UTF-8
+    encoded history files, see e.g. quote_tab. In theory this shouldn't be
+    necessary, because there are a bunch of bytes which are not contained in any
+    valid UTF-8 string, but following Murphy's Law, those are not used in
+    Checkmk. To keep backwards compatibility with old history files, we have no
+    choice and continue to do it wrong... :-/"""
+
+    return s.translate(_scrub_string_unicode_table)
+
+
+_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

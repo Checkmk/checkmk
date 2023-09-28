@@ -1,5 +1,3 @@
-load("@bzlws//:index.bzl", "bzlws_copy")
-
 filegroup(
   name = "package_source_files",
   srcs =  glob([
@@ -16,7 +14,7 @@ filegroup(
 
 genrule(
     name = "build",
-    srcs = [":package_source_files", ":package_root"],
+    srcs = [":package_source_files", ":package_root", ":skel"],
     outs = ["bin/redis-benchmark", "bin/redis-check-aof", "bin/redis-check-rdb", "bin/redis-cli", "bin/redis-sentinel", "bin/redis-server"],
     cmd = """
         make -C $$(dirname $(execpath :package_root))
@@ -27,25 +25,13 @@ genrule(
 
 genrule(
     name = "skel",
-    srcs = ["@omd_packages//packages/redis/skeleton:skel", "@omd_packages//packages/redis/skeleton:skel_root"],
+    srcs = ["@omd_packages//omd/packages/redis/skeleton:skel", "@omd_packages//omd/packages/redis/skeleton:skel_root"],
     outs = ["skeleton/etc/init.d/redis",
             "skeleton/etc/logrotate.d/redis",
             "skeleton/etc/rc.d/85-redis",
             "skeleton/etc/redis/redis.conf",
            ],
     cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//packages/redis/skeleton:skel_root)) $$(realpath $(RULEDIR))
+        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/redis/skeleton:skel_root)) $$(realpath $(RULEDIR))
     """,
-)
-
-# copy to $(DESTDIR)$(OMD_ROOT)/ is done by make
-bzlws_copy(
-    name = "deploy",
-    out = "build/by_bazel/redis/{FILEPATH}",
-    force = True,
-#    strip_filepath_prefix = "git/**/redis/",
-    srcs = [
-        ":build",
-        ":skel",
-    ],
 )

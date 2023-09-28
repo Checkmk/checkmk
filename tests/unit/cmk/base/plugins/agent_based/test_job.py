@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -143,7 +143,7 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
 @pytest.mark.parametrize(
     "string_table,expected_parsed_data",
     [
-        (
+        pytest.param(
             [
                 ["==>", "SHREK", "<=="],
                 ["start_time", "1547301201"],
@@ -183,8 +183,9 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
                 ["start_time", "1557301561"],
             ],
             SECTION_1,
+            id="",
         ),
-        (
+        pytest.param(
             [
                 ["==>", "backup.sh", "<=="],
                 ["start_time", "1415204091"],
@@ -214,8 +215,9 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
                 ["vol_context_switches", "274"],
             ],
             SECTION_2,
+            id="",
         ),
-        (
+        pytest.param(
             [
                 ["==>", "process1minrtu", "<=="],
                 ["start_time", "1560925321"],
@@ -244,9 +246,9 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
                 ["vol_context_switches", "1344324"],
             ],
             SECTION_3,
+            id="",
         ),
-        (
-            # I am not sure how that happened, but we have seen empty files
+        pytest.param(
             [
                 [
                     "==>",
@@ -255,6 +257,43 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
                 ]
             ],
             {},
+            id="empty file",
+        ),
+        pytest.param(
+            [
+                [
+                    "==>",
+                    "bla",
+                    "<==",
+                ],
+                ["real", "1:32:44"],
+                ["user", "2249.08"],
+                ["sys", "334.76"],
+            ],
+            {
+                "bla": {
+                    "running": False,
+                    "metrics": {"real_time": 5564.0, "user_time": 2249.08, "system_time": 334.76},
+                }
+            },
+            id="unformatted /usr/bin/time output",
+        ),
+        pytest.param(
+            [
+                [
+                    "==>",
+                    "bla",
+                    "<==",
+                ],
+                ["user", "2249,08"],
+            ],
+            {
+                "bla": {
+                    "metrics": {"user_time": 2249.08},
+                    "running": False,
+                }
+            },
+            id="localised float (comma instead of dot as decimal marker)",
         ),
     ],
 )

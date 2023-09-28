@@ -5,7 +5,7 @@
 
 #include <ranges>
 
-#include "cfg.h"
+#include "wnx/cfg.h"
 #include "common/wtools.h"
 #include "providers/df.h"
 namespace rs = std::ranges;
@@ -89,7 +89,7 @@ TEST(DfTest, CalcUsage) {
     EXPECT_EQ(1, df::CalcUsage(99, 100));
 }
 
-TEST(DfTest, Integration) {
+TEST(DfTest, Component) {
     cma::provider::Df df;
     auto result = df.generateContent();
     ASSERT_TRUE(!result.empty());

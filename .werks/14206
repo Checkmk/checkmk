@@ -1,0 +1,15 @@
+Title: Improved checker performance for hosts using HW/SW inventory checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689586709
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+HW/SW inventory checks usually generate persisted data on the monitoring server.
+This data is parsed on every check interval and there causes some CPU load.
+The format of the data has been changed, so that the data can be parsed multiple times faster.
+

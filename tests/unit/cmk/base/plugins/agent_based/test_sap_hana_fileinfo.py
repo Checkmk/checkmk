@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -14,18 +18,20 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
 
 
 @pytest.mark.parametrize(
     "item, parsed, expected_result",
     [
-        (
+        pytest.param(
             "file1234.txt",
             Fileinfo(),
             [Result(state=State.UNKNOWN, summary="Missing reference timestamp")],
+            id="missing reference timestamp",
         ),
-        (
+        pytest.param(
             "C:\\Datentransfer\\ORU\\KC\\KC_41135.hl7",
             Fileinfo(
                 reftime=1563288717,
@@ -40,16 +46,17 @@ from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
                 },
             ),
             [
-                Result(state=State.OK, summary="Size: 2,414 B"),
+                Result(state=State.OK, summary="Size: 2.36 KiB"),
                 Metric("size", 2414.0),
                 Result(state=State.OK, summary="Age: 4 years 249 days"),
                 Metric("age", 147662799.0),
             ],
+            id="file found",
         ),
     ],
 )
-def test_sap_hana_fileinfo(  # type:ignore[no-untyped-def]
-    fix_register, item, parsed, expected_result
+def test_sap_hana_fileinfo(
+    fix_register: FixRegister, item: str, parsed: Fileinfo, expected_result: CheckResult
 ) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     result = list(plugin.check_function(item=item, params={}, section=parsed))
@@ -66,7 +73,7 @@ def test_sap_hana_fileinfo(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_sap_hana_fileinfo_stale(fix_register, item, parsed) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_fileinfo_stale(fix_register: FixRegister, item: str, parsed: Fileinfo) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     with pytest.raises(IgnoreResultsError) as e:
         list(plugin.check_function(item=item, params={}, section=parsed))
@@ -102,8 +109,12 @@ def test_sap_hana_fileinfo_stale(fix_register, item, parsed) -> None:  # type:ig
         ),
     ],
 )
-def test_sap_hana_fileinfo_groups(  # type:ignore[no-untyped-def]
-    fix_register, item, parsed, params, expected_result
+def test_sap_hana_fileinfo_groups(
+    fix_register: FixRegister,
+    item: str,
+    parsed: Fileinfo,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
 ) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
 
@@ -120,8 +131,8 @@ def test_sap_hana_fileinfo_groups(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_sap_hana_fileinfo_groups_stale(  # type:ignore[no-untyped-def]
-    fix_register, item, parsed
+def test_sap_hana_fileinfo_groups_stale(
+    fix_register: FixRegister, item: str, parsed: Fileinfo
 ) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
     with pytest.raises(IgnoreResultsError) as e:

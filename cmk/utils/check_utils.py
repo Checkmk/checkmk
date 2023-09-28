@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
 
 def worst_service_state(*states: int, default: int) -> int:
@@ -78,16 +80,14 @@ def maincheckify(subcheck_name: str) -> str:
 _PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 
-# keep return type in sync with ParametersTypeAlias
-def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
+def wrap_parameters(parameters: Any) -> ParametersTypeAlias:
     """wrap the passed data structure in a dictionary, if it isn't one itself"""
     if isinstance(parameters, dict):
         return parameters
     return {_PARAMS_WRAPPER_KEY: parameters}
 
 
-# keep argument parameters in sync with ParametersTypeAlias
-def unwrap_parameters(parameters: Mapping[str, Any]) -> Any:
+def unwrap_parameters(parameters: ParametersTypeAlias) -> Any:
     if set(parameters) == {_PARAMS_WRAPPER_KEY}:
         return parameters[_PARAMS_WRAPPER_KEY]
     # Note: having *both* the wrapper key and other keys can only happen, if we

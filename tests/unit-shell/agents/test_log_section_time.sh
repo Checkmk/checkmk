@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -45,7 +45,7 @@ test_basic_function() {
 real	0mRUNTIMEs
 user	0mRUNTIMEs
 sys	0mRUNTIMEs
-runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_string_.log")"
+runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_string.log")"
 
 }
 

@@ -1,11 +1,11 @@
-title: HP Proliant Servers: General Status
+title: HPE Proliant Servers: General Status
 agents: snmp
-catalog: hw/server/hp
+catalog: hw/server/hpe
 license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
- on a HP Proliant server and reads the general status information.
+ on a HPE Proliant server and reads the general status information.
  In addition it also returns the serial number and firmware version.
 
  The status is {OK} only if the agent signals {Ok}, {WARN} on

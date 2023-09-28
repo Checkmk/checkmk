@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -13,29 +14,64 @@ from .agent_based_api.v1 import (
     register,
     render,
     Result,
+    Service,
     State,
 )
-from .agent_based_api.v1.type_defs import CheckResult
-from .utils.azure import (
-    check_azure_metrics,
-    discover_azure_by_metrics,
-    MetricData,
-    parse_resources,
-    Section,
-)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.azure import create_check_metrics_function, MetricData, parse_resources
+from .utils.azure_load_balancer import LoadBalancer, Section
+
+
+def parse_load_balancer(string_table: StringTable) -> Section:
+    resources = parse_resources(string_table)
+
+    return {
+        name: LoadBalancer(
+            resource=resource,
+            name=resource.name,
+            frontend_ip_configs=resource.properties["frontend_ip_configs"],
+            inbound_nat_rules=resource.properties["inbound_nat_rules"],
+            backend_pools=resource.properties["backend_pools"],
+            outbound_rules=resource.properties["outbound_rules"],
+        )
+        for name, resource in resources.items()
+    }
+
 
 register.agent_section(
     name="azure_loadbalancers",
-    parse_function=parse_resources,
+    parse_function=parse_load_balancer,
 )
 
 
+def discover_load_balancer_by_metrics(
+    *desired_metrics: str,
+) -> Callable[[Section], DiscoveryResult]:
+    """Return a discovery function, that will discover if any of the metrics are found"""
+
+    def discovery_function(section: Section) -> DiscoveryResult:
+        for item, load_balancer in section.items():
+            if set(desired_metrics) & set(load_balancer.resource.metrics):
+                yield Service(item=item)
+
+    return discovery_function
+
+
+#   .--Byte Count----------------------------------------------------------.
+#   |          ____        _          ____                  _              |
+#   |         | __ ) _   _| |_ ___   / ___|___  _   _ _ __ | |_            |
+#   |         |  _ \| | | | __/ _ \ | |   / _ \| | | | '_ \| __|           |
+#   |         | |_) | |_| | ||  __/ | |__| (_) | |_| | | | | |_            |
+#   |         |____/ \__, |\__\___|  \____\___/ \__,_|_| |_|\__|           |
+#   |                |___/                                                 |
+#   +----------------------------------------------------------------------+
+
+
 def check_byte_count(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    resource = section.get(item)
-    if resource is None:
+    if (load_balancer := section.get(item)) is None:
         raise IgnoreResultsError("Data not present at the moment")
 
-    metric = resource.metrics.get("total_ByteCount")
+    metric = load_balancer.resource.metrics.get("total_ByteCount")
     if metric is None:
         raise IgnoreResultsError("Data not present at the moment")
 
@@ -55,20 +91,29 @@ register.check_plugin(
     name="azure_load_balancer_byte_count",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s Byte Count",
-    discovery_function=discover_azure_by_metrics("total_ByteCount"),
+    discovery_function=discover_load_balancer_by_metrics("total_ByteCount"),
     check_function=check_byte_count,
     check_ruleset_name="byte_count",
     check_default_parameters={},
 )
 
 
+#   .--SNAT----------------------------------------------------------------.
+#   |                       ____  _   _    _  _____                        |
+#   |                      / ___|| \ | |  / \|_   _|                       |
+#   |                      \___ \|  \| | / _ \ | |                         |
+#   |                       ___) | |\  |/ ___ \| |                         |
+#   |                      |____/|_| \_/_/   \_\_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
 def check_snat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    resource = section.get(item)
-    if resource is None:
+    if (load_balancer := section.get(item)) is None:
         raise IgnoreResultsError("Data not present at the moment")
 
-    allocated_ports_metric = resource.metrics.get("average_AllocatedSnatPorts")
-    used_ports_metric = resource.metrics.get("average_UsedSnatPorts")
+    allocated_ports_metric = load_balancer.resource.metrics.get("average_AllocatedSnatPorts")
+    used_ports_metric = load_balancer.resource.metrics.get("average_UsedSnatPorts")
 
     if allocated_ports_metric is None or used_ports_metric is None:
         raise IgnoreResultsError("Data not present at the moment")
@@ -98,7 +143,7 @@ register.check_plugin(
     name="azure_load_balancer_snat",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s SNAT Consumption",
-    discovery_function=discover_azure_by_metrics(
+    discovery_function=discover_load_balancer_by_metrics(
         "average_AllocatedSnatPorts", "average_UsedSnatPorts"
     ),
     check_function=check_snat,
@@ -107,8 +152,21 @@ register.check_plugin(
 )
 
 
-def check_health() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+#   .--Health--------------------------------------------------------------.
+#   |                    _   _            _ _   _                          |
+#   |                   | | | | ___  __ _| | |_| |__                       |
+#   |                   | |_| |/ _ \/ _` | | __| '_ \                      |
+#   |                   |  _  |  __/ (_| | | |_| | | |                     |
+#   |                   |_| |_|\___|\__,_|_|\__|_| |_|                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def check_health(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (load_balancer := section.get(item)) is None:
+        raise IgnoreResultsError("Data not present at the moment")
+
+    yield from create_check_metrics_function(
         [
             MetricData(
                 "average_VipAvailability",
@@ -124,18 +182,18 @@ def check_health() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
                 render.percent,
                 lower_levels_param="health_probe",
             ),
-        ]
-    )
+        ],
+    )(item, params, {item: load_balancer.resource})
 
 
 register.check_plugin(
     name="azure_load_balancer_health",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s Health",
-    discovery_function=discover_azure_by_metrics(
+    discovery_function=discover_load_balancer_by_metrics(
         "average_VipAvailability", "average_DipAvailability"
     ),
-    check_function=check_health(),
+    check_function=check_health,
     check_ruleset_name="azure_load_balancer_health",
     check_default_parameters={"vip_availability": (90.0, 25.0), "health_probe": (90.0, 25.0)},
 )

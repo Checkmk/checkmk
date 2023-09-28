@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "install_api.h"
+#include "wnx/install_api.h"
 
 #include <msi.h>
 
@@ -12,11 +12,11 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
-#include "cma_core.h"
-#include "common/wtools.h"  // converts
-#include "logger.h"
+#include "common/wtools.h"   // converts
 #include "tools/_process.h"  // start process
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
 
 #pragma comment(lib, "msi.lib")
 namespace fs = std::filesystem;
@@ -282,7 +282,7 @@ bool NeedInstall(const fs::path &incoming_file,
     return src_time > target_time;
 }
 
-/// \brief - checks we have newer file than installed
+/// - checks we have newer file than installed
 ///
 /// In the case of any problems returns true
 /// No unit tests
@@ -430,7 +430,7 @@ void ExecuteUpdate::prepare(const fs::path &exe, const fs::path &msi,
 }
 
 namespace {
-/// \brief - returns the recovery file path which may not exist
+/// - returns the recovery file path which may not exist
 ///
 /// Name is based on the msi to be installed with special extension.
 /// The file content will be find in the windows install base
@@ -459,7 +459,7 @@ fs::path CreateRecoveryFile(const fs::path &msi_to_install) {
     return recover_file;
 }
 
-/// \brief - delivers msi to be installed in temp
+/// - delivers msi to be installed in temp
 ///
 /// Move MSI to be installed into temp
 /// May fail. On fail caller should stop installation.
@@ -545,7 +545,8 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         }
 
         auto command = eu.getCommand();
-        return {command, tools::RunStdCommand(command, false) != 0};
+        return {command,
+                tools::RunStdCommand(command, tools::WaitForEnd::no) != 0};
     } catch (const std::exception &e) {
         auto log_text = fmt::format(
             "Unexpected exception '{}' during attempt to execute agent update",
@@ -556,7 +557,7 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     return {{}, false};
 }
 
-/// \brief - checks that post install flag is set by MSI
+/// - checks that post install flag is set by MSI
 ///
 /// Must be called by any executable to check that installation is finalized
 bool IsPostInstallRequired() {
@@ -566,7 +567,7 @@ bool IsPostInstallRequired() {
                                     registry::kMsiPostInstallDefault);
 }
 
-/// \brief - cleans post install flag
+/// - cleans post install flag
 ///
 /// Normally called only by service after installation Python module
 void ClearPostInstallFlag() {
@@ -575,7 +576,7 @@ void ClearPostInstallFlag() {
                              registry::kMsiPostInstallDefault);
 }
 
-/// \brief - checks that migration flag is set by MSI
+/// - checks that migration flag is set by MSI
 ///
 /// Normally called only by service during upgrade config
 bool IsMigrationRequired() {
@@ -616,7 +617,7 @@ auto ReadFileAsTable(const fs::path &name) {
 
 /// reads the file which must be encoded as LE BOM
 std::wstring ReadLeBom(const fs::path &file) {
-    constexpr size_t max_log_size{8192U * 1024};
+    constexpr size_t max_log_size{8192U * 1024U};
     constexpr auto ff = static_cast<unsigned char>('\xFF');
     constexpr auto fe = static_cast<unsigned char>('\xFE');
     constexpr std::array le_bom_marker{ff, fe};
@@ -709,7 +710,7 @@ std::optional<std::wstring> Get() {
     }
     for (const auto &line : ReadFileAsTable(*api_log)) {
         if (line.starts_with(api_err::kFailMarker)) {
-            return wtools::ConvertToUTF16(line.c_str() +
+            return wtools::ConvertToUtf16(line.c_str() +
                                           api_err::kFailMarker.length());
         }
     }

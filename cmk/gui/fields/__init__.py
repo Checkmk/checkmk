@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,8 @@
 # warnings.simplefilter("error", RemovedInMarshmallow4Warning)
 
 
-from marshmallow.fields import Field, missing_
+from marshmallow.fields import missing_  # type: ignore[attr-defined]
+from marshmallow.fields import Field
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,
@@ -26,10 +27,15 @@ from cmk.gui.fields.attributes import (
 )
 from cmk.gui.fields.custom_fields import (
     AuxTagIDField,
+    ContactGroupField,
+    IPField,
     LDAPConnectionID,
     NetworkPortNumber,
+    PasswordStoreIDField,
     RelativeUrl,
+    SplunkURLField,
     Timeout,
+    TimePeriodIDField,
     UnixPath,
 )
 from cmk.gui.fields.definitions import (
@@ -39,6 +45,7 @@ from cmk.gui.fields.definitions import (
     ExprSchema,
     FOLDER_PATTERN,
     FolderField,
+    FolderIDField,
     GroupField,
     host_attributes_field,
     HostField,
@@ -50,6 +57,7 @@ from cmk.gui.fields.definitions import (
     query_field,
     SiteField,
     Timestamp,
+    Username,
     X509ReqPEMFieldUUID,
 )
 
@@ -57,23 +65,27 @@ __all__ = [
     "AuxTagIDField",
     "host_attributes_field",
     "column_field",
+    "ContactGroupField",
     "customer_field",
     "CustomHostAttributes",
     "ExprSchema",
     "Field",
     "FolderField",
+    "FolderIDField",
     "FOLDER_PATTERN",
     "GroupField",
     "HostAttributeManagementBoardField",
     "HostContactGroup",
     "HostField",
     "HostnameOrIP",
+    "IPField",
     "IPMIParameters",
     "MetaData",
     "missing_",
     "NetworkPortNumber",
     "NetworkScan",
     "NetworkScanResult",
+    "PasswordStoreIDField",
     "LDAPConnectionID",
     "LockedBy",
     "PasswordIdent",
@@ -82,10 +94,13 @@ __all__ = [
     "PythonString",
     "query_field",
     "SiteField",
+    "SplunkURLField",
     "SNMPCredentials",
     "Timeout",
+    "TimePeriodIDField",
     "Timestamp",
     "UnixPath",
+    "Username",
     "RelativeUrl",
     "X509ReqPEMFieldUUID",
 ]

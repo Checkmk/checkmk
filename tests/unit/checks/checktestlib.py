@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import copy
 import os
 import types
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest
-
-from cmk.base.check_api import Service
 
 
 class Tuploid:
@@ -39,8 +38,14 @@ class Tuploid:
 class PerfValue(Tuploid):
     """Represents a single perf value"""
 
-    def __init__(  # type:ignore[no-untyped-def]
-        self, key, value, warn=None, crit=None, minimum=None, maximum=None
+    def __init__(
+        self,
+        key: str,
+        value: int | float | None,
+        warn: int | float | None = None,
+        crit: int | float | None = None,
+        minimum: int | float | None = None,
+        maximum: int | float | None = None,
     ) -> None:
         # assign first, so __repr__ won't crash
         self.key = key
@@ -126,7 +131,9 @@ class BasicCheckResult(Tuploid):
     'Infotext contains...'
     """
 
-    def __init__(self, status, infotext, perfdata=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self, status: int, infotext: str, perfdata: None | Sequence[tuple | PerfValue] = None
+    ) -> None:
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
         self.status = status
@@ -215,7 +222,7 @@ class CheckResult:
      generator-induced laziness.
     """
 
-    def __init__(self, result) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, result: Iterable | None | CheckResult) -> None:
         """
         Initializes a list of subresults using BasicCheckResult.
 
@@ -245,6 +252,7 @@ class CheckResult:
                     subresult = BasicCheckResult(*subresult)
                 self.subresults.append(subresult)
         else:
+            assert isinstance(result, tuple)
             self.subresults.append(BasicCheckResult(*result))
 
     def __repr__(self) -> str:
@@ -297,10 +305,8 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery function."""
 
-    def __init__(self, entry) -> None:  # type:ignore[no-untyped-def]
-        self.item, self.default_params = (
-            (entry.item, entry.parameters) if isinstance(entry, Service) else entry
-        )
+    def __init__(self, entry: tuple[str | None, dict | str | tuple | None]) -> None:
+        self.item, self.default_params = entry
         assert self.item is None or isinstance(self.item, str)
 
     @property
@@ -320,7 +326,7 @@ class DiscoveryResult:
     get lost in the laziness.
     """
 
-    def __init__(self, result=()) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, result: Sequence[tuple[str | None, dict | str | tuple | None]] = ()) -> None:
         self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
 
     def __eq__(self, other):
@@ -344,17 +350,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
 
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
-        if isinstance(default_params_a, str):
-            default_params_a = eval(  # pylint:disable=eval-used
-                default_params_a, check.context, check.context
-            )
-
         item_e, default_params_e = ente
-        if isinstance(default_params_e, str):
-            default_params_e = eval(  # pylint:disable=eval-used
-                default_params_e, check.context, check.context
-            )
-
         assert item_a == item_e, f"items differ: {item_a!r} != {item_e!r}"
         assert (
             default_params_a == default_params_e
@@ -371,7 +367,7 @@ class BasicItemState:
     where the first one is either float or int.
     """
 
-    def __init__(self, *args) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
         if len(args) == 1:
             args = args[0]
         msg = "BasicItemState: expected 2-tuple (time_diff, value) - not %r"
@@ -439,17 +435,17 @@ def mock_item_state(mock_state):
 
 
 class MockHostExtraConf:
-    """Mock the calls to host_extra_conf.
+    """Mock the calls to get_host_values.
 
     Due to our rather unorthodox import structure, we cannot mock
-    host_extra_conf_merged directly (it's a global var in running checks!)
-    Instead, we mock the calls to cmk.base.config.host_extra_conf.
+    get_host_merged_dict directly (it's a global var in running checks!)
+    Instead, we mock the calls to cmk.base.config.get_host_values.
 
     Passing a single dict to this objects init method will result in
-    host_extra_conf_merged returning said dict.
+    get_host_merged_dict returning said dict.
 
     You can also pass a list of dicts, but that's rather pointless, as
-    host_extra_conf_merged will return a merged dict, the result of
+    get_host_merged_dict will return a merged dict, the result of
 
         merged_dict = {}
         for d in reversed(list_of_dicts):
@@ -460,14 +456,17 @@ class MockHostExtraConf:
 
     with MockHostExtraConf(mockconfig):
         # run your check test here,
-        # host_extra_conf_merged in your check will return
+        # get_host_merged_dict in your check will return
         # mockconfig
 
     See for example 'test_df_check.py'.
     """
 
-    def __init__(  # type:ignore[no-untyped-def]
-        self, check, mock_config, target="host_extra_conf"
+    def __init__(
+        self,
+        check: object,
+        mock_config: Callable | dict[object, object],
+        target: str = "get_host_values",
     ) -> None:
         self.target = target
         self.context: Any = None  # TODO: Figure out the right type
@@ -479,17 +478,18 @@ class MockHostExtraConf:
         if hasattr(self.config, "__call__"):
             return self.config(_hostname, _ruleset)
 
-        if self.target == "host_extra_conf" and isinstance(self.config, dict):
+        if self.target == "get_host_values" and isinstance(self.config, dict):
             return [self.config]
         return self.config
 
     def __enter__(self):
         """The default context: just mock get_item_state"""
-        import cmk.base.config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
 
-        config_cache = cmk.base.config.get_config_cache()
+        # we can't use get_config_cache here because it may lead to flakiness
+        config_cache = cmk.base.config.reset_config_cache()
         self.context = mock.patch.object(
-            config_cache,
+            config_cache.ruleset_matcher,
             self.target,
             # I'm the MockObj myself!
             new_callable=lambda: self,

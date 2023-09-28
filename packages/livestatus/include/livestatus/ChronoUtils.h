@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -33,6 +33,15 @@ constexpr typename ToDuration::rep ticks(
     return std::chrono::duration_cast<ToDuration>(d).count();
 }
 
+inline uint64_t mangleTimePoint(std::chrono::system_clock::time_point x) {
+    return ticks<std::chrono::microseconds>(x.time_since_epoch()) ^
+           0xA55A'7B7A'5A5A'3B75ULL;
+}
+
+inline std::chrono::system_clock::time_point demangleTimePoint(uint64_t x) {
+    return std::chrono::system_clock::time_point{
+        std::chrono::microseconds{x ^ mangleTimePoint({})}};
+}
 }  // namespace mk
 
 inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {

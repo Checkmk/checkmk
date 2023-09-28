@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On sites which had the option "Forward to remote site by notification spooler"
 configured, the answer of the target site also lead to execution of of the

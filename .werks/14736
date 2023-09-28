@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When narrowing down target platforms with the "Agent bakery packages" rule,
 the signed status (key icon) at the agent bakery GUI previously showed a

@@ -7,10 +7,10 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When the crash report page displayed a agent based check report, it displayed
-an error message "Internal error: Unsupported type <class 'bytes'>" in the
+an error message `Internal error: Unsupported type <class 'bytes'>` in the
 "Agent output" box.
 
 The agent output can now be displayed again, even if it might not be 100%

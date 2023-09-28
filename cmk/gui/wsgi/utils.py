@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -7,6 +7,10 @@ from __future__ import annotations
 import typing as t
 
 from flask import make_response, Response
+
+
+class undefined:
+    pass
 
 
 def render_string_template(template_string: str, **kwargs: str) -> Response:
@@ -48,7 +52,19 @@ class dict_property(t.Generic[T]):
             >>> foo["int_key"]  # not type-checked
             5
 
+        A default can also be set:
+
+            >>> class Bar(dict):
+            ...     int_key = dict_property[int](default=0)
+
+            >>> bar = Bar()
+            >>> assert bar.int_key == 0
+
+
     """
+
+    def __init__(self, default: T | undefined = undefined()) -> None:
+        self.default = default
 
     def __set_name__(self: Self, owner: Inst, name: str) -> None:
         self.name: str = name
@@ -70,6 +86,9 @@ class dict_property(t.Generic[T]):
         if instance is None:
             return self
         try:
+            if not isinstance(self.default, undefined):
+                return instance.setdefault(self.name, self.default)
+
             return instance[self.name]
         except KeyError as exc:
             raise AttributeError(exc) from exc

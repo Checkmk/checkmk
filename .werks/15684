@@ -1,0 +1,15 @@
+Title: password: empty strings should not be allowed as passwords
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1685454828
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When creating or editing a password, the rest-api schema
+would previously allow an empty string to be set. This werk
+addresses this issue by only allowing passwords of length
+1 or more.
+

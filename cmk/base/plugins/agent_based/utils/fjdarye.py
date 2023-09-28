@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,10 +14,22 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from typing import List, Mapping, MutableMapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import NamedTuple
 
-from ..agent_based_api.v1 import Result, Service, State
+from ..agent_based_api.v1 import any_of, equals, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+FJDARYE_SUPPORTED_DEVICES = [
+    ".1.3.6.1.4.1.211.1.21.1.60",  # fjdarye60
+    ".1.3.6.1.4.1.211.1.21.1.150",  # fjdarye500
+    ".1.3.6.1.4.1.211.1.21.1.153",  # fjdarye600
+]
+
+DETECT_FJDARYE = any_of(
+    *[equals(".1.3.6.1.2.1.1.2.0", device_oid) for device_oid in FJDARYE_SUPPORTED_DEVICES]
+)
+
 
 FJDARYE_ITEM_STATUS = {
     "1": Result(state=State.OK, summary="Normal"),
@@ -37,7 +49,7 @@ class FjdaryeItem(NamedTuple):
 SectionFjdaryeItem = Mapping[str, FjdaryeItem]
 
 
-def parse_fjdarye_item(string_table: List[StringTable]) -> SectionFjdaryeItem:
+def parse_fjdarye_item(string_table: list[StringTable]) -> SectionFjdaryeItem:
     fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
 
     for device in string_table:

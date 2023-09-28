@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -53,7 +53,7 @@ def test_join_password_missing_password() -> None:
 def test_join_password_specs_missing_meta_data() -> None:
     meta_data: dict[str, Password] = {}
     passwords = {"asd": "$ecret"}
-    assert join_password_specs(meta_data, passwords) == {}
+    assert not join_password_specs(meta_data, passwords)
 
 
 def test_split_password_specs() -> None:
@@ -101,7 +101,7 @@ def test_password_store_save(store: PasswordStore) -> None:
             }
         )
     }
-    store.save(entries)
+    store.save(entries, pretty=False)
 
     assert store.load_for_reading() == entries
 
@@ -120,7 +120,7 @@ def fixture_test_store(store: PasswordStore) -> PasswordStore:
             }
         )
     }
-    store.save(entries)
+    store.save(entries, pretty=False)
     return store
 
 

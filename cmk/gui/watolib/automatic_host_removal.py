@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
 import json
 import time
-from collections.abc import Iterable, Iterator
-from typing import Literal, TypedDict
+from collections.abc import Iterable, Iterator, Sequence
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from livestatus import LocalConnection, SiteId
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import HostName, Ruleset
+from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
@@ -21,14 +23,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, sitenames
-from cmk.gui.valuespec import Seconds
+from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import CREHost, Host
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
 def execute_host_removal_background_job() -> None:
@@ -93,24 +94,27 @@ def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
 
 def _hosts_to_be_removed(
     job_interface: BackgroundProcessInterface,
-) -> Iterator[tuple[SiteId, Iterator[CREHost]]]:
+) -> Iterator[tuple[SiteId, Iterator[Host]]]:
     yield from (
-        (site_id, _hosts_to_be_removed_for_site(job_interface, site_id)) for site_id in sitenames()
+        (site_id, _hosts_to_be_removed_for_site(job_interface, site_id))
+        for site_id in wato_site_ids()
     )
 
 
 def _hosts_to_be_removed_for_site(
     job_interface: BackgroundProcessInterface,
     site_id: SiteId,
-) -> Iterator[CREHost]:
+) -> Iterator[Host]:
     if site_is_local(site_id):
         hostnames = _hosts_to_be_removed_local()
     else:
         try:
-            hostnames_serialized = do_remote_automation(
-                get_site_config(site_id),
-                "hosts-for-auto-removal",
-                [],
+            hostnames_serialized = str(
+                do_remote_automation(
+                    get_site_config(site_id),
+                    "hosts-for-auto-removal",
+                    [],
+                )
             )
         except MKUserError:  # Site may be down
             job_interface.send_progress_update(f"Skipping remote site {site_id}, might be down")
@@ -129,10 +133,10 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
     for hostname, check_mk_service_crit_since in _livestatus_query_local_candidates():
         try:
             rule_value = next(
-                ruleset_matcher.get_host_ruleset_values(
-                    match_object=RulesetMatchObject(hostname),
-                    ruleset=automatic_host_removal_ruleset,
-                    is_binary=False,
+                iter(
+                    ruleset_matcher.get_host_values(
+                        hostname, ruleset=automatic_host_removal_ruleset
+                    )
                 )
             )
         except StopIteration:
@@ -144,9 +148,9 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
             yield hostname
 
 
-def _load_automatic_host_removal_ruleset() -> Ruleset:
+def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:
     return [
-        rule.to_config()
+        rule.to_config(use_host_folder=UseHostFolder.HOST_FOLDER_FOR_BASE)
         for _folder, _idx, rule in SingleRulesetRecursively.load_single_ruleset_recursively(
             "automatic_host_removal"
         )
@@ -168,7 +172,7 @@ Filter: state = 2"""
 
 
 class _RemovalConditions(TypedDict):
-    checkmk_service_crit: Seconds
+    checkmk_service_crit: int  # seconds
 
 
 def _should_delete_host(
@@ -183,6 +187,8 @@ def _should_delete_host(
 
 
 def _activate_changes(sites: Iterable[SiteId]) -> None:
+    # workaround until CMK-13093 is fixed
+    folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
     manager.load()
     with SuperUserContext():

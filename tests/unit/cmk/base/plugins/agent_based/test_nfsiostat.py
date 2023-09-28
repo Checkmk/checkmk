@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
 from cmk.base.plugins.agent_based import nfsiostat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-
-
-@pytest.fixture(name="discovery", scope="module")
-def _discovery():
-    return nfsiostat.inventory_nfsiostat
-
-
-@pytest.fixture(name="check", scope="module")
-def _check():
-    return nfsiostat.check_nfsiostat
+from cmk.base.plugins.agent_based.nfsiostat import Section
 
 
 @pytest.fixture(name="section1", scope="module")
@@ -135,16 +126,19 @@ def _section2():
         pytest.param("section2", "'abcdef123-x01:/bud_win_redvol/root/Oracle/tnsnames',"),
     ],
 )
-def test_item(section, item, discovery, request):
-    services = list(discovery(request.getfixturevalue(section)))
+def test_item(section, item, request):
+    services = list(nfsiostat.inventory_nfsiostat(request.getfixturevalue(section)))
     assert len(services) == 1
     assert services[0][0] == item
 
 
-def test_nfsiostat_check(section1, discovery, check) -> None:  # type:ignore[no-untyped-def]
-    services = list(discovery(section1))
+def test_nfsiostat_check(
+    section1: Section,
+) -> None:
+    services = list(nfsiostat.inventory_nfsiostat(section1))
     item = services[0][0]
-    results = list(check(item=item, params={}, section=section1))
+    assert isinstance(item, str)
+    results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section1))
     assert results == [
         Result(state=State.OK, summary="Operations: 1.66/s"),
         Metric("op_s", 1.66),
@@ -177,10 +171,13 @@ def test_nfsiostat_check(section1, discovery, check) -> None:  # type:ignore[no-
     ]
 
 
-def test_nfsiostat_check2(section2, discovery, check) -> None:  # type:ignore[no-untyped-def]
-    services = list(discovery(section2))
+def test_nfsiostat_check2(
+    section2: Section,
+) -> None:
+    services = list(nfsiostat.inventory_nfsiostat(section2))
     item = services[0][0]
-    results = list(check(item=item, params={}, section=section2))
+    assert isinstance(item, str)
+    results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section2))
     assert results == [
         Result(state=State.OK, summary="Operations: 1.24/s"),
         Metric("op_s", 1.24),
@@ -213,7 +210,7 @@ def test_nfsiostat_check2(section2, discovery, check) -> None:  # type:ignore[no
     ]
 
 
-def test_mount_name_ends_with_number(discovery, check):
+def test_mount_name_ends_with_number():
     section = nfsiostat.parse_nfsiostat(
         [
             [
@@ -266,13 +263,14 @@ def test_mount_name_ends_with_number(discovery, check):
         ]
     )
 
-    services = list(discovery(section))
+    services = list(nfsiostat.inventory_nfsiostat(section))
     item = services[0][0]
-    results = list(check(item=item, params={}, section=section))
+    assert isinstance(item, str)
+    results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section))
     assert results[0] == Result(state=State.OK, summary="Operations: 730.89/s")
 
 
-def test_mount_name_with_no_beginning_slash(discovery, check):
+def test_mount_name_with_no_beginning_slash():
     section = nfsiostat.parse_nfsiostat(
         [
             [
@@ -325,8 +323,8 @@ def test_mount_name_with_no_beginning_slash(discovery, check):
         ]
     )
 
-    services = list(discovery(section))
+    services = list(nfsiostat.inventory_nfsiostat(section))
     item = services[0][0]
     assert item == "'10.61.241.85:ucs',"
-    results = list(check(item=item, params={}, section=section))
+    results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section))
     assert results[0] == Result(state=State.OK, summary="Operations: 0.54/s")

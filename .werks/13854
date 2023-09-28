@@ -6,7 +6,7 @@ Date: 1649091977
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, provided by the WATO MSI file with Windows agent 
 retained a digital code signature from the original MSI file. 

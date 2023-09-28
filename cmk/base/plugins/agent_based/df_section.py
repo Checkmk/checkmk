@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import List, Mapping, Optional, Sequence, Set, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -17,11 +17,11 @@ from cmk.base.plugins.agent_based.utils.df import (
     InodesSubsection,
 )
 
-LsblkMap = Mapping[str, str]
+LsblkMap = Mapping[str, str | None]
 MpToDevice = Mapping[str, str]
 
 
-def _padded_line(line: List[str]) -> List[str]:
+def _padded_line(line: list[str]) -> list[str]:
     try:
         int(line[1])
     except ValueError:
@@ -30,7 +30,7 @@ def _padded_line(line: List[str]) -> List[str]:
     return [line[0], ""] + line[1:]
 
 
-def _reformat_line(line: List[str]) -> List[str]:
+def _reformat_line(line: list[str]) -> list[str]:
     # Handle known cases, where the file system contains spaces
     for index, entry in enumerate(line):
         if entry == "NTFS":
@@ -47,10 +47,10 @@ def _reformat_line(line: List[str]) -> List[str]:
 
 
 def _processed(
-    line: List[str],
-    seen_btrfs_devices: Set[str],
+    line: list[str],
+    seen_btrfs_devices: set[str],
     device_to_uuid: LsblkMap,
-) -> Optional[DfBlock]:
+) -> DfBlock | None:
     device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
     if fs_type == "btrfs":
         # This particular bit of magic originated in Werk #2671 and has the purpose of
@@ -91,8 +91,8 @@ def _processed(
 
 def _parse_blocks_subsection(
     blocks_subsection: StringTable, device_to_uuid: LsblkMap
-) -> Tuple[BlocksSubsection, MpToDevice]:
-    seen_btrfs_devices: Set[str] = set()
+) -> tuple[BlocksSubsection, MpToDevice]:
+    seen_btrfs_devices: set[str] = set()
     df_blocks = tuple(
         item  #
         for line in blocks_subsection
@@ -109,7 +109,7 @@ def _parse_blocks_subsection(
 def _parse_inodes_subsection(
     inodes_subsection: StringTable, mp_to_device: MpToDevice, device_to_uuid: LsblkMap
 ) -> InodesSubsection:
-    def _to_entry(line: Sequence[str]) -> Optional[DfInode]:
+    def _to_entry(line: Sequence[str]) -> DfInode | None:
         with suppress(ValueError):
             mountpoint = line[-1]
             device = mp_to_device.get(mountpoint)
@@ -134,6 +134,67 @@ def _parse_lsblk_subsection(lsblk_subsection: StringTable) -> LsblkMap:
         return {}
 
     return {row["name"]: row["uuid"] for row in lsblk.get("blockdevices") if row["name"]}
+
+
+def _parse_lsblk_v2_row(row: Sequence[str]) -> tuple[str, str | None]:
+    """
+    >>> _parse_lsblk_v2_row(["/dev/nvme0n1"])
+    ('/dev/nvme0n1', None)
+    >>> _parse_lsblk_v2_row(["/dev/nvme0n1p1", "C5CD-A9E8"])
+    ('/dev/nvme0n1p1', 'C5CD-A9E8')
+    >>> _parse_lsblk_v2_row(["/dev/sda","HPE", "\\x10"])
+    ('/dev/sda', 'HPE \\x10')
+    """
+    match row:
+        case [name]:
+            return name, None
+        case [name, uuid]:
+            return name, uuid
+        case [name, *uuid_with_spaces]:
+            return name, " ".join(uuid_with_spaces)
+    raise ValueError(f"An error occured while parsing {row}")
+
+
+def _parse_lsblk_v2_subsection(lsblk_subsection: StringTable) -> LsblkMap:
+    """
+    >>> _parse_lsblk_v2_subsection([
+    ...    ["NAME", "UUID"],
+    ...    ["/dev/loop0"],
+    ...    ["/dev/loop1"],
+    ...    ["/dev/mapper/nvme0n1p3_crypt", "qv3AXw-SFF2-u7O6-Q2gG-nqlv-zU1P-0Emxza"],
+    ...    ["/dev/nvme0n1"],
+    ...    ["/dev/nvme0n1p1", "C5CD-A9E8"],
+    ... ])
+    {'/dev/loop0': None, '/dev/loop1': None, '/dev/mapper/nvme0n1p3_crypt': 'qv3AXw-SFF2-u7O6-Q2gG-nqlv-zU1P-0Emxza', '/dev/nvme0n1': None, '/dev/nvme0n1p1': 'C5CD-A9E8'}
+    """
+    return dict(_parse_lsblk_v2_row(row) for row in lsblk_subsection[1:])  # skip header
+
+
+def _parse_df(
+    string_table: StringTable, parse_lsblk_subsection: Callable[[StringTable], LsblkMap]
+) -> DfSection:
+    blocks_subsection: StringTable = []
+    inodes_subsection: StringTable = []
+    lsblk_subsection: StringTable = []
+    current_list = blocks_subsection
+    for line in string_table:
+        if line[-1] == "[df_inodes_start]":
+            current_list = inodes_subsection
+            continue
+        if line[-1] == "[df_inodes_end]":
+            current_list = blocks_subsection
+            continue
+        if line[-1] == "[df_lsblk_start]":
+            current_list = lsblk_subsection
+            continue
+        if line[-1] == "[df_lsblk_end]":
+            current_list = blocks_subsection
+            continue
+        current_list.append(line)
+
+    device_to_uuid = parse_lsblk_subsection(lsblk_subsection)
+    df_blocks, mp_to_device = _parse_blocks_subsection(blocks_subsection, device_to_uuid)
+    return df_blocks, _parse_inodes_subsection(inodes_subsection, mp_to_device, device_to_uuid)
 
 
 def parse_df(string_table: StringTable) -> DfSection:
@@ -194,32 +255,22 @@ def parse_df(string_table: StringTable) -> DfSection:
     DfInode(device=None, total=65536, avail=40003, mountpoint='/', uuid=None)
     DfInode(device='/dev/sda5', total=799680, avail=799562, mountpoint='/persist', uuid=None)
     """
-    blocks_subsection: StringTable = []
-    inodes_subsection: StringTable = []
-    lsblk_subsection: StringTable = []
-    current_list = blocks_subsection
-    for line in string_table:
-        if line[-1] == "[df_inodes_start]":
-            current_list = inodes_subsection
-            continue
-        if line[-1] == "[df_inodes_end]":
-            current_list = blocks_subsection
-            continue
-        if line[-1] == "[df_lsblk_start]":
-            current_list = lsblk_subsection
-            continue
-        if line[-1] == "[df_lsblk_end]":
-            current_list = blocks_subsection
-            continue
-        current_list.append(line)
+    return _parse_df(string_table, _parse_lsblk_subsection)
 
-    device_to_uuid = _parse_lsblk_subsection(lsblk_subsection)
-    df_blocks, mp_to_device = _parse_blocks_subsection(blocks_subsection, device_to_uuid)
-    return df_blocks, _parse_inodes_subsection(inodes_subsection, mp_to_device, device_to_uuid)
+
+def parse_df_v2(string_table: StringTable) -> DfSection:
+    return _parse_df(string_table, _parse_lsblk_v2_subsection)
 
 
 register.agent_section(
     name="df",
     parse_function=parse_df,
+    supersedes=["hr_fs"],
+)
+
+register.agent_section(
+    name="df_v2",
+    parsed_section_name="df",
+    parse_function=parse_df_v2,
     supersedes=["hr_fs"],
 )

@@ -1,0 +1,19 @@
+Title: Filesystem checks: Avoid crash if device reports negative free space
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684489659
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+A negative value for the free space is of course nonsense. However, if a device reported this,
+Checkmk might have crashed with
+
+C+:
+ValueError("Cannot render negative timespan")
+C-:
+
+when attempting to compute the time left until the filesystem is full. Now, we instead report a
+value of 0 seconds in this case, st. users receive informative notifications about the problem.

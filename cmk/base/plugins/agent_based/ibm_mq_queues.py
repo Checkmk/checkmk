@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -23,7 +24,6 @@ register.agent_section(
 
 
 def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
-    path = ["software", "applications", "ibm_mq", "queues"]
     for item, attrs in sorted(section.items(), key=lambda t: t[0]):
         if ":" not in item:
             # Do not show queue manager in inventory
@@ -31,7 +31,7 @@ def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
 
         qmname, qname = item.split(":")
         yield TableRow(
-            path=path,
+            path=["software", "applications", "ibm_mq", "queues"],
             key_columns={
                 "qmgr": qmname,
                 "name": qname,
@@ -40,12 +40,14 @@ def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
                 "maxdepth": attrs["MAXDEPTH"],
                 "maxmsgl": attrs.get("MAXMSGL", "n/a"),
                 "created": (
-                    "%s %s"
-                    % (attrs.get("CRDATE", "n/a"), attrs.get("CRTIME", "").replace(".", ":"))
+                    "{} {}".format(
+                        attrs.get("CRDATE", "n/a"), attrs.get("CRTIME", "").replace(".", ":")
+                    )
                 ).strip(),
                 "altered": (
-                    "%s %s"
-                    % (attrs.get("ALTDATE", "n/a"), attrs.get("ALTTIME", "").replace(".", ":"))
+                    "{} {}".format(
+                        attrs.get("ALTDATE", "n/a"), attrs.get("ALTTIME", "").replace(".", ":")
+                    )
                 ).strip(),
                 "monq": attrs.get("MONQ", "n/a"),
             },

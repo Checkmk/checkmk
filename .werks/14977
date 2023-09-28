@@ -1,0 +1,20 @@
+Title: SAML Apache configuration with mod_auth_mellon is deprecated
+Class: feature
+Compatible: incomp
+Component: setup
+Date: 1675249828
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+The SAML integration approach on Apache level based on mod_auth_mellon is
+deprecated. In all Enterprise Editions of Checkmk, SAML is now configurable via
+the Setup (see werk #14976 for details).
+
+mod_auth_mellon continues to be available in Checkmk version 2.2.0, but will be
+removed with version 2.3.0. If you would like to use this SAML configuration
+approach in version 2.3.0 and beyond, mod_auth_mellon will need to be
+installed. However, please note that support will be fully dropped in version
+2.3.0.
+

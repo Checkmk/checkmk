@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -48,11 +48,9 @@ def _parse_voltage(v: str) -> float | None:
 
 
 def parse_win_cpuinfo(string_table: StringTable) -> _Section:
-
     section = _Section()
 
     for key, value in ((k.strip(), v.strip()) for k, v in string_table):
-
         match key:
             case "NumberOfCores":
                 if value:
@@ -91,6 +89,12 @@ def parse_win_cpuinfo(string_table: StringTable) -> _Section:
         section.threads = section.threads_per_cpu * section.cpus
 
     return section
+
+
+register.agent_section(
+    name="win_cpuinfo",
+    parse_function=parse_win_cpuinfo,
+)
 
 
 def inventory_win_cpuinfo(section: _Section) -> InventoryResult:

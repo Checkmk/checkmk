@@ -1,0 +1,26 @@
+Title: Reading host_config's will now honour contact groups
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1682084519
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk it was possible for a user to read a hosts configuration
+(using GET on `/objects/host_config/<host_name>`) even if that user was not
+in the contact group of that host.
+
+The REST-API will correctly check a users permissions before serving a response
+in that case and report a 403 error if the user cannot access the host's config.
+
+<b>Affected Versions</b>:
+LI: 2.2.0 (beta)
+LI: 2.1.0
+
+<b>Vulnerability Management</b>:
+We calculated a CVSS 3.1 score of 4.3 (Medium) with the following vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N
+We assigned CVE-2023-22348 to this vulnerability.
+
+We found this vulnerability internally and have no indication of any exploitation.

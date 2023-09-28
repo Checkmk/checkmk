@@ -1,0 +1,12 @@
+Title: Send metrics without perf data to backend
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1684486233
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+We erroneously rejected any metrics without performance data.  Indeed,
+this prevented users to log state changes for those metrics.

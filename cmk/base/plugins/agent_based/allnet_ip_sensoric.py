@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = Mapping[str, Mapping[str, str]]
+
+
+# No idea why we need this. Devices respond with '10 Â°C'.
+_FIXUP_ENCODING = (("°".encode().decode("latin-1"), "°"),)
 
 
 def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:
@@ -36,11 +40,15 @@ def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:
     pat = re.compile(r"(\w+)\.(\w+)")
     parsed: dict[str, dict[str, str]] = {}
     for key, value in string_table:
-        match = pat.search(key)
-        if match:
-            sensor = match.group(1)
-            field = match.group(2)
-            parsed.setdefault(sensor, {})[field] = value
+        if not (match := pat.search(key)):
+            continue
+
+        for wrong, right in _FIXUP_ENCODING:
+            value = value.replace(wrong, right)
+
+        sensor = match.group(1)
+        field = match.group(2)
+        parsed.setdefault(sensor, {})[field] = value
 
     return parsed
 
@@ -52,7 +60,6 @@ register.agent_section(
 
 
 def inventory_allnet_ip_sensoric(section: Mapping[str, Mapping[str, str]]) -> InventoryResult:
-
     if model := section.get("system", {}).get("devicetype"):
         yield Attributes(
             path=["hardware", "system"],

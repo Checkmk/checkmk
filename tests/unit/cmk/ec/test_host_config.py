@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,10 +8,11 @@ from typing import Any
 
 import pytest
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostName
 
-from cmk.ec.host_config import HostConfig, HostInfo
+from cmk.ec.core_queries import HostInfo
+from cmk.ec.host_config import HostConfig
 
 
 @pytest.fixture(name="host_config")
@@ -75,7 +76,7 @@ def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveSta
             HostInfo(
                 name=HostName("heute"),
                 alias="heute alias",
-                address="127.0.0.1",
+                address=HostAddress("127.0.0.1"),
                 custom_variables={
                     "FILENAME": "/wato/hosts.mk",
                     "ADDRESS_FAMILY": "4",

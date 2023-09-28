@@ -6,7 +6,7 @@ Date: 1654674693
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, only the update detection mode provided the desired result, while all other modes either had no
 effect or behaved differently than described. This werk reimplements the discover_services action endpoint.

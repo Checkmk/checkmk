@@ -1,0 +1,17 @@
+Title: Remove unexpected service for certain cluster setups
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678723024
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This only affects users that maintain a cluster where they cluster a service from only <i>some</i> of its nodes.
+
+This is a regression introduced by <a href="https://checkmk.com/werk/14693">Werk #14693</a> in Checkmk 2.1.0p11.
+As a result of this setup the service in question would appear as UNKNOWN service on the node(s) where it was <b>not</b> clustered from (even if it was not even discovered on the node in the first place).
+
+

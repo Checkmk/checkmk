@@ -10,7 +10,7 @@ Version: 2.1.0b1
 
 When using the inline SNMP backend a timeout of the "Check_MK" and
 "Check_MK Discovery" service would result in the service state UNKNOWN
-and the output <i>"<built-in function getbulk> returned a result with an error set"</i>.
+and the output <i>"&lt;built-in function getbulk&gt; returned a result with an error set"</i>.
 This is not very helpful.
 
 The service now goes to CRIT, displaying <i>"Fetcher for host 'my_host' timed out after 60 seconds"</i>.

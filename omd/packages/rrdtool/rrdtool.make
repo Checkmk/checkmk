@@ -2,7 +2,10 @@ RRDTOOL := rrdtool
 RRDTOOL_VERS := 1.7.2
 RRDTOOL_DIR := $(RRDTOOL)-$(RRDTOOL_VERS)
 # Increase this to enforce a recreation of the build cache
-RRDTOOL_BUILD_ID := 4
+RRDTOOL_BUILD_ID := 5
+# The cached package contains the python major/minor version, so include this in the cache name in order to trigger
+# a rebuild on a python version change.
+RRDTOOL_BUILD_ID := $(RRDTOOL_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
 
 RRDTOOL_PATCHING := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-patching
 RRDTOOL_CONFIGURE := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-configure
@@ -29,8 +32,6 @@ RRDTOOL_WORK_MODULEBUILDRC := $(RRDTOOL_WORK_DIR)/.modulebuildrc
 # Used by other OMD packages (e.g. mk-livestatus.make)
 PACKAGE_RRDTOOL_DESTDIR := $(RRDTOOL_INSTALL_DIR_LIBRARY)
 
-# Executed from enterprise/core/src/Makefile.am and livestatus/src/Makefile.am
-# and enterprise/core/src/.f12
 $(RRDTOOL)-build-library: $(BUILD_HELPER_DIR) $(RRDTOOL_CACHE_PKG_PROCESS_LIBRARY)
 
 RRDTOOL_CONFIGUREOPTS  := \

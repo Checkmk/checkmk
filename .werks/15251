@@ -1,0 +1,15 @@
+Title: Fixed "downtimes_with_extra_info" columns in host/service tables
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1675239307
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The "is_pending" part of the "downtimes_with_extra_info" column in the
+"hosts" and "services" table reported all downtimes to be pending.  This has
+been fixed and the information now reflects the real state of the downtime.
+
+This affected only Livestatus for the Nagios core, the CMC part was correct.

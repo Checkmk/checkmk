@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringByteTable
 from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lancom, parse_if_lancom
 
 
@@ -67,8 +70,12 @@ from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lanc
         ),
     ],
 )
-def test_parse_if_brocade_lancom(  # type:ignore[no-untyped-def]
-    if_table, name_map, port_map, ignore, expected_results
+def test_parse_if_brocade_lancom(
+    if_table: StringByteTable,
+    name_map: Mapping[str, str],
+    port_map: Mapping[str, str],
+    ignore: Iterable[str],
+    expected_results: object,
 ) -> None:
     results = tuple(
         (r.index, r.descr, r.alias, r.type, r.speed)
@@ -606,7 +613,7 @@ def test_parse_if_brocade_lancom(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_parse_if_lancom(string_table, expected_results) -> None:  # type:ignore[no-untyped-def]
+def test_parse_if_lancom(string_table: list[StringByteTable], expected_results: object) -> None:
     results = tuple(
         (r.index, r.descr, r.extra_info, r.type, r.speed)
         for r in (iface.attributes for iface in parse_if_lancom(string_table))

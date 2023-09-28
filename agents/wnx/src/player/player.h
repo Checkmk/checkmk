@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -13,11 +13,11 @@
 #include <optional>
 #include <string>
 
-#include "cma_core.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
 
 namespace cma::player {
 constexpr int kMaxPluginsToExec = 32;
@@ -370,7 +370,7 @@ private:
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);
-    FRIEND_TEST(PlayerTest, RealLifeInventory_Long);
+    FRIEND_TEST(PlayerTest, RealLifeInventory_Simulation);
     FRIEND_TEST(v, StartStop);
 #endif
 };

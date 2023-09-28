@@ -1,0 +1,15 @@
+Title: ActivateChanges: Improvements to what data is returned to the API user
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1674542399
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+When activating changes or requesting running changes via the REST API,
+the response would only contain activation ID. This werk adds more
+information to the returned activation data, for example, the changes
+made, the sites affected etc.
+

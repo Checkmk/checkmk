@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import random
 
 import pytest
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based import openshift_queries as plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State

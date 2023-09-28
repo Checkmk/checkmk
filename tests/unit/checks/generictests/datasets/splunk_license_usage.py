@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
-
-checkname = 'splunk_license_usage'
-
-
-info = [['license_usage'], ['524288000', '5895880']]
+checkname = "splunk_license_usage"
 
 
-discovery = {'': [(None, {})]}
+info = [["license_usage"], ["524288000", "5895880"]]
 
 
-checks = {'': [(None,
-                {'usage_bytes': (80.0, 90.0)},
-                [(0, 'Quota: 500 MiB', []),
-                 (0,
-                  'Slaves usage: 5.62 MiB',
-                  [('splunk_slave_usage_bytes',
-                    5895880,
-                    419430400.0,
-                    471859200.0,
-                    None,
-                    None)])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {"usage_bytes": (80.0, 90.0)},
+            [
+                (0, "Quota: 500 MiB", []),
+                (
+                    0,
+                    "Slaves usage: 5.62 MiB",
+                    [("splunk_slave_usage_bytes", 5895880, 419430400.0, 471859200.0, None, None)],
+                ),
+            ],
+        )
+    ]
+}

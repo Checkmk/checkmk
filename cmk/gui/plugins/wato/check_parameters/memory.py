@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,6 +16,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
+    Filesize,
     Integer,
     Percentage,
     TextInput,
@@ -36,6 +37,7 @@ def _parameter_valuespec_memory() -> Dictionary:
                     default_value=(150.0, 200.0),
                     match=match_dual_level_type,
                     help=_(
+                        # xgettext: no-python-format
                         "The used and free levels for the memory on UNIX systems take into account the "
                         "currently used memory (RAM or Swap) by all processes and sets this in relation "
                         "to the total RAM of the system. This means that the memory usage can exceed 100%. "
@@ -152,5 +154,27 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_memory_utilization,
         title=lambda: _("Memory Utilization"),
+    )
+)
+
+
+def _parameter_valuespec_memory_available() -> Dictionary:
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Filesize, title=_("Available memory lower levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="memory_available",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_memory_available,
+        title=lambda: _("Available Memory"),
     )
 )

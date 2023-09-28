@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
@@ -8,10 +8,9 @@ from datetime import datetime
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.conftest import with_user  # pylint: disable=unused-import
-from tests.unit.cmk.gui.test_userdb import _load_users_uncached
+from tests.unit.cmk.gui.userdb.test_userdb import _load_users_uncached
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 from cmk.gui.type_defs import UserSpec
@@ -143,6 +142,7 @@ def fixture_plugin() -> UpdateUserAttributes:
                 "serial": 0,
                 "num_failed_logins": 0,
                 "last_pw_change": 1668511745,
+                "temperature_unit": "celsius",
             },
             {
                 "alias": "test3",
@@ -163,6 +163,7 @@ def fixture_plugin() -> UpdateUserAttributes:
                 "serial": 0,
                 "num_failed_logins": 0,
                 "last_pw_change": 1668511745,
+                "temperature_unit": "celsius",
             },
             id="User already updated",
         ),
@@ -173,7 +174,7 @@ def test_update_user_attributes(
     expected: UserSpec,
     plugin: UpdateUserAttributes,
     mocker: MockerFixture,
-    with_user: tuple[UserId, str],  # pylint: disable=redefined-outer-name
+    with_user: tuple[UserId, str],
 ) -> None:
     now = datetime.now()
     user_id = with_user[0]

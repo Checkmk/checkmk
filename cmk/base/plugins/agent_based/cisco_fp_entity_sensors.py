@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -42,7 +42,6 @@
 # .1.3.6.1.2.1.47.1.1.1.1.7.24 = ''
 # .1.3.6.1.2.1.47.1.1.1.1.7.25 = ''
 
-from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -57,7 +56,7 @@ from cmk.base.plugins.agent_based.utils import entity_sensors as utils
 from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensorSection, OIDSysDescr
 
 
-def parse_cisco_fp_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
+def parse_cisco_fp_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:
     # do not add undefined and temperature (duplicate with cisco_temperature) sensors
     return utils.parse_entity_sensors(
         string_table,

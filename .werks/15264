@@ -1,0 +1,13 @@
+Title: Check plugins logwatch, logwatch_ec: Notify about unreadable log file
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681404802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In the Logwatch and Logwatch Event Console Forwarding Check unreadable log files (e.g. due to insufficient permissions) were previously treated the same as missing log files.
+With this werk, the checks will check specifically for log files that could not be read and will become {CRIT} if any are present.
+To configure the state for the Event Console Forwarding service when unreadable files are detected, use the option "State if a logfile cannot be read" in the rule <i>Logwatch Event Console Forwarding</i>.

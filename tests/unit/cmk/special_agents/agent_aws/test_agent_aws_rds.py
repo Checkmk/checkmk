@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,6 +11,7 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
+    NamingConvention,
     OverallTags,
     RDS,
     RDSLimits,
@@ -83,7 +84,7 @@ def get_rds_sections() -> RDSSections:
         names: object | None, tags: OverallTags
     ) -> tuple[RDSLimits, RDSSummary, RDS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("rds_names", names)
         config.add_service_tags("rds_tags", tags)
 
@@ -92,9 +93,10 @@ def get_rds_sections() -> RDSSections:
 
         distributor = ResultDistributor()
 
-        rds_limits = RDSLimits(FakeRDSClient(), region, config)
-        rds_summary = RDSSummary(fake_rds_client, region, config, distributor)
-        rds = RDS(fake_cloudwatch_client, region, config)
+        # TODO: FakeRDSClient shoud actually subclass RDSClient, etc.
+        rds_limits = RDSLimits(FakeRDSClient(), region, config)  # type: ignore[arg-type]
+        rds_summary = RDSSummary(fake_rds_client, region, config, distributor)  # type: ignore[arg-type]
+        rds = RDS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(rds_summary.name, rds)
         return rds_limits, rds_summary, rds

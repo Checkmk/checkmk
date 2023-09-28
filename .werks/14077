@@ -6,7 +6,7 @@ Date: 1653035141
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk only affects users of NagVis Geomaps.
 
@@ -30,4 +30,4 @@ two regular custom host attributes. This is fully compatible and will not result
 loss of data. The exact procedure is described here:
 https://kb.checkmk.com/display/KB/Geo+coordinates+from+Checkmk+in+NagVis+maps.
 After creating the custom attributes, users must remove their local copy of
-<tt>wato_geo_fields.py</tt> from <tt>local/share/check_mk/web/plugins/wato/<tt>.
+<tt>wato_geo_fields.py</tt> from <tt>local/share/check_mk/web/plugins/wato/</tt>.

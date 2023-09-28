@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -106,10 +107,10 @@ def _get_item_and_grouping(params: Mapping[str, Any]) -> ItemAndGrouping:
 
 def _prepare_item_name(entry: DfBlock | DfInode, behaviour: ItemBehaviour) -> str:
     if entry.device and behaviour == ItemBehaviour.volume_name:
-        return "%s %s" % (entry.device, entry.mountpoint)
+        return f"{entry.device} {entry.mountpoint}"
 
     if entry.uuid and behaviour == ItemBehaviour.uuid:
-        return "%s %s" % (entry.uuid, entry.mountpoint)
+        return f"{entry.uuid} {entry.mountpoint}"
 
     return entry.mountpoint
 
@@ -241,8 +242,11 @@ def check_df(item: str, params: Mapping[str, Any], section: DfSection) -> CheckR
         for df_inode in df_inodes
     ]
 
-    if params.get("show_volume_name"):
-        volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
+    if (
+        params.get("show_volume_name")
+        # we might have no matching device in the cluster case
+        and (volume_name := next((d.device for d in df_blocks if d.mountpoint == item), None))
+    ):
         yield Result(state=State.OK, summary=f"[{volume_name}]")
 
     yield from df_check_filesystem_list(

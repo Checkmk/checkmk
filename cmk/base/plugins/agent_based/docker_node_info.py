@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from itertools import zip_longest
-from typing import Dict
 
 from .agent_based_api.v1 import Attributes, HostLabel, register, TableRow
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
 from .utils import docker
 
-Section = Dict
 
-
-def parse_docker_node_info(string_table: StringTable) -> Section:
-    loaded: Section = {}
+def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:
+    loaded: dict = {}
     # docker_node_info section may be present multiple times,
     # this is how the docker agent plugin reports errors.
     # Key 'Unknown' is present if there is a python exception
@@ -36,7 +33,7 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
     return loaded
 
 
-def host_labels_docker_node_info(section: Section) -> HostLabelGenerator:
+def host_labels_docker_node_info(section: docker.NodeInfoSection) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -56,11 +53,10 @@ register.agent_section(
 )
 
 
-def inventory_docker_node_info(section: Section) -> InventoryResult:
+def inventory_docker_node_info(section: docker.NodeInfoSection) -> InventoryResult:
     if not section:
         return
 
-    docker_path = ["software", "applications", "docker"]
     swarm_data = section.get("Swarm")
 
     inventory_attributes = {
@@ -90,28 +86,25 @@ def inventory_docker_node_info(section: Section) -> InventoryResult:
     }
     if inventory_attributes or status_inventory:
         yield Attributes(
-            path=docker_path,
+            path=["software", "applications", "docker"],
             inventory_attributes=inventory_attributes,
             status_attributes=status_inventory,
         )
 
     if swarm_data and (swarm_managers := swarm_data.get("RemoteManagers")):
-        swarm_manager_path = ["software", "applications", "docker", "swarm_manager"]
         for swarm_manager in swarm_managers:
             if "NodeID" in swarm_manager:
                 yield TableRow(
-                    path=swarm_manager_path,
+                    path=["software", "applications", "docker", "swarm_manager"],
                     key_columns={"NodeID": swarm_manager["NodeID"]},
                     inventory_columns={k: v for k, v in swarm_manager.items() if k != "NodeID"},
                     status_columns={},
                 )
 
-    labels_path = ["software", "applications", "docker", "node_labels"]
-
     # Some outputs may look like: {"Labels": null}
     for label in section.get("Labels", []) or []:
         yield TableRow(
-            path=labels_path,
+            path=["software", "applications", "docker", "node_labels"],
             key_columns={
                 "label": label,
             },

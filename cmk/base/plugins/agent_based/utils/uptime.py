@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from ..agent_based_api.v1 import check_levels, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -20,7 +21,6 @@ def discover(section: Section) -> DiscoveryResult:
 
 
 def check(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     if section.message:
         yield Result(state=State.UNKNOWN, summary=section.message)
 

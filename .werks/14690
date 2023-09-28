@@ -1,0 +1,17 @@
+Title: Fixed "type" column in "downtimes" table
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1675238898
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The "type" column in the Livestatus "downtimes" table incorrectly contained
+information about the active/pending state of the downtime, now it is
+providing information about its type (host or service downtime).
+
+Note that for both kinds of information there is another, more appropriate
+column ("is_pending" and "is_service").
+

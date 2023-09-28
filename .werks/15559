@@ -1,0 +1,26 @@
+Title: mk_oracle: Always use TNS_ALIAS when present
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682068667
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+ATTENTION: This werk was reverted with <a href="https://checkmk.com/werk/15289">Werk #15289</a>.
+
+
+This werk may be relevant for you, in case:
+
+<ul>
+<li>you want to monitor remote instances</li>
+<li>you are using a TNS_ALIAS to reach the remote instance</li>
+</ul>
+
+Previously, a <tt>TNS_ALIAS</tt> from mk_oracle.cfg was pinged by the plugin with <tt>tnsping</tt> in order to verify that this alias can be reached.
+However, this needs the tool <tt>tnsping</tt> installed with the oracle client, which is not shipped per default.
+
+A failure led to silently ignoring the <tt>TNS_ALIAS</tt> and falling back to a potentially invalid connection string which is passed to <tt>sqlplus</tt>.
+The plugin now assumes that the given <tt>TNS_ALIAS</tt> can be reached and uses it.

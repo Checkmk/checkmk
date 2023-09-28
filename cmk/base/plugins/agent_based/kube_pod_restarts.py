@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Literal, MutableMapping, Optional, Tuple, TypedDict, Union
+from collections.abc import MutableMapping
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,7 +26,7 @@ def discovery(section: PodContainers) -> DiscoveryResult:
     yield Service()
 
 
-VSResultInteger = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
+VSResultInteger = tuple[Literal["levels"], tuple[int, int]] | Literal["no_levels"]
 
 
 class Params(TypedDict):
@@ -73,7 +76,7 @@ def _calc_restart_rate_in_last_hour(
     restart_count: int,
     curr_timestamp_seconds: int,
     host_value_store: MutableMapping[str, Any],
-) -> Optional[int]:
+) -> int | None:
     restart_count_list = host_value_store.setdefault("restart_count_list", [])
     while restart_count_list and restart_count_list[0][0] <= curr_timestamp_seconds - ONE_HOUR:
         restart_count_list.pop(0)

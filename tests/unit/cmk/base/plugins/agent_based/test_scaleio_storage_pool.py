@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,14 +16,13 @@ from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     check_scaleio_storage_pool_rebalancerw,
     check_scaleio_storage_pool_totalrw,
     discover_scaleio_storage_pool,
-    DiskReadWrite,
     FilesystemStoragePool,
     parse_scaleio_storage_pool,
     ScaleioStoragePoolSection,
-    StorageConversionError,
     StoragePool,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "4e9a44c700000000": StoragePool(
@@ -93,7 +92,6 @@ STRING_TABLE_WITH_UNKNOWN_UNIT: StringTable = [
 
 
 def test_parse_scaleio_id_and_name() -> None:
-
     scaleio_storage_pool = parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"]
     assert scaleio_storage_pool.pool_id == "4e9a44c700000000"
     assert scaleio_storage_pool.name == "pool01"
@@ -143,7 +141,7 @@ def test_parse_scaleio_section_not_found() -> None:
             ["NAME", "pool01"],
         ]
     )
-    assert parse_result == {}
+    assert not parse_result
 
 
 @pytest.mark.parametrize(
@@ -213,25 +211,19 @@ def test_check_scaleio_storage_pool() -> None:
 
 
 def test_check_scaleio_storage_pool_totalrw_rebalancerw_item_not_found() -> None:
-    assert (
-        list(
-            check_scaleio_storage_pool_totalrw(
-                item="item_not_found",
-                params=FILESYSTEM_DEFAULT_PARAMS,
-                section=SECTION,
-            )
+    assert not list(
+        check_scaleio_storage_pool_totalrw(
+            item="item_not_found",
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            section=SECTION,
         )
-        == []
     )
-    assert (
-        list(
-            check_scaleio_storage_pool_rebalancerw(
-                item="item_not_found",
-                params=FILESYSTEM_DEFAULT_PARAMS,
-                section=SECTION,
-            )
+    assert not list(
+        check_scaleio_storage_pool_rebalancerw(
+            item="item_not_found",
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            section=SECTION,
         )
-        == []
     )
 
 

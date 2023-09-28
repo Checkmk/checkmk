@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -45,7 +45,7 @@ class TestListChoice:
         ]
 
         with pytest.raises(ValueError, match="illegal type for choices"):
-            _load_elements(vs.ListChoice(choices=123))  # type: ignore
+            _load_elements(vs.ListChoice(choices=123))  # type: ignore[arg-type]
 
     def test_validate(self):
         expect_validate_success(_get_list_choice(), [1, 2])
@@ -66,4 +66,4 @@ class TestListChoice:
         assert _get_list_choice().mask(["2"]) == ["2"]
 
     def test_canonical_value(self):
-        assert _get_list_choice().canonical_value() == []
+        assert not _get_list_choice().canonical_value()

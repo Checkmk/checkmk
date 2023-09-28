@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This Werk fixes a code injection vulnerability in watolib.
 
@@ -31,7 +31,7 @@ Check these files for suspicious code.
 
 <b>Vulnerability Management</b>:
 We have rated the issue with a CVSS Score of 9.1 (Critical) with the following CVSS vector: <tt>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:L/A:L</tt>.
-A CVE has been requested.
+We have assigned CVE-2022-46836 for this issue.
 
 <b>Changes</b>:
 This Werk fixes the vulnerability by improving sanitization.

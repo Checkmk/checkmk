@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Configurations with hundreds or thousands of custom visualization elements such as custom graphs suffered
 from slow page rendering, because the configuration files usually become quite large.

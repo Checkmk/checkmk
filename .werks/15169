@@ -1,0 +1,14 @@
+Title: host_config & folder_config: fix validation for remove_attributes when using custom attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1673449082
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this werk, the REST-API returned a 400 error when a custom attribute was provided
+in the remove_attributes field in the update endpoint. This werk fixes this error by passing
+the validation mechanism to the endpoint.
+

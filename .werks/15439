@@ -1,0 +1,14 @@
+Title: site_connection: Wrong configuration was being set when live proxy global settings was set to False
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680007471
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue with the proxy field attribute, global_settings. When it was set
+to False via the rest-api, with no params option, it was incorrectly setting the
+configuration for parameters to None instead of {}.
+

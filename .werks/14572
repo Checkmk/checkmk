@@ -1,0 +1,33 @@
+Title: Prometheus: Deprecation of `kube-state-metrics` scrape target
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1673514758
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The Prometheus agent provides the `kube-state-metrics` as a possible data source. This in turn would
+enable the following checks.
+
+<ul>
+  <li>k8s_resources</li>
+  <li>k8s_namespaces</li>
+  <li>k8s_conditions</li>
+  <li>k8s_pod_container</li>
+  <li>k8s_service_info</li>
+  <li>k8s_daemon_pods</li>
+</ul>
+
+However, these checks are no longer actively maintained, since they have been superseded by their
+counterparts in the Kubernetes agent. Moreover, the `kube-state-metrics` target
+<ul>
+  <li>does not support new versions of kube-state-metrics (v2.0.0-alpha / 2020-09-16 or newer),</li>
+  <li>does not provide the information required to fully support monitoring and</li>
+  <li>is stricly inferior to monitoring via the Kubernetes agent.</li>
+</ul>
+For this reason, this option will be removed in Checkmk 2.3.0.
+
+If you are affected by this change, you need to setup your monitoring as per these instructions:
+https://docs.checkmk.com/latest/en/monitoring_kubernetes.html

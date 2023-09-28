@@ -1,0 +1,17 @@
+Title: agent_azure: Don't show an error if customer isn't privileged to see costs
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1681891778
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, an error 'Customer does not have the privilege to see the cost' and a CRIT status
+were shown in the Azure Agent Info service if customer didn't have privileges to see the costs.
+
+Now, the error isn't shown anymore and the status of the service is OK.
+
+
+

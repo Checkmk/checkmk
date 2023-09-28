@@ -1,0 +1,11 @@
+Title: mssql_instance: support Microsoft SQL Server 2022
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1678785264
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+

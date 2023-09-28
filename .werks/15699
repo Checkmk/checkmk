@@ -1,0 +1,20 @@
+Title: Deprecate Agent Updater v1.6.0
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1683557250
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Starting with Checkmk 2.3.0, the Checkmk server won't be able to communicate with an Agent Updater of version 1.6.0 or lower.
+
+The reason for this is that starting with Checkmk 2.0.0, the internal protocol for updating agents has changed.<br>
+While we have maintained the old protocol up to and including Checkmk 2.2.0, we are now finally deprecating it as of Checkmk 2.3.0.
+
+As a consequence, an Agent Updater v1.6.0 or lower won't be able to either register or update agents anymore, neither automatically, nor manually.<br>
+Please make sure to update all installed agent packages on all hosts to at least v2.0.0 before upgrading the Checkmk server to Checkmk 2.3.0.
+
+Note: The Checkmk agent package, including the agent updater if it is configured, will be given the same version as the Checkmk site on which it was baked.<br>
+It is therefore sufficient to update agents (automatically or manually) with an active Checkmk 2.0.0, 2.1.0 or 2.2.0 server installed.

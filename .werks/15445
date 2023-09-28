@@ -1,0 +1,13 @@
+Title: SAML metadata endpoint: support HEAD requests
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1678458946
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Some identity providers (e.g. Net IQ) require the HTTP headers first in order
+to import the XML metadata. The Checkmk metadata endpoint for SAML now supports
+this request method.

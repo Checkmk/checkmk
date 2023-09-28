@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -91,7 +91,8 @@ td.count.hstate0,
 .timeline .state0,
 .hostmatrix .state0,
 div.statea,
-div.stated {
+div.stated,
+table.job_details td.state.state0 {
   &,
   a {
     color: $font-color-black !important;
@@ -106,6 +107,7 @@ div.stated {
 /* WARN */
 .bibox_box.state1,
 span.content.state1,
+label.state1,
 b.state1,
 td.count.state1,
 td.number.state1,
@@ -115,7 +117,8 @@ td.fillbackground.state1,
 .infobox_entry.state1,
 .state1 span,
 .timeline .state1,
-.hostmatrix .state1 {
+.hostmatrix .state1,
+table.job_details td.state.state1 {
   &,
   a {
     color: $font-color-black !important;
@@ -126,6 +129,7 @@ td.fillbackground.state1,
 /* CRIT/DOWN */
 .bibox_box.state2,
 span.content.state2,
+label.state2,
 b.state2,
 td.count.state2,
 td.number.state2,
@@ -137,7 +141,8 @@ td.fillbackground.state2,
 .timeline .state2,
 .hostmatrix .state2,
 .hstate1 span,
-td.count.hstate1 {
+td.count.hstate1,
+table.job_details td.state.state2 {
   &,
   a {
     color: $font-color-white !important;
@@ -148,6 +153,7 @@ td.count.hstate1 {
 /* UNKNOWN / UNREACH */
 .bibox_box.state3,
 span.content.state3,
+label.state3,
 b.state3,
 td.count.state3,
 td.number.state3,
@@ -167,6 +173,23 @@ td.count.hstate2 {
 }
 
 /* PENDING / in DOWNTIME */
+span.content.state-1,
+.statebullet.statep,
+table.job_details td.state.statep {
+  &,
+  a {
+    color: $font-color-white !important;
+    background-color: $color-state-4-background !important;
+  }
+}
+
+/* RUNNING */
+table.job_details td.state.job_running {
+  color: $font-color-white !important;
+  background-color: $color-state-running-background !important;
+}
+
+.state-1,
 .statep,
 .hstatep,
 .stated,
@@ -273,7 +296,8 @@ b.stmark {
     &:hover {
       /* TODO: create a better hover effect */
       opacity: 0.5;
-      filter: alpha(opacity=50); /* For IE8 and earlier */
+      filter: alpha(opacity=50);
+      /* For IE8 and earlier */
     }
   }
 
@@ -450,12 +474,12 @@ table.data {
     white-space: nowrap;
 
     &.staletime {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color-red;
     }
 
     &.recent {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color;
     }
   }
@@ -467,7 +491,7 @@ table.data {
 }
 
 td.badflag span {
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   background-color: $orange-2;
 }
 

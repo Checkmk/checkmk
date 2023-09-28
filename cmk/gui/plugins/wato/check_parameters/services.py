@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,6 +31,7 @@ def _valuespec_inventory_services_rules():
                 "services",
                 ListOfStrings(
                     title=_("Services (Regular Expressions)"),
+                    size=49,
                     help=_(
                         "Regular expressions matching the begining of the internal name "
                         "or the description of the service. "

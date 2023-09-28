@@ -1,0 +1,12 @@
+Title: Make `Remove TLS registration` work for hosts on remote sites
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1681398686
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Attempting to remove the agent TLS registration via <i>Remove TLS registration</i> in the UI had no
+effect for hosts monitored on remote sites.

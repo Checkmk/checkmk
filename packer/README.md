@@ -7,8 +7,19 @@ We use it to build ready to use images for major cloud providers.
 
 # How to generate images
 
+To generate an image first you need to initialize packer and download all required plugins with
+
   packer init .
-  packer build checkmk.pkr.hcl
+
+Afterwards you can build the images. The builds depends on a few secrets that are defined as variables.
+We recommend you create a build.sh script that sets all variables for you. Have a look at the example\_build.sh file.
+For local development we recommend to only run the qemu builder
+
+  ./build.sh -only="checkmk-ansible.qemu.builder" .
+
+Since the build definitions are split across multiple files you have to run the build on the current folder ".". Just
+specifying one file will lead to an error.
+
 
 # Running the images
 

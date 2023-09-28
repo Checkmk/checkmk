@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from typing import AnyStr, Union
+# pylint: disable=unused-import
 
-from cmk.base.check_api import check_levels, get_average, get_rate, MKCounterWrapped, state_markers
-from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import; # reimported from checks!; See warning below
-    _migrate_params,
-    fahrenheit_to_celsius,
-    render_temp,
-    StatusType,
-    temp_unitsym,
-    TempParamType,
-    to_celsius,
-    TwoLevelsType,
+import time
+from typing import AnyStr
+
+from cmk.base.check_api import check_levels, state_markers
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
 )
+from cmk.base.plugins.agent_based.utils.temperature import _migrate_params
+from cmk.base.plugins.agent_based.utils.temperature import (
+    fahrenheit_to_celsius as fahrenheit_to_celsius,
+)
+from cmk.base.plugins.agent_based.utils.temperature import render_temp as render_temp
+from cmk.base.plugins.agent_based.utils.temperature import StatusType as StatusType
+from cmk.base.plugins.agent_based.utils.temperature import temp_unitsym as temp_unitsym
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
+from cmk.base.plugins.agent_based.utils.temperature import to_celsius as to_celsius
+from cmk.base.plugins.agent_based.utils.temperature import TwoLevelsType as TwoLevelsType
 
 Number = int | float
 
 # ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
-PerfDataEntryType = Union[tuple[AnyStr, Number], tuple[AnyStr, Number, Number | None]]
+PerfDataEntryType = tuple[AnyStr, Number] | tuple[AnyStr, Number, Number | None]
 PerfDataType = list[PerfDataEntryType]
 
 # Generic Check Type. Can be used elsewhere too.
@@ -86,7 +94,6 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     dev_warn_lower,
     dev_crit_lower,
 ):
-
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
 
@@ -152,6 +159,8 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
     crit_lower,
     unique_name,
 ):
+    value_store = get_value_store()
+
     def combiner(status, infotext):
         if "status" in dir(combiner):
             combiner.status = max(combiner.status, status)  # type: ignore[attr-defined]
@@ -168,10 +177,17 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         this_time = time.time()
 
         # first compute current rate in C/s by computing delta since last check
-        rate = get_rate("temp.%s.delta" % unique_name, this_time, temp, allow_negative=True)
+        rate = get_rate(
+            get_value_store(),
+            "temp.%s.delta" % unique_name,
+            this_time,
+            temp,
+        )
 
         # average trend, initialize with zero (by default), rate_avg is in C/s
-        rate_avg = get_average("temp.%s.trend" % unique_name, this_time, rate, trend_range_min)
+        rate_avg = get_average(
+            value_store, f"temp.{unique_name}.trend", this_time, rate, trend_range_min
+        )
 
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
@@ -193,26 +209,22 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         if crit_upper_trend is not None and trend > crit_upper_trend:
             combiner(
                 2,
-                "rising faster than %s/%g min(!!)"
-                % (render_temp(crit_upper_trend, output_unit, True), trend_range_min),
+                f"rising faster than {render_temp(crit_upper_trend, output_unit, True)}/{trend_range_min:g} min(!!)",
             )
         elif warn_upper_trend is not None and trend > warn_upper_trend:
             combiner(
                 1,
-                "rising faster than %s/%g min(!)"
-                % (render_temp(warn_upper_trend, output_unit, True), trend_range_min),
+                f"rising faster than {render_temp(warn_upper_trend, output_unit, True)}/{trend_range_min:g} min(!)",
             )
         elif crit_lower_trend is not None and trend < crit_lower_trend:
             combiner(
                 2,
-                "falling faster than %s/%g min(!!)"
-                % (render_temp(crit_lower_trend, output_unit, True), trend_range_min),
+                f"falling faster than {render_temp(crit_lower_trend, output_unit, True)}/{trend_range_min:g} min(!!)",
             )
         elif warn_lower_trend is not None and trend < warn_lower_trend:
             combiner(
                 1,
-                "falling faster than %s/%g min(!)"
-                % (render_temp(warn_lower_trend, output_unit, True), trend_range_min),
+                f"falling faster than {render_temp(warn_lower_trend, output_unit, True)}/{trend_range_min:g} min(!)",
             )
 
         if "trend_timeleft" in params:
@@ -240,7 +252,7 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
                     combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
                 elif minutes_left <= warn:
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         pass
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
@@ -347,17 +359,8 @@ def check_temperature(  # pylint: disable=too-many-branches
         effective_levels,
     )
 
-    if dev_status is not None:
-        if dlh == "best":
-            status = min(status, dev_status)
-        else:
-            status = max(status, dev_status)
-
     # Render actual temperature, e.g. "17.8 °F"
     infotext = f"{render_temp(temp, output_unit)} {temp_unitsym[output_unit]}"
-
-    if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
-        infotext += ", %s" % dev_status_name  # type: ignore[str-bytes-safe]
 
     # In case of a non-OK status output the information about the levels
     if status != 0:
@@ -420,6 +423,15 @@ def check_temperature(  # pylint: disable=too-many-branches
             if not usr_levels_lower:
                 infotext += dev_levelstext_lower
 
+    if dev_status is not None:
+        if dlh == "best":
+            status = min(status, dev_status)
+        else:
+            status = max(status, dev_status)
+
+    if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
+        infotext += ", State on device: %s" % dev_status_name  # type: ignore[str-bytes-safe]
+
     # all checks specify a unique_name but when multiple sensors are handled through
     #   check_temperature_list, trend is only calculated for the average and then the individual
     #   calls to check_temperate receive no unique_name
@@ -471,7 +483,6 @@ def check_temperature_list(sensorlist, params, unique_name):
     status = 0
     detailtext = ""
     for entry in sensorlist:
-
         if len(entry) == 2:
             sub_item, temp = entry
             kwargs = {}

@@ -1,22 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
-from typing import (
-    Any,
-    Collection,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import register, Result, State
+from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils import interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
@@ -47,7 +38,7 @@ def _line_to_mapping(
 
 
 class SectionCounters(NamedTuple):
-    timestamp: Optional[float]
+    timestamp: float | None
     interfaces: Mapping[str, interfaces.InterfaceWithCounters]
     found_windows_if: bool
     found_mk_dhcp_enabled: bool
@@ -56,7 +47,7 @@ class SectionCounters(NamedTuple):
 def _parse_timestamp_and_instance_names(
     line: Line,
     lines: Lines,
-) -> Tuple[Optional[float], Sequence[str]]:
+) -> tuple[float | None, Sequence[str]]:
     # The lines containing timestamp and nic names are consecutive:
     # [u'1418225545.73', u'510']
     # [u'8', u'instances:', 'NAME', ...]
@@ -98,9 +89,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status="1",
+                    oper_status=None,
                     out_qlen=counters["34"],
-                    oper_status_name="Connected",
+                    oper_status_name=interfaces.MISSING_OPER_STATUS,
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -121,13 +112,12 @@ def _parse_counters(
 
 def _filter_out_deprecated_plugin_lines(
     string_table: StringTable,
-) -> Tuple[StringTable, bool, bool]:
+) -> tuple[StringTable, bool, bool]:
     native_agent_data: StringTable = []
     found_windows_if = False
     found_mk_dhcp_enabled = False
 
     for line in (lines := iter(string_table)):
-
         # from mk_dhcp_enabled.bat
         if line[0].startswith("[dhcp_start]"):
             found_mk_dhcp_enabled = True
@@ -173,7 +163,7 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
-    for line in (lines := iter(string_table_filtered)):  # pylint:disable=superfluous-parens
+    for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
         if len(line) in (2, 3) and not line[-1].endswith("count"):
             # Do not consider lines containing counters:
             # ['-122', '38840302775', 'bulk_count']
@@ -244,7 +234,7 @@ class AdditionalIfData(NamedTuple):
     oper_status: str
     oper_status_name: str
     mac_address: str
-    guid: Optional[str]  # wmic_if.bat does not produce this
+    guid: str | None  # wmic_if.bat does not produce this
 
 
 SectionExtended = Collection[AdditionalIfData]
@@ -257,7 +247,7 @@ SectionExtended = Collection[AdditionalIfData]
 # 5 dormant
 # 6 notPresent
 # 7 lowerLayerDown
-_NetConnectionStatus_TO_OPER_STATUS: Mapping[str, Tuple[str, str]] = {
+_NetConnectionStatus_TO_OPER_STATUS: Mapping[str, tuple[str, str]] = {
     "0": ("2", "Disconnected"),
     "1": ("2", "Connecting"),
     "2": ("1", "Connected"),
@@ -390,7 +380,7 @@ def _normalize_name(
     return mod_name
 
 
-def _match_add_data_to_interfaces(  # type:ignore[no-untyped-def]
+def _match_add_data_to_interfaces(  # type: ignore[no-untyped-def]
     interface_names: Collection[str],
     section_teaming: SectionTeaming,
     section_extended: SectionExtended,
@@ -432,10 +422,9 @@ def _match_add_data_to_interfaces(  # type:ignore[no-untyped-def]
 
 def _merge_sections(
     ifaces: Mapping[str, interfaces.InterfaceWithCounters],
-    section_teaming: Optional[SectionTeaming],
-    section_extended: Optional[SectionExtended],
+    section_teaming: SectionTeaming | None,
+    section_extended: SectionExtended | None,
 ) -> Sequence[interfaces.InterfaceWithCounters]:
-
     section_teaming = section_teaming or {}
     additional_data = (
         _match_add_data_to_interfaces(
@@ -452,16 +441,18 @@ def _merge_sections(
             attributes=interfaces.Attributes(
                 **{
                     **asdict(interface.attributes),
-                    **dict(
-                        alias=add_if_data.alias,
-                        speed=add_if_data.speed or interface.attributes.speed,
-                        group=section_teaming[add_if_data.guid].team_name
+                    **{
+                        "alias": add_if_data.alias,
+                        "speed": add_if_data.speed or interface.attributes.speed,
+                        "group": section_teaming[add_if_data.guid].team_name
                         if add_if_data.guid in section_teaming
                         else None,
-                        oper_status=add_if_data.oper_status,
-                        oper_status_name=add_if_data.oper_status_name,
-                        phys_address=interfaces.mac_address_from_hexstring(add_if_data.mac_address),
-                    ),
+                        "oper_status": add_if_data.oper_status,
+                        "oper_status_name": add_if_data.oper_status_name,
+                        "phys_address": interfaces.mac_address_from_hexstring(
+                            add_if_data.mac_address
+                        ),
+                    },
                 },
             ),
             counters=interface.counters,
@@ -474,10 +465,10 @@ def _merge_sections(
 
 def discover_winperf_if(
     params: Sequence[Mapping[str, Any]],
-    section_winperf_if: Optional[SectionCounters],
-    section_winperf_if_teaming: Optional[SectionTeaming],
-    section_winperf_if_extended: Optional[SectionExtended],
-    section_winperf_if_dhcp: Optional[SectionDHPC],
+    section_winperf_if: SectionCounters | None,
+    section_winperf_if_teaming: SectionTeaming | None,
+    section_winperf_if_extended: SectionExtended | None,
+    section_winperf_if_dhcp: SectionDHPC | None,
 ) -> DiscoveryResult:
     if not section_winperf_if:
         return
@@ -494,10 +485,30 @@ def discover_winperf_if(
 def check_winperf_if(
     item: str,
     params: Mapping[str, Any],
-    section_winperf_if: Optional[SectionCounters],
-    section_winperf_if_teaming: Optional[SectionTeaming],
-    section_winperf_if_extended: Optional[SectionExtended],
-    section_winperf_if_dhcp: Optional[SectionDHPC],
+    section_winperf_if: SectionCounters | None,
+    section_winperf_if_teaming: SectionTeaming | None,
+    section_winperf_if_extended: SectionExtended | None,
+    section_winperf_if_dhcp: SectionDHPC | None,
+) -> CheckResult:
+    yield from _check_winperf_if(
+        item,
+        params,
+        section_winperf_if,
+        section_winperf_if_teaming,
+        section_winperf_if_extended,
+        section_winperf_if_dhcp,
+        get_value_store(),
+    )
+
+
+def _check_winperf_if(
+    item: str,
+    params: Mapping[str, Any],
+    section_winperf_if: SectionCounters | None,
+    section_winperf_if_teaming: SectionTeaming | None,
+    section_winperf_if_extended: SectionExtended | None,
+    section_winperf_if_dhcp: SectionDHPC | None,
+    value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     if not section_winperf_if:
         return
@@ -512,6 +523,7 @@ def check_winperf_if(
         ),
         group_name="Teaming",
         timestamp=section_winperf_if.timestamp,
+        value_store=value_store,
     )
     if section_winperf_if_dhcp and (
         dhcp_res := _check_dhcp(
@@ -531,7 +543,7 @@ def _check_dhcp(
     item: str,
     interface_names: Collection[str],
     section_dhcp: SectionDHPC,
-) -> Optional[Result]:
+) -> Result | None:
     for dhcp_data in section_dhcp:
         try:
             match = int(dhcp_data["index"]) == int(item)
@@ -597,9 +609,9 @@ register.check_plugin(
 
 
 def inventory_winperf_if(
-    section_winperf_if: Optional[SectionCounters],
-    section_winperf_if_teaming: Optional[SectionTeaming],
-    section_winperf_if_extended: Optional[SectionExtended],
+    section_winperf_if: SectionCounters | None,
+    section_winperf_if_teaming: SectionTeaming | None,
+    section_winperf_if_extended: SectionExtended | None,
 ) -> InventoryResult:
     if not section_winperf_if:
         return
@@ -632,7 +644,9 @@ def inventory_winperf_if(
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status[0]),
+                oper_status=int(interface.attributes.oper_status[0])
+                if isinstance(interface.attributes.oper_status, str)
+                else None,
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(

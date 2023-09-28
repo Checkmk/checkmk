@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, NewType, Union
+from typing import Any, NewType
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,13 +32,13 @@ class AggregationKey:
     key: str
 
 
-LabelKey = Union[ResourceKey, MetricKey]
-Key = Union[LabelKey, AggregationKey]
+LabelKey = ResourceKey | MetricKey
+Key = LabelKey | AggregationKey
 
 
 @dataclass(frozen=True)
 class GCPLabels:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, Mapping[str, Mapping[str, str]]]
 
     def __getitem__(self, key: LabelKey) -> str:
         return self._data[key.prefix]["labels"][key.key]
@@ -46,7 +46,7 @@ class GCPLabels:
 
 @dataclass(frozen=True)
 class GCPAggregation:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, str]
 
     def __getitem__(self, key: AggregationKey) -> str:
         return self._data[key.key]
@@ -125,7 +125,6 @@ Section = Mapping[Item, SectionItem]
 
 @dataclass(frozen=True)
 class AssetSection:
-    project: Project
     config: Config
     _assets: Mapping[AssetType, AssetTypeSection]
 
@@ -179,23 +178,38 @@ LEVEL_EXTRACTOR_TYPE = Callable[[Mapping[str, Any], str], tuple[float, float] | 
 
 
 @dataclass(frozen=True)
-class MetricSpec:
+class MetricExtractionSpec:
     @unique
     class DType(IntEnum):
         INT = 2
         FLOAT = 3
 
     metric_type: str
-    label: str
-    render_func: Callable
     scale: float = 1.0
     filter_by: Sequence[Filter] | None = None
-    level_extractor: LEVEL_EXTRACTOR_TYPE | None = None
+
+
+@dataclass(frozen=True)
+class MetricDisplaySpec:
+    label: str
+    render_func: Callable
+
+
+@dataclass(frozen=True)
+class MetricParamsSpec:
+    level_extractor: LEVEL_EXTRACTOR_TYPE
+
+
+@dataclass(frozen=True)
+class MetricSpec:
+    extraction: MetricExtractionSpec
+    display: MetricDisplaySpec
+    params: MetricParamsSpec | None = None
 
 
 def validate_asset_section(section_gcp_assets: AssetSection | None, service: str) -> AssetSection:
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
-        return AssetSection(Project(""), Config(services=[]), _assets={})
+        return AssetSection(Config(services=[]), _assets={})
     return section_gcp_assets
 
 
@@ -209,7 +223,7 @@ def _filter_by_value(result: GCPResult, filter_by: Filter) -> bool:
     return filter_match
 
 
-def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
+def get_value(timeseries: Sequence[GCPResult], spec: MetricExtractionSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
@@ -235,9 +249,9 @@ def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
     for result in results:
         proto_value = result.points[0]["value"]
         match result.value_type:
-            case MetricSpec.DType.FLOAT:
+            case MetricExtractionSpec.DType.FLOAT:
                 value = float(proto_value["double_value"])
-            case MetricSpec.DType.INT:
+            case MetricExtractionSpec.DType.INT:
                 value = float(proto_value["int64_value"])
             case _:
                 raise NotImplementedError("unknown dtype")
@@ -245,7 +259,7 @@ def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
     return ret_val
 
 
-def get_boolean_value(results: Sequence[GCPResult], spec: MetricSpec) -> bool | None:
+def get_boolean_value(results: Sequence[GCPResult], spec: MetricExtractionSpec) -> bool | None:
     def filter_func(r: GCPResult) -> bool:
         type_match = r.metric_type == spec.metric_type
         if spec.filter_by is None:
@@ -267,26 +281,26 @@ def generic_check(
     metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
-        value = get_value(timeseries, metric_spec)
-        if metric_spec.level_extractor:
-            levels_upper = metric_spec.level_extractor(params, metric_name)
+        value = get_value(timeseries, metric_spec.extraction)
+        if metric_spec.params:
+            levels_upper = metric_spec.params.level_extractor(params, metric_name)
         else:
             levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(
                 value,
                 metric_name=metric_name,
-                render_func=metric_spec.render_func,
+                render_func=metric_spec.display.render_func,
                 levels=levels_upper,
-                label=metric_spec.label,
+                label=metric_spec.display.label,
             )
         else:
             yield from check_levels(
                 value,
                 metric_name=metric_name,
-                render_func=metric_spec.render_func,
+                render_func=metric_spec.display.render_func,
                 levels_upper=levels_upper,
-                label=metric_spec.label,
+                label=metric_spec.display.label,
             )
 
 
@@ -383,12 +397,12 @@ def get_percentile_metric_specs(
             filters.extend(additional_filter_by)
 
         return MetricSpec(
-            gcp_metric,
-            f"{label_prefix} ({gcp_aligner_map.percentile}th percentile)",
-            render_func,
-            scale=scale,
-            filter_by=filters,
-            level_extractor=level_extractor,
+            extraction=MetricExtractionSpec(metric_type=gcp_metric, scale=scale, filter_by=filters),
+            display=MetricDisplaySpec(
+                label=f"{label_prefix} ({gcp_aligner_map.percentile}th percentile)",
+                render_func=render_func,
+            ),
+            params=MetricParamsSpec(level_extractor=level_extractor),
         )
 
     return {

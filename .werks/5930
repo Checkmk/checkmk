@@ -28,8 +28,31 @@ The configuration of the overall state also includes
 </ul>
 
 The default configuration for the overall and each data source
-is <table> <tr><td>connection problems</td><td>CRIT</td></tr>
-<tr><td>empty output</td><td>CRIT</td></tr> <tr><td>any unhandled
-exception</td><td>UNKNOWN</td></tr> <tr><td>timeout</td><td>CRIT</td></tr>
-<tr><td>wrong version</td><td>WARN</td></tr> <tr><td>missing
-sections</td><td>WARN</td></tr> </table>
+is
+
+<table>
+  <tr>
+    <td>connection problems</td>
+    <td>CRIT</td>
+  </tr>
+  <tr>
+    <td>empty output</td>
+    <td>CRIT</td>
+  </tr>
+  <tr>
+    <td>any unhandled exception</td>
+    <td>UNKNOWN</td>
+  </tr>
+  <tr>
+    <td>timeout</td>
+    <td>CRIT</td>
+  </tr>
+  <tr>
+    <td>wrong version</td>
+    <td>WARN</td>
+  </tr>
+  <tr>
+    <td>missing sections</td>
+    <td>WARN</td>
+  </tr>
+</table>

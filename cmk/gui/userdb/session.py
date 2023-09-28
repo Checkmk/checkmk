@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,37 +16,23 @@ Once a user logs out or the "last activity" is older than the configured session
 session is invalidated. The user can then login again from the same client or another one.
 """
 
-import hmac
-import secrets
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
-from hashlib import sha256
-from typing import Mapping
 
-import cmk.utils.paths
+from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
 
 auth_logger = gui_logger.getChild("auth")
-
-
-def create_auth_session(username: UserId, session_id: str) -> None:
-    set_auth_cookie(username, session_id)
-
-
-def set_auth_cookie(username: UserId, session_id: str) -> None:
-    response.set_http_cookie(
-        auth_cookie_name(), auth_cookie_value(username, session_id), secure=request.is_secure
-    )
 
 
 def auth_cookie_name() -> str:
@@ -59,32 +45,7 @@ def auth_cookie_value(username: UserId, session_id: str) -> str:
 
 def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
-    secret = _load_secret()
-    serial = _load_serial(username)
-    return hmac.new(
-        key=secret, msg=(username + session_id + str(serial)).encode("utf-8"), digestmod=sha256
-    ).hexdigest()
-
-
-def _load_secret() -> bytes:
-    """Reads the sites auth secret from a file
-
-    Creates the files if it does not exist. Having access to the secret means that one can issue
-    valid cookies for the cookie auth.
-    """
-    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-    secret = secret_path.read_bytes() if secret_path.exists() else None
-
-    # Create new secret when this installation has no secret
-    #
-    # In past versions we used another bad approach to generate a secret. This
-    # checks for such secrets and creates a new one. This will invalidate all
-    # current auth cookies which means that all logged in users will need to
-    # renew their login after update.
-    if secret is None or len(secret) == 32:
-        secret = secrets.token_bytes(256)
-        secret_path.write_bytes(secret)
-    return secret
+    return AuthenticationSecret().hmac(f"{username}{session_id}{_load_serial(username)}")
 
 
 def _load_serial(username: UserId) -> int:
@@ -101,7 +62,8 @@ def _load_serial(username: UserId) -> int:
 
 def on_succeeded_login(username: UserId, now: datetime) -> None:
     ensure_user_can_init_session(username, now)
-    _reset_failed_logins(username)
+    # Set failed login counter to 0
+    save_custom_attr(username, "num_failed_logins", 0)
 
 
 def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
@@ -118,13 +80,6 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
             raise MKUserError(None, _("Another session is active"))
 
 
-def _reset_failed_logins(username: UserId) -> None:
-    """Login succeeded: Set failed login counter to 0"""
-    num_failed_logins = _load_failed_logins(username)
-    if num_failed_logins != 0:
-        _save_failed_logins(username, 0)
-
-
 def load_session_infos(username: UserId, lock: bool = False) -> dict[str, SessionInfo]:
     """Returns the stored sessions of the given user"""
     return (
@@ -135,47 +90,26 @@ def load_session_infos(username: UserId, lock: bool = False) -> dict[str, Sessio
     )
 
 
-def _initialize_session(username: UserId, now: datetime) -> str:
-    """Creates a new user login session (if single user session mode is enabled) and
-    returns the session_id of the new session."""
-    session_infos = cleanup_old_sessions(load_session_infos(username, lock=True), now)
-
-    session_id = create_session_id()
-    now_ts = int(now.timestamp())
-    session_info = SessionInfo(
-        session_id=session_id,
-        started_at=now_ts,
-        last_activity=now_ts,
-        flashes=[],
-    )
-
-    session_infos[session_id] = session_info
-
-    # Save once right after initialization. It may be saved another time later, in case something
-    # was modified during the request (e.g. flashes were added)
-    save_session_infos(username, session_infos)
-
-    return session_id
-
-
-def _load_failed_logins(username: UserId) -> int:
-    num = load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
-    return 0 if num is None else num
-
-
-def cleanup_old_sessions(
+def active_sessions(
     session_infos: Mapping[str, SessionInfo], now: datetime
 ) -> dict[str, SessionInfo]:
-    """Remove invalid / outdated sessions
+    """Return only valid (not outdated) session
 
-    In single user session mode all sessions are removed. In regular mode, the sessions are limited
-    to 20 per user. Sessions with an inactivity > 7 days are also removed.
+    In single user session mode no sessions are returned. In regular mode, the sessions are limited
+    to 20 per user. Sessions with an inactivity > 7 days are also not returned.
     """
     if active_config.single_user_session:
         # In single user session mode there is only one session allowed at a time. Once we
         # reach this place, we can be sure that we are allowed to remove all existing ones.
         return {}
 
+    # NOTE
+    # We intentionally don't remove any session which has been logged out, and rely on that fact
+    # to be checked elsewhere, because that would lead to the session being removed directly after
+    # logout. This would lead to some information in the GUI no longer displaying.
+    #
+    # Once "last_login" got moved from the session_info struct to the user object, we can clean
+    # this up thoroughly.
     return {
         s.session_id: s
         for s in sorted(session_infos.values(), key=lambda s: s.last_activity, reverse=True)[:20]
@@ -193,12 +127,8 @@ def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) 
     save_custom_attr(
         username,
         "session_info",
-        repr({k: asdict(v) for k, v in session_infos.items() if not v.logged_out}),
+        repr({k: asdict(v) for k, v in session_infos.items()}),
     )
-
-
-def _save_failed_logins(username: UserId, count: int) -> None:
-    save_custom_attr(username, "num_failed_logins", str(count))
 
 
 def is_valid_user_session(
@@ -208,15 +138,10 @@ def is_valid_user_session(
     if not session_infos:
         return False  # no session active
 
-    if session_id not in session_infos:
+    if session_id not in session_infos or session_infos[session_id].logged_out:
         auth_logger.debug(
             "%s session_id %s not valid (logged out or timed out?)", username, session_id
         )
         return False
 
     return True
-
-
-def refresh_session(session_info: SessionInfo, now: datetime) -> None:
-    """Updates the current session of the user"""
-    session_info.last_activity = int(now.timestamp())

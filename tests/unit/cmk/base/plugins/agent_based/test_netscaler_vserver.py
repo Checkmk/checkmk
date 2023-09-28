@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.netscaler_vserver import _check_netscaler_vservers
+from cmk.base.plugins.agent_based.netscaler_vserver import _check_netscaler_vservers, VServer
 
 
 @pytest.fixture(name="clustered_vservers")
@@ -36,8 +38,8 @@ def clustered_vservers_fixture():
     ]
 
 
-def test_check_netscaler_vservers_clustered_best(  # type:ignore[no-untyped-def]
-    clustered_vservers,
+def test_check_netscaler_vservers_clustered_best(
+    clustered_vservers: Sequence[VServer],
 ) -> None:
     assert list(
         _check_netscaler_vservers(
@@ -70,8 +72,8 @@ def test_check_netscaler_vservers_clustered_best(  # type:ignore[no-untyped-def]
     ]
 
 
-def test_check_netscaler_vservers_clustered_worst(  # type:ignore[no-untyped-def]
-    clustered_vservers,
+def test_check_netscaler_vservers_clustered_worst(
+    clustered_vservers: Sequence[VServer],
 ) -> None:
     clustered_vservers[0]["service_state"] = (
         1,

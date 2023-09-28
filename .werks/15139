@@ -1,0 +1,14 @@
+Title: Fix hyperlinks in the service description
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673362931
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Previously, left click on a hyperlink in the service description would
+cause an error and the web page wouldn't open.
+
+Now, the left click opens the web page in a new tab.

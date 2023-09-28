@@ -45,7 +45,6 @@ def backup_site_to_tarfile(
     options: CommandOptions,
     verbose: bool,
 ) -> None:
-
     if not os.path.isdir(site.dir):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site.dir)
 
@@ -92,6 +91,9 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     # exclude all temporary files that are created during cmk.utils.store writes
     excludes.append("*.mk.new*")
     excludes.append("var/log/.liveproxyd.state.new*")
+
+    # exclude the "cache" / working directory for the agent bakery
+    excludes.append("var/check_mk/agents/.files_cache/*")
 
     # exclude section cache because files may vanish during backup. It would
     # be better to have them in the backup and simply don't make the backup

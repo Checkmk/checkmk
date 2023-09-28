@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -26,7 +26,7 @@ class AIXPackage(NamedTuple):
     package_type: str
 
 
-Section = List[AIXPackage]
+Section = list[AIXPackage]
 
 
 def parse_aix_packages(string_table: StringTable) -> Section:
@@ -73,10 +73,9 @@ register.agent_section(
 
 
 def inventory_aix_packages(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for row in section:
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": row.name,
             },

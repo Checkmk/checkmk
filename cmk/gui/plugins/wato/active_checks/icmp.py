@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
@@ -100,7 +102,7 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
             "This ruleset allows you to configure explicit PING monitoring of hosts. "
             "Usually a PING is being used as a host check, so this is not necessary. "
             "There are some situations, however, where this can be useful. One of them "
-            "is when using the Check_MK Micro Core with SMART Ping and you want to "
+            "is when using the Checkmk Micro Core with SMART Ping and you want to "
             "track performance data of the PING to some hosts, nevertheless."
         ),
         elements=elements + check_icmp_params(),
@@ -111,7 +113,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:icmp",
+        name=RuleGroup.ActiveChecks("icmp"),
         valuespec=_valuespec_active_checks_icmp,
     )
 )

@@ -7,13 +7,13 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The following error was shown after copying the "allservices" view into a
 dashboard (create new dashboard; choose "Add" -> "Copy of existing view";
 choose "allservices").
 
-<tt>Cannot load dashboards from /omd/sites/site/var/check_mk/web/cmkadmin/user_dashboards.mk: invalid syntax (<unknown>, line 1)</tt>
+`Cannot load dashboards from /omd/sites/site/var/check_mk/web/cmkadmin/user_dashboards.mk: invalid syntax (<unknown>, line 1)`
 
 The error was permanent, no dashboards could be viewed or edited. The error
 could be resolved by removing a single <tt>l</tt> before a <tt>"</tt> from the

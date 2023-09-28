@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, NoReturn
 
-from livestatus import LivestatusResponse, MultiSiteConnection
+from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
@@ -18,7 +18,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     Or,
     QueryExpression,
 )
-from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, Table
+from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, ExpressionDict, Table
 
 # TODO: Support Stats headers in Query() class
 
@@ -83,10 +83,10 @@ class ResultRow(dict):
         except KeyError as exc:
             raise AttributeError(str(exc))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: object, value: object) -> NoReturn:
         raise KeyError(f"{key}: Setting of keys not allowed.")
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: object, value: object) -> NoReturn:
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
@@ -115,13 +115,14 @@ def _get_column(table_class: type[Table], col: str) -> Column:
         A column instance
 
     """
-    if hasattr(table_class, col):
-        return getattr(table_class, col)
-
-    prefix = table_class.__tablename__.rstrip("s") + "_"
-    while col.startswith(prefix):
-        col = col[len(prefix) :]
-    return getattr(table_class, col)
+    if not hasattr(table_class, col):
+        prefix = table_class.__tablename__.rstrip("s") + "_"
+        while col.startswith(prefix):
+            col = col[len(prefix) :]
+    value = getattr(table_class, col)
+    if not isinstance(value, Column):
+        raise ValueError(f"{table_class}.{col} is not a Column")
+    return value
 
 
 class Query:
@@ -290,17 +291,38 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             return list(entry.values())[0]
         return None
 
-    def fetchall(self, sites: MultiSiteConnection) -> list[ResultRow]:
-        return list(self.iterate(sites))
+    def fetchall(
+        self,
+        sites: MultiSiteConnection,
+        include_site_ids: bool = False,
+        only_sites: OnlySites = None,
+    ) -> list[ResultRow]:
+        sites.set_only_sites(only_sites)
+        if include_site_ids:
+            with detailed_connection(sites) as conn:
+                result = list(self.iterate(conn))
+        else:
+            result = list(self.iterate(sites))
 
-    def fetchone(self, sites: MultiSiteConnection) -> ResultRow:
+        sites.set_only_sites()
+        return result
+
+    def fetchone(
+        self,
+        sites: MultiSiteConnection,
+        include_site_ids: bool = False,
+        only_site: SiteId | None = None,
+    ) -> ResultRow:
         """Fetch one row of the result.
 
         If the result from livestatus is more or less than exactly one row long it
         will throw an Exception.
+        If the site_id is passed, we only query that site + the site will be included in the result.
 
         Args:
-            sites:
+            sites: MultiSiteConnection
+            include_site_ids: include the site in the result or not,
+            only_site: query all sites or only the site with the site_id passed in.,
 
         Returns:
             One ResultRow entry.
@@ -336,7 +358,14 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ValueError: Expected one row, got 2 row(s).
 
         """
-        result = list(self.iterate(sites))
+        sites.set_only_sites(None if only_site is None else [only_site])
+        if include_site_ids:
+            with detailed_connection(sites) as conn:
+                result = list(self.iterate(conn))
+        else:
+            result = list(self.iterate(sites))
+
+        sites.set_only_sites()
         if len(result) != 1:
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]
@@ -497,7 +526,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ]
         )
 
-    def dict_repr(self):
+    def dict_repr(self) -> ExpressionDict | None:
         return expr_to_tree(self.table, self.filter_expr)
 
     @classmethod
@@ -730,7 +759,9 @@ def _parse_line(
 
 # TODO: Better rename to site_aware_connection or similar more meaningful
 @contextmanager
-def detailed_connection(connection):
+def detailed_connection(
+    connection: MultiSiteConnection,
+) -> Generator[MultiSiteConnection, None, None]:
     prev = connection.prepend_site
     connection.set_prepend_site(True)
     try:

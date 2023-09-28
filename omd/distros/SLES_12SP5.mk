@@ -15,6 +15,7 @@ OS_PACKAGES    += libevent-2_0-5
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline6
 OS_PACKAGES    += libuuid1
+OS_PACKAGES    += logrotate
 OS_PACKAGES    += net-snmp
 OS_PACKAGES    += pango
 OS_PACKAGES    += perl-Net-SNMP

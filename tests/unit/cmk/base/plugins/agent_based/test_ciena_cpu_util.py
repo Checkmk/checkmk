@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,6 +19,7 @@ SECTION_5171 = Section5171(util=12, cores=[("2", 10), ("3", 0)])
 SECTION_5142 = 12
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, result",
     [
@@ -60,6 +61,7 @@ def test_check_ciena_cpu_util_5171(params: Mapping[str, object], result: CheckRe
     assert list(check_ciena_cpu_util_5171(params, SECTION_5171)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, result",
     [

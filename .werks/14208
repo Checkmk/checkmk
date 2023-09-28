@@ -1,0 +1,21 @@
+Title: Setup: Renaming a host on a remote site no longer requires no pending changes in the central site
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1690881169
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+You can now rename a host at the remote site even if there are pending changes at the central site.
+This restriction has been removed because some setups with hundreds of sites rarely had an empty pending changes list.
+Also, sometimes users weren't allowed to see all sites - so they couldn't see other users' pending changes.
+
+However, this introduced another restriction: You can not use the <tt>Discard changes</tt> feature after
+a host renaming operation, until the next <tt>Activate Changes</tt> of the central site.
+The reasoning behind this is that the rename operation is something which cannot be discarded,
+because the operation was already executed on the remote site.
+The hosts' autochecks, historic data, rrd were already rewritten.
+

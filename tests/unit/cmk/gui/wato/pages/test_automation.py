@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
@@ -26,7 +26,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            if for_cmk_version >= cmk_version.Version.from_str("2.3.0i1")
             else SerializedResult(repr((self.field_1,)))
         )
 
@@ -35,7 +35,7 @@ class ResultTest(ABCAutomationResult):
         return "test"
 
 
-class TestModeAutomation:
+class TestPageAutomation:
     @pytest.fixture(name="result_type_registry")
     def result_type_registry_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         registry = ResultTypeRegistry()
@@ -47,12 +47,12 @@ class TestModeAutomation:
         )
 
     @staticmethod
-    def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
-        **_kwargs,
+    def _check_mk_local_automation_serialized(
+        **_kwargs: object,
     ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
-            "((1, 2), 'abc')",
+            "((1, 2), 'this field was not sent by version N-1')",
         )
 
     @pytest.fixture(name="check_mk_local_automation_serialized")
@@ -85,13 +85,14 @@ class TestModeAutomation:
         "patch_edition",
     )
     def test_execute_cmk_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            request,
-            "headers",
-            {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
-        )
-        automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"((1, 2), 'abc')"
+        with monkeypatch.context() as m:
+            m.setattr(
+                request,
+                "headers",
+                {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
+            )
+            automation.PageAutomation()._execute_cmk_automation()
+            assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
         "result_type_registry",
@@ -100,13 +101,14 @@ class TestModeAutomation:
         "patch_edition",
     )
     def test_execute_cmk_automation_previous_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            request,
-            "headers",
-            {"x-checkmk-version": "2.1.0p19", "x-checkmk-edition": "cee"},
-        )
-        automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"((1, 2),)"
+        with monkeypatch.context() as m:
+            m.setattr(
+                request,
+                "headers",
+                {"x-checkmk-version": "2.2.0p20", "x-checkmk-edition": "cee"},
+            )
+            automation.PageAutomation()._execute_cmk_automation()
+            assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.parametrize(
         "incomp_version",
@@ -121,13 +123,14 @@ class TestModeAutomation:
         "setup_request",
         "patch_edition",
     )
-    def test_execute_cmk_automation_incompatible(  # type:ignore[no-untyped-def]
+    def test_execute_cmk_automation_incompatible(
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
-    ):
-        monkeypatch.setattr(
-            request,
-            "headers",
-            {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
-        )
-        with pytest.raises(MKGeneralException, match="is incompatible"):
-            automation.ModeAutomation()._execute_cmk_automation()
+    ) -> None:
+        with monkeypatch.context() as m:
+            m.setattr(
+                request,
+                "headers",
+                {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
+            )
+            with pytest.raises(MKGeneralException, match="not compatible"):
+                automation.PageAutomation()._execute_cmk_automation()

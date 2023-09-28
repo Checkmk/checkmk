@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -53,10 +53,10 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: 0 B / 24 hours",
+                    "trend: +154 TiB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
-                        ("trend", 0.0, None, None, 0, 4277.291666666667),
+                        ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),
                     ],
                 ),
             ],
@@ -83,10 +83,10 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: 0 B / 24 hours",
+                    "trend: +154 TiB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
-                        ("trend", 0.0, None, None, 0, 4277.291666666667),
+                        ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),
                     ],
                 ),
                 (
@@ -119,10 +119,10 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     0,
-                    "trend: 0 B / 24 hours",
+                    "trend: +154 TiB / 24 hours",
                     [
                         ("growth", 161105947.82608697),
-                        ("trend", 0.0, None, None, 0, 4277.291666666667),
+                        ("trend", 161105947.82608697, None, None, 0, 4277.291666666667),
                     ],
                 ),
                 (
@@ -140,9 +140,10 @@ def test_df_check_filesystem_single_coroutine(
     data: tuple[float | None, float | None, float | None, float | None, float | None],
     expected_result: Sequence[tuple[int, str, Sequence[tuple]]],
 ) -> None:
+    mock_state = {"df./fake.delta": (100, 954)}
     mocker.patch(
-        "cmk.base.item_state.get_value_store",
-        return_value={"df./fake.delta": (100, 954)},
+        "cmk.base.check_legacy_includes.size_trend.get_value_store",
+        return_value=mock_state,
     )
     assert (
         list(

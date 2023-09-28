@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -62,7 +63,7 @@ ORACLE_TABLESPACES_DEFAULTS = {
 
 
 def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSpaces:
-    tablespaces: Dict[Tuple[str, str], oracle.TableSpaces] = {}
+    tablespaces: dict[tuple[str, str], oracle.TableSpaces] = {}
     error_sids: oracle.ErrorSids = {}
 
     for line in string_table:
@@ -162,11 +163,10 @@ register.agent_section(
 
 
 def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> DiscoveryResult:
-
     for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
             yield Service(
-                item="%s.%s" % (sid, ts_name),
+                item=f"{sid}.{ts_name}",
                 parameters={"autoextend": tablespace["autoextensible"]},
             )
 
@@ -276,7 +276,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
 
         # Check autoextend status if parameter not set to None
         if autoext is not None and ts_status != "READONLY":
-            autoext_info: Optional[str]
+            autoext_info: str | None
             if autoext and stats.num_extensible == 0:
                 autoext_info = "NO AUTOEXTEND"
             elif not autoext and stats.num_extensible > 0:
@@ -304,7 +304,6 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))
             or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
-
             yield from check_levels(
                 stats.free_space,
                 levels_lower=(warn, crit),
@@ -333,8 +332,8 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             )
 
 
-def cluster_check_oracle_tablespaces(  # type:ignore[no-untyped-def]
-    item, params, section: Mapping[str, Optional[oracle.SectionTableSpaces]]
+def cluster_check_oracle_tablespaces(  # type: ignore[no-untyped-def]
+    item, params, section: Mapping[str, oracle.SectionTableSpaces | None]
 ) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
 
@@ -388,7 +387,6 @@ register.check_plugin(
 
 
 def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
-    path_tablespaces = ["software", "applications", "oracle", "tablespaces"]
     tablespaces = section["tablespaces"]
     for tablespace in tablespaces:
         sid, name = tablespace
@@ -412,7 +410,7 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
             }
 
         yield TableRow(
-            path=path_tablespaces,
+            path=["software", "applications", "oracle", "tablespaces"],
             key_columns={
                 "sid": sid,
                 "name": name,

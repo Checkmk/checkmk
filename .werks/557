@@ -6,4 +6,4 @@ Date: 1392726543
 Class: fix
 
 The data from statgrab_mem section was already provided by the solaris_mem section.
-<<<statgrab_mem>>> is hereby removed from the check_mk_agent.solaris output.
+`<<<statgrab_mem>>>` is hereby removed from the check_mk_agent.solaris output.

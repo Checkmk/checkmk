@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,6 +14,7 @@ from cmk.utils import version as cmk_version
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
+from cmk.gui.http import request
 from cmk.gui.watolib import automations
 
 RESULT: object = None
@@ -27,7 +28,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1")
             else SerializedResult("i was very different previously")
         )
 
@@ -83,25 +84,23 @@ class TestCheckmkAutomationBackgroundJob:
         "save_text_to_file",
     )
     def test_execute_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            automations.request,
-            "headers",
-            {"x-checkmk-version": "2.2.0i1"},
-        )
-        automations.CheckmkAutomationBackgroundJob(
-            "job_id",
-            api_request := automations.CheckmkAutomationRequest(
+        with monkeypatch.context() as m:
+            m.setattr(request, "headers", {"x-checkmk-version": "2.2.0i1"})
+            api_request = automations.CheckmkAutomationRequest(
                 command="test",
                 args=None,
                 indata=None,
                 stdin_data=None,
                 timeout=None,
-            ),
-        ).execute_automation(
-            MagicMock(),
-            api_request,
-        )
-        assert RESULT == "(2, None)"
+            )
+            automations.CheckmkAutomationBackgroundJob(
+                "job_id",
+                api_request,
+            ).execute_automation(
+                MagicMock(),
+                api_request,
+            )
+            assert RESULT == "(2, None)"
 
     @pytest.mark.parametrize("set_version", [True, False])
     @pytest.mark.usefixtures(
@@ -112,24 +111,18 @@ class TestCheckmkAutomationBackgroundJob:
     def test_execute_automation_previous_version(
         self, set_version: bool, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        if set_version:
-            monkeypatch.setattr(
-                automations.request,
-                "headers",
-                {"x-checkmk-version": "2.1.0p10"},
-            )
-
-        automations.CheckmkAutomationBackgroundJob(
-            "job_id",
-            api_request := automations.CheckmkAutomationRequest(
+        with monkeypatch.context() as m:
+            if set_version:
+                m.setattr(request, "headers", {"x-checkmk-version": "2.1.0p10"})
+            api_request = automations.CheckmkAutomationRequest(
                 command="test",
                 args=None,
                 indata=None,
                 stdin_data=None,
                 timeout=None,
-            ),
-        ).execute_automation(
-            MagicMock(),
-            api_request,
-        )
-        assert RESULT == "i was very different previously"
+            )
+            automations.CheckmkAutomationBackgroundJob("job_id", api_request).execute_automation(
+                MagicMock(),
+                api_request,
+            )
+            assert RESULT == "i was very different previously"

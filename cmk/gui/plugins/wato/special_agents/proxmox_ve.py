@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
-from cmk.gui.valuespec import Dictionary, FixedValue, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, FixedValue, Integer, NetworkPort, TextInput
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_proxmox_ve():
@@ -22,7 +21,7 @@ def _valuespec_special_agents_proxmox_ve():
                 "password",
                 MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             ),
-            ("port", Integer(title=_("Port"), default_value=8006)),
+            ("port", NetworkPort(title=_("Port"), default_value=8006)),
             (
                 "no-cert-check",
                 FixedValue(
@@ -58,7 +57,7 @@ def _valuespec_special_agents_proxmox_ve():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox_ve",
+        name=RuleGroup.SpecialAgents("proxmox_ve"),
         valuespec=_valuespec_special_agents_proxmox_ve,
     )
 )

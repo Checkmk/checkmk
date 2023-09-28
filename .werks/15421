@@ -1,0 +1,33 @@
+Title: Improve agent updater logging
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1679583005
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the agent updater reported many errors coming from the agent bakery with this unhelpful log output:
+C+:
+Unexpected answer from Checkmk server: Missing json data.
+Maybe we are talking to an agent bakery from before Checkmk 2.0?
+C-:
+This happened for all errors that can not be interpreted by the agent bakery in a meaningful way.
+
+Starting with this Werk, the agent updater will instead propagate the unknown error, e.g.:
+C+:
+Agent Bakery: Unhandled exception: KeyError: 'Signatures'
+See ~/var/log/web.log on site 'mysite' for details.
+C-:
+
+As a last resort, if the agent updater still receives a response that it can't parse, it will still log
+<tt>Unexpected answer from Checkmk server: Missing json data.</tt>,
+but this time without the note about an old agent bakery, as this was not helpful at all.
+
+<i>Bonus</i>:<br>
+The error from the above example is now handled correctly:
+C+:
+The deployment server provides an agent but that is not signed.
+C-:
+

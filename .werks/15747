@@ -1,0 +1,16 @@
+Title: Fix macro replacement in special agents
+Class: fix
+Compatible: compat
+Component: config
+Date: 1683703767
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The use of macros was enabled for special agent parameters with
+werk 3721, but no longer worked in 2.1.
+It's fixed with this werk.
+
+

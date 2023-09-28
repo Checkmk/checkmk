@@ -1,0 +1,14 @@
+Title: kube_pod_conditions: addition of PodHasNetwork and DisruptionTarget conditions
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1680524072
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces the pod conditions PodHasNetwork and DisruptionTarget to the check.
+These conditions are only displayed if the Kubernetes version is compatible and configured
+to include these conditions.
+

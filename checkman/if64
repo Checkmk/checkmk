@@ -9,7 +9,7 @@ description:
  monitor switch ports with a traffic of more then 2GB per check interval.
 
  Also, this check can use {ifAlias} instead if {ifDescr} for retrieving
- the admin-configured interface description. This is useful e.g. for HP ProCurve
+ the admin-configured interface description. This is useful e.g. for HPE ProCurve
  switches which do not show the aliasses in {ifDescr}.
 
  {Note}: This check needs SNMP v2c and thus only works if your hosts are

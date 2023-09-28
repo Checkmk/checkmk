@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.ups_out_load import (
     check_ups_out_load,
     discovery_ups,
@@ -19,7 +26,7 @@ from cmk.base.plugins.agent_based.ups_out_load import (
         ([[["1", "2", "1"], ["0", "2", "2"]]], [Service(item="1")]),
     ],
 )
-def test_ups_out_load_discovery(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_ups_out_load_discovery(info: list[StringTable], expected_result: DiscoveryResult) -> None:
     section = parse_ups_load(info)
     result = discovery_ups(section)
     assert list(result) == expected_result
@@ -69,8 +76,8 @@ def test_ups_out_load_discovery(info, expected_result) -> None:  # type:ignore[n
         ),
     ],
 )
-def test_ups_out_load_check(  # type:ignore[no-untyped-def]
-    item, params, info, expected_result
+def test_ups_out_load_check(
+    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
 ) -> None:
     section = parse_ups_load(info)
     result = check_ups_out_load(item, params, section)

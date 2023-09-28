@@ -1,0 +1,12 @@
+Title: inventory_solaris_psrinfo: Fix missing model or maximum speed
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1674473970
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+
+

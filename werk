@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage werks
@@ -231,7 +231,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def try_migrate_werk_ids():
-
     if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
         try:
             # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
@@ -253,9 +252,9 @@ def get_tty_size() -> tuple[int, int]:
     return (24, 99999)
 
 
-def bail_out(text: str) -> NoReturn:
+def bail_out(text: str, exit_code: int = 1) -> NoReturn:
     sys.stderr.write(text + "\n")
-    sys.exit(1)
+    sys.exit(exit_code)
 
 
 g_base_dir = ""
@@ -286,7 +285,7 @@ def get_last_werk() -> int:
 def load_config() -> None:
     global g_last_werk, valid_choices
     with open("config") as f_config:
-        exec(f_config.read(), globals(), globals())
+        exec(f_config.read(), globals(), globals())  # nosec B102 # BNS:aee528
     try:
         with open(".last") as f_last:
             g_last_werk = int(f_last.read())
@@ -555,7 +554,6 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
     filters: dict[str, list] = {}
 
     for a in args.filter:
-
         if a == "current":
             a = g_current_version
 
@@ -583,7 +581,8 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
         if not hit:
             bail_out(
                 "No such edition, component, state, class, knowledge state or target version: %s"
-                % a
+                % a,
+                0,
             )
 
     # Filter
@@ -827,8 +826,9 @@ def main_delete(args: argparse.Namespace) -> None:
 
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
-                "Deleted werk %s (%s).\n"
-                % (format_werk_id(werk_id), g_werks[int(werk_id)]["title"])
+                "Deleted werk {} ({}).\n".format(
+                    format_werk_id(werk_id), g_werks[int(werk_id)]["title"]
+                )
             )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)
@@ -972,7 +972,6 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
     # Commit
     if werk_id is not None:
-
         # This allows for picking regular commits as well
         if not no_commit:
             subprocess.run(["git", "add", str(werk_id)], check=True)

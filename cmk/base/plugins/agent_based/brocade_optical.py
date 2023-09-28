@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -13,11 +16,11 @@ from .agent_based_api.v1 import (
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
     type_defs,
 )
 from .utils import interfaces, temperature
+from .utils.brocade import DETECT_MLX
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -96,7 +99,7 @@ OPER_STATUS_MAP = {
     "9": "admin down",
 }
 
-ValueAndStatus = Union[Tuple[float, str], Tuple[None, None]]
+ValueAndStatus = tuple[float, str] | tuple[None, None]
 Lane = Mapping[str, ValueAndStatus]
 
 
@@ -110,10 +113,10 @@ class Port(TypedDict, total=False):
     type: str
     part: str
     serial: str
-    lanes: Dict[int, Lane]
+    lanes: dict[int, Lane]
 
 
-Section = Dict[str, Port]
+Section = dict[str, Port]
 
 
 def _parse_value(value_string: str) -> ValueAndStatus:
@@ -126,7 +129,7 @@ def _parse_value(value_string: str) -> ValueAndStatus:
         return None, None
 
 
-def parse_brocade_optical(string_table: List[type_defs.StringTable]) -> Section:
+def parse_brocade_optical(string_table: list[type_defs.StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_brocade_optical([
@@ -261,7 +264,7 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1991.1."),
+    detect=DETECT_MLX,
 )
 
 
@@ -329,15 +332,15 @@ def _infotext(
     if reading[0] < -214748.0:
         reading_text = "off"
     else:
-        reading_text = "%.1f %s" % (reading[0], unit)
-    return "%s %s (%s)" % (title, reading_text, reading[1])
+        reading_text = f"{reading[0]:.1f} {unit}"
+    return f"{title} {reading_text} ({reading[1]})"
 
 
 def _check_light(
     reading: ValueAndStatus,
     metric_name: str,
     params: Mapping[str, Any],
-    lane_num: Optional[int] = None,
+    lane_num: int | None = None,
 ) -> type_defs.CheckResult:
     if any(x is None for x in reading):
         return
@@ -388,7 +391,7 @@ def check_brocade_optical(
     if add_info:
         yield Result(
             state=State.OK,
-            summary="[%s] Operational %s" % (", ".join(add_info), oper_status_readable),
+            summary="[{}] Operational {}".format(", ".join(add_info), oper_status_readable),
         )
     else:
         yield Result(

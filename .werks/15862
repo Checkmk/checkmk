@@ -1,0 +1,23 @@
+Title: Monitor Pure Storage FlashArrays
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1688383212
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This Werk adds services monitoring <i>"Pure Storage FlashArrays"</i>.
+Configuring a special agent by the same name lets you monitor the devices using the plugins
+
+LI: <i>Pure Storage FlashArray: Ethernet Port</i>
+LI: <i>Pure Storage FlashArray: Internal Alerts</i>
+LI: <i>Pure Storage FlashArray: Overall Capacity</i>
+LI: <i>Pure Storage FlashArray: Volume Capacity</i>
+LI: <i>Pure Storage FlashArray: Fibre Channel Port</i>
+LI: <i>Pure Storage FlashArray: InfiniBand Port</i>
+LI: <i>Pure Storage FlashArray: Storage Bay</i>
+LI: <i>Pure Storage FlashArray: Fan</i>
+
+For details please refer to the corresponding plugin manpages.

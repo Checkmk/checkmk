@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
@@ -11,8 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.enviromux_digital import (
     check_enviromux_digital,
     discover_enviromux_digital,
-    parse_enviromux_digital,
 )
+from cmk.base.plugins.agent_based.utils.enviromux import parse_enviromux_digital
 
 STRING_TABLE = [
     ["0", "Digital Input #1", "1", "1"],

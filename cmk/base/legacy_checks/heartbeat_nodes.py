@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Example outputs from agent:
+#
+# <<<heartbeat_nodes>>>
+# smwp active lanb up lanb up lana up lana up
+# swi04 ping swi04 up
+# swi03 ping swi03 up
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+
+
+def inventory_heartbeat_nodes(info):
+    return [(line[0], None) for line in info if line[0] != ""]
+
+
+def check_heartbeat_nodes(item, params, info):
+    for line in info:
+        if line[0] == item:
+            status = 0
+            nodeStatus = line[1]
+
+            linkOutput = ""
+            for link, state in zip(line[2::2], line[3::2]):
+                state_txt = ""
+                if state != "up":
+                    status = 2
+                    state_txt = " (!!)"
+                linkOutput += f"{link}: {state}{state_txt}, "
+            linkOutput = linkOutput.rstrip(", ")
+
+            if nodeStatus in ["active", "up", "ping"] and status <= 0:
+                status = 0
+            elif nodeStatus == "dead" and status <= 2:
+                status = 2
+
+            if nodeStatus not in ["active", "up", "ping", "dead"]:
+                return (3, f"Node {line[0]} has an unhandled state: {nodeStatus}")
+
+            return (
+                status,
+                f'Node {line[0]} is in state "{nodeStatus}". Links: {linkOutput}',
+            )
+
+    return (3, "Node is not present anymore")
+
+
+check_info["heartbeat_nodes"] = LegacyCheckDefinition(
+    service_name="Heartbeat Node %s",
+    discovery_function=inventory_heartbeat_nodes,
+    check_function=check_heartbeat_nodes,
+)

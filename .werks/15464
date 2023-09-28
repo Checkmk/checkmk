@@ -1,0 +1,17 @@
+Title: agent_azure: azure_agent_info is no longer CRIT if there are no usage details
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1681748421
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Azure Agent Info service is no longer CRIT if cost details are missing.
+
+If there are no running Azure services that create costs, there
+will be no usage details. Since that is a valid use case, we now show
+a 'Usage client: Azure API did not return any usage details' message,
+but the status of the service remains OK.
+

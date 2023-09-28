@@ -1,0 +1,31 @@
+Title: comments: add site property to the comments endpoints
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1691669873
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces several changes to the comments endpoints.
+
+1. Comment IDs are integers beginning from 1, both for the main site & for
+remote sites.  This means that the same comment ID can exist on more than
+one site at the same time. This caused problems when calling the DELETE
+endpoint as we weren't sure which ID the client wanted to delete.
+To get around this problem, we have introduced a mandatory "site_id" field
+which the client has to specify when they want to delete a comment.
+
+2. Like point 1, calling GET comment with only a comment ID could also cause
+the same problem. Therefore we have also introduced the mandatory "site_id"
+query parameter field here too.
+
+3. Now that the site_id field is mandatory in both the DELETE and GET comment
+endpoints, we now return the site_id field as a comment attribute in both the
+show comment and show comments endpoints.
+
+4. This last change introduces a new optional query parameter on the show
+all comments endpoint. The client can now specify the site_id as a filter,
+so that they can list all comments for a specific site.
+

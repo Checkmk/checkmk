@@ -1,0 +1,21 @@
+Title: azure_virtual_machine: New checks added
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676477147
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Monitoring of Azure VM is extended with five new checks.
+
+The new monitored checks are:
+LI: Microsoft Azure Virtual Machines: CPU Utilization
+LI: Microsoft Azure Virtual Machines: Burst CPU Credits
+LI: Microsoft Azure Virtual Machines: Memory
+LI: Microsoft Azure Virtual Machines: Disk
+LI: Microsoft Azure Virtual Machines: Network IO
+
+The new services will be automatically discovered if you have
+an Azure VM mapped to its own host in Checkmk.

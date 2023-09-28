@@ -14,8 +14,8 @@ In Checkmk versions 2.0.0i1 to 2.0.0, users with rules defined via
 
 The displayed message was
 
-<pre>
+C+:
 Invalid configuration variable 'logwatch_groups'
 --> Found 1 invalid variables
 If you use own helper variables, please prefix them with _.
-</pre>
+C-:

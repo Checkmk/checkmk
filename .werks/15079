@@ -1,0 +1,12 @@
+Title: Change log level of RRD error messages (cmc.log)
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1686648945
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In several places in the UI (e.g. the "IT infrastructure efficiency" views) a lot of unnecessary logging to cmc.log could occur. Missing rrd data would yield error messages such as <tt>Error accessing RRD: don't understand 'some_metric'</tt>.
+The log level for this specific case is changed from "Warning" to "Informational", so the mentionend error messages do not appear in cmc.log by default anymore.

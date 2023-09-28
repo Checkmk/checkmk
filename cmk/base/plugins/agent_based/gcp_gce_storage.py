@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -30,9 +30,8 @@ def discover(
     assets = gcp.validate_asset_section(section_gcp_assets, "gce_storage")
     for item, bucket in assets[ASSET_TYPE].items():
         data = bucket.resource_data
-        labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
-        labels.append(ServiceLabel("gcp/location", bucket.location))
-        labels.append(ServiceLabel("gcp/projectId", assets.project))
+        labels = [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+        labels.append(ServiceLabel("cmk/gcp/location", bucket.location))
         yield Service(item=item, labels=labels)
 
 
@@ -44,24 +43,28 @@ def check_storage(
 ) -> CheckResult:
     metrics = {
         "disk_read_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_bytes_count",
-            "Read",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/read_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="Read", render_func=render.iobandwidth),
         ),
         "disk_write_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_bytes_count",
-            "Write",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/write_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="Write", render_func=render.iobandwidth),
         ),
         "disk_read_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_ops_count",
-            "Read operations",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/read_ops_count"
+            ),
+            gcp.MetricDisplaySpec(label="Read operations", render_func=str),
         ),
         "disk_write_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_ops_count",
-            "Write operations",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/write_ops_count"
+            ),
+            gcp.MetricDisplaySpec(label="Write operations", render_func=str),
         ),
     }
     yield from gcp.check(

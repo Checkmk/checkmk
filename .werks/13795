@@ -6,7 +6,7 @@ Date: 1648822387
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The incompability of this change only affects users, who use the check API to write custom
 Kubernetes checks. The section kube_replicas_v1 has been renamed to kube_deployment_replicas_v1 and

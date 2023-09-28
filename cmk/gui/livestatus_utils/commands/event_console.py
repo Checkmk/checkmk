@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from time import time
-from typing import get_args, Iterator, Literal, Mapping
+from typing import get_args, Literal
 
-from livestatus import MultiSiteConnection, SiteId
+from livestatus import MultiSiteConnection, OnlySites, SiteId
 
-from cmk.utils.defines import core_state_names
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+from cmk.utils.statename import core_state_names
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,
     SyslogPriority,
 )
@@ -41,6 +42,7 @@ ServiceLevelType = Literal[
 
 @dataclass
 class ECEvent:
+    site: str
     event_id: int
     event_state: int
     event_sl: int
@@ -62,8 +64,8 @@ class ECEvent:
         """return a dict representation of the ECEvent object to
         send back via the response schema.
 
-        >>> dict(ECEvent(1, 1, 10, "heute", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
-        {'state': 'warning', 'service_level': 'silver', 'host': 'heute', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
+        >>> dict(ECEvent("heute", 1, 1, 10, "heute", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
+        {'site_id': 'heute', 'state': 'warning', 'service_level': 'silver', 'host': 'heute', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
 
         """
 
@@ -89,6 +91,10 @@ class ECEvent:
                 continue
 
             if k == "id":
+                continue
+
+            if k == "site":
+                yield "site_id", v
                 continue
 
             yield k, v
@@ -130,7 +136,6 @@ def filter_event_table(
     phase: str | None = None,
     query: QueryExpression | None = None,
 ) -> Query:
-
     q = query_event_console().filter(query) if query else query_event_console()
 
     if event_id is not None:
@@ -154,13 +159,18 @@ def filter_event_table(
     return q
 
 
-def get_all_events(connection: MultiSiteConnection, q: Query) -> dict[int, ECEvent]:
-    return {ev["event_id"]: ECEvent(**ev) for ev in q.iterate(connection)}
+def get_all_events(
+    connection: MultiSiteConnection, q: Query, site_id: SiteId | None
+) -> dict[int, ECEvent]:
+    _site_id: OnlySites = [site_id] if site_id is not None else None
+    return {ev["event_id"]: ECEvent(**ev) for ev in q.fetchall(connection, True, _site_id)}
 
 
-def get_single_event_by_id(connection: MultiSiteConnection, event_id: int) -> ECEvent:
+def get_single_event_by_id(
+    connection: MultiSiteConnection, event_id: int, site_id: SiteId
+) -> ECEvent:
     try:
-        ev = ECEvent(**filter_event_table(event_id=event_id).fetchone(connection))
+        ev = ECEvent(**filter_event_table(event_id=event_id).fetchone(connection, True, site_id))
     except ValueError:
         raise EventNotFoundError
 
@@ -168,31 +178,42 @@ def get_single_event_by_id(connection: MultiSiteConnection, event_id: int) -> EC
 
 
 def map_sites_to_ids_from_query(
-    connection: MultiSiteConnection, query: Query
+    connection: MultiSiteConnection,
+    query: Query,
+    site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
+    _site_id: OnlySites = [site_id] if site_id is not None else None
     sites_with_ids: dict[str, list[str]] = {}
-    with detailed_connection(connection) as conn:
-        for row in query.iterate(conn):
-            event_id_list = sites_with_ids.setdefault(row["site"], [])
-            event_id_list.append(str(row["event_id"]))
+    for row in query.fetchall(connection, True, _site_id):
+        event_id_list = sites_with_ids.setdefault(row["site"], [])
+        event_id_list.append(str(row["event_id"]))
     return sites_with_ids
 
 
 def update_and_acknowledge(
-    connection: MultiSiteConnection, change_comment: str, change_contact: str, query: Query
+    connection: MultiSiteConnection,
+    change_comment: str,
+    change_contact: str,
+    query: Query,
+    new_phase: Literal["ack", "open"],
+    site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
-    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+    ack = "1" if new_phase == "ack" else "0"
+    sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};1;{change_comment};{change_contact}"
+        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};{ack};{change_comment};{change_contact}"
         send_command(connection, cmd, site)
     return sites_with_ids
 
 
 def change_state(
-    connection: MultiSiteConnection, state: str, query: Query
+    connection: MultiSiteConnection,
+    state: str,
+    query: Query,
+    site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
-    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+    sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         event_ids_joined = ",".join(event_ids)
         cmd = f"EC_CHANGESTATE;{event_ids_joined};{user.ident};{states_ints_reversed[state]}"
@@ -200,8 +221,12 @@ def change_state(
     return sites_with_ids
 
 
-def archive_events(connection: MultiSiteConnection, query: Query) -> None:
-    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+def archive_events(
+    connection: MultiSiteConnection,
+    query: Query,
+    site_id: SiteId,
+) -> None:
+    sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         event_ids_joined = ",".join(event_ids)
         cmd = f"EC_DELETE;{event_ids_joined};{user.ident}"

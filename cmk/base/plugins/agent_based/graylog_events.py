@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,7 +30,6 @@ EventsInfoSection = EventsInfo | None
 
 
 def parse_graylog_events(string_table: StringTable) -> EventsInfoSection:
-
     try:
         events_data = json.loads(string_table[0][0]).get("events")
     except IndexError:

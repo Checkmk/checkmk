@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _
@@ -51,7 +51,23 @@ def ip_address_family_element():
             title=_("IP address family"),
             choices=[
                 (None, _("Primary address family")),
-                ("ipv4", _("Enforce IPv4")),
+                ("ipv4", _("Use any network address")),
+                ("ipv6", _("Enforce IPv6")),
+            ],
+            default_value=None,
+        ),
+    )
+
+
+def ip_address_family_http():
+    return (
+        "address_family",
+        DropdownChoice(
+            title=_("IP address family"),
+            choices=[
+                (None, _("Primary address family")),
+                ("ipv4", _("Use any network address")),
+                ("ipv4_enforced", _("Enforce IPv4")),
                 ("ipv6", _("Enforce IPv6")),
             ],
             default_value=None,

@@ -1,0 +1,13 @@
+Title: fortigate_sensors: Discover additional devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681727124
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The SNMP detection of the plugin <i>"FortiGate Firewalls: Sensor Summary"</i> has been needlessly restrictive.
+The plugin will now be triggered for additional devices.
+

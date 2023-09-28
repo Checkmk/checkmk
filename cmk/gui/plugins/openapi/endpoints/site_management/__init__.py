@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Site Management
@@ -20,7 +20,7 @@ The site management endpoints allow for:
 """
 
 from collections.abc import Mapping
-from typing import Any, Literal
+from typing import Any
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
@@ -29,7 +29,6 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.site_management.request_schemas import (
     SITE_ID,
-    SITE_ID_DOESNT_EXIST,
     SITE_ID_EXISTS,
     SiteConnectionRequestCreate,
     SiteConnectionRequestUpdate,
@@ -52,6 +51,13 @@ from cmk.gui.watolib.site_management import (
 )
 
 PERMISSIONS = permissions.Perm("wato.sites")
+
+LOGIN_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.users"),
+        PERMISSIONS,
+    ]
+)
 
 
 def _problem_from_user_error(e: MKUserError) -> Response:
@@ -171,7 +177,7 @@ def delete_site(params: Mapping[str, Any]) -> Response:
     request_schema=SiteLoginRequest,
     output_empty=True,
     additional_status_codes=[401],
-    permissions_required=PERMISSIONS,
+    permissions_required=LOGIN_PERMISSIONS,
 )
 def site_login(params: Mapping[str, Any]) -> Response:
     """Login to a remote site"""

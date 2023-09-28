@@ -1,0 +1,14 @@
+Title: MySQL Database monitoring under Windows: Support instance names containing spaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673440611
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The MySQL agent plugin for Windows (<tt>mk_mysql.vsb</tt>) crashed if one of the instance names
+contained a space. Hence, no corresponding services were discovered on affected hosts.
+
+To benefit from this werk, users have to update the agent plugin on affected systems.

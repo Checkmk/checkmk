@@ -1,0 +1,13 @@
+Title: Drop ancient mk_oracle_dbuser.conf
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682062193
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this werk, we drop the compatibilty of using a "mk_oracle_dbuser.conf" for mk_oracle.
+This configuration file is actually deprecated since 2014, so we assume nobody is using it anymore.
+

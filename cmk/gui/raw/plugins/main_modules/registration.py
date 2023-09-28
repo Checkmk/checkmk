@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,22 +8,25 @@
 from collections.abc import Sequence
 from functools import partial
 
+import cmk.utils.version as cmk_version
+
+import cmk.gui.graphing._graph_images as graph_images
+import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-import cmk.gui.plugins.metrics.graph_images as graph_images
-import cmk.gui.plugins.metrics.html_render as html_render
+from cmk.gui.graphing._graph_specification import GraphMetric
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.type_defs import CombinedGraphSpec, Row
+from cmk.gui.painter.v0 import painters
+from cmk.gui.painter.v0.base import Cell, painter_registry
+from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
-from cmk.gui.views.painter.v0 import painters
-from cmk.gui.views.painter.v0.base import Cell, painter_registry
 
 
 def resolve_combined_single_metric_spec(
-    specification: CombinedGraphSpec,
-) -> Sequence[CombinedGraphMetricSpec]:
+    specification: CombinedSingleMetricSpec,
+) -> Sequence[GraphMetric]:
     # Not available in CRE.
     return ()
 
@@ -67,5 +70,12 @@ def register_painters() -> None:
     painter_registry.register(painters.PainterDowntimeRecurring)
 
 
-register_pages()
-register_painters()
+def register() -> None:
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
+        return
+
+    register_pages()
+    register_painters()
+
+
+register()

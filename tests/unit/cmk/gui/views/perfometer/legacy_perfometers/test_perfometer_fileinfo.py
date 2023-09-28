@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
+from cmk.gui.type_defs import Perfdata
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_fileinfo_groups
+from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerResult
 
 
 @pytest.mark.parametrize(
@@ -43,7 +45,7 @@ from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_file
         ),
     ],
 )
-def test_perfometer_fileinfo_groups(  # type:ignore[no-untyped-def]
-    perf_data, expected_result, request_context
+def test_perfometer_fileinfo_groups(
+    perf_data: Perfdata, expected_result: LegacyPerfometerResult
 ) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

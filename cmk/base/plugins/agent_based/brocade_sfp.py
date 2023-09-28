@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, TypedDict
+from collections.abc import Mapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils.brocade import (
     brocade_fcport_getitem,
@@ -40,13 +43,12 @@ class Port(TypedDict):
 Section = Mapping[int, Port]
 
 
-def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
+def parse_brocade_sfp(string_table: list[StringTable]) -> Section:
     parsed: dict[int, Port] = {}
 
     isl_ports = [int(x[0]) for x in string_table[1]]
 
     for fcport_info, values in zip(string_table[0], string_table[2]):
-
         # Observed in the wild: Either all of the values are present
         # or none of them.
         if values[0] == "NA":
@@ -146,7 +148,6 @@ def discover_brocade_sfp(params: Mapping[str, Any], section: Section) -> Discove
 
 
 def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
-
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.
@@ -186,7 +187,6 @@ register.check_plugin(
 
 
 def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.

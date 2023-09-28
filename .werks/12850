@@ -27,7 +27,7 @@ The most important parts of the Checkmk configuration are now updated:
 
 <ul>
 <li>Distributed monitoring (sites) configuration</li>
-<li>Host & folder site attributes</li>
+<li>Host &amp; folder site attributes</li>
 <li>Dynamic host configuration site attribute</li>
 </ul>
 
@@ -70,4 +70,3 @@ This change introduces the general mechanism:
 The migration steps are realized in so called rename action plugins which can
 easily be extended. In the git you can find them at
 <tt>cmk/post_rename_site/plugins/actions</tt>.
-

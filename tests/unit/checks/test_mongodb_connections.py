@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,11 +7,14 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
+
 from .checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "info,state_expected,info_expected,perf_expected_key,perf_expected_value,state_expected_perc,info_expected_perc",
     [
@@ -92,6 +95,13 @@ def test_check_function(
     Checks funny connections values
     """
     check = Check("mongodb_connections")
+
+    # prepare state. scoped to this function by fixture
+    try:
+        get_value_store()["total_created"] = (0.0, int(info[2][1]))
+    except (ValueError, TypeError):
+        pass
+
     check_result = CheckResult(check.run_check(None, {"levels_perc": (80.0, 90.0)}, info))
 
     if len(check_result.subresults) == 0:

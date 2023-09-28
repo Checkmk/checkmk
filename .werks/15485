@@ -1,0 +1,13 @@
+Title: Fix deletion of hosts in folder
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1683095567
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you used the action menu and "Delete host" for a host in a folder, the host was not deleted.
+

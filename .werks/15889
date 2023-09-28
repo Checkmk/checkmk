@@ -1,0 +1,15 @@
+Title: password_store: pattern for password store identifiers should be the same as the gui
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1686815303
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+This werk fixes a difference we had between the gui and rest-api. Previously
+the regex pattern applied to the unique identifier of a password store id
+for the rest-api wasn't as strict as that of the gui.  The regex is now the
+same for both.

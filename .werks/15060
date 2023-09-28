@@ -1,0 +1,16 @@
+Title: EventConsole: Allow withdrawal of acknowledge command
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1673942967
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Event console events can currently be acknowledged via the REST API,
+however, to align with the GUI functionality, this change will allow
+the user to also withdraw the acknowledgemnt via the REST API. As a result of
+this change, the user can also ack all open events or withdraw all acked
+events.
+

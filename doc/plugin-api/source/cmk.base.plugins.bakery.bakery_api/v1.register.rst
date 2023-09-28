@@ -1,0 +1,7 @@
+======================
+bakery_api.v1.register
+======================
+
+.. automodule:: cmk.base.plugins.bakery.bakery_api.v1.register
+   :members:
+   :show-inheritance:

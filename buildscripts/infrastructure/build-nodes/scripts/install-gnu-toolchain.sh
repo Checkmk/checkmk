@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,18 +18,18 @@ GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 GCC_ARCHIVE_NAME="gcc-${GCC_VERSION}.tar.gz"
 GCC_URL="${MIRROR_URL}gcc/gcc-${GCC_VERSION}/${GCC_ARCHIVE_NAME}"
 
-BINUTILS_VERSION="2.39"
+BINUTILS_VERSION="2.41"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="12.1"
+GDB_VERSION="13.2"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
 DIR_NAME=gcc-${GCC_VERSION}
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
-BUILD_DIR=/opt/src
+BUILD_DIR="${TARGET_DIR}/src"
 
 # Increase this to enforce a recreation of the build cache
 # NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
@@ -48,7 +48,7 @@ download_sources() {
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
     local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
-    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}"; then
+    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, creating"
 
         tar xzf "${GCC_ARCHIVE_NAME}"
@@ -61,16 +61,12 @@ download_sources() {
 
 build_binutils() {
     log "Build binutils-${BINUTILS_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
     # HACK: Dispatching on the distro is not nice, we should really check the versions.
     case "$DISTRO" in
-        centos-7)
-            echo "makeinfo too old, gprofng's docs won't build"
-            BINUTILS_CONFIGURE_ADD_OPTS="--disable-gprofng"
-            ;;
         sles-12*)
             echo "bison 2.7 is too old, gprofng requires bison 3.0.4 or later"
             BINUTILS_CONFIGURE_ADD_OPTS="--disable-gprofng"
@@ -79,16 +75,18 @@ build_binutils() {
             BINUTILS_CONFIGURE_ADD_OPTS=""
             ;;
     esac
-    ../binutils-${BINUTILS_VERSION}/configure \
+    # sles-12* have ancient makeinfo versions, so let's just skip
+    # info generation for all distros, we don't really need it.
+    MAKEINFO=true ../binutils-${BINUTILS_VERSION}/configure \
         "${BINUTILS_CONFIGURE_ADD_OPTS}" \
         --prefix="${PREFIX}"
-    make -j4
-    make install
+    make -j4 MAKEINFO=true
+    make install MAKEINFO=true
 }
 
 build_gcc() {
     log "Build gcc-${GCC_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
     mkdir "gcc-${GCC_VERSION}-build"
     cd "gcc-${GCC_VERSION}-build"
@@ -104,7 +102,7 @@ build_gcc() {
 
 build_gdb() {
     log "Build gdb-${GDB_VERSION}"
-    cd ${BUILD_DIR}
+    cd "${BUILD_DIR}"
     tar xzf gdb-${GDB_VERSION}.tar.gz
     mkdir gdb-${GDB_VERSION}-build
     cd gdb-${GDB_VERSION}-build
@@ -136,16 +134,16 @@ set_symlinks() {
 }
 
 build_package() {
-    mkdir -p /opt/src
-    cd /opt/src
+    mkdir -p "$TARGET_DIR/src"
+    cd "$TARGET_DIR/src"
 
     download_sources
     build_binutils
     build_gcc
     build_gdb
 
-    cd /opt
-    rm -rf /opt/src
+    cd "$TARGET_DIR"
+    rm -rf "$TARGET_DIR/src"
 }
 
 if [ "$1" != "link-only" ]; then

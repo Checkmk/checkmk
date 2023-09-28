@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
@@ -14,6 +16,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -27,7 +30,7 @@ def _valuespec_active_checks_tcp() -> Tuple:
             "<tt>check_tcp</tt> from the standard Nagios plugins."
         ),
         elements=[
-            Integer(title=_("TCP Port"), minvalue=1, maxvalue=65535),
+            NetworkPort(title=_("TCP Port"), minvalue=1, maxvalue=65535),
             Dictionary(
                 title=_("Optional parameters"),
                 elements=[
@@ -198,7 +201,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:tcp",
+        name=RuleGroup.ActiveChecks("tcp"),
         valuespec=_valuespec_active_checks_tcp,
     )
 )

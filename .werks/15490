@@ -1,0 +1,14 @@
+Title: Show exceeded query limit warning also on automatic page reload
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1683272216
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If the hard or soft query limit was reached in views, the warning message was
+lost after the automatic page reload.
+

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import apache_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
@@ -184,7 +185,7 @@ def make_section_2() -> dict[str, dict[str, float]]:
         (make_agent_output_2(), make_section_2()),
     ],
 )
-def test_parse_function(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_function(string_table: StringTable, section: apache_status.Section) -> None:
     assert apache_status.apache_status_parse(string_table) == section
 
 
@@ -194,7 +195,7 @@ def test_discovery() -> None:
     ]
 
 
-def test_check_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_function(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         apache_status,
         "get_value_store",
@@ -241,5 +242,5 @@ def test_check_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         Metric("State_Logging", 0),
         Metric("State_Finishing", 0),
         Metric("State_IdleCleanup", 0),
-        Result(state=State.OK, notice=("Scoreboard states:\n  Waiting: 49\n  SendingReply: 1")),
+        Result(state=State.OK, notice="Scoreboard states:\n  Waiting: 49\n  SendingReply: 1"),
     ]

@@ -21,6 +21,7 @@ OS_PACKAGES    += libperl5.30
 OS_PACKAGES    += libreadline5
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += libxml2
+OS_PACKAGES    += logrotate
 OS_PACKAGES    += php-cli
 OS_PACKAGES    += php-cgi
 OS_PACKAGES    += php-gd

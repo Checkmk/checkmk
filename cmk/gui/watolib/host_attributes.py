@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A host attribute is something that is inherited from folders to
@@ -10,17 +10,29 @@ from __future__ import annotations
 import abc
 import functools
 import re
-from collections.abc import Callable, Sequence
-from typing import Any
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Literal, NotRequired
 
 from marshmallow import fields
+from typing_extensions import TypedDict
+
+from livestatus import SiteId
 
 import cmk.utils.plugin_registry
-from cmk.utils.tags import TagGroup
-from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.labels import Labels
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
+from cmk.utils.translations import TranslationOptionsSpec
+from cmk.utils.user import UserId
+
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+
+from cmk.fetchers import IPMICredentials
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -31,7 +43,98 @@ from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
 
-HostAttributeSpec = dict[str, Any]
+
+class HostContactGroupSpec(TypedDict):
+    groups: list[ContactgroupName]
+    recurse_perms: bool
+    use: bool
+    use_for_services: bool
+    recurse_use: bool
+
+
+IPRange = (
+    tuple[Literal["ip_range"], tuple[str, str]]
+    | tuple[Literal["ip_network"], tuple[str, int]]
+    | tuple[Literal["ip_list"], Sequence[HostAddress]]
+)
+
+ExcludeIPRange = IPRange | tuple[Literal["ip_regex_list"], Sequence[str]]
+
+
+class NetworkScanSpec(TypedDict):
+    ip_ranges: list[IPRange]
+    exclude_ranges: list[ExcludeIPRange]
+    scan_interval: int
+    time_allowed: Sequence[tuple[tuple[int, int], tuple[int, int]]]
+    set_ipaddress: bool
+    tag_criticality: NotRequired[str]
+    max_parallel_pings: NotRequired[int]
+    run_as: UserId
+    translate_names: NotRequired[TranslationOptionsSpec]
+
+
+class NetworkScanResult(TypedDict):
+    start: float | None
+    end: float | Literal[True] | None
+    state: bool | None
+    output: str
+
+
+class MetaData(TypedDict):
+    # All the NotRequired should be investigated and cleaned up via cmk-update-config
+    created_at: NotRequired[float]
+    created_by: NotRequired[UserId | None]
+    updated_at: NotRequired[float]
+
+
+# Possible improvements for the future:
+# - Might help to differentiate between effective attributes and non effective attributes, since
+#   in effective attributes many more attributes are mandatory
+# - Some attributes are actually folder specific (see ABCHostAttribute.show_in_folder)
+# - How to represent the tag group attributes?
+#   -> Built-in tags can be defined here while custom(izable) tag groups can not
+# - How to represent custom host attributes?
+#   -> The values are always of type str, but can have arbritary keys
+class HostAttributes(TypedDict, total=False):
+    """All built-in host attributes to
+
+    Host attributes are set on folders (mostly for inheritance to folders) and on hosts
+    directly.
+    """
+
+    alias: str
+    ipaddress: HostAddress
+    ipv6address: HostAddress
+    additional_ipv4addresses: Sequence[HostAddress]
+    additional_ipv6addresses: Sequence[HostAddress]
+    snmp_community: SNMPCredentials
+    parents: Sequence[HostName]
+    network_scan: NetworkScanSpec
+    network_scan_result: NetworkScanResult
+    management_address: HostAddress
+    management_protocol: Literal["snmp", "ipmi"] | None
+    management_snmp_community: SNMPCredentials
+    management_ipmi_credentials: IPMICredentials
+    site: SiteId
+    # This is a list of 3 elements. tuple[SiteId, str, str] would be better.
+    locked_by: Sequence[str]
+    locked_attributes: Sequence[str]
+    meta_data: MetaData
+    inventory_failed: bool
+    labels: Labels
+    contactgroups: HostContactGroupSpec
+    # Enterprise editions only
+    bake_agent_package: bool
+    # Enterprise editions only
+    cmk_agent_connection: Literal["push-agent", "pull-agent"]
+    # Built-in tag groups
+    tag_agent: Literal["cmk-agent", "all-agents", "special-agents", "no-agent"]
+    tag_piggyback: Literal["auto-piggyback", "piggyback", "no-piggyback"]
+    tag_snmp_ds: Literal["no-snmp", "snmp-v2", "snmp-v1"]
+    tag_address_family: Literal["ip-v4-only", "ip-v6-only", "ip-v4v6", "no-ip"]
+    # Shipped tag attributes, but could be changed or even removed by users.
+    # So we don't define the shipped literals here
+    tag_criticality: str
 
 
 class HostAttributeTopic(abc.ABC):
@@ -55,7 +158,7 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
+    def plugin_name(self, instance: type[HostAttributeTopic]):  # type: ignore[no-untyped-def]
         return instance().ident
 
     def get_choices(self):
@@ -234,7 +337,7 @@ class ABCHostAttribute(abc.ABC):
         Instead, an exclicit_host_config entry will be generated, e.g.
         explicit_host_config["alias"][hostname] = value
 
-        Used in: hosts_and_folders:CREFolder:_save_hosts_file
+        Used in: hosts_and_folders:Folder:_save_hosts_file
         """
         return False
 
@@ -371,7 +474,7 @@ class ABCHostAttribute(abc.ABC):
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_groups(self, value: Any) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
@@ -447,7 +550,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
+def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
     topic_id,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
@@ -469,7 +572,7 @@ def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
 
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(  # type:ignore[no-untyped-def]
+def declare_host_attribute(
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
@@ -483,8 +586,7 @@ def declare_host_attribute(  # type:ignore[no-untyped-def]
     show_inherited_value: bool = True,
     may_edit: Callable[[], bool] | None = None,
     from_config: bool = False,
-):
-
+) -> None:
     if not issubclass(a, ABCHostAttribute):
         raise MKGeneralException(
             _("Failed to load legacy host attribute from local plugins: %r") % a
@@ -588,7 +690,7 @@ def _clear_config_based_host_attributes() -> None:
 def _declare_host_tag_attributes() -> None:
     for topic_spec, tag_groups in active_config.tags.get_tag_groups_by_topic():
         for tag_group in tag_groups:
-            # Try to translate the title to a builtin topic ID. In case this is not possible mangle the given
+            # Try to translate the title to a built-in topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
             # TODO: We need to adapt the tag data structure to contain topic IDs
             topic_id = _transform_attribute_topic_title_to_id(topic_spec)
@@ -694,7 +796,7 @@ def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> lis
     This lead to issues with localized topics. We now have internal IDs for
     all the topics and try to convert the values here to the new format.
 
-    We translate the titles which have been distributed with Check_MK to their
+    We translate the titles which have been distributed with Checkmk to their
     internal topic ID. No action should be needed. Custom topics or topics of
     other languages are not translated. The attributes are put into the
     "Custom attributes" topic once. Users will have to re-configure the topic,
@@ -744,9 +846,9 @@ def host_attribute(name: str) -> ABCHostAttribute:
 # is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(
     for_what: str, new: bool, do_validate: bool = True, varprefix: str = ""
-) -> HostAttributeSpec:
+) -> HostAttributes:
     """Read attributes from HTML variables"""
-    host = {}
+    host = HostAttributes()
     for attr in host_attribute_registry.attributes():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
@@ -757,7 +859,8 @@ def collect_attributes(
         if do_validate and attr.needs_validation(for_what, new):
             attr.validate_input(value, varprefix)
 
-        host[attrname] = value
+        # Mypy can not help here with the dynamic key
+        host[attrname] = value  # type: ignore[literal-required]
     return host
 
 
@@ -909,12 +1012,12 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     def is_tag_attribute(self) -> bool:
         return True
 
-    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
     def is_show_more(self) -> bool:
-        return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
+        return self._tag_group.id in ["criticality", "networking", "piggyback"]
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
@@ -976,7 +1079,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def _tag_value(self) -> TagID | None:
         return self._tag_group.get_tag_choices()[0][0]
 
-    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         if not value:
             return {}
         return super().get_tag_groups(self._tag_value())
@@ -1028,7 +1131,7 @@ def TextAttribute(
 
 
 # TODO: Kept for pre 1.6 plugin compatibility
-def NagiosTextAttribute(  # type:ignore[no-untyped-def]
+def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     name: str,
     nag_name: str,
     title: str,

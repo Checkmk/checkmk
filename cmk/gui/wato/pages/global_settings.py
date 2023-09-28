@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Editor for global settings in main.mk and modes for these global
@@ -10,13 +10,15 @@ from collections.abc import Collection, Iterable, Iterator
 from typing import Any, Final
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.forms as forms
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -24,6 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_confirmed_form_submit_link,
     make_display_options_dropdown,
     make_simple_form_page_menu,
@@ -34,15 +37,6 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-)
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
@@ -50,15 +44,28 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
     MatchItem,
     MatchItems,
 )
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeEditGlobals)
+    mode_registry.register(ModeEditGlobalSetting)
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -118,7 +125,7 @@ class ABCGlobalSettingsMode(WatoMode):
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
-                    "your local Check_MK installation" % varname
+                    "your local Checkmk installation" % varname
                 )
             return False
 
@@ -148,12 +155,16 @@ class ABCGlobalSettingsMode(WatoMode):
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
+        global_config = get_global_config()
         for group, config_variables in self.iter_all_configuration_variables():
             header_is_painted = False  # needed for omitting empty groups
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
                 valuespec = config_variable.valuespec()
+
+                if not global_config.global_settings.is_activated(varname):
+                    continue
 
                 if self._show_only_modified and varname not in self._current_settings:
                     continue
@@ -267,6 +278,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         self._global_settings: GlobalSettings = {}
 
     def _may_edit_configvar(self, varname):
+        if not get_global_config().global_settings.is_activated(varname):
+            return False
         if varname in ["actions"]:
             return user.may("wato.add_or_modify_executables")
         return True
@@ -289,10 +302,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 item=make_confirmed_form_submit_link(
                     form_name="value_editor",
                     button_name="_reset",
-                    message=_(
-                        "Do you really want to reset this configuration variable "
-                        "back to its default value?"
-                    ),
+                    title=_("Reset configuration variable to default value"),
+                    confirm_button=_("Reset"),
                 ),
                 is_enabled=reset_possible,
                 is_shortcut=True,
@@ -411,7 +422,6 @@ class ABCEditGlobalSettingMode(WatoMode):
         pass
 
 
-@mode_registry.register
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -433,12 +443,10 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
-        if cmk_version.is_managed_edition():
-            import cmk.gui.cme.plugins.wato.cme_global_settings  # pylint: disable=no-name-in-module,import-outside-toplevel
+        if cmk_version.edition() is cmk_version.Edition.CME:
+            import cmk.gui.cme.wato  # pylint: disable=no-name-in-module,import-outside-toplevel
 
-            dropdowns.append(
-                cmk.gui.cme.plugins.wato.cme_global_settings.cme_global_settings_dropdown()
-            )
+            dropdowns.append(cmk.gui.cme.wato.cme_global_settings_dropdown())
 
         dropdowns.append(
             PageMenuDropdown(
@@ -481,7 +489,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
-            title=_("Hide all settings") if self._show_only_modified else _("Show all settings"),
+            title=_("Show only modified settings"),
             icon_name="toggle_on" if self._show_only_modified else "toggle_off",
             item=make_simple_link(
                 makeactionuri(
@@ -532,7 +540,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-@mode_registry.register
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -556,7 +563,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type:ignore[no-untyped-def]
+def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

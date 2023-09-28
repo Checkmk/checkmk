@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # For an explanation of what is what see comments in __all__definition at the end
 
 from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
+
+from cmk.checkengine.discovery import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
@@ -18,7 +20,6 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
-from cmk.base.api.agent_based.type_defs import HostLabel
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,

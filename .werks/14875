@@ -1,0 +1,15 @@
+Title: shadow hosts custom attributes doesn't disappear anymore
+Class: fix
+Compatible: compat
+Component: config
+Date: 1666099210
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0p15
+
+Previously, shadow hosts custom attributes were ignored during 
+config generation.
+
+With this release the problem has been eliminated.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,10 +12,11 @@
 
 import math
 from collections.abc import Callable
-from typing import Literal, Union
+from typing import Literal
+
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
@@ -34,7 +35,7 @@ PerfometerData = list[tuple[float, str]]
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-LegacyPerfometerResult = Union[tuple[str, HTML] | None]
+LegacyPerfometerResult = tuple[str, HTML] | None
 
 # "Registry" for old perfometers. There are still some left. See:
 # cmk/gui/plugins/views/perfometers/check_mk.py
@@ -166,7 +167,7 @@ def perfometer_logarithmic_dual_independent(
 
 
 # Create HTML representation of Perf-O-Meter
-def render_metricometer(stack) -> HTML:  # type:ignore[no-untyped-def]
+def render_metricometer(stack) -> HTML:  # type: ignore[no-untyped-def]
     if len(stack) not in (1, 2):
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack

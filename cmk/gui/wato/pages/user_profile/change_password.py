@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 from datetime import datetime
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import MKUserError
@@ -14,18 +14,21 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import page_registry
-from cmk.gui.plugins.wato.utils.base_modes import redirect
+from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
 
 from .abstract_page import ABCUserProfilePage
 
 
-@page_registry.register_page("user_change_pw")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("user_change_pw")(UserChangePasswordPage)
+
+
 class UserChangePasswordPage(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Change password")
@@ -60,7 +63,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
-            raise MKUserError("password2", _("The both new passwords do not match."))
+            raise MKUserError("password2", _("New passwords don't match."))
 
         verify_password_policy(password)
         user_spec["password"] = hash_password(password)
@@ -136,6 +139,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         forms.section(_("New Password Confirmation"))
         html.password_input("password2", autocomplete="new-password")
+
+        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 
         forms.end()
         html.close_div()

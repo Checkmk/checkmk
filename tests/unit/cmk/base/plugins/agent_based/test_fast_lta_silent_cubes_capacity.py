@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 info = [["8001591181312", "3875508482048"]]
 check_name = "fast_lta_silent_cubes_capacity"
+
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
@@ -30,16 +32,16 @@ def _get_check_function(plugin):
     return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
 
 
-def test_discovery_fast_lta_silent_cube_capacity(  # type:ignore[no-untyped-def]
-    discover_fast_lta_silent_cubes_capacity,
+def test_discovery_fast_lta_silent_cube_capacity(
+    discover_fast_lta_silent_cubes_capacity: DiscoveryFunction,
 ) -> None:
     assert list(discover_fast_lta_silent_cubes_capacity(info)) == [Service(item="Total")]
 
 
-def test_check_fast_lta_silent_cube_capacity(  # type:ignore[no-untyped-def]
-    check_fast_lta_silent_cubes_capacity,
+@pytest.mark.usefixtures("initialised_item_state")
+def test_check_fast_lta_silent_cube_capacity(
+    check_fast_lta_silent_cubes_capacity: CheckFunction,
 ) -> None:
-
     actual_check_results = list(
         check_fast_lta_silent_cubes_capacity(None, FILESYSTEM_DEFAULT_PARAMS, info)
     )

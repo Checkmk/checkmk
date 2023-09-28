@@ -16,7 +16,7 @@ endpoints by default. All Kubernetes versions since 1.9
 support these new API endpoints.
 
 To grant Checkmk access to the new API endpoints an
-updated version of the <a href="https://github.com/tribe29/checkmk/blob/master/doc/treasures/kubernetes/check_mk_rbac.yaml">check_mk_rbac.yaml</a>
+updated version of the <a href="https://github.com/Checkmk/checkmk/blob/master/doc/treasures/kubernetes/check_mk_rbac.yaml">check_mk_rbac.yaml</a>
 has to be applied.
 
 If you have a Kubernetes version >= 1.16 and use a

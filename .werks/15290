@@ -1,0 +1,12 @@
+Title: df: Support block device UUIDs with spaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1691055640
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some block devices report UUIDs with spaces.
+This can now be handled by the df check.

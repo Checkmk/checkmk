@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: Check_MK Enterprise License
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <compare>
 #include <ratio>
 #include <thread>
 
@@ -28,7 +29,7 @@ using namespace std::chrono_literals;
 namespace {
 std::optional<SocketPair> fail(const std::string &message, Logger *logger,
                                SocketPair &sp) {
-    generic_error ge{message};
+    const generic_error ge{message};
     Alert(logger) << ge;
     sp.close();
     return {};
@@ -134,12 +135,13 @@ void setThreadName(std::string name) {
     }
 
     // ... and here invisible to ps/pstree/..., but in its full glory:
-    thread_name = move(name);
+    thread_name = std::move(name);
 }
 
 std::string getThreadName() { return thread_name; }
 
-file_lock::file_lock(const char *name) : fd_(::open(name, O_RDWR)) {
+file_lock::file_lock(const std::filesystem::path &name)
+    : fd_{::open(name.c_str(), O_RDWR)} {
     if (fd_ == -1) {
         throw generic_error("could not open lock file");
     }
@@ -175,7 +177,7 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
         fcntl_impl(l_type, F_SETLKW, msg);
         return true;
     }
-    do {
+    while (true) {
         if (fcntl_impl(l_type, F_SETLK, msg, true)) {
             return true;
         }
@@ -183,7 +185,7 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
             return false;
         }
         std::this_thread::sleep_for(10ms);
-    } while (true);
+    }
 }
 
 ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,

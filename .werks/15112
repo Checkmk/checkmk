@@ -1,0 +1,20 @@
+Title: Drop configuration option "State in case of empty output"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674075625
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+The WATO configuration option <i>"State in case of empty output"</i> is dropped.
+
+The feature did not work as intended since Checkmk version 2.0.
+We now reviewed the feature to decide whether we want to repair or remove it.
+In this case we felt that its small benefit does not justify the complexity it introduces into the codebase.
+
+For the sake of simplicty and maintainability we remove the feature.
+
+An empty output from a monitored host will always result in a CRIT state of the <i>Check_MK</i> service, which has always been the default.
+

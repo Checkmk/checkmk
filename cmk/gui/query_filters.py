@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,7 +13,8 @@ from typing import Literal
 
 import livestatus
 
-import cmk.gui.inventory as inventory
+from cmk.utils.tags import TagGroupID
+
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -22,7 +23,14 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
+from cmk.gui.utils.labels import (
+    encode_label_groups_for_livestatus,
+    encode_labels_for_livestatus,
+    Label,
+    LabelGroups,
+    Labels,
+    parse_labels_value,
+)
 from cmk.gui.utils.user_errors import user_errors
 
 SitesOptions = list[tuple[str, str]]
@@ -145,7 +153,7 @@ class SingleOptionQuery(Query):
 
 
 class TristateQuery(SingleOptionQuery):
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         *,
         ident,
@@ -245,14 +253,6 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
     return filterheader
 
 
-# Filter tables
-def inside_inventory(inventory_path: inventory.InventoryPath) -> Callable[[bool, Row], bool]:
-    def keep_row(on: bool, row: Row) -> bool:
-        return inventory.get_attribute(row["host_inventory"], inventory_path) is on
-
-    return keep_row
-
-
 def has_inventory(on: bool, row: Row) -> bool:
     return bool(row["host_inventory"]) is on
 
@@ -322,7 +322,6 @@ class NumberRangeQuery(Query):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
-        assert not isinstance(values, str)
         from_value, to_value = self.extractor(values)
 
         if (self.filter_row is None) or (from_value is None and to_value is None):
@@ -360,7 +359,6 @@ def version_in_range(
     ident: str, request_vars: list[str], context: VisualContext, rows: Rows
 ) -> Rows:
     values = context.get(ident, {})
-    assert not isinstance(values, str)
     from_version, to_version = (values.get(v) for v in request_vars)
 
     new_rows = []
@@ -377,7 +375,6 @@ def version_in_range(
 
 class TimeQuery(NumberRangeQuery):
     def __init__(self, *, ident: str, column: str | None = None) -> None:
-
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
@@ -451,7 +448,6 @@ class TextQuery(Query):
         request_var: str | None = None,
         column: str | None = None,
     ):
-
         request_vars = [request_var or ident]
         if negateable:
             request_vars.append("neg_" + (request_var or ident))
@@ -492,7 +488,6 @@ class TableTextQuery(TextQuery):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         column = self.column
         filtertext = value.get(column, "").strip().lower()
         if not filtertext:
@@ -519,35 +514,6 @@ def re_ignorecase(text: str, varprefix: str) -> re.Pattern:
 def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], bool]:
     regex = re_ignorecase(filtertext, column)
     return lambda row: bool(regex.search(row.get(column, "")))
-
-
-def filter_by_host_inventory(
-    inventory_path: inventory.InventoryPath,
-) -> Callable[[str, str], Callable[[Row], bool]]:
-    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
-        regex = re_ignorecase(filtertext, column)
-
-        def filt(row: Row):  # type:ignore[no-untyped-def]
-            invdata = inventory.get_attribute(row["host_inventory"], inventory_path)
-            if not isinstance(invdata, str):
-                invdata = ""
-            return bool(regex.search(invdata))
-
-        return filt
-
-    return row_filter
-
-
-def filter_in_host_inventory_range(
-    inventory_path: inventory.InventoryPath,
-) -> Callable[[Row, str, MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: MaybeBounds) -> bool:
-        invdata = inventory.get_attribute(row["host_inventory"], inventory_path)
-        if not isinstance(invdata, (int, float)):
-            return False
-        return value_in_range(invdata, bounds)
-
-    return row_filter
 
 
 class CheckCommandQuery(TextQuery):
@@ -680,7 +646,65 @@ class MultipleQuery(TextQuery):
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
 
 
-class LabelsQuery(Query):
+class AllLabelGroupsQuery(Query):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
+        self.object_type = object_type
+        self.column = f"{object_type}_labels"
+        # Request vars can be empty here. They are gathered dynamically within the
+        # LabelGroupFilter class, value() method
+        super().__init__(ident=f"{object_type}_labels", request_vars=[])
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return encode_label_groups_for_livestatus(self.column, self.parse_value(value))
+
+    def parse_value(self, value: FilterHTTPVariables) -> LabelGroups:
+        prefix: str = self.ident  # "[host|service]_labels"
+        label_groups: list = []
+
+        groups_count: int = self._get_validated_count_value(f"{prefix}_count", value)
+        labels_count: int
+        for i in range(1, groups_count + 1):
+            labels_count = self._get_validated_count_value(f"{prefix}_{i}_vs_count", value)
+            label_group_operator: str = self._get_validated_operator_value(
+                f"{prefix}_{i}_bool", value
+            )
+            label_group = []
+            for j in range(1, labels_count + 1):
+                operator: str = self._get_validated_operator_value(
+                    f"{prefix}_{i}_vs_{j}_bool", value
+                )
+                if vs_value := value.get(f"{prefix}_{i}_vs_{j}_vs"):
+                    label_group.append((operator, vs_value))
+
+            if label_group:
+                label_groups.append((label_group_operator, label_group))
+
+        return label_groups
+
+    def _get_validated_count_value(self, ident: str, value: FilterHTTPVariables) -> int:
+        try:
+            str_val: str = value.get(ident) or "0"
+            return int(str_val)
+        except ValueError:
+            raise MKUserError(
+                ident,
+                _('The value "%s" of HTTP variable "%s" is not an integer.') % (str_val, ident),
+            )
+
+    def _get_validated_operator_value(self, ident: str, value: FilterHTTPVariables) -> str:
+        operator: str = value.get(ident, "and")
+        if operator not in ["and", "or", "not"]:
+            raise MKUserError(
+                ident,
+                _(
+                    'The value "%s" of HTTP variable "%s" is not a valid operator ({"and", "or", "not"}).'
+                )
+                % (operator, ident),
+            )
+        return operator
+
+
+class ABCTagsQuery(Query):
     column: str
     object_type: Literal["host", "service"]
 
@@ -691,14 +715,7 @@ class LabelsQuery(Query):
         return parse_labels_value(value.get(self.request_vars[0], ""))
 
 
-class AllLabelsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
-        self.object_type = object_type
-        self.column = f"{object_type}_labels"
-        super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
-
-
-class TagsQuery(LabelsQuery):
+class TagsQuery(ABCTagsQuery):
     def __init__(
         self,
         *,
@@ -728,14 +745,14 @@ class TagsQuery(LabelsQuery):
             num += 1
 
             op = value.get(prefix + "_op")
-            tag_group = active_config.tags.get_tag_group(value.get(prefix + "_grp", ""))
+            tag_group = active_config.tags.get_tag_group(TagGroupID(value.get(prefix + "_grp", "")))
 
             if tag_group and op:
                 tag = value.get(prefix + "_val", "")
                 yield Label(tag_group.id, tag, negate=op != "is")
 
 
-class AuxTagsQuery(LabelsQuery):
+class AuxTagsQuery(ABCTagsQuery):
     def __init__(self, *, object_type: Literal["host"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_tags"
@@ -859,7 +876,7 @@ def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
     "When VALUE keys are the options, return filterheaders that equal column to option."
 
-    def drop_column_prefix(var: str):  # type:ignore[no-untyped-def]
+    def drop_column_prefix(var: str):  # type: ignore[no-untyped-def]
         if var.startswith(column + "_"):
             return var[len(column) + 1 :]
         return var
@@ -869,7 +886,7 @@ def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHea
     return lq_logic("Filter: %s =" % column, selected, "Or")
 
 
-def svc_state_min_options(prefix: str):  # type:ignore[no-untyped-def]
+def svc_state_min_options(prefix: str):  # type: ignore[no-untyped-def]
     return [
         (prefix + "0", _("OK")),
         (prefix + "1", _("WARN")),
@@ -955,9 +972,11 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
-    def _add_row(row) -> bool:  # type:ignore[no-untyped-def]
+    def _add_row(row) -> bool:  # type: ignore[no-untyped-def]
         # Apply filter if and only if a filter value is set
-        if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
+        if (oper_status := row.get("invinterface_oper_status")) is not None and (
+            filter_key := "%s_%d" % (ident, oper_status)
+        ) in values:
             return values[filter_key] == "on"
         return True
 

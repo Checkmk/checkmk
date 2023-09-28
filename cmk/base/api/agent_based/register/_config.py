@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Set
+from collections.abc import Iterable, Sequence
 
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    InventoryPluginName,
-    ParsedSectionName,
-    Ruleset,
-    RuleSetName,
-    SectionName,
-)
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
@@ -22,22 +21,22 @@ from cmk.base.api.agent_based.register.section_plugins import trivial_section_fa
 from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SectionPlugin, SNMPSectionPlugin
 
-registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
-registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
-registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
-registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
+registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
+registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}
+registered_check_plugins: dict[CheckPluginName, CheckPlugin] = {}
+registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
 
 # N O T E: This currently contains discovery *and* host_label rulesets.
 # The rules are deliberately put the same dictionary, as we allow for
 # the host_label_function and the discovery_function to share a ruleset.
-# We provide seperate API functions however, should the need arise to
-# seperate them.
-stored_rulesets: Dict[RuleSetName, Ruleset] = {}
+# We provide separate API functions however, should the need arise to
+# separate them.
+stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
-_check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
+_check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]] = defaultdict(list)
 
-_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName, SectionPlugin]] = defaultdict(
+_sections_by_parsed_name: dict[ParsedSectionName, dict[SectionName, SectionPlugin]] = defaultdict(
     dict
 )
 
@@ -70,7 +69,7 @@ def add_section_plugin(section_plugin: SectionPlugin) -> None:
         registered_snmp_sections[section_plugin.name] = section_plugin
 
 
-def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
+def get_check_plugin(plugin_name: CheckPluginName) -> CheckPlugin | None:
     """Returns the registered check plugin
 
     Management plugins may be created on the fly.
@@ -89,17 +88,17 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
     return None
 
 
-def get_discovery_ruleset(ruleset_name: RuleSetName) -> Ruleset:
+def get_discovery_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
     """Returns all rulesets of a given name"""
     return stored_rulesets.get(ruleset_name, [])
 
 
-def get_host_label_ruleset(ruleset_name: RuleSetName) -> Ruleset:
+def get_host_label_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
     """Returns all rulesets of a given name"""
     return stored_rulesets.get(ruleset_name, [])
 
 
-def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
+def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | None:
     """Returns the registered inventory plugin"""
     return registered_inventory_plugins.get(plugin_name)
 
@@ -108,18 +107,16 @@ def get_relevant_raw_sections(
     *,
     check_plugin_names: Iterable[CheckPluginName],
     inventory_plugin_names: Iterable[InventoryPluginName],
-) -> Dict[SectionName, SectionPlugin]:
+) -> dict[SectionName, SectionPlugin]:
     """return the raw sections potentially relevant for the given check or inventory plugins"""
-    parsed_section_names: Set[ParsedSectionName] = set()
+    parsed_section_names: set[ParsedSectionName] = set()
 
     for check_plugin_name in check_plugin_names:
-        check_plugin = get_check_plugin(check_plugin_name)
-        if check_plugin:
+        if check_plugin := get_check_plugin(check_plugin_name):
             parsed_section_names.update(check_plugin.sections)
 
     for inventory_plugin_name in inventory_plugin_names:
-        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
-        if inventory_plugin:
+        if inventory_plugin := get_inventory_plugin(inventory_plugin_name):
             parsed_section_names.update(inventory_plugin.sections)
 
     return {
@@ -137,7 +134,7 @@ def get_section_plugin(section_name: SectionName) -> SectionPlugin:
     )
 
 
-def get_section_producers(parsed_section_name: ParsedSectionName) -> Set[SectionName]:
+def get_section_producers(parsed_section_name: ParsedSectionName) -> set[SectionName]:
     return set(_sections_by_parsed_name[parsed_section_name])
 
 
@@ -154,7 +151,17 @@ def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -
 
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
-    return section_name in registered_agent_sections or section_name in registered_snmp_sections
+    return is_registered_snmp_section_plugin(section_name) or is_registered_agent_section_plugin(
+        section_name
+    )
+
+
+def is_registered_agent_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_agent_sections
+
+
+def is_stored_ruleset(ruleset_name: RuleSetName) -> bool:
+    return ruleset_name in stored_rulesets
 
 
 def needs_redetection(section_name: SectionName) -> bool:
@@ -192,16 +199,13 @@ def len_snmp_sections() -> int:
 
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
-    rules: Ruleset,
+    rules: Sequence[RuleSpec],
 ) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
 
 
-def set_host_label_ruleset(
-    ruleset_name: RuleSetName,
-    rules: Ruleset,
-) -> None:
+def set_host_label_ruleset(ruleset_name: RuleSetName, rules: Sequence[RuleSpec]) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
 

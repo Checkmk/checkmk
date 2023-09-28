@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,8 +12,8 @@ from cmk.base.plugins.agent_based.kemp_loadmaster_services import (
     check_kemp_loadmaster_services,
     discover_kemp_loadmaster_services,
     parse_kemp_loadmaster_services,
-    Section,
 )
+from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection
 
 STRING_TABLE = [
     ["vs adaptive method type", "1", "100", "1"],
@@ -39,7 +39,7 @@ def section_fixture():
     ],
 )
 def test_discovery_kemp_loadmaster_services(
-    section: Section, expected_services: Sequence[Service]
+    section: VSSection, expected_services: Sequence[Service]
 ) -> None:
     assert list(discover_kemp_loadmaster_services(section)) == expected_services
 
@@ -74,6 +74,6 @@ def test_discovery_kemp_loadmaster_services(
     ],
 )
 def test_check_kemp_loadmaster_services(
-    section: Section, item: str, expected_results: Sequence[Result]
+    section: VSSection, item: str, expected_results: Sequence[Result]
 ) -> None:
     assert list(check_kemp_loadmaster_services(item=item, section=section)) == expected_results

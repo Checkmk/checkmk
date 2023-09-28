@@ -26,4 +26,7 @@ $(NAVICLI_INSTALL):
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/lib/seccli/* $(DESTDIR)$(OMD_ROOT)/lib/seccli
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/navicli
 	cp -pr $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/seccli/CST $(DESTDIR)$(OMD_ROOT)/share/navicli
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/navicli/CST
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/navicli/CST/*.xml
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/navicli/CST/*.xsd
 	$(TOUCH) $@

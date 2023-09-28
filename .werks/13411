@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this change the ip address was used to connect to the Cisco Prime
 server. This could lead to problems if a TLS connection was used and the

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
 from typing import NamedTuple
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 poe_default_levels = (90.0, 95.0)
 
 
 #  constants for operational status of poe interface
-class PoeStatus(enum.IntEnum):
+class PoeStatus(int, enum.Enum):
     ON = 1
     OFF = 2
     FAULTY = 3
@@ -41,7 +42,6 @@ def check_poe_data(params, poe_data):
 
     # PoE on device is turned ON
     if poe_data.poe_status == PoeStatus.ON:
-
         # calculate percentage of power consumption
         poe_used_percentage = (
             ((float(poe_data.poe_used) / float(poe_data.poe_max)) * 100)
@@ -53,7 +53,7 @@ def check_poe_data(params, poe_data):
             poe_used_percentage,
             "power_usage_percentage",
             params.get("levels", poe_default_levels),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname=f"POE usage ({poe_data.poe_used}W/{poe_data.poe_max}W): ",
         )
 

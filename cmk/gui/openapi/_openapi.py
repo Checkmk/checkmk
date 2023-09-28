@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,8 +31,8 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
     def module_name(func: Any) -> str:
         return f"{func.__module__}.{func.__name__}"
 
-    def sort_key(e: Endpoint) -> tuple[str, int, str]:
-        return module_name(e.func), methods.index(e.method), e.path
+    def sort_key(e: Endpoint) -> tuple[str | int, ...]:
+        return e.sort, module_name(e.func), methods.index(e.method), e.path
 
     # Depends on another commit. This Any will go away.
     seen_paths = dict[Ident, Any]()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -28,7 +28,8 @@
 # cpio-lang|2.9|i586|rpm|Languages for package cpio|
 # zlib|1.2.3|i586|rpm|Data Compression Library|
 
-from typing import Iterable, NamedTuple, Optional
+from collections.abc import Iterable
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -40,7 +41,7 @@ class Package(NamedTuple):
     arch: str
     package_type: str
     summary: str
-    package_version: Optional[str]
+    package_version: str | None
 
 
 Section = Iterable[Package]
@@ -95,7 +96,6 @@ register.agent_section(
 
 
 def inventory_lnx_packages(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for package in section:
         inventory_columns = {
             "version": package.version,
@@ -105,8 +105,9 @@ def inventory_lnx_packages(section: Section) -> InventoryResult:
         }
         if package.package_version:
             inventory_columns["package_version"] = package.package_version
+
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": package.name,
             },

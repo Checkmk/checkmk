@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import NamedTuple
 
 import pytest
@@ -96,10 +96,13 @@ def on_failure(p: CommandOutput) -> str:
     return f"Command failed ({p.stdout!r}, {p.stderr!r})"
 
 
+Execute = Callable[[list[str]], CommandOutput]
+
+
 @pytest.fixture(name="execute")
-def execute_fixture(test_cfg, site: Site):  # type:ignore[no-untyped-def]
-    def _execute(command, cwd=None):
-        p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+def execute_fixture(test_cfg: None, site: Site) -> Execute:
+    def _execute(command: list[str]) -> CommandOutput:
+        p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None)
         stdout, stderr = p.communicate()
         return CommandOutput(returncode=p.returncode, stdout=stdout, stderr=stderr)
 
@@ -128,7 +131,7 @@ def execute_fixture(test_cfg, site: Site):  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_list_hosts(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_hosts(execute: Execute) -> None:
     for opt in ["--list-hosts", "-l"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0, on_failure(p)
@@ -148,31 +151,31 @@ def test_list_hosts(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_list_tag_all(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_tag_all(execute: Execute) -> None:
     p = execute(["cmk", "--list-tag"])
     assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
 
 
-def test_list_tag_single_tag_filter(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_tag_single_tag_filter(execute: Execute) -> None:
     p = execute(["cmk", "--list-tag", "test"])
     assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
 
 
-def test_list_tag_offline(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_tag_offline(execute: Execute) -> None:
     p = execute(["cmk", "--list-tag", "offline"])
     assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host4\n"
 
 
-def test_list_tag_multiple_tags(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_tag_multiple_tags(execute: Execute) -> None:
     p = execute(["cmk", "--list-tag", "test", "xyz"])
     assert p.returncode == 0, on_failure(p)
     assert p.stdout == ""
 
 
-def test_list_tag_multiple_tags_2(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_tag_multiple_tags_2(execute: Execute) -> None:
     p = execute(["cmk", "--list-tag", "test", "cmk-agent"])
     assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
@@ -190,7 +193,7 @@ def test_list_tag_multiple_tags_2(execute) -> None:  # type:ignore[no-untyped-de
 #   '----------------------------------------------------------------------'
 
 
-def test_list_checks(execute) -> None:  # type:ignore[no-untyped-def]
+def test_list_checks(execute: Execute) -> None:
     output_long = None
     for opt in ["--list-checks", "-L"]:
         p = execute(["cmk", opt])
@@ -216,13 +219,13 @@ def test_list_checks(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_dump_agent_missing_arg(execute) -> None:  # type:ignore[no-untyped-def]
+def test_dump_agent_missing_arg(execute: Execute) -> None:
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt])
         assert p.returncode == 1, on_failure(p)
 
 
-def test_dump_agent_error(execute) -> None:  # type:ignore[no-untyped-def]
+def test_dump_agent_error(execute: Execute) -> None:
     output_long = None
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host4"])
@@ -236,7 +239,7 @@ def test_dump_agent_error(execute) -> None:  # type:ignore[no-untyped-def]
             assert p.stdout == output_long
 
 
-def test_dump_agent_test(execute) -> None:  # type:ignore[no-untyped-def]
+def test_dump_agent_test(execute: Execute) -> None:
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
@@ -255,7 +258,7 @@ def test_dump_agent_test(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_dump_agent_dump_all_hosts(execute) -> None:  # type:ignore[no-untyped-def]
+def test_dump_agent_dump_all_hosts(execute: Execute) -> None:
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0, on_failure(p)
@@ -263,7 +266,7 @@ def test_dump_agent_dump_all_hosts(execute) -> None:  # type:ignore[no-untyped-d
         assert p.stdout.count("Addresses: ") == 3
 
 
-def test_dump_agent(execute) -> None:  # type:ignore[no-untyped-def]
+def test_dump_agent(execute: Execute) -> None:
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
@@ -284,7 +287,7 @@ def test_dump_agent(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_paths(execute) -> None:  # type:ignore[no-untyped-def]
+def test_paths(execute: Execute) -> None:
     p = execute(["cmk", "--paths"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -394,14 +397,14 @@ def test_paths(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_flush_existing_host(execute) -> None:  # type:ignore[no-untyped-def]
+def test_flush_existing_host(execute: Execute) -> None:
     p = execute(["cmk", "--flush", "modes-test-host4"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
     assert p.stdout == "modes-test-host4    : (nothing)\n"
 
 
-def test_flush_not_existing_host(execute) -> None:  # type:ignore[no-untyped-def]
+def test_flush_not_existing_host(execute: Execute) -> None:
     p = execute(["cmk", "--flush", "bums"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -474,7 +477,7 @@ def test_flush_not_existing_host(execute) -> None:  # type:ignore[no-untyped-def
 #   '----------------------------------------------------------------------'
 
 
-def test_inventory_all_hosts(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_all_hosts(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0, on_failure(p)
@@ -482,7 +485,7 @@ def test_inventory_all_hosts(execute) -> None:  # type:ignore[no-untyped-def]
         assert p.stdout == ""
 
 
-def test_inventory_single_host(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_single_host(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
@@ -490,7 +493,7 @@ def test_inventory_single_host(execute) -> None:  # type:ignore[no-untyped-def]
         assert p.stdout == ""
 
 
-def test_inventory_multiple_hosts(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_multiple_hosts(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host", "modes-test-host2"])
         assert p.returncode == 0, on_failure(p)
@@ -498,7 +501,7 @@ def test_inventory_multiple_hosts(execute) -> None:  # type:ignore[no-untyped-de
         assert p.stdout == ""
 
 
-def test_inventory_verbose(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_verbose(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", "-v", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
@@ -521,14 +524,14 @@ def test_inventory_verbose(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_inventory_as_check_unknown_host(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_as_check_unknown_host(execute: Execute) -> None:
     p = execute(["cmk", "--inventory-as-check", "xyz."])
     assert p.returncode == 2, on_failure(p)
     assert p.stdout.startswith("Failed to lookup IPv4 address of")
     assert p.stderr == ""
 
 
-def test_inventory_as_check(execute) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_as_check(execute: Execute) -> None:
     p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
     assert re.match(r"Found \d+ inventory entries", p.stdout)
@@ -558,17 +561,6 @@ def test_inventory_as_check(execute) -> None:  # type:ignore[no-untyped-def]
 # TODO
 
 # .
-#   .--discover-marked-hosts-----------------------------------------------.
-#   |           _ _                                 _            _         |
-#   |        __| (_)___  ___   _ __ ___   __ _ _ __| | _____  __| |        |
-#   |       / _` | / __|/ __| | '_ ` _ \ / _` | '__| |/ / _ \/ _` |        |
-#   |      | (_| | \__ \ (__ _| | | | | | (_| | |  |   <  __/ (_| |        |
-#   |       \__,_|_|___/\___(_)_| |_| |_|\__,_|_|  |_|\_\___|\__,_|        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-# TODO
-
-# .
 #   .--check-discovery-----------------------------------------------------.
 #   |       _     _               _ _                                      |
 #   |   ___| |__ | | __        __| (_)___  ___ _____   _____ _ __ _   _    |
@@ -579,17 +571,17 @@ def test_inventory_as_check(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_check_discovery_host(execute) -> None:  # type:ignore[no-untyped-def]
+def test_check_discovery_host(execute: Execute) -> None:
     p = execute(["cmk", "--check-discovery", "xyz."])
     assert p.returncode == 2, on_failure(p)
     assert p.stdout.startswith("Failed to lookup IPv4 address")
     assert p.stderr == ""
 
 
-def test_check_discovery(execute) -> None:  # type:ignore[no-untyped-def]
+def test_check_discovery(execute: Execute) -> None:
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
-    assert p.stdout.startswith("All services up to date, All host labels up to date")
+    assert p.stdout.startswith("Services: all up to date, Host labels: all up to date")
     assert p.stderr == ""
 
 
@@ -615,7 +607,7 @@ def test_check_discovery(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_check(execute) -> None:  # type:ignore[no-untyped-def]
+def test_check(execute: Execute) -> None:
     opts: list[list[str]] = [["--check"], []]
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
@@ -623,7 +615,7 @@ def test_check(execute) -> None:  # type:ignore[no-untyped-def]
         assert p.stdout.startswith("[agent] Success")
 
 
-def test_check_verbose_perfdata(execute) -> None:  # type:ignore[no-untyped-def]
+def test_check_verbose_perfdata(execute: Execute) -> None:
     p = execute(["cmk", "-v", "-p", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
@@ -631,7 +623,7 @@ def test_check_verbose_perfdata(execute) -> None:  # type:ignore[no-untyped-def]
     assert "[agent] Success" in p.stdout
 
 
-def test_check_verbose_only_check(execute) -> None:  # type:ignore[no-untyped-def]
+def test_check_verbose_only_check(execute: Execute) -> None:
     p = execute(["cmk", "-v", "--plugins=lnx_thermal", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
@@ -650,7 +642,7 @@ def test_check_verbose_only_check(execute) -> None:  # type:ignore[no-untyped-de
 #   '----------------------------------------------------------------------'
 
 
-def test_version(execute) -> None:  # type:ignore[no-untyped-def]
+def test_version(execute: Execute) -> None:
     p = execute(["cmk", "--version"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -668,7 +660,7 @@ def test_version(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_help(execute) -> None:  # type:ignore[no-untyped-def]
+def test_help(execute: Execute) -> None:
     p = execute(["cmk", "--help"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -676,7 +668,7 @@ def test_help(execute) -> None:  # type:ignore[no-untyped-def]
     assert "--snmpwalk" in p.stdout
 
 
-def test_help_without_args(execute) -> None:  # type:ignore[no-untyped-def]
+def test_help_without_args(execute: Execute) -> None:
     p = execute(["cmk"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -695,7 +687,7 @@ def test_help_without_args(execute) -> None:  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_create_diagnostics_dump(execute) -> None:  # type:ignore[no-untyped-def]
+def test_create_diagnostics_dump(execute: Execute) -> None:
     p = execute(["cmk", "--create-diagnostics-dump"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""

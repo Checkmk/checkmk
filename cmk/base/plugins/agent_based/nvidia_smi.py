@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import cast, Literal, Mapping, TypedDict, TypeVar
+from typing import cast, Literal, TypeVar
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -151,7 +153,7 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
         cuda_version=get_text_from_element(xml.find("cuda_version")),
         attached_gpus=get_int_from_element(xml.find("attached_gpus")),
         gpus={
-            ":".join(gpu.get("id", "").split(":")[-2:]): GPU(
+            gpu.get("id", ""): GPU(
                 id=_let_pydantic_check_none(gpu.get("id")),
                 product_name=get_text_from_element(gpu.find("product_name")),
                 product_brand=get_text_from_element(gpu.find("product_brand")),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Agent Cisco Prime
@@ -62,6 +62,14 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         logging.getLogger("vcr").setLevel(logging.WARN)
 
     def fetch_json_data(url: str, args: argparse.Namespace) -> str:
+        """
+        Cisco allows the user to configure the rate limiting parameters. We currently assume that
+        the default parameters are in place for some.
+
+        Docs:
+            * https://developer.cisco.com/site/prime-infrastructure/documents/api-reference/rest-api-v3-9/v4/@id=rate-limiting-doc/#rate-limiting-config-doc
+            * https://developer.cisco.com/site/prime-infrastructure/documents/api-reference/rest-api-v3-9/v4/@id=tutorials/ (see Paging section)
+        """
         logging.info("fetch data from url=%r", url)
 
         if args.basic_auth:
@@ -86,8 +94,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             #    raise OurCustomException("Nice message") [from exc]
             # as soon as we have proper exception handling
             raise RuntimeError(
-                "Server dit not return valid JSON (%s). Reply with %r"
-                % (exc.msg, response.text[:30])
+                f"Server dit not return valid JSON ({exc.msg}). Reply with {response.text[:30]!r}"
             )
 
     args = parse_arguments(argv)

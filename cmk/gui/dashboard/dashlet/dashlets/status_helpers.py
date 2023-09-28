@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,8 +7,10 @@ from collections.abc import Iterable
 
 from livestatus import LivestatusResponse
 
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
+
 from cmk.gui import sites, visuals
-from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext

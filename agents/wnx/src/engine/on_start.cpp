@@ -1,20 +1,26 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#include "on_start.h"
+#include "wnx/on_start.h"
 
 #include <atomic>
 #include <string>
 
-#include "cfg.h"
-#include "cfg_details.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
-#include "windows_service_api.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cma_core.h"
+#include "wnx/windows_service_api.h"
 
 namespace fs = std::filesystem;
 
 namespace cma {
+
+bool OnStart(AppType proposed_type, const std::wstring &config_file);
+inline bool OnStart(AppType type) { return OnStart(type, L""); }
+bool OnStartApp() { return OnStart(AppType::automatic); }
+bool OnStartTest() { return OnStart(AppType::test); }
+
 
 // internal global variables:
 namespace {
@@ -150,7 +156,7 @@ bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
     }
 
     XLOG::l.i("Loaded start config {}",
-              wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
+              wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
     return true;
 }
 
@@ -167,17 +173,19 @@ bool LoadConfigFull(const std::wstring &config_file) {
 }
 
 bool OnStartCore(AppType type, const std::wstring &config_file) {
-    if (!cfg::FindAndPrepareWorkingFolders(type)) return false;
+    if (!cfg::FindAndPrepareWorkingFolders(type)) {
+        return false;
+    }
     wtools::InitWindowsCom();
 
     return LoadConfigFull(config_file);
 }
 
-// must be called on start
+/// must be called on the start
 bool OnStart(AppType proposed_type, const std::wstring &config_file) {
-    auto type = CalcAppType(proposed_type);
+    const auto type = CalcAppType(proposed_type);
 
-    auto already_loaded = g_s_on_start_called.exchange(true);
+    const auto already_loaded = g_s_on_start_called.exchange(true);
     if (type == AppType::srv) {
         XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 35,
                                              "check_mk_service is loading");

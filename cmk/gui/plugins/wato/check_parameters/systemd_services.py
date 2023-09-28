@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import NamedTuple
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -72,6 +70,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         is_deprecated=True,
+        title=lambda: _("Systemd single services discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
         name="discovery_systemd_units_services_rules",
@@ -80,25 +79,16 @@ rulespec_registry.register(
 )
 
 
-class UnitNames(NamedTuple):
-    plural: str
-    singular: str
-
-
-SERVICE = UnitNames(singular="service", plural="services")
-SOCKET = UnitNames(singular="socket", plural="sockets")
-
-
-def _valuespec_discovery_systemd_units(unit: UnitNames) -> Dictionary:
+def _valuespec_discovery_systemd_units() -> Dictionary:
     return Dictionary(
-        title=_("Systemd single %s discovery") % unit.plural,
+        title=_("Systemd single unit discovery"),
         elements=[
             (
                 "descriptions",
                 ListOf(
                     valuespec=TextOrRegExp(),
                     title=_("Restrict by description"),
-                    help=_("Restrict the systemd %s by description.") % unit.plural,
+                    help=_("Restrict the systemd units by description."),
                     allow_empty=False,
                 ),
             ),
@@ -106,8 +96,8 @@ def _valuespec_discovery_systemd_units(unit: UnitNames) -> Dictionary:
                 "names",
                 ListOf(
                     valuespec=TextOrRegExp(),
-                    title=_("Restrict by %s name") % unit.singular,
-                    help=_("Restrict the systemd %s by its name.") % unit.plural,
+                    title=_("Restrict by name"),
+                    help=_("Restrict the systemd units by their name."),
                     allow_empty=False,
                 ),
             ),
@@ -125,33 +115,35 @@ def _valuespec_discovery_systemd_units(unit: UnitNames) -> Dictionary:
             ),
         ],
         help=_(
-            "Configure the discovery of single systemd %(singular)s. To be discovered, a %(singular)s "
-            "must match at least one description condition, one name condition and one state "
-            "condition, if configured. To simply discover all systemd %(plural)s, do not "
-            "configure any restrictions. Note that independently of this ruleset, some systemd "
-            "%(plural)s which are used by the Checkmk agent ('check-mk-agent@...') will "
-            "never be discovered because they appear and disappear frequently."
-        )
-        % {"singular": unit.singular, "plural": unit.singular},
-        empty_text=_("No restrictions (discover all systemd %s)") % unit.plural,
+            "Configure the discovery of single systemd units (sockets or services)."
+            " To be discovered, a unit must match at least one condition each:"
+            " One description condition, one name condition and one state condition, if configured."
+            " To discover all units, do not configure any restrictions."
+            " Independently of this ruleset, some systemd units created by the Checkmk agent"
+            " ('check-mk-agent@...') will never be discovered."
+            " They appear and disappear frequently."
+        ),
+        empty_text=_("No restrictions (discover all units)"),
     )
 
 
 rulespec_registry.register(
     HostRulespec(
+        title=lambda: _("Systemd single service discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
         name="discovery_systemd_units_services",
-        valuespec=lambda: _valuespec_discovery_systemd_units(SERVICE),
+        valuespec=_valuespec_discovery_systemd_units,
     )
 )
 
 rulespec_registry.register(
     HostRulespec(
+        title=lambda: _("Systemd single socket discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
         name="discovery_systemd_units_sockets",
-        valuespec=lambda: _valuespec_discovery_systemd_units(SOCKET),
+        valuespec=_valuespec_discovery_systemd_units,
     )
 )
 
@@ -204,8 +196,8 @@ def _parameter_valuespec_systemd_services():
             ),
         ],
         help=_(
-            "This ruleset only applies when individual Systemd services are discovered. The user "
-            "needs to configure this option in the discovery section."
+            "This ruleset only applies when individual Systemd services are discovered. "
+            "The user needs to configure this option in the discovery section."
         ),
     )
 
@@ -223,7 +215,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_systemd_units(unit: UnitNames) -> Dictionary:
+def _parameter_valuespec_systemd_units() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -234,21 +226,21 @@ def _parameter_valuespec_systemd_units(unit: UnitNames) -> Dictionary:
                         (
                             "active",
                             MonitoringState(
-                                title=_("Monitoring state if %s is active") % unit.singular,
+                                title=_("Monitoring state if unit is active"),
                                 default_value=0,
                             ),
                         ),
                         (
                             "inactive",
                             MonitoringState(
-                                title=_("Monitoring state if %s is inactive") % unit.singular,
+                                title=_("Monitoring state if unit is inactive"),
                                 default_value=0,
                             ),
                         ),
                         (
                             "failed",
                             MonitoringState(
-                                title=_("Monitoring state if %s is failed") % unit.singular,
+                                title=_("Monitoring state if unit is failed"),
                                 default_value=2,
                             ),
                         ),
@@ -258,24 +250,22 @@ def _parameter_valuespec_systemd_units(unit: UnitNames) -> Dictionary:
             (
                 "states_default",
                 MonitoringState(
-                    title=_("Monitoring state for any other %s state") % unit.singular,
+                    title=_("Monitoring state for any other unit state"),
                     default_value=2,
                 ),
             ),
             (
                 "else",
                 MonitoringState(
-                    title=_("Monitoring state if a monitored %s is not found at all.")
-                    % unit.singular,
+                    title=_("Monitoring state if a monitored unit is not found at all."),
                     default_value=2,
                 ),
             ),
         ],
         help=_(
-            "This ruleset only applies when individual Systemd %s are discovered. The user "
-            "needs to configure this option in the discovery section."
-        )
-        % unit.plural,
+            "This ruleset only applies when individual Systemd units are discovered. "
+            "The user needs to configure this option in the discovery section."
+        ),
     )
 
 
@@ -285,7 +275,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Name of the service")),
         match_type="dict",
-        parameter_valuespec=lambda: _parameter_valuespec_systemd_units(SERVICE),
+        parameter_valuespec=_parameter_valuespec_systemd_units,
         title=lambda: _("Systemd single service"),
     )
 )
@@ -295,7 +285,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Name of the socket")),
         match_type="dict",
-        parameter_valuespec=lambda: _parameter_valuespec_systemd_units(SOCKET),
+        parameter_valuespec=_parameter_valuespec_systemd_units,
         title=lambda: _("Systemd single socket"),
     )
 )

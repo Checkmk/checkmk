@@ -1,0 +1,11 @@
+Title: Improve site CA
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1693490241
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Site Certificate Authorities generated after this Werk now have a key length of 4096 bit and expire in 10 years.

@@ -1,0 +1,12 @@
+Title: Fixed broken hostname filter for parent/child topology
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1676475383
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

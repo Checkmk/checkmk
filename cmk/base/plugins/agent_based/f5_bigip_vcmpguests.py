@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import List, Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -14,7 +14,7 @@ from .utils.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
 Section = Mapping[str, str]
 
 
-def parse_f5_bigip_vcmpguests(string_table: List[StringTable]) -> Optional[Section]:
+def parse_f5_bigip_vcmpguests(string_table: list[StringTable]) -> Section | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_vcmpguests([[['guest1', 'Active'], ['guest2', 'Inactive']]])
     {'guest1': 'active', 'guest2': 'inactive'}
@@ -28,7 +28,7 @@ def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:
 
 def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
     for guest, status in sorted(section.items()):
-        yield Result(state=State.OK, summary="Guest [%s] is %s" % (guest, status))
+        yield Result(state=State.OK, summary=f"Guest [{guest}] is {status}")
 
 
 register.snmp_section(

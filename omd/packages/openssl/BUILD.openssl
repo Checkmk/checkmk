@@ -1,74 +1,65 @@
-load("@bzlws//:index.bzl", "bzlws_copy")
-
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-  name = "package_source_files",
-  srcs =  glob(["**"]),
+    name="all_srcs",
+    srcs=glob(["**"]),
 )
 
-# TODO: This is only needed to find the root of the bazel files.
-# A better way should be found.
-filegroup(
-  name = "package_root",
-  srcs = ["WORKSPACE"],
-)
-
-genrule(
-    name = "build",
-    srcs = [":package_source_files", ":package_root"],
-    outs = [
-        "openssl-built.tgz",
-        "lib/libssl.a",
-        "lib/libssl.so",
-        "lib/pkgconfig/libcrypto.pc",
-        "lib/pkgconfig/libssl.pc",
-        "lib/pkgconfig/openssl.pc",
-        "lib/engines-1.1/padlock.so",
-        "lib/engines-1.1/capi.so",
-        "lib/engines-1.1/afalg.so",
-        "lib/libcrypto.so.1.1",
-        "lib/libcrypto.so",
-        "lib/libcrypto.a",
-        "lib/libssl.so.1.1",
-        "bin/openssl",
-        "bin/c_rehash",
-        "skel/etc/ssl/ct_log_list.cnf.dist",
-        "skel/etc/ssl/misc/CA.pl",
-        "skel/etc/ssl/misc/tsget",
-        "skel/etc/ssl/misc/tsget.pl",
-        "skel/etc/ssl/ct_log_list.cnf",
-        "skel/etc/ssl/openssl.cnf",
-        "skel/etc/ssl/openssl.cnf.dist",
+configure_make(
+    name="openssl",
+    lib_name="openssl",
+    lib_source=":all_srcs",
+    visibility=["//visibility:public"],
+    configure_command="config",
+    configure_in_place=True,
+    configure_options=[
+         "--openssldir='skel/etc/ssl'",
+         "enable-md2",
+         "no-tests",
     ],
-    cmd = """
-        # For convenience, and to make sure all paths are absolute
-        PACKAGE_ROOT_DIR="$$(realpath $$(dirname $(execpath :package_root)))"
-        OUT_DIR="$$(realpath $(RULEDIR))"
-        # -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib \
-        
-        cd "$$PACKAGE_ROOT_DIR"
-        
-        ./config \
-          --prefix="/" \
-          --libdir="lib" \
-          --openssldir="skel/etc/ssl" \
-          enable-md2 \
-          no-tests
-        
-        make -j8
-        
-        make -j8 DESTDIR="$$OUT_DIR" install_sw install_ssldirs
-        
-        (cd "$$OUT_DIR"; tar cz *) > openssl-built.tgz
-        
-        mv openssl-built.tgz "$$OUT_DIR"
-    """,
+    args=["-j6"],
+
+    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
+    # combined with foreign_cc/configure_make's RPATH agnosticness
+    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
+    # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
+    #   + the actual build directory, leading to a potentially wrong RPATH
+    #   next to the fact that build artifacts won't be binary identical even
+    #   when built in an exact same environment
+    # This can be worked around by setting RPATH again after `bazel build` still
+    # leaving us with RPATH placeholders of different size
+    # Unfortunately this does not work for dynamic libraries, since strangely
+    # for those the flags definded with `copts` will be appended rather than
+    # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
+    # For that reason we need to manually set RPATH outside Bazel (during `make`)
+    env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+
+    targets=[
+        "build_programs",
+        "install_sw",
+        "install_ssldirs",
+    ],
+    out_binaries=[
+        "openssl",
+        "c_rehash",
+    ],
+    out_shared_libs=[
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
+        "libssl.so",
+        "libssl.so.1.1",
+        "libcrypto.so",
+        "libcrypto.so.1.1",
+    ],
+    out_static_libs=[
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    out_data_dirs=[
+        "skel",
+        "lib/pkgconfig",
+        "lib/engines-1.1",
+    ],
 )
 
-# copy to $(DESTDIR)$(OMD_ROOT)/ is done by make
-bzlws_copy(
-    name = "deploy",
-    out = "build/by_bazel/openssl/{FILEPATH}",
-    force = True,
-    srcs = [":build"],
-)

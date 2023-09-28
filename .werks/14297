@@ -6,7 +6,7 @@ Date: 1664518242
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In Checkmk 1.6 and previous versions custom dashboard element plugins could be
 registered by deploying a file to

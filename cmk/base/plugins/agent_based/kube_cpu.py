@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, MutableMapping, Optional
+from collections.abc import MutableMapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -23,18 +24,18 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
 
 
 def discovery_kube_cpu(
-    section_kube_performance_cpu: Optional[PerformanceUsage],
-    section_kube_cpu_resources: Optional[Resources],
-    section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
+    section_kube_performance_cpu: PerformanceUsage | None,
+    section_kube_cpu_resources: Resources | None,
+    section_kube_allocatable_cpu_resource: AllocatableResource | None,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check_kube_cpu(
     params: Params,
-    section_kube_performance_cpu: Optional[PerformanceUsage],
-    section_kube_cpu_resources: Optional[Resources],
-    section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
+    section_kube_performance_cpu: PerformanceUsage | None,
+    section_kube_cpu_resources: Resources | None,
+    section_kube_allocatable_cpu_resource: AllocatableResource | None,
 ) -> CheckResult:
     yield from _check_kube_cpu(
         params,
@@ -48,9 +49,9 @@ def check_kube_cpu(
 
 def _check_kube_cpu(
     params: Params,
-    section_kube_performance_cpu: Optional[PerformanceUsage],
-    section_kube_cpu_resources: Optional[Resources],
-    section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
+    section_kube_performance_cpu: PerformanceUsage | None,
+    section_kube_cpu_resources: Resources | None,
+    section_kube_allocatable_cpu_resource: AllocatableResource | None,
     current_timestamp: float,
     host_value_store: MutableMapping[str, Any],
 ) -> CheckResult:

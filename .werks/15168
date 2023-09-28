@@ -1,0 +1,14 @@
+Title: KUBE: addition of available to DaemonSet and Deployment replicas
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1673439651
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+This werk adds the available replicas field of the Deployment and DaemonSet to
+the <tt>kube_replicas</tt> check plugin. Similar to the ready replicas, the
+duration threshold can be configured via the check plugin's rule.
+

@@ -1,10 +1,10 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 #
-# Default Check MK configuration file
+# Default Checkmk configuration file
 #
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
@@ -276,6 +276,15 @@ mrpe:
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include some_user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+extensions:
+    enabled: yes
+
+    execution:
+        - name        : "robot_mk"                                  # just a name
+          binary      : "$CUSTOM_AGENT_PATH$/bin/robotmk_ext.exe"   # what to run
+          command_line: "daemon"                                    # command line
+          run         : auto                                        # yes, no or auto(run if present)
+
 modules:
     enabled: yes
 
@@ -322,5 +331,6 @@ system:
         start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
                                # delayed - serice started automatically(delayed)
                                # disabled - service cannot be started manually and should be enabled
+    repair_invalid_utf: no
 
 

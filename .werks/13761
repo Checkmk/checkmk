@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin <tt>cmk_site_statistics</tt> crashed for pre-1.6 CRE sites
 with <tt>KeyError (core_pid)</tt>.

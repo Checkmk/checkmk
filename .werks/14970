@@ -1,0 +1,17 @@
+Title: mk_postgres.py: Use PATH as fallback for psql binary location
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673455566
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+This werk affects the monitoring of one or more PostgreSQL instances via agent plugin on linux if the changes made in werk #14975 are applied.
+The agent plugin will look for the "psql" binary under the path <tt>/{pg_database}/{pg_version}/bin/{binary_name}</tt>, using the configured values in the .env and .pgpass files.
+However, this path does not have to be correct, depending on the setup. In case it cannot be found the binary location from PATH is now used instead.
+
+In order to apply this change you will need to reinstall the agent plugin.
+

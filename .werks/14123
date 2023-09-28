@@ -6,7 +6,7 @@ Date: 1651233458
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The new service name is 'Cluster collector'. Users have to rediscover the service and to reconfigure
 rules, which have options matching the service name.

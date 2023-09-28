@@ -6,7 +6,7 @@ Date: 1668005614
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin used to crash if the item was not found in the section.
 This has now been fixed. The check will go to UKNOWN state and provide information that no data for the item was found.

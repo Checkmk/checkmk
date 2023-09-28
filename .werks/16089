@@ -1,0 +1,24 @@
+Title: etherbox_smoke: Fix default behaviour and remove predictive levels option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692277918
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The check plugin <tt>etherbox_smoke</tt> monitors smoke sensors of Etherboxes.
+<a href="https://checkmk.com/werk/14664">Werk 14664</a> introduced configurable levels for this
+plugin. However, this accidentally changed the default behaviour of the plugin. Before werk 14664,
+the plugin reported <i>OK</i> if no smoke was detected and <i>CRIT</i> otherwise. With werk 14664,
+by default, the plugin always reported <i>CRIT</i>, even if no smoke was detected.
+
+As of this werk, the old default behaviour is restored. Furthermore, a new configuration option is
+added. Users now have two alternatives for configuring the behaviour of the plugin: Users can either
+specify two monitoring states for the two cases "smoke detected" and "no smoke detected", or,
+alternatively, users can specify <i>WARN</i> and <i>CRIT</i> thresholds on the smoke level.
+
+Finally, this werk removes the option to configure predictive levels for this check plugin, which
+was also added by werk 14664. Using this option lead to a crash. Already existing configurations
+will automatically be migrated to the default behaviour mentioned above.

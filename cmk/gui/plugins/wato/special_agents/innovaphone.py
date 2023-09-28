@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
@@ -35,7 +37,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_innovaphone(),
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:innovaphone",
+        name=RuleGroup.SpecialAgents("innovaphone"),
         valuespec=_valuespec_special_agents_innovaphone,
     )
 )

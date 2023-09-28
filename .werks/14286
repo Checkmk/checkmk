@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case fetching the graphs takes more than 10 seconds, the notification plugin
 aborts waiting for the graphs and continues to send the notification without

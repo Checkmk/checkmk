@@ -1,0 +1,15 @@
+Title: REST-API: several endpoints returned "Host not found"
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1685017549
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Several rest-api endpoints returned a 400 status code with message
+"Host not found" when the host was on a remote site.
+
+An internal validation was too tight. This is now fixed.
+

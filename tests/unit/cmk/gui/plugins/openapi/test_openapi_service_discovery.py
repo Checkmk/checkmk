@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,14 +12,19 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import HostLabel
+from cmk.utils.sectionname import SectionName
+
 from cmk.automations.results import (
-    CheckPreviewEntry,
     GetServicesLabelsResult,
+    ServiceDiscoveryPreviewResult,
     SetAutochecksResult,
-    TryDiscoveryResult,
 )
 
-mock_discovery_result = TryDiscoveryResult(
+from cmk.checkengine.discovery import CheckPreviewEntry
+
+mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
             "old",
@@ -37,7 +42,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("load15", 1.32, 40.0, 80.0, 0, 8),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -54,7 +59,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("thread_usage", 1.3496215054443164, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -84,7 +89,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("inodes_used", 1558, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -114,7 +119,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("inodes_used", 1, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -144,7 +149,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("inodes_used", 1412, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -174,7 +179,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("inodes_used", 1131429, 28009267.2, 29565337.599999998, 0.0, 31121408.0),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -203,7 +208,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("fs_used_percent", 2.9997247958902853, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -233,7 +238,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("inodes_used", 305, 42163.200000000004, 44505.6, 0.0, 46848.0),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -253,7 +258,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("page_swap_out", 0.0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -272,7 +277,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("util", 26.948711508431227, None, None, 0, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -286,7 +291,7 @@ mock_discovery_result = TryDiscoveryResult(
             "25.0 °C",
             [("temp", 25.0, 107.0, 107.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -300,7 +305,7 @@ mock_discovery_result = TryDiscoveryResult(
             "20.0 °C",
             [("temp", 20.0, 70.0, 80.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -314,7 +319,7 @@ mock_discovery_result = TryDiscoveryResult(
             "54.0 °C",
             [("temp", 54.0, 78.0, 88.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -328,7 +333,7 @@ mock_discovery_result = TryDiscoveryResult(
             "35.0 °C",
             [("temp", 35.0, 70.0, 80.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -342,7 +347,7 @@ mock_discovery_result = TryDiscoveryResult(
             "41.0 °C",
             [("temp", 41.0, 70.0, 80.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -356,7 +361,7 @@ mock_discovery_result = TryDiscoveryResult(
             "55.5 °C",
             [("temp", 55.5, 115.0, 115.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -370,7 +375,7 @@ mock_discovery_result = TryDiscoveryResult(
             "64.0 °C",
             [("temp", 64.0, 99.0, 127.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -384,7 +389,7 @@ mock_discovery_result = TryDiscoveryResult(
             "74.0 °C (warn/crit at 70.0/80.0 °C)",
             [("temp", 74.0, 70.0, 80.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -398,7 +403,7 @@ mock_discovery_result = TryDiscoveryResult(
             "38.0 °C",
             [("temp", 38.0, 70.0, 80.0, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "new",
@@ -468,13 +473,13 @@ mock_discovery_result = TryDiscoveryResult(
                 ("writeback_tmp", 0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
             "mkeventd_status",
             None,
-            "heute",
+            HostName("heute"),
             "{}",
             {},
             "OMD heute Event Console",
@@ -492,7 +497,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("average_request_time", 0.00027762370400620984, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -516,13 +521,13 @@ mock_discovery_result = TryDiscoveryResult(
                 ("average_request_time", 0.00039733688471126213, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
             "mknotifyd",
             None,
-            "heute",
+            HostName("heute"),
             "{}",
             {},
             "OMD heute Notification Spooler",
@@ -533,7 +538,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("new_files", 0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -550,7 +555,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("new_files", 0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -564,7 +569,7 @@ mock_discovery_result = TryDiscoveryResult(
             "Mount options exactly as expected",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -578,7 +583,7 @@ mock_discovery_result = TryDiscoveryResult(
             "Mount options exactly as expected",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -601,7 +606,7 @@ mock_discovery_result = TryDiscoveryResult(
             "Mount options exactly as expected",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -655,7 +660,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("bytes_other", 0.0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -709,7 +714,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("bytes_other", 0.0, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -723,7 +728,7 @@ mock_discovery_result = TryDiscoveryResult(
             "138 services in total, Service 'kubelet' activating for: 0.00 s, 5 disabled services",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -749,7 +754,7 @@ mock_discovery_result = TryDiscoveryResult(
                 ("TIME_WAIT", 108, None, None, None, None),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "old",
@@ -763,7 +768,7 @@ mock_discovery_result = TryDiscoveryResult(
             "Up since Tue Jun  2 07:50:48 2020, uptime: 7 days, 7:30:46",
             [("uptime", 631846.94, None, None, None, None)],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "active",
@@ -777,7 +782,7 @@ mock_discovery_result = TryDiscoveryResult(
             "WAITING - Active check, cannot be done offline",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
     ],
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},
@@ -785,19 +790,23 @@ mock_discovery_result = TryDiscoveryResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    source_results={"agent": (0, "Success")},
+    labels_by_host={
+        HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
+    },
 )
 
 
-@pytest.fixture(name="mock_try_discovery")
-def fixture_mock_try_discovery(mocker: MockerFixture) -> MagicMock:
+@pytest.fixture(name="mock_discovery_preview")
+def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.try_discovery", return_value=mock_discovery_result
+        "cmk.gui.watolib.services.local_discovery_preview", return_value=mock_discovery_result
     )
 
 
 @pytest.fixture(name="mock_discovery")
 def fixture_mock_discovery(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("cmk.gui.watolib.services.discovery", return_value=None)
+    return mocker.patch("cmk.gui.watolib.services.local_discovery", return_value=None)
 
 
 @pytest.fixture(name="mock_set_autochecks")
@@ -811,7 +820,7 @@ def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
 def test_openapi_discovery_fails_on_invalid_content_type(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.post(
@@ -821,7 +830,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
         status=415,
     )
     assert "Content type not valid" in resp.json["title"]
-    mock_try_discovery.assert_not_called()
+    mock_discovery_preview.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
 
@@ -829,7 +838,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
 def test_openapi_discovery_on_invalid_mode(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -841,7 +850,7 @@ def test_openapi_discovery_on_invalid_mode(
         status=400,
     )
     assert resp.json["detail"] == "These fields have problems: mode"
-    mock_try_discovery.assert_not_called()
+    mock_discovery_preview.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
 
@@ -849,7 +858,7 @@ def test_openapi_discovery_on_invalid_mode(
 def test_openapi_discovery_refresh_services(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -864,10 +873,9 @@ def test_openapi_discovery_refresh_services(
         resp.location
         == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
-    assert mock_try_discovery.mock_calls == [
-        call("NO_SITE", ["@noscan"], "example.com"),
-        call("NO_SITE", ["@scan"], "example.com"),
-        call("NO_SITE", ["@noscan"], "example.com"),
+    assert mock_discovery_preview.mock_calls == [
+        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
 
@@ -877,7 +885,7 @@ def test_openapi_discovery_tabula_rasa(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_set_autochecks: MagicMock,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_discovery: MagicMock,
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
@@ -890,11 +898,17 @@ def test_openapi_discovery_tabula_rasa(
     )
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
-        call("NO_SITE", "refresh", ["@scan"], ["example.com"], non_blocking_http=True)
+        call(
+            "refresh",
+            ["example.com"],
+            scan=True,
+            raise_errors=False,
+            non_blocking_http=True,
+        )
     ]
-    assert mock_try_discovery.mock_calls == [
-        call("NO_SITE", ["@noscan"], "example.com"),
-        call("NO_SITE", ["@noscan"], "example.com"),
+    assert mock_discovery_preview.mock_calls == [
+        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=True, raise_errors=False),
     ]
 
 
@@ -902,13 +916,13 @@ def test_openapi_discovery_tabula_rasa(
 def test_openapi_discovery_disable_and_re_enable_one_service(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch(
         # one would like to mock the call in the library and not the import. WHY????
-        "cmk.gui.watolib.services.get_services_labels",
+        "cmk.gui.watolib.rulesets.get_services_labels",
         return_value=GetServicesLabelsResult(labels=defaultdict(lambda: {})),
     )
     aut_user_auth_wsgi_app.call_method(
@@ -925,7 +939,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         headers={"Accept": "application/json"},
         status=200,
     )
-    mock_try_discovery.reset_mock()
+    mock_discovery_preview.reset_mock()
 
     df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
         resp,
@@ -935,8 +949,8 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         status=204,
     )
     assert df_boot_ignore.text == ""
-    mock_try_discovery.assert_called_once()
-    mock_try_discovery.reset_mock()
+    mock_discovery_preview.assert_called_once()
+    mock_discovery_preview.reset_mock()
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
         "example.com",
@@ -1009,7 +1023,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         status=204,
     )
     assert df_boot_monitor.text == ""
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
         "example.com",
@@ -1094,7 +1108,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 def test_openapi_discover_single_service(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1106,7 +1120,7 @@ def test_openapi_discover_single_service(
         status=204,
     )
     assert resp.text == ""
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
     # known to the host. I have not verified this. But in case something like this happens, the
     # endpoint should fail with some error instead instead of continuing silently.
@@ -1188,10 +1202,10 @@ def test_openapi_bulk_discovery_with_invalid_hostname(
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_refresh_job_status(  # type:ignore[no-untyped-def]
+def test_openapi_refresh_job_status(
     base: str,
-    aut_user_auth_wsgi_app,
-    mock_try_discovery: MagicMock,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_discovery_preview: MagicMock,
 ) -> None:
     host_name = "example.com"
 
@@ -1232,11 +1246,11 @@ def test_openapi_refresh_job_status(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_deprecated_execute_discovery_endpoint(  # type:ignore[no-untyped-def]
+def test_openapi_deprecated_execute_discovery_endpoint(
     base: str,
-    aut_user_auth_wsgi_app,
-    mock_try_discovery: MagicMock,
-):
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_discovery_preview: MagicMock,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         f"{base}/objects/host/example.com/actions/discover_services/invoke",

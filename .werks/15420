@@ -1,0 +1,15 @@
+Title: mssql_availability_groups: Catch errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679491145
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When monitoring MSSQL databases with the mssql agent plugin, the discovery previously crashed when the plugin was unable to query for availability groups.
+
+Now, unsuccessful queries for availability groups will be skipped on service discovery.
+For already discovered services, an unsuccessful query will result in an UNKNOWN state, containing the error message passed by the mssql agent plugin.
+

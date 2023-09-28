@@ -1,0 +1,17 @@
+Title: Datadog special agent: Fix time shifts when querying logs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673444301
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+When querying logs from the Datadog API, there was a shift in the time window of the query. The
+shift corresponded to the UTC offset of the local time zone of the monitoring server. This was
+caused by misinterpreting local times as UTC times.
+
+For example, if the local time zone of the monitoring server is CET, then there was a shift of one
+hour into the future, causing the agent to query future logs. If the local time zone of the
+monitoring server is UTC, there was no shift.

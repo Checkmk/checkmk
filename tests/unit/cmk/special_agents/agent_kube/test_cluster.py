@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import NoReturn
-from unittest.mock import MagicMock
 
 import pytest
 
 from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers.cluster_handler import (
+    _allocatable_cpu_resource,
+    _allocatable_memory_resource,
+    _allocatable_pods,
+    _cpu_resources,
+    _memory_resources,
+    _node_collector_daemons,
+    _node_count,
+    _node_is_ready,
+    _pod_resources,
+    create_api_sections,
+)
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import Cluster
 from cmk.special_agents.utils_kubernetes.schemata import api, section
-from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
 from .factory import (
     APIDaemonSetFactory,
@@ -31,12 +42,12 @@ from .factory import (
 )
 
 
-def _create_labels_from_roles(roles: Sequence[str]) -> api.Labels:
-    return parse_labels({f"node-role.kubernetes.io/{role}": "" for role in roles})
+def _create_labels_from_roles(roles: Sequence[str]) -> dict[str, str]:
+    return {f"node-role.kubernetes.io/{role}": "" for role in roles}
 
 
-def cluster_api_sections() -> Sequence[str]:
-    return [
+def cluster_api_sections() -> set[str]:
+    return {
         "kube_pod_resources_v1",
         "kube_allocatable_pods_v1",
         "kube_node_count_v1",
@@ -47,7 +58,7 @@ def cluster_api_sections() -> Sequence[str]:
         "kube_allocatable_cpu_resource_v1",
         "kube_cluster_info_v1",
         "kube_collector_daemons_v1",
-    ]
+    }
 
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
@@ -61,10 +72,10 @@ def test_cluster_resources(cluster_pods: int) -> None:
         )
         for _ in range(cluster_pods)
     ]
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(pods=pods))
-    assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
-    assert cluster.cpu_resources().count_total == cluster_pods * pod_containers_count
-    assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods
+    cluster = Cluster.from_api_resources((), APIDataFactory.build(pods=pods))
+    assert _memory_resources(cluster).count_total == cluster_pods * pod_containers_count
+    assert _cpu_resources(cluster).count_total == cluster_pods * pod_containers_count
+    assert sum(len(pods) for _phase, pods in _pod_resources(cluster)) == cluster_pods
 
 
 def test_cluster_allocatable_memory_resource() -> None:
@@ -74,10 +85,10 @@ def test_cluster_allocatable_memory_resource() -> None:
         allocatable=NodeResourcesFactory.build(memory=memory, factory_use_construct=True)
     )
     nodes = APINodeFactory.batch(size=number_nodes, status=status)
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
     expected = section.AllocatableResource(context="cluster", value=memory * number_nodes)
-    actual = cluster.allocatable_memory_resource()
+    actual = _allocatable_memory_resource(cluster)
     assert actual == expected
 
 
@@ -88,62 +99,35 @@ def test_cluster_allocatable_cpu_resource():
         allocatable=NodeResourcesFactory.build(cpu=cpu, factory_use_construct=True)
     )
     nodes = APINodeFactory.batch(size=number_nodes, status=status)
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
-    actual = cluster.allocatable_cpu_resource()
+    actual = _allocatable_cpu_resource(cluster)
     assert actual == expected
 
 
-def test_write_cluster_api_sections_registers_sections_to_be_written(
-    write_sections_mock: MagicMock,
-) -> None:
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build())
-    agent.write_cluster_api_sections("cluster", cluster)
-    assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections()
+def test_write_cluster_api_sections_registers_sections_to_be_written() -> None:
+    cluster = Cluster.from_api_resources((), APIDataFactory.build())
+    sections = create_api_sections(cluster, "cluster")
+    assert {s.section_name for s in sections} == cluster_api_sections()
 
 
-def test_write_cluster_api_sections_maps_section_names_to_callables(
-    write_sections_mock: MagicMock,
-) -> None:
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build())
-    agent.write_cluster_api_sections("cluster", cluster)
-    assert all(
-        callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in cluster_api_sections()
-    )
+@pytest.mark.parametrize("cluster_node_count", [0, 10, 20])
+def test_node_count(cluster_node_count: int) -> None:
+    nodes = APINodeFactory.batch(size=cluster_node_count)
+    cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    section_node_count = _node_count(cluster)
+    assert len(section_node_count.nodes) == cluster_node_count
 
 
-@pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
-def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) -> None:
-    nodes = APINodeFactory.batch(
-        size=cluster_nodes, status=node_status(api.NodeConditionStatus.TRUE)
-    )
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
-    node_count = cluster.node_count()
-    assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes
+def test__node_is_ready_with_ready_node() -> None:
+    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
+    assert _node_is_ready(api_node) is True
 
 
-def test_node_control_plane_count() -> None:
-    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
-    api_node = APINodeFactory.build(
-        metadata=metadata, status=node_status(api.NodeConditionStatus.TRUE)
-    )
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
-    node_count = cluster.node_count()
-    assert node_count.worker.total == 0
-    assert node_count.control_plane.total == 1
-    assert node_count.control_plane.ready == 1
-
-
-def test_node_control_plane_not_ready_count() -> None:
-    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
-    api_node = APINodeFactory.build(
-        metadata=metadata, status=node_status(api.NodeConditionStatus.FALSE)
-    )
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
-    node_count = cluster.node_count()
-    assert node_count.control_plane.not_ready == 1
+def test__node_is_ready_with_unready_node() -> None:
+    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.FALSE))
+    assert _node_is_ready(api_node) is False
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
@@ -199,12 +183,14 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
         else cluster_nodes
     )
     expected = section.AllocatableResource(context="cluster", value=memory * counted_nodes)
-    cluster = agent.Cluster.from_api_resources(
+    cluster = Cluster.from_api_resources(
         excluded_node_roles=excluded_node_roles,
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
+                    metadata=NodeMetaDataFactory.build(
+                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                    ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(
                             memory=memory, factory_use_construct=True
@@ -215,7 +201,7 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
             ],
         ),
     )
-    actual = cluster.allocatable_memory_resource()
+    actual = _allocatable_memory_resource(cluster)
     assert actual == expected
 
 
@@ -252,12 +238,14 @@ def test_cluster_allocatable_cpu_resource_cluster(
         else cluster_nodes
     )
     expected = section.AllocatableResource(context="cluster", value=6.0 * counted_nodes)
-    cluster = agent.Cluster.from_api_resources(
+    cluster = Cluster.from_api_resources(
         excluded_node_roles=excluded_node_roles,
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
+                    metadata=NodeMetaDataFactory.build(
+                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                    ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(cpu=6.0, factory_use_construct=True)
                     ),
@@ -266,7 +254,7 @@ def test_cluster_allocatable_cpu_resource_cluster(
             ],
         ),
     )
-    actual = cluster.allocatable_cpu_resource()
+    actual = _allocatable_cpu_resource(cluster)
     assert actual == expected
 
 
@@ -301,18 +289,20 @@ def test_cluster_usage_resources(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles))
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            )
         )
         for node, _, roles in node_podcount_roles
     ]
-    cluster = agent.Cluster.from_api_resources(
+    cluster = Cluster.from_api_resources(
         [excluded_node_role],
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
 
-    assert cluster.memory_resources().count_total == len(APIPodFactory.build().containers) * total
-    assert cluster.cpu_resources().count_total == len(APIPodFactory.build().containers) * total
-    assert sum(len(pods) for _, pods in cluster.pod_resources()) == total
+    assert _memory_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
+    assert _cpu_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
+    assert sum(len(pods) for _, pods in _pod_resources(cluster)) == total
 
 
 @pytest.mark.parametrize(
@@ -348,7 +338,9 @@ def test_cluster_allocatable_pods(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            ),
             status=NodeStatusFactory.build(
                 allocatable=NodeResourcesFactory.build(
                     pods=allocatable, factory_use_construct=True
@@ -358,13 +350,13 @@ def test_cluster_allocatable_pods(
         )
         for node, _, roles in node_podcount_roles
     ]
-    cluster = agent.Cluster.from_api_resources(
+    cluster = Cluster.from_api_resources(
         [excluded_node_role],
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
 
-    assert cluster.allocatable_pods().capacity == total * capacity
-    assert cluster.allocatable_pods().allocatable == total * allocatable
+    assert _allocatable_pods(cluster).capacity == total * capacity
+    assert _allocatable_pods(cluster).allocatable == total * allocatable
 
 
 @pytest.mark.parametrize("phase_all_pods", list(api.Phase))
@@ -404,7 +396,9 @@ def test_create_correct_number_pod_names_for_cluster_host(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            ),
         )
         for node, _, roles in node_podcount_roles
     ]
@@ -521,11 +515,13 @@ def test__node_collector_daemons_error_handling(
 ) -> None:
     daemonsets = [
         APIDaemonSetFactory.build(
-            metadata=MetaDataFactory.build(labels=parse_labels(labels)),
+            metadata=MetaDataFactory.build(
+                labels=api.parse_labels(labels), factory_use_construct=True
+            ),
         )
         for labels in labels_per_daemonset
     ]
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = _node_collector_daemons(daemonsets)
 
     assert collector_daemons.errors == expected_error
     if expected_error.duplicate_container_collector:
@@ -536,17 +532,20 @@ def test__node_collector_daemons_error_handling(
 
 DAEMONSET_MACHINE_SECTIONS = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"node-collector": "machine-sections"}),
+        labels=api.parse_labels({"node-collector": "machine-sections"}),
+        factory_use_construct=True,
     ),
 )
 DAEMONSET_CONTAINER_METRICS = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"node-collector": "container-metrics"}),
+        labels=api.parse_labels({"node-collector": "container-metrics"}),
+        factory_use_construct=True,
     ),
 )
 DAEMONSET_NOT_A_COLLECTOR = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"random-label": "container-metrics"}),
+        labels=api.parse_labels({"random-label": "container-metrics"}),
+        factory_use_construct=True,
     ),
 )
 
@@ -567,7 +566,7 @@ DAEMONSET_NOT_A_COLLECTOR = APIDaemonSetFactory.build(
 def test__node_collector_daemons_identify_container_collector(
     daemonsets: Iterable[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = _node_collector_daemons(daemonsets)
 
     assert collector_daemons.errors == section.IdentificationError(
         duplicate_machine_collector=False,
@@ -600,7 +599,7 @@ def test__node_collector_daemons_identify_container_collector(
 def test__node_collector_daemons_identify_machine_collector(
     daemonsets: Iterable[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = _node_collector_daemons(daemonsets)
 
     assert collector_daemons.errors == section.IdentificationError(
         duplicate_machine_collector=False,
@@ -628,7 +627,7 @@ def test__node_collector_daemons_identify_machine_collector(
 def test__node_collector_daemons_missing_container_collector(
     daemonsets: Sequence[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = _node_collector_daemons(daemonsets)
 
     assert not collector_daemons.errors.duplicate_container_collector
     assert collector_daemons.container is None
@@ -647,14 +646,14 @@ def test__node_collector_daemons_missing_container_collector(
 def test__node_collector_daemons_missing_machine_collector(
     daemonsets: Sequence[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = _node_collector_daemons(daemonsets)
 
     assert not collector_daemons.errors.duplicate_machine_collector
     assert collector_daemons.machine is None
 
 
 def test__node_collector_daemons_no_daemonsets() -> None:
-    collector_daemons = agent._node_collector_daemons([])
+    collector_daemons = _node_collector_daemons([])
 
     assert not collector_daemons.errors.duplicate_machine_collector
     assert collector_daemons.machine is None

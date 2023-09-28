@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -12,7 +12,6 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
-#include <type_traits>
 
 #include "livestatus/OStreamStateSaver.h"
 
@@ -27,17 +26,6 @@ std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
-}
-
-bool starts_with(std::string_view input, std::string_view test) {
-    return input.size() >= test.size() &&
-           input.compare(0, test.size(), test) == 0;
-}
-
-bool ends_with(std::string_view input, std::string_view test) {
-    return input.size() >= test.size() &&
-           input.compare(input.size() - test.size(), std::string::npos, test) ==
-               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
@@ -98,10 +86,10 @@ std::string strip(const std::string &str, const std::string &chars) {
 }
 
 std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp) {
-    OStreamStateSaver s{os};
+    const OStreamStateSaver s{os};
     os << std::hex << std::uppercase << std::setfill('0');
     for (auto ch : enp.buffer) {
-        int uch{static_cast<unsigned char>(ch)};
+        const int uch{static_cast<unsigned char>(ch)};
         if (std::isprint(uch) != 0 && ch != '\\') {
             os << ch;
         } else {
@@ -125,7 +113,7 @@ std::string replace_first(const std::string &str, const std::string &from,
     if (str.empty() && from.empty()) {
         return "";
     }
-    size_t match = str.find(from);
+    const size_t match = str.find(from);
     if (match == std::string::npos) {
         return str;
     }
@@ -140,7 +128,7 @@ std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to) {
     std::string result;
     result.reserve(str.size());
-    size_t added_after_match = from.empty() ? 1 : 0;
+    const size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
     size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {
@@ -150,6 +138,18 @@ std::string replace_all(const std::string &str, const std::string &from,
         pos = match + from.size() + added_after_match;
     }
     return result.append(str, pos - added_after_match);
+}
+
+std::string replace_chars(const std::string &str,
+                          const std::string &chars_to_replace,
+                          char replacement) {
+    std::string result(str);
+    size_t i = 0;
+    while ((i = result.find_first_of(chars_to_replace, i)) !=
+           std::string::npos) {
+        result[i++] = replacement;
+    }
+    return result;
 }
 
 std::string from_multi_line(const std::string &str) {
@@ -166,4 +166,90 @@ std::string ipv4ToString(in_addr_t ipv4_address) {
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
     return addr_buf;
 }
+namespace ec {
+// The funny encoding of an Optional[Iterable[str]] is done in
+// cmk.ec.history.quote_tab().
+
+bool is_none(const std::string &str) { return str == "\002"; }
+
+std::vector<std::string> split_list(const std::string &str) {
+    return str.empty() || is_none(str) ? std::vector<std::string>()
+                                       : mk::split(str.substr(1), '\001');
+}
+
+}  // namespace ec
+bool is_utf8(std::string_view s) {
+    // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf p.125
+    // Correct UTF-8 encoding
+    // ----------------------------------------------------------------
+    // Code Points         First Byte Second Byte Third Byte Fourth Byte
+    // U+0000 -   U+007F     00 - 7F
+    // U+0080 -   U+07FF     C2 - DF    80 - BF
+    // U+0800 -   U+0FFF     E0         A0 - BF     80 - BF
+    // U+1000 -   U+CFFF     E1 - EC    80 - BF     80 - BF
+    // U+D000 -   U+D7FF     ED         80 - 9F     80 - BF
+    // U+E000 -   U+FFFF     EE - EF    80 - BF     80 - BF
+    // U+10000 -  U+3FFFF    F0         90 - BF     80 - BF    80 - BF
+    // U+40000 -  U+FFFFF    F1 - F3    80 - BF     80 - BF    80 - BF
+    // U+100000 - U+10FFFF   F4         80 - 8F     80 - BF    80 - BF
+    const auto *end = s.cend();
+    for (const char *p = s.cbegin(); p != end; ++p) {
+        const unsigned char ch0 = *p;
+        if (ch0 < 0x80) {
+            continue;
+        }
+        if (ch0 < 0xC2 || ch0 > 0xF4) {
+            // Invalid first byte: 0x80..0xC2 and 0xF5..0xFF
+            return false;
+        }
+        if (ch0 < 0xE0) {
+            // 2 byte encoding: C2..DF
+            if (end <= &p[1]) {
+                return false;
+            }
+            const unsigned char ch1 = *++p;
+            if (ch1 < 0x80 || ch1 > 0xBF) {
+                return false;
+            }
+            continue;
+        }
+        if (ch0 < 0xF0) {
+            // 3 byte encoding: 0xE0..0xEF
+            if (end <= &p[2]) {
+                return false;
+            }
+            const unsigned char ch1 = *++p;
+            const unsigned char low = ch0 == 0xE0 ? 0xA0 : 0x80;
+            const unsigned char high = ch0 == 0xED ? 0x9F : 0xBF;
+            if (ch1 < low || ch1 > high) {
+                return false;
+            }
+            const unsigned char ch2 = *++p;
+            if (ch2 < 0x80 || ch2 > 0xBF) {
+                return false;
+            }
+            continue;
+        }
+        // 4 byte encoding: 0xF0..0xF3
+        if (end <= &p[3]) {
+            return false;
+        }
+        const unsigned char ch1 = *++p;
+        const unsigned char low = ch0 == 0xF0 ? 0x90 : 0x80;
+        const unsigned char high = ch0 == 0xF4 ? 0x8F : 0xBF;
+        if (ch1 < low || ch1 > high) {
+            return false;
+        }
+        const unsigned char ch2 = *++p;
+        if (ch2 < 0x80 || ch2 > 0xBF) {
+            return false;
+        }
+        const unsigned char ch3 = *++p;
+        if (ch3 < 0x80 || ch3 > 0xBF) {
+            return false;
+        }
+    }
+    return true;
+}
+
 }  // namespace mk

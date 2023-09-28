@@ -1,0 +1,15 @@
+Title: rest_api: corrected the time period response schema
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675448967
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk introduces a fix for a bug that would cause a
+500 internal error when fetching a timeperiod via the
+REST-API. This was caused when configuring sepecific days
+for activate_time_range in the GUI.
+

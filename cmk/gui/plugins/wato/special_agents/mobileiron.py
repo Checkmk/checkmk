@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    MKUserError,
-    RulespecGroupDatasourceProgramsApps,
-)
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    HTTPProxyReference,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
+from cmk.gui.plugins.wato.utils import HTTPProxyReference
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, ListOfStrings, RegExp, TextInput
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _validate_regex_choices(
@@ -35,9 +32,9 @@ def _validate_regex_choices(
 
 def _valuespec_special_agents_mobileiron() -> Dictionary:
     return Dictionary(
-        title=_("MobileIron API"),
+        title=_("IvantiNeurons for MDM (formerly MobileIron Cloud)"),
         help=_(
-            "Requests data from Mobileiron API and outputs a piggyback host per returned device."
+            "Requests data from the API of IvantiNeurons for MDM (formerly MobileIron Cloud) and outputs a piggyback host per returned device."
         ),
         elements=[
             ("username", TextInput(title=_("Username"), allow_empty=False)),
@@ -139,7 +136,7 @@ def _valuespec_special_agents_mobileiron() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:mobileiron",
+        name=RuleGroup.SpecialAgents("mobileiron"),
         valuespec=_valuespec_special_agents_mobileiron,
     )
 )

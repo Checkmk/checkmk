@@ -1,0 +1,17 @@
+Title: custom_user_attributes: after deleting, all user config will be updated
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675696840
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk introduces a fix in the REST-API to avoid a race condition
+when calling the user_config endpoint. After you delete any custom
+attribute via the gui interface, all users config will be updated
+to reflect the change.
+
+
+

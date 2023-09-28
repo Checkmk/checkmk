@@ -1,0 +1,15 @@
+Title: Fix hex to rgb color conversion
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1675097468
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Hex to RGB conversion has now been fixed to work for 3-digits HEX
+
+If you had an error showing "Invalid color specification: #100" in the
+graph, this will be fixed by this werk.
+

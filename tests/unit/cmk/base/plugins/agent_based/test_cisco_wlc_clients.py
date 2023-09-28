@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,
@@ -99,49 +105,47 @@ ITEM_RESULT = [
 ]
 
 
-def _run_parse_and_check(  # type:ignore[no-untyped-def]
+def _run_parse_and_check(
     item: str,
     info: list[StringTable],
     params: VsResult | None = None,
-):
+) -> CheckResult:
     if params is None:
         params = {}
-    result = list(
-        check_wlc_clients(
-            item=item,
-            params=params,
-            section=parse_cisco_wlc_clients(info),
-        )
+    yield from check_wlc_clients(
+        item=item,
+        params=params,
+        section=parse_cisco_wlc_clients(info),
     )
-    return result
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_cisco_wlc_clients(item, result) -> None:  # type:ignore[no-untyped-def]
-    assert _run_parse_and_check(item, INFO) == result
+def test_cisco_wlc_clients(item: str, result: CheckResult) -> None:
+    assert list(_run_parse_and_check(item, INFO)) == result
 
 
 PARAM_STATUS = [
     # summary: 186 connections
     [{}, State.OK],
-    [dict(levels=(300, 400)), State.OK],
-    [dict(levels=(100, 400)), State.WARN],
-    [dict(levels=(50, 100)), State.CRIT],
-    [dict(levels_lower=(100, 50)), State.OK],
-    [dict(levels_lower=(200, 100)), State.WARN],
-    [dict(levels_lower=(300, 200)), State.CRIT],
+    [{"levels": (300, 400)}, State.OK],
+    [{"levels": (100, 400)}, State.WARN],
+    [{"levels": (50, 100)}, State.CRIT],
+    [{"levels_lower": (100, 50)}, State.OK],
+    [{"levels_lower": (200, 100)}, State.WARN],
+    [{"levels_lower": (300, 200)}, State.CRIT],
     # check status when exactly on the defined level
-    [dict(levels=(186, 400)), State.WARN],
-    [dict(levels=(50, 186)), State.CRIT],
-    [dict(levels_lower=(186, 100)), State.OK],
-    [dict(levels_lower=(300, 186)), State.WARN],
+    [{"levels": (186, 400)}, State.WARN],
+    [{"levels": (50, 186)}, State.CRIT],
+    [{"levels_lower": (186, 100)}, State.OK],
+    [{"levels_lower": (300, 186)}, State.WARN],
 ]
 
 
 @pytest.mark.parametrize("param, status", PARAM_STATUS)
-def test_cisco_wlc_clients_parameter(param, status) -> None:  # type:ignore[no-untyped-def]
-    result = _run_parse_and_check("Summary", INFO, param)
-    assert result[0].state == status
+def test_cisco_wlc_clients_parameter(param: VsResult | None, status: State) -> None:
+    result = next(iter(_run_parse_and_check("Summary", INFO, param)))
+    assert isinstance(result, Result)
+    assert result.state == status
 
 
 def test_parse_cisco_wlc_clients() -> None:
@@ -151,15 +155,15 @@ def test_parse_cisco_wlc_clients() -> None:
         total_clients=186,
         clients_per_ssid={
             "FreePublicWifi": ClientsPerInterface(
-                per_interface=dict(
-                    guest1=0,
-                    guest2=114,
-                    guest3=68,
-                )
+                per_interface={
+                    "guest1": 0,
+                    "guest2": 114,
+                    "guest3": 68,
+                }
             ),
-            "AnotherWifiSSID": ClientsPerInterface(per_interface=dict(interface_name=0)),
-            "corp_internal_001": ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
-            "corp_internal_003": ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
+            "AnotherWifiSSID": ClientsPerInterface(per_interface={"interface_name": 0}),
+            "corp_internal_001": ClientsPerInterface(per_interface={"corp_intern_001": 1}),
+            "corp_internal_003": ClientsPerInterface(per_interface={"corp_intern_003": 3}),
         },
     )
 
@@ -205,15 +209,15 @@ DATA = """
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_cisco_wlc_client_with_snmp_walk() -> None:
+def test_cisco_wlc_client_with_snmp_walk(as_path: Callable[[str], Path]) -> None:
     plugin = agent_based_register.get_check_plugin(CheckPluginName("wlc_clients"))
     assert plugin
 
     # test detect
-    assert snmp_is_detected(SectionName("cisco_wlc_9800_clients"), DATA)
+    assert snmp_is_detected(SectionName("cisco_wlc_9800_clients"), as_path(DATA))
 
     # parse
-    parsed = get_parsed_snmp_section(SectionName("cisco_wlc_9800_clients"), DATA)
+    parsed = get_parsed_snmp_section(SectionName("cisco_wlc_9800_clients"), as_path(DATA))
 
     # test discovery
     assert list(plugin.discovery_function(parsed)) == [

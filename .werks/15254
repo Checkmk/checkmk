@@ -1,0 +1,15 @@
+Title: Fixed incorrect availability calculation when a host was removed and added again
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1678461175
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The availability information was not updated when a new host got
+re-introduced and the CMC was only reloaded, which resulted in "No
+information about that period of time available" for such a host.  Only a
+CMC restart fixed the calculation, but with this fix a reload is enough.
+

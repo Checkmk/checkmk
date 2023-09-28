@@ -10,7 +10,7 @@ State: unknown
 Version: 2.1.0b1
 
 The check_mk_agent for solaris reported the error "integer expression expected"
-while executing the "<<<job>>>" section.
+while executing the `<<<job>>>` section.
 The cause of this error is that solaris does not support "su -s".
 This bugfix removes the parameter "-s" from the su command.
 Therefore statistics for jobs of users that have no login shell (e.g. www-data)

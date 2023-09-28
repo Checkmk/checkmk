@@ -13,7 +13,7 @@ datasource with the current stable version of Check_MK we backport the API
 calls that are needed for this datasource with this werk.
 
 If you are curious, you can have a look at the code of the datasource:
-https://github.com/tribe29/grafana-checkmk-datasource
+https://github.com/Checkmk/grafana-checkmk-datasource
 
 You could even setup the datasource with a daily build or starting with 1.5.0p16
 from now.

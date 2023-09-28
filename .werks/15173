@@ -1,0 +1,12 @@
+Title: Couchbase special agent: Fix crash if timeout is configured
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673883708
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+When configuring the Couchbase special agent, Checkmk offers the option to specify the timeout for
+HTTP requests made by the agent. Using this configuration option led to a crash in the agent.

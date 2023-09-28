@@ -1,0 +1,12 @@
+Title: Changed host label for Azure Resource Group hosts
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1675678149
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+This werk affects users who use the `resource_group:<group>` host label of Azure Resource Group hosts.
+The label is being renamed to `cmk/azure/resource_group:<group>` in order to stay consistent with other host labels. The old label will be removed in a future version.

@@ -1,0 +1,19 @@
+Title: REST API: update password change time when changing automation user's secret
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1674478891
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Previously, changing an automation user's authentication secret did not update the recorded timestamp of the last password change for the automation user.
+As a result, the automation user could have been prevented from logging in by the password policy for local users, because the secret appeared to be too old.
+
+The recorded timestamp is now updated when the secret is changed via the REST API.
+
+Note that the issue did not affect changing an automation user's secret via the user management GUI (Setup > Users).
+Here the timestamp was already updated correctly.
+

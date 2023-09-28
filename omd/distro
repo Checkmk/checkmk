@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -45,13 +45,7 @@ then
     VERSION=$(cat /etc/redhat-release)
     if [ "${VERSION:0:6}" = CentOS ]
     then
-        if [ "${VERSION:0:24}" = "CentOS Linux release 6.0" ]; then
-            echo "CENTOS${SEP}6"
-            exit 0
-        elif [ "${VERSION:0:22}" = "CentOS Linux release 7" ]; then
-            echo "CENTOS${SEP}7"
-            exit 0
-        elif [ "${VERSION:0:22}" = "CentOS Linux release 8" ]; then
+        if [ "${VERSION:0:22}" = "CentOS Linux release 8" ]; then
             echo "CENTOS${SEP}8"
             exit 0
         fi

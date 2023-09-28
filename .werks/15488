@@ -1,0 +1,17 @@
+Title: Allow configuration of backups for remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1683183546
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you tried to configure a backup for a remote site of a customer with
+disabled option "Disable remote configuration" for that site, the message
+"Check_MK can only be configured on the managers central site." was shown. This
+made it impossible to configure a backup for such remote sites.
+
+

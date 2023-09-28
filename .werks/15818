@@ -1,0 +1,14 @@
+Title: Activating changes will check for git being installed if config versioning is enabled
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1686646424
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If configuration versioning (named "Use GIT version control for WATO" in the GUI) is
+enabled, activating changes will now check if git is installed and if not, fail to
+activate the changes.
+

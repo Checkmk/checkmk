@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# Fmt creates regular releases.
+TAG=9.0.0
+
+curl --silent \
+    --show-error \
+    --fail \
+    --location \
+    -o fmt-${TAG}.tar.gz \
+    https://github.com/fmtlib/fmt/archive/refs/tags/${TAG}.tar.gz

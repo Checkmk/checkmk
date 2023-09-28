@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, NamedTuple, Optional, TypeVar
+from collections.abc import Mapping
+from typing import Final, NamedTuple, TypeVar
 
 from ..agent_based_api.v1 import Result, State
 
@@ -59,10 +60,10 @@ _ABBREVIATIONS: Final = {
 
 class LDisk(NamedTuple):
     state: str
-    default_cache: Optional[str] = None
-    current_cache: Optional[str] = None
-    default_write: Optional[str] = None
-    current_write: Optional[str] = None
+    default_cache: str | None = None
+    current_cache: str | None = None
+    default_write: str | None = None
+    current_write: str | None = None
 
 
 SectionLDisks = Mapping[str, LDisk]
@@ -71,7 +72,7 @@ SectionLDisks = Mapping[str, LDisk]
 class PDisk(NamedTuple):
     name: str
     state: str
-    failures: Optional[int]
+    failures: int | None
 
 
 SectionPDisks = Mapping[str, PDisk]

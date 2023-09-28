@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import List, Mapping, MutableMapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import equals, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -15,7 +16,7 @@ class Interface(NamedTuple):
     if_name: str
     ip_address: str
     address_type: str
-    subnet: List[str]
+    subnet: list[str]
 
 
 SectionFortinetInterface = Mapping[str, Interface]
@@ -28,9 +29,8 @@ SectionFortinetInterface = Mapping[str, Interface]
 
 
 def parse_fortinet_firewall_network_interfaces(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> SectionFortinetInterface:
-
     if not string_table:
         return {}
 
@@ -80,9 +80,7 @@ register.snmp_section(
 
 
 def inventory_fortinet_firewall(section: SectionFortinetInterface) -> InventoryResult:
-
     for interface in section.values():
-
         yield TableRow(
             path=["networking", "addresses"],
             key_columns={

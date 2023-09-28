@@ -6,7 +6,7 @@ Date: 1655467160
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For some devices, the check plugins <tt>cisco_cpu_multiitem</tt> and <tt>cisco_fru_module_status</tt>
 did not discover any services due to a crash in the parsing of the raw data. Instead, the Check_MK

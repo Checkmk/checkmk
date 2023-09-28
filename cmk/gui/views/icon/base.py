@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,9 +8,11 @@ from __future__ import annotations
 import abc
 from collections.abc import Sequence
 
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import TagID
 
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import Icon as IconSpec
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 
 
@@ -47,7 +49,7 @@ class Icon(abc.ABC):
         row: Row,
         tags: list[TagID],
         custom_vars: dict[str, str],
-    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+    ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
         raise NotImplementedError()
 
     def columns(self) -> Sequence[ColumnName]:

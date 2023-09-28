@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class Load(NamedTuple):
@@ -23,12 +23,12 @@ class ProcessorType(Enum):
 @dataclass(frozen=True)
 class Threads:
     count: int
-    max: Optional[int] = None
+    max: int | None = None
 
 
 @dataclass
 class Section:
     load: Load
     num_cpus: int
-    threads: Optional[Threads] = None
+    threads: Threads | None = None
     type: ProcessorType = ProcessorType.unspecified

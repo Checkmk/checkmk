@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,18 +22,27 @@ docker_tag() {
     # Tag images
     REGISTRY=$1
     FOLDER=$2
-
-    log "Erstelle \"${VERSION}\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
-
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
-        log "Erstelle \"{$BRANCH}-latest\" tag..."
-        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    TARGET_VERSION=$3
+    if [[ -z "$TARGET_VERSION" ]]; then
+        TARGET_VERSION="${VERSION_TAG}"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    SOURCE_TAG="checkmk/check-mk-${EDITION}:${VERSION_TAG}"
+
+    log "Erstelle \"${VERSION}\" tag..."
+    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${TARGET_VERSION}"
+
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
+        log "Erstelle \"{$BRANCH}-latest\" tag..."
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        log "Erstelle \"daily\" tag..."
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
+    fi
+
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         log "Erstelle \"latest\" tag..."
-        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
 
@@ -42,51 +51,52 @@ docker_push() {
     REGISTRY=$1
     FOLDER=$2
 
-    log "Lade zu ($REGISTRY) hoch..."
-    docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
-
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
-        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    if [[ "$VERSION_TAG" == *"-rc"* ]]; then
+        echo "${VERSION_TAG} was a release candidate, do a retagging before pushing".
+        RELEASE_VERSION=$(echo -n "${VERSION_TAG}" | sed 's/-rc[0-9]*//g')
+        docker_tag "${REGISTRY}" "${NAMESPACE}" "${RELEASE_VERSION}"
+    else
+        RELEASE_VERSION="${VERSION_TAG}"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    log "Lade zu ($REGISTRY) hoch..."
+    docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${RELEASE_VERSION}"
+
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
+    fi
+
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
 
 build_image() {
     log "Unpack source tar to $TMP_PATH"
-    tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}.tar.gz"
+    tar -xz -C "$TMP_PATH" -f "${SOURCE_PATH}/check-mk-${EDITION}-${VERSION}${SUFFIX}.tar.gz"
 
     log "Copy debian package..."
-    cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
+    cp "${SOURCE_PATH}/${PKG_FILE}" "$DOCKER_PATH/"
 
     log "Building container image"
-    make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
+    make -C "$DOCKER_PATH" VERSION_TAG="${VERSION_TAG}" BUILD_IMAGE_WITHOUT_CACHE="${BUILD_IMAGE_WITHOUT_CACHE}" "$DOCKER_IMAGE_ARCHIVE"
 
     log "Verschiebe Image-Tarball..."
-    mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
+    mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"
 
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_tag "" "checkmk"
-    else
-        docker_tag "registry.checkmk.com" "/${EDITION}"
-    fi
+    docker_tag "${REGISTRY}" "${NAMESPACE}"
 }
 
 push_image() {
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_push "" "checkmk"
-    else
-        docker_push "registry.checkmk.com" "/${EDITION}"
-    fi
-
+    docker_push "${REGISTRY}" "${NAMESPACE}"
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ]; then
-    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
-    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no push"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ] || [ "$8" = "" ]; then
+    echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [BUILD_IMAGE_WITHOUT_CACHE] [ACTION]"
+    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 false false false push"
     echo
     exit 1
 fi
@@ -94,20 +104,34 @@ fi
 BRANCH=$1
 EDITION=$2
 VERSION=$3
-SET_LATEST_TAG=$4
-SET_BRANCH_LATEST_TAG=$5
-ACTION=$6
+SOURCE_PATH=$4
+SET_LATEST_TAG=$5
+SET_BRANCH_LATEST_TAG=$6
+BUILD_IMAGE_WITHOUT_CACHE=$7
+ACTION=$8
+
+VERSION_TAG=$(basename "${SOURCE_PATH}")
+
+# Default to our internal registry, set it to "" if you want push it to dockerhub
+REGISTRY="registry.checkmk.com"
+NAMESPACE="/${EDITION}"
 
 if [ "$EDITION" = raw ]; then
     SUFFIX=.cre
-elif [ "$EDITION" = free ]; then
-    SUFFIX=.cfe
+    REGISTRY=""
+    NAMESPACE="checkmk"
 elif [ "$EDITION" = enterprise ]; then
     SUFFIX=.cee
 elif [ "$EDITION" = managed ]; then
     SUFFIX=.cme
-elif [ "$EDITION" = plus ]; then
-    SUFFIX=.cpe
+elif [ "$EDITION" = cloud ]; then
+    SUFFIX=.cce
+    REGISTRY=""
+    NAMESPACE="checkmk"
+elif [ "$EDITION" = saas ]; then
+    SUFFIX=.cse
+    REGISTRY="artifacts.lan.tribe29.com:4000"
+    NAMESPACE=""
 else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi
@@ -115,7 +139,6 @@ fi
 BASE_PATH=$(pwd)/tmp
 mkdir -p "$BASE_PATH"
 TMP_PATH=$(mktemp --directory -p "$BASE_PATH" --suffix=.cmk-docker)
-PACKAGE_PATH=$(pwd)/download
 DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker_image"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}"

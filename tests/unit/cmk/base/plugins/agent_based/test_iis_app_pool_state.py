@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.iis_app_pool_state import (
     check_iis_app_pool_state,
     DefaultCheckParameters,
     IisAppPoolState,
+    IisAppPoolStateCheckParams,
+    Section,
 )
 
 
@@ -18,7 +21,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
     [
         (
             "app",
-            dict(app=IisAppPoolState.Initialized),
+            {"app": IisAppPoolState.Initialized},
             DefaultCheckParameters,
             [
                 Result(state=State.WARN, summary="State: Initialized"),
@@ -26,7 +29,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
         (
             "app",
-            dict(app=IisAppPoolState.ShutdownPending),
+            {"app": IisAppPoolState.ShutdownPending},
             DefaultCheckParameters,
             [
                 Result(state=State.CRIT, summary="State: ShutdownPending"),
@@ -42,23 +45,23 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
-            dict(state_mapping={"Running": State.CRIT.value}),
+            {"app": IisAppPoolState.Running},
+            {"state_mapping": {"Running": State.CRIT.value}},
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
-            dict(state_mapping={}),
+            {"app": IisAppPoolState.Running},
+            {"state_mapping": {}},
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
+            {"app": IisAppPoolState.Running},
             {},
             [
                 Result(state=State.CRIT, summary="State: Running"),
@@ -66,7 +69,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
     ],
 )
-def test_check_iis_app_pool_state(  # type:ignore[no-untyped-def]
-    item, section, params, results
+def test_check_iis_app_pool_state(
+    item: str, section: Section, params: IisAppPoolStateCheckParams, results: CheckResult
 ) -> None:
     assert list(check_iis_app_pool_state(item, params, section)) == results

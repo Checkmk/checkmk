@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk changes the way extension packages (<i>MKP</i>s) are uploaded, installed, modified and/or downloaded in the GUI.
 
@@ -18,8 +18,8 @@ Here is how common tasks are done now:
 
 <b>Upload and install a package</b>:
 Previously, this was one step.
-It failed if packages were not siutable for the sites Checkmk version or if it collided with an already installed MKP.
-Now can always upload the package.
+It failed if packages were not suitable for the sites Checkmk version or if it collided with an already installed MKP.
+Now users can always upload the package.
 It is then shown in the list of <i>available</i> packages.
 From this list, you can choose to <i>enable</i>, <i>download</i> and <i>remove</i> it.
 The operation of "enabling" might still fail for the reasons mentioned above, in which case the MKP will be displayed in the list of "inactive" packages.

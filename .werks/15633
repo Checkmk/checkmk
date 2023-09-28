@@ -1,0 +1,20 @@
+Title: cisco_fru_module_status: '14' is not a valid PhysicalClasses
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687255455
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the plugin <tt>cisco_fru_module_status</tt> would raise the error
+
+C+:
+ValueError ('14' is not a valid PhysicalClasses)
+C-:
+
+while parsing the section. With this Werk, the crash no longer occurs.
+The state '14' is now remapped to 'unknown'. Note, that the MIB v2/ENTITY-MIB.my does not list the
+state '14', so may we might have to update this mapping, if Cisco aligns their MIBs with the
+behaviour of their devices.

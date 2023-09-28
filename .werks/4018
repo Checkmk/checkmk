@@ -11,49 +11,51 @@ A few new functions to manage host, service and contact groups have been introdu
 <br>
 
 
-<tt>
 Example calls:
 
 
 You can get all groups of a specific type with the action get_all_{groupname}<br>
-curl http://localhost/heute/check_mk/webapi.py?action=get_all_hostgroups&_username=automation&_secret=1122<br>
 
-curl http://localhost/heute/check_mk/webapi.py?action=get_all_servicegroups&_username=automation&_secret=1122<br>
+```
+curl http://localhost/heute/check_mk/webapi.py?action=get_all_hostgroups&_username=automation&_secret=1122
 
-curl http://localhost/heute/check_mk/webapi.py?action=get_all_contactgroups&_username=automation&_secret=1122<br>
-<br>
-<br>
+curl http://localhost/heute/check_mk/webapi.py?action=get_all_servicegroups&_username=automation&_secret=1122
+
+curl http://localhost/heute/check_mk/webapi.py?action=get_all_contactgroups&_username=automation&_secret=1122
+```
+
+
 Furthermore you can add, edit and delete these groups
 
 
-<tt>
-    # All group types can be managed with similar requests
+```
+# All group types can be managed with similar requests
 
-    # Add group<br>
-    curl "http://localhost/heute/check_mk/webapi.py?action=add_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1", "alias": "the hg alias"}'<br>
+# Add group
+curl "http://localhost/heute/check_mk/webapi.py?action=add_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1", "alias": "the hg alias"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=add_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1", "alias": "the sg alias"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=add_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1", "alias": "the sg alias"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=add_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1", "alias": "the cg alias"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=add_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1", "alias": "the cg alias"}'
 
-    # Edit group<br>
-    curl "http://localhost/heute/check_mk/webapi.py?action=edit_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1", "alias": "the hg alias"}'<br>
+# Edit group
+curl "http://localhost/heute/check_mk/webapi.py?action=edit_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1", "alias": "the hg alias"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=edit_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1", "alias": "the sg alias"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=edit_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1", "alias": "the sg alias"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=edit_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1", "alias": "the cg alias"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=edit_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1", "alias": "the cg alias"}'
 
-    # Delete group<br>
-    curl "http://localhost/heute/check_mk/webapi.py?action=delete_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1"}'<br>
+# Delete group
+curl "http://localhost/heute/check_mk/webapi.py?action=delete_hostgroup&_username=automation&_secret=1122" -d 'request={"groupname": "hostgroup1"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=delete_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=delete_servicegroup&_username=automation&_secret=1122" -d 'request={"groupname": "servicegroup1"}'
 
-    curl "http://localhost/heute/check_mk/webapi.py?action=delete_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1"}'<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=delete_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "contactgroup1"}'
 
 
-    # For contact groups you may also specify a list of nagvis maps in the extra attribute nagivs_maps<br>
-    curl "http://localhost/heute/check_mk/webapi.py?action=add_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "newgroup2", "alias": "the alias", "nagvis_maps": ["dfdf"]}'
-</tt>
+# For contact groups you may also specify a list of nagvis maps in the extra attribute nagivs_maps<br>
+curl "http://localhost/heute/check_mk/webapi.py?action=add_contactgroup&_username=automation&_secret=1122" -d 'request={"groupname": "newgroup2", "alias": "the alias", "nagvis_maps": ["dfdf"]}'
+```
 
 
 Please note: A more elaborate version of these new web api calls will be added to our manual soon. :)

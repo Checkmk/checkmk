@@ -1,0 +1,46 @@
+Title: OpenShift: Introduce Monitoring
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674036625
+Edition: cce
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Checkmk now supports monitoring OpenShift clusters. The OpenShift monitoring builds on top of
+Checkmk's existing Kubernetes monitoring. However, the metrics are collected via methods tailored to
+OpenShift due to the incompatibility of the <tt>Checkmk collectors</tt> with OpenShift. This new
+monitoring leverages the Kubernetes API and the off-the-shelf Prometheus monitoring stack of
+OpenShift. Thus, no additional workload needs to be deployed in your OpenShift cluster. In
+particular, the OpenShift monitoring does not require the <tt>Checkmk Cluster collector</tt>.
+
+This feature can be enabled by configuring the rule <tt>Kubernetes</tt>.
+
+Enabling the collectors has the following benefits.
+<ul>
+  <li>Allow monitoring CPU and Memory usage via the <tt>kube_memory</tt> and <tt>kube_cpu</tt>
+checks.</li>
+  <li>Enable machine level monitoring on each node.</li>
+  <li>Populate the Kubernetes dashboard with data.</li>
+</ul>
+
+The following check plugins are part of machine-level monitoring of a node.
+<ul>
+  <li>uptime</li>
+  <li>cpu_loads</li>
+  <li>kernel_util</li>
+  <li>mem_used</li>
+  <li>mem_used (inventory plugin)</li>
+  <li>diskstat</li>
+  <li>df</li>
+</ul>
+
+While Prometheus acts as a data source for the OpenShift monitoring, this does not imply that this
+monitoring is compatible to any Prometheus stack. For compatibility Checkmk requires the identical
+set-up of Prometheus as in OpenShift. This includes scraping the same collectors, renaming metrics
+in the same manner, having the same recording rules and so forth. Thus, we highly recommend using
+the <tt>Checkmk collectors</tt> for any non-OpenShift Kubernetes environment.
+
+The Checkmk Openshift monitoring will display different metric values for some resources than reported
+on the Openshift dashboard.

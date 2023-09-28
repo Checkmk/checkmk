@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
-checkname = 'tplink_poe_summary'
+checkname = "tplink_poe_summary"
 
-info = [['150']]
+info = [["150"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {
-    '': [
-        (
-            None, {}, [
-                (0, '15.00 Watt', [('power', 15.0)])
-            ]
-        )
-    ]
-}
+checks = {"": [(None, {}, [(0, "15.00 Watt", [("power", 15.0)])])]}

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, exists, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -23,8 +24,8 @@ class SNMPExtendedInfoEntry(NamedTuple):
 
 class SNMPExtendedInfo(NamedTuple):
     description: str  # First description is used for host labels
-    serial: Optional[str]  # Used for 'global' device Attributes
-    model: Optional[str]  # Used for 'global' device Attributes
+    serial: str | None  # Used for 'global' device Attributes
+    model: str | None  # Used for 'global' device Attributes
     entities: Mapping[str, Sequence[SNMPExtendedInfoEntry]]
 
 
@@ -48,7 +49,7 @@ Section = SNMPExtendedInfo
 
 
 def parse_snmp_extended_info(string_table: StringTable) -> Section:
-    parsed: Dict[str, Tuple[str, ...]] = {}
+    parsed: dict[str, tuple[str, ...]] = {}
     count_parents = 0
 
     for (
@@ -77,7 +78,7 @@ def parse_snmp_extended_info(string_table: StringTable) -> Section:
 
     parent_info_serial = None
     parent_info_model = None
-    children_info_by_type: Dict[str, List[SNMPExtendedInfoEntry]] = {}
+    children_info_by_type: dict[str, list[SNMPExtendedInfoEntry]] = {}
 
     for index, (
         parent,

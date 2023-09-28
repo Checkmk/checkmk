@@ -1,2 +1,2 @@
 #!/bin/bash
-cmk-update-config -v
+cmk-update-config "--conflict" "$OMD_CONFLICT_MODE"

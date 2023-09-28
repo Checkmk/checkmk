@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
@@ -20,7 +20,11 @@ STRING_TABLE_FILER_NETAPP_8_1_1 = [
 
 
 def test_discover() -> None:
-    assert list(discover(section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),)) == [
+    assert list(
+        discover(
+            section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
+        )
+    ) == [
         Service(item="vol0"),
         Service(item="lun_29Aug2012_162910_vol"),
         Service(item="a2_esx_zit_g7_00"),

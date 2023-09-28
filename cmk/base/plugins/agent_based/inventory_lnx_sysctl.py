@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,16 +24,16 @@
 # dev.cdrom.info = Can select disk:
 
 import re
-from typing import Dict, Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, Set[str]]
+Section = Mapping[str, set[str]]
 
 
 def parse_lnx_sysctl(string_table: StringTable) -> Section:
-    kernel_config: Dict[str, Set[str]] = {}
+    kernel_config: dict[str, set[str]] = {}
     for line in string_table:
         kernel_config.setdefault(line[0], set()).add(" ".join(line[2:]))
     return kernel_config
@@ -52,7 +52,6 @@ def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) 
 
     exclude_patterns: Sequence[str] = params.get("exclude_patterns", [])
 
-    path = ["software", "kernel_config"]
     for name, values in section.items():
         if _include_parameter(
             name,
@@ -61,7 +60,7 @@ def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) 
         ):
             for value in values:
                 yield TableRow(
-                    path=path,
+                    path=["software", "kernel_config"],
                     key_columns={
                         "name": name,
                         "value": value,

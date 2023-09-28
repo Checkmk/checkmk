@@ -6,7 +6,7 @@ Date: 1652098843
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Package version of deb packages in inventory was always "-". Now,
 the package version is correctly parsed from the version.

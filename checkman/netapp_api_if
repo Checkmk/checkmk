@@ -9,6 +9,11 @@ description:
  Currently, only the ethernet and virtual interfaces are checked. For virtual
  interfaces, the check raises a WARN if the speed differs among the members of
  the virtual interface.
+ 
+ Also - if available for a given virtual interface - failover information will be taken
+ into account the following way: if for a given virtual interface the link-status of any
+ of it's failover ports is not 'up' the service status will be CRIT if that node is part
+ of the home node, WARN otherwise.
 
  Depending on the check parameters, this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a

@@ -6,7 +6,7 @@ Date: 1673436109
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, the REST-API raised an error when the user tried to query a folder
 config which had the network scan option configured with 24:00 in one its time ranges.

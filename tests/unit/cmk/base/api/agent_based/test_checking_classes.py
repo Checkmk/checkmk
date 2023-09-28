@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from ast import literal_eval
 from collections.abc import Sequence
 
 import pytest
 
+from cmk.checkengine.parameters import Parameters
+
 from cmk.base.api.agent_based.checking_classes import (
+    EvalableFloat,
     IgnoreResults,
     Metric,
     Result,
@@ -14,7 +18,11 @@ from cmk.base.api.agent_based.checking_classes import (
     ServiceLabel,
     State,
 )
-from cmk.base.api.agent_based.type_defs import Parameters
+
+
+def test_evalable_float() -> None:
+    inf = EvalableFloat("inf")
+    assert literal_eval("%r" % inf) == float("inf")
 
 
 def test_parameters_features() -> None:
@@ -39,7 +47,11 @@ def test_parameters_features() -> None:
         _ = par0["olaf"]
     assert par1["olaf"] == "schneemann"
 
-    assert list(par0) == list(par0.keys()) == list(par0.values()) == list(par0.items()) == []
+    assert not list(par0)
+    assert not list(par0.keys())
+    assert not list(par0.values())
+    assert not list(par0.items())
+
     assert list(par1) == list(par1.keys()) == ["olaf"]
     assert list(par1.values()) == ["schneemann"]
     assert list(par1.items()) == [("olaf", "schneemann")]

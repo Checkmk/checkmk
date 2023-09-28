@@ -1,0 +1,18 @@
+Title: activate_changes: responses for non-existing activate_ids now include detail
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677692912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue with the problem response in the activate changes GET
+endpoint.
+
+Previously, it would return a 404 with a title attribute only.  It now conforms to
+our other endpoints and returns a problem response with status code, title and detail
+attribute.
+
+

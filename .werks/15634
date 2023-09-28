@@ -1,0 +1,13 @@
+Title: zypper: Enable Configuration of Monitoring States
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1687501124
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The monitoring state of the plugin <tt>zypper</tt> depends on the presence of
+package locks, security updates, recommended updates and other updates. With
+this Werk, this behaviour is configurable via the rule <tt>Zypper Updates</tt>.

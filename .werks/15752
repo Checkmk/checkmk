@@ -1,0 +1,15 @@
+Title: azure_virtual_network_gateways: Fix crash in parsing Azure VNet gateway section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684248130
+Edition: cce
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you are monitoring an Azure VNet gateway that has BGP enabled, but does not have any BGP
+peering addresses, the section parsing crashed:
+C+:
+  ValidationError (([ErrorWrapper(exc=ValidationError(model='BgpSettings', errors=[{'loc': ('bgpPeeringAddresses',), 'msg': 'field required', 'type': 'value_error.missing'}]), loc=('bgpSettings',))], <class 'cmk.base.plugins.agent_based.azure_virtual_network_gateways.VNetGWSettings'>))
+C-:

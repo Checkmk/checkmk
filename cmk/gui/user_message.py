@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 from collections.abc import Iterator
 
-import cmk.utils.paths
-import cmk.utils.werks
-
 import cmk.gui.message as message
-import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -25,11 +21,16 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.table import table_element
 
 
-@cmk.gui.pages.page_registry.register_page("user_message")
-class ModeUserMessagePage(cmk.gui.pages.Page):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("user_message")(PageUserMessage)
+    page_registry.register_page_handler("ajax_delete_user_message", ajax_delete_user_message)
+
+
+class PageUserMessage(Page):
     def title(self) -> str:
         return _("User messages")
 
@@ -82,7 +83,6 @@ def render_user_message_table(what: str) -> None:
     with table_element(
         "user_messages", sortable=False, searchable=False, omit_if_empty=True
     ) as table:
-
         for entry in sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True):
             if what not in entry["methods"]:
                 continue
@@ -112,7 +112,6 @@ def render_user_message_table(what: str) -> None:
     html.close_div()
 
 
-@cmk.gui.pages.register("ajax_delete_user_message")
 def ajax_delete_user_message() -> None:
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)

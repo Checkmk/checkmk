@@ -1,0 +1,14 @@
+Title: mk-job.{aix,solaris}: silently handle missing write permissions to $MK_VARDIR/job errors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1681463662
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The Linux variant mk-job does not report any errors in the event the user
+running the jobs does not have write permissions to the $MK_VARDIR/job
+directory (i.e. errors of this kind are not written to stderr). This feature is
+now also available for mk-job under Solaris and AIX.

@@ -13,6 +13,13 @@ description:
  utilization is omitted if any container has a limit of zero. The reason for omission is displayed
  in the check's details.
 
+ Some care must be taken, when interpreting the usage on individual nodes. The "CPU resources"
+ service reports the usage of running pods only. This means that the usage of operating and
+ Kubernetes system daemons is not reflected. If you need full usage, use the "CPU utilization"
+ service instead. Another caveat is that "Node utilization" and "Cluster utilization" are computed
+ relative to the allocatable number of cores of the nodes, not relative to their capacity. For
+ details on this distinction please consult the Kubernetes docs.
+
  The service includes metrics for the CPU usage, the requests utilization, the limits utilization,
  the CPU requests and CPU limits of the Kubernetes object.
 
@@ -20,6 +27,9 @@ description:
  "Kubernetes CPU resource utilization" ruleset.
 
  The check requires that the special agent kube is configured.
+
+ For the Checkmk Openshift monitoring, the reported metric values will differ from the values
+ reported on the Openshift dashboard as as the included values describe a different quantity.
 
 discovery:
  One service is created per Kubernetes object.

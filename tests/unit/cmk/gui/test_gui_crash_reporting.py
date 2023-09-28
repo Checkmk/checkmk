@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import io
 import tarfile
 from pathlib import Path
+
+import pytest
 
 import cmk.utils.crash_reporting
 
@@ -17,7 +19,8 @@ def test_gui_crash_report_registry() -> None:
     assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_handler.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_gui_crash_report_get_packed() -> None:
     store = crash_handler.CrashReportStore()
     try:
         crash_dir = Path()

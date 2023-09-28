@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -7,8 +7,7 @@
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import ServiceLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, ServiceLabel, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -63,11 +62,10 @@ class TestGCSDiscover(DiscoverTester):
     @property
     def expected_labels(self) -> set[ServiceLabel]:
         return {
-            ServiceLabel("gcp/labels/tag", "freebackup"),
-            ServiceLabel("gcp/location", "US-CENTRAL1"),
-            ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
-            ServiceLabel("gcp/bucket/locationType", "region"),
-            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("cmk/gcp/labels/tag", "freebackup"),
+            ServiceLabel("cmk/gcp/location", "US-CENTRAL1"),
+            ServiceLabel("cmk/gcp/bucket/storageClass", "STANDARD"),
+            ServiceLabel("cmk/gcp/bucket/locationType", "region"),
         }
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
@@ -85,10 +83,9 @@ def test_discover_bucket_labels_without_user_labels() -> None:
     buckets = list(discover(section_gcp_service_gcs=None, section_gcp_assets=asset_section))
     labels = buckets[0].labels
     assert set(labels) == {
-        ServiceLabel("gcp/location", "US-CENTRAL1"),
-        ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
-        ServiceLabel("gcp/bucket/locationType", "region"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
+        ServiceLabel("cmk/gcp/location", "US-CENTRAL1"),
+        ServiceLabel("cmk/gcp/bucket/storageClass", "STANDARD"),
+        ServiceLabel("cmk/gcp/bucket/locationType", "region"),
     }
 
 

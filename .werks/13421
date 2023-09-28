@@ -6,7 +6,7 @@ Date: 1654084750
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 mk_sap.py handles a tree of SAP objects. The objects are annotated with the
 path from the root of the tree to the object. The objects returned by SAP

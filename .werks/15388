@@ -1,0 +1,12 @@
+Title: agent_cisco_meraki: Collect all sections if no sections are explicitly configured
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681901752
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

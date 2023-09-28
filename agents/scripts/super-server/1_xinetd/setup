@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -68,7 +68,7 @@ deploy() {
 cleanup() {
 
     # migrate CRE pre 2.1 xinetd service
-    if [ ! -e "${TEMPLATE}" ] && [ -e "/etc/xinetd.d/check_mk" ]; then
+    if [ -e "/etc/xinetd.d/check_mk" ]; then
         printf "migrating old /etc/xinetd.d/check_mk ... "
         sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" >"${TEMPLATE}" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"
     fi

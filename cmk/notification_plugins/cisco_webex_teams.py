@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 r"""
@@ -28,9 +28,9 @@ def _cisco_webex_teams_msg(context: dict) -> dict:
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
         host_service_info = "Host: {} (IP: {})  \nService: {}".format(
-            format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
+            format_link("[%s](%s)", context["HOSTNAME"], host_url_from_context(context)),
             context["HOSTADDRESS"],
-            format_link("<%s|%s>", service_url_from_context(context), context["SERVICEDESC"]),
+            format_link("[%s](%s)", context["SERVICEDESC"], service_url_from_context(context)),
         )
         state = "State: %s" % context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
@@ -39,7 +39,7 @@ def _cisco_webex_teams_msg(context: dict) -> dict:
     else:
         monitored_type = "Host"
         host_service_info = "Host: {} (IP: {})".format(
-            format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
+            format_link("[%s](%s)", context["HOSTNAME"], host_url_from_context(context)),
             context["HOSTADDRESS"],
         )
         state = "State: %s" % context["HOSTSTATE"]

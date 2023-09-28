@@ -1,0 +1,17 @@
+Title: azure_app_gateway: Monitor Azure Application Gateway
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1675328273
+Edition: cce
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+It's now possible to monitor Azure Application Gateway in Checkmk.
+A new check plugin Microsoft Azure Application Gateway and HW/SW
+inventory plugin have been added.
+
+To monitor App Registrations you have to configure the related
+special agent Microsoft Azure.
+

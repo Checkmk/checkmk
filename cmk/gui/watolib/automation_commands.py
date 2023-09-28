@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing the available automation calls"""
@@ -9,6 +9,7 @@ from typing import Any
 
 import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
+from cmk.utils.licensing.registry import get_license_state
 
 
 class AutomationCommand(abc.ABC):
@@ -23,7 +24,8 @@ class AutomationCommand(abc.ABC):
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
-        in this method. The request produced by this function is 1:1 handed over to the execute() method."""
+        in this method. The request produced by this function is 1:1 handed over to the execute() method.
+        """
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -50,4 +52,5 @@ class AutomationPing(AutomationCommand):
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition().short,
+            "license_state": get_license_state().name,
         }

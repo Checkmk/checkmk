@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -17,6 +19,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Integer,
+    Migrate,
     MonitoringState,
     Percentage,
     TextInput,
@@ -313,39 +316,51 @@ def _item_spec_azure_vms():
     return TextInput(title=_("VM name"))
 
 
-def _parameter_valuespec_azure_vms():
-    return Dictionary(
-        help=_(
-            "To obtain the data required for this check, please configure"
-            ' the datasource program "Microsoft Azure".'
+# the migration is introduced in 2.2.0b1
+def migrate_map_states(params: dict[str, Any]) -> dict[str, Any]:
+    map_provisioning = params.pop("map_provisioning_states", None)
+    map_power = params.pop("map_power_states", None)
+
+    if map_provisioning:
+        for state in ("succeeded", "failed"):
+            params[state] = map_provisioning.get(state, 1)
+
+    if map_power:
+        for state in (
+            "starting",
+            "running",
+            "stopping",
+            "stopped",
+            "deallocating",
+            "deallocated",
+            "unknown",
+        ):
+            params[state] = map_power.get(state, 1)
+
+    return params
+
+
+def _parameter_valuespec_azure_vms() -> Migrate:
+    return Migrate(
+        Dictionary(
+            help=_(
+                "To obtain the data required for this check, please configure"
+                ' the datasource program "Microsoft Azure".'
+            ),
+            title=_("Map provisioning and power states"),
+            elements=[
+                ("succeeded", MonitoringState(title="Provisioning state succeeded")),
+                ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
+                ("starting", MonitoringState(title="Power state starting")),
+                ("running", MonitoringState(title="Power state running")),
+                ("stopping", MonitoringState(title="Power state stopping", default_value=1)),
+                ("stopped", MonitoringState(title="Power state stopped", default_value=1)),
+                ("deallocating", MonitoringState(title="Power state deallocating")),
+                ("deallocated", MonitoringState(title="Power state deallocated")),
+                ("unknown", MonitoringState(title=_("Power state unknown"), default_value=3)),
+            ],
         ),
-        elements=[
-            (
-                "map_provisioning_states",
-                Dictionary(
-                    title=_("Map provisioning states"),
-                    elements=[
-                        ("succeeded", MonitoringState(title="succeeded")),
-                        ("failed", MonitoringState(title="failed", default_value=2)),
-                    ],
-                ),
-            ),
-            (
-                "map_power_states",
-                Dictionary(
-                    title=_("Map power states"),
-                    elements=[
-                        ("starting", MonitoringState(title="starting")),
-                        ("running", MonitoringState(title="running")),
-                        ("stopping", MonitoringState(title="stopping", default_value=1)),
-                        ("stopped", MonitoringState(title="stopped", default_value=1)),
-                        ("deallocating", MonitoringState(title="deallocating")),
-                        ("deallocated", MonitoringState(title="deallocated")),
-                        ("unknown", MonitoringState(title=_("unknown"), default_value=3)),
-                    ],
-                ),
-            ),
-        ],
+        migrate=migrate_map_states,
     )
 
 
@@ -735,5 +750,61 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
         title=lambda: _("Azure Load Balancer Health"),
+    )
+)
+
+
+def _parameter_valuespec_vm_burst_cpu_credits() -> Dictionary:
+    return Dictionary(
+        title=_("Levels CPU credits"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Float, title=_("Remaining credits lower levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_vm_burst_cpu_credits",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
+        title=lambda: _("Azure VM Burst CPU Credits"),
+    )
+)
+
+
+def _parameter_valuespec_vm_disk() -> Dictionary:
+    return Dictionary(
+        title=_("Levels disk"),
+        elements=[
+            (
+                "disk_read",
+                SimpleLevels(Float, title=_("Disk read"), unit="B/s"),
+            ),
+            (
+                "disk_write",
+                SimpleLevels(Float, title=_("Disk write"), unit="B/s"),
+            ),
+            (
+                "disk_read_ios",
+                SimpleLevels(Float, title=_("Disk read operations"), unit="1/s"),
+            ),
+            (
+                "disk_write_ios",
+                SimpleLevels(Float, title=_("Disk write operations"), unit="1/s"),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_vm_disk",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_disk,
+        title=lambda: _("Azure VM Disk"),
     )
 )

@@ -16,4 +16,4 @@ description:
  are configurable via the rule "Network Interfaces and switch ports".
 
 discovery:
- One service is created.
+ One service is created for each virtual machine.

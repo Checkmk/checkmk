@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 from collections.abc import Iterable, Mapping
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pytest
@@ -17,18 +17,26 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
+    _check_encryption_panic,
     _check_only_from,
     _check_python_plugins,
     _check_transport,
     _check_version,
-    check_checkmk_agent,
-    discover_checkmk_agent,
 )
+from cmk.base.plugins.agent_based.checkmk_agent import (
+    _normalize_ip_addresses as normalize_ip_addresses,
+)
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
 from cmk.base.plugins.agent_based.utils.checkmk import (
+    CachedPlugin,
+    CachedPluginsSection,
+    CachedPluginType,
+    CertInfoController,
     CMKAgentUpdateSection,
     Connection,
     ControllerSection,
+    LocalConnectionStatus,
     Plugin,
     PluginSection,
 )
@@ -37,11 +45,11 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
 
 
 def test_discovery_something() -> None:
-    assert [*discover_checkmk_agent({}, None, None, None)] == [Service()]
+    assert [*discover_checkmk_agent({}, None, None, None, None)] == [Service()]
 
 
 def test_check_no_data() -> None:
-    assert not [*check_checkmk_agent({}, None, None, None, None)]
+    assert not [*check_checkmk_agent({}, None, None, None, None, None)]
 
 
 def test_check_version_os_no_values() -> None:
@@ -79,14 +87,28 @@ def test_check_version_match() -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.3", ("specific", {"literal": "1.2.2"}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.3",
+            ("specific", {"literal": "1.2.2"}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_site_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.2", ("site", {}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.2",
+            ("site", {}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
@@ -191,13 +213,29 @@ def test_check_faild_python_plugins() -> None:
     ]
 
 
+def test_check_encryption_panic() -> None:
+    assert [*_check_encryption_panic("something")] == [
+        Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
+        )
+    ]
+
+
+def test_check_no_encryption_panic() -> None:
+    assert not [*_check_encryption_panic(None)]
+
+
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_tranport_ls_ok(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
             ControllerSection(
-                allow_legacy_pull=False, ip_allowlist=(), socket_ready=True, connections=[]
+                allow_legacy_pull=False,
+                ip_allowlist=[],
+                agent_socket_operational=True,
+                connections=[],
             ),
             fail_state,
         )
@@ -210,7 +248,10 @@ def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
         *_check_transport(
             False,
             ControllerSection(
-                allow_legacy_pull=True, ip_allowlist=(), socket_ready=False, connections=[]
+                allow_legacy_pull=True,
+                ip_allowlist=[],
+                agent_socket_operational=False,
+                connections=[],
             ),
             fail_state,
         )
@@ -222,7 +263,10 @@ def test_check_tranport_no_tls(fail_state: State) -> None:
     (result,) = _check_transport(
         False,
         ControllerSection(
-            allow_legacy_pull=True, ip_allowlist=(), socket_ready=True, connections=[]
+            allow_legacy_pull=True,
+            ip_allowlist=[],
+            agent_socket_operational=True,
+            connections=[],
         ),
         fail_state,
     )
@@ -425,7 +469,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                             "aghash 38bf6e44175732bc",
                             "pending_hash 1234abcd5678efgh",
                             "update_url https://server/site/check_mk",
-                            "error 503 Server Error: Service Unavailable",
+                            "error 503 Server Error: Service Unavailable\nSomething for second line",
                         )
                     )
                 },
@@ -434,7 +478,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         )
 
     assert actual == [
-        Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
+        Result(
+            state=State.WARN,
+            summary="Update error: 503 Server Error: Service Unavailable",
+            details="503 Server Error: Service Unavailable\nSomething for second line",
+        ),
         Result(
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
@@ -916,6 +964,7 @@ def test_check_plugins(
                 section_plugins,
                 None,
                 None,
+                None,
             )
         )
         == expected_result
@@ -931,8 +980,8 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
+                agent_socket_operational=True,
+                ip_allowlist=[],
                 connections=[],
             ),
             [],
@@ -941,16 +990,24 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
+                agent_socket_operational=True,
+                ip_allowlist=[],
                 connections=[
-                    Connection(site_id="localhost/heute", valid_for_seconds=31504213431.635986)
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2028, 1, 24, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    notice="Time until controller certificate for 'localhost/heute' expires: 998 years 362 days",
+                    notice="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 5 years 0 days",
                 )
             ],
             id="Certificate valid for more than 30 days -> Result is OK.",
@@ -958,14 +1015,24 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
-                connections=[Connection(site_id="localhost/heute", valid_for_seconds=2505600)],
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2023, 2, 14, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
             ),
             [
                 Result(
                     state=State.WARN,
-                    summary="Time until controller certificate for 'localhost/heute' expires: 29 days 0 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                    summary="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 20 days 22 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
                 )
             ],
             id="Certificate valid for less than 30 days -> Result is WARN.",
@@ -973,17 +1040,79 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
-                connections=[Connection(site_id="localhost/heute", valid_for_seconds=31231)],
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2023, 2, 1, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
             ),
             [
                 Result(
                     state=State.CRIT,
-                    summary="Time until controller certificate for 'localhost/heute' expires: 8 hours 40 minutes (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                    summary="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 7 days 22 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
                 )
             ],
             id="Certificate valid for less than 15 days -> Result is CRIT.",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id=None,
+                        coordinates="localhost:8000/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(3021, 5, 27, 15, 20, 40, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 998 years 364 days",
+                )
+            ],
+            id="Legacy (2.1) case",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id=None,
+                        coordinates=None,
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2028, 1, 24, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until controller certificate issued by `Site 'heute' local CA` (imported connection) expires: 5 years 0 days",
+                )
+            ],
+            id="Imported connection",
         ),
     ],
 )
@@ -991,4 +1120,133 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result
+    with on_time(1674578645.3644419, "UTC"):
+        assert (
+            list(check_checkmk_agent({}, None, None, controller_section, None, None))
+            == expected_result
+        )
+
+
+@pytest.mark.parametrize(
+    [
+        "section_cached_plugins",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            CachedPluginsSection(
+                timeout=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.PLUGIN,
+                        plugin_name="some_plugin",
+                        timeout=123,
+                        pid=4711,
+                    ),
+                ],
+                killfailed=None,
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Timed out plugin(s): some_plugin",
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 123s, PID: 4711) - "
+                    "Corresponding output is outdated and/or dropped.",
+                ),
+            ],
+            id="timeout_agent_plugin",
+        ),
+        pytest.param(
+            CachedPluginsSection(
+                timeout=None,
+                killfailed=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.LOCAL,
+                        plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Termination failed: my_local_check",
+                    details="Cached plugins(s) that failed to be terminated after timeout: "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234) - Dysfunctional until successful termination.",
+                ),
+            ],
+            id="killfailed_local_check",
+        ),
+        pytest.param(
+            CachedPluginsSection(
+                timeout=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.PLUGIN,
+                        plugin_name="some_plugin",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                    CachedPlugin(
+                        plugin_type=None,
+                        plugin_name="other_process",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                ],
+                killfailed=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.LOCAL,
+                        plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.ORACLE,
+                        plugin_name="destroy_db",
+                        timeout=123,
+                        pid=4711,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Timed out plugin(s): some_plugin, other_process",
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 7200s, PID: 1234), "
+                    "other_process (Timeout: 7200s, PID: 1234) - Corresponding output is outdated and/or dropped.",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Termination failed: my_local_check, destroy_db",
+                    details="Cached plugins(s) that failed to be terminated after timeout: "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plugin, Timeout: 123s, PID: 4711) - "
+                    "Dysfunctional until successful termination.",
+                ),
+            ],
+            id="timeout_and_killfailed",
+        ),
+    ],
+)
+def test_cached_plugins(
+    section_cached_plugins: CachedPluginsSection | None,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_checkmk_agent(
+                {},
+                None,
+                None,
+                None,
+                None,
+                section_cached_plugins,
+            )
+        )
+        == expected_result
+    )
+
+
+def test_normalize_ip() -> None:
+    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

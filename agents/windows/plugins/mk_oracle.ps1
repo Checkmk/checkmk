@@ -1,5 +1,5 @@
-$CMK_VERSION = "2.2.0i1"
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+$CMK_VERSION = "2.3.0b1"
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -59,7 +59,7 @@ $run_async = $null
 
 
 # Sections that run fast and are not run with caching
-$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance")
+$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance", "systemparameter")
 
 # Set debug to 1 to turn it on, set to zero to turn it off
 # if debug is on, debug messages are shown on the screen
@@ -164,8 +164,6 @@ if ($ORACLE_HOME) {
 # setting the output error language to be English
 $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
 
-$ASYNC_PROC_PATH = "$MK_TEMPDIR\async_proc.txt"
-
 #.
 #   .--SQL Queries---------------------------------------------------------.
 #   |        ____   ___  _        ___                  _                   |
@@ -190,6 +188,9 @@ set echo on
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
+Function should_exclude($exclude, $section) {
+    return (($exclude -Match "ALL") -or ($exclude -Match $section))
+}
 
 Function get_dbversion_database ($ORACLE_HOME) {
      # The output of this command contains -- among others -- the version
@@ -205,13 +206,13 @@ Function get_dbversion_database ($ORACLE_HOME) {
 }
 
 
-function is_async_running ($fullPath) {
-     if (-not(Test-Path -path "$ASYNC_PROC_PATH")) {
+function is_async_running ($async_proc_path, $fullPath) {
+     if (-not(Test-Path -path "$async_proc_path")) {
           # no file, no running process
           return $false
      }
 
-     $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
+     $proc_pid = (Get-Content ${async_proc_path})
 
      # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
      # Our async process always contains `$fullPath` in their own command line.
@@ -222,7 +223,7 @@ function is_async_running ($fullPath) {
      }
 
      # The process to the PID cannot be found, so remove also the proc file
-     rm $ASYNC_PROC_PATH
+     rm $async_proc_path
      return $false
 }
 
@@ -509,8 +510,9 @@ Function sqlcall {
                #####################################################
                # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
                #####################################################
+               $async_proc_path = "$MK_TEMPDIR\async_proc.$sqlsid.txt"
                debug_echo "about to call bg task $sql_message"
-               if (-not(is_async_running($fullPath))) {
+               if (-not(is_async_running($async_proc_path, $fullPath))) {
 
                     $command = {
                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
@@ -529,7 +531,7 @@ Function sqlcall {
                     # variable to the script block
                     $escaped_sql = $THE_SQL.replace("'", "''")
                     $async_proc = Start-Process -PassThru powershell -windowstyle hidden -ArgumentList "-command invoke-command -scriptblock {$command} -argumentlist '$SQL_CONNECT', '$escaped_sql', '$fullpath', '$sqlsid'"
-                    $async_proc.id | set-content $ASYNC_PROC_PATH
+                    $async_proc.id | set-content $async_proc_path
                     debug_echo "should be run here $run_async"
                }
           }
@@ -1642,6 +1644,24 @@ Function sql_version {
 
 
 ################################################################################
+# SQL for Oracle system parameters
+################################################################################
+Function sql_systemparameter {
+     $query_systemparameter = @'
+     prompt <<<oracle_systemparameter:sep(124)>>>;
+     select upper(i.instance_name)
+             || '|' || NAME
+             || '|' || DISPLAY_VALUE
+             || '|' || ISDEFAULT
+        from v$system_parameter, v$instance i
+        where name not like '!_%' ESCAPE '!';
+'@
+ echo $query_systemparameter
+}
+
+
+
+################################################################################
 # SQL for sql_instance information
 ################################################################################
 Function sql_instance {
@@ -1659,6 +1679,7 @@ Function sql_instance {
                || '|' || 'ASM'
                || '|' || 'NO'
                || '|' || i.instance_name
+               || '|' || i.host_name
           from v$instance i;
 
 '@
@@ -1689,8 +1710,9 @@ Function sql_instance {
                     || '|' || precovery_status
                     || '|' || round(nvl(popen_time, -1))
                     || '|' || pblock_size
+                    || '|' || host_name
                from(
-                    select i.instance_name, i.version, i.status, i.logins, i.archiver
+                    select i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, vp.con_id, vp.name pname
                          ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
@@ -1703,7 +1725,7 @@ Function sql_instance {
                     where p.name = 'enable_pluggable_database'
                     union all
                     select
-                         i.instance_name, i.version, i.status, i.logins, i.archiver
+                         i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, 0 con_id, null pname
                          ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
@@ -1732,6 +1754,7 @@ Function sql_instance {
                          || '|' || FORCE_LOGGING
                          || '|' || d.name
                          || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
+                         || '|' || i.host_name
                     from v$instance i, v$database d;
 
 '@
@@ -2240,16 +2263,14 @@ if ($the_count -gt 0) {
                          # check if $EXCLUDE_SID is used
                          if ("$EXCLUDE_$inst_name" -ne $null) {
                               # if used, then we at first presume that we do not want to skip this section
-                              $SKIP_SECTION = 0
                               # if this SECTION is in our ONLY_SIDS then it will be skipped
-                              if (((get-variable "EXCLUDE_$inst_name").value -contains "ALL") -or ((get-variable "EXCLUDE_$inst_name").value -contains $the_section)) {
-                                   $SKIP_SECTION = 1
-                              }
+                              $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
+                              $SKIP_SECTION = should_exclude $instance_exclude $section
                          }
                          # now we set our action on error back to our normal value
                          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
                          debug_echo "value of the_section = ${the_section}"
-                         if ($SKIP_SECTION -eq 0) {
+                         if (-Not ($SKIP_SECTION)) {
                               $THE_NEW_SQL = invoke-expression "${the_section}"
                               $THE_SQL = $THE_SQL + $THE_NEW_SQL
                          }
@@ -2277,18 +2298,16 @@ if ($the_count -gt 0) {
                               # check if $EXCLUDE_SID is used
                               if ("$EXCLUDE_$inst_name" -ne $null) {
                                    # if used, then we at first presume that we do not want to skip this section
-                                   $SKIP_SECTION = 0
                                    # if this SECTION is in our ONLY_SIDS then it will be skipped
                                    # "dynamic variables" are not supported in powershell. For example, $inst_name holds the value of the oracle_sid, let's say "ORCL"
                                    # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
                                    # and so I built the following workaround...
-                                   if (((get-variable "EXCLUDE_$inst_name").value -contains "ALL") -or ((get-variable "EXCLUDE_$inst_name").value -contains $the_section)) {
-                                        $SKIP_SECTION = 1
-                                   }
+                                   $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
+                                   $SKIP_SECTION = should_exclude $instance_exclude $section
                               }
                               # now we set our action on error back to our normal value
                               $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-                              if ($SKIP_SECTION -eq 0) {
+                              if (-Not ($SKIP_SECTION)) {
                                    $THE_NEW_SQL = invoke-expression "$the_section"
                                    $THE_SQL = $THE_SQL + $THE_NEW_SQL
                               }

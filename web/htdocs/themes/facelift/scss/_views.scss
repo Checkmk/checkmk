@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,7 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color;
     background-color: $floatfilter-bg-color;
 
@@ -316,6 +316,176 @@ div.floatfilter {
       margin: 8px 0;
     }
   }
+
+  table.valuespec_listof.filter &[class$="_labels"] {
+    &,
+    div#page_menu_popups div.side_popup form & {
+      width: 348px;
+      padding-right: 0;
+    }
+
+    td.vlof_buttons,
+    td.vlof_content {
+      border: none;
+    }
+
+    td.vlof_content {
+      display: flex;
+      left: unset;
+      padding-right: 0;
+
+      & > div {
+        display: inline-block;
+      }
+    }
+
+    tr {
+      position: relative;
+
+      td.vlof_buttons {
+        width: 0;
+        min-width: 0;
+        padding: 0;
+
+        a.delete_button img {
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          right: 3px;
+        }
+      }
+    }
+
+    tr[id*="_labels_entry"] {
+      > td.vlof_buttons a.delete_button img {
+        opacity: 0.5;
+
+        &:hover {
+          opacity: 0.3;
+        }
+      }
+
+      > td.vlof_content > div.bool {
+        display: flex;
+        width: 6 * $spacing;
+        margin-top: 8px;
+
+        span.vs_label {
+          margin-right: 4px;
+          margin: 4px 7px 0;
+        }
+
+        span.select2-container--default {
+          width: 5 * $spacing !important;
+          height: max-content;
+        }
+
+        div.line {
+          width: 100%;
+          margin-top: $spacing;
+          border-top: 1px solid $line-color;
+        }
+      }
+    }
+
+    div.label_group {
+      flex-grow: 1;
+      padding: 8px;
+      background-color: $navbar-color;
+      border: 1px solid $line-color;
+      border-radius: $theme-border-radius;
+
+      td.vlof_content {
+        margin-right: $spacing;
+      }
+
+      tr:last-child {
+        td.vlof_buttons a.delete_button {
+          display: none;
+        }
+
+        td.vlof_content {
+          padding-bottom: 0;
+        }
+
+        span.select2-container--default {
+          opacity: $label-filter-last-row-opacity;
+        }
+
+        &.active,
+        &:hover {
+          span.select2-container--default {
+            opacity: 1;
+          }
+        }
+      }
+
+      td.vlof_buttons a.delete_button img {
+        right: 0;
+        top: 5.5px;
+        padding: 3px;
+        padding-right: 2px;
+      }
+
+      div.line {
+        display: none;
+      }
+
+      // Boolean operator dropdowns
+      select[id$="_bool"] {
+        & + span.select2-container--default {
+          width: 6 * $spacing !important;
+        }
+      }
+
+      // Valuespec (label) dropdowns
+      select[id$="_vs"] {
+        + span.select2-container--default {
+          width: auto !important;
+          flex-grow: 1;
+          margin-left: 4px;
+
+          span.select2-selection__rendered {
+            padding: 0 5px;
+
+            span.select2-selection__clear {
+              display: none;
+            }
+          }
+
+          span.select2-selection__arrow {
+            display: none;
+          }
+        }
+      }
+
+      a.vlof_add_button,
+      br {
+        display: none;
+      }
+    }
+
+    a.vlof_add_button {
+      display: inline-block;
+      margin: $spacing 2px;
+      background: transparent;
+      text-decoration: none;
+      font-weight: $font-weight-bold;
+
+      img {
+        margin: 0 4px 2px 0;
+      }
+    }
+
+    br {
+      display: none;
+    }
+  }
+}
+
+div.flex_break {
+  flex-basis: 100%;
+  height: 0;
 }
 
 /* Specific styling for side popup floatfilters that are contained in a ListOf() */
@@ -674,7 +844,7 @@ table.data.availability {
   }
 
   tr.summary td {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   tr.odd0 td.number.stats {
@@ -1194,4 +1364,8 @@ td.agent_config table.rulesets td {
       }
     }
   }
+}
+
+.muted_text {
+  color: $font-color-dimmed;
 }

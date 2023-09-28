@@ -17,5 +17,5 @@ a global setting declaration for WATO below
 dialog of the global setting did not work in all cases as
 expected.
 
-Some times a <tt>KeyError: '<setting-name>'</tt> exception
+Some times a `KeyError: '<setting-name>'` exception
 was shown in the GUI.

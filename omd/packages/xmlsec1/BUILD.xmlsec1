@@ -1,0 +1,69 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name="all_srcs",
+    srcs=glob(["**"]),
+)
+
+#
+# This should be put somewhere toplevel, also avoiding the deprecated
+# --define syntax, see
+# https://bazel.build/docs/configurable-attributes
+#
+config_setting(
+    name="no_own_openssl",
+    values={"define": "no-own-openssl=true"},
+)
+
+configure_make(
+    name="xmlsec1",
+    lib_name="xmlsec1",
+    lib_source=":all_srcs",
+    configure_command="configure",
+    configure_in_place=True,
+    configure_options=select({
+            ":no_own_openssl": [],
+            "//conditions:default": ["--with-openssl=$EXT_BUILD_DEPS/openssl"],
+    }) + [
+        "--disable-mans",
+        "--disable-docs",
+    ],
+    args=["-j6"],
+
+    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
+    # combined with foreign_cc/configure_make's RPATH agnosticness
+    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
+    # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
+    #   + the actual build directory, leading to a potentially wrong RPATH
+    #   next to the fact that build artifacts won't be binary identical even
+    #   when built in an exact same environment
+    # This can be worked around by setting RPATH again after `bazel build` still
+    # leaving us with RPATH placeholders of different size
+    # Unfortunately this does not work for dynamic libraries, since strangely
+    # for those the flags definded with `copts` will be appended rather than
+    # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
+    # For that reason we need to manually set RPATH outside Bazel (during `make`)
+    env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+
+    deps=select({
+            ":no_own_openssl": [],
+            "//conditions:default": ["@openssl"],
+    }),
+    out_binaries=["xmlsec1"],
+    # Looks like Bazel doesn't know .la files, but we need them.
+    #  see https://stackoverflow.com/questions/75282435
+    # So instead of listing library files explicitly we just deliver the
+    # whole `lib` folder, containing shared and dynamic libraries as well as
+    # .la files
+    # Note that we list the dynamic libraries anyway, in order to fail if they
+    # for any reason can't be built
+    out_shared_libs=[
+        "libxmlsec1.so",
+        "libxmlsec1.so.1",
+        "libxmlsec1-openssl.so",
+        "libxmlsec1-openssl.so.1",
+    ],
+    out_data_dirs=["lib"],
+    targets=["install"],
+)

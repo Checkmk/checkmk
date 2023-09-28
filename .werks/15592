@@ -1,0 +1,17 @@
+Title: agent: update openapi doc examples for streamed data responses
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1680274360
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a change to the openapi documentation for
+endpoints that support streamed responses. The examples will
+now correctly show that stream=True is required for urllib
+and requests examples.  Also, streamed responses reply with a
+status code of 200 and not a 204 as was previously shown
+in the examples.
+

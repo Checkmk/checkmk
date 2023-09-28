@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Mapping, Sequence
 from typing import Literal
 
 import pytest
 
 from cmk.special_agents.agent_aws import (
+    _get_wafv2_web_acls,
     AWSConfig,
+    NamingConvention,
+    OverallTags,
     ResultDistributor,
     WAFV2Limits,
     WAFV2Summary,
@@ -53,12 +57,42 @@ class FakeWAFV2Client:
         return {"TagInfoForResource": tags, "NextMarker": "string"}
 
 
-def create_sections(names, tags, is_regional):
+Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
 
+
+def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
+    fake_wafv2_client = FakeWAFV2Client()
+
+    def get_response_content(response, key, dflt=None):  # type: ignore[no-untyped-def]
+        if dflt is None:
+            dflt = []
+        if key in response:
+            return response[key]
+        return dflt
+
+    res = _get_wafv2_web_acls(fake_wafv2_client, "us-east-1", get_response_content, None, None)  # type: ignore[arg-type]
+    search_string = res[0]["Rules"][0]["Statement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+    assert isinstance(search_string, str)
+
+    for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
+        if "RateBasedStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "NotStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            assert isinstance(search_string, str)
+        if "AndStatement" in rule["Statement"]:
+            search_string = rule["Statement"]["AndStatement"]["Statements"][0][
+                "ByteMatchStatement"
+            ]["SearchString"]
+            assert isinstance(search_string, str)
+
+
+def create_sections(names: object | None, tags: OverallTags, is_regional: bool) -> Wafv2Sections:
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -67,9 +101,10 @@ def create_sections(names, tags, is_regional):
 
     distributor = ResultDistributor()
 
-    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)
-    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)
-    wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)
+    # TODO: FakeWAFV2Client shoud actually subclass WAFV2Client.
+    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
+    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
+    wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)  # type: ignore[arg-type]
 
     distributor.add(wafv2_limits.name, wafv2_summary)
     distributor.add(wafv2_summary.name, wafv2_web_acl)
@@ -81,8 +116,11 @@ def create_sections(names, tags, is_regional):
     }
 
 
+CreateWafv2Sections = Callable[[object | None, OverallTags], tuple[Wafv2Sections, Wafv2Sections]]
+
+
 @pytest.fixture()
-def get_wafv2_sections():
+def get_wafv2_sections() -> CreateWafv2Sections:
     def _create_wafv2_sections(names, tags):
         return create_sections(names, tags, True), create_sections(names, tags, False)
 
@@ -134,27 +172,26 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
-    wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")
+    # TODO: This is plainly wrong, the client can't be None.
+    wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")  # type: ignore[arg-type]
     assert wafv2_limits_regional._region_report == region
 
-    wafv2_limits_regional = WAFV2Limits(None, "us-east-1", config, "CLOUDFRONT")
+    wafv2_limits_regional = WAFV2Limits(None, "us-east-1", config, "CLOUDFRONT")  # type: ignore[arg-type]
     assert wafv2_limits_regional._region_report == "CloudFront"
 
     with pytest.raises(AssertionError):
-        WAFV2Limits(None, "region", config, "CLOUDFRONT")
-        WAFV2Limits(None, "region", config, "WRONG")  # type:ignore[arg-type]
-        WAFV2WebACL(None, "region", config, False)
+        WAFV2Limits(None, "region", config, "CLOUDFRONT")  # type: ignore[arg-type]
+        WAFV2Limits(None, "region", config, "WRONG")  # type: ignore[arg-type]
+        WAFV2WebACL(None, "region", config, False)  # type: ignore[arg-type]
 
-    assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3
-    assert len(WAFV2WebACL(None, "us-east-1", config, False)._metric_dimensions) == 2
+    assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3  # type: ignore[arg-type]
+    assert len(WAFV2WebACL(None, "us-east-1", config, False)._metric_dimensions) == 2  # type: ignore[arg-type]
 
 
 def _test_limits(wafv2_sections):
-
     wafv2_limits = wafv2_sections["wafv2_limits"]
     wafv2_limits_results = wafv2_limits.run().results
 
@@ -170,15 +207,17 @@ def _test_limits(wafv2_sections):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_limits(  # type:ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_limits(wafv2_sections)
 
 
 def _test_summary(wafv2_summary, found_instances):
-
     wafv2_summary_results = wafv2_summary.run().results
 
     assert wafv2_summary.cache_interval == 300
@@ -196,8 +235,11 @@ def _test_summary(wafv2_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_w_limits(  # type:ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_summary_w_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
@@ -205,15 +247,17 @@ def test_agent_aws_wafv2_summary_w_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_wo_limits(  # type:ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_summary_wo_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
 
 
 def _test_web_acl(wafv2_sections, found_instances):
-
     _wafv2_summary_results = wafv2_sections["wafv2_summary"].run().results
     wafv2_web_acl = wafv2_sections["wafv2_web_acl"]
     wafv2_web_acl_results = wafv2_web_acl.run().results
@@ -229,8 +273,11 @@ def _test_web_acl(wafv2_sections, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_w_limits(  # type:ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_web_acls_w_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
@@ -238,8 +285,11 @@ def test_agent_aws_wafv2_web_acls_w_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_wo_limits(  # type:ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_web_acls_wo_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_web_acl(wafv2_sections, found_instances)

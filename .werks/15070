@@ -1,0 +1,16 @@
+Title: Drop support for weak DH ciphers
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1680174830
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this Werk two TLS ciphers are disabled from the <tt>stunnel</tt> configuration.
+<tt>stunnel</tt> is used when the <i>Encrypt communication</i> option in <i>Enable Livestatus access via network (TCP)</i> or <i>Notification Spooler Configuration</i> is used.
+
+To our knowledge no attacks on these ciphers are known, this is a hardening measure.
+
+We rate this with a CVSS of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N). This CVSS is primarily meant to please automatic scanners.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previous to this Werk it was possible to inject arbitrary shell commands
 when sending SMS notifications. For this, attackers would have needed to
@@ -34,8 +34,8 @@ fields. Check the Audit Log for changes to this field.
 
 <b>Vulnerability Management</b>: We have rated the issue with a CVSS
 Score of 8.0 (High) with the following CVSS vector:
-<tt>CVSS:3.1/AV:A/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H</tt>. A CVE has been
-requested.
+<tt>CVSS:3.1/AV:A/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H</tt>.
+We have assigned CVE-2022-46303 for this issue.
 
 <b>Changes</b>: This Werk replaces a hazardous call to
 <tt>os.system</tt> by a safer alternative and adds additional validation

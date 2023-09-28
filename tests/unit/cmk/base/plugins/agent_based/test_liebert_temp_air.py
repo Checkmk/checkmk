@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,12 +15,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.liebert_temp_air import (
     _check_liebert_temp_air,
     discover_liebert_temp_air,
     parse_liebert_temp_air,
+    ParsedSection,
 )
+from cmk.base.plugins.agent_based.utils.liebert import SystemSection
 from cmk.base.plugins.agent_based.utils.temperature import TempParamDict, TrendComputeDict
 
 STRING_TABLE = [
@@ -42,8 +48,8 @@ PARAMETERS: TempParamDict = {
 }
 
 PARSED_SECTION = {
-    "Return Air Temperature": ["107.6", "deg F"],
-    "Some made-up Air Temperature": ["Unavailable", "deg C"],
+    "Return Air Temperature": ("107.6", "deg F"),
+    "Some made-up Air Temperature": ("Unavailable", "deg C"),
 }
 
 PARSED_EXTRA_SECTION = {
@@ -63,7 +69,7 @@ PARSED_EXTRA_SECTION = {
         ),
     ],
 )
-def test_parse_liebert_temp_air(string_table, result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_liebert_temp_air(string_table: list[StringTable], result: ParsedSection) -> None:
     parsed = parse_liebert_temp_air(string_table)
     assert parsed == result
 
@@ -78,8 +84,8 @@ def test_parse_liebert_temp_air(string_table, result) -> None:  # type:ignore[no
         )
     ],
 )
-def test_discover_liebert_temp_air(  # type:ignore[no-untyped-def]
-    section, extra_section, result
+def test_discover_liebert_temp_air(
+    section: ParsedSection, extra_section: SystemSection, result: DiscoveryResult
 ) -> None:
     discovered = list(discover_liebert_temp_air(section, extra_section))
     assert discovered == result
@@ -95,7 +101,7 @@ def test_discover_liebert_temp_air(  # type:ignore[no-untyped-def]
             PARSED_EXTRA_SECTION,
             [
                 Metric(name="temp", value=42.0, levels=(50.0, 55.0)),
-                Result(state=State.OK, summary="Temperature: 42.0°C"),
+                Result(state=State.OK, summary="Temperature: 42.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -116,8 +122,12 @@ def test_discover_liebert_temp_air(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_liebert_temp_air(  # type:ignore[no-untyped-def]
-    item, params, section, extra_section, result
+def test_check_liebert_temp_air(
+    item: str,
+    params: TempParamDict,
+    section: ParsedSection,
+    extra_section: SystemSection,
+    result: CheckResult,
 ) -> None:
     checked = list(_check_liebert_temp_air(item, params, section, extra_section, {}))
     assert checked == result
@@ -135,7 +145,7 @@ def test_check_liebert_temp_air_trend() -> None:
                 item="Return",
                 params=params,
                 section_liebert_temp_air={
-                    "Return Air Temperature": [temp, "deg F"],
+                    "Return Air Temperature": (temp, "deg F"),
                 },
                 section_liebert_system=PARSED_EXTRA_SECTION,
                 value_store=value_store,
@@ -144,19 +154,19 @@ def test_check_liebert_temp_air_trend() -> None:
 
     with freezegun.freeze_time("1970-01-01 01:00:00"):
         with pytest.raises(IgnoreResultsError):
-            _get_check_result("20.0")  # -6.66°C
+            _get_check_result("20.0")  # -6.66 °C
 
     with freezegun.freeze_time("1970-01-01 02:00:00"):
         with pytest.raises(IgnoreResultsError):
-            _get_check_result("30.0")  # -1.11°C
+            _get_check_result("30.0")  # -1.11 °C
 
     with freezegun.freeze_time("1970-01-01 03:00:00"):
-        result = _get_check_result("40.0")  # 4.44 °C
+        result = _get_check_result("40.0")  # 4.44  °C
 
     assert result == [
         Metric("temp", 4.444444444444445, levels=(50.0, 55.0)),
-        Result(state=State.CRIT, summary="Temperature: 4.4°C (warn/crit below 10°C/15°C)"),
-        Result(state=State.OK, summary="Temperature trend: +5.6°C per 60 min"),
+        Result(state=State.CRIT, summary="Temperature: 4.4 °C (warn/crit below 10 °C/15 °C)"),
+        Result(state=State.OK, summary="Temperature trend: +5.6 °C per 60 min"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

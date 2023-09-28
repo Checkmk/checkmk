@@ -17,12 +17,9 @@ description:
  extension turned on. The behaviour of autoextension setting can be configured
  with a check parameter.
 
- {Increment size}: If the configuration parameter
- {oracle_tablespaces_check_default_increment} is set to
- {True} (which is the default), then the check will warn
- you, if the increment size is set to the Oracle default
- value of {1} (which is generally considered as a non-optimal
- setting).
+ {Increment size}:
+ By default an increment size set to the Oracle default  value of {1} (which is generally considered as a non-optimal setting) will lead to a warning.
+ This can be configured using the configuration parameter {Default increment},
 
  {State}: Only table spaces in state {ONLINE} and {READONLY}
  will be found by inventory and monitored. If the state changes

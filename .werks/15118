@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since version 2.1.0 adding of content elements "Host report for multiple hosts"
 and "Service report for multiple services" to reports was non functional. The

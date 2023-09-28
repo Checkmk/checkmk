@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,16 +7,13 @@ import copy
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
-    ip_address_family_element,
+    ip_address_family_http,
     RulespecGroupActiveChecks,
-)
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -34,6 +31,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _active_checks_http_proxyspec() -> Dictionary:
@@ -108,7 +107,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                 "port",
                 _active_checks_http_portspec(443),
             ),
-            ip_address_family_element(),
+            ip_address_family_http(),
             (
                 "virthost",
                 TextInput(
@@ -490,7 +489,7 @@ def _valuespec_active_checks_http() -> Migrate:
                         totext="",
                         title=_("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
                         help=_(
-                            "In earlier versions of Check_MK users had to enable SNI explicitly."
+                            "In earlier versions of Checkmk users had to enable SNI explicitly."
                             " We now assume users allways want SNI support. If you don't, you"
                             " can disable it with this option."
                         ),
@@ -542,7 +541,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:http",
+        name=RuleGroup.ActiveChecks("http"),
         valuespec=_valuespec_active_checks_http,
     )
 )

@@ -6,6 +6,6 @@ Date: 1649332110
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 mk_filestats can now be distributed to solaris systems via the agent bakery.

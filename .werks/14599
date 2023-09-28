@@ -1,0 +1,20 @@
+Title: livestatus_status: Don't display negative rates after program restart
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680679965
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The plugin livestatus_status reports the metrics
+LI: <tt>Livestatus connects</tt>
+LI: <tt>Livestatus requests</tt>
+LI: <tt>Log messages</tt>
+LI: <tt>Host checks</tt>
+LI: <tt>Service checks</tt>
+Previously, the check would compute rates based on the corresponding counters. This did not take
+into account that these counters are set to zero after a program restart. With this werk, the rates
+are now direcly provided by <tt>MK Livestatus</tt>.
+

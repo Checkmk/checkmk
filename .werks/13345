@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The available conditions are specific to the cluster setup. Previously,
 the check always expected that all conditions are present which led to a crash.

@@ -1,0 +1,20 @@
+Title: Missing agent sections in rare upgrade scenario
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675673073
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+This fixes missing agent sections when users upgrade from a <b>1.6.0 systemd</b> Checkmk agent package to a <b>2.0.0 xinetd</b> package.
+Since from 1.6.0 to 2.0.0 we changed the default network service <b>from xinetd to systemd</b>, this is a very rare scenario.
+
+In case it did happen the systemd socket was not stopped during the upgrade, preventing the xinetd service from binding to the port.
+This resulted in a partially working monitoring (as the systemd socked <i>was</i> running).
+
+However, services using chached data would go to stale (e.g. <i>"NTP Time"</i>) and the agent updater would no longer be triggered.
+
+

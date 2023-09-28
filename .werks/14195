@@ -1,0 +1,15 @@
+Title: Graphite metrics: Introduced rule to configure host metrics sent to Graphite
+Class: feature
+Compatible: compat
+Component: cmc
+Date: 1681395873
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The new rule <tt>Send host metrics to Graphite</tt> allows you to configure which host metrics are sent to graphite.
+Previous versions always sent the <tt>VALUE</tt> to graphite, with no way to disable the metrics altogether.
+Now you can configure a rule and turn everything off.
+

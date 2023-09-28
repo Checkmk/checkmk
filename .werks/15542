@@ -1,0 +1,20 @@
+Title: Crash MSSQL backup rendering negative timespans
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679988803
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When the hosts' time is running ahead of the servers time the
+time since last backup can be negative.
+
+In this case the MSSQL backup check plugin would crash showing
+the error message:
+
+<b>ValueError (Cannot render negative timespan)</b>
+
+Now the check plugin creates a warning result rather than crashing.
+

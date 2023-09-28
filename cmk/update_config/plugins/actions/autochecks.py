@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 from logging import Logger
 from pathlib import Path
+from typing import Any
 
 from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkengine.legacy import LegacyCheckParameters
 
 from cmk.base.api.agent_based import register
-from cmk.base.autochecks import AutocheckEntry, AutochecksStore
 
-from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -97,7 +102,7 @@ def _transformed_params(
     if check_plugin is None:
         return None
 
-    ruleset_name = "checkgroup_parameters:%s" % check_plugin.check_ruleset_name
+    ruleset_name = RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
     if ruleset_name not in all_rulesets.get_rulesets():
         return None
 
@@ -110,17 +115,7 @@ def _transformed_params(
 
     try:
         ruleset = all_rulesets.get_rulesets()[ruleset_name]
-
-        # TODO: in order to keep the original input parameters and to identify misbehaving
-        #       transform_values() implementations we check the passed values for modifications
-        #       In that case we have to fix that transform_values() before using it
-        #       This hack chould vanish as soon as we know transform_values() works as expected
-        param_copy = copy.deepcopy(params)
-        new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
-        if not param_copy == params:
-            logger.warning(
-                "transform_value() for ruleset '%s' altered input" % check_plugin.check_ruleset_name
-            )
+        new_params = _transform_params_safely(params, ruleset, ruleset_name, logger)
 
         assert new_params or not params, "non-empty params vanished"
         assert not isinstance(params, dict) or isinstance(new_params, dict), (
@@ -131,7 +126,8 @@ def _transformed_params(
         #       with old keys. As soon as we can remove the workaround below we should not
         #       handle any ruleset differently
         if str(check_plugin.check_ruleset_name) in {"if", "filesystem"}:
-            return new_params
+            # Valuespecs are currently Any...
+            return new_params  # type: ignore[no-any-return]
 
         # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
         #       missing keys - so for safety-reasons we keep keys that don't exist in the
@@ -147,3 +143,19 @@ def _transformed_params(
         logger.error(msg)
 
     return None
+
+
+# TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value
+def _transform_params_safely(
+    params: LegacyCheckParameters, ruleset: Ruleset, ruleset_name: str, logger: Logger
+) -> Any:
+    """Safely converts <params> using <transform_value> function
+    Write warning in the log if <transform_value> alters input. Such behavior is not allowed and
+    the warning helps us to detect bad legacy/old transform functions.
+    Returns `Any` because valuespecs are currently Any
+    """
+    param_copy = copy.deepcopy(params)
+    new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
+    if param_copy != params:
+        logger.warning(f"transform_value() for ruleset '{ruleset_name}' altered input")
+    return new_params

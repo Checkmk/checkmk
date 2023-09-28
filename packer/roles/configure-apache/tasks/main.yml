@@ -1,0 +1,66 @@
+---
+- name: Enable the Apache2 module headers
+  community.general.apache2_module:
+    state: present
+    name: headers
+  become: yes
+
+- name: Enable the Apache2 module ssl
+  community.general.apache2_module:
+    state: present
+    name: ssl
+  become: yes
+
+- name: Copy apache 000-default.conf
+  template:
+    src: files/000-default.conf.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+
+- name: disable rpcbind (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind
+  become: yes
+
+- name: disable rpcbind.socket (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind.socket
+  become: yes
+
+- name: remove snakeoil
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ssl/private/ssl-cert-snakeoil.key
+    - /etc/ssl/certs/ssl-cert-snakeoil.pem
+  become: yes
+
+- name: Copy cert service
+  template:
+    src: files/cmk-cert.service
+    dest: /lib/systemd/system/cmk-cert.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+
+- name: enbale cert service
+  ansible.builtin.systemd:
+    name: cmk-cert
+    enabled: true
+    daemon_reload: yes
+  become: yes
+
+- name: ensure apache is running
+  service:
+    name: apache2
+    state: started
+  become: yes

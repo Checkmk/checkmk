@@ -1,0 +1,17 @@
+Title: Added basic hardware/firmware information for Kyocera printers
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1678368758
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+As of this werk the following information is inventorized for Kyocera printers:
+LI: Vendor/Manufacturer
+LI: Model name
+LI: Serial number
+LI: Firmware version
+
+The information can be found in the HW/SW inventory of the respective host.

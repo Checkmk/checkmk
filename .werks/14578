@@ -1,0 +1,13 @@
+Title: kube_node_count: Check node count if there are zero control plane nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674817125
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+If there were no control plane nodes, Checkmk would not check the node count
+against the tresholds for the control plane nodes configured in <tt>Kubernetes
+node count</tt>.

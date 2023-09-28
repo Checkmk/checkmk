@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,17 +10,18 @@ import itertools
 import os
 import time
 from collections.abc import Callable, Iterator
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from livestatus import LivestatusOutputFormat, OnlySites, SiteId
 
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import lq_logic
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.bi import BIManager
@@ -38,6 +39,7 @@ from cmk.gui.type_defs import (
     ViewProcessTracking,
     VisualContext,
 )
+from cmk.gui.utils import cmp_service_name_equiv
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
@@ -54,15 +56,15 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.view_utils import CSSClass
-from cmk.gui.views.sorter import cmp_service_name_equiv
 
-from cmk.bi.data_fetcher import (
+from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
     BIStatusInfo,
+    NodeComputeResult,
+    NodeResultBundle,
 )
-from cmk.bi.lib import NodeComputeResult, NodeResultBundle
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
@@ -71,7 +73,7 @@ AVOptions = dict[str, Any]  # TODO: Improve this type
 AVOptionValueSpecs = list  # TODO: Be more specific here
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
-AVObjectSpec = Union[None, AVBIObjectSpec, AVHostOrServiceObjectSpec]
+AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
 AVOutageStatisticsAggregations = list[Literal["min", "max", "avg", "cnt"]]
 AVOutageStatisticsStates = list[
     Literal[
@@ -97,7 +99,7 @@ AVObjectCells = list[tuple[str, str]]
 AVRowCells = list[tuple[HTML | str, CSSClass]]
 AVGroups = list[tuple[str | None, AVData]]
 HostOrServiceGroupName = str
-AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
+AVGroupKey = SiteHost | HostOrServiceGroupName | None
 AVGroupIds = list[SiteHost] | set[HostOrServiceGroupName] | None
 AVTimeStamp = float
 AVTimeRange = tuple[AVTimeStamp, AVTimeStamp]
@@ -113,14 +115,14 @@ AVTimeformatSpecLegacy = Literal[
     "hours",
     "hhmmss",
 ]
-AVTimeformatSpec = Union[
-    AVTimeformatSpecLegacy,
-    tuple[
+AVTimeformatSpec = (
+    AVTimeformatSpecLegacy
+    | tuple[
         Literal["both", "perc", "time"],
         Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
         Literal["seconds", "minutes", "hours", "hhmmss"],
-    ],
-]
+    ]
+)
 AVTimelineLabelling = Literal[
     "omit_headers",
     "omit_host",
@@ -135,7 +137,8 @@ AVTimelineLabelling = Literal[
 AVIconSpec = tuple[str, str, str]
 
 AVTimelineStateName = str
-AVTimelineRows = list[tuple[AVSpan, AVTimelineStateName]]
+AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
+AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
 AVTimelineStyle = str
@@ -190,7 +193,7 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key) -> list[ColumnSpec]:  # type:ignore[no-untyped-def]
+    def __getitem__(self, key) -> list[ColumnSpec]:  # type: ignore[no-untyped-def]
         return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
@@ -290,7 +293,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             ("service_groups", _("By Service group")),
         ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         ruleset_search_url = makeuri_contextless(
             request,
             [
@@ -474,7 +477,11 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                 title=_("Summary line"),
                 choices=[
                     (None, _("Do not show a summary line")),
-                    ("sum", _("Display total sum (for % the average)")),
+                    (
+                        "sum",
+                        # xgettext: no-python-format
+                        _("Display total sum (for % the average)"),
+                    ),
                     ("average", _("Display average")),
                 ],
                 default_value="sum",
@@ -1153,7 +1160,6 @@ def compute_availability(  # pylint: disable=too-many-branches
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in reclassified_rawdata.items():
         for service, service_entry in site_host_entry.items():
-
             if grouping == "host":
                 group_ids: AVGroupIds = [site_host]
             elif grouping in ["host_groups", "service_groups"]:
@@ -1166,7 +1172,6 @@ def compute_availability(  # pylint: disable=too-many-branches
             total_duration = 0
             considered_duration = 0
             for span in service_entry:
-
                 # Information about host/service groups are in the actual entries
                 if grouping in ["host_groups", "service_groups"] and what != "bi":
                     assert isinstance(group_ids, set)
@@ -2172,12 +2177,12 @@ def layout_timeline(  # pylint: disable=too-many-branches
             spans.append((row_nr, title, width, css))
     # If timeline span ends before the current time, fill it up with
     # unmonitored entry until end
-    if avoptions["service_period"] == "honor" and this_until_time < until_time:  # GAP
+    if avoptions["service_period"] == "honor" and current_time < until_time:  # GAP
         spans.append(
             (
                 None,
                 "",
-                100.0 * (until_time - this_until_time) / total_duration,
+                100.0 * (until_time - current_time) / total_duration,
                 "unmonitored",
             )
         )
@@ -2236,23 +2241,23 @@ def _render_hour(tst: time.struct_time) -> str:
 
 
 def _render_2hours(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
 
 
 def _render_6hours(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
 
 
 def _render_day(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m. 00:00", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(", %d.%m. 00:00", tst)
 
 
 def _render_week(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m.", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(", %d.%m.", tst)
 
 
 def _render_month(tst: time.struct_time) -> str:
-    return "%s %d" % (defines.month_name(tst.tm_mon - 1), tst.tm_year)
+    return "%s %d" % (dateutils.month_name(tst.tm_mon - 1), tst.tm_year)
 
 
 def _make_struct(year: int, month: int, day: int, hour: int, *, offset: int) -> time.struct_time:
@@ -2379,7 +2384,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, aggr_row) -> None:  # type: ignore[no-untyped-def]
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data
@@ -2446,7 +2451,7 @@ def get_bi_leaf_history(
 
         for site, host, service in timeline_container.aggr_compiled_branch.required_elements():
             this_service = service or ""
-            by_host.setdefault(host, set()).add(this_service)
+            by_host.setdefault(host, {""}).add(this_service)
             timeline_container.host_service_info.add((host, this_service))
             timeline_container.host_service_info.add((host, ""))
 
@@ -2688,7 +2693,6 @@ def _compute_status_info(
     hosts: dict[BIHostSpec, AVBITimelineState],
     services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]],
 ) -> BIStatusInfo:
-
     status_info: BIStatusInfo = {}
 
     for site_host, state_output in hosts.items():

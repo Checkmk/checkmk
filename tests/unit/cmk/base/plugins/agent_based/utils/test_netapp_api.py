@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.netapp_api import parse_netapp_api_multiple_instances
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.netapp_api import (
+    parse_netapp_api_multiple_instances,
+    SectionMultipleInstances,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -40,6 +44,8 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_get_filesystem_levels(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_get_filesystem_levels(
+    info: StringTable, expected_result: SectionMultipleInstances
+) -> None:
     result = parse_netapp_api_multiple_instances(info)
     assert result == expected_result

@@ -1,0 +1,14 @@
+Title: report_scheduler: time of day must be provided
+Class: fix
+Compatible: compat
+Component: config
+Date: 1695022677
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue when creating a report scheduler. Previously,
+the 'time of day to create report at' could be left blank when saving, but
+now it's a required field.
+

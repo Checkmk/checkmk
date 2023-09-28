@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 
 class TestListOfStrings:
     def test_canonical_value(self) -> None:
-        assert vs.ListOfStrings().canonical_value() == []
+        assert not vs.ListOfStrings().canonical_value()
 
     def test_validate(self) -> None:
         expect_validate_success(vs.ListOfStrings(), ["1", "2"])
@@ -26,9 +26,9 @@ class TestListOfStrings:
         expect_validate_failure(
             vs.ListOfStrings(max_entries=1), ["1", "2"], match="You can specify at most 1 entries"
         )
-        expect_validate_failure(
+        expect_validate_failure(  # type: ignore[misc]
             vs.ListOfStrings(), 123, match="Expected data type is list, but your type is int."
-        )  # type:ignore
+        )
 
     def test_value_to_html(self) -> None:
         assert vs.ListOfStrings().value_to_html(["1", "2"]) == HTML(

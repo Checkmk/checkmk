@@ -1,0 +1,22 @@
+Title: Host renaming got stuck when "Automatically create monitoring agents" was activated
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1675954539
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+When the configuration option <i>"Automatically create monitoring agents"</i> was enabled,
+the operation <i>"rename host"</i> got stuck indefinitely.
+
+You can recover from this by killing the (second) apache processes accessing <tt>multisite.mk</tt> and restarting (CMC and apache):
+
+C+:
+OMD[mySite]:~$ fuser etc/check_mk/multisite.mk
+/opt/omd/sites/mySite/etc/check_mk/multisite.mk: 2294054 2294059 2294332
+OMD[mySite]:~$ kill 2294059
+OMD[mySite]:~$ omd restart
+C-:

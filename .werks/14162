@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 A lookup cache for searching for folders via their internal hexid was removed because it was broken.
 The feature itself is still working, though a little bit slower. This mostly affected the REST API.

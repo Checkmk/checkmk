@@ -31,6 +31,8 @@ from re import Pattern
 from tty import setraw
 from typing import TYPE_CHECKING
 
+from omdlib.type_defs import ConfigChoiceHasError
+
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
@@ -84,10 +86,47 @@ def dialog_regex(
             return True, new_value
 
 
-def dialog_yesno(text: str, yeslabel: str = "yes", nolabel: str = "no") -> bool:
-    state, _response = _run_dialog(
-        ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"]
-    )
+def dialog_config_choice_has_error(
+    title: str, text: str, pattern: ConfigChoiceHasError, value: str, oktext: str, canceltext: str
+) -> DialogResult:
+    while True:
+        args = [
+            "--ok-label",
+            oktext,
+            "--cancel-label",
+            canceltext,
+            "--title",
+            title,
+            "--inputbox",
+            text,
+            "0",
+            "0",
+            value,
+        ]
+        change, new_value = _run_dialog(args)
+        if not change:
+            return False, value
+        validity = pattern(new_value)
+        if validity.is_error():
+            dialog_message(validity.error)
+            value = new_value
+        else:
+            return True, new_value
+
+
+def dialog_yesno(
+    text: str,
+    yeslabel: str = "yes",
+    nolabel: str = "no",
+    default_no: bool = False,
+    scrollbar: bool = False,
+) -> bool:
+    command: list[str] = ["--yes-label", yeslabel, "--no-label", nolabel]
+    if default_no:
+        command += ["--defaultno"]
+    if scrollbar:
+        command += ["--scrollbar"]
+    state, _response = _run_dialog(command + ["--yesno", text, "0", "0"])
     return state
 
 

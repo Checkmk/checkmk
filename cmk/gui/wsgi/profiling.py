@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -15,7 +15,7 @@ from werkzeug.wrappers import Request
 import cmk.utils.log
 import cmk.utils.paths
 
-from cmk.gui.wsgi.applications.utils import load_single_global_wato_setting
+from cmk.gui.wsgi.applications import utils
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if typing.TYPE_CHECKING:
@@ -52,7 +52,6 @@ class ProfileSwitcher:
         )
 
     def _create_dump_script(self):
-
         if not self.script_file.exists():
             with self.script_file.open("w", encoding="utf-8") as f:
                 f.write(
@@ -98,8 +97,9 @@ def _profiling_enabled(environ: WSGIEnvironment) -> bool:
 
 
 def _load_profiling_setting() -> bool | Literal["enable_by_var"]:
-    """Load the profiling global setting from the WATO GUI config"""
-    return load_single_global_wato_setting("profile", deflt=False)
+    """Load the profiling global setting from the Setup GUI config"""
+    # NOTE: Importing the module and not the function to enable mock-ability.
+    return utils.load_single_global_wato_setting("profile", deflt=False)
 
 
 __all__ = ["ProfileSwitcher"]

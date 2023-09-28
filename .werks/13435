@@ -6,7 +6,7 @@ Date: 1667396850
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Deleting a rule which is a dependency of another rule returned a 500 status code, now returns 409
 

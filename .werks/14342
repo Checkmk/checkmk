@@ -6,7 +6,7 @@ Date: 1654694819
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the agent returned an error if the build_info PromQL returned multiple entries. This
 effectively prevented the user from using the agent for a Prometheus cluster setup. This werk removes

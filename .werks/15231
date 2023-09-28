@@ -1,0 +1,17 @@
+Title: Drop command line alias "cmk -P" for "mkp"
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1674662772
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+The extension packages manager has been callable from the command line in three ways:
+LI: <tt>cmk -P [arguments]</tt>
+LI: <tt>check_mk -P [arguments]</tt>
+LI: <tt>mkp [arguments]</tt>
+
+We no longer support the first ones, and only keep the <tt>mkp</tt> command.
+This unification reduces confusion, eases documentation, and increases maintainability.

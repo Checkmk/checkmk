@@ -1,0 +1,11 @@
+Title: agent_cisco_meraki: Fix collecting licenses overview
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681895814
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The API name for organisation IDs was wrong, ie. {{id}} instead of {{organizationId}}.

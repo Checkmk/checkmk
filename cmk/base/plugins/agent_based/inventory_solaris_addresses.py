@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,7 +13,8 @@
 # inet 10.8.57.39 netmask ffffff00 broadcast 10.8.57.255
 # ether 0:3:ba:29:fc:cc
 
-from typing import Dict, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -30,15 +31,15 @@ class Interface(NamedTuple):
 
 class Address(NamedTuple):
     device: str
-    address: Optional[str]
-    address_type: Optional[str]
+    address: str | None
+    address_type: str | None
 
 
-Section = Tuple[Sequence[Interface], Sequence[Address]]
+Section = tuple[Sequence[Interface], Sequence[Address]]
 
 
 def parse_solaris_addresses(string_table: StringTable) -> Section:
-    parsed: Dict = {}
+    parsed: dict = {}
     dev_name = None
     for line in string_table:
         if line[0][-1] == ":":
@@ -75,8 +76,8 @@ def parse_solaris_addresses(string_table: StringTable) -> Section:
                 )
             )
 
-        address: Optional[str] = None
-        address_type: Optional[str] = None
+        address: str | None = None
+        address_type: str | None = None
         if "IPv4" in attrs:
             address = attrs["IPv4"]
             address_type = "IPv4"
@@ -104,10 +105,9 @@ register.agent_section(
 def inventory_solaris_addresses(section: Section) -> InventoryResult:
     interfaces, addresses = section
 
-    ifaces_path = ["networking", "interfaces"]
     for iface in interfaces:
         yield TableRow(
-            path=ifaces_path,
+            path=["networking", "interfaces"],
             key_columns={
                 "index": iface.idx,
                 "description": iface.description,
@@ -121,10 +121,9 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
             status_columns={},
         )
 
-    addresses_path = ["networking", "addresses"]
     for address in addresses:
         yield TableRow(
-            path=addresses_path,
+            path=["networking", "addresses"],
             key_columns={
                 "device": address.device,
             },

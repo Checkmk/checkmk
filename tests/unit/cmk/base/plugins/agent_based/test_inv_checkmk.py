@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
+
+import cmk.utils.version as cmk_version
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.plugins.agent_based import inventory_checkmk_server as inv_checkmk
@@ -16,7 +19,7 @@ SECTION_LIVESTATUS_STATUS = {
     "heute": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "0.456069",
+        "average_latency_checker": "0.456069",
         "average_latency_fetcher": "0.456069",
         "average_latency_generic": "0.83618",
         "average_latency_real_time": "0",
@@ -40,7 +43,6 @@ SECTION_LIVESTATUS_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0.00172541",
         "helper_usage_checker": "0.00172541",
         "helper_usage_fetcher": "0.00172541",
         "helper_usage_generic": "6.34573e-14",
@@ -82,7 +84,7 @@ SECTION_LIVESTATUS_STATUS = {
     "stable": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "2.93392e-05",
+        "average_latency_checker": "2.93392e-05",
         "average_latency_fetcher": "2.93392e-05",
         "average_latency_generic": "6.15271e-06",
         "average_latency_real_time": "0",
@@ -106,7 +108,6 @@ SECTION_LIVESTATUS_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0.00377173",
         "helper_usage_fetcher": "0.00377173",
         "helper_usage_checker": "0.00377173",
         "helper_usage_generic": "3.45846e-323",
@@ -262,7 +263,6 @@ MERGED_SECTION_ENTERPRISE = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 6.34573e-12,
-                "check_mk_helper_usage": 0.172541,
                 "fetcher_helper_usage": 0.172541,
                 "checker_helper_usage": 0.172541,
                 "cmc": "running",
@@ -284,7 +284,6 @@ MERGED_SECTION_ENTERPRISE = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
-                "check_mk_helper_usage": 0.377173,
                 "fetcher_helper_usage": 0.377173,
                 "checker_helper_usage": 0.377173,
                 "cmc": "running",
@@ -337,7 +336,6 @@ MERGED_SECTION_RAWEDITION = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 6.34573e-12,
-                "check_mk_helper_usage": 0.172541,
                 "fetcher_helper_usage": 0.172541,
                 "checker_helper_usage": 0.172541,
                 "crontab": "running",
@@ -357,7 +355,6 @@ MERGED_SECTION_RAWEDITION = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
-                "check_mk_helper_usage": 0.377173,
                 "fetcher_helper_usage": 0.377173,
                 "checker_helper_usage": 0.377173,
                 "crontab": "running",
@@ -389,16 +386,18 @@ MERGED_SECTION_RAWEDITION = {
 
 
 @pytest.mark.parametrize(
-    "is_raw_edition, merged_sections",
+    "edition, merged_sections",
     [
-        (False, MERGED_SECTION_ENTERPRISE),
-        (True, MERGED_SECTION_RAWEDITION),
+        (cmk_version.Edition.CEE, MERGED_SECTION_ENTERPRISE),
+        (cmk_version.Edition.CRE, MERGED_SECTION_RAWEDITION),
     ],
 )
-def test_merge_sections(  # type:ignore[no-untyped-def]
-    monkeypatch, is_raw_edition, merged_sections
+def test_merge_sections(
+    monkeypatch: pytest.MonkeyPatch,
+    edition: cmk_version.Edition,
+    merged_sections: Mapping[str, object],
 ) -> None:
-    monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     assert merged_sections == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )
@@ -433,7 +432,6 @@ def test_inventory_checkmk() -> None:
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 6.34573e-12,
-                    "check_mk_helper_usage": 0.172541,
                     "fetcher_helper_usage": 0.172541,
                     "checker_helper_usage": 0.172541,
                     "cmc": "running",
@@ -457,7 +455,6 @@ def test_inventory_checkmk() -> None:
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 3.46e-321,
-                    "check_mk_helper_usage": 0.377173,
                     "fetcher_helper_usage": 0.377173,
                     "checker_helper_usage": 0.377173,
                     "cmc": "running",

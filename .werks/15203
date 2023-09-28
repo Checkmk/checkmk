@@ -1,0 +1,15 @@
+Title: Rule "Check Email": Allow current host address/name as mail server
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674551166
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Currently the mail server in the "Check Email" rule does not allow macros such as $HOSTNAME$ as input.
+To avoid repeated configuration for each host, the <tt>$HOSTADDRESS$</tt>  or <tt>$HOSTNAME$</tt>  can be selected in addition to the current input via the options "Use the address of the host for which the service is generated" and "Use the name of the host for which the service is generated" respectively.
+If a <tt>$HOSTADDRESS$</tt>  or <tt>$HOSTNAME$</tt>  was used in a previous version, the corresponding option will be selected during the update.
+

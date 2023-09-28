@@ -1,0 +1,12 @@
+Title: Error in fetchers results in 100% CPU load in microcore
+Class: fix
+Compatible: compat
+Component: core
+Date: 1688992279
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This fixes a case where an error in the fetcher would result in high
+CPU load in the CMC process.

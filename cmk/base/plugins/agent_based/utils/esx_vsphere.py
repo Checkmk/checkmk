@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 from collections import OrderedDict
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 Section = OrderedDict
 
@@ -15,7 +15,7 @@ SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
 SectionCounter = Mapping[str, SubSectionCounter]
 
 
-class ESXMemory(BaseModel):
+class ESXMemory(BaseModel, frozen=True):
     """ESX VSphere VM memory model
     host_usage:
         consumed host memory
@@ -28,14 +28,15 @@ class ESXMemory(BaseModel):
         (must not be set)
     private:
         the portion of memory, in MB, that is granted to this VM from host memory that is shared
-        between VMs.
+        between VMs; only present if the VM data is collected via vCenter, in case the data is
+        collected directly from an esx host, this value will be None
     """
 
     host_usage: float
     guest_usage: float
     ballooned: float
     shared: float
-    private: float
+    private: float | None
 
 
 class ESXCpu(BaseModel):
@@ -49,12 +50,11 @@ class ESXCpu(BaseModel):
         number of cores per socket
     """
 
+    model_config = ConfigDict(frozen=True)
+
     overall_usage: int
     cpus_count: int
     cores_per_socket: int
-
-    class Config:
-        allow_mutation = False
 
 
 class ESXDataStore(BaseModel):
@@ -84,6 +84,9 @@ class HeartBeat(BaseModel):
 
 
 class ESXVm(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    mounted_devices: Sequence[str]
     snapshots: Sequence[str]
     status: ESXStatus | None
     power_state: str | None
@@ -93,9 +96,6 @@ class ESXVm(BaseModel):
     heartbeat: HeartBeat | None
     host: str | None
     name: str | None
-
-    class Config:
-        allow_mutation = False
 
 
 SectionVM = ESXVm | None

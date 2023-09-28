@@ -1,0 +1,16 @@
+Title: apache_processes: we now replicate the configuration on remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695714746
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue where we weren't replicating the configuration
+for the number of apache processes.  Now we do.  On activate changes the
+number of apache processes configured on the main site will now be replicated
+on the remote site.  An apache restart is required for these changes to
+take effect.
+

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, List, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -22,7 +23,7 @@ class EsxVsphereHostsystemCpuSection(NamedTuple):
 
 def extract_esx_vsphere_hostsystem_cpu_usage(
     section: Section,
-) -> Optional[EsxVsphereHostsystemCpuSection]:
+) -> EsxVsphereHostsystemCpuSection | None:
     try:
         return EsxVsphereHostsystemCpuSection(
             num_sockets=int(section["hardware.cpuInfo.numCpuPackages"][0]),
@@ -36,8 +37,8 @@ def extract_esx_vsphere_hostsystem_cpu_usage(
 
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
-    section_esx_vsphere_hostsystem: Optional[Section],
-    section_winperf_processor: Optional[List],  # currently no parse function
+    section_esx_vsphere_hostsystem: Section | None,
+    section_winperf_processor: list | None,  # currently no parse function
 ) -> DiscoveryResult:
     if section_winperf_processor or not section_esx_vsphere_hostsystem:
         return
@@ -56,7 +57,6 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
     cpu_section: EsxVsphereHostsystemCpuSection,
     total_mhz: float,
 ) -> CheckResult:
-
     yield from cpu_util.check_cpu_util(
         util=cpu_section.used_mhz / total_mhz * 100,
         params=params,
@@ -87,8 +87,8 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
 
 def check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Optional[Section],
-    section_winperf_processor: Optional[List],
+    section_esx_vsphere_hostsystem: Section | None,
+    section_winperf_processor: list | None,
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
@@ -117,10 +117,9 @@ def _applicable_thresholds(
 
 def cluster_check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Mapping[str, Optional[Section]],
-    section_winperf_processor: Mapping[str, Optional[List]],
+    section_esx_vsphere_hostsystem: Mapping[str, Section | None],
+    section_winperf_processor: Mapping[str, list | None],
 ) -> CheckResult:
-
     aggregated_section = None
     total_mhz = 0.0
     for _node, section in section_esx_vsphere_hostsystem.items():

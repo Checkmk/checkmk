@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules
@@ -13,6 +13,7 @@ from typing import NewType
 from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+from pylint.lint.pylinter import PyLinter  # type: ignore[import]
 
 from tests.testlib import cmk_path
 
@@ -21,7 +22,7 @@ ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
 Component = NewType("Component", str)
 
 
-def register(linter):
+def register(linter: PyLinter) -> None:
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
@@ -48,7 +49,7 @@ def _get_absolute_importee(
 def _is_package(node: ImportFrom) -> bool:
     parent = node.parent
     try:
-        return parent.package
+        return bool(parent.package)
     except AttributeError:  # could be a try/except block, for instance.
         return _is_package(parent)
 
@@ -69,6 +70,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported, Component("cmk.fields")),
             _in_component(imported, Component("cmk.automations")),
             _in_component(imported, Component("cmk.bi")),
+            _in_component(imported, Component("cmk.commands")),
         )
     )
 
@@ -81,17 +83,35 @@ def _is_default_allowed_import(
     return _is_allowed_import(imported) or _in_component(imported, component)
 
 
+def _allow_default_plus_checkers(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """`cmk.checkengine` is the generic (library) part to the check engine."""
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkengine")),
+        )
+    )
+
+
 def _allow_default_plus_fetchers_and_snmplib(
     *,
     imported: ModuleName,
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.fetchers`, `cmk.checkers` and `cmk.snmplib`.
+    Allow import of `cmk.checkengine`, `cmk.fetchers` and `cmk.snmplib`.
 
-    The layering is such that `fetchers` and `snmplib` is between
-    `utils` and `base` so that importing `fetchers` in `utils` is
-    wrong but anywhere else is OK.
+    `cmk.fetchers` are concrete fetchers implementations to the check engine.
+    The module shouldn't be required in too many places, always prefer the
+    more abstract `cmk.checkengine` or refactor the code so that `cmk.checkengine` can
+    be used instead.
+
+    `cmk.snmplib` is part of the SNMP fetcher backend.  The same restrictions apply.
+
     """
     return any(
         (
@@ -108,7 +128,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.fetchers`, `cmk.checkers` and `cmk.snmplib`.
+    Allow import of `cmk.fetchers`, `cmk.checkengine` and `cmk.snmplib`.
 
     The layering is such that `fetchers` and `snmplib` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -120,7 +140,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
                 imported=imported,
                 component=component,
             ),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
         )
     )
 
@@ -131,11 +151,11 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.checkers`, `cmk.snmplib` and `cmk.cee.bakery`.
+    Allow import of `cmk.checkengine`, `cmk.snmplib` and `cmk.cee.bakery`.
 
-    The layering is such that `fetchers`, `snmplib` and `bakery` is between
-    `utils` and `base` so that importing `fetchers` in `utils` is
-    wrong but anywhere else is OK.
+    Warning:
+        Refactor to depend on `cmk.checkengine` only.
+
     """
     return any(
         (
@@ -143,6 +163,7 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
                 imported=imported,
                 component=component,
             ),
+            _in_component(imported, Component("cmk.cee.helpers")),
             _in_component(imported, Component("cmk.cee.bakery")),
         )
     )
@@ -156,7 +177,7 @@ def _allow_default_plus_fetchers_checkers_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
             _in_component(imported, Component("cmk.fetchers")),
             _in_component(imported, Component("cmk.cee.bakery")),
         )
@@ -197,6 +218,8 @@ def _allow_default_plus_gui_base_and_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.fetchers")),
             _in_component(imported, Component("cmk.cee.bakery")),
             _in_component(imported, Component("cmk.base")),
             _in_component(imported, Component("cmk.gui")),
@@ -230,12 +253,76 @@ def _is_allowed_for_agent_based_plugin(
     )
 
 
+def _allow_default_plus_component_under_test(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    if component.startswith("tests.unit.checks"):
+        component_under_test = Component("cmk.base.plugins.agent_based")
+    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
+        component_under_test = Component(".".join(component.split(".")[2:]))
+    else:
+        raise ValueError(f"Unhandled component: {component}")
+
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _is_default_allowed_import(imported=imported, component=component_under_test),
+        )
+    )
+
+
+def _is_allowed_for_legacy_check_tests(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_component_under_test(imported=imported, component=component),
+            _in_component(imported, Component("cmk.base.legacy_checks")),
+            _in_component(imported, Component("cmk.base.command_config")),
+            _in_component(imported, Component("cmk.base.check_legacy_includes")),
+            _in_component(imported, Component("cmk.base.api.agent_based")),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.snmplib")),
+        )
+    )
+
+
+def _allow_default_plus_component_under_test_bakery_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_component_under_test(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.cee.bakery")),
+        )
+    )
+
+
 _COMPONENTS = (
+    (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
+    (Component("tests.unit.cmk_metrics"), _allow_default_plus_component_under_test),
+    (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
+    (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
+    (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.snmplib"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.cee.liveproxy"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.integration.cmk.base"),
+        _allow_default_plus_component_under_test_bakery_checkengine,
+    ),
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
-    (Component("cmk.base.api.agent_based.value_store"), _is_default_allowed_import),
-    (Component("cmk.base.api.agent_based"), _is_default_allowed_import),
+    (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
+    (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
@@ -243,7 +330,9 @@ _COMPONENTS = (
     (Component("cmk.base"), _allow_default_plus_fetchers_checkers_snmplib_and_bakery),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
-    (Component("cmk.checkers"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_fetchers_checkers_bakery),
     (Component("cmk.ec"), _is_default_allowed_import),
@@ -258,6 +347,7 @@ _COMPONENTS = (
     (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
+    (Component("cmk.active_checks"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -270,7 +360,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.checkers"),
+    ModulePath("enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
@@ -321,8 +411,8 @@ class CMKModuleLayerChecker(BaseChecker):
         absolute_path: str = node.root().file
         importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
-        # Tests are allowed to import anyting.
-        if str(importing_path).startswith("tests/"):
+        # Tests are allowed to import everything for now. Should be cleaned up soon
+        if str(importing_path).startswith("tests/testlib"):
             return
 
         importing = self._get_module_name_of_files(importing_path)
@@ -337,11 +427,8 @@ class CMKModuleLayerChecker(BaseChecker):
         parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         parts[-1] = removeprefix(parts[-1], "flycheck_")
-        # Strip CEE/CME/CPE prefix, we use symlink magic to combine editions. :-P
-        if parts[:2] in (["enterprise", "cmk"], ["managed", "cmk"], ["plus", "cmk"]):
-            parts = parts[1:]
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        if parts[0] != "cmk":
+        if parts[0] not in ("cmk", "tests", "cmk_metrics"):
             parts = [parts[-1]]
         return ModuleName(".".join(parts))
 
@@ -383,6 +470,11 @@ class CMKModuleLayerChecker(BaseChecker):
 
         if component == Component("cmk.special_agents") and importing_path.startswith(
             "agents/special/"
+        ):
+            return True
+
+        if component == Component("cmk.active_checks") and importing_path.startswith(
+            "active_checks/"
         ):
             return True
 

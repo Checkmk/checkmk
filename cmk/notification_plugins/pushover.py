@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -122,8 +122,7 @@ def send_push_notification(
 
     if response.status_code != 200:
         sys.stdout.write(
-            "Failed to send notification. Status: %s, Response: %s\n"
-            % (response.status_code, response.text)
+            f"Failed to send notification. Status: {response.status_code}, Response: {response.text}\n"
         )
         return 1
 

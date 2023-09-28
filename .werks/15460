@@ -1,0 +1,19 @@
+Title: agent_azure: Fix an error when collecting metrics for Express Route vNet Gateway
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1680594426
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the Azure agent would show an error when collecting metrics for
+the Express Route vNet Gateway:
+C+:
+cmk.special_agents.agent_azure.ApiError: Failed to find metric configuration for provider: Microsoft.Network,
+resource Type: virtualNetworkGateways, metric: P2SConnectionCount, Valid metrics: ExpressRouteGatewayPacketsPerSecond,
+ExpressRouteGatewayBitsPerSecond, ...
+C-:
+
+The VNet Gateway service wasn't affected by this. Now, the error gets handled by the Azure agent plugin.

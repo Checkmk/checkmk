@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,37 +7,36 @@ import copy
 from collections.abc import Callable, Sequence
 from typing import cast, Literal, TypeVar
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.dashboard.dashlet.base import IFrameDashlet
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletId, DashletSize
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     HTTPVariables,
-    Icon,
-    LinkFromSpec,
     SingleInfos,
     SorterSpec,
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
-from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
-from cmk.gui.views.painter_options import PainterOptions
 from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
-
-from ..base import DashletConfig, DashletId, DashletSize, IFrameDashlet
+from cmk.gui.visuals import get_only_sites_from_context
 
 
 class ABCViewDashletConfig(DashletConfig):
@@ -52,23 +51,14 @@ class LinkedViewDashletConfig(ABCViewDashletConfig):
 
 
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):
-    # TODO: Find a way to clean up the rendundancies with ViewSpec and Visual
-    # From: Visual
-    owner: UserId
     # These fields are redundant between DashletConfig and Visual
     # name: str
     # context: VisualContext
     # single_infos: SingleInfos
     # title: str | LazyString
     add_context_to_title: bool
-    description: str | LazyString
-    topic: str
     sort_index: int
     is_show_more: bool
-    icon: Icon | None
-    hidden: bool
-    hidebutton: bool
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     # From: ViewSpec
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
@@ -81,18 +71,15 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
 
 
 class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
-    # TODO: Find a way to clean up the rendundancies with ViewSpec and Visual
-    # From: Visual
-    link_from: LinkFromSpec
     # From: ViewSpec
     add_headers: str
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: bool
     mustsearch: bool
     force_checkboxes: bool
-    user_sortable: bool
     play_sounds: bool
+    user_sortable: bool
 
 
 def copy_view_into_dashlet(
@@ -121,7 +108,7 @@ def copy_view_into_dashlet(
         if not view:
             raise MKGeneralException(
                 _(
-                    "Failed to convert a builtin dashboard which is referencing "
+                    "Failed to convert a built-in dashboard which is referencing "
                     'the view "%s". You will have to migrate it to the new '
                     "dashboard format on your own to work properly."
                 )
@@ -230,7 +217,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         # it
         view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
         view.row_limit = get_limit()
-        view.only_sites = visuals.get_only_sites_from_context(context)
+        view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 
         process_view(GUIViewRenderer(view, show_buttons=False))
@@ -243,7 +230,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
 
 
 class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
-    """Dashlet that displays a Check_MK view"""
+    """Dashlet that displays a Checkmk view"""
 
     @classmethod
     def type_name(cls) -> str:
@@ -291,6 +278,27 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             urlencode(makeuri(request, [("edit", "1")])),
         )
 
+    @classmethod
+    def default_settings(cls) -> dict[str, object]:
+        return {
+            "datasource": request.get_str_input_mandatory("datasource"),
+            "group_painters": [],
+            "layout": "table",
+            "painters": [],
+            "sorters": [],
+            "title": "",
+            "browser_reload": 0,
+            "column_headers": "off",
+            "hidden": False,
+            "mustsearch": False,
+            "name": "",
+            "num_columns": 3,
+            "play_sounds": False,
+            "sort_index": 99,
+            "add_context_to_title": True,
+            "is_show_more": False,
+        }
+
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
@@ -320,28 +328,28 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "title": dashlet["title"],
             "browser_reload": dashlet["browser_reload"],
             "column_headers": dashlet["column_headers"],
-            "description": dashlet["description"],
-            "hidden": dashlet["hidden"],
-            "hidebutton": dashlet["hidebutton"],
-            "mustsearch": dashlet["mustsearch"],
             "name": dashlet["name"],
             "num_columns": dashlet["num_columns"],
-            "owner": dashlet["owner"],
-            "play_sounds": dashlet["play_sounds"],
-            "public": dashlet["public"],
-            "topic": dashlet["topic"],
             "sort_index": dashlet["sort_index"],
-            "icon": dashlet["icon"],
-            "user_sortable": dashlet["user_sortable"],
-            "link_from": dashlet["link_from"],
             "add_context_to_title": dashlet["add_context_to_title"],
             "is_show_more": dashlet["is_show_more"],
+            # Just to satisfy ViewSpec, not saved to storage and not needed for
+            # rendering in a ViewDashlet.
+            "owner": UserId.builtin(),
+            "description": "",
+            "topic": "",
+            "icon": None,
+            "hidden": False,
+            "hidebutton": False,
+            "public": False,
+            "link_from": {},
+            "packaged": False,
         }
     )
 
 
 class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
-    """Dashlet that displays a Check_MK view without embedding it's definition into the dashboard"""
+    """Dashlet that displays a Checkmk view without embedding it's definition into the dashboard"""
 
     @classmethod
     def type_name(cls) -> str:

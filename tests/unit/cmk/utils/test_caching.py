@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,7 @@ def test_create_dict_cache() -> None:
     key = "test"
 
     assert key not in mgr
-    cache = mgr.get(key)
+    cache = mgr.obtain_cache(key)
     assert key in mgr
 
     assert isinstance(cache, dict)
@@ -25,7 +25,7 @@ def test_create_dict_cache() -> None:
 def test_clear_all() -> None:
     mgr = cmk.utils.caching.CacheManager()
 
-    cache = mgr.get("test_dict")
+    cache = mgr.obtain_cache("test_dict")
     assert cache.is_empty()
 
     cache["asd"] = 1
@@ -39,7 +39,7 @@ def test_clear_all() -> None:
 def test_populated() -> None:
     mgr = cmk.utils.caching.CacheManager()
 
-    cache = mgr.get("test1")
+    cache = mgr.obtain_cache("test1")
     assert not cache.is_populated()
     cache.set_populated()
     assert cache.is_populated()

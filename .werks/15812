@@ -1,0 +1,13 @@
+Title: Remove config verification from the cmk tool
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1685953348
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+<tt>cmk</tt>'s option to verify the config (<tt>--verify-config</tt> or <tt>-X</tt>) has been removed.
+You can use <tt>cmk-update-config</tt> to do a basic verification of your config.
+

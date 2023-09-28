@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,8 +13,9 @@
 
 import json
 from collections import namedtuple
+from collections.abc import Mapping
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -55,8 +56,8 @@ MAP_BUILD_STATES = {
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:  # type:ignore[no-untyped-def]
-    parsed: Dict[str, JenkinsJobInfo] = {}
+def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
+    parsed: dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:
         jenkins_data = json.loads(line[0])
@@ -157,7 +158,8 @@ def check_jenkins_jobs(item: str, params: Mapping[str, Any], section: Section) -
             yield Result(
                 state=State(
                     params.get("build_result", {}).get(
-                        job.build_result, MAP_BUILD_STATES[job.build_result.lower()]
+                        job.build_result.lower(),
+                        MAP_BUILD_STATES[job.build_result.lower()],
                     )
                 ),
                 summary="Build result: %s" % job.build_result.title(),
@@ -173,7 +175,7 @@ def _handle_single_job(job):
 
     # key lastSuccessfulBuild can have None value: {'lastSuccessfulBuild':None}
     try:
-        last_sb: Optional[float] = float(job["lastSuccessfulBuild"]["timestamp"]) / 1000.0
+        last_sb: float | None = float(job["lastSuccessfulBuild"]["timestamp"]) / 1000.0
     except (
         KeyError,
         TypeError,
@@ -183,10 +185,10 @@ def _handle_single_job(job):
 
     # key lastBuild can have None value: {'lastBuild':None}
     try:
-        last_br: Optional[str] = job["lastBuild"]["result"]
-        last_bn: Optional[str] = job["lastBuild"]["number"]
-        last_bd: Optional[float] = float(job["lastBuild"]["duration"]) / 1000.0
-        last_bt: Optional[int] = int(int(job["lastBuild"]["timestamp"]) / 1000)
+        last_br: str | None = job["lastBuild"]["result"]
+        last_bn: str | None = job["lastBuild"]["number"]
+        last_bd: float | None = float(job["lastBuild"]["duration"]) / 1000.0
+        last_bt: int | None = int(int(job["lastBuild"]["timestamp"]) / 1000)
     except (KeyError, TypeError, ValueError):
         last_br = None
         last_bn = None
@@ -222,7 +224,7 @@ def _handle_job_type(data, new_dict, folder=""):
         if item_name is None:
             item_name = "%s" % job_type["name"]
         else:
-            item_name = "%s%s" % (item_name, job_type["name"])
+            item_name = "{}{}".format(item_name, job_type["name"])
 
         job = _handle_single_job(job_type)
 

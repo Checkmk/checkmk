@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=unused-import
+
 import functools
-import json  # pylint: disable=unused-import
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_percent_human_readable,
+from cmk.base.check_api import check_levels, get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
-    MKCounterWrapped,
+    get_value_store,
+    IgnoreResultsError,
+    render,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import
-    AZURE_AGENT_SEPARATOR,
-    iter_resource_attributes,
-    parse_resources,
+from cmk.base.plugins.agent_based.utils.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
+from cmk.base.plugins.agent_based.utils.azure import (
+    iter_resource_attributes as iter_resource_attributes,
 )
+from cmk.base.plugins.agent_based.utils.azure import parse_resources as parse_resources
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
-    "percent": get_percent_human_readable,
+    "percent": render.percent,
     "bytes": get_bytes_human_readable,
     "bytes_per_second": render.iobandwidth,
     "seconds": lambda s: "%.2f s" % s,
     "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
+    "milliseconds": lambda ms: "%d ms" % (ms * 1000),
 }
 
 
@@ -41,7 +42,7 @@ def get_data_or_go_stale(check_function):
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator: parsed is not a dict"
         if item not in parsed or not parsed[item]:
-            raise MKCounterWrapped("Data not present at the moment")
+            raise IgnoreResultsError("Data not present at the moment")
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function
@@ -56,7 +57,9 @@ def check_azure_metric(  # pylint: disable=too-many-locals
 
     if use_rate:
         countername = f"{resource.id}.{metric_key}"
-        value = get_rate(countername, time.time(), metric.value)
+        value = get_rate(
+            get_value_store(), countername, time.time(), metric.value, raise_overflow=True
+        )
         unit = "%s_rate" % metric.unit
     else:
         value = metric.value
@@ -66,7 +69,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         return 3, "Metric %s is 'None'" % display_name, []
 
     # convert to SI-unit
-    if unit == "milli_seconds":
+    if unit in ("milli_seconds", "milliseconds"):
         value /= 1000.0
     elif unit == "seconds_rate":
         # we got seconds, but we computed the rate -> seconds per second:

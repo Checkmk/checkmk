@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,6 @@
 
 import dataclasses
 import re
-from typing import Optional
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -23,10 +22,10 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 @dataclasses.dataclass
 class Section:
-    serial: Optional[str] = None
-    manufacturer: Optional[str] = None
-    product: Optional[str] = None
-    family: Optional[str] = None
+    serial: str | None = None
+    manufacturer: str | None = None
+    product: str | None = None
+    family: str | None = None
 
 
 def parse(string_table: StringTable) -> Section:

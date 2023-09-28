@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With Checkmk 2.1 we introduce the new option to configure InfluxDB connections.
 With this option you are able to send metrics directly from Checkmk to the

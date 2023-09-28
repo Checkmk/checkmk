@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -64,10 +64,10 @@ def get_activation_site_choices() -> list[tuple[SiteId, str]]:
 
 
 def activation_sites() -> SiteConfigurations:
-    """Returns sites that are affected by WATO changes
+    """Returns sites that are affected by Setup changes
 
     These sites are shown on activation page and get change entries
-    added during WATO changes."""
+    added during Setup changes."""
     return SiteConfigurations(
         {
             site_id: site

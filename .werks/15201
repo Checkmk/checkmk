@@ -1,0 +1,17 @@
+Title: Remove ps output width limitation for several Checkmk agents
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673964100
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Currently the width of the output of the ps command for several Checkmk agents is limited to 10000 characters, causing pattern matching to fail for longer processes.
+The width is now no longer limited for the agents for the following operating systems:
+
+LI: Linux
+LI: FreeBSD
+LI: NetBSD
+LI: OpenBSD

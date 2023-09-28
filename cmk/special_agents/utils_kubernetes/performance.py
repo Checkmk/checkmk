@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -17,16 +17,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NewType, TypeVar
 
-from pydantic import BaseModel, Field, parse_raw_as, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 import cmk.utils
 
 from cmk.special_agents.utils_kubernetes import common
 from cmk.special_agents.utils_kubernetes.schemata import section
 
-AGENT_TMP_PATH = Path(
-    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
-)
+AGENT_TMP_PATH = (
+    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else Path(tempfile.gettempdir())
+) / "agent_kube"
+
 ContainerName = NewType("ContainerName", str)
 
 
@@ -91,7 +92,8 @@ _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
-    return parse_raw_as(list[_AllSamples], cluster_collector_metrics)
+    adapter = TypeAdapter(list[_AllSamples])
+    return adapter.validate_json(cluster_collector_metrics)
 
 
 def create_selectors(
@@ -100,7 +102,8 @@ def create_selectors(
     """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
-    cpu_rate_metrics = _create_cpu_rate_metrics(cluster_name, metrics.cpu)
+    container_store_path = AGENT_TMP_PATH.joinpath(f"{cluster_name}_containers_counters.json")
+    cpu_rate_metrics = _create_cpu_rate_metrics(container_store_path, metrics.cpu)
     return (
         common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
         common.Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
@@ -138,15 +141,11 @@ def _group_metric_types(metrics: Sequence[_AllSamples]) -> Samples:
 
 
 def _create_cpu_rate_metrics(
-    cluster_name: str, cpu_metrics: Sequence[CPUSample]
+    container_store_path: Path, cpu_metrics: Sequence[CPUSample]
 ) -> Sequence[CPURateSample]:
     # We only persist the relevant counter metrics (not all metrics)
     current_cycle_store = ContainersStore(cpu=cpu_metrics)
-    store_file_name = f"{cluster_name}_containers_counters.json"
-    previous_cycle_store = _load_containers_store(
-        path=AGENT_TMP_PATH,
-        file_name=store_file_name,
-    )
+    previous_cycle_store = _load_containers_store(container_store_path)
 
     # The agent will store the latest counter values returned by the collector overwriting the
     # previous ones. The collector will return the same metric values for a certain time interval
@@ -154,14 +153,14 @@ def _create_cpu_rate_metrics(
     # is polled too frequently (no performance section for the checks). All cases where no
     # performance section can be generated should be handled on the check side (reusing the same
     # value, etc.)
-    _persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
+    _persist_containers_store(container_store_path, current_cycle_store)
     return _determine_cpu_rate_metrics(current_cycle_store.cpu, previous_cycle_store.cpu)
 
 
-def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
-    common.LOGGER.debug("Load previous cycle containers store from %s", file_name)
+def _load_containers_store(container_store_path: Path) -> ContainersStore:
+    common.LOGGER.debug("Load previous cycle containers store from %s", container_store_path)
     try:
-        return ContainersStore.parse_file(f"{path}/{file_name}")
+        return ContainersStore.parse_file(container_store_path)
     except FileNotFoundError as e:
         common.LOGGER.info("Could not find metrics file. This is expected if the first run.")
         common.LOGGER.debug("Exception: %s", e)
@@ -172,14 +171,12 @@ def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
 
 
 def _persist_containers_store(
-    containers_store: ContainersStore, path: Path, file_name: str
+    container_store_path: Path, containers_store: ContainersStore
 ) -> None:
-    file_path = f"{path}/{file_name}"
-    common.LOGGER.debug("Creating directory %s for containers store file", path)
-    path.mkdir(parents=True, exist_ok=True)
-    common.LOGGER.debug("Persisting current containers store under %s", file_path)
-    with open(file_path, "w") as f:
-        f.write(containers_store.json())
+    common.LOGGER.debug("Persisting current containers store under %s", container_store_path)
+    container_store_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(container_store_path, "w") as f:
+        f.write(containers_store.json(by_alias=True))
 
 
 def _determine_cpu_rate_metrics(
@@ -188,7 +185,6 @@ def _determine_cpu_rate_metrics(
 ) -> Sequence[CPURateSample]:
     """Determine the rate metrics for each container based on the current and previous
     counter metric values"""
-
     common.LOGGER.debug("Determine rate metrics from the latest containers counters stores")
     cpu_metrics_old_map = {metric.container_name: metric for metric in cpu_metrics_old}
     return [
@@ -206,7 +202,7 @@ def _determine_cpu_rate_metrics(
 def _calculate_rate(counter_metric: CPUSample, old_counter_metric: CPUSample) -> float:
     """Calculate the rate value based on two counter metric values
     Examples:
-        >>> from pydantic_factories import ModelFactory
+        >>> from polyfactory.factories.pydantic_factory import ModelFactory
         >>> class SampleFactory(ModelFactory):
         ...    __model__ = CPUSample
         >>> _calculate_rate(SampleFactory.build(metric_value_string="40", timestamp=60),

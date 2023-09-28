@@ -6,7 +6,7 @@ Date: 1659518203
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using the option "Write long output of services to monitoring history" the history
 can now be displayed as a column called "Details history".

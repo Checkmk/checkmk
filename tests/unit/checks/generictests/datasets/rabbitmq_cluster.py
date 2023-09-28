@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
-checkname = 'rabbitmq_cluster'
+# mypy: disable-error-code=var-annotated
+checkname = "rabbitmq_cluster"
 
 info = [
     [
@@ -13,84 +13,51 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})], 'messages': [(None, {})], 'stats': [(None, {})]}
+discovery = {"": [(None, {})], "messages": [(None, {})], "stats": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (0, 'Cluster name: rabbit@my-rabbit', []),
-                (0, 'Rabbitmq version: None', []),
-                (0, 'Erlang version: None', [])
-            ]
+            None,
+            {},
+            [
+                (0, "Cluster name: rabbit@my-rabbit", []),
+                (0, "Rabbitmq version: None", []),
+                (0, "Erlang version: None", []),
+            ],
         )
     ],
-    'messages': [
+    "messages": [
         (
-            None, {}, [
+            None,
+            {},
+            [
+                (0, "Total number of messages: 2", [("messages", 2, None, None, None, None)]),
+                (0, "Rate: 0.0 1/s", [("messages_rate", 0.0, None, None, None, None)]),
+                (0, "Messages ready: 2", [("messages_ready", 2, None, None, None, None)]),
                 (
-                    0, 'Total number of messages: 2', [
-                        ('messages', 2, None, None, None, None)
-                    ]
+                    0,
+                    "Messages unacknowledged: 0",
+                    [("messages_unacknowledged", 0, None, None, None, None)],
                 ),
-                (
-                    0, 'Rate: 0.0 1/s', [
-                        ('messages_rate', 0.0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Messages ready: 2', [
-                        ('messages_ready', 2, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Messages unacknowledged: 0', [
-                        ('messages_unacknowledged', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Messages published: 2', [
-                        ('messages_publish', 2, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Rate: 0.0 1/s', [
-                        ('messages_publish_rate', 0.0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Messages delivered: 0', [
-                        ('messages_deliver', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Rate: 0.0 1/s', [
-                        ('messages_deliver_rate', 0.0, None, None, None, None)
-                    ]
-                )
-            ]
+                (0, "Messages published: 2", [("messages_publish", 2, None, None, None, None)]),
+                (0, "Rate: 0.0 1/s", [("messages_publish_rate", 0.0, None, None, None, None)]),
+                (0, "Messages delivered: 0", [("messages_deliver", 0, None, None, None, None)]),
+                (0, "Rate: 0.0 1/s", [("messages_deliver_rate", 0.0, None, None, None, None)]),
+            ],
         )
     ],
-    'stats': [
+    "stats": [
         (
-            None, {}, [
-                (0, 'Channels: 0', [('channels', 0, None, None, None, None)]),
-                (
-                    0, 'Connections: 0', [
-                        ('connections', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Consumers: 0', [
-                        ('consumers', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Exchanges: 7', [
-                        ('exchanges', 7, None, None, None, None)
-                    ]
-                ), (0, 'Queues: 1', [('queues', 1, None, None, None, None)])
-            ]
+            None,
+            {},
+            [
+                (0, "Channels: 0", [("channels", 0, None, None, None, None)]),
+                (0, "Connections: 0", [("connections", 0, None, None, None, None)]),
+                (0, "Consumers: 0", [("consumers", 0, None, None, None, None)]),
+                (0, "Exchanges: 7", [("exchanges", 7, None, None, None, None)]),
+                (0, "Queues: 1", [("queues", 1, None, None, None, None)]),
+            ],
         )
-    ]
+    ],
 }

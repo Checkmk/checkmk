@@ -1,0 +1,15 @@
+Title: Fix possible error in availability
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1681974129
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Since 2.1.0p25 the availabilty could show an error like "Internal error: local
+variable 'this_until_time' referenced before assignment" if you used a time
+range other than "Last month".
+

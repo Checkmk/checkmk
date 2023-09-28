@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -148,10 +148,12 @@ iframe#robotmk_error {
   img {
     width: 48px;
     height: auto;
+    padding: 0;
   }
 
   .min & img {
     width: 45px;
+    padding: 0 12px;
 
     &.custom {
       width: 35px;
@@ -169,15 +171,17 @@ body.main .popup_menu #side_header > span {
   background-size: auto 30px;
 }
 
-#side_fold {
-  margin: $spacing 0;
+#side_fold,
+#saas {
+  padding: $spacing 4px $spacing 0;
   font-size: $font-size-small;
   color: $font-color;
   text-align: center;
   cursor: pointer;
+  border-left: 4px solid $navigation-bg-color;
 
-  &:not(.folded) {
-    color: $font-color-green;
+  &:hover {
+    border-left-color: $success;
   }
 
   img {
@@ -187,11 +191,14 @@ body.main .popup_menu #side_header > span {
       opacity: 1;
     }
   }
+}
 
-  &:not(.folded) img.folded {
-    display: none;
+#side_fold {
+  &:not(.folded) {
+    color: $font-color-green;
   }
 
+  &:not(.folded) img.folded,
   &.folded img:not(.folded) {
     display: none;
   }
@@ -352,7 +359,7 @@ div.snapin {
 
   /* Normal link in snapins */
   a {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color;
     text-decoration: none;
 

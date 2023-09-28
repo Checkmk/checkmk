@@ -1,0 +1,15 @@
+Title: State and Count of Processes: Calculate process creation time consistently
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685980195
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The creation time of a process, as displayed by the "State and Count of Processes" service is calculated by taking the difference between the current time and the time elapsed since the process was started.
+Previously, this used the time the check was performed at as the current time, leading to different creation times if different services were created for the same process.
+Now the time the agent section was parsed is used instead.
+
+Note that this will still lead to incorrect creation times if it takes too long to fetch the agent output.

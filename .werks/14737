@@ -6,7 +6,7 @@ Date: 1662552116
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 During agent package installation on Linux (.rpm or .deb package),
 some shell scripts get executed that are located under the directory

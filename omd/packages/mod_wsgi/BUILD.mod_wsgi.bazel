@@ -1,0 +1,37 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "mod_wsgi",
+    args = ["-j4"],
+    configure_in_place = True,
+    configure_options = [
+        "--with-python=${EXT_BUILD_DEPS}/python/bin/python3",
+        "--with-apxs=$(which apxs2 || which apxs)",
+    ],
+    copts = [
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        "CFLAGS": "-I$${EXT_BUILD_DEPS}/python/include/python3.11/",
+        "LDFLAGS": "-L$${EXT_BUILD_DEPS}/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib",
+        "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
+    },
+    lib_source = ":all_srcs",
+    out_shared_libs = [
+        "mod_wsgi.so",
+    ],
+    postfix_script = """
+        cp src/server/.libs/mod_wsgi.so $INSTALLDIR/lib
+    """,
+    targets = [""],
+    deps = ["@python"],
+)

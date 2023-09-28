@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def is_ibm_mq_service_vanished(item, parsed) -> bool:  # type:ignore[no-untyped-def]
+def is_ibm_mq_service_vanished(item, parsed) -> bool:  # type: ignore[no-untyped-def]
     """
     Returns true if queue or channel is not contained anymore in the agent
     output but queue manager is known as RUNNING. Throws MKCounterWrapped to
@@ -24,7 +24,7 @@ def is_ibm_mq_service_vanished(item, parsed) -> bool:  # type:ignore[no-untyped-
 
     if qmgr_status == "RUNNING":
         return True
-    raise MKCounterWrapped("Stale because queue manager %s" % qmgr_status)
+    raise IgnoreResultsError("Stale because queue manager %s" % qmgr_status)
 
 
 def ibm_mq_check_version(actual_version, params, label):

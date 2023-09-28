@@ -1,37 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
 import string
-from typing import (
-    Callable,
-    get_args,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    NoReturn,
-    Optional,
-    Union,
-)
+from collections.abc import Callable, Iterable, Mapping
+from typing import get_args, NamedTuple, NoReturn
 
-from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName, RuleSetName
+from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.structured_data import SDKey, SDValue
 
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
-
-_ATTR_DICT_KEY_TYPE = str
-
-AttrDict = Mapping[_ATTR_DICT_KEY_TYPE, Union[None, int, float, str]]
+from cmk.checkengine.inventory import InventoryPluginName, ItemDataCollection
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 # get allowed value types back as a tuple to guarantee consistency
-_ATTR_DICT_VAL_TYPES = get_args(get_args(AttrDict)[1])
+_ATTR_DICT_VAL_TYPES = get_args(get_args(Mapping[SDKey, SDValue])[1])
 
 _VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
 
-def _parse_valid_path(path: List[str]) -> List[str]:
+def _parse_valid_path(path: list[str]) -> list[str]:
     if not (path and isinstance(path, list) and all(isinstance(s, str) for s in path)):
         raise TypeError("'path' arg expected a non empty List[str], got %r" % path)
     invalid_chars = set("".join(path)) - _VALID_CHARACTERS
@@ -40,22 +30,23 @@ def _parse_valid_path(path: List[str]) -> List[str]:
     return path
 
 
-def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
+def _raise_invalid_attr_dict(kwarg_name: str, dict_: Mapping[SDKey, SDValue]) -> NoReturn:
     value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
     raise TypeError(
-        f"{kwarg_name} must be a dict with keys of type {_ATTR_DICT_KEY_TYPE.__name__}"
+        f"{kwarg_name} must be a dict with keys of type {SDKey.__name__}"
         f" and values of type {value_types}. Got {dict_!r}"
     )
 
 
-def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
+def _parse_valid_dict(
+    kwarg_name: str, dict_: Mapping[SDKey, SDValue] | None
+) -> Mapping[SDKey, SDValue]:
     if dict_ is None:
         return {}
     if not isinstance(dict_, dict):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     if not all(
-        isinstance(k, _ATTR_DICT_KEY_TYPE) and isinstance(v, _ATTR_DICT_VAL_TYPES)
-        for k, v in dict_.items()
+        isinstance(k, SDKey) and isinstance(v, _ATTR_DICT_VAL_TYPES) for k, v in dict_.items()
     ):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     return dict_
@@ -65,9 +56,9 @@ class Attributes(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_AttributesTuple",
         [
-            ("path", List[str]),
-            ("inventory_attributes", AttrDict),
-            ("status_attributes", AttrDict),
+            ("path", list[SDKey]),
+            ("inventory_attributes", Mapping[SDKey, SDValue]),
+            ("status_attributes", Mapping[SDKey, SDValue]),
         ],
     )
 ):
@@ -76,9 +67,9 @@ class Attributes(
     def __new__(
         cls,
         *,
-        path: List[str],
-        inventory_attributes: Optional[AttrDict] = None,
-        status_attributes: Optional[AttrDict] = None,
+        path: list[str],
+        inventory_attributes: Mapping[SDKey, SDValue] | None = None,
+        status_attributes: Mapping[SDKey, SDValue] | None = None,
     ) -> "Attributes":
         """
 
@@ -111,15 +102,21 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
+    def collect(self, collection: ItemDataCollection) -> None:
+        if self.inventory_attributes:
+            collection.inventory_pairs.append(self.inventory_attributes)
+        if self.status_attributes:
+            collection.status_data_pairs.append(self.status_attributes)
+
 
 class TableRow(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_TableRowTuple",
         [
-            ("path", List[str]),
-            ("key_columns", AttrDict),
-            ("inventory_columns", AttrDict),
-            ("status_columns", AttrDict),
+            ("path", list[SDKey]),
+            ("key_columns", Mapping[SDKey, SDValue]),
+            ("inventory_columns", Mapping[SDKey, SDValue]),
+            ("status_columns", Mapping[SDKey, SDValue]),
         ],
     )
 ):
@@ -128,10 +125,10 @@ class TableRow(
     def __new__(
         cls,
         *,
-        path: List[str],
-        key_columns: AttrDict,
-        inventory_columns: Optional[AttrDict] = None,
-        status_columns: Optional[AttrDict] = None,
+        path: list[str],
+        key_columns: Mapping[SDKey, SDValue],
+        inventory_columns: Mapping[SDKey, SDValue] | None = None,
+        status_columns: Mapping[SDKey, SDValue] | None = None,
     ) -> "TableRow":
         """
 
@@ -154,7 +151,7 @@ class TableRow(
         """
         if not (isinstance(key_columns, dict) and key_columns):
             raise TypeError(
-                "TableRows 'key_columns' expected non empty Dict[str, Any], got %r" % (key_columns,)
+                f"TableRows 'key_columns' expected non empty Dict[str, Any], got {key_columns!r}"
             )
 
         key_columns = _parse_valid_dict("key_columns", key_columns)
@@ -173,15 +170,24 @@ class TableRow(
             status_columns=status_columns,
         )
 
+    def collect(self, collection: ItemDataCollection) -> None:
+        # TableRow provides:
+        #   - key_columns: {"kc": "kc-val", ...}
+        #   - rows: [{"c": "c-val", ...}, ...]
+        collection.key_columns.extend(self.key_columns)
+        collection.inventory_rows.append({**self.key_columns, **self.inventory_columns})
+        if self.status_columns:
+            collection.status_data_rows.append({**self.key_columns, **self.status_columns})
 
-InventoryResult = Iterable[Union[Attributes, TableRow]]
+
+InventoryResult = Iterable[Attributes | TableRow]
 InventoryFunction = Callable[..., InventoryResult]
 
 
 class InventoryPlugin(NamedTuple):
     name: InventoryPluginName
-    sections: List[ParsedSectionName]
+    sections: list[ParsedSectionName]
     inventory_function: InventoryFunction
     inventory_default_parameters: ParametersTypeAlias
-    inventory_ruleset_name: Optional[RuleSetName]
+    inventory_ruleset_name: RuleSetName | None
     module: str

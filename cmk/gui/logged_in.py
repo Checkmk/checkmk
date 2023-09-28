@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage the currently logged in user"""
 
 from __future__ import annotations
 
-import errno
 import logging
 import os
 import time
-from collections.abc import Container
+from collections.abc import Container, Sequence
 from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
@@ -129,8 +129,8 @@ class LoggedInUser:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> list:
-        return self.get_attribute("contactgroups", [])
+    def contact_groups(self) -> Sequence[ContactgroupName]:
+        return [ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
 
     @property
     def start_url(self) -> str | None:
@@ -411,13 +411,11 @@ class LoggedInUser:
 
         try:
             return os.stat(self.confdir + "/" + name + ".mk").st_mtime
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 0
-            raise
+        except FileNotFoundError:
+            return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version(__version__).version_base
+        version = Version.from_str(__version__).version_base
         version = version if version != "" else "master"
         return "https://docs.checkmk.com/{}/{}".format(
             version, "de" if self.language == "de" else "en"

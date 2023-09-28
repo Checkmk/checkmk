@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -54,28 +54,39 @@ def load_group_information() -> AllGroupSpecs:
 
 def _load_cmk_base_groups() -> dict[GroupName, dict[GroupName, str]]:
     """Load group alias maps from Checkmk world"""
-    group_specs: dict[str, dict[GroupName, str]] = {
-        "define_hostgroups": {},
-        "define_servicegroups": {},
-        "define_contactgroups": {},
+    return {
+        GroupName(k_outer): {
+            GroupName(k_inner): str(v_inner) for k_inner, v_inner in v_outer.items()
+        }
+        for k_outer, v_outer in store.load_mk_file(
+            cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
+            default={
+                "define_hostgroups": {},
+                "define_servicegroups": {},
+                "define_contactgroups": {},
+            },
+        ).items()
+        if isinstance(v_outer, dict)
     }
-
-    return store.load_mk_file(
-        cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", default=group_specs
-    )
 
 
 def _load_gui_groups() -> dict[str, GroupSpecs]:
-    # Now load information from the Web world
-    group_specs: dict[str, GroupSpecs] = {
-        "multisite_hostgroups": {},
-        "multisite_servicegroups": {},
-        "multisite_contactgroups": {},
+    """Load information from the Web world"""
+    return {
+        k_outer: {
+            GroupName(k_middle): {str(k_inner): v_inner for k_inner, v_inner in v_middle.items()}
+            for k_middle, v_middle in v_outer.items()
+        }
+        for k_outer, v_outer in store.load_mk_file(
+            cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
+            default={
+                "multisite_hostgroups": {},
+                "multisite_servicegroups": {},
+                "multisite_contactgroups": {},
+            },
+        ).items()
+        if isinstance(v_outer, dict)
     }
-
-    return store.load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs
-    )
 
 
 def clear_group_information_request_cache() -> None:

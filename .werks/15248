@@ -1,0 +1,14 @@
+Title: Partially running site after update
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679315365
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+During an Checkmk update Checkmk's extention package manager would sometimes reload the site apache, inadvertently starting it.
+As a result users would end up with a <i>partially running</i> site.
+The relaod is now only done if the apache is running (otherwise we don't need a reload anyway).
+

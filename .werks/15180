@@ -1,0 +1,15 @@
+Title: <tt>logwatch</tt> agent plugin on Windows: Enable monitoring of log files with non-ASCII characters in their paths
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675670505
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Before this werk, the <tt>logwatch</tt> agent plugin crashed with
+C+:
+UnicodeEncodeError: 'ascii' codec can't encode character ...: ordinal not in range(128)
+C-:
+for log files whose paths contained non-ASCII characters.

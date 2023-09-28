@@ -9,15 +9,14 @@ Level: 1
 State: unknown
 Version: 2.1.0b1
 
-Previously we only checked {{<...,UP>}} in the bracket info and treated this
-interface as {{UP}} if and only if no output of ethtool is available.
+Previously we only checked `<...,UP>` in the bracket info and treated this
+interface as `UP` if and only if no output of ethtool is available.
 
 Please have a look at the following scenarios and how we now determine whether
-an interface is {{UP}}:
-<ul>
-<li>{{<BROADCAST,MULTICAST,UP,LOWER_UP>}} means that this interface has a link
-and is UP</li>
-<li>{{<NO-CARRIER,BROADCAST,MULTICAST,UP>}} means that this interface is
-configured and ADMIN UP but has no link</li>
-<li>{{<BROADCAST,MULTICAST>}} means that this interface is not configured</li>
-</ul>
+an interface is `UP`:
+
+* `<BROADCAST,MULTICAST,UP,LOWER_UP>` means that this interface has a link
+and is UP
+* `<NO-CARRIER,BROADCAST,MULTICAST,UP>` means that this interface is
+configured and ADMIN UP but has no link
+* `<BROADCAST,MULTICAST>` means that this interface is not configured

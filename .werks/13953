@@ -6,7 +6,7 @@ Date: 1657538092
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The UI would be unsuable due to a crash if there was a pending change and the japanese locale set.
 This is no longer the case.

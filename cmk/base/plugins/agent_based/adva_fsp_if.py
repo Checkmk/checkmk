@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,7 +20,7 @@ _KEYS = [
 ]
 
 
-def parse_adva_fsp_if(string_table: List[StringTable]) -> Section:
+def parse_adva_fsp_if(string_table: list[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_adva_fsp_if([[
@@ -104,7 +105,7 @@ def check_adva_fsp_if(
     opertxt, operstate = _MAP_OPER_STATUS[interface["oper_status"]]
     yield Result(
         state=State.worst(adminstate, operstate),
-        summary="Admin/Operational State: %s/%s" % (admintxt, opertxt),
+        summary=f"Admin/Operational State: {admintxt}/{opertxt}",
     )
 
     for power_type in ["output", "input"]:
@@ -128,7 +129,7 @@ def check_adva_fsp_if(
 
         yield Result(
             state=mon_state,
-            summary="%s power: %.1f dBm" % (power_type.title(), power),
+            summary=f"{power_type.title()} power: {power:.1f} dBm",
         )
         yield Metric(
             "%s_power" % power_type,

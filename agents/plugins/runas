@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.2.0i1"
+CMK_VERSION="2.3.0b1"
 
 # This plugin allows to execute mrpe, local and plugin skripts with a different user context
 # It is configured with in the file $MK_CONFDIR/runas.cfg
@@ -47,6 +47,7 @@ grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
                 grep -Ev '^[[:space:]]*($|#)' "$include" |
                     while read descr cmdline; do
                         PLUGIN=${cmdline%% *}
+                        #  shellcheck disable=SC2030 # false positive? "Modification of PREFIX is local..."
                         if [ -n "$PREFIX" ]; then
                             cmdline="$PREFIX\"$cmdline\""
                         fi
@@ -61,6 +62,7 @@ grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
                 fi
                 find "$include" -executable -type f |
                     while read filename; do
+                        # shellcheck disable=SC2031 # false positive? "PREFIX was modified in a subshell..."
                         if [ -n "$PREFIX" ]; then
                             cmdline="$PREFIX\"$filename\""
                         else

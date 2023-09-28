@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.entity_sensors import (
     check_entity_sensors_fan,
     check_entity_sensors_power_presence,
@@ -15,7 +19,8 @@ from cmk.base.plugins.agent_based.entity_sensors import (
     discover_entity_sensors_temp,
     parse_entity_sensors,
 )
-from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensor
+from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensor, EntitySensorSection
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 _SECTION_CISCO_ENTITY_SENSORS = {
     "fan": {
@@ -65,8 +70,8 @@ _SECTION_CISCO_ENTITY_SENSORS = {
         ),
     ],
 )
-def test_discover_entity_sensors_temp(  # type:ignore[no-untyped-def]
-    string_table, expected_discovery
+def test_discover_entity_sensors_temp(
+    string_table: list[StringTable], expected_discovery: DiscoveryResult
 ) -> None:
     assert (
         list(discover_entity_sensors_temp(parse_entity_sensors(string_table))) == expected_discovery
@@ -99,8 +104,8 @@ def test_discover_entity_sensors_temp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_entity_sensors_fan(  # type:ignore[no-untyped-def]
-    string_table, expected_discovery
+def test_discover_entity_sensors_fan(
+    string_table: list[StringTable], expected_discovery: DiscoveryResult
 ) -> None:
     assert (
         list(discover_entity_sensors_fan(parse_entity_sensors(string_table))) == expected_discovery
@@ -125,8 +130,8 @@ def test_discover_entity_sensors_fan(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
-    string_table, expected_discovery
+def test_discover_entity_sensors_power_presence(
+    string_table: list[StringTable], expected_discovery: DiscoveryResult
 ) -> None:
     assert (
         list(discover_entity_sensors_power_presence(parse_entity_sensors(string_table)))
@@ -134,6 +139,7 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -178,7 +184,7 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
             },
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -201,7 +207,7 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
             },
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -210,8 +216,8 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_entity_sensors_temp(  # type:ignore[no-untyped-def]
-    item, params, section, expected_result
+def test_check_entity_sensors_temp(
+    item: str, params: TempParamType, section: EntitySensorSection, expected_result: CheckResult
 ) -> None:
     assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 
@@ -279,8 +285,11 @@ def test_check_entity_sensors_temp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_entity_sensors_fan(  # type:ignore[no-untyped-def]
-    item, params, section, expected_result
+def test_check_entity_sensors_fan(
+    item: str,
+    params: Mapping[str, object],
+    section: EntitySensorSection,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_entity_sensors_fan(item, params, section)) == expected_result
 
@@ -341,7 +350,10 @@ def test_check_entity_sensors_fan(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
-    item, params, section, expected_result
+def test_check_entity_sensors_power_presence(
+    item: str,
+    params: Mapping[str, object],
+    section: EntitySensorSection,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_entity_sensors_power_presence(item, params, section)) == expected_result

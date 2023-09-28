@@ -1,0 +1,13 @@
+Title: DCD: Piggyback hosts are now updated and deleted again
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1675417485
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.2.0b1
+
+The rule <tt>Dynamic host management</tt> allows user to configure automatic creation, updating and
+deleting of hosts. With werk 15206 (included in 2.1.0p20), the underlying mechanism, <tt>Dynamic
+Configuration Daemon</tt> would no longer update and delete hosts.

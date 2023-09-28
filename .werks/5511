@@ -25,7 +25,11 @@ If prelink is installed on the target system (i.e. the file <tt>/etc/prelink.con
 our blacklist-file will be referenced as an additional prelink configuration file.
 If prelink gets installed on the system after the Check_MK Agent, you have to reference
 the blacklist-file by yourself. You can do this by adding a line
-<pre>-c /etc/prelink.conf.d/cmk-update-agent.conf</pre>
+
+C+:
+-c /etc/prelink.conf.d/cmk-update-agent.conf
+C-:
+
 to <tt>/etc/prelink.conf</tt>.
 
 However, this mechanism is only available for .rpm and .deb Check_MK Agent pakages.

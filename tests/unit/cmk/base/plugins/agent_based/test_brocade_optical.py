@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based import brocade_optical
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -67,7 +70,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
         ),
     ],
 )
-def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignore[no-untyped-def]
+def test_discover_brocade_optical(
+    params: Sequence[Mapping[str, object]], expect_service: bool
+) -> None:
     section: brocade_optical.Section = {
         "1410": {
             "description": "10GigabitEthernet23/2",
@@ -90,6 +95,7 @@ def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignor
     ) == (expect_service and services or [])
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [
@@ -115,7 +121,7 @@ def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignor
                     summary="[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down",
                 ),
                 Metric("temp", 31.4882),
-                Result(state=State.OK, summary="Temperature: 31.5°C"),
+                Result(state=State.OK, summary="Temperature: 31.5 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -158,7 +164,7 @@ def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignor
                 Metric("tx_light", -1.6045),
                 Result(state=State.OK, summary="RX Light -2.3 dBm (Normal)"),
                 Metric("rx_light", -2.2504),
-                Result(state=State.OK, notice="Temperature (Lane 1) Temperature: 31.5°C"),
+                Result(state=State.OK, notice="Temperature (Lane 1) Temperature: 31.5 °C"),
                 Metric("port_temp_1", 31.4531),
                 Result(state=State.OK, notice="TX Light (Lane 1) -1.6 dBm (Normal)"),
                 Metric("tx_light_1", -1.6045),
@@ -168,14 +174,15 @@ def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignor
         ),
     ],
 )
-def test_check_brocade_optical(  # type:ignore[no-untyped-def]
-    item, params, section, expected
+def test_check_brocade_optical(
+    item: str, params: Mapping[str, object], section: brocade_optical.Section, expected: CheckResult
 ) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 
 
 # Disable auto-formatting here as it takes ages
 # fmt: off
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [
@@ -564,8 +571,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N AGA07AJ, P/N FTRX-3811-353-F1] Operational up'),
                     Metric('temp', 31.7695),
                     Result(state=State.OK,
-                           summary='Temperature: 31.8°C',
-                           details='Temperature: 31.8°C'),
+                           summary='Temperature: 31.8 °C',
+                           details='Temperature: 31.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -589,8 +596,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N AG800UB, P/N FTRX-3811-354-F1] Operational up'),
                     Metric('temp', 34.8203),
                     Result(state=State.OK,
-                           summary='Temperature: 34.8°C',
-                           details='Temperature: 34.8°C'),
+                           summary='Temperature: 34.8 °C',
+                           details='Temperature: 34.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -614,8 +621,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N PRG041, P/N FIM31060/210W55] Operational up'),
                     Metric('temp', 34.1445),
                     Result(state=State.OK,
-                           summary='Temperature: 34.1°C',
-                           details='Temperature: 34.1°C'),
+                           summary='Temperature: 34.1 °C',
+                           details='Temperature: 34.1 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -639,8 +646,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N SPG153, P/N FIM31060/210W56] Operational up'),
                     Metric('temp', 33.2734),
                     Result(state=State.OK,
-                           summary='Temperature: 33.3°C',
-                           details='Temperature: 33.3°C'),
+                           summary='Temperature: 33.3 °C',
+                           details='Temperature: 33.3 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -664,8 +671,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N PHG020, P/N FIM31060/210W50] Operational up'),
                     Metric('temp', 30.7734),
                     Result(state=State.OK,
-                           summary='Temperature: 30.8°C',
-                           details='Temperature: 30.8°C'),
+                           summary='Temperature: 30.8 °C',
+                           details='Temperature: 30.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -689,8 +696,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N PRG015, P/N FIM31060/210W51] Operational up'),
                     Metric('temp', 32.6914),
                     Result(state=State.OK,
-                           summary='Temperature: 32.7°C',
-                           details='Temperature: 32.7°C'),
+                           summary='Temperature: 32.7 °C',
+                           details='Temperature: 32.7 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -714,8 +721,8 @@ def test_check_brocade_optical(  # type:ignore[no-untyped-def]
                            details='[S/N UL30HQ5, P/N XFP-DWLR08-52] Operational up'),
                     Metric('temp', 32.5),
                     Result(state=State.OK,
-                           summary='Temperature: 32.5°C',
-                           details='Temperature: 32.5°C'),
+                           summary='Temperature: 32.5 °C',
+                           details='Temperature: 32.5 °C'),
                     Result(
                         state=State.OK,
                         notice=

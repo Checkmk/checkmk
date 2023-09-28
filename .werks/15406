@@ -1,0 +1,19 @@
+Title: Renaming of hosts: Handle TLS agent registrations correctly
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1677139415
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When renaming hosts which were registered for TLS-encrypted agent communication, Checkmk ran into
+the following error:
+C+:
+TypeError: '<' not supported between instances of 'tuple' and 'str'
+C-:
+
+Furthermore, in distributed setups, renaming TLS-registered hosts which were monitored on remote
+sites lead to a loss of registration, which prevented any further agent communication until the
+affected hosts were re-registered.

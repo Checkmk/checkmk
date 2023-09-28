@@ -1,0 +1,16 @@
+Title: Fix refresh of pending changes on bulk service discovery
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1683874631
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you used "Run bulk service discovery" in "Setup" - "Hosts" and started the
+discovery, the pending changes were not updated after the background job was
+finished. A manual reload of the page was needed.
+
+

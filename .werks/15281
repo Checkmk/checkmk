@@ -1,0 +1,25 @@
+Title: mssql_blocked_sessions: Levels now overwrite state
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1678199682
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The inline-help of the parameter "Levels for wait" of the rule "MSSQL Blocked
+Sessions" mentions:
+
+"The thresholds for wait_duration_ms. Will overwrite the default state set above."
+
+This was not right. If only the levels were set, the check would go to CRIT
+regardless of the wait_duration_ms.
+
+After setting "Levels for wait" all sessions that wait for a shorter duration
+than the warning level of "Levels for wait" will not affect the check result.
+The check result is then controlled by wait_duration_ms being greater than the
+levels defined.
+
+If "Levels for wait" is not set (the default), the behaviour is not altered.
+

@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=too-many-branches,no-else-break
 
+import asyncio
 from ssl import SSLObject
+from urllib.parse import unquote
 
-from uvicorn.protocols.http.h11_impl import (
-    asyncio,
-    h11,
-    H11Protocol,
-    HIGH_WATER_LIMIT,
-    RequestResponseCycle,
-    service_unavailable,
-    unquote,
-)
+import h11
+from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavailable
+from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
 from uvicorn.workers import UvicornWorker
 
 
@@ -81,7 +77,7 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
 
                 raw_path, _, query_string = event.target.partition(b"?")
-                self.scope = {  # type: ignore[typeddict-item]
+                self.scope = {
                     "type": "http",
                     "asgi": {
                         "version": self.config.asgi_version,

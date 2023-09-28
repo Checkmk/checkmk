@@ -1,0 +1,27 @@
+@startuml
+scale 0.6
+start
+partition preparing the Kubernetes API data (api_server.py) {
+:Query the Kubernetes API server to
+get the current state of the **k8s**;
+:Parse the queried API data to our version-free models;
+}
+partition API data handling {
+:determine the **relationship**
+between the Kubernetes objects;
+:determine resource usage through aggregation;
+:write out API based piggyback sections;
+}
+partition usage metrics handling (optional) {
+:query the usage (CPU & Memory) from
+our collectors / OpenShift Prometheus;
+:write out piggyback sections if the matching
+k8s API object is still running;
+}
+partition machine-sections handling (optional) {
+:query machine-sections from
+cluster collector / OpenShift Prometheus;
+:write out piggyback sections specific to node if
+node is reported to be present;
+}
+@enduml

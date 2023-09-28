@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import Final
 
 from cmk.utils.log import console
 
@@ -24,12 +25,11 @@ def warn(text: str) -> None:
 
 def get_configuration() -> ConfigurationWarnings:
     adjusted_warnings = list(set(g_configuration_warnings))
-
-    if (num_warnings := len(adjusted_warnings)) > 10:
-        warnings = adjusted_warnings[:10] + [
-            "%d further warnings have been omitted" % (num_warnings - 10)
-        ]
-    else:
-        warnings = adjusted_warnings
-
-    return warnings
+    max_warnings: Final = 10
+    num_warnings = len(adjusted_warnings)
+    return (
+        adjusted_warnings[:max_warnings]
+        + [f"{num_warnings - max_warnings} further warnings have been omitted"]
+        if num_warnings > max_warnings
+        else adjusted_warnings
+    )

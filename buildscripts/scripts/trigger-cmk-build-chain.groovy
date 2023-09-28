@@ -47,14 +47,17 @@ def main() {
     ];
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["enterprise", "raw", "free", "managed", "plus"] : (
+    assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
-    def build_image = !(edition in ["free"]);
-    def build_ami_image = edition == "free";
+    def build_image = true;
+    def build_cloud_images = edition == "cloud";
 
-    def run_integration_tests = !(edition in ["free"]);
-    def run_image_tests = !(edition in ["free"]);
+    // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
+    def run_int_tests = edition != "saas";
+    def run_comp_tests = edition != "saas";
+    def run_image_tests = edition != "saas";
+    def run_update_tests = (edition in ["enterprise"]);
 
     print(
         """
@@ -62,52 +65,69 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_ami_image:....... │${build_ami_image}│
-        |run_integration_tests:. │${run_integration_tests}│
+        |build_cloud_images:.... │${build_cloud_images}│
+        |run_comp_tests:........ │${run_comp_tests}│
+        |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
+        |run_update_tests:...... │${run_update_tests}│
         |===================================================
         """.stripMargin());
 
-    stage('Build Packages') {
-        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-packages") {
-            build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
-        }
+    def success = true;
+
+    stage("Build Packages") {
+        build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
     }
 
-    conditional_stage('Build CMK IMAGE', build_image) {
-        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-image") {
-            build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-        }
+    success &= smart_stage(
+            name: "Build CMK IMAGE",
+            condition: build_image,
+            raiseOnError: false) {
+        build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
     }
 
-    conditional_stage('Build AMI Image', build_ami_image) {
-        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-aws-ami") {
-            build(job: "${base_folder}/build-cmk-aws-ami", parameters: job_parameters);
-        }
+    success &= smart_stage(
+            name: "Build Cloud Images",
+            condition: build_cloud_images,
+            raiseOnError: false) {
+        build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
     parallel([
-        'Integration Test for Docker Container': {
-            conditional_stage('Integration Test for Docker Container', run_image_tests) {
-                on_dry_run_omit(LONG_RUNNING, "trigger test-integration-docker") {
-                    build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
-                }
+        "Integration Test for Docker Container": {
+            success &= smart_stage(
+                    name: "Integration Test for Docker Container",
+                    condition: run_image_tests,
+                    raiseOnError: false) {
+                build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
             }
         },
 
-        'Composition Test for Packages': {
-            conditional_stage('Composition Test for Packages', run_integration_tests) {
-                on_dry_run_omit(LONG_RUNNING, "trigger test-composition") {
-                    build(job: "${base_folder}/test-composition", parameters: job_parameters);
-                }
+        "Composition Test for Packages": {
+            success &= smart_stage(
+                    name: "Composition Test for Packages",
+                    condition: run_comp_tests,
+                    raiseOnError: false) {
+                build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
         }
     ])
 
-    conditional_stage('Integration Test for Packages', run_integration_tests) {
-        on_dry_run_omit(LONG_RUNNING, "trigger test-integration-packages") {
-            build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
-        }
+    success &= smart_stage(
+            name: "Integration Test for Packages",
+            condition: run_int_tests,
+            raiseOnError: false) {
+        build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }
+
+    success &= smart_stage(
+            name: "Update Test",
+            condition: run_update_tests,
+            raiseOnError: false) {
+        build(job: "${base_folder}/test-update", parameters: job_parameters);
+    }
+
+    currentBuild.result = success ? "SUCCESS" : "FAILURE";
+
 }
 return this;

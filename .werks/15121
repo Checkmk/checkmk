@@ -1,0 +1,14 @@
+Title: Fix possible AssertionError on rule search
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1674057007
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+If you e.g. searched for tags in the rule search, an error like
+"AssertionError" could occur.
+

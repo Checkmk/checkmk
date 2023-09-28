@@ -1,28 +1,30 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #include "pch.h"
 
+#include <ranges>
 #include <string>
 #include <string_view>
 
-#include "cfg.h"
-#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "providers/p_perf_counters.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
+namespace rs = std::ranges;
 
 namespace {
 bool ValidIndexOfTs(int index) {
-    return std::ranges::any_of(tst::g_terminal_services_indexes,
-                               [index](const auto &e) { return e == index; });
+    return rs::any_of(tst::g_terminal_services_indexes,
+                      [index](const auto &e) { return e == index; });
 }
 }  // namespace
 
@@ -40,7 +42,7 @@ TEST(WinPerf, ValidateFabricConfig) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
-    auto cmd_line = cfg::groups::winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     auto cfg = cfg::GetLoadedConfig();
 
     auto winperf_node = cfg[groups::kWinPerf];
@@ -50,18 +52,18 @@ TEST(WinPerf, ValidateFabricConfig) {
     auto wp_group = cfg[groups::kWinPerf];
     auto cfg_timeout = wp_group[vars::kWinPerfTimeout].as<int>(1234567);
     ASSERT_NE(cfg_timeout, 1234567);
-    EXPECT_EQ(groups::winperf.timeout(), cfg_timeout);
+    EXPECT_EQ(groups::g_winperf.timeout(), cfg_timeout);
 
     EXPECT_TRUE(wp_group[vars::kWinPerfFork].as<bool>(false));
-    EXPECT_TRUE(groups::winperf.isFork());
+    EXPECT_TRUE(groups::g_winperf.isFork());
 
     EXPECT_FALSE(wp_group[vars::kWinPerfTrace].as<bool>(true));
-    EXPECT_FALSE(groups::winperf.isTrace());
+    EXPECT_FALSE(groups::g_winperf.isTrace());
 
     auto cfg_prefix =
         wp_group[vars::kWinPerfPrefixName].as<std::string>("1234567");
     ASSERT_EQ(cfg_prefix, vars::kWinPerfPrefixDefault);
-    EXPECT_EQ(groups::winperf.prefix(), cfg_prefix);
+    EXPECT_EQ(groups::g_winperf.prefix(), cfg_prefix);
 
     auto enabled = cfg::GetVal(groups::kWinPerf, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
@@ -90,11 +92,11 @@ TEST(WinPerf, ValidateFabricConfig) {
 TEST(WinPerf, BuildCommandLine) {
     const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent("global:\n  enabled: yes\n"));
-    auto cmd_line = cfg::groups::winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     EXPECT_TRUE(cmd_line.empty()) << cmd_line;
 
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
-    cmd_line = cfg::groups::winperf.buildCmdLine();
+    cmd_line = cfg::groups::g_winperf.buildCmdLine();
     EXPECT_EQ(cmd_line, L"234:phydisk 510:if 238:processor")
         << "validate fabric yaml";
 }
@@ -124,7 +126,7 @@ std::pair<wtools::perf::DataSequence, uint32_t> GetKeyIndex() {
         details::LoadWinPerfData(std::to_wstring(ts_index), key_index);
     return {std::move(result), key_index};
 }
-TEST(WinPerf, MakeBodyForTSIntegration) {
+TEST(WinPerf, MakeBodyForTSComponent) {
     auto [result, key_index] = GetKeyIndex();
 
     auto object = wtools::perf::FindPerfObject(result, key_index);
@@ -171,9 +173,10 @@ TEST(WinPerf, IfCounter) {
 
     EXPECT_EQ(std::to_string(tools::ConvertToUint64(stamp[1], 12345678)),
               "510");
-
     EXPECT_EQ(tools::ConvertToUint64(stamp[2], 12345678),
               cfg::GetPerformanceFrequency());
+    // check at least one negative value is in
+    EXPECT_TRUE(rs::any_of(table, [](auto &l) { return l[0] == '-'; }));
 }
 
 TEST(WinPerf, TcpConnCounter) {

@@ -6,7 +6,7 @@ Date: 1646229173
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Add support for Google Cloud Platform (GCP). To enable GCP monitoring add
 an agent rule for "Google Cloud Platform (GCP)". For each project you want
@@ -16,3 +16,8 @@ private key. One rule has to be created per project.
 Monitored GCP services
 
 - Google Cloud Storage (GCS)
+- Cloud Load Balancing
+- Google Compute Engine (GCE)
+- Cloud SQL
+- Filestore
+- Cloud Costs

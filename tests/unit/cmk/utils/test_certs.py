@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
+from dateutil.relativedelta import relativedelta
 from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
@@ -201,7 +202,7 @@ def test_load_cert_and_private_key(
 
 
 def test_make_private_key() -> None:
-    assert _make_private_key().key_size == 2048
+    assert _make_private_key().key_size == 4096
 
 
 def test_make_root_certificate() -> None:
@@ -209,7 +210,7 @@ def test_make_root_certificate() -> None:
     with on_time(100, "UTC"):
         cert = _make_root_certificate(
             _make_subject_name("peter"),
-            1,
+            relativedelta(days=1),
             key,
         )
     assert check_cn(
@@ -240,7 +241,7 @@ def test_sign_csr() -> None:
     root_key = _make_private_key()
     root_cert = _make_root_certificate(
         _make_subject_name("peter"),
-        1,
+        relativedelta(days=1),
         root_key,
     )
     key = _make_private_key()
@@ -251,7 +252,7 @@ def test_sign_csr() -> None:
     with on_time(100, "UTC"):
         cert = _sign_csr(
             csr,
-            2,
+            relativedelta(days=2),
             root_cert,
             root_key,
         )
@@ -277,7 +278,7 @@ def test_sign_csr_with_local_ca() -> None:
     root_key = _make_private_key()
     root_cert = _make_root_certificate(
         _make_subject_name("peter"),
-        1,
+        relativedelta(days=1),
         root_key,
     )
     key = _make_private_key()
@@ -288,7 +289,10 @@ def test_sign_csr_with_local_ca() -> None:
 
     root_ca = RootCA(root_cert, root_key)
     with on_time(567892121, "UTC"):
-        cert = root_ca.sign_csr(csr, 100)
+        cert = root_ca.sign_csr(
+            csr,
+            relativedelta(days=100),
+        )
 
     assert check_cn(
         cert,

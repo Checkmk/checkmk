@@ -6,7 +6,7 @@ Date: 1657141188
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This Werk only affects users that configured <i>Filesystem</i> services to ignore individual mount points via the variable <tt>inventory_df_exclude_mountpoints</tt> in a <tt>.mk</tt> file.
 

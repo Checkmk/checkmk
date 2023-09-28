@@ -1,0 +1,19 @@
+Title: mk_filestats: Make combination of file grouping and single file aggregation more usable
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1680766003
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is incompatible for users that use file grouping and single file aggregation
+and have "%s" in the section name.
+
+It's now possible to define a name containing "%s" in both section and group names when
+using single file aggregation.
+
+In that case, the services of files that don't belong to a group will be named
+`<SECTION NAME> <FILE NAME>` and the services of grouped files
+`<SECTION NAME> <GROUP NAME> <FILE NAME>`.

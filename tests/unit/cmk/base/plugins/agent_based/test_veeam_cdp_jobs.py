@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,6 +16,7 @@ DATA = [
     ["Test 2", "1632216559.87806", "Failed"],
     ["Test 3", "1632216559.87806", "Stopped"],
     ["Test 4", "null", "Disabled"],
+    ["Test 5", "1632216559,73749", "Running"],
 ]
 
 
@@ -29,6 +30,7 @@ DATA = [
                 Service(item="Test 2"),
                 Service(item="Test 3"),
                 Service(item="Test 4"),
+                Service(item="Test 5"),
             ],
         ),
     ],
@@ -83,6 +85,15 @@ def test_veeam_cdp_jobs_discovery(
             DATA,
             [
                 Result(state=State.OK, summary="State: Disabled"),
+            ],
+        ),
+        (
+            "Test 5",
+            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            DATA,
+            [
+                Result(state=State.OK, summary="State: Running"),
+                Result(state=State.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
             ],
         ),
     ],

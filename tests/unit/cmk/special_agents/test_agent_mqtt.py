@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest
 
 from cmk.utils import password_store
 from cmk.utils.config_path import LATEST_CONFIG
@@ -48,7 +50,7 @@ def test_parse_all_arguments() -> None:
     assert args.client_id == "ding"
 
 
-def test_parse_password_store(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_parse_password_store(monkeypatch: pytest.MonkeyPatch) -> None:
     password_store.save({"mqtt_password": "blablu"})
     password_store.save_for_helpers(LATEST_CONFIG)
     monkeypatch.setattr(

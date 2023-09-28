@@ -1,0 +1,12 @@
+Title: f5_bigip_vserver: Added possibility to configure the levels for the maximum number of connections
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683625662
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The possibility to configure the levels for the maximum number of connections has been added to the existing ruleset in WATO.
+

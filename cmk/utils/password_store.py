@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module is meant to be used by components (e.g. active checks, notifications, bakelets)
@@ -38,27 +38,25 @@ file, there is the `extract` function which can be used like this:
   password = cmk.utils.password_store.extract("pw_id")
 
 """
-import hashlib
 import os
-import secrets
 import shutil
-import string
 import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Literal, NoReturn, TypedDict, Union
+from typing import Literal, NoReturn
 
-from Cryptodome.Cipher import AES
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.crypto.secrets import PasswordStoreSecret
+from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-PasswordId = Union[str, tuple[PasswordLookupType, str]]
+PasswordId = str | tuple[PasswordLookupType, str]
 
 
 class Password(TypedDict):
@@ -103,12 +101,12 @@ def replace_passwords() -> None:
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
         if len(parts) != 3:
-            bail_out("pwstore: Invalid --pwstore entry: %s" % password_spec)
+            bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
             num_arg, pos_in_arg, password_id = int(parts[0]), int(parts[1]), parts[2]
         except ValueError:
-            bail_out("pwstore: Invalid format: %s" % password_spec)
+            bail_out(f"pwstore: Invalid format: {password_spec}")
 
         try:
             arg = sys.argv[num_arg]
@@ -118,7 +116,7 @@ def replace_passwords() -> None:
         try:
             password = passwords[password_id]
         except KeyError:
-            bail_out("pwstore: Password '%s' does not exist" % password_id)
+            bail_out(f"pwstore: Password '{password_id}' does not exist")
 
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
@@ -154,6 +152,7 @@ def _load(store_path: Path) -> dict[str, str]:
 
 
 def extract(password_id: PasswordId) -> str | None:
+    """Translate the password store reference to the actual password"""
     if not isinstance(password_id, tuple):
         return load().get(password_id)
 
@@ -223,56 +222,21 @@ class PasswordStore:
     VERSION = 0
     VERSION_BYTE_LENGTH = 2
 
-    @staticmethod
-    def _secret_key_path() -> Path:
-        path = cmk.utils.paths.omd_root / "etc" / "password_store.secret"
-        if not path.exists():
-            # Initialize the password store encryption key in case it does not exist
-            PasswordStore._create_secret_key(path)
-        return path
-
-    @staticmethod
-    def _passphrase() -> bytes:
-        with PasswordStore._secret_key_path().open(mode="rb") as f:
-            return f.read().strip()
-
-    @staticmethod
-    def _cipher(key: bytes, nonce: bytes) -> Any:
-        return AES.new(key, AES.MODE_GCM, nonce=nonce)
-
-    @staticmethod
-    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
-        """Build some secret for the encryption
-
-        Use the sites auth.secret for encryption. This secret is only known to the current site
-        and other distributed sites.
-        """
-        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
-
-    @staticmethod
-    def _create_secret_key(path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.touch()
-        path.chmod(0o660)
-        path.write_text(
-            "".join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(256))
-        )
+    SALT_LENGTH: int = 16
+    NONCE_LENGTH: int = 16
 
     @staticmethod
     def encrypt(value: str) -> bytes:
-        salt = os.urandom(AES.block_size)
-        nonce = os.urandom(AES.block_size)
-        cipher = PasswordStore._cipher(
-            PasswordStore._secret_key(PasswordStore._passphrase(), salt),
-            nonce,
-        )
-        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        salt = os.urandom(PasswordStore.SALT_LENGTH)
+        nonce = os.urandom(PasswordStore.NONCE_LENGTH)
+        key = PasswordStoreSecret().derive_secret_key(salt)
+        encrypted = aes_gcm_encrypt(key, nonce, value)
         return (
             PasswordStore.VERSION.to_bytes(PasswordStore.VERSION_BYTE_LENGTH, byteorder="big")
             + salt
             + nonce
-            + tag
-            + encrypted
+            + encrypted.tag
+            + encrypted.ciphertext
         )
 
     @staticmethod
@@ -281,18 +245,11 @@ class PasswordStore:
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )
-        salt, rest = rest[: AES.block_size], rest[AES.block_size :]
-        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
-        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
-
-        return (
-            PasswordStore._cipher(
-                PasswordStore._secret_key(PasswordStore._passphrase(), salt),
-                nonce,
-            )
-            .decrypt_and_verify(encrypted, tag)
-            .decode("utf-8")
-        )
+        salt, rest = rest[: PasswordStore.SALT_LENGTH], rest[PasswordStore.SALT_LENGTH :]
+        nonce, rest = rest[: PasswordStore.NONCE_LENGTH], rest[PasswordStore.NONCE_LENGTH :]
+        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        key = PasswordStoreSecret().derive_secret_key(salt)
+        return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))
 
 
 _obfuscate = PasswordStore.encrypt

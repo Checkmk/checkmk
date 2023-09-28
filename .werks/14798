@@ -1,0 +1,14 @@
+Title: Extend discovery of cmciii waterflow sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676640648
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+If you're using cmciii waterflow sensors which where not exactly named "Waterflow",
+they haven't been discovered with Checkmk.
+Now all sensors containing "Waterflow" in their name will be discovered.
+

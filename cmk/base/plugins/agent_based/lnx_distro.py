@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Final
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -38,7 +39,7 @@ def inv_lnx_parse_os(line: _Line) -> _KVPairs:
     for entry in line:
         if entry.count("=") == 0:
             continue
-        k, v = [x.replace('"', "") for x in entry.split("=", 1)]
+        k, v = (x.replace('"', "") for x in entry.split("=", 1))
         if k == "VERSION_ID":
             yield "version", v
         elif k == "PRETTY_NAME":
@@ -67,11 +68,11 @@ def inv_lnx_parse_suse(line: _Line) -> _KVPairs:
     else:
         patchlevel = "0"
 
-    version = "%s.%s" % (major, patchlevel)
+    version = f"{major}.{patchlevel}"
 
     yield "vendor", "SuSE"
     yield "version", version
-    yield "name", "%s.%s" % (line[0].split("(")[0].strip(), patchlevel)
+    yield "name", "{}.{}".format(line[0].split("(")[0].strip(), patchlevel)
 
     if (code_name := _SUSE_CODE_NAMES.get(version)) is not None:
         yield "code_name", code_name
@@ -148,7 +149,7 @@ def inv_lnx_parse_debian(line: _Line) -> _KVPairs:
 
 def inv_lnx_parse_cma(line: _Line) -> _KVPairs:
     yield "name", "Checkmk Appliance " + line[0]
-    yield "vendor", "tribe29 GmbH"
+    yield "vendor", "Checkmk GmbH"
     yield "version", line[0]
     yield "code_name", None
 
@@ -175,7 +176,6 @@ _HANDLERS: Final = (
 
 
 def inventory_lnx_distro(section: Section) -> InventoryResult:
-
     for file_name, handler in _HANDLERS:
         if file_name in section:
             yield Attributes(

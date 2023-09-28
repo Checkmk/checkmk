@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-SectionDatabases = Dict[str, Dict[str, str]]
+SectionDatabases = dict[str, dict[str, str]]
 
 
 def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
@@ -36,10 +37,10 @@ def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
         if len(line) == 6:
             data = dict(zip(headers, line))
         elif len(line) == 7:
-            data = dict(zip(headers, line[:2] + ["%s %s" % (line[2], line[3])] + line[-3:]))
+            data = dict(zip(headers, line[:2] + [f"{line[2]} {line[3]}"] + line[-3:]))
         else:
             continue
-        parsed.setdefault("%s %s" % (data["Instance"], data["DBname"]), data)
+        parsed.setdefault("{} {}".format(data["Instance"], data["DBname"]), data)
 
     return parsed
 
@@ -81,15 +82,14 @@ def check_mssql_databases(
     for what in ["close", "shrink"]:
         state_int, state_readable = map_states[data["auto_%s" % what]]
         state_int = params.get("map_auto_%s_state" % what, {}).get(state_readable, state_int)
-        yield Result(state=State(state_int), summary="Auto %s: %s" % (what, state_readable))
+        yield Result(state=State(state_int), summary=f"Auto {what}: {state_readable}")
 
 
 def cluster_check_mssql_databases(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[SectionDatabases]],
+    section: Mapping[str, SectionDatabases | None],
 ) -> CheckResult:
-
     conflated_section: SectionDatabases = {}
     for node_data in section.values():
         conflated_section.update(node_data or {})

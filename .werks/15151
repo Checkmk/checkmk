@@ -1,0 +1,16 @@
+Title: azure_storageaccounts: Fix aggregation type and units in performance check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677573579
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+There were several bugs in the Azure Storage performance check plugin.
+Success server latency and End-to-end server latency had no units in the service
+summary and showed wrong units in the metrics. The aggregation of all three
+metrics was wrong, total instead of avergage, which led to incorrect values
+being shown.
+

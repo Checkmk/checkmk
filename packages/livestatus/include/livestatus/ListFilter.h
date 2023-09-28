@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,7 +6,8 @@
 #ifndef ListFilter_h
 #define ListFilter_h
 
-#include <algorithm>
+// NOTE: IWYU oscillates regarding <algorithm>.
+#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -17,11 +18,12 @@
 #include <vector>
 
 #include "livestatus/ColumnFilter.h"
-#include "livestatus/Filter.h"
 #include "livestatus/Row.h"
-#include "livestatus/opids.h"
-class RegExp;
+
+class Filter;
 class Logger;
+class RegExp;
+enum class RelationalOperator;
 class User;
 
 class ListFilter : public ColumnFilter {

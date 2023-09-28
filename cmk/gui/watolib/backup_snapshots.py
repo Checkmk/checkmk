@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import glob
 import io
 import os
@@ -15,17 +14,17 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, TypeVar
+from typing import Any, IO, Literal, NotRequired, TypeVar
 
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -123,7 +122,6 @@ def _do_create_snapshot(data: SnapshotData) -> None:
 
         # Initialize the snapshot tar file and populate with initial information
         with tarfile.open(filename_work, "w") as tar_in_progress:
-
             for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
                 # key is basically Literal["comment", "created_by", "type"] but
@@ -298,7 +296,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently using the Check_MK Micro Core, but this snapshot does not use the "
+                    "You are currently using the Checkmk Micro Core, but this snapshot does not use the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
@@ -306,7 +304,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if not using_cmc and snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently not using the Check_MK Micro Core, but this snapshot uses the "
+                    "You are currently not using the Checkmk Micro Core, but this snapshot uses the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
@@ -697,6 +695,5 @@ def _wipe_directory(path: str) -> None:
         else:
             try:
                 os.remove(p)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                pass

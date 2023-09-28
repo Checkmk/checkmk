@@ -1,0 +1,17 @@
+Title: omd_diskusage: Avoid Errors if Site Name is 'log' or 'rrd'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684155745
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk affects users who use the check plugin <tt>omd_diskusage</tt> (a 2.2.0 feature).
+
+If the name of the site is <tt>log</tt> or <tt>rrd</tt>, then the following error would be shown
+C+:
+Syntax error in expression ('('rrd', ... : too many operands left
+C-:
+With this Werk, this error is fixed.

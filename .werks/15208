@@ -1,0 +1,14 @@
+Title: users: fix error when changing the password for an existing user
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1675077204
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this werk, an error was raised when an user tried to change the
+password for an existing user if the DCD global setting was not configured.
+This werk resolves the issue.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,14 +14,13 @@
 # .1.3.6.1.4.1.14685.3.1.12.9.0 0 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummarylastack.0
 # .1.3.6.1.4.1.14685.3.1.12.10.0 24 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummarylisten.0
 # .1.3.6.1.4.1.14685.3.1.12.11.0 0 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummaryclosing.0
-from typing import List
 
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils import datapower, tcp_connections
 
 
-def parse_datapower_tcp(string_table: List[StringTable]) -> tcp_connections.TCPConnections:
+def parse_datapower_tcp(string_table: list[StringTable]) -> tcp_connections.TCPConnections:
     """
     >>> from pprint import pprint
     >>> pprint(parse_datapower_tcp([[

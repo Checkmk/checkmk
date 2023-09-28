@@ -1,0 +1,17 @@
+Title: SAML mellon_create_metadata is executable by default
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1685515259
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This Werk makes mellon_create_metadata executable.
+
+It is no longer necessary to run
+C+:
+chmod +x ~/bin/mellon_create_metadata
+C-:
+

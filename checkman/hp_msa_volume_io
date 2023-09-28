@@ -1,10 +1,10 @@
-title: HP MSA 2040: Volume IO
+title: HPE MSA 2040: Volume IO
 agents: linux
 catalog: hw/storagehw/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the IO summary of all volume of a HP MSA 2040 storage system.
+ This check monitors the IO summary of all volume of a HPE MSA 2040 storage system.
  To make it work you have to configure the hp_msa datasource program via WATO.
  With the WATO rule "Discovery mode for Disk IO check" the check
  monitors each volume IO.

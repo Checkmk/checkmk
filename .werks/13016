@@ -6,7 +6,7 @@ Date: 1654184028
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Make delete all events much faster.
 This is achieved by running one delete command

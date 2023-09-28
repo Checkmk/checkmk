@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-TARGET_DIR="${TARGET_DIR:-/opt}"
+TARGET_DIR="/opt"
 
 VALGRIND_VERSION=3.19.0
 DIR_NAME=valgrind-${VALGRIND_VERSION}

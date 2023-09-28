@@ -1,14 +1,16 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #include "livestatus/StringFilter.h"
 
+#include <compare>
 #include <utility>
 
 #include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
+#include "livestatus/opids.h"
 
 StringFilter::StringFilter(Kind kind, std::string columnName,
                            std::function<std::string(Row)> getValue,
@@ -19,7 +21,7 @@ StringFilter::StringFilter(Kind kind, std::string columnName,
 
 bool StringFilter::accepts(Row row, const User & /*user*/,
                            std::chrono::seconds /*timezone_offset*/) const {
-    std::string act_string = _getValue(row);
+    const std::string act_string = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:

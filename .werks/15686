@@ -1,0 +1,17 @@
+Title: Allow Links in HTML Emails
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1681816063
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With Werk #15069 escaping for the <tt>Insert HTML section between body and table</tt> section was introduced.
+Unfortunately links were not allowed anymore.
+
+This Werk removes the escaping for links.
+
+Links (<tt>a</tt>) are now allowed with the attributes <tt>href</tt> and <tt>target</tt>.
+The <tt>href</tt> needs to be either relative or when absolute must use one of the following URL schemas: <tt>http</tt>, <tt>https</tt>, <tt>mailto</tt>.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,13 +8,16 @@ import re
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
+
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -52,13 +55,14 @@ from cmk.gui.fields.utils import BaseSchema
         ("~DCN~DE.KAE.BS", True),
     ],
 )
-def test_folder_regexp(given, expected) -> None:  # type:ignore[no-untyped-def]
+def test_folder_regexp(given: str, expected: bool) -> None:
     regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")
     match = regexp.findall(given)
     assert bool(match) == expected, match
 
 
-def test_folder_schema(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_folder_schema() -> None:
     class FolderSchema(BaseSchema):
         folder = FolderField(required=True)
 
@@ -68,7 +72,9 @@ def test_folder_schema(request_context) -> None:  # type:ignore[no-untyped-def]
     assert schema.load({"folder": "~"})["folder"]
 
 
-def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_folder_validation(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, clients: ClientRegistry
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -86,6 +92,12 @@ def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
+    clients.Folder.create(
+        folder_name="\\",
+        title="test",
+        parent="~",
+        expect_ok=False,
+    )
 
 
 def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
@@ -98,149 +110,103 @@ def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK) -
     assert len(resp.json["value"]) == 1
 
 
-def test_openapi_folders(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_folders(clients: ClientRegistry) -> None:
+    resp = clients.Folder.get_all()
     assert resp.json["value"] == []
 
-    other_folder = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "other_folder", "title": "bar", "parent": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    # Create folder /other_folder with title = bar
+    clients.Folder.create(
+        parent="/",
+        folder_name="other_folder",
+        title="bar",
     )
 
-    resp = new_folder = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "~"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    # Create folder ~new_folder with title = foo
+    clients.Folder.create(
+        parent="~",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_agent": "no-agent", "tag_piggyback": "auto-piggyback"},
     )
 
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params=r'{"name": "sub_folder", "title": "foo", "parent": "~new_folder"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    # Create folder ~new_folder/sub_folder with title = foo
+    clients.Folder.create(
+        parent="~new_folder",
+        folder_name="sub_folder",
+        title="foo",
     )
 
     # First test without an ETag, fails with 428 (precondition required)
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=428,
-        headers={"Accept": "application/json"},
-        params='{"title": "foobar"}',
-        content_type="application/json",
-    )
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        etag=None,
+        expect_ok=False,
+    ).assert_status_code(428)
+
     # First test without the proper ETag, fails with 412 (precondition failed)
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=412,
-        headers={"Accept": "application/json", "If-Match": "Witty Sensationalist Header!"},
-        params='{"title": "foobar"}',
-        content_type="application/json",
-    )
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        etag="invalid_etag",
+        expect_ok=False,
+    ).assert_status_code(412)
+
     # With the right ETag, the operation shall succeed
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params='{"title": "foobar"}',
-        content_type="application/json",
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        etag="valid_etag",
     )
+
     # Even twice, as this is idempotent.
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params='{"title": "foobar"}',
-        content_type="application/json",
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=[],
+        etag="valid_etag",
     )
 
     # Move to the same source should give a 400
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "cmk/move",
-        status=400,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params=json.dumps({"destination": "~"}),
-        content_type="application/json",
-    )
+    clients.Folder.move(
+        folder_name="~new_folder",
+        destination="~",
+        expect_ok=False,
+    ).assert_status_code(400)
 
     # Check that unknown folders also give a 400
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "cmk/move",
-        status=400,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params=json.dumps({"destination": "asdf"}),
-        content_type="application/json",
-    )
+    clients.Folder.move(
+        folder_name="~new_folder",
+        destination="unknown_folder",
+        expect_ok=False,
+    ).assert_status_code(400)
 
     # Check that moving onto itself gives a 400
-    aut_user_auth_wsgi_app.follow_link(
-        other_folder,
-        "cmk/move",
-        status=400,
-        headers={"Accept": "application/json", "If-Match": other_folder.headers["ETag"]},
-        params=json.dumps({"destination": "~other_folder"}),
-        content_type="application/json",
-    )
+    clients.Folder.move(
+        folder_name="~other_folder",
+        destination="~other_folder",
+        expect_ok=False,
+    ).assert_status_code(400)
 
     # Check that moving into it's own subfolder is not possible.
-    aut_user_auth_wsgi_app.follow_link(
-        new_folder,
-        "cmk/move",
-        status=400,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params=json.dumps({"destination": "/new_folder/sub_folder"}),
-        content_type="application/json",
-    )
+    clients.Folder.move(
+        folder_name="~new_folder",
+        destination="/new_folder/sub_folder",
+        expect_ok=False,
+    ).assert_status_code(400)
 
-    aut_user_auth_wsgi_app.follow_link(
-        new_folder,
-        "cmk/move",
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        params=json.dumps({"destination": "\\other_folder"}),
-        content_type="application/json",
+    # Should succeed
+    clients.Folder.move(
+        folder_name="~new_folder",
+        destination="~other_folder",
     )
 
     # Delete all folders.
-    coll = aut_user_auth_wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    for entry in coll.json["value"]:
-        # Fetch the new E-Tag.
-        self_link = [link["href"] for link in entry["links"] if link["rel"] == "self"]
-        resp = aut_user_auth_wsgi_app.get(
-            self_link[0],
-            status=200,
-            headers={"Accept": "application/json"},
-        )
-        # With the right ETag, the operation shall succeed
-        aut_user_auth_wsgi_app.follow_link(
-            resp,
-            ".../delete",
-            status=204,
-            headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        )
+    for folder_obj in clients.Folder.get_all().json["value"]:
+        clients.Folder.delete(folder_name=folder_obj["id"])
 
 
 def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
@@ -280,9 +246,8 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-def test_openapi_folder_hosts_sub_resource(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_host
-) -> None:
+@pytest.mark.usefixtures("with_host")
+def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts",
@@ -373,12 +338,12 @@ def test_openapi_create_folder_with_network_scan(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=json.dumps(
-            dict(
-                name="my_folder_name",
-                title="some title",
-                parent="~",
-                attributes=dict(
-                    network_scan={
+            {
+                "name": "my_folder_name",
+                "title": "some title",
+                "parent": "~",
+                "attributes": {
+                    "network_scan": {
                         "addresses": [
                             {"type": "network_range", "network": "172.10.9.0/24"},
                             {
@@ -401,8 +366,8 @@ def test_openapi_create_folder_with_network_scan(
                         "run_as": user,
                         "translate_names": {"drop_domain": True, "convert_case": "lower"},
                     }
-                ),
-            )
+                },
+            }
         ),
         status=200,
         headers={"Accept": "application/json"},
@@ -583,126 +548,84 @@ def test_openapi_update_with_invalid_attribute_folder(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_actions_folders(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_bulk_actions_folders(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="~",
+        folder_name="new_folder",
+        title="foo",
     )
 
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/folder_config/actions/bulk-update/invoke",
-        params=json.dumps(
+    # remove an attribute that the folder doesn't have
+    clients.Folder.bulk_edit(
+        entries=[
             {
-                "entries": [{"folder": "~new_folder", "remove_attributes": ["tag_foobar"]}],
+                "folder": "~new_folder",
+                "remove_attributes": ["tag_foobar"],
             }
-        ),
-        status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
 
     # add tag_address_family
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/folder_config/actions/bulk-update/invoke",
-        params=json.dumps(
+    clients.Folder.bulk_edit(
+        entries=[
             {
-                "entries": [
-                    {
-                        "folder": "~new_folder",
-                        "update_attributes": {"tag_address_family": "ip-v4-only"},
-                    }
-                ],
+                "folder": "~new_folder",
+                "attributes": {"tag_address_family": "ip-v4-only"},
             }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+        ],
     )
 
     # check label was added
-    resp = aut_user_auth_wsgi_app.get(
-        base + "/objects/folder_config/~new_folder",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    resp = clients.Folder.get("~new_folder")
     assert resp.json["extensions"]["attributes"]["tag_address_family"] == "ip-v4-only"
 
     # remove tag_address_family
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/folder_config/actions/bulk-update/invoke",
-        params=json.dumps(
+    clients.Folder.bulk_edit(
+        entries=[
             {
-                "entries": [{"folder": "~new_folder", "remove_attributes": ["tag_address_family"]}],
+                "folder": "~new_folder",
+                "remove_attributes": ["tag_address_family"],
             }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+        ],
     )
 
     # check label was removed
-    resp = aut_user_auth_wsgi_app.get(
-        base + "/objects/folder_config/~new_folder",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    resp = clients.Folder.get("~new_folder")
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_folder_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "fooo", "parent": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_folder_update(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_address_family": "ip-v6-only"},
     )
 
     # make sure we can update a folder without title argument (SUP-7195)
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/folder_config/~new_folder",
-        params=json.dumps({"update_attributes": {"tag_address_family": "no-ip"}}),
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
+    resp = clients.Folder.edit(
+        folder_name="~new_folder",
+        update_attributes={"tag_address_family": "no-ip"},
     )
+
     # title should not change
-    assert resp.json["title"] == "fooo"
+    assert resp.json["title"] == "foo"
+
     # double check
-    resp = aut_user_auth_wsgi_app.follow_link(resp, "self", headers={"Accept": "application/json"})
-    assert resp.json["title"] == "fooo"
+    resp = clients.Folder.get("~new_folder")
+    assert resp.json["title"] == "foo"
 
     # actually change the title
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/folder_config/~new_folder",
-        params=json.dumps(
-            {
-                "title": "fo",
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
+    resp = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="fo",
     )
-    # title should be updated
     assert resp.json["title"] == "fo"
+
     # double check
-    resp = aut_user_auth_wsgi_app.follow_link(resp, "self", headers={"Accept": "application/json"})
+    resp = clients.Folder.get("~new_folder")
     assert resp.json["title"] == "fo"
 
 
@@ -717,44 +640,30 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     )
 
 
-def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"tag_address_family": "ip-v6-only"}}',
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
+def test_openapi_folder_remove_attribute(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_address_family": "ip-v6-only"},
     )
 
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        status=200,
-        params=json.dumps(
-            {
-                "title": "foo",
-                "remove_attributes": ["tag_address_family"],
-            }
-        ),
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
+    resp = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="food",
+        remove_attributes=["tag_address_family"],
     )
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
     # make sure changes are written to disk:
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "self",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    resp = clients.Folder.get("~new_folder")
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
 
 
-def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-untyped-def]
+def test_openapi_folder_config_collections_recursive_list(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
-    def _create_folder(fname: str, parent: str):  # type:ignore[no-untyped-def]
+) -> None:
+    def _create_folder(fname: str, parent: str) -> None:
         params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
         aut_user_auth_wsgi_app.call_method(
             "post",
@@ -766,7 +675,7 @@ def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-unt
         )
         parent += f"{fname}~"
 
-    def _create_folders_recursive(folders: Sequence[str]):  # type:ignore[no-untyped-def]
+    def _create_folders_recursive(folders: Sequence[str]) -> None:
         _create_folder(folders[0], "~")
         parent = f"~{folders[0]}"
         for fname in folders[1:]:
@@ -788,7 +697,9 @@ def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-unt
         assert "batman" not in folder["id"]
 
 
-@pytest.mark.skipif(version.is_raw_edition(), reason="Tested Attribute is not in RAW")
+@pytest.mark.skipif(
+    version.edition() is version.Edition.CRE, reason="Tested Attribute is not in RAW"
+)
 def test_bake_agent_package_attribute_regression(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
@@ -821,4 +732,180 @@ def test_bake_agent_package_attribute_regression(
         url=base + "/domain-types/folder_config/collections/all",
         headers={"Accept": "application/json"},
         status=200,
+    )
+
+
+def test_delete_root_folder(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    resp = aut_user_auth_wsgi_app.delete(
+        url=base + "/objects/folder_config/~",
+        headers={"Accept": "application/json"},
+        status=401,
+    )
+    assert resp.json["title"] == "Problem deleting folder."
+    assert resp.json["detail"] == "Deleting the root folder is not permitted."
+
+
+def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> None:
+    r = clients.Folder.create(
+        folder_name="",
+        title="some_foldeer_title",
+        parent="~",
+        expect_ok=False,
+    )
+    assert r.json["detail"] == "These fields have problems: name"
+    assert r.json["fields"]["name"][0] == "string '' is too short. The minimum length is 1."
+
+
+def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-2"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-3"
+
+    wato_dir = Path(paths.omd_root, paths.check_mk_config_dir, "wato")
+    assert (wato_dir / "a_duplicate").exists()
+    assert (wato_dir / "a_duplicate-2").exists()
+    assert (wato_dir / "a_duplicate-3").exists()
+
+    folders = [folder["id"] for folder in clients.Folder.get_all().json["value"]]
+    assert "~a_duplicate" in folders
+    assert "~a_duplicate-2" in folders
+    assert "~a_duplicate-3" in folders
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_update_actions(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="~",
+        folder_name="new_folder",
+        title="foo",
+    )
+
+    clients.Folder.bulk_edit(
+        entries=[
+            {
+                "folder": "~new_folder",
+                "update_attributes": {"tag_address_family": "ip-v4-only"},
+            }
+        ],
+    )
+
+    # check label was added
+    resp = clients.Folder.get("~new_folder")
+    assert resp.json["extensions"]["attributes"]["tag_address_family"] == "ip-v4-only"
+
+    # remove tag_address_family
+    clients.Folder.bulk_edit(
+        entries=[
+            {
+                "folder": "~new_folder",
+                "remove_attributes": ["tag_address_family"],
+            }
+        ],
+    )
+
+    # check label was removed
+    resp = clients.Folder.get("~new_folder")
+    assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="~",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_address_family": "ip-v6-only"},
+    )
+
+    resp1 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp1.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp2 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp2.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp3 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp3.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp4 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        etag=None,
+        expect_ok=False,
+    )
+    resp4.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+
+invalid_folder_names = (
+    "folderA\\n",
+    "folderB\n",
+    "folder\nC",
+    "\nfolderD",
+)
+
+
+@pytest.mark.parametrize("folder_name", invalid_folder_names)
+def test_create_folder_name_with_newline(
+    clients: ClientRegistry,
+    folder_name: str,
+) -> None:
+    resp = clients.Folder.create(
+        title="not_important",
+        parent="/",
+        folder_name=folder_name,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{folder_name!r} does not match pattern '^[-\\\\w]*\\\\Z'."
     )

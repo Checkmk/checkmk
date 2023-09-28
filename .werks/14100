@@ -6,12 +6,12 @@ Date: 1655443262
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The following change only affects the discovery of the <tt>df</tt> check plugin.
 All other "<i>Filesystem</i>" services are not affected.
 
-The service discovery of the <tt>df</tt> plugin no longer respects rules configured using the "<i>Filesystem grouping patterns</i"<  ruleset.
+The service discovery of the <tt>df</tt> plugin no longer respects rules configured using the "<i>Filesystem grouping patterns</i>"  ruleset.
 The discovery of the <tt>df</tt> plugin can also be configured by the ruleset "<i>Filesystem discovery</i>", which now supports the configuration of those grouping patterns.
 If you configured such grouping patterns for the <tt>df</tt> check, you have to add the corresponding options to the ruleset "<i>Filesystem discovery</i>".
 

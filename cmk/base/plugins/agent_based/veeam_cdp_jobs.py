@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple, TypedDict
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -37,14 +40,19 @@ Section = Mapping[str, CDPJob]
 
 
 class CheckParams(TypedDict):
-    age: Tuple[float, float]
+    age: tuple[float, float]
 
 
 def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:
+    def _sanitize_last_sync(last_sync: str) -> float:
+        # Some agent outputs may provide lines like:
+        # ['"JOB-NAME"', '1695809510,31277', 'Running']
+        return float(last_sync.replace(",", "."))
+
     return {
         name: CDPJob(
             name,
-            None if last_sync == "null" else time.time() - float(last_sync),
+            None if last_sync == "null" else time.time() - _sanitize_last_sync(last_sync),
             CDPState(state),
         )
         for name, last_sync, state in string_table

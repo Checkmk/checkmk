@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,9 +13,9 @@ import traceback
 from pathlib import Path
 from typing import Any, Literal
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root, var_dir
 from cmk.utils.render import fmt_bytes
-from cmk.utils.type_defs import HostName
 
 opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv
@@ -60,7 +60,7 @@ def _read_config() -> None:
     globals().update(default_config)
 
     try:
-        exec(config_file.read_text(), globals(), globals())
+        exec(config_file.read_text(), globals(), globals())  # nosec B102 # BNS:aee528
     except OSError:
         pass  # ignore non existant config
     except Exception as e:
@@ -127,7 +127,7 @@ def _load_plugins() -> None:
             path = base_dir / file_name
             _verbose("Loading plugin: %s" % path)
             try:
-                exec(
+                exec(  # nosec B102 # BNS:aee528
                     path.read_text(),
                     plugins[file_name],
                     plugins[file_name],
@@ -310,7 +310,7 @@ def _get_configured_hosts() -> tuple[set, set, bool]:
     if (
         distr_wato_filepath := Path("~/etc/check_mk/conf.d/distributed_wato.mk").expanduser()
     ).exists():
-        exec(
+        exec(  # nosec B102 # BNS:aee528
             distr_wato_filepath.read_text(),
             file_vars,
             file_vars,

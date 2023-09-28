@@ -1,0 +1,16 @@
+Title: SNMPv3 contexts: reintroducing 'All SNMP sections' option
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1670396768
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Previously, werk 11114 unintentionally removed the option from the
+dropdown list which consequently led to an error when a user tried
+to upgrade for example from the 1.6 to the 2.0 version. This werk
+fixes this problem by reintroducing the option.
+

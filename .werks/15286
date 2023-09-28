@@ -1,0 +1,17 @@
+Title: mk_oracle.ps1: fix async execution with multiple SIDs
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1685517883
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+On systems with multiple SIDs, only the first database async job was started,
+when the second database gets to the async code, it realizes that the PID from
+the async proc is still running and didn't start a new process.
+
+We now create one proc file per SID so one async porcess will be started for
+each SID.
+

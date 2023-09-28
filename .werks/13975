@@ -1,0 +1,15 @@
+Title: 'group' parameter has been removed from rulset search
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677502729
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The 'group' query parameter in the ruleset search/list endpoint
+(GET "/domain-types/ruleset/collections/all") has been removed, since
+it was non functional and didn't make much sense in the context
+of a ruleset search.
+

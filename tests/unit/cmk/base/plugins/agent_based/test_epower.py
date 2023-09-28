@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -52,6 +54,16 @@ UPS_POWER_0 = """
 .1.3.6.1.2.1.33.1.4.4.1.4.3  4800
 """
 
+# power is 0
+UPS_POWER_1 = """
+.1.3.6.1.2.1.33.1.4.4.1.2.1  230
+.1.3.6.1.2.1.33.1.4.4.1.2.2  230
+.1.3.6.1.2.1.33.1.4.4.1.2.3  229
+.1.3.6.1.2.1.33.1.4.4.1.4.1  0
+.1.3.6.1.2.1.33.1.4.4.1.4.2  3500
+.1.3.6.1.2.1.33.1.4.4.1.4.3  4800
+"""
+
 
 @pytest.mark.parametrize(
     "walk, section_name, result",
@@ -89,8 +101,13 @@ UPS_POWER_0 = """
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_power_discover(walk: str, section_name: SectionName, result: DiscoveryResult) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
+def test_power_discover(
+    walk: str,
+    section_name: SectionName,
+    result: DiscoveryResult,
+    as_path: Callable[[str], Path],
+) -> None:
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
 
     assert list(discover_epower(parsed)) == result
 
@@ -175,12 +192,25 @@ def test_power_discover(walk: str, section_name: SectionName, result: DiscoveryR
             ],
             id="ups-power-2-crit",
         ),
+        pytest.param(
+            UPS_POWER_1,
+            SectionName("ups_power"),
+            "1",
+            {},
+            [Result(state=State.OK, summary="Power: 0 W"), Metric("power", 0.0)],
+            id="ups-power is 0",
+        ),
     ],
 )
 @pytest.mark.usefixtures("fix_register")
 def test_epower_check(
-    walk: str, section_name: SectionName, item: str, params: Any, result: CheckResult
+    walk: str,
+    section_name: SectionName,
+    item: str,
+    params: Any,
+    result: CheckResult,
+    as_path: Callable[[str], Path],
 ) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
 
     assert list(check_epower(item=item, params=params, section=parsed)) == result

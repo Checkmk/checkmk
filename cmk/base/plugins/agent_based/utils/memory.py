@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
+from collections.abc import Mapping
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import Metric, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
-MemoryLevels = Tuple[_LevelsMode, Tuple[Optional[float], Optional[float]]]
+MemoryLevels = tuple[_LevelsMode, tuple[float | None, float | None]]
 
 SectionMem = Mapping[str, int]
 
@@ -36,7 +39,7 @@ def is_linux_section(section: SectionMem) -> bool:
     } <= section.keys()
 
 
-def get_levels_mode_from_value(warn: Optional[float]) -> _LevelsMode:
+def get_levels_mode_from_value(warn: float | None) -> _LevelsMode:
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -59,12 +62,12 @@ def get_levels_mode_from_value(warn: Optional[float]) -> _LevelsMode:
 
 def normalize_levels(
     mode: _LevelsMode,
-    warn: Optional[float],
-    crit: Optional[float],
+    warn: float | None,
+    crit: float | None,
     total: float,
-    _perc_total: Optional[float] = None,
+    _perc_total: float | None = None,
     render_unit: int = 1,
-) -> Union[Tuple[float, float, str], Tuple[None, None, str]]:
+) -> tuple[float, float, str] | tuple[None, None, str]:
     """get normalized levels and formatter
 
     Levels may be given either as
@@ -87,17 +90,17 @@ def normalize_levels(
 
     mode_split = mode.split("_", 1)
     if mode_split[0] not in ("perc", "abs") or mode_split[-1] not in ("used", "free"):
-        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+        raise NotImplementedError(f"unknown levels mode: {mode!r}")
 
     # normalize percent -> absolute
     if mode.startswith("perc"):
         warn_used = warn / 100.0 * _perc_total
         crit_used = crit / 100.0 * _perc_total
-        levels_text = "%s/%s" % (render.percent(warn), render.percent(crit))
+        levels_text = f"{render.percent(warn)}/{render.percent(crit)}"
     else:  # absolute
         warn_used = float(warn)
         crit_used = float(crit)
-        levels_text = "%s/%s" % (render.bytes(warn * render_unit), render.bytes(crit * render_unit))
+        levels_text = f"{render.bytes(warn * render_unit)}/{render.bytes(crit * render_unit)}"
 
     # normalize free -> used
     if mode.endswith("free"):
@@ -110,7 +113,7 @@ def normalize_levels(
     return warn_used, crit_used, levels_text
 
 
-def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> State:
+def compute_state(value: float, warn: float | None, crit: float | None) -> State:
     """get state according to levels
 
     >>> print(compute_state(23., 12, 42))
@@ -129,10 +132,10 @@ def check_element(
     used: float,
     total: float,
     # levels: we can deal with anything, though
-    levels: Optional[MemoryLevels] = None,
+    levels: MemoryLevels | None = None,
     label_total: str = "",
     show_free: bool = False,
-    metric_name: Optional[str] = None,
+    metric_name: str | None = None,
     create_percent_metric: bool = False,
 ) -> CheckResult:
     """Yield a check result and metric for one memory element
@@ -159,7 +162,7 @@ def check_element(
         show_value = used
         show_text = ""
 
-    infotext = "%s: %s%s - %s of %s%s" % (
+    infotext = "{}: {}{} - {} of {}{}".format(
         label,
         render.percent(100.0 * show_value / total),
         show_text,
@@ -169,7 +172,7 @@ def check_element(
     )
 
     try:
-        mode, (warn, crit) = levels  # type: ignore
+        mode, (warn, crit) = levels  # type: ignore[misc]
     except (ValueError, TypeError):  # handle None, "ignore"
         warn, crit, levels_text = None, None, ""
     else:
@@ -177,7 +180,7 @@ def check_element(
 
     my_state = compute_state(used, warn, crit)
     if my_state != State.OK and levels_text:
-        infotext = "%s (%s)" % (infotext, levels_text)
+        infotext = f"{infotext} ({levels_text})"
     yield Result(state=my_state, summary=infotext)
 
     if metric_name:

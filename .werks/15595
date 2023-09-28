@@ -1,0 +1,14 @@
+Title: aux_tag: editing a builtin aux tag is not allowed
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680514787
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue when trying to edit a builtin auxilliary tag.
+Previously this would cause a 500 Internal Server Error. With this change
+we now return a 404 response with an appropriate error message.
+

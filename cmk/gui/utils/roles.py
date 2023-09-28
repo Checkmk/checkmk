@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Final, Literal
 
-import cmk.utils.paths
-from cmk.utils.type_defs import UserId
+from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.user import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import active_config
@@ -36,7 +36,7 @@ _default_admin_permissions: Final[frozenset[str]] = frozenset(
     {
         "general.use",  # use Multisite
         "wato.use",  # enter WATO
-        "wato.edit",  # make changes in WATO...
+        "wato.edit",  # make changes in Setup...
         "wato.users",  # ... with access to user management
     }
 )
@@ -90,11 +90,17 @@ def is_user_with_publish_permissions(
         if for_type == "visual"
         else "general.publish_to_foreign_groups_%s" % type_name
     )
+    publish_sites_permission: str = (
+        "general.publish_" + type_name + "_to_sites"
+        if for_type == "visual"
+        else "general.publish_to_sites_%s" % type_name
+    )
 
     return (
         user_may(user_id, publish_all_permission)
         or user_may(user_id, publish_groups_permission)
         or user_may(user_id, publish_foreign_groups_permission)
+        or user_may(user_id, publish_sites_permission)
     )
 
 
@@ -110,10 +116,7 @@ def roles_of_user(user_id: UserId | None) -> list[str]:
         return ["guest"]
     if active_config.users is not None and user_id in active_config.users:
         return ["user"]
-    if (
-        user_id is not None
-        and cmk.utils.paths.profile_dir.joinpath(user_id, "automation.secret").exists()
-    ):
+    if user_id is not None and AutomationUserSecret(user_id).exists():
         return ["guest"]  # unknown user with automation account
     if "roles" in active_config.default_user_profile:
         return existing_role_ids(active_config.default_user_profile["roles"])

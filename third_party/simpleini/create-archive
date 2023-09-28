@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+# Just for reference, not intended to be used in development
+
+curl --silent \
+    --show-error \
+    --fail \
+    --location \
+    -o simpleini-4.17.tar.gz \
+    https://github.com/brofield/simpleini/archive/refs/tags/4.17.zip

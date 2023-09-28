@@ -16,7 +16,7 @@ description:
  You can configure upper levels for all three types of memory utilization (Total, FB, BAR1).
 
 item:
- PCI bus ID of the graphics card without the leading zeroes
+ PCI bus ID of the graphics card
 
 discovery:
  One service is created for each available graphics card if the necessary

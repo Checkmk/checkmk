@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,7 +30,9 @@ _VMS_IF_COUNTERS_ORDER = [
 ]
 
 
-def parse_vms_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_vms_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(

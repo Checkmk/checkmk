@@ -1,0 +1,13 @@
+Title: Improved host/service label filters
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1675768094
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+This change implements the current main feature request from the Checkmk feature portal: Host and service label filters now allow for more complex queries, using logical operators 'and', 'or', 'not'.
+Additionally, the labels to filter by can be grouped, and label groups can be connected through the logical operators 'and', 'or', 'not' as well.
+Existing label filter configurations of custom views, dashboards and reports are transformed to the new ones. For each, host and service labels, all labels are written into one group and connected by 'and' to persist the former filtering outcome.

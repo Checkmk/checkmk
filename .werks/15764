@@ -1,0 +1,13 @@
+Title: xinetd: Migrate old xinetd service if template file exists
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1686924008
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the cleanup function didn't do the migration of an old
+xinetd service if /etc/check_mk/xinetd-service-template.cfg was present.
+

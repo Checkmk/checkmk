@@ -1,0 +1,14 @@
+Title: saml2: resolve login after migrating user to saml2 connector
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1684833765
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, login with SAML2 failed whenever an existing
+user was migrated to use the SAML2 connector. This werk fixes this
+issue.
+

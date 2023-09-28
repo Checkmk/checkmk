@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, Mapping, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils import multipath
 
@@ -126,7 +129,7 @@ def parse_multipath(  # pylint: disable=too-many-branches
             if reg_prio.search(l):
                 group["state"] = "".join(line[3:])
             elif len(line) >= 4 and reg_lun.match(line[1]):
-                luninfo = "%s(%s)" % (line[1], line[2])
+                luninfo = f"{line[1]}({line[2]})"
                 lun_info.append(luninfo)
                 state = line[4]
                 if "active" not in state:
@@ -147,7 +150,6 @@ register.agent_section(
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
-
     for uuid, group in section.items():
         # take current number of paths as target value
         yield Service(

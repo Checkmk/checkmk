@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -39,7 +39,7 @@ class TestValueSpecDropdownChoice:
             get_dropdown_choice(invalid_choice="replace"),
             "asd",
         )
-        expect_validate_failure(  # type: ignore
+        expect_validate_failure(  # type: ignore[misc]
             get_dropdown_choice(),
             1,
             match="The value 1 has type int, but does not match any of the available choice types.",
@@ -56,7 +56,7 @@ class TestValueSpecDropdownChoice:
             get_dropdown_choice(choices=[]).validate_value(None, "")
 
         # this one works, although its a typing error
-        get_dropdown_choice(deprecated_choices=[77]).validate_datatype(77, "")  # type: ignore
+        get_dropdown_choice(deprecated_choices=[77]).validate_datatype(77, "")  # type: ignore[arg-type]
 
     def test_mask(self) -> None:
         assert get_dropdown_choice().mask("hunter2") == "hunter2"

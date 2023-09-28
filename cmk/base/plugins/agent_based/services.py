@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Generator, Mapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,7 +33,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # <state> is the expected state to inventorize services of (running, stopped, ...)
 # <start_mode> is the expected state to inventorize services of (auto, manual, ...)
 
-WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: Dict[str, Any] = {}
+WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: dict[str, Any] = {}
 
 WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
     "states": [("running", None, 0)],
@@ -50,7 +51,7 @@ class WinService(NamedTuple):
     description: str
 
 
-Section = List[WinService]  # deterministic order!
+Section = list[WinService]  # deterministic order!
 
 
 def parse_windows_services(string_table: StringTable) -> Section:
@@ -72,7 +73,7 @@ register.agent_section(
 
 def _extract_wato_compatible_rules(
     params: Sequence[Mapping[str, Any]],
-) -> Sequence[Tuple[Optional[str], Optional[str], Optional[str]]]:
+) -> Sequence[tuple[str | None, str | None, str | None]]:
     return [
         (pattern, rule.get("state"), rule.get("start_mode"))
         # If no rule is set by user, *no* windows services should be discovered.
@@ -84,9 +85,9 @@ def _extract_wato_compatible_rules(
 
 def _add_matching_services(
     service: WinService,
-    pattern: Optional[str],
-    state: Optional[str],
-    mode: Optional[str],
+    pattern: str | None,
+    state: str | None,
+    mode: str | None,
 ) -> DiscoveryResult:
     if pattern:
         # First match name or description (optional since rule based config option available)
@@ -168,7 +169,7 @@ def check_windows_services(
 def cluster_check_windows_services(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their

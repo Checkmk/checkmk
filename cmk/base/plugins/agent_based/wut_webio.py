@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check plugin for W&T WebIO device
@@ -8,7 +8,8 @@ Knowledge:
 * a device can potentially be in an Unknown state for different reasons such as an occasional
 firmware problem
 """
-from typing import Any, List, Literal, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     any_of,
@@ -59,7 +60,7 @@ AS_DISCOVERED = "as_discovered"
 STATES_DURING_DISC_KEY = "states_during_discovery"
 
 
-def parse_wut_webio(string_table: List[type_defs.StringTable]) -> Optional[Section]:
+def parse_wut_webio(string_table: list[type_defs.StringTable]) -> Section | None:
     # We may have a EA12x6, EA2x2 or EA12x12
     webio_data = string_table[0] or string_table[1] or string_table[2]
     if not webio_data:
@@ -95,7 +96,6 @@ def _get_state_evaluation_from_state(state: str) -> Mapping[str, int]:
 
 
 def discover_wut_webio(section: Section) -> type_defs.DiscoveryResult:
-
     yield from [
         Service(item=item, parameters={STATES_DURING_DISC_KEY: input_.state})
         for item, input_ in section.items()

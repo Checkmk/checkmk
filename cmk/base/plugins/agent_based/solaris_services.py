@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, Sequence, TypedDict
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -94,7 +97,7 @@ def _state_match(rule_state: str | None, state: str) -> bool:
 
 
 def _get_svc_name(svc_attrs: SolarisService) -> str:
-    return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
+    return "{}/{}:{}".format(svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
 
 def discover_solaris_services(
@@ -144,7 +147,7 @@ def check_solaris_services(item: str, params: Mapping[str, Any], section: Sectio
                     break
             yield Result(
                 state=State(check_state),
-                summary="Status: %s, %s" % (svc_state, info_stime),
+                summary=f"Status: {svc_state}, {info_stime}",
             )
             return
 

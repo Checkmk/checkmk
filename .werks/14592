@@ -1,0 +1,20 @@
+Title: PSU Capacity Levels: Remove error message during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678447291
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+During discovery the following error could occur
+C+:
+Invalid check parameter: PSU Capacity Levels: The value 80 has type int, but must be of type float
+Variable: checkgroup_parameters:hw_psu
+Parameters:
+{'levels': (80, 90)}
+C-:
+This error is cosmetic in nature and does not affect the behaviour of the check.
+This werk fixes the issue.
+

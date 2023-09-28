@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -43,8 +43,7 @@ def testconfig_engine(request, make_yaml_config):
             "enabled": "yes",
             "timeout": 60,
             "config": [
-                "check = %s '%s'"
-                % (Globals.checkname, os.path.join(Globals.mrpedir, Globals.pluginname))
+                f"check = {Globals.checkname} '{os.path.join(Globals.mrpedir, Globals.pluginname)}'"
             ],
         }
     else:
@@ -60,8 +59,7 @@ def testconfig_engine(request, make_yaml_config):
 def expected_output_engine():
     expected = [
         re.escape(r"<<<%s>>>" % Globals.section),
-        r"\(%s\) %s 2 CRIT - This check is always critical"
-        % (Globals.pluginname, Globals.checkname),
+        rf"\({Globals.pluginname}\) {Globals.checkname} 2 CRIT - This check is always critical",
     ]
     if not Globals.alone:
         expected += [re.escape(r"<<<systemtime>>>"), r"\d+"]
@@ -107,8 +105,6 @@ def manage_plugin(request):
             os.unlink(os.path.join(target_dir, Globals.cfgfile))
 
 
-def test_section_mrpe(  # type:ignore[no-untyped-def]
-    request, testconfig, expected_output, actual_output, testfile
-) -> None:
+def test_section_mrpe(request, testconfig, expected_output, actual_output, testfile) -> None:  # type: ignore[no-untyped-def]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

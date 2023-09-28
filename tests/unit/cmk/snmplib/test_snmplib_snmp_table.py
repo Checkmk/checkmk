@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 
 import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
+import cmk.snmplib._table as _snmp_table
+from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
+    ensure_str,
+    get_snmp_table,
     SNMPBackend,
     SNMPBackendEnum,
     SNMPHostConfig,
@@ -24,12 +28,14 @@ from cmk.snmplib.type_defs import (
     SpecialColumn,
 )
 
+from cmk.checkengine.fetcher import SourceType
+
 from cmk.base.config import ConfigCache
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
     hostname=HostName("testhost"),
-    ipaddress="1.2.3.4",
+    ipaddress=HostAddress("1.2.3.4"),
     credentials="",
     port=42,
     is_bulkwalk_host=False,
@@ -44,10 +50,10 @@ SNMPConfig = SNMPHostConfig(
 
 
 class SNMPTestBackend(SNMPBackend):
-    def get(self, oid, context_name=None):
+    def get(self, /, oid, *, context):
         pass
 
-    def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
+    def walk(self, /, oid, *, context, **kw):
         return [(f"{oid}.{r}", b"C0FEFE") for r in (1, 2, 3)]
 
 
@@ -76,14 +82,14 @@ def test_get_snmp_table(
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table(
+            return get_snmp_table(
                 section_name=SectionName("unit_test"),
                 tree=info,
                 walk_cache={},
                 backend=backend,
             )
         return [
-            snmp_table.get_snmp_table(
+            get_snmp_table(
                 section_name=SectionName("unit_test"),
                 tree=i,
                 walk_cache={},
@@ -96,7 +102,7 @@ def test_get_snmp_table(
 
 
 @pytest.mark.parametrize(
-    "encoding,columns,expected",
+    "encoding, columns, expected",
     [
         (None, [([b"\xc3\xbc"], "string")], [["ü"]]),  # utf-8
         (None, [([b"\xc3\xbc"], "binary")], [[[195, 188]]]),  # utf-8
@@ -108,26 +114,14 @@ def test_get_snmp_table(
     ],
 )
 def test_sanitize_snmp_encoding(
-    monkeypatch: MonkeyPatch,
     encoding: str | None,
-    columns: snmp_table.ResultColumnsSanitized,
-    expected: snmp_table.ResultColumnsDecoded,
+    columns: _snmp_table._ResultColumnsSanitized,
+    expected: _snmp_table._ResultColumnsDecoded,
 ) -> None:
-    ts = Scenario()
-    ts.add_host("localhost")
-    ts.set_ruleset(
-        "snmp_character_encodings",
-        [
-            {
-                "condition": {},
-                "value": encoding,
-            },
-        ],
+    assert (
+        _snmp_table._sanitize_snmp_encoding(columns, partial(ensure_str, encoding=encoding))
+        == expected
     )
-    config_cache = ts.apply(monkeypatch)
-
-    snmp_config = config_cache.make_snmp_config("localhost", "")
-    assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -136,11 +130,21 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
         "bulkwalk_hosts",
         [{"condition": {"host_name": ["localhost"]}, "value": True}],
     )
-    ts.add_host("abc")
-    ts.add_host("localhost")
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("localhost"))
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_snmp_config("abc", "").is_bulkwalk_host is False
-    assert config_cache.make_snmp_config("localhost", "").is_bulkwalk_host is True
+    assert (
+        config_cache.make_snmp_config(
+            HostName("abc"), HostAddress("1.2.3.4"), SourceType.HOST
+        ).is_bulkwalk_host
+        is False
+    )
+    assert (
+        config_cache.make_snmp_config(
+            HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
+        ).is_bulkwalk_host
+        is True
+    )
 
 
 def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
@@ -153,18 +157,18 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
         "snmpv2c_hosts",
         [{"condition": {"host_name": ["v2c_h"]}, "value": True}],
     )
-    ts.add_host("bulkwalk_h")
-    ts.add_host("v2c_h")
-    ts.add_host("not_included")
+    ts.add_host(HostName("bulkwalk_h"))
+    ts.add_host(HostName("v2c_h"))
+    ts.add_host(HostName("not_included"))
     monkeypatch.setattr(ConfigCache, "_is_inline_backend_supported", lambda *args: True)
 
     config_cache = ts.apply(monkeypatch)
 
     # not bulkwalk and not v2c
-    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.CLASSIC
-    assert config_cache.get_snmp_backend("bulkwalk_h") is SNMPBackendEnum.INLINE
-    assert config_cache.get_snmp_backend("v2c_h") is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.CLASSIC
+    assert config_cache.get_snmp_backend(HostName("bulkwalk_h")) is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("v2c_h")) is SNMPBackendEnum.INLINE
 
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
-    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE

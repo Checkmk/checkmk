@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import copy
 import json
+import re
 import time
 from collections.abc import Sequence
-from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
-from cmk.utils.type_defs import UserId
+from typing_extensions import TypedDict
+
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.git
 from cmk.gui.config import active_config
@@ -24,7 +29,28 @@ from cmk.gui.watolib.paths import wato_var_dir
 LogMessage = str | HTML | LazyString
 
 
+class AuditLogFilter(TypedDict, total=False):
+    timestamp_from: int
+    timestamp_to: int
+    object_type: str
+    object_ident: str
+    user_id: str
+    filter_regex: str
+
+
+class AuditLogFilterRaw(TypedDict, total=False):
+    timestamp_from: int
+    timestamp_to: int
+    object_type: str | None
+    object_ident: str | None
+    user_id: str | None
+    filter_regex: str | None
+
+
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
+    def __init__(self) -> None:
+        super().__init__(wato_var_dir() / "log" / "wato_audit.log")
+
     class Entry(NamedTuple):
         time: int
         object_ref: ObjectRef | None
@@ -33,27 +59,34 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         text: LogMessage
         diff_text: str | None
 
-    @staticmethod
-    def make_path(*args: str) -> Path:
-        return wato_var_dir() / "log" / "wato_audit.log"
+        @staticmethod
+        def deserialize(raw_entry: object) -> AuditLogStore.Entry:
+            raw: object = copy.copy(raw_entry)
+            if not isinstance(raw, dict):
+                raise ValueError("expected a dictionary")
+            # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
+            raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
+            raw["object_ref"] = (
+                ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
+            )
+            return AuditLogStore.Entry(**raw)
+
+        @staticmethod
+        def serialize(entry: AuditLogStore.Entry) -> dict[str, Any]:
+            raw = entry._asdict()
+            raw["text"] = (
+                ("html", str(entry.text)) if isinstance(entry.text, HTML) else ("str", entry.text)
+            )
+            raw["object_ref"] = raw["object_ref"].serialize() if raw["object_ref"] else None
+            return raw
 
     @staticmethod
-    def _serialize(entry: "AuditLogStore.Entry") -> object:
-        raw = entry._asdict()
-        raw["text"] = (
-            ("html", str(entry.text)) if isinstance(entry.text, HTML) else ("str", entry.text)
-        )
-        raw["object_ref"] = raw["object_ref"].serialize() if raw["object_ref"] else None
-        return raw
+    def _serialize(entry: AuditLogStore.Entry) -> object:
+        return AuditLogStore.Entry.serialize(entry)
 
     @staticmethod
-    def _deserialize(raw: object) -> "AuditLogStore.Entry":
-        if not isinstance(raw, dict):
-            raise ValueError("expected a dictionary")
-        # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
-        raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
-        raw["object_ref"] = ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
-        return AuditLogStore.Entry(**raw)
+    def _deserialize(raw: object) -> AuditLogStore.Entry:
+        return AuditLogStore.Entry.deserialize(raw)
 
     def clear(self) -> None:
         """Instead of just removing, like ABCAppendStore, archive the existing file"""
@@ -72,16 +105,57 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 
         self._path.rename(newpath)
 
-    def get_entries_since(self, timestamp: int) -> Sequence["AuditLogStore.Entry"]:
+    def read(self, options: AuditLogFilter | None = None) -> Sequence[AuditLogStore.Entry]:
+        entries = super().read()
+
+        if options is None:
+            return entries
+
+        return [entry for entry in entries if AuditLogStore.filter_entry(entry, options)]
+
+    @staticmethod
+    def filter_entry(entry: AuditLogStore.Entry, options: AuditLogFilter) -> bool:
+        if "timestamp_from" in options and entry.time < options["timestamp_from"]:
+            return False
+
+        if "timestamp_to" in options and entry.time > options["timestamp_to"]:
+            return False
+
+        if "object_type" in options and options["object_type"] != "All":
+            if entry.object_ref is None and options["object_type"] != "None":
+                return False
+            if entry.object_ref and entry.object_ref.object_type.name != options["object_type"]:
+                return False
+
+        if "object_ident" in options:
+            if entry.object_ref is None and options["object_ident"] != "":
+                return False
+            if entry.object_ref and entry.object_ref.ident != options["object_ident"]:
+                return False
+
+        if "user_id" in options and options["user_id"] is not None:
+            if entry.user_id != options["user_id"]:
+                return False
+
+        filter_regex: str | None = options["filter_regex"] if "filter_regex" in options else None
+        if filter_regex:
+            return any(
+                re.search(filter_regex, val)
+                for val in [entry.user_id, entry.action, str(entry.text)]
+            )
+
+        return True
+
+    def get_entries_since(self, timestamp: int) -> Sequence[AuditLogStore.Entry]:
         return [entry for entry in self.read() if entry.time > timestamp]
 
     @classmethod
-    def to_json(cls, entries: Sequence["AuditLogStore.Entry"]) -> str:
+    def to_json(cls, entries: Sequence[AuditLogStore.Entry]) -> str:
         return json.dumps([cls._serialize(entry) for entry in entries])
 
     @classmethod
-    def from_json(cls, raw: str) -> Sequence["AuditLogStore.Entry"]:
-        return [cls._deserialize(entry) for entry in json.loads(raw)]
+    def from_json(cls, raw: str) -> Sequence[AuditLogStore.Entry]:
+        return [AuditLogStore.Entry.deserialize(entry) for entry in json.loads(raw)]
 
 
 def log_audit(
@@ -117,4 +191,34 @@ def _log_entry(
         text=message,
         diff_text=diff_text,
     )
-    AuditLogStore(AuditLogStore.make_path()).append(entry)
+    AuditLogStore().append(entry)
+
+
+def build_audit_log_filter(options: AuditLogFilterRaw) -> AuditLogFilter:
+    result: AuditLogFilter = {}
+
+    object_ident = options.get("object_ident", "")
+    user_id = options.get("user_id")
+    filter_regex = options.get("filter_regex", "")
+    object_type = options.get("object_type")
+    timestamp_from = options.get("timestamp_from")
+    timestamp_to = options.get("timestamp_to")
+
+    if timestamp_from:
+        result["timestamp_from"] = timestamp_from
+
+    if timestamp_to:
+        result["timestamp_to"] = timestamp_to
+
+    if object_ident:
+        result["object_ident"] = object_ident
+
+    if user_id is not None:
+        result["user_id"] = user_id
+
+    if filter_regex:
+        result["filter_regex"] = filter_regex
+
+    result["object_type"] = {"": "All", None: "None"}.get(object_type, object_type)  # type: ignore[arg-type]
+
+    return result

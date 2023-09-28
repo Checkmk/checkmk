@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,8 @@
 # <<<timemachine>>>
 # Unable to locate machine directory for host.
 import datetime
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -33,6 +34,10 @@ def discover_timemachine(section: str) -> DiscoveryResult:
 
 
 def check_timemachine(params: Mapping[str, Any], section: str) -> CheckResult:
+    yield from _check(datetime.datetime.now(), params, section)
+
+
+def _check(now: datetime.datetime, params: Mapping[str, Any], section: str) -> CheckResult:
     # We expect at least one line
     if not section.startswith("/Volumes/"):
         yield Result(
@@ -42,7 +47,7 @@ def check_timemachine(params: Mapping[str, Any], section: str) -> CheckResult:
 
     raw_backup_time = section.split("/")[-1]
     backup_time = datetime.datetime.strptime(raw_backup_time, "%Y-%m-%d-%H%M%S")
-    backup_age = (datetime.datetime.now() - backup_time).total_seconds()
+    backup_age = (now - backup_time).total_seconds()
 
     if backup_age < 0:
         yield Result(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """These functions implement a web service with that a master can call
@@ -14,8 +14,9 @@ from datetime import datetime
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -23,24 +24,28 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
-    compatible_with_central_site,
     local_automation_failure,
+    verify_request_compatibility,
 )
 
 
-@page_registry.register_page("automation_login")
-class ModeAutomationLogin(AjaxPage):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("automation_login")(PageAutomationLogin)
+    page_registry.register_page("noauth:automation")(PageAutomation)
+
+
+class PageAutomationLogin(AjaxPage):
     """Is executed by the central Checkmk site to get the site secret of the remote site
 
     When the page method is execute a remote (central) site has successfully
@@ -64,42 +69,9 @@ class ModeAutomationLogin(AjaxPage):
         if not request.has_var("_version"):
             raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
-        # - _version and _edition_short were added with 1.5.0p10 to the login call only
-        # - x-checkmk-version and x-checkmk-edition were added with 2.0.0p1
-        # Prefer the headers and fall back to the request variables for now.
-        central_version = (
-            request.headers["x-checkmk-version"]
-            if "x-checkmk-version" in request.headers
-            else request.get_ascii_input_mandatory("_version")
-        )
-        central_edition_short = (
-            request.headers["x-checkmk-edition"]
-            if "x-checkmk-edition" in request.headers
-            else request.get_ascii_input_mandatory("_edition_short")
-        )
-
-        if not isinstance(
-            compatibility := compatible_with_central_site(
-                central_version,
-                central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
-            ),
-            cmk_version.VersionsCompatible,
-        ):
-            raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s). Reason: %s"
-                )
-                % (
-                    central_version,
-                    central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
-                    compatibility,
-                )
-            )
+        # allow login even with incompatible license, otherwise we cannot distribute license
+        # information to make remote sites compatible
+        verify_request_compatibility(ignore_license_compatibility=True)
 
         response.set_data(
             repr(
@@ -113,8 +85,7 @@ class ModeAutomationLogin(AjaxPage):
         return None
 
 
-@page_registry.register_page("noauth:automation")
-class ModeAutomation(AjaxPage):
+class PageAutomation(AjaxPage):
     """Executes the requested automation call
 
     This page is accessible without regular login. The request is authenticated using the given
@@ -124,8 +95,12 @@ class ModeAutomation(AjaxPage):
     def _from_vars(self):
         self._authenticate()
         _set_version_headers()
-        self._verify_compatibility()
         self._command = request.get_str_input_mandatory("command")
+        # licensing information has to be distributed before checking for compatibility
+        # to deal with remote sites in license state "free"
+        verify_request_compatibility(
+            ignore_license_compatibility=self._command == "distribute-verification-response"
+        )
 
     def _authenticate(self):
         secret = request.var("secret")
@@ -135,32 +110,6 @@ class ModeAutomation(AjaxPage):
 
         if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
-
-    def _verify_compatibility(self) -> None:
-        central_version = request.headers.get("x-checkmk-version", "")
-        central_edition_short = request.headers.get("x-checkmk-edition", "")
-        if not isinstance(
-            compatibility := compatible_with_central_site(
-                central_version,
-                central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
-            ),
-            cmk_version.VersionsCompatible,
-        ):
-            raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s): Reason: %s"
-                )
-                % (
-                    central_version,
-                    central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
-                    compatibility,
-                )
-            )
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
@@ -174,7 +123,7 @@ class ModeAutomation(AjaxPage):
 
     def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
-        # the normal WATO page processing. This might not be needed for some
+        # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
         lock_config = not (
@@ -210,7 +159,7 @@ class ModeAutomation(AjaxPage):
             return (
                 result_type_registry[cmk_command]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source())
+                .serialize(cmk_version_of_remote_automation_source(request))
             )
         except SyntaxError as e:
             raise local_automation_failure(

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you used host or service level filter in views with an event datasource,
 e.g. "Events of host & services", the error "Internal error: 'NoneType' object

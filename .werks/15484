@@ -1,0 +1,15 @@
+Title: Fix encoding of special characters in "Move to other folder"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1683042476
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Special characters were wrongly displayed in the "Move to other folder"
+dropdown. E.g. "&" as "&amp;".
+
+

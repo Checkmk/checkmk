@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypeAlias, TypeVar
+
+from typing_extensions import TypedDict
 
 from cmk.utils import version as cmk_version
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.labels import HostLabelValueDict, Labels
-from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
+from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import (
-    Gateways,
-    HostName,
-    Item,
-    LegacyCheckParameters,
-    MetricTuple,
-    NotifyAnalysisInfo,
-    NotifyBulks,
-    ParametersTypeAlias,
-    RulesetName,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
+from cmk.utils.servicename import Item, ServiceName
+
+from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
+Gateway: TypeAlias = tuple[
+    tuple[HostName | None, HostAddress, HostName | None] | None, str, int, str
+]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
-    def plugin_name(self, instance: type["ABCAutomationResult"]) -> str:
+    def plugin_name(self, instance: type[ABCAutomationResult]) -> str:
         return instance.automation_call()
 
 
@@ -75,7 +77,7 @@ class ABCAutomationResult(ABC):
 
 
 @dataclass
-class DiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]
 
     def _to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
@@ -91,56 +93,140 @@ class DiscoveryResult(ABCAutomationResult):
         return SerializedResult(repr(self._to_dict()))
 
     @classmethod
-    def deserialize(cls, serialized_result: SerializedResult) -> "DiscoveryResult":
+    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
+    @staticmethod
+    def automation_call() -> str:
+        return "service-discovery"
+
+
+result_type_registry.register(ServiceDiscoveryResult)
+
+
+# Should be droped in 2.3
+class DiscoveryPre22NameResult(ServiceDiscoveryResult):
     @staticmethod
     def automation_call() -> str:
         return "inventory"
 
 
-result_type_registry.register(DiscoveryResult)
-
-
-@dataclass(frozen=True)
-class CheckPreviewEntry:
-    check_source: str
-    check_plugin_name: str
-    ruleset_name: RulesetName | None
-    item: Item
-    discovered_parameters: LegacyCheckParameters
-    effective_parameters: LegacyCheckParameters
-    description: str
-    state: int | None
-    output: str
-    metrics: list[MetricTuple]
-    labels: dict[str, str]
-    found_on_nodes: list[HostName]
+result_type_registry.register(DiscoveryPre22NameResult)
 
 
 @dataclass
-class TryDiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     output: str
     check_table: Sequence[CheckPreviewEntry]
     host_labels: DiscoveredHostLabelsDict
     new_labels: DiscoveredHostLabelsDict
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
+    labels_by_host: Mapping[HostName, Sequence[HostLabel]]
+    source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(repr(astuple(self)))
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.1.0p27"
+        ):  # no source results, no labels by host
+            return SerializedResult(repr(astuple(self)[:6]))
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b1"
+        ):  # labels by host, but no source results
+            return self._serialize_as_dict()
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b2"
+        ):  # no source results, no labels by host
+            return SerializedResult(repr(astuple(self)[:6]))
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b6"
+        ):  # source_results, no labels by host
+            return SerializedResult(repr(astuple(self)[:6] + (self.source_results,)))
+
+        return self._serialize_as_dict()
+
+    def _serialize_as_dict(self) -> SerializedResult:
+        raw = asdict(self)
+        return SerializedResult(
+            repr(
+                {
+                    **raw,
+                    "labels_by_host": {
+                        str(host_name): [label.serialize() for label in labels]
+                        for host_name, labels in self.labels_by_host.items()
+                    },
+                }
+            )
+        )
 
     @classmethod
-    def deserialize(cls, serialized_result: SerializedResult) -> "TryDiscoveryResult":
-        raw_output, raw_check_table, *raw_rest = literal_eval(serialized_result)
-        return cls(raw_output, [CheckPreviewEntry(*cpe) for cpe in raw_check_table], *raw_rest)
+    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
+        raw = literal_eval(serialized_result)
+        return cls(
+            output=raw["output"],
+            check_table=[CheckPreviewEntry(**cpe) for cpe in raw["check_table"]],
+            host_labels=raw["host_labels"],
+            new_labels=raw["new_labels"],
+            vanished_labels=raw["vanished_labels"],
+            changed_labels=raw["changed_labels"],
+            labels_by_host={
+                HostName(raw_host_name): [
+                    HostLabel.deserialize(raw_label) for raw_label in raw_host_labels
+                ]
+                for raw_host_name, raw_host_labels in raw["labels_by_host"].items()
+            },
+            source_results=raw["source_results"],
+        )
 
+    @staticmethod
+    def automation_call() -> str:
+        return "service-discovery-preview"
+
+
+result_type_registry.register(ServiceDiscoveryPreviewResult)
+
+
+# Should be droped in 2.3
+class DiscoveryPreviewPre22NameResult(ServiceDiscoveryPreviewResult):
     @staticmethod
     def automation_call() -> str:
         return "try-inventory"
 
 
-result_type_registry.register(TryDiscoveryResult)
+result_type_registry.register(DiscoveryPreviewPre22NameResult)
+
+
+@dataclass
+class AutodiscoveryResult(ABCAutomationResult):
+    hosts: Mapping[HostName, SingleHostDiscoveryResult]
+    changes_activated: bool
+
+    def _hosts_to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
+        return {k: asdict(v) for k, v in self.hosts.items()}
+
+    @staticmethod
+    def _hosts_from_dict(
+        serialized: Mapping[HostName, Mapping[str, Any]]
+    ) -> Mapping[HostName, SingleHostDiscoveryResult]:
+        return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
+
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        return SerializedResult(repr((self._hosts_to_dict(), self.changes_activated)))
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> AutodiscoveryResult:
+        hosts, changes_activated = literal_eval(serialized_result)
+        return cls(cls._hosts_from_dict(hosts), changes_activated)
+
+    @staticmethod
+    def automation_call() -> str:
+        return "autodiscovery"
+
+
+result_type_registry.register(AutodiscoveryResult)
 
 
 @dataclass
@@ -199,7 +285,7 @@ class AnalyseServiceResult(ABCAutomationResult):
     label_sources: LabelSources
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version >= cmk_version.Version("2.2.0i1"):
+        if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1"):
             return self._default_serialize()
         previous_serialized: Mapping[str, object] = {
             **self.service_info,
@@ -321,7 +407,7 @@ result_type_registry.register(GetSectionInformationResult)
 
 @dataclass
 class ScanParentsResult(ABCAutomationResult):
-    gateways: Gateways
+    gateways: Sequence[Gateway]
 
     @staticmethod
     def automation_call() -> str:
@@ -434,7 +520,7 @@ result_type_registry.register(CreateDiagnosticsDumpResult)
 
 @dataclass
 class BakeAgentsResult(ABCAutomationResult):
-    warnings_as_json: str
+    output: str | None
 
     @staticmethod
     def automation_call() -> str:

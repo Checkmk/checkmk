@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
 import json
 from collections.abc import Collection
+from typing import NotRequired
+
+from typing_extensions import TypedDict
+
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
+
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -21,29 +29,39 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    Float,
-    HostAddress,
-    Integer,
-    Password,
-)
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
+from cmk.gui.valuespec import HostAddress as VSHostAddress
+from cmk.gui.valuespec import Integer, Password
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
-from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
+from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+SNMPv3NoAuthNoPriv = tuple[str, str]
+SNMPv3AuthNoPriv = tuple[str, str, str, str]
+SNMPv3AuthPriv = tuple[str, str, str, str, str, str]
 
 
-@mode_registry.register
+class HostSpec(TypedDict):
+    hostname: HostName
+    ipaddress: NotRequired[HostAddress]
+    snmp_community: NotRequired[SNMPCredentials]
+    snmp_v3_credentials: NotRequired[SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv]
+
+
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+    page_registry.register_page("wato_ajax_diag_host")(PageAjaxDiagHost)
+    mode_registry.register(ModeDiagHost)
+
+
 class ModeDiagHost(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -69,10 +87,10 @@ class ModeDiagHost(WatoMode):
             ("traceroute", _("Traceroute")),
         ]
 
-    def _from_vars(self):
-        self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = Folder.current().load_host(self._hostname)
-        self._host.need_permission("read")
+    def _from_vars(self) -> None:
+        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
+        self._host = folder_from_request().load_host(self._hostname)
+        self._host.permissions.need_permission("read")
 
         if self._host.is_cluster():
             raise MKGeneralException(_("This page does not support cluster hosts."))
@@ -141,34 +159,35 @@ class ModeDiagHost(WatoMode):
         if request.var("go_to_properties"):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
-            new = vs_host.from_html_vars("vs_host")
+            new: HostSpec = vs_host.from_html_vars("vs_host")
             vs_host.validate_value(new, "vs_host")
 
-            # If both snmp types have credentials set - snmpv3 takes precedence
             return_message = []
+            attributes = HostAttributes()
+
             if "ipaddress" in new:
                 return_message.append(_("IP address"))
+                attributes["ipaddress"] = new["ipaddress"]
+
+            # If both SNMP types have credentials set - SNMPv3 takes precedence
             if "snmp_v3_credentials" in new:
                 if "snmp_community" in new:
                     return_message.append(_("SNMPv3 credentials (SNMPv2 community was discarded)"))
                 else:
                     return_message.append(_("SNMPv3 credentials"))
-                new["snmp_community"] = new["snmp_v3_credentials"]
+                attributes["snmp_community"] = new["snmp_v3_credentials"]
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
+                attributes["snmp_community"] = new["snmp_community"]
 
-            # Remove fields in this page that are not host attributes in order to avoid
-            # data corruption.
-            self._host.update_attributes(
-                {k: v for k, v in new.items() if k in host_attribute_registry}
-            )
+            self._host.update_attributes(attributes)
 
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
                 mode_url(
                     "edit_host",
                     host=self._hostname,
-                    folder=Folder.current().path(),
+                    folder=folder_from_request().path(),
                 )
             )
         return None
@@ -195,11 +214,11 @@ class ModeDiagHost(WatoMode):
 
         forms.section(legend=False)
 
-        # The diagnose page shows both snmp variants at the same time
+        # The diagnose page shows both SNMP variants at the same time
         # We need to analyse the preconfigured community and set either the
         # snmp_community or the snmp_v3_credentials
-        vs_dict = {}
-        for key, value in self._host.attributes().items():
+        vs_dict: dict[str, object] = {}
+        for key, value in self._host.attributes.items():
             if key == "snmp_community" and isinstance(value, tuple):
                 vs_dict["snmp_v3_credentials"] = value
                 continue
@@ -300,7 +319,7 @@ class ModeDiagHost(WatoMode):
                 ),
                 (
                     "ipaddress",
-                    HostAddress(
+                    VSHostAddress(
                         title=_("IPv4 address"),
                         allow_empty=False,
                         allow_ipv6_address=False,
@@ -315,7 +334,7 @@ class ModeDiagHost(WatoMode):
                 ),
                 (
                     "snmp_v3_credentials",
-                    SNMPCredentials(
+                    VSSNMPCredentials(
                         default_value=None,
                         only_v3=True,
                     ),
@@ -357,7 +376,7 @@ class ModeDiagHost(WatoMode):
                         ),
                         help=_(
                             "This variable allows to specify a timeout for the "
-                            "TCP connection to the Check_MK agent on a per-host-basis."
+                            "TCP connection to the Checkmk agent on a per-host-basis."
                             "If the agent does not respond within this time, it is considered to be unreachable."
                         ),
                     ),
@@ -395,8 +414,7 @@ class ModeDiagHost(WatoMode):
         )
 
 
-@page_registry.register_page("wato_ajax_diag_host")
-class ModeAjaxDiagHost(AjaxPage):
+class PageAjaxDiagHost(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):
@@ -418,7 +436,7 @@ class ModeAjaxDiagHost(AjaxPage):
         if host.is_cluster():
             raise MKGeneralException(_("This view does not support cluster hosts."))
 
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         _test = api_request.get("_test")
         if not _test:
@@ -454,6 +472,10 @@ class ModeAjaxDiagHost(AjaxPage):
                 snmpv3_auth_proto = {
                     str(DropdownChoice.option_id("md5")): "md5",
                     str(DropdownChoice.option_id("sha")): "sha",
+                    str(DropdownChoice.option_id("SHA-224")): "SHA-224",
+                    str(DropdownChoice.option_id("SHA-256")): "SHA-256",
+                    str(DropdownChoice.option_id("SHA-384")): "SHA-384",
+                    str(DropdownChoice.option_id("SHA-512")): "SHA-512",
                 }.get(api_request.get("snmpv3_auth_proto", ""), "")
 
                 args[8] = snmpv3_auth_proto
@@ -464,6 +486,8 @@ class ModeAjaxDiagHost(AjaxPage):
                     snmpv3_privacy_proto = {
                         str(DropdownChoice.option_id("DES")): "DES",
                         str(DropdownChoice.option_id("AES")): "AES",
+                        str(DropdownChoice.option_id("AES-192")): "AES-192",
+                        str(DropdownChoice.option_id("AES-256")): "AES-256",
                     }.get(api_request.get("snmpv3_privacy_proto", ""), "")
 
                     args[11] = snmpv3_privacy_proto

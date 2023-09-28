@@ -1,0 +1,14 @@
+Title: user_config: allow all option for authorized_sites
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1679986949
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the "all" value in authorized_sites was rejected due
+to the validation mechanism. This werk fixes this issue. This fix does not
+modify the default behaviour of authorized_sites when creating an user.
+

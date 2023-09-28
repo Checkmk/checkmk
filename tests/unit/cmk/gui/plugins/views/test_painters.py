@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, Literal
 
 import pytest
 
@@ -13,17 +14,17 @@ from tests.testlib import on_time
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import StructuredDataNode
-from cmk.utils.type_defs import UserId
+from cmk.utils.structured_data import ImmutableTree
+from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.type_defs import ColumnSpec, Literal, Row
+from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0.painters import _paint_custom_notes
+from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
-from cmk.gui.views.painter.v0.base import painter_registry
-from cmk.gui.views.painter.v0.painters import _paint_custom_notes
 from cmk.gui.visual_link import render_link_to_view
 
 
@@ -80,6 +81,7 @@ def test_registered_painters() -> None:
         "aggr_state_num",
         "aggr_treestate",
         "aggr_treestate_boxed",
+        "aggr_treestate_frozen_diff",
         "alert_stats_crit",
         "alert_stats_ok",
         "alert_stats_problem",
@@ -98,6 +100,7 @@ def test_registered_painters() -> None:
         "crash_ident",
         "crash_time",
         "crash_type",
+        "crash_source",
         "crash_version",
         "downtime_author",
         "downtime_comment",
@@ -199,6 +202,7 @@ def test_registered_painters() -> None:
         "host_next_check",
         "host_next_notification",
         "host_normal_interval",
+        "host_notes_url_expanded",
         "host_notification_number",
         "host_notification_postponement_reason",
         "host_notifications_enabled",
@@ -268,7 +272,10 @@ def test_registered_painters() -> None:
         "inv_hardware_storage_disks",
         "inv_hardware_storage_disks_size",
         "inv_hardware_system",
+        "inv_hardware_system_device_number",
+        "inv_hardware_system_description",
         "inv_hardware_system_expresscode",
+        "inv_hardware_system_mac_address",
         "inv_hardware_system_manufacturer",
         "inv_hardware_system_model",
         "inv_hardware_system_model_name",
@@ -296,6 +303,21 @@ def test_registered_painters() -> None:
         "inv_networking_wlan_controller_accesspoints",
         "inv_software",
         "inv_software_applications",
+        "inv_software_applications_azure",
+        "inv_software_applications_azure_application_gateways",
+        "inv_software_applications_azure_application_gateways_rules",
+        "inv_software_applications_azure_application_gateways_rules_backends",
+        "inv_software_applications_azure_application_gateways_rules_listeners",
+        "inv_software_applications_azure_application_gateways_rules_listeners_private_ips",
+        "inv_software_applications_azure_application_gateways_rules_listeners_public_ips",
+        "inv_software_applications_azure_load_balancers",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_configs",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_private_ips",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_public_ips",
+        "inv_software_applications_azure_load_balancers_outbound_rules",
+        "inv_software_applications_azure_load_balancers_outbound_rules_backend_pools",
+        "inv_software_applications_azure_load_balancers_outbound_rules_backend_pools_addresses",
         "inv_software_applications_check_mk",
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",
@@ -306,6 +328,13 @@ def test_registered_painters() -> None:
         "inv_software_applications_check_mk_sites",
         "inv_software_applications_check_mk_versions",
         "inv_software_applications_checkmk-agent",
+        "inv_software_applications_checkmk-agent_version",
+        "inv_software_applications_checkmk-agent_agentdirectory",
+        "inv_software_applications_checkmk-agent_datadirectory",
+        "inv_software_applications_checkmk-agent_spooldirectory",
+        "inv_software_applications_checkmk-agent_pluginsdirectory",
+        "inv_software_applications_checkmk-agent_localdirectory",
+        "inv_software_applications_checkmk-agent_agentcontroller",
         "inv_software_applications_checkmk-agent_local_checks",
         "inv_software_applications_checkmk-agent_plugins",
         "inv_software_applications_citrix",
@@ -405,6 +434,11 @@ def test_registered_painters() -> None:
         "inv_software_bios_vendor",
         "inv_software_bios_version",
         "inv_software_configuration",
+        "inv_software_configuration_organisation",
+        "inv_software_configuration_organisation_address",
+        "inv_software_configuration_organisation_network_id",
+        "inv_software_configuration_organisation_organisation_id",
+        "inv_software_configuration_organisation_organisation_name",
         "inv_software_configuration_snmp_info",
         "inv_software_configuration_snmp_info_contact",
         "inv_software_configuration_snmp_info_location",
@@ -739,6 +773,7 @@ def test_registered_painters() -> None:
         "svc_next_check",
         "svc_next_notification",
         "svc_normal_interval",
+        "svc_notes_url_expanded",
         "svc_notification_number",
         "svc_notification_postponement_reason",
         "svc_notifications_enabled",
@@ -765,7 +800,7 @@ def test_registered_painters() -> None:
         "wato_folder_rel",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_painters += [
             "svc_metrics_forecast",
             "svc_metrics_hist",
@@ -784,7 +819,7 @@ def test_registered_painters() -> None:
             "deployment_target_hash",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_painters += [
             "host_customer",
             "customer_id",
@@ -805,9 +840,6 @@ def test_registered_painters() -> None:
     assert sorted(painters) == sorted(expected_painters)
 
 
-# We only get all painters after the plugins and config have been loaded. Since there currently no
-# way to create test parameters while depending on a fixture we can not use pytests parametrization
-@pytest.mark.usefixtures("load_config")
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
     return sorted(list(painters_of_datasource("services").keys()))
@@ -860,6 +892,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         context={},
     )
@@ -928,7 +961,7 @@ def _service_row():
         "host_in_check_period": 1,
         "host_in_notification_period": 1,
         "host_in_service_period": 1,
-        "host_inventory": StructuredDataNode.deserialize(
+        "host_inventory": ImmutableTree.deserialize(
             {
                 "hardware": {
                     "memory": {
@@ -1731,6 +1764,21 @@ def _set_expected_queries(painter_ident, live):
         return
 
 
+def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) -> list[str]:
+    expected_notes: list[str] = []
+
+    for path in notes_dirs:
+        path.mkdir(parents=True, exist_ok=True)
+
+    for note in notes:
+        with open(note["file"], "w") as f:
+            f.write(note["content"])
+            if note["on_response"]:
+                expected_notes.append(note["content"])
+
+    return expected_notes
+
+
 @pytest.mark.parametrize(
     "notes_type, notes_dir, notes_file, row, notes",
     [
@@ -1797,4 +1845,244 @@ def test_paint_custom_notes(
     with open(notes_file, "w") as f:
         f.write("<hr>".join(notes))
 
-    assert notes_file.read_text() == _paint_custom_notes(notes_type, row)[1]
+    assert notes_file.read_text() == str(_paint_custom_notes(notes_type, row)[1])
+
+
+@pytest.mark.parametrize(
+    "object_type, host_name, service_name, notes_dirs, notes",
+    [
+        pytest.param(
+            "host",
+            "localhost",
+            "",
+            [
+                Path(default_config_dir) / "notes/hosts",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "localhost",
+                    "content": "Notes for host localhost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*ost",
+                    "content": "Notes for hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*",
+                    "content": "Notes for all hosts",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "ost",
+                    "content": "This note should be ignored",
+                    "on_response": False,
+                },
+            ],
+            id="Inclusion of host notes files",
+        ),
+        pytest.param(
+            "service",
+            "localhost",
+            "Uptime",
+            [
+                Path(default_config_dir) / "notes/services" / "*",
+                Path(default_config_dir) / "notes/services" / "*ost",
+                Path(default_config_dir) / "notes/services/localhost",
+                Path(default_config_dir) / "notes/services/no_match",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "Pendorcho",
+                    "content": "This note should be ignored (localhost:Pendorcho)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "Uptime",
+                    "content": "Notes for service Uptime on host localhost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*time",
+                    "content": "Notes for services ending with time on host localhost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*",
+                    "content": "Notes for all services on host localhost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "Pendorcho",
+                    "content": "This note should be ignored (*ost:Pendorcho)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "Uptime",
+                    "content": "Notes for service Uptime on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*time",
+                    "content": "Notes for services ending with time on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*",
+                    "content": "Notes for all services on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "Pendorcho",
+                    "content": "This note should be ignored (*:Pendorcho)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "Uptime",
+                    "content": "Notes for service Uptime on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*time",
+                    "content": "Notes for services ending with time on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*",
+                    "content": "Notes for all services on hosts ending with ost",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "Pendorcho",
+                    "content": "This note should be ignored (no_match:Pendorcho)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "Uptime",
+                    "content": "This note should be ignored (no_match:Uptime)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "*time",
+                    "content": "This note should be ignored (no_match:*time)",
+                    "on_response": False,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "no_match" / "*",
+                    "content": "This note should be ignored (no_match:*)",
+                    "on_response": False,
+                },
+            ],
+            id="Inclusion of service notes files",
+        ),
+        pytest.param(
+            "host",
+            "localhost",
+            "",
+            [
+                Path(default_config_dir) / "notes/hosts",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "localhost",
+                    "content": "this note contains javascript <script>alert('hello')</script>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*ost",
+                    "content": "this note contains a table <table><tr><td>cell1</td><td>cell2</td></tr></table>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/hosts" / "*",
+                    "content": 'This note contains a paragraph with some style <p style="color: red">paragraph</p>',
+                    "on_response": True,
+                },
+            ],
+            id="HTML content on hosts notes",
+        ),
+        pytest.param(
+            "service",
+            "localhost",
+            "Uptime",
+            [
+                Path(default_config_dir) / "notes/services" / "*",
+                Path(default_config_dir) / "notes/services" / "*ost",
+                Path(default_config_dir) / "notes/services/localhost",
+                Path(default_config_dir) / "notes/services/no_match",
+            ],
+            [
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "Uptime",
+                    "content": "this note contains javascript <script>alert('hello')</script>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*time",
+                    "content": "this note contains a table <table><tr><td>cell1</td><td>cell2</td></tr></table>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "localhost" / "*",
+                    "content": 'This note contains a paragraph with some style <p style="color: red">paragraph</p>',
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "Uptime",
+                    "content": "This note has a <strong>tag</strong>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*time",
+                    "content": "<h1>This</h1> is a heading",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*ost" / "*",
+                    "content": '<table border="1"><tr style="background-color:#d35400"><th>Title</th></tr><tr><td>Content</td</tr></table>',
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "Uptime",
+                    "content": "<script>alert('hello')</script>",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*time",
+                    "content": "multi </br> line </br> note",
+                    "on_response": True,
+                },
+                {
+                    "file": Path(default_config_dir) / "notes/services" / "*" / "*",
+                    "content": "even broken <tags> are allowed",
+                    "on_response": True,
+                },
+            ],
+            id="HTML content on services notes",
+        ),
+    ],
+)
+def test_paint_custom_notes_file_inclusion_and_html_tags(
+    object_type: Literal["host", "service"],
+    host_name: str,
+    service_name: str | None,
+    notes_dirs: list[Path],
+    notes: list[dict[str, Any]],
+) -> None:
+    expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
+
+    row: Row = {
+        "host_name": host_name,
+        "service_description": service_name,
+        "site": "my_site",
+        "host_address": "127.0.0.1",
+    }
+
+    displayed_custom_notes = _paint_custom_notes(object_type, row)[1]
+    assert isinstance(displayed_custom_notes, HTML)
+
+    notes_as_string = str(displayed_custom_notes)
+    expected_string = str(HTML("<hr>".join(expected_notes)))
+
+    assert expected_string == notes_as_string

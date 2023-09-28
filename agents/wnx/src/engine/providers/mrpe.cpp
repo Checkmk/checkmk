@@ -10,12 +10,12 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/wtools.h"
-#include "glob_match.h"
-#include "logger.h"
 #include "tools/_raii.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/glob_match.h"
+#include "wnx/logger.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -287,7 +287,7 @@ void MrpeProvider::parseConfig() {
     checks_.clear();
     includes_.clear();
 
-    auto strings =
+    const auto strings =
         cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
 
     if (strings.empty()) {
@@ -301,9 +301,9 @@ void MrpeProvider::parseConfig() {
 }
 
 void MrpeProvider::loadTimeout() {
-    auto mrpe_timeout = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
-                                    cfg::defaults::kMrpeTimeout);
-    setTimeout(std::min(1U, mrpe_timeout));
+    const auto mrpe_timeout = cfg::GetVal(
+        cfg::groups::kMrpe, cfg::vars::kTimeout, cfg::defaults::kMrpeTimeout);
+    setTimeout(std::max(1U, mrpe_timeout));
 }
 
 void MrpeProvider::loadConfig() {
@@ -349,7 +349,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     minibox.processResults([&result](const std::wstring &cmd_line, uint32_t pid,
                                      uint32_t error_code,
                                      const std::vector<char> &data_block) {
-        auto data = wtools::ConditionallyConvertFromUTF16(data_block);
+        auto data = wtools::ConditionallyConvertFromUtf16(data_block);
         tools::AllTrim(data);
 
         // mrpe output must be patched in a bit strange way

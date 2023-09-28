@@ -1,63 +1,8 @@
-# The following files contain a lot of ESLint warnings or errors.
-# These issues will be fixed on a file per file basis over a longer period of time.
-
-web/htdocs/js/modules/node_visualization/node_visualization_layout.*s
-web/htdocs/js/modules/node_visualization/node_visualization_infobox.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport_layers.*s
-web/htdocs/js/modules/node_visualization/node_visualization_toolbar.*s
-web/htdocs/js/modules/node_visualization/node_visualization.*s
-web/htdocs/js/modules/node_visualization/node_visualization_search.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_toolbar_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_datasources.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layouting.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layout_styles.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport.*s
-web/htdocs/js/modules/node_visualization/node_visualization_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layouting_utils.*s
-web/htdocs/js/modules/prediction.*s
-web/htdocs/js/modules/wato.*s
-web/htdocs/js/modules/views.*s
-web/htdocs/js/modules/sla.*s
-web/htdocs/js/modules/page_menu.*s
-web/htdocs/js/modules/sidebar.*s
-web/htdocs/js/modules/selection.*s
-web/htdocs/js/modules/transfer.*s
+# These are just copied files and should be replaced
+# with npm dependencies in the future
 web/htdocs/js/modules/cbor_ext.*s
-web/htdocs/js/modules/visibility_detection.*s
-web/htdocs/js/modules/quicksearch.*s
-web/htdocs/js/modules/valuespecs.*s
-web/htdocs/js/modules/hover.*s
-web/htdocs/js/modules/reload_pause.*s
-web/htdocs/js/modules/bi.*s
-web/htdocs/js/modules/popup_menu.*s
-web/htdocs/js/modules/backup.*s
-web/htdocs/js/modules/help.*s
-web/htdocs/js/modules/async_progress.*s
-web/htdocs/js/modules/profile_replication.*s
-web/htdocs/js/modules/activation.*s
-web/htdocs/js/modules/ajax.*s
-web/htdocs/js/modules/element_dragging.*s
-web/htdocs/js/modules/background_job.*s
-web/htdocs/js/modules/graphs.*s
-web/htdocs/js/modules/dashboard.*s
-web/htdocs/js/modules/foldable_container.*s
-web/htdocs/js/modules/host_diagnose.*s
-web/htdocs/js/modules/search.*s
-web/htdocs/js/modules/webauthn.*s
-web/htdocs/js/modules/graph_integration.*s
-web/htdocs/js/modules/figures/cmk_table.*s
-web/htdocs/js/modules/figures/cmk_figures_plugins.*s
-web/htdocs/js/modules/figures/cmk_stats.*s
-web/htdocs/js/modules/figures/cmk_figures.*s
 web/htdocs/js/modules/colorpicker.*s
-web/htdocs/js/modules/sites.*s
-web/htdocs/js/modules/service_discovery.*s
-web/htdocs/js/modules/number_format.*s
-web/htdocs/js/modules/utils.*s
-web/htdocs/js/modules/forms.*s
-web/htdocs/js/index.*s
-web/htdocs/js/mobile.*s
+
 
 
 # These are generated files or included libraries

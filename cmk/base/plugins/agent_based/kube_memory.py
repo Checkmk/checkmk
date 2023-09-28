@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
 
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
@@ -41,18 +40,18 @@ register.agent_section(
 
 
 def discovery_kube_memory(
-    section_kube_performance_memory: Optional[PerformanceUsage],
-    section_kube_memory_resources: Optional[Resources],
-    section_kube_allocatable_memory_resource: Optional[AllocatableResource],
+    section_kube_performance_memory: PerformanceUsage | None,
+    section_kube_memory_resources: Resources | None,
+    section_kube_allocatable_memory_resource: AllocatableResource | None,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check_kube_memory(
     params: Params,
-    section_kube_performance_memory: Optional[PerformanceUsage],
-    section_kube_memory_resources: Optional[Resources],
-    section_kube_allocatable_memory_resource: Optional[AllocatableResource],
+    section_kube_performance_memory: PerformanceUsage | None,
+    section_kube_memory_resources: Resources | None,
+    section_kube_allocatable_memory_resource: AllocatableResource | None,
 ) -> CheckResult:
     assert section_kube_memory_resources is not None
     yield from check_resource(

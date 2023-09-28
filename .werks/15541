@@ -1,0 +1,21 @@
+Title: Replace BGP peer check plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1679472169
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The Arista BGP check plugin is replaced by a more general BGP peer check plugin.
+
+The following new features are added:
+<ul>
+<li>Introduction of new SNMP sections cisco_bgp_peerv2 and cisco_bgp_peerv3
+<li>Add description or VrfName if available which is available as check result and service label
+<li>Add established time which is available as check result aswell as a metric
+<li>Move less important check output to details
+<li>Add configurable state mapping for admin state and peer state
+</ul>
+

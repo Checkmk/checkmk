@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,17 +7,20 @@ from collections.abc import Iterable, Sequence
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -29,9 +32,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
-from cmk.gui.views.data_source import ABCDataSource, data_source_registry
 from cmk.gui.views.layout import Layout, layout_registry
-from cmk.gui.views.painter.v0.base import Cell, JoinCell, painter_exists
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import sorter_registry, SorterEntry
 from cmk.gui.visuals import view_title
@@ -83,7 +84,7 @@ class View:
             if not painter_exists(e):
                 continue
 
-            if (col_type := e.column_type) == "join_column":
+            if (col_type := e.column_type) in ["join_column", "join_inv_column"]:
                 cells.append(JoinCell(e, self._compute_sort_url_parameter(e)))
             elif col_type == "column":
                 cells.append(Cell(e, self._compute_sort_url_parameter(e)))
@@ -120,7 +121,7 @@ class View:
         return compute_sort_url_parameter(
             painter.name,
             painter.parameters,
-            painter.join_index,
+            painter.join_value,
             self.spec["group_painters"],
             self.spec["sorters"],
             self._user_sorters or [],

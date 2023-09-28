@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,12 +10,14 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
+from cmk.utils.notify_types import EventRule
+from cmk.utils.regex import GROUP_NAME_PATTERN
+from cmk.utils.timeperiod import timeperiod_spec_alias
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
-import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.userdb as userdb
-import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
     AllGroupSpecs,
@@ -31,25 +33,27 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.watolib.utils import config_variable_registry
+from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.userdb import load_roles, load_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.global_settings import GlobalSettings, load_configuration_settings
+from cmk.gui.watolib.config_domain_name import config_variable_registry
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopic,
     HostAttributeTopicBasicSettings,
+    HostContactGroupSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, folder_tree
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
@@ -64,7 +68,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
         raise MKUserError("name", _("Please specify a name of the new group."))
     if " " in name:
         raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
-    if not re.match(r"^[-a-z0-9A-Z_\.]*$", name):
+    if not re.match(GROUP_NAME_PATTERN, name):
         raise MKUserError(
             "name",
             _("Invalid group name. Only the characters a-z, A-Z, 0-9, _, . and - are allowed."),
@@ -89,7 +93,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         old_customer = managed.get_customer_id(old_group_backup)
         new_customer = managed.get_customer_id(extra_info)
         if old_customer != new_customer:
@@ -119,18 +123,29 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         )
 
 
+class UnknownGroupException(Exception):
+    ...
+
+
+class GroupInUseException(Exception):
+    ...
+
+
 def delete_group(name: GroupName, group_type: GroupType) -> None:
     check_modify_group_permissions(group_type)
     # Check if group exists
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
-        raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
+        raise UnknownGroupException(
+            None,
+            _("Unknown %s group: %s") % (group_type, name),
+        )
 
     # Check if still used
     usages = find_usages_of_group(name, group_type)
     if usages:
-        raise MKUserError(
+        raise GroupInUseException(
             None,
             _("Unable to delete group. It is still in use by: %s")
             % ", ".join([e[0] for e in usages]),
@@ -139,14 +154,16 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     # Delete group
     group = groups.pop(name)
     save_group_information(all_groups)
-    _add_group_change(group, "edit-%sgroups", _l("Deleted %s group %s") % (group_type, name))
+    _add_group_change(
+        group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
+    )
 
 
 # TODO: Consolidate all group change related functions in a class that can be overriden
 # by the CME code for better encapsulation.
 def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
     group_sites = None
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         cid = managed.get_customer_id(group)
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
@@ -217,7 +234,7 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     used_in += _find_usages_of_contact_group_in_users(name)
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
-    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, folder_tree().root_folder())
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
     used_in += _find_usages_of_contact_group_in_ec_rules(name)
@@ -228,7 +245,7 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
 def _find_usages_of_contact_group_in_users(name: GroupName) -> list[tuple[str, str]]:
     """Is the contactgroup assigned to a user?"""
     used_in = []
-    users = userdb.load_users()
+    users = load_users()
     for userid, user_spec in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
         cgs = user_spec.get("contactgroups", [])
         if name in cgs:
@@ -287,19 +304,17 @@ def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
 
 
 def _find_usages_of_contact_group_in_hosts_and_folders(
-    name: GroupName, folder: CREFolder
+    name: GroupName, folder: Folder
 ) -> list[tuple[str, str]]:
     used_in = []
     for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
 
-    attributes = folder.attributes()
-    if name in attributes.get("contactgroups", {}).get("groups", []):
+    if name in folder.attributes.get("contactgroups", {}).get("groups", []):
         used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
 
     for host in folder.hosts().values():
-        attributes = host.attributes()
-        if name in attributes.get("contactgroups", {}).get("groups", []):
+        if name in host.attributes.get("contactgroups", {}).get("groups", []):
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
@@ -357,7 +372,7 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
 def _find_usages_of_contact_group_in_ec_rules(name: str) -> list[tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: list[tuple[str, str]] = []
-    rule_packs = mkeventd.load_mkeventd_rules()
+    rule_packs = ec.load_rule_packs()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):
@@ -419,7 +434,7 @@ def is_alias_used(
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
-    roles = userdb_utils.load_roles()
+    roles = load_roles()
     for key, value in roles.items():
         if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key
@@ -459,11 +474,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
         )
         return (
             _(
-                "Only members of the contact groups listed here have WATO permission "
-                "to the host / folder. If you want, you can make those contact groups "
-                "automatically also <b>monitoring contacts</b>. This is completely "
-                "optional. Assignment of host to contact groups can be done by "
-                "<a href='%s'>rules</a> as well."
+                "Only members of the contact groups listed here have Setup "
+                "permission for the host/folder. Optionally, you can make these "
+                "contact groups automatically monitor contacts. The assignment "
+                "of hosts to contact groups can also be defined by "
+                "<a href='%s'>rules</a>."
             )
             % url
         )
@@ -474,11 +489,18 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def show_in_folder(self) -> bool:
         return True
 
-    def default_value(self) -> Any:
-        return (True, [])
+    def default_value(self) -> HostContactGroupSpec:
+        return HostContactGroupSpec(
+            {
+                "groups": [],
+                "recurse_perms": False,
+                "use": False,
+                "use_for_services": False,
+                "recurse_use": False,
+            }
+        )
 
     def paint(self, value, hostname):
-        value = convert_cgroups_from_tuple(value)
         texts: list[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
@@ -506,8 +528,6 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return "", result
 
     def render_input(self, varprefix: str, value: Any) -> None:
-        value = convert_cgroups_from_tuple(value)
-
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
@@ -590,7 +610,6 @@ class HostAttributeContactGroups(ABCHostAttribute):
         }
 
     def filter_matches(self, crit, value, hostname):
-        value = convert_cgroups_from_tuple(value)
         # Just use the contact groups for searching
         for contact_group in crit["groups"]:
             if contact_group not in value["groups"]:

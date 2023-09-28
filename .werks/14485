@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this Werk expired sessions were still valid on the RestAPI, since the
 RestAPI only vaildated the Cookie signature.
@@ -30,5 +30,4 @@ Review Apache and web.log for suspicious logs.
 We have rated the issue with a CVSS Score of 5.6 (Medium) with the following
 CVSS vector:
 <tt>CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L</tt>.
-A CVE has been requested.
-
+We have assigned CVE-2022-48317 for this issue.

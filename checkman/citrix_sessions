@@ -4,7 +4,11 @@ catalog: app/citrix
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the number of active, inactive an total Sessions on a citrix server. In Order to work the plugin {{citrix_sessions.ps1}} is needed.
+ This check monitors the number of active, inactive an total Sessions on a citrix server.
+ To make this check work you have to either install the agent plugin
+ - {{citrix_xenapp.ps1}} or
+ - {{citrix_farm.ps1}}.
+ The agent plugin {{citrix_sessions.ps1}} is now deprecated.
 
 discovery:
  One service is created.

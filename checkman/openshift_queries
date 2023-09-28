@@ -1,4 +1,4 @@
-title: Kubernetes: OpenShift queries
+title: Kubernetes: OpenShift Cluster Collector
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPLv2
@@ -54,6 +54,9 @@ description:
  `Incompatible data received` indicates that the labels of the received metrics
  did not match those expected by Checkmk. The labels depend on the collectors
  of the cluster.
+
+ Note, that the information displayed by this service changes, if the
+ corresponding collector is changed.
 
 discovery:
  One service is created if the option `Use data from Openshift` is set.

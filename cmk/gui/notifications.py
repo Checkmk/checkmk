@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     permission_section_registry,
@@ -38,9 +38,13 @@ from cmk.gui.permissions import (
 from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -191,7 +195,6 @@ def _may_see_failed_notifications() -> bool:
     )
 
 
-@page_registry.register_page("clear_failed_notifications")
 class ClearFailedNotificationPage(Page):
     def __init__(self) -> None:
         if not _may_see_failed_notifications():
@@ -210,7 +213,7 @@ class ClearFailedNotificationPage(Page):
                 make_header(html, title, breadcrumb)
 
                 for message in get_flashed_messages():
-                    html.show_message(message)
+                    html.show_message(message.msg)
                 user_profile_async_replication_page(back_url="clear_failed_notifications.py")
                 return
 
@@ -250,12 +253,13 @@ class ClearFailedNotificationPage(Page):
         self, acktime: float, failed_notifications: LivestatusResponse, breadcrumb: Breadcrumb
     ) -> PageMenu:
         confirm_url = make_simple_link(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=makeactionuri(
                     request, transactions, [("acktime", str(acktime)), ("_confirm", "1")]
                 ),
-                message=_("Do you really want to acknowledge all failed notifications up to %s?")
-                % cmk.utils.render.date_and_time(acktime),
+                title=_("Acknowledge all failed notifications"),
+                message=("Up to: %s") % cmk.utils.render.date_and_time(acktime),
+                confirm_button=_("Acknowledge"),
             )
         )
 
@@ -269,7 +273,7 @@ class ClearFailedNotificationPage(Page):
                             title=_("Actions"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Confirm"),
+                                    title=_("Acknowledge"),
                                     icon_name="save",
                                     item=confirm_url,
                                     is_shortcut=True,

@@ -1,0 +1,14 @@
+Title: df: No longer crash if volume name is shown on a cluster
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689713619
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The check plugin <i>"Used Space and Inodes in Filesystems"</i> (<tt>df</tt>) crashed if the option <i>"Show volume name in service output"</i> was configured for clustered services.
+
+

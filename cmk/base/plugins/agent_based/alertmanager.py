@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Alertmanager Check"""
 
 import json
 from enum import Enum
-from typing import Dict, List, NamedTuple, Optional, Tuple, TypedDict
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -39,35 +41,35 @@ class Rule(NamedTuple):
     group_name: str
     status: RuleState
     severity: Severity
-    message: Optional[str]
+    message: str | None
 
 
-Group = Dict[str, Rule]
-Section = Dict[str, Group]
+Group = dict[str, Rule]
+Section = dict[str, Group]
 
-StateMapping = Dict[str, int]
+StateMapping = dict[str, int]
 
 
 class GroupServices(TypedDict, total=False):
     min_amount_rules: int
-    no_group_services: List[str]
+    no_group_services: list[str]
 
 
 class DiscoveryParams(TypedDict, total=False):
     # TODO: Remove total=False and mark summary_service as
     # not required when upgrading to Python 3.10:
     # https://www.python.org/dev/peps/pep-0655/
-    group_services: Tuple[bool, GroupServices]
+    group_services: tuple[bool, GroupServices]
     summary_service: bool
 
 
 class AlertRemapping(TypedDict):
-    rule_names: List[str]
+    rule_names: list[str]
     map: StateMapping
 
 
 class CheckParams(TypedDict, total=False):
-    alert_remapping: List[AlertRemapping]
+    alert_remapping: list[AlertRemapping]
 
 
 default_discovery_parameters = DiscoveryParams(
@@ -103,7 +105,7 @@ def _get_summary_count(section: Section) -> int:
     return sum(len(group) for group in section.values())
 
 
-def _get_mapping(rule: Rule, params: CheckParams) -> Optional[StateMapping]:
+def _get_mapping(rule: Rule, params: CheckParams) -> StateMapping | None:
     """Returns remapping for a specific rule if one exists"""
     for mapping in params.get("alert_remapping", []):
         if rule.rule_name in mapping["rule_names"]:
@@ -232,8 +234,9 @@ def check_alertmanager_groups(item: str, params: CheckParams, section: Section) 
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s"
-                    % (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="{}: {}".format(
+                        rule.rule_name, rule.message if rule.message else "No message"
+                    ),
                 )
 
 
@@ -274,8 +277,9 @@ def check_alertmanager_summary(params: CheckParams, section: Section) -> CheckRe
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s"
-                    % (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="{}: {}".format(
+                        rule.rule_name, rule.message if rule.message else "No message"
+                    ),
                 )
 
 

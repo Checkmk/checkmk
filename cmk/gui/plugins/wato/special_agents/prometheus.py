@@ -1,31 +1,39 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import typing
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._utils import MetricName
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     filter_kubernetes_namespace_element,
     RulespecGroupVMCloudContainer,
-    ssl_verification,
 )
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
     Float,
     Hostname,
-    Integer,
     ListChoice,
     ListOf,
     Migrate,
+    NetworkPort,
     TextInput,
     Tuple,
 )
+
+
+def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
+    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
 
 
 def _check_not_empty_exporter_dict(value, _varprefix):
@@ -45,7 +53,7 @@ def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
     return Migrate(
         valuespec=Dictionary(
             elements=[
-                ("port", Integer(title=_("Port"), default_value=6443)),
+                ("port", NetworkPort(title=_("Port"), default_value=6443)),
                 (
                     "path_prefix",
                     TextInput(
@@ -77,6 +85,7 @@ def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
             help=help,
         ),
         migrate=_rename_path_prefix_key,
+        validate=_deprecate_dynamic_host_adress,
     )
 
 
@@ -107,14 +116,14 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                     choices=[
                         (
                             "ip_address",
-                            _("IP Address"),
+                            _("(deprecated) IP Address"),
                             _valuespec_connection_elements(
                                 help=_("Use IP Address of assigned host")
                             ),
                         ),
                         (
                             "host_name",
-                            _("Host name"),
+                            _("(deprecated) Host name"),
                             _valuespec_connection_elements(
                                 help=_("Use host name of assigned host")
                             ),
@@ -146,7 +155,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                     title=_("Prometheus connection option"),
                 ),
             ),
-            ssl_verification(),
+            tls_verify_flag_default_no(),
             api_request_authentication(),
             (
                 "protocol",
@@ -216,55 +225,6 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                     ],
                                     title=_("Node Exporter metrics"),
                                     optional_keys=["host_mapping"],
-                                ),
-                            ),
-                            (
-                                "kube_state",
-                                _("Kube-state-metrics"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "cluster_name",
-                                            Hostname(
-                                                title=_("Cluster name"),
-                                                allow_empty=False,
-                                                help=_(
-                                                    "You must specify a name for your Kubernetes cluster. The provided name"
-                                                    " will be used to create a piggyback host for the cluster related services."
-                                                ),
-                                            ),
-                                        ),
-                                        namespace_element,
-                                        filter_kubernetes_namespace_element(),
-                                        (
-                                            "entities",
-                                            ListChoice(
-                                                choices=[
-                                                    ("cluster", _("Cluster")),
-                                                    ("nodes", _("Nodes")),
-                                                    ("services", _("Services")),
-                                                    ("pods", _("Pods")),
-                                                    ("daemon_sets", _("Daemon sets")),
-                                                ],
-                                                default_value=[
-                                                    "cluster",
-                                                    "nodes",
-                                                    "services",
-                                                    "pods",
-                                                    "daemon_sets",
-                                                ],
-                                                allow_empty=False,
-                                                title=_("Retrieve information about..."),
-                                                help=_(
-                                                    "For your Kubernetes cluster select for which entity levels "
-                                                    "you would like to retrieve information about. Piggyback hosts "
-                                                    "for the respective entities will be created."
-                                                ),
-                                            ),
-                                        ),
-                                    ],
-                                    title=_("Kube state metrics"),
-                                    optional_keys=["namespace_include_patterns"],
                                 ),
                             ),
                             (
@@ -582,7 +542,8 @@ def _validate_prometheus_service_metrics(value, _varprefix):
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:prometheus",
+        name=RuleGroup.SpecialAgents("prometheus"),
         valuespec=_valuespec_generic_metrics_prometheus,
+        doc_references={DocReference.PROMETHEUS: _("Integrating Prometheus")},
     )
 )

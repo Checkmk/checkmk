@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,31 +17,17 @@ import fnmatch
 import hashlib
 import pathlib
 import time
-from typing import (
-    Any,
-    Counter,
-    Dict,
-    IO,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Match,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
+from re import Match
+from typing import Any, IO, Literal
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-# from cmk.base.config import logwatch_rule will NOT work!
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
-    service_extra_conf,
 )
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
@@ -50,22 +36,22 @@ from .utils import eval_regex, logwatch
 
 AllParams = Sequence[Mapping[str, Any]]
 
-ClusterSection = Dict[Optional[str], logwatch.Section]
+ClusterSection = dict[str | None, logwatch.Section]
 
-GroupingPattern = Tuple[str, str]
+GroupingPattern = tuple[str, str]
 DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
 
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
-def _compile_params(item: str) -> Dict[str, Any]:
-    compiled_params: Dict[str, Any] = {"reclassify_patterns": []}
+def _compile_params(item: str) -> dict[str, Any]:
+    compiled_params: dict[str, Any] = {"reclassify_patterns": []}
 
-    for rule in service_extra_conf(host_name(), item, cmk.base.config.logwatch_rules):
+    for rule in logwatch.service_extra_conf(item):
         if isinstance(rule, dict):
             compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:
@@ -122,7 +108,7 @@ def discover_logwatch_groups(
         invert=True,
     )
     inventory_groups = _get_discovery_groups(params)
-    inventory: Dict[str, Set[GroupingPattern]] = {}
+    inventory: dict[str, set[GroupingPattern]] = {}
 
     for logfile in not_forwarded_logs:
         for group_patterns in inventory_groups:
@@ -150,6 +136,9 @@ def check_logwatch(
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
+    yield from logwatch.check_unreadable_files(
+        logwatch.get_unreadable_logfiles(item, section), State.CRIT
+    )
 
     value_store = get_value_store()
 
@@ -172,7 +161,7 @@ def check_logwatch(
 
 
 def cluster_check_logwatch(
-    item: str, section: Mapping[str, Optional[logwatch.Section]]
+    item: str, section: Mapping[str, logwatch.Section | None]
 ) -> CheckResult:
     yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
 
@@ -203,7 +192,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> Tuple[str, str]:
+def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> tuple[str, str]:
     num_perc_s = group_name.count("%s")
     matches = [g or "" for g in match.groups()]
 
@@ -225,10 +214,10 @@ def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> Tuple
 
 
 def _groups_of_logfile(
-    group_patterns: List[Tuple[str, GroupingPattern]],
+    group_patterns: list[tuple[str, GroupingPattern]],
     filename: str,
-) -> Dict[str, Set[GroupingPattern]]:
-    found_these_groups: Dict[str, Set[GroupingPattern]] = {}
+) -> dict[str, set[GroupingPattern]]:
+    found_these_groups: dict[str, set[GroupingPattern]] = {}
     for group_name, (inclusion, exclusion) in group_patterns:
         inclusion_is_regex = inclusion.startswith("~")
         exclusion_is_regex = exclusion.startswith("~")
@@ -261,7 +250,6 @@ def _match_group_patterns(
     inclusion: str,
     exclusion: str,
 ) -> bool:
-
     # NOTE: in the grouped sap and fileinfo checks, the *exclusion* pattern wins.
     inclusion_is_regex = inclusion.startswith("~")
     if inclusion_is_regex:
@@ -316,7 +304,7 @@ def check_logwatch_groups(
 def cluster_check_logwatch_groups(
     item: str,
     params: DiscoveredGroupParams,
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     yield from check_logwatch_groups(
         item, params, {k: v for k, v in section.items() if v is not None}
@@ -346,11 +334,10 @@ def truncate_by_line(file_path: pathlib.Path, offset: int) -> None:
 
 
 class LogwatchBlock:
-
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, header, patterns) -> None:  # type: ignore[no-untyped-def]
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines: list = []
@@ -362,7 +349,7 @@ class LogwatchBlock:
 
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
-        header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
+        header = f"<<<{self._timestamp} {state_str}>>>\n"
         return [header] + self.lines
 
     def add_line(self, line, reclassify):
@@ -388,7 +375,7 @@ class LogwatchBlock:
             self.states_counter[level] += 1
 
         if reclassify and level != "I":
-            self.lines.append("%s %s\n" % (level, text))
+            self.lines.append(f"{level} {text}\n")
 
 
 class LogwatchBlockCollector:
@@ -396,7 +383,7 @@ class LogwatchBlockCollector:
         self.worst = 0
         self.last_worst_line = ""
         self.saw_lines = False
-        self._output_lines: List[str] = []
+        self._output_lines: list[str] = []
         self._states_counter: Counter[str] = Counter()
 
     @property
@@ -423,7 +410,7 @@ class LogwatchBlockCollector:
     def clear_lines(self) -> None:
         self._output_lines = []
 
-    def get_lines(self) -> List[str]:
+    def get_lines(self) -> list[str]:
         return self._output_lines
 
     def get_count_info(self) -> str:
@@ -441,7 +428,7 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     *,
     item: str,
     patterns,
@@ -559,7 +546,7 @@ def _truncate_way_too_large_result(
     return True
 
 
-def _extract_blocks(  # type:ignore[no-untyped-def]
+def _extract_blocks(  # type: ignore[no-untyped-def]
     lines: Iterable[str],
     patterns,
     reclassify: bool,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -308,6 +308,18 @@ from tests.testlib import ActiveCheck
                 "virtual.host",
             ],
         ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "host": {"address_family": None},
+            },
+            [
+                "--sni",
+                "-I",
+                "$_HOSTADDRESS_4$",
+            ],
+        ),
         pytest.param(
             {
                 "name": "irrelevant",
@@ -338,7 +350,6 @@ def test_check_http_argument_parsing(
     params: Mapping[str, Any],
     expected_args: Sequence[object],
 ) -> None:
-
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_http")
     assert active_check.run_argument_function(params) == expected_args

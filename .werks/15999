@@ -1,0 +1,12 @@
+Title: cisco_cpu_multiitem, cisco_fru_module_status: Fix parsing PhysicalClasses
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695802874
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

@@ -3,7 +3,7 @@
 #
 # TODO: make output visible after job starting
 # TODO: make diagnostic better
-# 2019 (c) tribe29
+# 2019 (c) Checkmk GmbH
 # 
 
 $make_exe = $Env:make_exe
@@ -12,11 +12,10 @@ if( "$make_exe" -eq "" ){
         return 1
 }
 
-$cargo_build = (Get-Item -Path ".\").FullName + "\scripts\call_cargo_build.cmd"
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
-$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\cmk-agent-ctl"
+$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\cmk-agent-ctl"
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
@@ -83,7 +82,7 @@ else {
 }
 
 $cargo_b = {
-& Set-Location $using:cmk_agent_ctl_dir; .\cargo_build.cmd
+& Set-Location $using:cmk_agent_ctl_dir; .\run.cmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error in cargo build: " $LASTEXITCODE -foreground Red
     throw "Failed cargo build..."

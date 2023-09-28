@@ -1,31 +1,36 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import cast, Literal, TYPE_CHECKING, TypedDict
+from typing import cast, Literal, TYPE_CHECKING
 
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, ValidationError
+from typing_extensions import TypedDict
 
-from cmk.utils.type_defs import (
+from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
     HostOrServiceConditionsNegated,
     HostOrServiceConditionsSimple,
-    LabelConditions,
+)
+from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
     TagConditionNOR,
     TagConditionOR,
 )
+from cmk.utils.tags import TagID
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields import base
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
 
 from cmk import fields
+
+LabelConditions = dict[str, str | TagConditionNE]
 
 # Needed for cast()-ing. Do not move into typing.TYPE_CHECKING
 ApiExpressionValue = list[str] | str
@@ -152,7 +157,7 @@ class LabelConditionSchema(base.BaseSchema):
     )
 
     @pre_dump(pass_many=True)
-    def convert_to_api(  # type:ignore[no-untyped-def]
+    def convert_to_api(  # type: ignore[no-untyped-def]
         self,
         data,
         many: bool = False,
@@ -204,7 +209,6 @@ class LabelConditionSchema(base.BaseSchema):
 
 
 class TagConditionSchemaBase(base.BaseSchema):
-
     allowed_operators: tuple[str, str]
     operator_type: str
 
@@ -252,6 +256,7 @@ class TagConditionSchemaBase(base.BaseSchema):
         many=False,
         **kwargs,
     ):
+        value: TagCondition | str
         if self.operator_type == "collection":
             value = _collection_value(data["value"], data["operator"])
         elif self.operator_type == "scalar":
@@ -541,7 +546,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
             raise ValidationError(f"Unknown format: {_entry}")
 
-        def _ensure_list(_entry) -> list[str]:  # type:ignore[no-untyped-def]
+        def _ensure_list(_entry) -> list[str]:  # type: ignore[no-untyped-def]
             if isinstance(_entry, list):
                 return _entry
 
@@ -818,10 +823,10 @@ class InputRuleObject(base.BaseSchema):
 
     ruleset = fields.String(
         description="Name of rule set.",
-        example="host_config",
+        example="host_label_rules",
         required=True,
     )
-    folder = gui_fields.FolderField(required=True, example="~router")
+    folder = gui_fields.FolderField(required=True, example="~hosts~linux")
     properties = fields.Nested(
         RuleProperties,
         description="Configuration values for rules.",
@@ -833,7 +838,7 @@ class InputRuleObject(base.BaseSchema):
             "the 'export for API' menu item in the Rule Editor of the GUI. The value is expected "
             "to be a valid Python type."
         ),
-        example='{"ignore_fs_types": ["tmpfs"]}',
+        example="{'cmk/os_family': 'linux'}",
     )
     conditions = fields.Nested(
         RuleConditions,
@@ -843,7 +848,7 @@ class InputRuleObject(base.BaseSchema):
 
 
 def _unpack_value(
-    v: TagCondition | HostOrServiceConditionsNegated,
+    v: str | TagCondition | HostOrServiceConditionsNegated,
 ) -> ApiExpressionValue | None:
     """Unpacks the value from a condition value
 
@@ -858,7 +863,7 @@ def _unpack_value(
         >>> _unpack_value(None)
 
 
-        >>> _unpack_value({'foo': 'bar'})  # type: ignore
+        >>> _unpack_value({'foo': 'bar'})  # type: ignore[arg-type]
         Traceback (most recent call last):
         ...
         ValueError: Unknown operator: {'foo': 'bar'}
@@ -921,7 +926,7 @@ def _scalar_value(
     if operator == "is":  # pylint: disable=no-else-return
         return value
     elif operator == "is_not":
-        return {"$ne": value}
+        return {"$ne": TagID(value)}
     else:
         raise ValidationError(f"Unsupported scalar operator: {operator} {value!r}")
 
@@ -957,9 +962,9 @@ def _collection_value(
         raise ValidationError(f"Unsupported data type: {value!r}")
 
     if operator == "one_of":  # pylint: disable=no-else-return
-        return {"$or": value}
+        return {"$or": [TagID(v) for v in value]}
     elif operator == "none_of":
-        return {"$nor": value}
+        return {"$nor": [TagID(v) for v in value]}
     else:
         raise ValidationError(f"Unsupported list operator: {operator} {value!r}")
 
@@ -972,7 +977,7 @@ class RuleSearchOptions(base.BaseSchema):
     )
 
 
-def _unpack_operator(v) -> ApiOperator:  # type:ignore[no-untyped-def]
+def _unpack_operator(v) -> ApiOperator:  # type: ignore[no-untyped-def]
     """Unpacks the operator from a condition value
 
     Examples:
@@ -992,7 +997,7 @@ def _unpack_operator(v) -> ApiOperator:  # type:ignore[no-untyped-def]
         >>> _unpack_operator(None)
         'is'
 
-        >>> _unpack_operator({"foo": "bar"})  # type: ignore
+        >>> _unpack_operator({"foo": "bar"})
         Traceback (most recent call last):
         ...
         marshmallow.exceptions.ValidationError: Unknown operator: 'foo'

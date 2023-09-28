@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import glob
 import os
 import subprocess
@@ -11,8 +10,8 @@ from pathlib import Path
 
 import cmk.utils
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -95,13 +94,11 @@ def _git_command(args: list[str]) -> None:
             encoding="utf-8",
             check=False,
         )
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            raise MKGeneralException(
-                _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
-                % (subprocess.list2cmdline(command), e)
-            )
-        raise
+    except FileNotFoundError as e:
+        raise MKGeneralException(
+            _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
+            % (subprocess.list2cmdline(command), e)
+        ) from e
 
     if completed_process.returncode:
         raise MKGeneralException(
@@ -120,10 +117,8 @@ def _git_has_pending_changes() -> bool:
             check=False,
         )
         return bool(completed_process.stdout)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return False  # ignore missing git command
-        raise
+    except FileNotFoundError:
+        return False  # ignore missing git command
 
 
 # TODO: Use cmk.store

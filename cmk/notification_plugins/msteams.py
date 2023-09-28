@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from cmk.utils.ms_teams_constants import (
     ms_teams_tmpl_svc_summary,
     ms_teams_tmpl_svc_title,
 )
-from cmk.utils.type_defs import PluginNotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,
@@ -79,9 +79,7 @@ def _get_text_fields(
     context: PluginNotificationContext,
     notify_what: str,
 ) -> tuple[str, str, str, str]:
-    subtitle: str = MAP_TYPES[
-        context["NOTIFICATIONTYPE"] if context["NOTIFICATIONTYPE"] in MAP_TYPES else ""
-    ]
+    subtitle: str = MAP_TYPES.get(context["NOTIFICATIONTYPE"], "")
     if notify_what == "SERVICE":
         return (
             context.get("PARAMETER_SERVICE_TITLE", ms_teams_tmpl_svc_title()),

@@ -1,0 +1,21 @@
+Title: mk_oracle: Fix error in the mk_oracle plugin
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1686724789
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Werk 15848 (version 2.1.0p29) introduced a bug which caused the mk_oracle
+plugin to execute incorrectly and stop sending data to Checkmk.
+
+If called from the command line from the plugin's parent directory, the plugin
+incorrectly reported `Unhandled location` and terminated, even if the location
+of the plugin was correct.
+
+
+
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,6 @@ from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
 from .graph import TemplateGraphDashlet
 from .logo import MKLogoDashlet
-from .overview import OverviewDashlet
 from .snapin import SnapinDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
@@ -38,7 +37,6 @@ def register_dashlets(dashlet_registry: DashletRegistry) -> None:
     dashlet_registry.register(FailedNotificationsDashlet)
     dashlet_registry.register(TemplateGraphDashlet)
     dashlet_registry.register(MKLogoDashlet)
-    dashlet_registry.register(OverviewDashlet)
     dashlet_registry.register(SnapinDashlet)
     dashlet_registry.register(HostStatsDashlet)
     dashlet_registry.register(ServiceStatsDashlet)

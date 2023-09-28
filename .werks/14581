@@ -1,0 +1,22 @@
+Title: AWS: Allow configurable piggyback names
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1675418824
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+When creating a piggyback host for an EC2 instance, <tt>agent_aws</tt> uses the format
+C+:
+{Private IPv4 address}-{region}-{Instance ID}
+C-:
+This format guarantees that the piggback name is always unique, even when instances are restarted
+and could potentially switch their IP address. However, in practice this problem can be neglected
+and only using the Private IP DNS name as a piggyback name is safe. With this werk, the option
+<tt>Piggyback names</tt> in the rule <tt>Amazon Web Services (AWS)</tt> allows you to configure how
+piggyback hosts are named.
+
+Note, that if a host changes it's name, then all historical data is lost.
+

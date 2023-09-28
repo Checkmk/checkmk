@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Sequence
 from datetime import datetime
+from typing import cast
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.type_defs import UserId, UserObject, Users, UserSpec
+from cmk.gui.type_defs import UserObject, Users, UserSpec
+from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
@@ -87,11 +88,33 @@ def edit_users(changed_users: UserObject) -> None:
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _l("Created new users: %s") % ", ".join(new_users_info))
+        add_change(
+            "edit-users",
+            _l("Created new users: %s") % ", ".join(new_users_info),
+        )
     if modified_users_info:
-        add_change("edit-users", _l("Modified users: %s") % ", ".join(modified_users_info))
+        add_change(
+            "edit-users",
+            _l("Modified users: %s") % ", ".join(modified_users_info),
+        )
+        hooks.call("users-changed", modified_users_info)
 
     userdb.save_users(all_users, datetime.now())
+
+
+def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+    edit_users(
+        {
+            user_id: {
+                "attributes": cast(
+                    UserSpec,
+                    {k: v for k, v in settings.items() if k != custom_attribute_name},
+                ),
+                "is_new_user": False,
+            }
+            for user_id, settings in userdb.load_users(lock=True).items()
+        }
+    )
 
 
 def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:
@@ -147,17 +170,14 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
-    # Authentication: Password or Secret
+    # Automation Secret
+    # Note: if a password is used it is verified before this; we only know the hash here
     if "automation_secret" in user_attrs:
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError(
-                "secret", _("Please specify a secret of at least 10 characters length.")
+                "_auth_secret", _("Please enter an automation secret of at least 10 characters.")
             )
-    else:
-        password = user_attrs.get("password")
-        if password:
-            verify_password_policy(Password(password))
 
     # Email
     email = user_attrs.get("email")
@@ -182,7 +202,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Custom user attributes
-    for name, attr in userdb.get_user_attributes():
+    for name, attr in get_user_attributes():
         value = user_attrs.get(name)
         attr.valuespec().validate_value(value, "ua_" + name)
 
@@ -201,14 +221,27 @@ def get_vs_user_idle_timeout():
                 title=_("Disable the login timeout"),
                 totext="",
             ),
-            Age(
-                title=_("Set an individual idle timeout"),
-                display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
-            ),
+            vs_idle_timeout_duration(),
         ],
         orientation="horizontal",
+    )
+
+
+def vs_idle_timeout_duration() -> Age:
+    return Age(
+        title=_("Set an individual idle timeout"),
+        display=["minutes", "hours", "days"],
+        minvalue=60,
+        help=_(
+            "Normally a user login session is valid until the password is changed or "
+            "the user is locked. By enabling this option, you can apply a time limit "
+            "to login sessions which is applied when the user stops interacting with "
+            "the GUI for a given amount of time. When a user is exceeding the configured "
+            "maximum idle time, the user will be logged out and redirected to the login "
+            "screen to renew the login session. This setting can be overridden for each "
+            "user individually in the profile of the users."
+        ),
+        default_value=5400,
     )
 
 
@@ -230,31 +263,20 @@ def notification_script_choices():
 
 def verify_password_policy(password: Password) -> None:
     min_len = active_config.password_policy.get("min_length")
-    if min_len and password.char_count() < min_len:
+    num_groups = active_config.password_policy.get("num_groups")
+
+    result = password.verify_policy(PasswordPolicy(min_len, num_groups))
+    if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
             "password",
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
-
-    num_groups = active_config.password_policy.get("num_groups")
-    if num_groups:
-        groups = {}
-        for c in password.as_string():
-            if c in "abcdefghijklmnopqrstuvwxyz":
-                groups["lcase"] = 1
-            elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                groups["ucase"] = 1
-            elif c in "0123456789":
-                groups["numbers"] = 1
-            else:
-                groups["special"] = 1
-
-        if sum(groups.values()) < num_groups:
-            raise MKUserError(
-                "password",
-                _(
-                    "The password does not use enough character groups. You need to "
-                    "set a password which uses at least %d of them."
-                )
-                % num_groups,
+    if result == PasswordPolicy.Result.TooSimple:
+        raise MKUserError(
+            "password",
+            _(
+                "The password does not use enough character groups. You need to "
+                "set a password which uses at least %d of them."
             )
+            % num_groups,
+        )

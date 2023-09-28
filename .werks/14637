@@ -6,7 +6,7 @@ Date: 1658530630
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The implementation of the discovery rules of the plugin "Oracle Tablespaces: Perfomance Data" was not quite right.
 If you see redundant output after this werk, please rediscover the affected services.

@@ -1,26 +1,52 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
+
+from __future__ import annotations
+
 import enum
-from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Sequence, Tuple, Union
+import sys
+from collections.abc import Callable, Iterable, Sequence
+from typing import NamedTuple, overload, Self
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
+from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
 
-from cmk.base.api.agent_based.type_defs import (
-    ParametersTypeAlias,
-    PluginSuppliedLabel,
-    RuleSetTypeName,
-)
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import MetricTuple
+from cmk.checkengine.sectionparser import ParsedSectionName
+
+from cmk.base.api.agent_based.type_defs import RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
-_OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
+_OptionalPair = tuple[float | None, float | None] | None
 
 
-class ServiceLabel(PluginSuppliedLabel):
+class _KV(NamedTuple):
+    name: str
+    value: str
+
+
+class EvalableFloat(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+
+    def __str__(self) -> str:
+        return super().__repr__()
+
+    def __repr__(self) -> str:
+        if self > sys.float_info.max:
+            return "1e%d" % (sys.float_info.max_10_exp + 1)
+        if self < -1 * sys.float_info.max:
+            return "-1e%d" % (sys.float_info.max_10_exp + 1)
+        return super().__repr__()
+
+
+class ServiceLabel(_KV):
     """Representing a service label in Checkmk
 
     This class creates a service label that can be passed to a 'Service' object.
@@ -30,12 +56,24 @@ class ServiceLabel(PluginSuppliedLabel):
 
     """
 
+    __slots__ = ()
+
+    def __new__(cls, name: str, value: str) -> Self:
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+        return super().__new__(cls, name, value)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
+
 
 class Service(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_ServiceTuple",
         [
-            ("item", Optional[str]),
+            ("item", str | None),
             ("parameters", ParametersTypeAlias),
             ("labels", Sequence[ServiceLabel]),
         ],
@@ -60,10 +98,10 @@ class Service(
     def __new__(
         cls,
         *,
-        item: Optional[str] = None,
-        parameters: Optional[ParametersTypeAlias] = None,
-        labels: Optional[Sequence[ServiceLabel]] = None,
-    ) -> "Service":
+        item: str | None = None,
+        parameters: ParametersTypeAlias | None = None,
+        labels: Sequence[ServiceLabel] | None = None,
+    ) -> Service:
         return super().__new__(
             cls,
             item=cls._parse_item(item),
@@ -72,28 +110,28 @@ class Service(
         )
 
     @staticmethod
-    def _parse_item(item: Optional[str]) -> Optional[str]:
+    def _parse_item(item: str | None) -> str | None:
         if item is None:
             return None
         if item and isinstance(item, str):
             return item
-        raise TypeError("'item' must be a non empty string or ommited entirely, got %r" % (item,))
+        raise TypeError(f"'item' must be a non empty string or ommited entirely, got {item!r}")
 
     @staticmethod
-    def _parse_parameters(parameters: Optional[ParametersTypeAlias]) -> ParametersTypeAlias:
+    def _parse_parameters(parameters: ParametersTypeAlias | None) -> ParametersTypeAlias:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
             return parameters
-        raise TypeError("'parameters' must be dict or None, got %r" % (parameters,))
+        raise TypeError(f"'parameters' must be dict or None, got {parameters!r}")
 
     @staticmethod
-    def _parse_labels(labels: Optional[Sequence[ServiceLabel]]) -> Sequence[ServiceLabel]:
+    def _parse_labels(labels: Sequence[ServiceLabel] | None) -> Sequence[ServiceLabel]:
         if not labels:
             return []
         if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):
             return labels
-        raise TypeError("'labels' must be list of ServiceLabels or None, got %r" % (labels,))
+        raise TypeError(f"'labels' must be list of ServiceLabels or None, got {labels!r}")
 
     def __repr__(self) -> str:
         args = ", ".join(
@@ -122,7 +160,7 @@ class State(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union["State", int]) -> "State":
+    def best(cls, *args: State | int) -> State:
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -158,7 +196,7 @@ class State(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union["State", int]) -> "State":
+    def worst(cls, *args: State | int) -> State:
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -189,8 +227,8 @@ class Metric(
         [
             ("name", str),
             ("value", EvalableFloat),
-            ("levels", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
-            ("boundaries", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("levels", tuple[EvalableFloat | None, EvalableFloat | None]),
+            ("boundaries", tuple[EvalableFloat | None, EvalableFloat | None]),
         ],
     )
 ):
@@ -218,11 +256,11 @@ class Metric(
         *,
         levels: _OptionalPair = None,
         boundaries: _OptionalPair = None,
-    ) -> "Metric":
+    ) -> Metric:
         cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
-            raise TypeError("value for metric must be float or int, got %r" % (value,))
+            raise TypeError(f"value for metric must be float or int, got {value!r}")
 
         return super().__new__(
             cls,
@@ -244,7 +282,7 @@ class Metric(
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
-    def _sanitize_single_value(field: str, value: Optional[float]) -> Optional[EvalableFloat]:
+    def _sanitize_single_value(field: str, value: float | None) -> EvalableFloat | None:
         if value is None:
             return None
         if isinstance(value, (int, float)):
@@ -256,7 +294,7 @@ class Metric(
         cls,
         field: str,
         values: _OptionalPair,
-    ) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
+    ) -> tuple[EvalableFloat | None, EvalableFloat | None]:
         if values is None:
             return None, None
 
@@ -269,11 +307,9 @@ class Metric(
         )
 
     def __repr__(self) -> str:
-        levels = "" if self.levels == (None, None) else ", levels=%r" % (self.levels,)
-        boundaries = (
-            "" if self.boundaries == (None, None) else ", boundaries=%r" % (self.boundaries,)
-        )
-        return "%s(%r, %r%s%s)" % (
+        levels = "" if self.levels == (None, None) else f", levels={self.levels!r}"
+        boundaries = "" if self.boundaries == (None, None) else f", boundaries={self.boundaries!r}"
+        return "{}({!r}, {!r}{}{})".format(
             self.__class__.__name__,
             self.name,
             self.value,
@@ -316,9 +352,9 @@ class Result(ResultTuple):
         >>> # run function to make sure we have a working example
         >>> _ = list(my_check_function())
 
-    The ``notice`` keyword has the special property that it will only be displayed if the
-    corresponding state is not OK. Otherwise we assume it is sufficient if the information
-    is available in the details view:
+    The ``notice`` keyword has the special property that it will only be displayed in the summary
+    if the state passed to _this_ ``Result`` instance is not OK.
+    Otherwise we assume it is sufficient to show the information in the details view:
 
         >>> def my_check_function() -> None:
         ...     count = 23
@@ -342,8 +378,8 @@ class Result(ResultTuple):
         *,
         state: State,
         summary: str,
-        details: Optional[str] = None,
-    ) -> "Result":
+        details: str | None = None,
+    ) -> Result:
         pass
 
     @overload
@@ -352,14 +388,14 @@ class Result(ResultTuple):
         *,
         state: State,
         notice: str,
-        details: Optional[str] = None,
-    ) -> "Result":
+        details: str | None = None,
+    ) -> Result:
         pass
 
-    def __new__(  # type:ignore[no-untyped-def]
+    def __new__(  # type: ignore[no-untyped-def]
         cls,
         **kwargs,
-    ) -> "Result":
+    ) -> Result:
         state, summary, details = _create_result_fields(**kwargs)
         return super().__new__(
             cls,
@@ -381,10 +417,10 @@ class Result(ResultTuple):
 def _create_result_fields(
     *,
     state: State,
-    summary: Optional[str] = None,
-    notice: Optional[str] = None,
-    details: Optional[str] = None,
-) -> Tuple[State, str, str]:
+    summary: str | None = None,
+    notice: str | None = None,
+    details: str | None = None,
+) -> tuple[State, str, str]:
     if not isinstance(state, State):
         raise TypeError(f"'state' must be a checkmk State constant, got {state}")
 
@@ -455,7 +491,7 @@ class IgnoreResults:
         self._value = value
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._value)
+        return f"{self.__class__.__name__}({self._value!r})"
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
@@ -464,22 +500,51 @@ class IgnoreResults:
         return isinstance(other, IgnoreResults) and self._value == other._value
 
 
-CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
+CheckResult = Iterable[IgnoreResults | Metric | Result]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]
 
 
+def consume_check_results(
+    # TODO(ml):  We should limit the type to `CheckResult` but that leads to
+    # layering violations.  We could also go with dependency inversion or some
+    # other slightly higher abstraction.  The code here is really concrete.
+    # Investigate and find a solution later.
+    subresults: Iterable[object],
+) -> tuple[Sequence[MetricTuple], Sequence[Result]]:
+    """Impedance matching between the Check API and the Check Engine."""
+    ignore_results: list[IgnoreResults] = []
+    results: list[Result] = []
+    perfdata: list[MetricTuple] = []
+    for subr in subresults:
+        if isinstance(subr, IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        elif isinstance(subr, Result):
+            results.append(subr)
+        else:
+            raise TypeError(subr)
+
+    # Consume *all* check results, and *then* raise, if we encountered
+    # an IgnoreResults instance.
+    if ignore_results:
+        raise IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
+
+
 class CheckPlugin(NamedTuple):
     name: CheckPluginName
-    sections: List[ParsedSectionName]
+    sections: list[ParsedSectionName]
     service_name: str
     discovery_function: DiscoveryFunction
-    discovery_default_parameters: Optional[ParametersTypeAlias]
-    discovery_ruleset_name: Optional[RuleSetName]
+    discovery_default_parameters: ParametersTypeAlias | None
+    discovery_ruleset_name: RuleSetName | None
     discovery_ruleset_type: RuleSetTypeName
     check_function: CheckFunction
-    check_default_parameters: Optional[ParametersTypeAlias]
-    check_ruleset_name: Optional[RuleSetName]
-    cluster_check_function: Optional[CheckFunction]
-    module: Optional[str]  # not available for auto migrated plugins.
+    check_default_parameters: ParametersTypeAlias | None
+    check_ruleset_name: RuleSetName | None
+    cluster_check_function: CheckFunction | None
+    module: str | None  # not available for auto migrated plugins.

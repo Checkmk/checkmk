@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,7 @@ from cmk.gui.utils.html import HTML
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_dictionary_vs(**kwargs) -> vs.Dictionary:  # type:ignore[no-untyped-def]
+def get_dictionary_vs(**kwargs) -> vs.Dictionary:  # type: ignore[no-untyped-def]
     return vs.Dictionary(
         elements=[
             ("a", vs.TextInput(title="A")),
@@ -55,8 +55,8 @@ class TestValueSpecDictionary:
         expect_validate_failure(get_dictionary_vs(), ["a", "b"])  # type: ignore[misc]
 
         # required_keys do what you would expect
-        expect_validate_success(get_dictionary_vs(required_keys=("a")), {"a": "a"})
-        expect_validate_failure(get_dictionary_vs(required_keys=("a")), empty_dict)
+        expect_validate_success(get_dictionary_vs(required_keys=("a",)), {"a": "a"})
+        expect_validate_failure(get_dictionary_vs(required_keys=("a",)), empty_dict)
 
         # optional_keys invert required_keys internally:
         # optional_keys=[a,b,c] == required_keys=[d]
@@ -158,6 +158,10 @@ class TestValueSpecDictionary:
         ) == {"the answer": "******"}
 
     def test_transform_value(self) -> None:
-        assert vs.Dictionary(elements=[("a", vs.TextInput()),]).transform_value(
+        assert vs.Dictionary(
+            elements=[
+                ("a", vs.TextInput()),
+            ]
+        ).transform_value(
             {"a": "lala"}
         ) == {"a": "lala"}

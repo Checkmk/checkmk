@@ -7,12 +7,12 @@ Version: 1.6.0b1
 Date: 1552033415
 Class: feature
 
-In the past conflicting check plugins with services called "Interface <ITEM>"
+In the past conflicting check plugins with services called `Interface <ITEM>`
 could lead to a "duplicate services" warning on the discovery page.
 
 To avoid this issue in the future, an API is now provided:
 
-If you add a new "Interface <ITEM>"- service, please add register the
+If you add a new `Interface <ITEM>`- service, please add register the
 scan function by decorating it with the line
 <tt>@network_interface_scan_registry.register</tt>.
 The matching devices will then be automatically excluded from the generic

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # DB2 support requires installation of the IBM Data Server Client:
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:
-#  https://pypi.python.org/pypi/ibm_db
+#  https://pypi.org/pypi/ibm_db
 
 # SQLAnywhere support requires installation of the SAP SQL Anywhere binaries:
 # https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0
@@ -17,7 +17,8 @@ import argparse
 import logging
 import os
 import sys
-from typing import NoReturn
+from collections.abc import Sequence
+from typing import Any, NoReturn
 
 import cmk.utils.password_store
 
@@ -82,7 +83,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "-o",
         "--procedure",
         action="store_true",
-        help="""treat the main argument as a procedure instead
+        help="""Treat the main argument as a procedure instead
                               of an SQL-Statement""",
     )
     parser.add_argument(
@@ -91,7 +92,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         metavar="CSV",
         default=[],
         type=lambda s: s.split(","),
-        help="""comma separated list if values of input variables
+        help="""Comma separated list of values of input variables
                              if required by the procedure""",
     )
     # optional arguments
@@ -125,7 +126,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         metavar="RANGE",
         default=MP_INF,
         type=levels,
-        help="""lower and upper level for the warning state,
+        help="""Lower and upper level for the warning state,
                              separated by a colon""",
     )
     parser.add_argument(
@@ -134,7 +135,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         metavar="RANGE",
         default=MP_INF,
         type=levels,
-        help="""lower and upper level for the critical state,
+        help="""Lower and upper level for the critical state,
                              separated by a colon""",
     )
     parser.add_argument(
@@ -211,7 +212,9 @@ def bail_out(exit_code: int, output: str) -> NoReturn:
 # For every DBMS specify a connect and execute function.
 # Add them in the dict in the 'main' connect and execute functions
 #
-def _default_execute(cursor, cmd, inpt, procedure):
+def _default_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: str
+) -> list[tuple[Any, ...]]:
     if procedure:
         LOG.info("SQL Procedure Name: %s", cmd)
         LOG.info("Input Values: %s", inpt)
@@ -224,33 +227,39 @@ def _default_execute(cursor, cmd, inpt, procedure):
     return cursor.fetchall()
 
 
-def postgres_connect(host, port, db_name, user, pwd):
+def postgres_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     import psycopg2  # type: ignore[import] # pylint: disable=import-outside-toplevel
 
     return psycopg2.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
-def postgres_execute(cursor, cmd, inpt, procedure):
+def postgres_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: str
+) -> list[tuple[Any, ...]]:
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-def mysql_connect(host, port, db_name, user, pwd):
+def mysql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     import pymysql  # pylint: disable=import-outside-toplevel
 
     return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)
 
 
-def mysql_execute(cursor, cmd, inpt, procedure):
+def mysql_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: str
+) -> list[tuple[Any, ...]]:
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-def mssql_connect(host, port, db_name, user, pwd):
+def mssql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
 
     return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
-def mssql_execute(cursor, cmd, _inpt, procedure):
+def mssql_execute(
+    cursor: Any, cmd: str, _inpt: Sequence[str], procedure: bool
+) -> list[tuple[Any, ...]]:
     if procedure:
         LOG.info("SQL Procedure Name: %s", cmd)
         cmd = "EXEC " + cmd
@@ -262,24 +271,26 @@ def mssql_execute(cursor, cmd, _inpt, procedure):
     return cursor.fetchall()
 
 
-def oracle_connect(host, port, db_name, user, pwd):
+def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     sys.path.append(
         f"/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     )
     try:
-        import cx_Oracle  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+        import oracledb  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
-        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
+        bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
 
     cstring = f"{user}/{pwd}@{host}:{port}/{db_name}"
-    return cx_Oracle.connect(cstring)
+    return oracledb.connect(cstring)
 
 
-def oracle_execute(cursor, cmd, inpt, procedure):
+def oracle_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: bool
+) -> list[tuple[Any, ...]]:
     try:
-        import cx_Oracle  # pylint: disable=import-error,import-outside-toplevel
+        import oracledb  # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
-        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
+        bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
 
     if procedure:
         LOG.info("SQL Procedure Name: %s", cmd)
@@ -288,18 +299,18 @@ def oracle_execute(cursor, cmd, inpt, procedure):
         # In an earlier version, this code-branch
         # had been executed regardles of the dbms.
         # clearly this is oracle specific.
-        outvar = cursor.var(cx_Oracle.STRING)  # pylint:disable=undefined-variable
+        outvar = cursor.var(oracledb.STRING)  # pylint: disable=undefined-variable
         # However, I have not been able to test it.
-        inpt.append(outvar)
+        parameters = [*inpt, outvar]
+        cursor.callproc(cmd, parameters)
 
-        cursor.callproc(cmd, inpt)
-
-        LOG.debug("inpt after 'callproc' = %r", inpt)
+        LOG.debug("parameters after 'callproc' = %r", parameters)
         LOG.debug("outvar = %r", outvar)
 
         # for empty input this is just
         #  _res = outvar.getvalue()
-        _res = ",".join(i.getvalue() for i in inpt)
+        _res = ",".join(i.getvalue() for i in parameters)
+
         LOG.debug("outvar.getvalue() = %r", _res)
         params_result = _res.split(",")
         LOG.debug("params_result = %r", params_result)
@@ -311,7 +322,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
     return cursor.fetchall()
 
 
-def db2_connect(host, port, db_name, user, pwd):
+def db2_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     # IBM data server driver
     try:
         import ibm_db  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
@@ -327,11 +338,13 @@ def db2_connect(host, port, db_name, user, pwd):
     return ibm_db_dbi.Connection(ibm_db_conn)
 
 
-def db2_execute(cursor, cmd, inpt, procedure):
+def db2_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: str
+) -> list[tuple[Any, ...]]:
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-def sqlanywhere_connect(host, port, db_name, user, pwd):
+def sqlanywhere_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     try:
         import sqlanydb  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
@@ -339,14 +352,16 @@ def sqlanywhere_connect(host, port, db_name, user, pwd):
     return sqlanydb.connect(uid=user, pwd=pwd, dbn=db_name, host=f"{host}:{port}")
 
 
-def sqlanywhere_execute(cursor, cmd, inpt, procedure):
+def sqlanywhere_execute(
+    cursor: Any, cmd: str, inpt: Sequence[str], procedure: str
+) -> list[tuple[Any, ...]]:
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
 # .
 
 
-def connect(dbms, host, port, db_name, user, pwd):
+def connect(dbms: str, host: str, port: int | None, db_name: str, user: str, pwd: str) -> Any:
     """Connect to the correct database
 
     A python library is imported depending on the value of dbms.
@@ -365,7 +380,9 @@ def connect(dbms, host, port, db_name, user, pwd):
     }[dbms](host, port, db_name, user, pwd)
 
 
-def execute(dbms, connection, cmd, inpt, procedure=False):
+def execute(
+    dbms: str, connection: Any, cmd: str, inpt: Sequence[str], procedure: bool = False
+) -> list[tuple[Any, ...]]:
     """Execute the sql statement, or call the procedure.
 
     Some corrections are made for libraries that do not adhere to the
@@ -381,7 +398,9 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
             "oracle": oracle_execute,
             "db2": db2_execute,
             "sqlanywhere": sqlanywhere_execute,
-        }[dbms](cursor, cmd, inpt, procedure)
+        }[dbms](
+            cursor, cmd, inpt, procedure
+        )  # type: ignore[operator]
     finally:
         cursor.close()
         connection.close()
@@ -390,7 +409,13 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
     return result
 
 
-def process_result(result, warn, crit, metrics, debug):
+def process_result(
+    result: list[tuple[Any, ...]],
+    warn: tuple[float, float],
+    crit: tuple[float, float],
+    metrics: str | None,
+    debug: bool,
+) -> tuple[int, str]:
     """Process the first row (!) of the result of the SQL command.
 
     Only the first row of the result (result[0]) is considered.

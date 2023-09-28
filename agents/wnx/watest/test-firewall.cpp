@@ -3,9 +3,9 @@
 //
 #include "pch.h"
 
-#include "firewall.h"
-#include "logger.h"
-#include "on_start.h"
+#include "wnx/firewall.h"
+#include "wnx/logger.h"
+#include "wnx/on_start.h"
 #include "tools/_misc.h"
 
 namespace cma::fw {
@@ -42,7 +42,7 @@ class FirewallApiFixture : public ::testing::Test {
     }
 };
 
-TEST_F(FirewallApiFixture, BaseIntegration) {
+TEST_F(FirewallApiFixture, BaseComponent) {
     ASSERT_FALSE(FindRule(g_rule_name));
     EXPECT_EQ(CountRules(g_rule_name, L""), 0);
     ASSERT_TRUE(CreateInboundRule(g_rule_name, g_app_name_base, 9999));

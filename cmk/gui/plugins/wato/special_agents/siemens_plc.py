@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 from typing import Any
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -18,6 +20,7 @@ from cmk.gui.valuespec import (
     ID,
     Integer,
     ListOf,
+    NetworkPort,
     TextInput,
     Tuple,
     ValueSpec,
@@ -118,7 +121,7 @@ def _special_agents_siemens_plc_siemens_plc_value() -> list[ValueSpec]:
             title=_("Ident of the value"),
             help=_(
                 " An identifier of your choice. This identifier "
-                "is used by the Check_MK checks to access "
+                "is used by the Checkmk checks to access "
                 "and identify the single values. The identifier "
                 "needs to be unique within a group of VALUETYPES."
             ),
@@ -176,7 +179,7 @@ def _valuespec_special_agents_siemens_plc():
                             ),
                             (
                                 "tcp_port",
-                                Integer(
+                                NetworkPort(
                                     title=_("TCP Port number"),
                                     help=_("Port number for communicating with the PLC"),
                                     default_value=102,
@@ -230,7 +233,7 @@ def _valuespec_special_agents_siemens_plc():
         optional_keys=["timeout"],
         title=_("Siemens PLC (SPS)"),
         help=_(
-            "This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
+            "This rule selects the Siemens PLC agent instead of the normal Checkmk Agent "
             "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
             "your connection settings and values to fetch here."
         ),
@@ -241,7 +244,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_siemens_plc(),
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:siemens_plc",
+        name=RuleGroup.SpecialAgents("siemens_plc"),
         valuespec=_valuespec_special_agents_siemens_plc,
     )
 )

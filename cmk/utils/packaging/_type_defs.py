@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -7,37 +7,48 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from functools import cached_property
-from typing import Literal, Union
+from typing import Any, Literal
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator, GetCoreSchemaHandler
+from pydantic_core import core_schema
 from semver import VersionInfo
 
-from cmk.utils.exceptions import MKException
 
-
-class PackageException(MKException):
+class PackageError(Exception):
     pass
 
 
-_SortKeyElement = Union[
+_SortKeyElement = (
     # First element makes sure
     #  a) Never compare different types
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
     #  c) A larger set of fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
-    tuple[Literal[0], str],
-    tuple[Literal[1], int],
-    tuple[Literal[2], None],
-]
+    tuple[Literal[0], str]
+    | tuple[Literal[1], int]
+    | tuple[Literal[2], None]
+)
 
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
-    _MISMATCH_MSG = "A package version must not contain slashes"
+    _MISMATCH_MSG = "Invalid version %r. A package version must not contain slashes"
 
     def __new__(cls, value: str) -> PackageVersion:
         if "/" in value:
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
+
+    @classmethod
+    def validate(cls, value: str | PackageVersion) -> PackageVersion:
+        return cls(value)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     @staticmethod
     def parse_semver(raw: str) -> VersionInfo:
@@ -74,24 +85,42 @@ class PackageVersion(str):
 class PackageName(str):
     _REGEX = re.compile(r"^[^\d\W][-\w]*$")
     _MISMATCH_MSG = (
-        "A package name must only consist of letters, digits, dash and "
+        "Invalid name %r. A package name must only consist of letters, digits, dash and "
         "underscore and it must start with a letter or underscore."
     )
 
+    @classmethod
+    def validate(cls, value: str | PackageName) -> PackageName:
+        return cls(value)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
+
     def __new__(cls, value: str) -> PackageName:
         if not cls._REGEX.match(value):
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
 
 
-class PackageID(BaseModel, frozen=True):
+class PackageID(BaseModel):
+    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+
     name: PackageName
     version: PackageVersion
 
-    @validator("name")
+    @field_validator("name")
     def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
         return PackageName(value)
 
-    @validator("version")
+    @field_validator("version")
     def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
         return PackageVersion(value)

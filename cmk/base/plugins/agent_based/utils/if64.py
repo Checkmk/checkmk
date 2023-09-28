@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping
+from typing import Any
 
 from ..agent_based_api.v1 import exists, OIDBytes, type_defs
 from . import interfaces
 
-Section = Sequence[interfaces.InterfaceWithCounters]
-
 BASE_OID = ".1.3.6.1.2.1"
 
-END_OIDS: List[Union[str, OIDBytes]] = [
+END_OIDS: list[str | OIDBytes] = [
     "2.2.1.1",  # ifIndex                      0
     "2.2.1.2",  # ifDescr                      1
     "2.2.1.3",  # ifType                       2
@@ -288,8 +287,7 @@ def _convert_type(if_type: str) -> str:
         int(if_type)
     except ValueError:
         return str(_PORT_TYPES.get(if_type, "1"))
-    else:
-        return if_type
+    return if_type
 
 
 def _convert_status(if_status: str) -> str:
@@ -297,15 +295,14 @@ def _convert_status(if_status: str) -> str:
         int(if_status)
     except ValueError:
         return str(_STATUS_NAMES.get(if_status, "4"))
-    else:
-        return if_status
+    return if_status
 
 
 def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type:ignore[no-untyped-def]
+def port_mapping(name, port_map: Mapping[str, str]) -> str | None:  # type: ignore[no-untyped-def]
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
@@ -317,8 +314,8 @@ def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type:ig
 
 def generic_parse_if64(
     string_table: type_defs.StringByteTable,
-    port_map: Optional[Mapping[str, str]] = None,
-) -> Section:
+    port_map: Mapping[str, str] | None = None,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -351,12 +348,13 @@ def generic_parse_if64(
     ]
 
 
-def parse_if64(string_table: type_defs.StringByteTable) -> Section:
+def parse_if64(
+    string_table: type_defs.StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     preprocessed_lines: type_defs.StringByteTable = []
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:
-
             # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
             # capped at 4GBit.
             # combine the two to get the actual interface speed
@@ -378,7 +376,7 @@ def parse_if64(string_table: type_defs.StringByteTable) -> Section:
 def generic_check_if64(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
+    section: interfaces.Section[interfaces.TInterfaceType],
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,

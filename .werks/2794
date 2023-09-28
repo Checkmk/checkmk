@@ -7,5 +7,5 @@ Date: 1447764921
 Class: fix
 
 You can configure the encoding of agent sections with the additional section parameter
-<i>encoding(cp437)</i>, e.g. "<<<mycheck:sep(9):encoding(cp437)>>>.
+<i>encoding(cp437)</i>, e.g. `<<<mycheck:sep(9):encoding(cp437)>>>`.
 This feature was broken, due to some code restructuring a few months ago.

@@ -1,0 +1,15 @@
+Title: SLA: fixed exception when a host or service was not sla relevant for the query duration
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1682063959
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+An exception <tt>Internal error: list index out of range</tt> showed up when the queried host or service was not considered in the sla timeframe.
+The reasons could have been that the host was unknown or completely out of his service period.
+
+

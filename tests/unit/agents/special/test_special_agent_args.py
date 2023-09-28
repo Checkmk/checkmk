@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -53,8 +53,12 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "SECRET_ACCESS_KEY",
         "--hostname",
         "HOSTNAME",
+        "--piggyback-naming-convention",
+        "ip_region_instance",
     ],
     "agent_azure": [
+        "--authority",
+        "global",
         "--subscription",
         "SUBSCRIPTION",
         "--client",
@@ -141,6 +145,9 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
     ],
     "agent_cisco_meraki": ["HOSTNAME", "API_KEY"],
     "agent_azure_status": ["REGION1 REGION2"],
+    "agent_aws_status": [],
+    "agent_gcp_status": [],
+    "agent_pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
 }
 
 
@@ -154,7 +161,7 @@ def test_all_agents_tested() -> None:
 
 
 @pytest.mark.parametrize("agent_name, required_args", list(REQUIRED_ARGUMENTS.items()))
-def test_parse_arguments(agent_name, required_args) -> None:  # type:ignore[no-untyped-def]
+def test_parse_arguments(agent_name: str, required_args: list[str]) -> None:
     agent = import_module("cmk.special_agents.%s" % agent_name)
     if agent_name in AGENTS_WITHOUT_PARSE_ARGUMENTS:
         return

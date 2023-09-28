@@ -3,11 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "cfg.h"
 #include "common/wtools.h"
 #include "providers/perf_cpuload.h"
-#include "service_processor.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/service_processor.h"
 
 namespace cma::provider {
 

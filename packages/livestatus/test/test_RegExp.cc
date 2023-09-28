@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -9,7 +9,7 @@
 #include "livestatus/RegExp.h"
 
 TEST(RegExpTest, RespectLiteral) {
-    RegExp r{"max", RegExp::Case::respect, RegExp::Syntax::literal};
+    const RegExp r{"max", RegExp::Case::respect, RegExp::Syntax::literal};
 
     EXPECT_EQ("MinGNARK MinKENU", r.replace("maxGNARK maxKENU", "Min"));
 
@@ -23,7 +23,7 @@ TEST(RegExpTest, RespectLiteral) {
 }
 
 TEST(RegExpTest, IgnoreLiteral) {
-    RegExp r{"MaX", RegExp::Case::ignore, RegExp::Syntax::literal};
+    const RegExp r{"MaX", RegExp::Case::ignore, RegExp::Syntax::literal};
 
     EXPECT_EQ("MinGNARK MinKENU", r.replace("maxGNARK maxKENU", "Min"));
 
@@ -37,7 +37,7 @@ TEST(RegExpTest, IgnoreLiteral) {
 }
 
 TEST(RegExpTest, RespectPattern) {
-    RegExp r{"m+.[w-z]", RegExp::Case::respect, RegExp::Syntax::pattern};
+    const RegExp r{"m+.[w-z]", RegExp::Case::respect, RegExp::Syntax::pattern};
 
     EXPECT_EQ("MinGNARK MinKENU", r.replace("maxGNARK maxKENU", "Min"));
     EXPECT_EQ("MinGNARK MinKENU", r.replace("mmmmmczGNARK mbwKENU", "Min"));
@@ -55,7 +55,7 @@ TEST(RegExpTest, RespectPattern) {
 }
 
 TEST(RegExpTest, IgnorePattern) {
-    RegExp r{"M+.[w-z]", RegExp::Case::ignore, RegExp::Syntax::pattern};
+    const RegExp r{"M+.[w-z]", RegExp::Case::ignore, RegExp::Syntax::pattern};
 
     EXPECT_EQ("MinGNARK MinKENU", r.replace("maxGNARK maxKENU", "Min"));
     EXPECT_EQ("MinGNARK MinKENU", r.replace("mmmmmczGNARK mbwKENU", "Min"));
@@ -75,7 +75,7 @@ TEST(RegExpTest, IgnorePattern) {
 
 TEST(RegExpTest, CMK1381) {
     // Regression test for wrong quoting of special characters
-    RegExp r{"xy.z|", RegExp::Case::respect, RegExp::Syntax::literal};
+    const RegExp r{"xy.z|", RegExp::Case::respect, RegExp::Syntax::literal};
 
     EXPECT_EQ("MinGNARK MinKENU", r.replace("xy.z|GNARK xy.z|KENU", "Min"));
     EXPECT_EQ("MinGNARK xyaz|KENU", r.replace("xy.z|GNARK xyaz|KENU", "Min"));

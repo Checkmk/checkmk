@@ -1,0 +1,25 @@
+Title: Drop support for outdated password hashing schemes
+Class: security
+Compatible: incomp
+Component: setup
+Date: 1674060884
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+With Checkmk 2.2.0 the support for older and in part insecure password hashing schemes has been removed.
+
+As a result, it is possible that some local users cannot log in anymore.
+<tt>omd update</tt> will now inform about these cases.
+
+Since Werk #14391 old password hashes were either automatically updated upon login or users were asked to choose new passwords, depending on how old and insecure their hashes were.
+However, if a user has not logged in at all since Werk #14391 it is possible that they still use the old hashing scheme.
+These users will not be able to log in after the update, since support for these schemes has been removed.
+The login will fail with the message "Invalid login".
+
+In order to restore access for affected users, you need to manually reset their password.
+This can be done either via user management in Setup > Users or via the commandline using cmk-passwd.
+
+Even though this Werk is related to security, it does not fix any exploitable issue.
+To aid automatic scanners, we assign a CVSS score of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).

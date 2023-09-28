@@ -1,0 +1,12 @@
+Title: State and Count of Processes: Include pid in per-process details for for all agents
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685607207
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, only pids provided by the ps section of Linux and Windows agents were displayed in the per-process details of the "State and Count of Processes" service.
+Now also pids provided by e.g Solaris, BSD or Aix agents will be included.

@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.oracle_recovery_area import inventory_oracle_recovery_area
 
 from .utils_inventory import sort_inventory_result
@@ -28,8 +35,8 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_oracle_recovery_area(  # type:ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_discover_oracle_recovery_area(
+    fix_register: FixRegister, string_table: StringTable, expected_result: CheckResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert sorted(check_plugin.discovery_function(string_table)) == expected_result
@@ -52,8 +59,8 @@ def test_discover_oracle_recovery_area(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_oracle_recovery_area(  # type:ignore[no-untyped-def]
-    fix_register, string_table, item, expected_result
+def test_check_oracle_recovery_area(
+    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert (
@@ -91,8 +98,8 @@ def test_check_oracle_recovery_area(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_oracle_recovery_area(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_oracle_recovery_area(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_oracle_recovery_area(string_table)

@@ -1,0 +1,15 @@
+Title: Abort CMC startup if state file could not be read or parsed
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1677593604
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This avoids simply continuing and creating a new state file, which loses all
+comments, ad hoc downtimes, acknowledgements, etc.
+
+Note that it is still OK when there is no state file at all, which is e.g. 
+the case when the CMC starts for the first time.

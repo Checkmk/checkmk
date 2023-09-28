@@ -1,0 +1,20 @@
+Title: Predictive Levels: Suppress levels if standard deviation is undefined
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692955960
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+This change affects users of the option <tt>In relation to standard deviation</tt> from
+<tt>Predictive Levels</tt>.
+
+<tt>Predictive Levels</tt> are computed by considering every data point matching the configured
+reference period. If there is only a single data point available, the standard deviation is
+undefined. Previously, since the standard deviation was unavailable, Checkmk would use the absolute
+value of the reference value. In particular, if the reference value was 0, then this would result in
+a CRIT.
+
+With this Werk, no levels are applied, if the standard deviation is undefined.

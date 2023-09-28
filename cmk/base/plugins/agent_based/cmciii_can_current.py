@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,8 +35,7 @@ def check_cmciii_can_current(
     state = State.OK if state_readable == "OK" else State.CRIT
     yield Result(
         state=state,
-        summary="Status: %s, Current: %s mA (warn/crit at %s/%s mA)"
-        % (state_readable, value, warn, crit),
+        summary=f"Status: {state_readable}, Current: {value} mA (warn/crit at {warn}/{crit} mA)",
     )
     yield Metric("current", value / 1000.0, levels=(warn / 1000.0, crit / 1000.0))
 

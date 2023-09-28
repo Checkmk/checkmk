@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Basic functions for cmk_figures"""
@@ -11,7 +11,7 @@ FigureResponse = dict[str, Any]
 FigureResponseData = dict[str, Any]
 
 
-def create_figures_response(data, context=None) -> FigureResponse:  # type:ignore[no-untyped-def]
+def create_figures_response(data, context=None) -> FigureResponse:  # type: ignore[no-untyped-def]
     """Any data for a figure is always wrapped into a dictionary
     This makes future extensions (meta_data, etc.) easier, preventing
     intermingling of dictionary keys"""

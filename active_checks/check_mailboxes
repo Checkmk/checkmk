@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -66,7 +66,11 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
 
 def check_mailboxes(args: Args) -> CheckResult:
-    args.fetch_password = args.fetch_password or getpass()
+    # Currently only EWS uses fetch_tenant_id, don't use getpass() if set
+    # because of "warning: password input may be echoed."
+    args.fetch_password = (
+        args.fetch_password if args.fetch_tenant_id or args.fetch_password else getpass()
+    )
     if args.fetch_protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
     if type(args.crit_age_newest) is not type(args.warn_age_newest):
@@ -127,7 +131,7 @@ def check_mailboxes(args: Args) -> CheckResult:
                     )
 
             if args.crit_age_newest is not None and args.warn_age_newest is not None:
-                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
+                new_mails = sorted(mailbox.mails_by_date(after=now - args.crit_age_newest))
                 logging.debug("timestamps fetched from folder %r: %s", folder, new_mails)
 
                 if new_mails and (newest := now - new_mails[-1]) >= args.warn_age_newest:

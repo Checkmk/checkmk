@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,7 +30,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 import urllib3
 from exchangelib import (  # type: ignore[import]
@@ -158,8 +158,8 @@ def _mutf_7_decode(string: bytes) -> str:
             res.append(
                 "&"
                 if len(b64_buffer) == 1
-                else (b"+" + b64_buffer[1:].replace(b",", b"/") + b"-").decode("utf-7")  #
-            )
+                else (b"+" + b64_buffer[1:].replace(b",", b"/") + b"-").decode("utf-7")
+            )  #
             b64_buffer = bytearray()
         elif b64_buffer:
             b64_buffer.append(char)
@@ -178,10 +178,10 @@ def _mutf_7_encode(string: str) -> bytes:
 
     def encode_b64_buffer() -> bytes:
         return (
-            binascii.b2a_base64("".join(b64_buffer).encode("utf-16be"))  #
+            binascii.b2a_base64("".join(b64_buffer).encode("utf-16be"))
             .rstrip(b"\n=")
             .replace(b"/", b",")
-        )
+        )  #
 
     def consume_b64_buffer() -> None:
         if b64_buffer:
@@ -207,11 +207,11 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
     pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
     mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]
     return [
-        match.group(3).strip('"')  #
-        for mb in mb_list  #
-        for match in (pattern.search(mb),)  #
+        match.group(3).strip('"')
+        for mb in mb_list
+        for match in (pattern.search(mb),)
         if match is not None
-    ]
+    ]  #  #  #
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
@@ -221,7 +221,7 @@ def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list
     if isinstance(data, tuple):
         if isinstance(data[0], str):
             assert isinstance(data[1], list)
-            if not data[0] in {"OK", "BYE"}:
+            if data[0] not in {"OK", "BYE"}:
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             return data[1]
         if isinstance(data[0], bytes):
@@ -300,6 +300,7 @@ class Mailbox:
                                 ),
                                 auth_type=OAUTH2,
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )
@@ -317,6 +318,7 @@ class Mailbox:
                                     self._args.fetch_password,
                                 ),
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )
@@ -333,11 +335,11 @@ class Mailbox:
         except Exception as exc:
             raise ConnectError(f"Failed to connect to {self._args.fetch_server}: {exc}")
 
-    def inbox_protocol(self) -> str:
+    def inbox_protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
             return "POP3"
         if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
-            return "IMAP4"
+            return "IMAP"
         if isinstance(self._connection, EWS):
             return "EWS"
         raise AssertionError("connection must be POP3[_SSL], IMAP4[_SSL] or EWS")
@@ -345,7 +347,7 @@ class Mailbox:
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
         assert self._connection
-        if self.inbox_protocol() == "IMAP4":
+        if self.inbox_protocol() == "IMAP":
             return extract_folder_names(
                 e for e in verified_result(self._connection.list()) if isinstance(e, bytes)
             )
@@ -383,8 +385,7 @@ class Mailbox:
                 #       we jump out of the for loop
                 except Exception as exc:
                     raise Exception(
-                        "Failed to fetch mail %s (%r). Available messages: %r"
-                        % (num, exc, messages)
+                        f"Failed to fetch mail {num} ({exc!r}). Available messages: {messages!r}"
                     ) from exc
             return mails
 
@@ -392,7 +393,7 @@ class Mailbox:
             inbox_protocol = self.inbox_protocol()
             if inbox_protocol == "POP3":
                 return _fetch_mails_pop3()
-            if inbox_protocol == "IMAP4":
+            if inbox_protocol == "IMAP":
                 return _fetch_mails_imap()
             raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
         except Exception as exc:
@@ -411,7 +412,7 @@ class Mailbox:
         """Select folder @folder_name and return the number of mails contained"""
         assert self._connection
         try:
-            if self.inbox_protocol() == "IMAP4":
+            if self.inbox_protocol() == "IMAP":
                 encoded_number = verified_result(
                     self._connection.select(_mutf_7_encode(f'"{folder_name}"'))
                 )[0]
@@ -450,7 +451,9 @@ class Mailbox:
             # return int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
             raw_number = verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
             assert isinstance(raw_number, bytes)
-            return int(time.mktime(imaplib.Internaldate2tuple(raw_number)))
+            time_tuple = imaplib.Internaldate2tuple(raw_number)
+            assert time_tuple is not None
+            return int(time.mktime(time_tuple))
 
         if self.inbox_protocol() == "EWS":
             assert isinstance(self._connection, EWS)
@@ -483,13 +486,13 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                if isinstance(mail_id, str)  # caused by verified_result() typing horror
+                if isinstance(mail_id, str)
                 for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]
             if ids and ids[0]
             else []
-        )
+        )  # caused by verified_result() typing horror
 
     def delete_mails(self, mails: Iterable[int]) -> None:
         assert self._connection is not None
@@ -498,7 +501,7 @@ class Mailbox:
             if self.inbox_protocol() == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
-            elif self.inbox_protocol() == "IMAP4":
+            elif self.inbox_protocol() == "IMAP":
                 for mail_index in mails:
                     verified_result(self._connection.store(mail_index, "+FLAGS", "\\Deleted"))
                 self._connection.expunge()
@@ -507,7 +510,7 @@ class Mailbox:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy_mails(self, mails: list[int], folder: str) -> None:
-        assert self._connection and self.inbox_protocol() == "IMAP4"
+        assert self._connection and self.inbox_protocol() == "IMAP"
         try:
             for mail_index in mails:
                 # The user wants the message to be moved to the folder
@@ -517,7 +520,7 @@ class Mailbox:
                 # Create maybe missing folder hierarchy
                 target = ""
                 for level in folder.split("/"):
-                    target += "%s/" % level
+                    target += f"{level}/"
                     self._connection.create(target)
 
                 # Copy the mail
@@ -531,7 +534,7 @@ class Mailbox:
             return
         if self.inbox_protocol() == "POP3":
             verified_result(self._connection.quit())
-        elif self.inbox_protocol() == "IMAP4":
+        elif self.inbox_protocol() == "IMAP":
             with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
                 verified_result(self._connection.close())
             verified_result(self._connection.logout())
@@ -539,7 +542,8 @@ class Mailbox:
             self._connection.close()
 
 
-def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
+def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_ews: bool) -> Args:
+    protocols = {"IMAP", "POP3", "EWS"} if allow_ews else {"IMAP", "POP3"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -558,13 +562,13 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-server",
         required=True,
         metavar="ADDRESS",
-        help="Host address of the IMAP/POP3/EWS server hosting your mailbox",
+        help=f"Host address of the {'/'.join(protocols)} server hosting your mailbox",
     )
     parser.add_argument(
         "--fetch-username",
         required=False,
         metavar="USER",
-        help="Username to use for IMAP/POP3/EWS",
+        help=f"Username to use for {'/'.join(protocols)}",
     )
     parser.add_argument(
         "--fetch-email-address",
@@ -576,31 +580,31 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-password",
         required=False,
         metavar="PASSWORD",
-        help="Password to use for IMAP/POP3/EWS",
+        help="Password to use for {'/'.join(protocols)}",
     )
     parser.add_argument(
         "--fetch-client-id",
         required=False,
         metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS",
+        help="OAuth2 ClientID for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-client-secret",
         required=False,
         metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS",
+        help="OAuth2 ClientSecret for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-tenant-id",
         required=False,
         metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS",
+        help="OAuth2 TenantID for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-protocol",
         type=str.upper,
-        choices={"IMAP", "POP3", "EWS"},
-        help="Set to 'IMAP', 'POP3' or 'EWS', depending on your mailserver (default=IMAP)",
+        choices=protocols,
+        help="Protocol used for fetching mail (default=IMAP)",
     )
     parser.add_argument(
         "--fetch-port",
@@ -626,12 +630,12 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
 
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as e:
         # we have no efficient way to control the output on stderr but at least we can return
         # UNKNOWN
-        raise SystemExit(3)
+        raise SystemExit(3) from e
 
-    if not tuple(
+    if tuple(
         map(
             bool,
             (
@@ -642,7 +646,10 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
                 args.fetch_tenant_id,
             ),
         )
-    ) in {(True, True, False, False, False), (False, False, True, True, True)}:
+    ) not in {
+        (True, True, False, False, False),
+        (False, False, True, True, True),
+    }:
         raise RuntimeError(
             "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
         )
@@ -652,8 +659,8 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         if args.fetch_protocol == "POP3"
         else (993 if args.fetch_tls else 143)
         if args.fetch_protocol == "IMAP"
-        else (443 if args.fetch_tls else 80)  # HTTP / REST (e.g. EWS)
-    )
+        else (443 if args.fetch_tls else 80)
+    )  # HTTP / REST (e.g. EWS)
     return args
 
 
@@ -666,23 +673,23 @@ def _active_check_main_core(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
     argv: Sequence[str],
+    allow_ews: bool = True,
 ) -> CheckResult:
     """Main logic for active checks"""
     # todo argparse - exceptions?
-    args = parse_arguments(argument_parser, argv)
+    args = parse_arguments(argument_parser, argv, allow_ews)
     logging.basicConfig(
-        level=logging.CRITICAL
-        if not (args.debug or args.verbose > 0)
-        else {0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+        if args.debug or args.verbose > 0
+        else logging.CRITICAL
     )
 
     # when we disable certificate validation intensionally we don't want to see warnings
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # disable anything that might write to stderr by default
-    if not (args.debug or args.verbose > 0):
-        if not sys.warnoptions:
-            warnings.simplefilter("ignore")
+    if not args.debug and args.verbose == 0 and not sys.warnoptions:
+        warnings.simplefilter("ignore")
 
     # Enable IMAP protocol messages on stderr
     if args.fetch_protocol == "IMAP":
@@ -717,18 +724,17 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
     >>> _output_check_result("Something strange", [("name", "value1", "value2")])
     Something strange | name=value1;value2
     """
-    sys.stdout.write("%s" % text)
+    sys.stdout.write(text)
     if perfdata:
         sys.stdout.write(" | ")
-        sys.stdout.write(
-            " ".join("{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata)
-        )
+        sys.stdout.write(" ".join(f'{p[0]}={";".join(map(str, p[1:]))}' for p in perfdata))
     sys.stdout.write("\n")
 
 
 def active_check_main(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
+    allow_ews: bool = True,
 ) -> None:
     """Evaluate the check, write output according to Checkmk active checks and terminate the
     program in respect to the check result:
@@ -742,6 +748,8 @@ def active_check_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process."""
     cmk.utils.password_store.replace_passwords()
-    exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
+    exitcode, status, perfdata = _active_check_main_core(
+        argument_parser, check_fn, sys.argv[1:], allow_ews
+    )
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

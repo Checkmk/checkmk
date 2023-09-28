@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "modules.h"
+#include "wnx/modules.h"
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -16,14 +16,14 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "zip.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
+#include "wnx/zip.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -133,7 +133,7 @@ bool Module::prepareToWork(const fs::path &backup_dir,
 }
 
 namespace {
-/// \brief extracts usual extension and unusual, e.g. ".checkmk.py"
+/// extracts usual extension and unusual, e.g. ".checkmk.py"
 std::string ExtractExtension(const fs::path &script) {
     if (!script.has_extension()) {
         return std::string{kNoExtension};
@@ -265,7 +265,7 @@ ModuleCommander::GetSystemExtensions() {
     try {
         name_ = node[vars::kModulesName].as<std::string>();
         exec_ =
-            wtools::ConvertToUTF16(node[vars::kModulesExec].as<std::string>());
+            wtools::ConvertToUtf16(node[vars::kModulesExec].as<std::string>());
         exts_ = GetArray<std::string>(node[vars::kModulesExts]);
 
         // dir is optional

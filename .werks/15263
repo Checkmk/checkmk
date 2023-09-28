@@ -1,0 +1,14 @@
+Title: netscaler_tcp_conns: Improve metric display
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680706256
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously the server and client connection metrics of the check "netscaler_tcp_conns" were displayed in scientific notation, as well as having a non-userfriendly title.
+This has been corrected in this werk.
+
+

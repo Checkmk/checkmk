@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
+import time
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 import pytest
 
@@ -23,8 +23,9 @@ def test_host_labels_ps_no_match_attr() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -34,7 +35,7 @@ def test_host_labels_ps_no_match_attr() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
+    assert not list(ps.host_labels_ps(params, section))
 
 
 def test_host_labels_ps_no_match_pattern() -> None:
@@ -46,8 +47,9 @@ def test_host_labels_ps_no_match_pattern() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -56,7 +58,7 @@ def test_host_labels_ps_no_match_pattern() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
+    assert not list(ps.host_labels_ps(params, section))
 
 
 def test_host_labels_ps_match() -> None:
@@ -68,8 +70,9 @@ def test_host_labels_ps_match() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        1540375342,
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -78,56 +81,81 @@ def test_host_labels_ps_match() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == [  # type: ignore[arg-type]
-        HostLabel("marco", "polo")
-    ]
+    assert list(ps.host_labels_ps(params, section)) == [HostLabel("marco", "polo")]
 
 
 @pytest.mark.parametrize(
-    "ps_line, ps_pattern, user_pattern, result",
+    "ps_user, ps_line, ps_pattern, user_pattern, result",
     [
-        (["test", "ps"], "", None, True),
-        (["test", "ps"], "ps", None, True),
-        (["test", "ps"], "ps", "root", False),
-        (["test", "ps"], "ps", "~.*y$", False),
-        (["test", "ps"], "ps", "~.*t$", True),
-        (["test", "ps"], "sp", "~.*t$", False),
-        (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
-        ([None], None, "~.*y", False),
+        ("test", ["ps"], "", None, True),
+        ("test", ["ps"], "ps", None, True),
+        ("test", ["ps"], "ps", "root", False),
+        ("test", ["ps"], "ps", "~.*y$", False),
+        ("test", ["ps"], "ps", "~.*t$", True),
+        ("test", ["ps"], "sp", "~.*t$", False),
+        ("root", ["/sbin/init", "splash"], "/sbin/init", None, True),
+        (None, [], None, "~.*y", False),
+        pytest.param(
+            "test",
+            [],
+            None,
+            None,
+            True,
+            id="empty command line (SUP-13009), no matching",
+        ),
+        pytest.param(
+            "test",
+            [],
+            "~^$",
+            None,
+            True,
+            id="empty command line (SUP-13009), matches",
+        ),
+        pytest.param(
+            "test",
+            [],
+            "ps",
+            None,
+            False,
+            id="empty command line (SUP-13009), does not match",
+        ),
     ],
 )
 def test_process_matches(
-    ps_line: Sequence[str], ps_pattern: str, user_pattern: str | None, result: bool
+    ps_user: str | None,
+    ps_line: Sequence[str],
+    ps_pattern: str,
+    user_pattern: str | None,
+    result: bool,
 ) -> None:
-    psi = ps.PsInfo(ps_line[0])
-    matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
+    matches_attr = ps.process_attributes_match(ps.PsInfo(ps_user), user_pattern, (None, False))
+    matches_proc = ps.process_matches(ps_line, ps_pattern)
 
-    assert (matches_attr and matches_proc) == result
+    assert (matches_attr and bool(matches_proc)) is result
 
 
 @pytest.mark.parametrize(
-    "ps_line, ps_pattern, user_pattern, match_groups, result",
+    "ps_user, ps_line, ps_pattern, user_pattern, match_groups, result",
     [
-        (["test", "ps"], "", None, None, True),
-        (["test", "123_foo"], "~.*/(.*)_foo", None, ["123"], False),
-        (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ["123"], True),
-        (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ["123"], False),
-        (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
+        ("test", ["ps"], "", None, None, True),
+        ("test", ["123_foo"], "~.*/(.*)_foo", None, ["123"], False),
+        ("test", ["/a/b/123_foo"], "~.*/(.*)_foo", None, ["123"], True),
+        ("test", ["123_foo"], "~.*\\\\(.*)_foo", None, ["123"], False),
+        ("test", ["c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
     ],
 )
 def test_process_matches_match_groups(
+    ps_user: str | None,
     ps_line: Sequence[str],
     ps_pattern: str,
     user_pattern: None,
     match_groups: None | Sequence[str],
     result: bool,
 ) -> None:
-    psi = ps.PsInfo(ps_line[0])
-    matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
+    matches_attr = ps.process_attributes_match(ps.PsInfo(ps_user), user_pattern, (None, False))
+    matches_proc = ps.process_matches(ps_line, ps_pattern, match_groups)
 
-    assert (matches_attr and matches_proc) == result
+    assert (matches_attr and bool(matches_proc)) == result
 
 
 @pytest.mark.parametrize(
@@ -213,8 +241,23 @@ def test_format_process_list(
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
 
-def test_unused_value_remover() -> None:
+def test_format_process_list_html_backslash_replacement() -> None:
+    assert ps.format_process_list(
+        [
+            [
+                ("name", ("D:\\nginx", "")),
+                ("user", ("tim & struppi", "")),
+                ("arguments", ("", "")),
+            ]
+        ],
+        True,
+    ) == (
+        "<table><tr><th>name</th><th>user</th><th>arguments</th></tr>"
+        "<tr><td>D:&bsol;nginx</td><td>tim &amp; struppi</td><td></td></tr></table>"
+    )
 
+
+def test_unused_value_remover() -> None:
     value_store_test = {
         "test": {
             "unused": (23.0, 23.0),
@@ -235,7 +278,6 @@ def test_unused_value_remover() -> None:
 
 
 def test_memory_perc_check_noop_no_resident_size() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     assert not list(
         ps.memory_perc_check(
@@ -247,7 +289,6 @@ def test_memory_perc_check_noop_no_resident_size() -> None:
 
 
 def test_memory_perc_check_noop_no_rule() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     # add a fake process
     procs.resident_size = 42
@@ -256,7 +297,6 @@ def test_memory_perc_check_noop_no_rule() -> None:
 
 
 def test_memory_perc_check_missing_mem_total() -> None:
-
     missing_mem_result = [
         Result(
             state=State.UNKNOWN,
@@ -280,7 +320,6 @@ def test_memory_perc_check_missing_mem_total() -> None:
 
 
 def test_memory_perc_check_realnode() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
 
@@ -289,20 +328,19 @@ def test_memory_perc_check_realnode() -> None:
     ) == [
         Result(
             state=State.CRIT,
-            summary="Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)",
+            summary="Percentage of resident memory: 42.00% (warn/crit at 10.00%/20.00%)",
         ),
     ]
 
 
 def test_memory_perc_check_cluster() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
     procs.running_on_nodes = {"A", "B"}
 
     mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
     assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
-        Result(state=State.OK, summary="Percentage of total RAM: 21.00%")
+        Result(state=State.OK, summary="Percentage of resident memory: 21.00%")
     ]
 
 
@@ -336,7 +374,8 @@ def test_memory_perc_check_cluster() -> None:
                         "-prefsLen",
                         "9681",
                     ],
-                )
+                    1540375342,
+                ),
             ],
             {"process_info_arguments": 15},
             [
@@ -350,11 +389,96 @@ def test_memory_perc_check_cluster() -> None:
                 ]
             ],
             id="process_info_args",
-        )
+        ),
+        pytest.param(
+            [
+                (
+                    None,
+                    ps.PsInfo(
+                        user="root",
+                        virtual=12856,
+                        physical=16160,
+                        cputime="0.0",
+                        process_id=None,
+                        pagefile=None,
+                        usermode_time=None,
+                        kernelmode_time=None,
+                        handles=None,
+                        threads=None,
+                        uptime=None,
+                        cgroup=None,
+                    ),
+                    [
+                        "/usr/lib/firefox/firefox",
+                        "-contentproc",
+                        "-childID",
+                        "31",
+                        "-isForBrowser",
+                        "-prefsLen",
+                        "9681",
+                    ],
+                    1540375342,
+                ),
+            ],
+            {"process_usernames": False},
+            [
+                [
+                    ("name", ("/usr/lib/firefox/firefox", "")),
+                    ("virtual size", (12856, "kB")),
+                    ("resident size", (16160, "kB")),
+                    ("cpu usage", (0.0, "%")),
+                ]
+            ],
+            id="exclude_usernames",
+        ),
+        pytest.param(
+            [
+                (
+                    None,
+                    ps.PsInfo(
+                        user="root",
+                        virtual=12856,
+                        physical=16160,
+                        cputime="0.0",
+                        process_id="1234",
+                        pagefile=None,
+                        usermode_time=None,
+                        kernelmode_time=None,
+                        handles=None,
+                        threads=None,
+                        uptime=None,
+                        cgroup=None,
+                    ),
+                    [
+                        "/usr/lib/firefox/firefox",
+                        "-contentproc",
+                        "-childID",
+                        "31",
+                        "-isForBrowser",
+                        "-prefsLen",
+                        "9681",
+                    ],
+                    1540375342,
+                ),
+            ],
+            {"process_info_arguments": 15},
+            [
+                [
+                    ("name", ("/usr/lib/firefox/firefox", "")),
+                    ("user", ("root", "")),
+                    ("virtual size", (12856, "kB")),
+                    ("resident size", (16160, "kB")),
+                    ("pid", ("1234", "")),
+                    ("cpu usage", (0.0, "%")),
+                    ("args", ("-contentproc -c", "")),
+                ]
+            ],
+            id="solaris_BSD_aix_pid",
+        ),
     ],
 )
 def test_process_capture(
-    process_lines: Iterable[tuple[str | None, ps.PsInfo, Sequence[str]]],
+    process_lines: Iterable[ps.ProcessLine],
     params: Mapping[str, int],
     expected_processes: Sequence[ps._Process],
 ) -> None:

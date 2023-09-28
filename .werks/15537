@@ -1,0 +1,14 @@
+Title: IPMI sensors: Make the special agent output the FreeIPMI states by default
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683663602
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This changes the default setting for <i>"Sensor State"</i> of <i>"IPMI Sensors via Freeipmi or IPMItool"</i> from disabled to enabled.
+The special agent for IPMI sensors using FreeIPMI has been able to report the states determined by FreeIPMI for long time, but it was disabled by default.
+Since FreeIPMI state is used to determine the sensor state since <a href="https://checkmk.com/werk/15536">Werk #15536</a>, it makes sense to enable it by default.
+

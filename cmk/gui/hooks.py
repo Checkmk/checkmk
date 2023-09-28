@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
@@ -39,6 +39,11 @@ def unregister_plugin_hooks() -> None:
 
 def register_builtin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=True)
+
+
+# TODO: Kept for compatibility with pre-1.6 Setup plugins
+def register_hook(name: str, func: Callable) -> None:
+    register_from_plugin(name, func)
 
 
 def register_from_plugin(name: str, func: Callable) -> None:

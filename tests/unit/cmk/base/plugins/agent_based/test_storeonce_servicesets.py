@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,10 +13,10 @@ from cmk.base.plugins.agent_based.storeonce_servicesets import (
     check_storeonce_servicesets,
     check_storeonce_servicesets_capacity,
     discover_storeonce_servicesets,
-    FILESYSTEM_DEFAULT_PARAMS,
     parse_storeonce_servicesets,
 )
 from cmk.base.plugins.agent_based.utils import storeonce
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 Section = storeonce.SectionServiceSets
 

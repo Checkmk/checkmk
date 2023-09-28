@@ -1,0 +1,15 @@
+Title: Fix cleanup of PDF tmp files in ~/tmp/check_mk
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1675869123
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Created PDF tmp files were not cleaned up in folder ~/tmp/check_mk.
+
+Newly created PDF tmp files will be created in folder ~/tmp/check_mk/pdf and
+the new cronjob "cleanup_pdf_tmp_files", running every day at
+00:15, will cleanup PDF tmp files older one day in this folder.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.aruba_wlc_clients import parse_aruba_wlc_clients
 from cmk.base.plugins.agent_based.utils.wlc_clients import ClientsTotal, VsResult, WlcClientsSection
 from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
@@ -53,11 +54,11 @@ ITEM_RESULT = [
 ]
 
 
-def _run_parse_and_check(  # type:ignore[no-untyped-def]
+def _run_parse_and_check(
     item: str,
     info: list[StringTable],
     params: VsResult | None = None,
-):
+) -> CheckResult:
     if params is None:
         params = {}
     result = list(check_wlc_clients(item, params, parse_aruba_wlc_clients(info)))
@@ -65,7 +66,7 @@ def _run_parse_and_check(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_aruba_wlc_clients(item, result) -> None:  # type:ignore[no-untyped-def]
+def test_aruba_wlc_clients(item: str, result: CheckResult) -> None:
     assert _run_parse_and_check(item, INFO) == result
 
 

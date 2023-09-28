@@ -6,7 +6,7 @@ Date: 1648124895
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The "WSUS (Windows Updates)" rulespec now enforces that both warning and critical levels have to be set.
 Existing configurations will be migrated automatically.

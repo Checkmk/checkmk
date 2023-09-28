@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,11 +12,11 @@ import socket
 import sys
 
 try:
-    omdhome = os.environ['OMD_ROOT']
+    omdhome = os.environ["OMD_ROOT"]
 
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(omdhome + "/tmp/run/rrdcached.sock")
-    s.sendall(b'STATS\n')
+    s.sendall(b"STATS\n")
     data = s.recv(1024)
     s.close()
 
@@ -24,7 +24,7 @@ try:
     stats = {}
     for line in lines:
         key, svalue = line.split(" ", 1)
-        stats[key[:len(key) - 1]] = int(svalue)
+        stats[key[: len(key) - 1]] = int(svalue)
 
     for key, value in stats.items():
         print("%-15s :%15d" % (key, value))

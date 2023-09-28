@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Optional
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -38,8 +39,8 @@ register.agent_section(
 
 
 def discover_netapp_api_vf_stats(
-    section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
+    section_netapp_api_vf_stats: netapp_api.SectionSingleInstance | None,
+    section_netapp_api_cpu: netapp_api.CPUSection | None,
 ) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats({'vfiler0': {}}, None))
@@ -65,8 +66,8 @@ def discover_netapp_api_vf_stats_common(
 def check_netapp_api_vf_stats(
     item: str,
     params: Mapping[str, Any],
-    section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
+    section_netapp_api_vf_stats: netapp_api.SectionSingleInstance | None,
+    section_netapp_api_cpu: netapp_api.CPUSection | None,
 ) -> type_defs.CheckResult:
     yield from _check_netapp_api_vf_stats(
         item,
@@ -81,12 +82,11 @@ def check_netapp_api_vf_stats(
 def _check_netapp_api_vf_stats(
     item: str,
     params: Mapping[str, Any],
-    section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
+    section_netapp_api_vf_stats: netapp_api.SectionSingleInstance | None,
+    section_netapp_api_cpu: netapp_api.CPUSection | None,
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> type_defs.CheckResult:
-
     vf = (section_netapp_api_vf_stats or {}).get(item)
     if not vf:
         return

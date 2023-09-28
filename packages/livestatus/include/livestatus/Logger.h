@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,8 +6,7 @@
 #ifndef Logger_h
 #define Logger_h
 
-// The stream-related pragmas are probably caused by
-// https://github.com/include-what-you-use/include-what-you-use/issues/277
+// NOTE: <iosfwd> should be enough, but IWYU complains then.
 #include <atomic>
 #include <cerrno>
 #include <chrono>

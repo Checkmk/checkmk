@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -31,7 +31,7 @@ def check_cmciii_access(item: str, params: CheckParams, section: Section) -> typ
     else:
         state = State.CRIT
 
-    yield Result(state=state, summary="%s: %s" % (entry["DescName"], state_readable))
+    yield Result(state=state, summary="{}: {}".format(entry["DescName"], state_readable))
     yield Result(state=State.OK, summary="Delay: %s" % entry["Delay"])
     yield Result(state=State.OK, summary="Sensitivity: %s" % entry["Sensitivity"])
 

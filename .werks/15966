@@ -1,0 +1,69 @@
+Title: downtimes: add site property to the downtimes endpoints
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1690799512
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+This werk introduces several changes to the downtimes endpoints.
+
+
+1. Downtime IDs are integers beginning from 1, both for the main site & for
+remote sites.  This means that the same downtime ID can exist on more than
+one site at the same time. This caused problems when calling the DELETE
+endpoint as we weren't sure which ID the client wanted to delete.
+To get around this problem, we have introduced a mandatory "site_id" field
+which the client has to specify when they want to delete a downtime.
+
+E.g.
+
+C+:
+curl \
+    --request POST \
+    --write-out "\nxxx-status_code=%{http_code}\n" \
+    --header "Authorization: Bearer $USERNAME $PASSWORD" \
+    --header "Accept: application/json" \
+    --header "Content-Type: application/json" \
+    --data '{
+          "delete_type": "params",
+          "downtime_id": "1",
+          "site_id": "heute"
+        }' \
+    "$API_URL/domain-types/downtime/actions/delete/invoke"
+C-:
+
+2. Like point 2, calling GET downtime with only a downtime ID could also cause
+the same problem. Therefore we have also introduced the mandatory "site_id"
+query parameter field here too.
+
+E.g.
+
+C+:
+curl \
+    -G \
+    --request GET \
+    --write-out "\nxxx-status_code=%{http_code}\n" \
+    --header "Authorization: Bearer $USERNAME $PASSWORD" \
+    --header "Accept: application/json" \
+    --data-urlencode 'site_id=heute' \
+    "$API_URL/objects/downtime/1"
+C-:
+
+
+3. Now that the site_id field is mandatory in both the DELETE and GET downtime
+endpoints, we now return the site_id field as a downtime attribute in both the
+show downtime and show downtimes endpoints.
+
+4. This last change introduces a new optional query parameter on the show
+all downtimes endpoint. The client can now specify the site_id as a filter,
+so that they can list all downtimes for a specific site.
+
+
+5. We've added a response schema which adds to minor changes.
+    a. The domainType for collection responses now correctly shows "downtime"
+    instead of "dict"
+    b. The API documentation now shows the expected response.

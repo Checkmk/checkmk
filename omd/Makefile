@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -29,12 +29,11 @@ PACKAGES := \
     protobuf \
     python3-modules \
     rrdtool \
+    lcab \
     msitools \
     net-snmp \
     apache-omd \
-    lasso \
     xinetd \
-    mod_auth_mellon \
     mod_fcgid \
     mod_wsgi \
     check_mk \
@@ -52,21 +51,26 @@ PACKAGES := \
     heirloom-mailx \
     snap7 \
     heirloom-pkgtools \
-    livestatus
+    livestatus \
+    unixcat \
+    neb \
+    xmlsec1
 
 ifeq ($(EDITION),enterprise)
-PACKAGES += enterprise
-endif
-ifeq ($(EDITION),free)
 PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += managed
 endif
-ifeq ($(EDITION),plus)
+ifeq ($(EDITION),cloud)
 PACKAGES += enterprise
-PACKAGES += plus
+PACKAGES += cloud
+endif
+ifeq ($(EDITION),saas)
+PACKAGES += enterprise
+PACKAGES += cloud
+PACKAGES += saas
 endif
 
 PIPENV := ../scripts/run-pipenv
@@ -90,7 +94,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'plus' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'cloud' || $$P == 'saas' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
@@ -121,7 +125,7 @@ ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 BOM := bill-of-materials.json
 
-.PHONY: install cma rpm deb clean setversion install-clean
+.PHONY: install cma rpm deb clean install-clean
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
@@ -209,6 +213,10 @@ $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
 	install -m 644 $(BOM) $(DESTDIR)$(OMD_ROOT)/share/doc/$(BOM)
 
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man/man1
+
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
 	fi
@@ -294,8 +302,10 @@ deb: debian/changelog debian/control
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="BAZEL_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
@@ -304,12 +314,6 @@ deb: debian/changelog debian/control
 	    -i.gitignore -I.gitignore \
 	    -rfakeroot \
 	    $$TARGET
-
-setversion:
-# NEW_VERSION should be set on the command line.  Replace all '/' since sed
-# tries to interpret them '/' might occur in custom branches filenames and sed
-# arguments should not contain '/'
-	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT) ; \
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
@@ -343,7 +347,3 @@ clean: install-clean
 	$(RM) -r $(BUILD_HELPER_DIR)
 	$(RM) -r $(BUILD_BASE_DIR)
 	$(RM) -r $(PACKAGE_BUILD_DIR)
-
-setup:
-	@echo "Please run the build in a docker container."
-	@echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."

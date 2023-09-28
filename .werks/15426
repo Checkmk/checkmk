@@ -1,0 +1,14 @@
+Title: check_mk_agent: fixing command when determining mrpe configured interval
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1677679304
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Under certain OS, the -o flag of the grep command is unsupported and
+therefore led to a crash when attempting to determine the interval
+for the mrpe command. This werk fixes this issue.
+

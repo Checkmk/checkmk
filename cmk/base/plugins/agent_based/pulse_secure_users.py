@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Generator, List, Mapping, Optional, Union
+from collections.abc import Generator, Mapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -18,10 +19,10 @@ from .agent_based_api.v1 import (
 from .utils import pulse_secure
 
 Section = Mapping[str, int]
-CheckOutput = Generator[Union[Result, Metric], None, None]
+CheckOutput = Generator[Result | Metric, None, None]
 
 
-def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Optional[Section]:
+def parse_pulse_secure_users(string_table: list[type_defs.StringTable]) -> Section | None:
     try:
         return {"n_users": int(string_table[0][0][0])}
     except IndexError:
@@ -62,9 +63,8 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
 
 def cluster_check_pulse_secure_users(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckOutput:
-
     n_users_total = 0
 
     for node_name, section_node in section.items():

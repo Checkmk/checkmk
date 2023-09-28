@@ -1,0 +1,14 @@
+Title: BI sample configuration: fixed missing filesystems due to incorrectly used placeholder
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1683287203
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Event Console
@@ -10,13 +10,18 @@ not simply defined as states, but they form a category of their own and are in f
 information by Checkmk in the sidebar’s Overview.
 
 The event console endpoints allow for
-* Get an event console event by event id
-* Get event console events with/without filters. Get all, get by query or get by filtering on specific params.
-* Update & Acknowledge / Change State filtering on specific params.
-* Archive events filtering on specific params.
+* Show event console event/s.
+    * Query the event console table using filters, id or live status query.
+* Update & Acknowledge event/s.
+    * Query the event console table using filters, id or live status query and set the phase to ack or open.
+* Change State of event/s.
+    * Query the event console table using filters, id or live status query and set the state for those events.
+* Archive event/s.
+    * Query the event console table using filters, id or live status query and archive those events.
 
 """
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
@@ -46,7 +51,7 @@ from cmk.gui.plugins.openapi.endpoints.event_console.request_schemas import (
     ChangeEventState,
     ChangeEventStateSelector,
     DeleteECEvents,
-    UpdateAndAcknowledgeEvent,
+    UpdateAndAcknowledeEventSiteIDRequired,
     UpdateAndAcknowledgeSelector,
 )
 from cmk.gui.plugins.openapi.endpoints.event_console.response_schemas import (
@@ -57,7 +62,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
-IGNORE_PERMISSIONS = permissions.Ignore(
+IGNORE_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("mkeventd.seeall"),
@@ -154,12 +159,22 @@ def _serialize_event(event: ECEvent) -> DomainObject:
     method="get",
     tag_group="Monitoring",
     path_params=[EventID],
+    query_params=[
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+                required=True,
+            )
+        }
+    ],
     response_schema=ECEventResponse,
 )
 def show_event(params: Mapping[str, Any]) -> Response:
     """Show an event"""
     try:
-        event = get_single_event_by_id(sites.live(), int(params["event_id"]))
+        event = get_single_event_by_id(sites.live(), int(params["event_id"]), params["site_id"])
     except EventNotFoundError:
         return event_id_not_found_problem(params["event_id"])
     return serve_json(data=_serialize_event(event))
@@ -172,7 +187,20 @@ def show_event(params: Mapping[str, Any]) -> Response:
     tag_group="Monitoring",
     response_schema=EventConsoleResponseCollection,
     update_config_generation=False,
-    query_params=[FilterEventsByQuery, HostName, AppName, EventState, EventPhase],
+    query_params=[
+        FilterEventsByQuery,
+        HostName,
+        AppName,
+        EventState,
+        EventPhase,
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+            )
+        },
+    ],
 )
 def show_events(params: Mapping[str, Any]) -> Response:
     """Show events"""
@@ -186,7 +214,10 @@ def show_events(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="event_console",
-            value=[_serialize_event(ev) for _, ev in get_all_events(sites.live(), query).items()],
+            value=[
+                _serialize_event(ev)
+                for _, ev in get_all_events(sites.live(), query, params.get("site_id")).items()
+            ],
         )
     )
 
@@ -197,7 +228,7 @@ def show_events(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     path_params=[EventID],
-    request_schema=UpdateAndAcknowledgeEvent,
+    request_schema=UpdateAndAcknowledeEventSiteIDRequired,
     output_empty=True,
     permissions_required=UPDATE_AND_ACKNOWLEDGE_PERMISSIONS,
 )
@@ -213,6 +244,8 @@ def update_and_acknowledge_event(params: Mapping[str, Any]) -> Response:
         body.get("change_comment", ""),
         body.get("change_contact", ""),
         query,
+        body["phase"],
+        body["site_id"],
     )
 
     if not results:
@@ -234,7 +267,9 @@ def change_event_state(params: Mapping[str, Any]) -> Response:
     """Change event state"""
     user.need_permission("mkeventd.changestate")
     query = filter_event_table(event_id=params["event_id"])
-    results = change_state(sites.live(), params["body"]["new_state"], query)
+    results = change_state(
+        sites.live(), params["body"]["new_state"], query, params["body"]["site_id"]
+    )
     if not results:
         return event_id_not_found_problem(params["event_id"])
     return Response(status=204)
@@ -256,19 +291,26 @@ def update_and_acknowledge_multiple_events(params: Mapping[str, Any]) -> Respons
     user.need_permission("mkeventd.update_comment")
     user.need_permission("mkeventd.update_contact")
     body = params["body"]
+    # Optimization - If the user wants to acknowledge events, filter for only open events
+    # if the user wants to open events, filter for only acknowledged events
+    filter_phase = "ack" if body["phase"] == "open" else "open"
     match body["filter_type"]:
+        case "all":
+            update_query = filter_event_table(
+                phase=filter_phase,
+            )
         case "params":
             filters = body["filters"]
             update_query = filter_event_table(
                 host=filters.get("host"),
                 state=filters.get("state"),
                 application=filters.get("application"),
-                phase="open",
+                phase=filter_phase,
             )
         case "query":
             update_query = filter_event_table(
                 query=body.get("query"),
-                phase="open",
+                phase=filter_phase,
             )
 
     update_and_acknowledge(
@@ -276,6 +318,8 @@ def update_and_acknowledge_multiple_events(params: Mapping[str, Any]) -> Respons
         body.get("change_comment", ""),
         body.get("change_contact", ""),
         update_query,
+        body["phase"],
+        body.get("site_id"),
     )
     return Response(status=204)
 
@@ -305,9 +349,11 @@ def change_multiple_event_states(params: Mapping[str, Any]) -> Response:
             )
 
         case "query":
-            change_state_query = filter_event_table(query=body.get("query"))
+            change_state_query = filter_event_table(
+                query=body.get("query"),
+            )
 
-    change_state(sites.live(), body["new_state"], change_state_query)
+    change_state(sites.live(), body["new_state"], change_state_query, body.get("site_id"))
     return Response(status=204)
 
 
@@ -340,5 +386,5 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
         case "query":
             del_query = filter_event_table(query=body["query"])
 
-    archive_events(sites.live(), del_query)
+    archive_events(sites.live(), del_query, body["site_id"])
     return Response(status=204)

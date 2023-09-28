@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union
 
 from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces, ucs_bladecenter
@@ -122,7 +121,9 @@ _UCS_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_ucs_bladecenter_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     data = ucs_bladecenter.generic_parse(string_table)
     converted = []
     last_index = 0
@@ -224,7 +225,7 @@ def _extract_counters(
     return ifaces
 
 
-PleaseDont = Dict[str, Dict[str, Union[str, Dict[str, str]]]]
+PleaseDont = dict[str, dict[str, str | dict[str, str]]]
 
 
 def _parse_fc_interfaces(data):

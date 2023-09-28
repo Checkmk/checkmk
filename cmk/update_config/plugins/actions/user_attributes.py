@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
 from logging import Logger
 
-from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_users, save_users, Users, UserSpec
+from cmk.gui.userdb import load_users, save_users, USER_SCHEME_SERIAL, Users, UserSpec
 from cmk.gui.watolib.global_settings import load_configuration_settings
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -57,17 +56,11 @@ def _add_user_scheme_serial(user: UserSpec) -> None:
 
 def _remove_flexible_notifications(user: UserSpec) -> None:
     """Remove flexible notification configuration from users (version 2.2)"""
-    for key in [
-        "notifications_enabled",
-        "notification_period",
-        "host_notification_options",
-        "service_notification_options",
-        "notification_method",
-    ]:
-        if not key in user:
-            continue
-
-        del user[key]  # type: ignore
+    user.pop("notifications_enabled", None)
+    user.pop("notification_period", None)
+    user.pop("host_notification_options", None)
+    user.pop("service_notification_options", None)
+    user.pop("notification_method", None)
 
 
 class UpdateUserAttributes(UpdateAction):

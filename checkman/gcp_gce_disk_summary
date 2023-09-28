@@ -16,4 +16,4 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
 discovery:
- One service
+ One service for each virtual machine.

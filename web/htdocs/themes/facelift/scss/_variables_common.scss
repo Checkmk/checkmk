@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,6 +19,10 @@ $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
 $danger-dimmed: darken($danger, 25%);
+// TODO: Exchange the variable $success with $new-success and adjust the occurences of $new-success
+//       in _login.scss. Rebranding and the 2.2.0 release made this temporary hack necessary.
+//       See https://jira.lan.tribe29.com/browse/CMK-13295
+$new-success: rgb(21, 209, 160);
 $success: rgb(19, 211, 137);
 $success-dimmed: darken($success, 5%);
 $success-dimmed-2: darken($success, 15%);
@@ -76,6 +80,14 @@ $letter-spacing-default: 0.5px;
 $letter-spacing-table: 1px;
 
 // -----------------------------------------------------------------------------
+// BI
+// -----------------------------------------------------------------------------
+$bi-missing-element-bright: rgb(174, 25, 159);
+$bi-new-element-bright: rgb(6, 103, 193);
+$bi-missing-element-dim: rgb(79, 4, 71);
+$bi-new-element-dim: rgb(6, 61, 113);
+
+// -----------------------------------------------------------------------------
 // Spacings
 // -----------------------------------------------------------------------------
 $spacing: 10px;
@@ -118,3 +130,5 @@ $input-field-margin: 0 $spacing-half $spacing-half 0;
 $mobile-form-element-bg-color: rgb(246, 246, 246);
 $mobile-form-element-border: 1px solid rgb(221, 221, 221);
 $mobile-form-element-focus-box-shadow: 0 0 12px rgb(51, 136, 204);
+$mobile-background-color: rgb(249, 249, 249);
+$trial-expiration-warn-color: rgb(255, 76, 0);

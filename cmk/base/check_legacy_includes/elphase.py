@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 _RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
     "%": (
-        get_percent_human_readable,
+        render.percent,
         "",
     ),
     "mA": (
@@ -68,7 +69,6 @@ def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
         ("differential_current_ac", "Differential current AC", "mA", Bounds.Upper, 0.001),
         ("differential_current_dc", "Differential current DC", "mA", Bounds.Upper, 0.001),
     ]:
-
         if what in parsed[item]:
             entry = parsed[item][what]
             if isinstance(entry, tuple):

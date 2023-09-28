@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
-from .utils import interfaces, netapp_api
+from typing_extensions import TypedDict
 
-MACList = List[Tuple[str, Optional[str]]]
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Result,
+    State,
+    type_defs,
+)
+from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
+
+MACList = list[tuple[str, str | None]]
 
 
 class NICExtraInfo(TypedDict, total=False):
     grouped_if: MACList
-    speed_differs: Tuple[int, int]
+    speed_differs: tuple[int, int]
     home_port: str
+    home_node: str | None
     is_home: bool
+    failover_ports: Sequence[Mapping[str, str]]
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
-Section = Tuple[interfaces.Section, ExtraInfo]
+Section = tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
 
 
 def parse_netapp_api_if(  # pylint: disable=too-many-branches
@@ -33,7 +44,7 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
     # List of virtual interfaces
     vif_list = []
 
-    speed: Union[str, int]
+    speed: str | int
 
     # Calculate speed, state and create mac-address list
     for name, values in ifaces.items():
@@ -125,41 +136,51 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
                         oper_status = "1"
                         break
 
-        # Only add interfaces with counters
-        if "recv_data" in values:
-            nics.append(
-                interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index=str(idx + 1),
-                        descr=nic_name,
-                        alias=values.get("interface-name", ""),
-                        type="6",
-                        speed=interfaces.saveint(speed),
-                        oper_status=oper_status,
-                        phys_address=interfaces.mac_address_from_hexstring(
-                            values.get("mac-address", "")
-                        ),
-                        speed_as_text=speed == "auto" and "auto" or "",
+        if "failover_ports" in values and values["failover_ports"] != "none":
+            extra_info.setdefault(nic_name, {})["failover_ports"] = [
+                {
+                    "node": node,
+                    "port": name,
+                    "link-status": link_status,
+                }
+                for port in values["failover_ports"].split(";")
+                for node, name, link_status, *_ in (port.split("|"),)
+            ]
+
+        nics.append(
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(idx + 1),
+                    descr=nic_name,
+                    alias=values.get("interface-name", ""),
+                    type="6",
+                    speed=interfaces.saveint(speed),
+                    oper_status=oper_status,
+                    phys_address=interfaces.mac_address_from_hexstring(
+                        values.get("mac-address", "")
                     ),
-                    interfaces.Counters(
-                        in_octets=interfaces.saveint(values.get("recv_data")),
-                        in_ucast=interfaces.saveint(values.get("recv_packet")),
-                        in_mcast=interfaces.saveint(values.get("recv_mcasts")),
-                        in_err=interfaces.saveint(values.get("recv_errors")),
-                        out_octets=interfaces.saveint(values.get("send_data")),
-                        out_ucast=interfaces.saveint(values.get("send_packet")),
-                        out_mcast=interfaces.saveint(values.get("send_mcasts")),
-                        out_err=interfaces.saveint(values.get("send_errors")),
-                    ),
-                )
+                    speed_as_text=speed == "auto" and "auto" or "",
+                ),
+                interfaces.Counters(
+                    in_octets=interfaces.saveint(values.get("recv_data")),
+                    in_ucast=interfaces.saveint(values.get("recv_packet")),
+                    in_mcast=interfaces.saveint(values.get("recv_mcasts")),
+                    in_err=interfaces.saveint(values.get("recv_errors")),
+                    out_octets=interfaces.saveint(values.get("send_data")),
+                    out_ucast=interfaces.saveint(values.get("send_packet")),
+                    out_mcast=interfaces.saveint(values.get("send_mcasts")),
+                    out_err=interfaces.saveint(values.get("send_errors")),
+                ),
             )
-            if "home-port" in values:
-                extra_info.setdefault(nic_name, {}).update(
-                    {
-                        "home_port": values["home-port"],
-                        "is_home": values.get("is-home") == "true",
-                    }
-                )
+        )
+        if "home-port" in values:
+            extra_info.setdefault(nic_name, {}).update(
+                {
+                    "home_port": values["home-port"],
+                    "home_node": values.get("home-node"),
+                    "is_home": values.get("is-home") == "true",
+                }
+            )
 
     return nics, extra_info
 
@@ -210,71 +231,87 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
         value_store=value_store,
     )
 
-    for iface in nics:
-        descr_cln = interfaces.cleanup_if_strings(iface.attributes.descr)
-        alias_cln = interfaces.cleanup_if_strings(iface.attributes.alias)
+    for iface in interfaces.matching_interfaces_for_item(item, nics):
         first_member = True
-        if interfaces.item_matches(item, iface.attributes.index, alias_cln, descr_cln):
-            vif = extra_info.get(iface.attributes.descr)
-            if vif is None:
-                continue
+        vif = extra_info.get(iface.attributes.descr)
+        if vif is None:
+            continue
 
-            speed_state, speed_info_included = 1, True
-            home_state, home_info_included = 0, True
+        speed_state, speed_info_included = 1, True
+        home_state, home_info_included = 0, True
 
-            if "match_same_speed" in params:
-                speed_behaviour = params["match_same_speed"]
-                speed_info_included = INFO_INCLUDED_MAP.get(
-                    speed_behaviour,
-                    speed_info_included,
-                )
-                speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
+        if "match_same_speed" in params:
+            speed_behaviour = params["match_same_speed"]
+            speed_info_included = INFO_INCLUDED_MAP.get(
+                speed_behaviour,
+                speed_info_included,
+            )
+            speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
 
-            if "home_port" in params:
-                home_behaviour = params["home_port"]
-                home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
-                home_state = STATUS_MAP.get(home_behaviour, home_state)
+        if "home_port" in params:
+            home_behaviour = params["home_port"]
+            home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
+            home_state = STATUS_MAP.get(home_behaviour, home_state)
 
-            if "home_port" in vif and home_info_included:
-                is_home_port = vif["is_home"]
-                mon_state = 0 if is_home_port else home_state
-                home_attribute = "is %shome port" % ("" if is_home_port else "not ")
-                yield Result(
-                    state=State(mon_state),
-                    summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
-                )
+        if "home_port" in vif and home_info_included:
+            is_home_port = vif["is_home"]
+            mon_state = 0 if is_home_port else home_state
+            home_attribute = "is %shome port" % ("" if is_home_port else "not ")
+            yield Result(
+                state=State(mon_state),
+                summary="Current Port: {} ({})".format(vif["home_port"], home_attribute),
+            )
 
-            if "grouped_if" in vif:
-                for member_name, member_state in sorted(vif.get("grouped_if", [])):
-                    if member_state is None or member_name == iface.attributes.descr:
-                        continue  # Not a real member or the grouped interface itself
+        if "failover_ports" in vif:
+            failover_group_str = ", ".join(
+                f"{fop['node']}:{fop['port']}={fop['link-status']}"
+                for fop in sorted(vif["failover_ports"], key=lambda x: (x["node"], x["port"]))
+            )
+            yield Result(
+                state=(
+                    State.CRIT
+                    if any(
+                        fop["link-status"] != "up" and fop["node"] == vif["home_node"]
+                        for fop in vif["failover_ports"]
+                    )
+                    else State.WARN
+                    if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
+                    else State.OK
+                ),
+                notice=f"Failover Group: [{failover_group_str}]",
+            )
 
-                    if member_state == "2":
-                        mon_state = 1
-                    else:
-                        mon_state = 0
+        if "grouped_if" in vif:
+            for member_name, member_state in sorted(vif.get("grouped_if", [])):
+                if member_state is None or member_name == iface.attributes.descr:
+                    continue  # Not a real member or the grouped interface itself
 
-                    if first_member:
-                        yield Result(
-                            state=State(mon_state),
-                            summary="Physical interfaces: %s(%s)"
-                            % (
-                                member_name,
-                                interfaces.statename(member_state),
-                            ),
-                        )
-                        first_member = False
-                    else:
-                        yield Result(
-                            state=State(mon_state),
-                            summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
-                        )
+                if member_state == "2":
+                    mon_state = 1
+                else:
+                    mon_state = 0
 
-            if "speed_differs" in vif and speed_info_included:
-                yield Result(
-                    state=State(speed_state),
-                    summary="Interfaces do not have the same speed",
-                )
+                if first_member:
+                    yield Result(
+                        state=State(mon_state),
+                        summary="Physical interfaces: %s(%s)"
+                        % (
+                            member_name,
+                            interfaces.statename(member_state),
+                        ),
+                    )
+                    first_member = False
+                else:
+                    yield Result(
+                        state=State(mon_state),
+                        summary=f"{member_name}({interfaces.statename(member_state)})",
+                    )
+
+        if "speed_differs" in vif and speed_info_included:
+            yield Result(
+                state=State(speed_state),
+                summary="Interfaces do not have the same speed",
+            )
 
 
 register.check_plugin(

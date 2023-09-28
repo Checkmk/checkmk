@@ -1,0 +1,15 @@
+Title: DCD: resolve bug when hosts with locked attributes are included in Phase 2.2
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1673964990
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Prior to this werk, DCD was unable to complete Phase 2.2 whenever the REST API
+returned host configs which included locked attributes. This werk resolves this
+issue and no further KeyError should appear in the DCD logs.
+
+The bug was previously introduced with werk 13640.

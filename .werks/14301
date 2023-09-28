@@ -1,0 +1,20 @@
+Title: Minor mail notification usability improvements
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1676644383
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some minor usability improvements have been applied to the body of the mail
+notifications.
+
+The Host row now displays the alias only in case it is set and is different
+from the hostname to reduce redundant information.
+
+The "performance data" (aka metric) row is not displayed anymore by default
+because it's considered a detail information that can be viewed in the UI if it
+is needed. However, if you prefer to keep this in the notification, you can
+configure this in the notification plugin settings.

@@ -1,20 +1,20 @@
-title: Mobileiron device: Mobileiron versions
+title: Ivanti Neurons for MDM (formerly MobileIron Cloud): Device versions
 agents: mobileiron
-catalog: app/mobileiron
+catalog: app/ivantineurons
 license: GPL
 distribution: check_mk
 description:
- The special agent mobileiron queries the mobileiron cloud instance
- through the REST API and then displays the status of each
- device via the piggyback mechanism.
+ The special agent Ivanti Neurons for MDM (formerly MobileIron Cloud) 
+ queries the cloud instance through the REST API.
 
- This check monitors the versions parameters of each device in mobileiron.
+ This check monitors the OS version, OS build version, 
+ security patch level (for Android) and client version
+ of each device managed via Ivanti Neurons for MDM.
 
- The monitored parameters are:
- - osBuildVersion
- - androidSecurityPatchLevel
- - platformVersion
- - clientVersion
+ The alerting can be configured to detect specific iOS and Android versions
+ and to monitor the age of security patch level and OS build.
+ Furthermore a state can be set for devices which are neither Android nor iOS, 
+ with unknown OS builds or unknown patch levels. 
 
 discovery:
- One service is created
+ One service per device is created

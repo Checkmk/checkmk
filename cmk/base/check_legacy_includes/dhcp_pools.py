@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.utils import dhcp_pools
 # }
 
 
-def check_dhcp_pools_levels(  # type:ignore[no-untyped-def]
+def check_dhcp_pools_levels(  # type: ignore[no-untyped-def]
     free, used, pending, size, params: Mapping[str, tuple[float, float]]
 ):
     for new_api_object in dhcp_pools.check_dhcp_pools_levels(free, used, pending, size, params):

@@ -1,0 +1,18 @@
+Title: mssql_datafiles/transactionlogs: Regression in maximum size calculation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1694589964
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This is a follow-up to Werk #14421.
+
+Since Checkmk 2.1.0p5, we calculate the maximum size as the sum of available
+and used size for unlimited instances.
+
+However, in some cases, we accidentally drop explicit thresholds for the
+maximum size if avaiable, falling back to the unlimited case.
+

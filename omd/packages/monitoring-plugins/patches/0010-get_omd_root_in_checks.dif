@@ -22,8 +22,8 @@
  		server_address, port);
 
  	for (i = 0; i < numoids; i++) {
---- a/plugins/check_hpjd.c	2021-04-10 14:13:41.000000000 +0200
-+++ b/plugins/check_hpjd.c	2022-04-04 15:45:58.801463952 +0200
+--- a/plugins/check_hpjd.c	2022-10-19 12:50:27.000000000 +0000
++++ b/plugins/check_hpjd.c	2023-01-13 12:09:34.120943312 +0000
 @@ -37,6 +37,7 @@
  #include "popen.h"
  #include "utils.h"
@@ -32,19 +32,22 @@
 
  #define DEFAULT_COMMUNITY "public"
  #define DEFAULT_PORT "161"
-@@ -121,9 +122,11 @@
+@@ -121,12 +122,9 @@
  		 HPJD_GD_DOOR_OPEN, HPJD_GD_PAPER_OUTPUT, HPJD_GD_STATUS_DISPLAY);
 
  	/* get the command to run */
--	sprintf (command_line, "%s -OQa -m : -v 1 -c %s %s:%hd %s", PATH_TO_SNMPGET, community,
+-	sprintf (command_line, "%s -OQa -m : -v 1 -c %s %s:%u %s",
+-			PATH_TO_SNMPGET,
+-			community,
+-			address,
+-			port,
+-			query_string);
 +	char * absolute_cmd_path = get_absolute_snmp_cmd_path(PATH_TO_SNMPGET);
 +	sprintf (command_line, "%s -OQa -m : -v 1 -c %s %s:%hd %s", absolute_cmd_path, community,
- 									address, port, query_string);
++ 									address, port, query_string);
 
-+
  	/* run the command */
  	child_process = spopen (command_line);
- 	if (child_process == NULL) {
 --- a/lib/utils_cmd.h	2021-04-10 14:13:41.000000000 +0200
 +++ b/lib/utils_cmd.h	2022-04-04 15:45:58.801463952 +0200
 @@ -23,6 +23,7 @@

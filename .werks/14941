@@ -1,0 +1,14 @@
+Title: Extend ps check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1675277591
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+With this werk, the process check is able to monitor memory levels for indivudual
+processes either with a single datapoint resolution or by using a time-averaged
+resolution.
+

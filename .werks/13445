@@ -1,0 +1,16 @@
+Title: Allow single character names
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675770491
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Several endpoints (contact_group_config, password, service_group_config,
+host_group_config, and time_period) used a field which required at least two
+characters, although it was possible to create a one character name via the UI.
+
+

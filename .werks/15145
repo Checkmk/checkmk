@@ -1,0 +1,18 @@
+Title: agent_azure: Remove caching from the azure_usagedetails section
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1675954792
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Usage details section provides yesterday's Azure resource costs used in the "Cost"
+check plugin. Until now, the section data was fetched once a day and cached.
+The problem is that because yesterday's costs are still being calculated in
+the Azure's Cost Management, they change throughout the day.
+
+In order to report the cost data as soon as possible and to be consistent with
+the Azure's Cost Management, the caching of the azure_usagedetails section has
+been removed.

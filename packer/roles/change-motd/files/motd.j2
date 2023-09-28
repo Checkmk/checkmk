@@ -1,0 +1,21 @@
+ / ___| |__   ___  ___| | ___ __ ___ | | __
+| |   | '_ \ / _ \/ __| |/ / '_ ` _ \| |/ /
+| |___| | | |  __/ (__|   <| | | | | |   <
+ \____|_| |_|\___|\___|_|\_\_| |_| |_|_|\_\
+
+               Cloud Monitoring
+
+To create a new site run
+
+   sudo omd create <name of site>
+   sudo omd start <name of site>
+
+The omd command will show you the password for the default admin account.
+
+IMPORTANT: The Apache web server currently uses a self signed certificate that
+must be considered insecure. Please read the documentation in the Official User
+Guide located at https://docs.checkmk.com/2.2.0/en/omd_https.html to learn how
+to replace the certificate with your own or use certbot to automatically obtain
+certificates. When finished, restart the Apache process with the command
+
+systemctl restart apache2

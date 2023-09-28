@@ -15,24 +15,24 @@ In Jira you have to add two custom fields to your project screen as described <a
 In Check_MK, under "WATO - Notifications", create a new notification rule and select Jira.
 
 Parameters to set:
-LI:JIRA URL: The URL to your Jira environment
-LI:User Name: Jira username
-LI:Password: Jira password
-LI:Project ID: The Project ID the issues should be created in
-LI:Issue type ID: The issue type ID
-LI:Host custom field ID: The first custom field ID you created in Jira
-LI:Service custom field ID: The second custom field ID you created in Jira
-LI:Monitoring URL: URL of your Check_MK environment to create hyperlinks back to Check_MK (eg. https://server/site)
-LI:Priority ID: The priority ID (optional)
-LI:Summary for host notifications: The summary the created host issue should use (optional)
-LI:Summary for service notifications: The summary the created service issue shoud use (optional)
-LI:Label: Label for Jira issues. If not set, 'monitoring' will be used. (optional)
-LI:Activate resultion with following resolution transistion ID: If set, the created issue will be resolved with the configured resolution ID (optional)
-LI:Set optional timeout for connections to JIRA: Timeout in seconds, default is 10 (optional)
+* JIRA URL: The URL to your Jira environment
+* User Name: Jira username
+* Password: Jira password
+* Project ID: The Project ID the issues should be created in
+* Issue type ID: The issue type ID
+* Host custom field ID: The first custom field ID you created in Jira
+* Service custom field ID: The second custom field ID you created in Jira
+* Monitoring URL: URL of your Check_MK environment to create hyperlinks back to Check_MK (eg. https://server/site)
+* Priority ID: The priority ID (optional)
+* Summary for host notifications: The summary the created host issue should use (optional)
+* Summary for service notifications: The summary the created service issue shoud use (optional)
+* Label: Label for Jira issues. If not set, 'monitoring' will be used. (optional)
+* Activate resultion with following resolution transistion ID: If set, the created issue will be resolved with the configured resolution ID (optional)
+* Set optional timeout for connections to JIRA: Timeout in seconds, default is 10 (optional)
 
 You need different Jira IDs to open/resolve issues. There are different ways to get this IDs:
-LI: <a href="https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html">Jira_support</a>
-LI: Retrieve with the a script (example: project_id):
+* <a href="https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html">Jira_support</a>
+* Retrieve with the a script (example: project_id):
 
 F+:example_script.py
 #!/usr/bin/env python
@@ -59,6 +59,6 @@ resp = sess.get("%s/rest/api/2/issuetype" % JIRA_SERVER)
 resp = sess.get("%s/rest/api/2/priority" % JIRA_SERVER)
 F-:
 
-More information about the Jira API can be found <a href "https://docs.atlassian.com/software/jira/docs/api/REST/7.12.0">here</a>.
+More information about the Jira API can be found <a href="https://docs.atlassian.com/software/jira/docs/api/REST/7.12.0">here</a>.
 
 CMK-1185

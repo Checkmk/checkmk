@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -19,6 +16,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextInput,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements:
@@ -107,6 +106,7 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                 Checkbox(
                     title=_("Sensor state"),
                     label=_("Enable"),
+                    default_value=True,
                     help=_("Output sensor state"),
                 ),
             ),
@@ -189,7 +189,7 @@ def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
         ],
         title=_("IPMI Sensors via Freeipmi or IPMItool"),
         help=_(
-            "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+            "This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
             "which collects the data through the FreeIPMI resp. IPMItool command"
         ),
     )
@@ -198,7 +198,7 @@ def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:ipmi_sensors",
+        name=RuleGroup.SpecialAgents("ipmi_sensors"),
         valuespec=_valuespec_special_agents_ipmi_sensors,
     )
 )

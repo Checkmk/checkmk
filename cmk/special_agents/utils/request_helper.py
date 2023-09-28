@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common module request related stuff"""
@@ -11,10 +11,11 @@ import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, TypedDict
+from typing import Any
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
+from typing_extensions import TypedDict
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -46,7 +47,6 @@ class Requester(abc.ABC):
 
 
 class HTTPSConfigurableConnection(HTTPSConnection):
-
     IGNORE = "__ignore"
 
     def __init__(self, host: str, ca_file: str | None = None) -> None:
@@ -171,7 +171,7 @@ class ApiSession(Session):
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
-def parse_api_url(  # type:ignore[no-untyped-def]
+def parse_api_url(  # type: ignore[no-untyped-def]
     server_address,
     api_path,
     protocol="http",

@@ -1,0 +1,14 @@
+Title: user: return 400 status code when trying to create or edit an user specifying a non existing customer
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1689336534
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the user setup endpoint returned a 500 status code whenever
+the user tried to create or update an user specifiying a non-existing customer.
+This werk fixes this and returns a 400 status code instead
+

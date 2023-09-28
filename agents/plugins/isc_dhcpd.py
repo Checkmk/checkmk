@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
 # Monitor leases if ISC-DHCPD
 import calendar
 import os
+import platform
 import re
 import sys
 import time
@@ -38,19 +39,15 @@ if not conf_file or not leases_file:
 def get_pid():
     cmd = "pidof dhcpd"
 
-    # workaround for bug in sysvinit-utils in debian buster
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
-    lsb_path = "/etc/lsb-release"
-    if os.path.exists(lsb_path):
-        with open(lsb_path) as lsb_file:
-            for line in lsb_file:
-                if "buster" in line:
-                    cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
-                    break
+    if "debian-10" in platform.platform().lower():
+        # workaround for bug in sysvinit-utils in debian buster
+        # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
+        cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
 
     # This produces a false warning in Bandit, claiming there was no failing test for this nosec.
     # The warning is a bug in Bandit: https://github.com/PyCQA/bandit/issues/942
-    return os.popen(cmd).read().strip()  # nosec B605 # BNS:f6c1b9
+    p = os.popen(cmd)  # nosec B605 # BNS:f6c1b9
+    return p.read().strip()
 
 
 pidof_dhcpd = get_pid()

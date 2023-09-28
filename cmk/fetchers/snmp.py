@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,9 @@ import logging
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.snmplib.type_defs import (
+from cmk.snmplib import (
     BackendSNMPTree,
     SNMPBackend,
     SNMPBackendEnum,
@@ -79,12 +79,12 @@ class SNMPPluginStoreItem(NamedTuple):
         }
 
 
-class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
+class SNMPPluginStore(SectionMap[SNMPPluginStoreItem]):
     def __init__(
         self,
-        store: Mapping[SectionName, SNMPPluginStoreItem] | None = None,
+        store: SectionMap[SNMPPluginStoreItem] | None = None,
     ) -> None:
-        self._store: Final[Mapping[SectionName, SNMPPluginStoreItem]] = store if store else {}
+        self._store: Final[SectionMap[SNMPPluginStoreItem]] = store if store else {}
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"

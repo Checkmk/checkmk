@@ -1,0 +1,17 @@
+Title: Fix copy of random secret to clipboard
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1690198878
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In some environments, the button "Create random secret and copy secret to
+clipboard" of the option "Automation secret for machine accounts" on the users
+page did not copy the secret to the clipboard.
+
+We now use a fallback mechanism if the standard fails. If even the fallback
+fails you will see a dialog were you can copy the secret manually.
+

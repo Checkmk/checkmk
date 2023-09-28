@@ -1,0 +1,14 @@
+Title: apache_status: Try to detect servers with ss first
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1683903144
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, apache_status agent plugin would try to first fetch server
+info by using netstat. If the output was empty it would use ss.
+The sequence of commands is now changed because netstat is deprecated
+and truncates IPv6 addresses.

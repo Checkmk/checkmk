@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cmk.utils import paths as paths_utils
 
-from cmk.gui import visuals
+from cmk.gui.visuals._store import _CombinedVisualsCache
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -39,7 +39,7 @@ class VersionSpecificCachesCleaner(UpdateAction):
         # The caches might contain visuals in a deprecated format. For example, in 2.2, painters in
         # visuals are represented by a dedicated type, which was not the case the before. The caches
         # from 2.1 will still contain the old data structures.
-        visuals._CombinedVisualsCache.invalidate_all_caches()
+        _CombinedVisualsCache.invalidate_all_caches()
 
 
 update_action_registry.register(

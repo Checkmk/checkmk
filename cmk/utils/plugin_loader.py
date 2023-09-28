@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,13 +7,55 @@ import importlib
 import os
 import pkgutil
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from itertools import chain
 from pathlib import Path
 from types import ModuleType
 
+PluginFailures = Generator[tuple[str, BaseException], None, None]
 
-def load_plugins_with_exceptions(package_name: str) -> Iterator[tuple[str, BaseException]]:
+
+def load_plugins(
+    package_name: str,
+) -> Generator[tuple[str, ModuleType | BaseException], None, None]:
+    """Load all specified packages
+
+    This function accepts a package name in Pythons dotted syntax (e.g. requests.exceptions).
+
+    Args:
+        package_name:
+            A valid module path in Python's dotted syntax.
+
+    Returns:
+        A generator of 2-tuples of plugin-name and module or exception,
+        when a plugin failed to import.
+
+    Raises:
+        Nothing explicit. Possibly ImportErrors.
+
+    """
+    walk_errors: list[tuple[str, BaseException]] = []
+
+    def onerror_func(name: str) -> None:
+        if exc := sys.exc_info()[1]:
+            walk_errors.append((name, exc))
+
+    try:
+        __import__(package_name)
+    except Exception as exc:
+        yield package_name, exc
+        return
+    for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
+        name = full_name.removeprefix(f"{package_name}.")
+        try:
+            yield name, importlib.import_module(full_name)
+        except Exception as exc:
+            yield name, exc
+
+    yield from walk_errors
+
+
+def load_plugins_with_exceptions(package_name: str) -> PluginFailures:
     """Load all specified packages
 
     This function accepts a package name in Python's dotted syntax (e.g.
@@ -35,20 +77,7 @@ def load_plugins_with_exceptions(package_name: str) -> Iterator[tuple[str, BaseE
         ...     print("Importing %s failed: %s" % (mod_name, exc))
 
     """
-    walk_errors: list[tuple[str, BaseException]] = []
-
-    def onerror_func(name: str) -> None:
-        if exc := sys.exc_info()[1]:
-            walk_errors.append((name, exc))
-
-    __import__(package_name)
-    for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
-        try:
-            importlib.import_module(full_name)
-        except Exception as exc:
-            yield full_name.removeprefix(f"{package_name}."), exc
-
-    yield from walk_errors
+    yield from ((n, e) for n, e in load_plugins(package_name) if isinstance(e, BaseException))
 
 
 def _find_modules(pkg: ModuleType, onerror: Callable[[str], None]) -> list[str]:
@@ -80,7 +109,7 @@ def _discover_path_importables(
         if pkg_dir_path.parts[-1] == "__pycache__":
             continue
 
-        if all(Path(_).suffix != ".py" for _ in file_names):
+        if all(Path(f).suffix != ".py" for f in file_names):
             continue
 
         rel_pt = pkg_dir_path.relative_to(pkg_pth)
@@ -95,7 +124,7 @@ def _discover_path_importables(
         )
 
 
-def load_plugins(
+def import_plugins(
     init_file_path: str,
     package_name: str,
 ) -> None:
@@ -116,8 +145,7 @@ def load_plugins(
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path: list[str] | None = getattr(package, "__path__")
-    if module_path:
+    if module_path := getattr(package, "__path__"):
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             importlib.import_module(f"{package_name}.{plugin_name}")
 

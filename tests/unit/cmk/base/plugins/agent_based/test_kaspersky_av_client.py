@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,10 +26,10 @@ def set_fixed_timezone():
         (
             [["Fullscan", "01.01.1970", "00:00:00", "1"]],
             1,
-            dict(fullscan_age=1, fullscan_failed=True),
+            {"fullscan_age": 1, "fullscan_failed": True},
         ),
-        ([["Signatures", "01.01.1970", "00:00:00"]], 1, dict(signature_age=1)),
-        ([["Signatures", "01.01.1970"]], 1, dict(signature_age=1)),
+        ([["Signatures", "01.01.1970", "00:00:00"]], 1, {"signature_age": 1}),
+        ([["Signatures", "01.01.1970"]], 1, {"signature_age": 1}),
         ([["Signatures", "Missing"]], 0, {}),
     ],
 )
@@ -43,7 +43,7 @@ def test_parse_kaspersky_av_client(
     "section,results",
     [
         (
-            dict(fullscan_age=2.3549888134, signature_age=2.3549888134),
+            {"fullscan_age": 2.3549888134, "signature_age": 2.3549888134},
             [
                 Result(
                     state=State.WARN,
@@ -56,7 +56,7 @@ def test_parse_kaspersky_av_client(
             ],
         ),
         (
-            dict(fullscan_age=3.35498881343, signature_age=3.3549888134),
+            {"fullscan_age": 3.35498881343, "signature_age": 3.3549888134},
             [
                 Result(
                     state=State.CRIT,
@@ -69,7 +69,7 @@ def test_parse_kaspersky_av_client(
             ],
         ),
         (
-            dict(fullscan_failed=True, fullscan_age=1.3549888134, signature_age=1.3549888134),
+            {"fullscan_failed": True, "fullscan_age": 1.3549888134, "signature_age": 1.3549888134},
             [
                 Result(state=State.OK, summary="Last update of signatures: 1 second ago"),
                 Result(state=State.OK, summary="Last fullscan: 1 second ago"),
@@ -88,5 +88,5 @@ def test_parse_kaspersky_av_client(
 def test_check_kaskpersky_av_client(
     section: kaspersky_av_client.Section, results: Sequence[Result]
 ) -> None:
-    test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
+    test_params = {"signature_age": (2, 3), "fullscan_age": (2, 3)}
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

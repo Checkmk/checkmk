@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import time
+from collections.abc import Iterable
 
 import pytest
 from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
-from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
+from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # noqa: F401
     compile_builtin_po_files,
     locale_base_dir,
     locale_paths,
@@ -20,7 +21,7 @@ from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
 from livestatus import SiteId
 
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.i18n as i18n
 from cmk.gui.utils.html import HTML
@@ -71,12 +72,16 @@ class TestObjectRef:
 
 class TestAuditLogStore:
     @pytest.fixture(name="store")
-    def fixture_store(self, tmp_path):
-        return AuditLogStore(tmp_path / "audit.log")
+    def fixture_store(self) -> Iterable[AuditLogStore]:
+        store = AuditLogStore()
+        try:
+            yield store
+        finally:
+            store._path.unlink(missing_ok=True)
 
     def test_read_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
     def test_clear_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
@@ -107,7 +112,7 @@ class TestAuditLogStore:
         assert list(store.read()) == [entry]
 
         store.clear()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
         archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
         assert archive_path.exists()
@@ -120,7 +125,7 @@ class TestAuditLogStore:
             assert list(store.read()) == [entry]
 
             store.clear()
-            assert list(store.read()) == []
+            assert not list(store.read())
 
             for archive_num in range(n + 1):
                 archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
@@ -134,11 +139,15 @@ class TestAuditLogStore:
 
 class TestSiteChanges:
     @pytest.fixture(name="store")
-    def fixture_store(self, tmp_path):
-        return SiteChanges(tmp_path / ("replication_changes_mysite.mk"))
+    def fixture_store(self) -> Iterable[SiteChanges]:
+        store = SiteChanges(SiteId("mysite"))
+        try:
+            yield store
+        finally:
+            store._path.unlink(missing_ok=True)
 
     @pytest.fixture(name="entry")
-    def fixture_entry(self):
+    def fixture_entry(self) -> ChangeSpec:
         return {
             "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
             "action_name": "create-host",
@@ -153,20 +162,20 @@ class TestSiteChanges:
 
     def test_read_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
     def test_clear_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
         store.clear()
 
-    def test_write(self, store: SiteChanges, entry: ChangeSpec) -> None:
+    def test_mutable_view(self, store: SiteChanges, entry: ChangeSpec) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-        entry2 = entry.copy()
-        entry2["id"] = "1"
+        entry2 = {**entry, "id": "1"}
+        with store.mutable_view() as mv:
+            mv[:] = [entry2]
 
-        store.write([entry2])
         assert list(store.read()) == [entry2]
 
     def test_append(self, store: SiteChanges, entry: ChangeSpec) -> None:
@@ -178,39 +187,7 @@ class TestSiteChanges:
         assert list(store.read()) == [entry]
 
         store.clear()
-        assert list(store.read()) == []
-
-    @pytest.mark.parametrize(
-        "old_type,ref_type",
-        [
-            ("CREHost", ObjectRefType.Host),
-            ("CMEHost", ObjectRefType.Host),
-            ("CREFolder", ObjectRefType.Folder),
-            ("CMEFolder", ObjectRefType.Folder),
-        ],
-    )
-    def test_read_pre_20_host_change(
-        self, store: SiteChanges, old_type: str, ref_type: ObjectRefType
-    ) -> None:
-        with store._path.open("wb") as f:
-            f.write(
-                repr(
-                    {
-                        "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
-                        "action_name": "create-host",
-                        "text": "Created new host node1.",
-                        "object": (old_type, "node1"),
-                        "user_id": "cmkadmin",
-                        "domains": ["check_mk"],
-                        "time": 1605461248.786142,
-                        "need_sync": True,
-                        "need_restart": True,
-                    }
-                ).encode("utf-8")
-                + b"\0"
-            )
-
-        assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
+        assert not list(store.read())
 
 
 @pytest.mark.usefixtures("request_context")
@@ -232,7 +209,7 @@ def test_log_audit_with_object_diff() -> None:
             diff_text=make_diff_text(old, new),
         )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
@@ -255,7 +232,7 @@ def test_log_audit_with_html_message() -> None:
             message=HTML("Message <b>bla</b>"),
         )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
@@ -288,7 +265,7 @@ def test_log_audit_with_lazystring() -> None:
                 message=lazy_str,
             )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,

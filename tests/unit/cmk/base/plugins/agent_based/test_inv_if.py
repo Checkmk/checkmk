@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
-from cmk.base.plugins.agent_based.inv_if import Interface, inventory_if, parse_inv_if, SectionInvIf
+from cmk.base.plugins.agent_based.inv_if import inventory_if, parse_inv_if, SectionInvIf
 from cmk.base.plugins.agent_based.utils import uptime
+from cmk.base.plugins.agent_based.utils.inventory_interfaces import Interface
 
 from .utils_inventory import sort_inventory_result
 

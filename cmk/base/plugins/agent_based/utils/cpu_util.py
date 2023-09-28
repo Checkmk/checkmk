@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -69,7 +70,7 @@ class CPUInfo(
         return self.util_total + self.idle
 
     @property
-    def utils_perc(self) -> Tuple[float, float, float, float, float, float]:
+    def utils_perc(self) -> tuple[float, float, float, float, float, float]:
         # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputim  e.c
         # see 'account_guest_time'
         # if task_nice(p) <= 0:
@@ -94,7 +95,7 @@ class CPUInfo(
         )
 
 
-def core_name(orig: str, core_index: int) -> Tuple[str, str]:
+def core_name(orig: str, core_index: int) -> tuple[str, str]:
     """
     normalize name of a cpu core so that the perfdata-template
     recognizes it. If the input name doesn't end on a number, this
@@ -122,8 +123,8 @@ def check_cpu_util(
     *,
     util: float,
     params: Mapping[str, Any],
-    cores: Sequence[Tuple[str, float]] = (),
-    perf_max: Optional[float] = 100,
+    cores: Sequence[tuple[str, float]] = (),
+    perf_max: float | None = 100,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
@@ -213,7 +214,7 @@ def check_cpu_util_unix(
     params: Mapping,
     this_time: float,
     value_store: MutableMapping,
-    cores: List[CPUInfo],
+    cores: list[CPUInfo],
     values_counter: bool,
 ) -> CheckResult:
     if values_counter:
@@ -305,8 +306,8 @@ def check_cpu_util_unix(
 
 def _check_single_core_util(
     util: float,
-    metric: Optional[str],
-    levels: Optional[Tuple[float, float]],
+    metric: str | None,
+    levels: tuple[float, float] | None,
     label: str,
 ) -> CheckResult:
     yield from check_levels(
@@ -345,7 +346,7 @@ def _util_perfdata(
 
     config_single_avg = params.get("average_single", {})
 
-    metric_names: Tuple[Optional[str], Optional[str]] = core_name(core, core_index)
+    metric_names: tuple[str | None, str | None] = core_name(core, core_index)
     metric_raw, metric_avg = metric_names
     if not params.get("core_util_graph"):
         metric_raw = None
@@ -397,7 +398,7 @@ def cpu_util_time(
     core: str,
     perc: float,
     threshold: float,
-    levels: Optional[Tuple[float, float]],
+    levels: tuple[float, float] | None,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:

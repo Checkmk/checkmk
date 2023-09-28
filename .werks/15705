@@ -1,0 +1,36 @@
+Title: Warning about agent updater rule on CME remote site update
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1690440242
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+When updating a remote site in a distributed site setup using the
+Checkmk Managed Services Edition, the update process may issue a
+warning like this:
+C+:
+-|  WARNING: Invalid rule configuration detected (Ruleset: agent_config:cmk_update_agent, Title: Agent updater (Linux, Windows, Solaris), Folder: ,
+-| Rule nr: 1, Exception: -----BEGIN CERTIFICATE-----
+-| MII...
+-| ...HqQ==
+-| -----END CERTIFICATE-----
+-|  is not an allowed value)
+-|  Detected 1 issue(s) in configured rules.
+-| To correct these issues, we recommend to open the affected rules in the GUI.
+-| Upon attempting to save them, any problematic fields will be highlighted.
+C-:
+
+The root cause for this warning is that on the CME remote site, the underlying
+agent signing certificates are not available, so the ruleset referring to them
+can't be verified.
+
+As a workaround you can safely ignore this warning, since the <i>cmk_update_agent</i>
+rule is never used on a remote site.
+
+However, from now on the warning won't be displayed any longer.
+

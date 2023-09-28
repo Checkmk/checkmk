@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,11 +11,11 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_wato_disabled_blocks_query(  # type:ignore[no-untyped-def]
+def test_openapi_wato_disabled_blocks_query(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
     set_config: SetConfig,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     base = "/NO_SITE/check_mk/api/1.0"

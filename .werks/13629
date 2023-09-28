@@ -1,0 +1,14 @@
+Title: GCP GCE check plugins: Aligned service names
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1677869610
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The service names of the compute engine services have
+not followed the naming convention used by other vm services.
+This is aligned now.
+

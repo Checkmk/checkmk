@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "tcp_port": 143},
-                        "auth": ("foo", "bar"),
+                        "auth": ("basic", ("foo", "bar")),
                     },
                 ),
                 "connect_timeout": 15,
@@ -43,14 +43,14 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                         "connection": {"disable_tls": True, "tcp_port": 123},
                     },
                 ),
                 "forward": {
                     "facility": 2,
                     "application": None,
-                    "host": "me.too@tribe29.com",
+                    "host": "me.too@checkmk.com",
                     "cleanup": True,
                 },
             },
@@ -62,7 +62,7 @@ pytestmark = pytest.mark.checks
                 "--fetch-password=p4ssw0rd",
                 "--forward-ec",
                 "--forward-facility=2",
-                "--forward-host=me.too@tribe29.com",
+                "--forward-host=me.too@checkmk.com",
                 "--cleanup=delete",
             ],
         ),

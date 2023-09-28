@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,28 +19,28 @@ from unittest.mock import MagicMock
 
 import pytest
 import webtest  # type: ignore[import]
-
-# TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
-from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from mypy_extensions import KwArg
+from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
+    ClientRegistry,
     expand_rel,
+    get_client_registry,
     get_link,
     RequestHandler,
     Response,
     RestApiClient,
 )
 from tests.testlib.users import create_and_destroy_user
-from tests.testlib.utils import no_search_index_update_background
 
 import cmk.utils.log
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 
@@ -48,6 +48,7 @@ import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
+import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry
@@ -55,10 +56,11 @@ from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
+from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.watolib import hosts_and_folders
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 SPEC_LOCK = threading.Lock()
 
@@ -81,7 +83,18 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture(autouse=True)
-def gui_cleanup_after_test():
+def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "cmk.gui.watolib.search.updates_requested",
+        return_value=False,
+    )
+
+
+@pytest.fixture(autouse=True)
+def gui_cleanup_after_test(
+    request_context: None,
+    deactivate_search_index_building_at_requenst_end: None,
+) -> Iterator[None]:
     yield
 
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
@@ -89,7 +102,6 @@ def gui_cleanup_after_test():
     hooks.call("request-end")
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 @pytest.fixture()
 def request_context(flask_app: Flask) -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
@@ -97,25 +109,6 @@ def request_context(flask_app: Flask) -> Iterator[None]:
         flask_app.preprocess_request()
         yield
         flask_app.process_response(http.Response())
-
-
-@pytest.fixture()
-def monkeypatch(monkeypatch: MonkeyPatch, request_context: None) -> Iterator[MonkeyPatch]:
-    """Makes patch/undo of request globals possible
-
-    In the GUI we often use the monkeypatch for patching request globals (e.g.
-    cmk.gui.globals.config). To be able to undo all these patches, we need to be within the request
-    context while monkeypatch.undo is running. However, with the default "monkeypatch" fixture the
-    undo would be executed after leaving the application and request context.
-
-    What we do here is to override the default monkeypatch fixture of pytest for the GUI tests:
-    See also: https://github.com/pytest-dev/pytest/blob/main/src/_pytest/monkeypatch.py.
-
-    The drawback here may be that we create some unnecessary application / request context objects
-    for some tests. If you have an idea for a cleaner approach, let me know.
-    """
-    with monkeypatch.context() as m:
-        yield m
 
 
 @pytest.fixture(name="mock_livestatus")
@@ -153,11 +146,23 @@ def set_config(**kwargs: Any) -> Iterator[None]:
         for key, val in kwargs.items():
             setattr(active_config, key, val)
 
+    def fake_load_single_global_wato_setting(
+        varname: str,
+        deflt: typing.Any | None = None,
+    ) -> typing.Any:
+        return kwargs.get(varname, deflt)
+
     try:
         config_module.register_post_config_load_hook(_set_config)
         if kwargs:
             # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
-            with mock.patch.multiple(active_config, **kwargs):
+            with (
+                mock.patch.multiple(active_config, **kwargs),
+                mock.patch(
+                    "cmk.gui.wsgi.applications.utils.load_single_global_wato_setting",
+                    new=fake_load_single_global_wato_setting,
+                ),
+            ):
                 yield
         else:
             yield
@@ -193,7 +198,7 @@ def with_user(request_context: None, load_config: None) -> Iterator[tuple[UserId
 @pytest.fixture()
 def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    with login.TransactionIdContext(user_id):
         yield user_id
 
 
@@ -206,7 +211,7 @@ def with_admin(request_context: None, load_config: None) -> Iterator[tuple[UserI
 @pytest.fixture()
 def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    with login.TransactionIdContext(user_id):
         yield user_id
 
 
@@ -226,7 +231,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
 @pytest.fixture()
 def make_html_object_explode(mocker: MagicMock) -> None:
     class HtmlExploder:
-        def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
+        def __init__(self, *args: object, **kw: object) -> None:
             raise NotImplementedError("Tried to instantiate html")
 
     mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
@@ -243,8 +248,7 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
-    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._detach_from_parent")
-    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._close_apache_fds")
+    mocker.patch("cmk.gui.watolib.activate_changes._close_apache_fds")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._open_stdout_and_stderr")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
@@ -278,7 +282,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
-    def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self.username: UserId | None = None
         self.password: str | None = None
@@ -287,7 +291,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
-    def call_method(  # type:ignore[no-untyped-def]
+    def call_method(  # type: ignore[no-untyped-def]
         self, method: HTTPMethod, url, *args, **kw
     ) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
@@ -322,7 +326,7 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def login(self, username: UserId, password: str) -> webtest.TestResponse:
         self.username = username
-        login = self.get("/NO_SITE/check_mk/login.py")
+        login = self.get("/NO_SITE/check_mk/login.py", status=200)
         login.form["_username"] = username
         login.form["_password"] = password
         resp = login.form.submit("_login", index=1)
@@ -342,7 +346,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
     # environment dict. When however a Request is passed in, the environment of the Request will
     # not be touched.
     user_id, _ = with_user
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
+    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
 
 
 @pytest.fixture()
@@ -354,7 +358,7 @@ def admin_auth_request(
     # environment dict. When however a Request is passed in, the environment of the Request will
     # not be touched.
     user_id, _ = with_admin
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
+    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
 
 
 class SingleRequest(typing.Protocol):
@@ -364,13 +368,12 @@ class SingleRequest(typing.Protocol):
 
 @pytest.fixture(scope="function")
 def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleRequest:
-
     """Do a single authenticated request, thereby persisting the session to disk."""
 
     def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
         with flask_app.test_client() as client:
             client.get(auth_request)
-            infos = userdb.load_session_infos(session.user.ident)
+            infos = load_session_infos(session.user.ident)
 
             # When `in_the_past` is a positive integer, the resulting session will have happened
             # that many seconds in the past.
@@ -389,21 +392,13 @@ def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleR
 
 
 @pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
 def wsgi_app() -> WebTestAppForCMK:
     return _make_webtest(debug=False, testing=True)
 
 
 @pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
 def wsgi_app_debug_off() -> WebTestAppForCMK:
     return _make_webtest(debug=False, testing=False)
-
-
-@pytest.fixture(autouse=True)
-def avoid_search_index_update_background(monkeypatch):
-    with no_search_index_update_background():
-        yield
 
 
 @pytest.fixture()
@@ -418,6 +413,7 @@ def logged_in_wsgi_app(
 def logged_in_admin_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
 ) -> WebTestAppForCMK:
+    wsgi_app.set_authorization(None)
     _ = wsgi_app.login(with_admin[0], with_admin[1])
     return wsgi_app
 
@@ -440,7 +436,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "_get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(mkeventd, "get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 
@@ -449,14 +445,13 @@ def with_host(
     request_context,
     with_admin_login,
 ):
-    hostnames = ["heute", "example.com"]
-    hosts_and_folders.CREFolder.root_folder().create_hosts(
+    hostnames = [HostName("heute"), HostName("example.com")]
+    root_folder = folder_tree().root_folder()
+    root_folder.create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
     )
     yield hostnames
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(
-        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult()
-    )
+    root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
 @pytest.fixture(autouse=True)
@@ -480,7 +475,7 @@ def run_as_user() -> Callable[[UserId], ContextManager[None]]:
 
     @contextmanager
     def _run_as_user(user_id: UserId) -> Iterator[None]:
-        cmk.gui.config.load_config()
+        config_module.load_config()
         with UserContext(user_id):
             yield None
 
@@ -503,7 +498,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
     @contextmanager
     def _run_as_superuser() -> Iterator[None]:
-        cmk.gui.config.load_config()
+        config_module.load_config()
         with SuperUserContext():
             yield None
 
@@ -531,12 +526,12 @@ class WebTestAppRequestHandler(RequestHandler):
         self,
         method: HTTPMethod,
         url: str,
-        query_params: Mapping[str, str] | None = None,
+        query_params: Mapping[str, str | typing.Sequence[str]] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> Response:
         if query_params is not None:
-            query_string = "?" + urllib.parse.urlencode(query_params)
+            query_string = "?" + urllib.parse.urlencode(query_params, doseq=True)
         else:
             query_string = ""
         resp = self.app.call_method(
@@ -552,3 +547,8 @@ class WebTestAppRequestHandler(RequestHandler):
 @pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
+    return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

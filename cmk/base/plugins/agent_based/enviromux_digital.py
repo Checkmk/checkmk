@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.enviromux import (
     DETECT_ENVIROMUX,
+    DETECT_ENVIROMUX5,
     EnviromuxDigitalSection,
     parse_enviromux_digital,
 )
@@ -25,6 +26,22 @@ register.snmp_section(
         ],
     ),
     detect=DETECT_ENVIROMUX,
+)
+
+register.snmp_section(
+    name="enviromux5_digital",
+    parse_function=parse_enviromux_digital,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3699.1.1.10.1.6.1.1",
+        oids=[
+            "1",  # digInputIndex
+            "3",  # digInputDescription
+            "7",  # digInputValue
+            "9",  # digInputNormalValue
+        ],
+    ),
+    parsed_section_name="enviromux_digital",
+    detect=DETECT_ENVIROMUX5,
 )
 
 

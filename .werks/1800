@@ -9,7 +9,7 @@ Date: 1418998671
 
 Previous versions allowed HTML codes to be used in texts of exceptions to give the
 error messages some kind of markup. This was removed to prevent XSS attacks. Now
-we changed the code to only allow special markup tags like <tt>, <b>, <i>, <br>.
+we changed the code to only allow special markup tags like `<tt>`, `<b>`, `<i>`, `<br>`.
 
 So if you saw these tags in error messages in previous version, they should be
 fixed now.

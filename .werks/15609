@@ -1,0 +1,21 @@
+Title: KUBE: Limit collection time for <tt>Persistent Volume Claims & Persistent Volumes</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682683781
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b7
+
+This change affects those using the <tt>Kubernetes</tt> together with the feature <tt>Collect
+information about Persistent Volume Claims & Persistent Volumes</tt> (available in 2.2.0 and above).
+
+With this feature turned on, the Kubernetes agent will contact the kubelet on each node via a proxy
+provided by the Kubernetes API server. This means the data collection depends on the number of
+nodes and the latency of the Pod network. If this data collection takes too long, the Kubernetes
+agent may timeout. This in turn causes the previously collected API data to be discarded.
+
+With this Werk, the data collection time is limited to 30 seconds. The omission of the data causes
+the omission of metrics from the <tt>PVC</tt> service of a Pod. This is consistent with how missing
+data is handled, if the corresponding kubelet is down.

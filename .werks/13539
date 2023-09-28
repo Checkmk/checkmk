@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 From kernel docs: on Linux the temperature is reported in milli degrees. On
 SunXI the temperature value is measured in degrees.

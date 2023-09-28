@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,8 +18,7 @@ def _parameter_valuespec():
         help=_(
             "This ruleset is relevant for Kubernetes replicas. You can set "
             "a maximum allowed duration during which replicas may be in a not "
-            "ready or not up-to-date state. For StatefulSets, you may additionally "
-            "specify such a duration for the not available state. For DaemonSets, you may "
+            "ready, not available or not up-to-date state. For DaemonSets, you may "
             "additionally specify the duration for which there may be a "
             "positive number of misscheduled replicas. Keep in mind that replicas "
             "may temporarily be in these states during the process of an "

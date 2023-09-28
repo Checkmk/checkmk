@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping, NamedTuple, Sequence, Tuple, TypedDict
+from collections.abc import Iterable, Mapping, Sequence
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.render import percent, timespan
@@ -50,12 +53,12 @@ register.agent_section(
 
 
 class CheckParams(TypedDict):
-    rta: Tuple[int, int]
-    rtstddev: Tuple[int, int]
-    pl: Tuple[int, int]
+    rta: tuple[int, int]
+    rtstddev: tuple[int, int]
+    pl: tuple[int, int]
 
 
-def discover_mtr(section) -> DiscoveryResult:  # type:ignore[no-untyped-def]
+def discover_mtr(section) -> DiscoveryResult:  # type: ignore[no-untyped-def]
     yield from (Service(item=item) for item in section)
 
 
@@ -77,7 +80,6 @@ def _check_last_hop(
     last_hop: Hop,
     last_idx: int,
 ) -> CheckResult:
-
     yield from check_levels(
         last_hop.pl,
         levels_upper=params["pl"],

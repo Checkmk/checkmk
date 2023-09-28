@@ -1,36 +1,37 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert
-from .utils.temperature import check_temperature, TempParamType, to_celsius
+from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection, temperature_to_celsius
+from .utils.temperature import check_temperature, TempParamType
 
-ParsedSection = Dict[str, Any]
+ParsedSection = Mapping[str, tuple[str, str]]
 
 
 def _get_item_from_key(key: str) -> str:
     return key.replace(" Air Temperature", "")
 
 
-def _get_item_data(item: str, section_liebert_temp_air: ParsedSection) -> Tuple:
+def _get_item_data(item: str, section_liebert_temp_air: ParsedSection) -> tuple[str, str] | None:
     for key, data in section_liebert_temp_air.items():
         if _get_item_from_key(key) == item:
             return data
-    return (None, None)
+    return None
 
 
-def parse_liebert_temp_air(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_temp_air(string_table: list[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 
 def discover_liebert_temp_air(
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[Dict[str, str]],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
 ) -> DiscoveryResult:
     if not section_liebert_temp_air:
         return
@@ -42,8 +43,8 @@ def discover_liebert_temp_air(
 def check_liebert_temp_air(
     item: str,
     params: TempParamType,
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[Dict[str, str]],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
 ) -> CheckResult:
     value_store = get_value_store()
     yield from _check_liebert_temp_air(
@@ -58,17 +59,17 @@ def check_liebert_temp_air(
 def _check_liebert_temp_air(
     item: str,
     params: TempParamType,
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[Dict[str, str]],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if section_liebert_temp_air is None or section_liebert_system is None:
         return
 
-    value, unit = _get_item_data(item, section_liebert_temp_air)
-    if value is None:
+    if not (item_data := _get_item_data(item, section_liebert_temp_air)):
         return
+
+    value, unit = item_data
 
     device_state = section_liebert_system.get("Unit Operating State")
     if "Unavailable" in value and device_state == "standby":
@@ -76,14 +77,12 @@ def _check_liebert_temp_air(
         return
 
     try:
-        value = float(value)
+        value_float = float(value)
     except ValueError:
         return
 
-    unit = unit.replace("deg ", "").lower()
-    value = to_celsius(value, unit)
     yield from check_temperature(
-        value,
+        temperature_to_celsius(value_float, unit),
         params,
         unique_name="check_liebert_temp_air.%s" % item,
         value_store=value_store,

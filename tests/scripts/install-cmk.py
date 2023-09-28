@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Is executed in container from git top level as working directory to install
@@ -45,7 +45,7 @@ def main():
     logger.info(
         "Version: %s, Edition: %s, Branch: %s",
         version.version,
-        version.edition.name,
+        version.edition.long,
         version.branch,
     )
 
@@ -68,7 +68,7 @@ def get_omd_distro_name() -> str:
 
     rh = Path("/etc/redhat-release")
     if rh.exists():
-        content = rh.open().read()
+        content = rh.read_text()
         if content.startswith("CentOS release 6"):
             return "el6"
         if content.startswith("CentOS Linux release 7"):
@@ -196,7 +196,7 @@ class ABCPackageManager(abc.ABC):
     def _install_package(self, package_path: Path) -> None:
         raise NotImplementedError()
 
-    def _execute(self, cmd: list[str]) -> None:
+    def _execute(self, cmd: list[str | Path]) -> None:
         logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
 
         # Workaround to fix package installation issues
@@ -227,27 +227,27 @@ def sha256_file(path: Path) -> str:
 
 class PackageManagerDEB(ABCPackageManager):
     def _package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.name}-{version}_0.{self.distro_name}_amd64.deb"
+        return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
 
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         # As long as we do not have all dependencies preinstalled, we need to ensure that the
         # package mirror information are up-to-date
         self._execute(["apt-get", "update"])
-        self._execute(["/usr/bin/gdebi", "--non-interactive", package_path])
+        self._execute(["apt", "install", "-y", package_path])
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def _package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.name}-{version}-{self.distro_name}-38.x86_64.rpm"
+        return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         self._execute(["zypper", "in", "-y", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
-    def _install_package(self, package_path):
+    def _install_package(self, package_path: Path) -> None:
         self._execute(["/usr/bin/yum", "-y", "install", package_path])
 
 

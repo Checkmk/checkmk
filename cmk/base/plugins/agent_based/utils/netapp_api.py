@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import Result, Service, State, type_defs
 
 CPUSection = TypedDict(
     "CPUSection",
     {
-        "clustermode": Dict[str, Dict[str, str]],
-        "7mode": Dict[str, str],
+        "clustermode": dict[str, dict[str, str]],
+        "7mode": dict[str, str],
     },
     total=False,
 )
 
-Instance = Dict[str, str]
-SectionMultipleInstances = Dict[str, List[Instance]]
+Instance = dict[str, str]
+SectionMultipleInstances = dict[str, list[Instance]]
 SectionSingleInstance = Mapping[str, Instance]
-CustomKeys = Optional[Sequence[str]]
-ItemFunc = Optional[Callable[[str, Instance], str]]
+CustomKeys = Sequence[str] | None
+ItemFunc = Callable[[str, Instance], str] | None
 
 
 _DEV_KEYS = {
@@ -176,7 +179,6 @@ def discover_summary(
 def get_single_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
-
     error_key, number_key = _DEV_KEYS[device_type]
 
     def check_single(
@@ -204,7 +206,6 @@ def _pluralize(thing: str, count: int) -> str:
 def get_summary_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
-
     error_key, _number_key = _DEV_KEYS[device_type]
 
     def check_summary(

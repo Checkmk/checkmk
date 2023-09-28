@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from functools import partial
 from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeVar
 
@@ -31,19 +32,24 @@ ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
 from cmk.utils import plugin_registry
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.type_defs import (
-    HostName,
-    HostState,
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
+
+from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
     ServiceDetails,
-    ServiceName,
     ServiceState,
-    TaggroupID,
-    TaggroupIDToTagCondition,
-    TagID,
 )
 
-from cmk.bi.type_defs import ActionConfig, ComputationConfigDict, GroupConfigDict, SearchConfig
+from cmk.bi.type_defs import (
+    ActionConfig,
+    ComputationConfigDict,
+    GroupConfigDict,
+    HostState,
+    SearchConfig,
+)
 
 
 class BIStates:
@@ -101,7 +107,7 @@ class BIServiceData(NamedTuple):
 
 class BIHostData(NamedTuple):
     site_id: str
-    tags: set[tuple[TaggroupID, TagID]]
+    tags: set[tuple[TagGroupID, TagID]]
     labels: MapGroup2Value
     folder: str
     services: dict[str, BIServiceData]
@@ -202,7 +208,7 @@ def create_nested_schema(
         base_schema,
         dump_default=default_config,
         example=example,
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="Nested dictionary",
     )
 
 
@@ -243,6 +249,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.disabled = computation_config["disabled"]
         self.use_hard_states = computation_config["use_hard_states"]
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
+        self.freeze_aggregations = computation_config.get("freeze_aggregations", False)
 
     @classmethod
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
@@ -251,6 +258,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def serialize(self):
         return {
             "disabled": self.disabled,
+            "freeze_aggregations": self.freeze_aggregations,
             "use_hard_states": self.use_hard_states,
             "escalate_downtimes_as_warn": self.escalate_downtimes_as_warn,
         }
@@ -260,6 +268,7 @@ class BIAggregationComputationOptionsSchema(Schema):
     disabled = ReqBoolean(dump_default=False, example=False)
     use_hard_states = ReqBoolean(dump_default=False, example=False)
     escalate_downtimes_as_warn = ReqBoolean(dump_default=False, example=False)
+    freeze_aggregations = Boolean(dump_default=False, example=False)
 
 
 class BIAggregationGroups(ABCWithSchema):
@@ -342,17 +351,14 @@ def replace_macros(
 
 
 def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:
-    new_list: list[str] = []
-    for element in elements:
-        new_list.append(replace_macros(element, macros))
-    return new_list
+    return [replace_macros(element, macros) for element in elements]
 
 
 def replace_macros_in_dict(old_dict: dict[str, str], macros: MacroMapping) -> dict[str, str]:
-    new_dict: dict[str, str] = {}
-    for key, value in old_dict.items():
-        new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
-    return new_dict
+    return {
+        replace_macros(key, macros): replace_macros(value, macros)
+        for key, value in old_dict.items()
+    }
 
 
 def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
@@ -373,6 +379,7 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 
 class ABCBISearcher(ABC):
     def __init__(self) -> None:
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
         self.hosts: dict[str, BIHostData] = {}
         self._host_regex_match_cache: dict[str, dict] = {}
         self._host_regex_miss_cache: dict[str, dict] = {}
@@ -407,7 +414,7 @@ class ABCBISearcher(ABC):
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TagGroupID, TagCondition],
     ) -> Iterable[BIHostData]:
         ...
 
@@ -440,10 +447,33 @@ CompiledNodeKind = Literal[
 ]
 
 
+@dataclass(frozen=True)
+class FrozenMarker:
+    status: Literal["missing", "new", "ok"]
+
+
+@dataclass(frozen=True)
+class NodeIdentifierInfo:
+    id: tuple
+    node_ref: ABCBICompiledNode
+
+
 class ABCBICompiledNode(ABC):
     def __init__(self) -> None:
         super().__init__()
-        self.required_hosts: list[tuple[SiteId, str]] = []
+        self.required_hosts: list[tuple[SiteId, HostName]] = []
+        self._frozen_marker: FrozenMarker | None = None
+
+    @property
+    def frozen_marker(self):
+        return self._frozen_marker
+
+    def set_frozen_marker(self, frozen_marker: FrozenMarker) -> None:
+        """Sets branch comparison result info"""
+        self._frozen_marker = frozen_marker
+
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
+        return []
 
     @classmethod
     @abstractmethod

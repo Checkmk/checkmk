@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "common/wtools.h"
-#include "logger.h"
+#include "wnx/logger.h"
 using namespace std::chrono_literals;
 
 struct ThreadControlBlock {

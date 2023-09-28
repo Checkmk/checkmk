@@ -18,7 +18,8 @@ description:
  The plugin {mk_dhcp_enabled.bat} can be used to get a WARN if the ip
  address of the interface was assigned by dhcp. To check the current state of
  Windows bonding interfaces, you need to install the agent plugin {windows_if.ps1}
- on the target host.
+ on the target host. Without the plugin, this check will show 'Not available' as
+ the operation state.
 
  Depending on the check parameters, this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
@@ -40,8 +41,9 @@ item:
 discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
- By default, these are interfaces which are currently found {Connected} and are of
- type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
+ By default, these are interfaces with the operation state {Connected} or
+ {Not available} and are of type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182,
+ 205 or 229.
 
  {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import get_args
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,
     SyslogPriority,
 )
 
-from cmk.gui.fields import Timestamp
+from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.event_console import ServiceLevelType
 from cmk.gui.plugins.openapi.endpoints.event_console.common_fields import (
@@ -27,6 +27,12 @@ from cmk import fields
 
 
 class ECEventAttributes(BaseSchema):
+    site_id = SiteField(
+        description="The site id of the EC event.",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     state = StateField(
         required=True,
     )

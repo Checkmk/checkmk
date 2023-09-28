@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public Licensv2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public Licensv2
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.
 
 from collections.abc import Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based import cisco_vpn_tunnel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -276,6 +276,7 @@ def test_check_cisco_vpn_tunnel(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_cisco_vpn_tunnel_counter_init() -> None:
     with pytest.raises(IgnoreResultsError):
         list(

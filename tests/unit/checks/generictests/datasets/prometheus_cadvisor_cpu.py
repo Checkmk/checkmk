@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
-checkname = 'cadvisor_cpu'
+checkname = "cadvisor_cpu"
 
 info = [
     [
@@ -14,27 +14,18 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (
-                    0, 'User: 0.11%', [
-                        ('user', 0.10996819381471273, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'System: 0.13%',
-                    [('system', 0.12688637747851422, None, None, None, None)]
-                ),
-                (
-                    0, 'Total CPU: 0.24%', [
-                        ('util', 0.23685457129322696, None, None, None, None)
-                    ]
-                )
-            ]
+            None,
+            {},
+            [
+                (0, "User: 0.11%", [("user", 0.10996819381471273, None, None, None, None)]),
+                (0, "System: 0.13%", [("system", 0.12688637747851422, None, None, None, None)]),
+                (0, "Total CPU: 0.24%", [("util", 0.23685457129322696, None, None, None, None)]),
+            ],
         )
     ]
 }

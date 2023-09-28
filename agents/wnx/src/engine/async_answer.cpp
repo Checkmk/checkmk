@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "async_answer.h"
+#include "wnx/async_answer.h"
 
 #include <chrono>
 #include <cstdint>
@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "common/cfg_info.h"
-#include "logger.h"
-#include "section_header.h"       // names
-#include "windows_service_api.h"  // global situation
+#include "wnx/logger.h"
+#include "wnx/section_header.h"       // names
+#include "wnx/windows_service_api.h"  // global situation
 
 using std::chrono::milliseconds;
 using std::chrono::steady_clock;
@@ -111,6 +111,7 @@ bool AsyncAnswer::prepareAnswer(std::string_view ip) {
 std::vector<std::string> AsyncAnswer::segmentNameList() const {
     std::unique_lock lk(lock_);
     std::vector<std::string> list;
+    list.reserve(segments_.size());
     for (const auto &s : segments_) {
         list.emplace_back(s.name_);
     }

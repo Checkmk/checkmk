@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The count of users was not showing on the "Setup" - "Users" page. This number
 is now displayed in the same way as for hosts on the "Setup" - "Hosts" page.

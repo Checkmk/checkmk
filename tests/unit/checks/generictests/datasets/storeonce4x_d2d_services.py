@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
-checkname = 'storeonce4x_d2d_services'
+# mypy: disable-error-code=var-annotated
+checkname = "storeonce4x_d2d_services"
 
 info = [
     [
@@ -13,36 +13,38 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (0, 'OverallHealth: Running (Active)', []),
-                (0, 'evt-mgr: Running (Active)', []),
-                (0, 'nas-share: Running (Active)', []),
-                (0, 'rep-obj-rpc: Running (Active)', []),
-                (0, 'rep-rpc: Running (Active)', []),
-                (0, 'vtl-rpc: Running (Active)', []),
-                (0, 'nas: Running (Active)', []),
-                (0, 'buffer-manager: Running (Active)', []),
-                (0, 'res-mgr: Running (Active)', []),
-                (0, 'd2d-iscsid: Running (Active)', []),
-                (0, 'fc-rpc: Running (Active)', []),
-                (0, 'smm: Running (Active)', []),
-                (0, 'licensing-rpc: Running (Active)', []),
-                (0, 'rmc-ert-iscsid: Running (Active)', []),
-                (0, 'nas-bm: Running (Active)', []),
-                (0, 'd2d-manager-proxy: Running (Active)', []),
-                (0, 'replication: Running (Active)', []),
-                (0, 'nas-rpc: Running (Active)', []),
-                (0, 'smm-rpc: Running (Active)', []),
-                (0, 'cat-rpc: Running (Active)', []),
-                (0, 'predupe: Running (Active)', []),
-                (0, 'object-store: Running (Active)', []),
-                (0, 'vtl: Running (Active)', [])
-            ]
+            None,
+            {},
+            [
+                (0, "OverallHealth: Running (Active)", []),
+                (0, "evt-mgr: Running (Active)", []),
+                (0, "nas-share: Running (Active)", []),
+                (0, "rep-obj-rpc: Running (Active)", []),
+                (0, "rep-rpc: Running (Active)", []),
+                (0, "vtl-rpc: Running (Active)", []),
+                (0, "nas: Running (Active)", []),
+                (0, "buffer-manager: Running (Active)", []),
+                (0, "res-mgr: Running (Active)", []),
+                (0, "d2d-iscsid: Running (Active)", []),
+                (0, "fc-rpc: Running (Active)", []),
+                (0, "smm: Running (Active)", []),
+                (0, "licensing-rpc: Running (Active)", []),
+                (0, "rmc-ert-iscsid: Running (Active)", []),
+                (0, "nas-bm: Running (Active)", []),
+                (0, "d2d-manager-proxy: Running (Active)", []),
+                (0, "replication: Running (Active)", []),
+                (0, "nas-rpc: Running (Active)", []),
+                (0, "smm-rpc: Running (Active)", []),
+                (0, "cat-rpc: Running (Active)", []),
+                (0, "predupe: Running (Active)", []),
+                (0, "object-store: Running (Active)", []),
+                (0, "vtl: Running (Active)", []),
+            ],
         )
     ]
 }

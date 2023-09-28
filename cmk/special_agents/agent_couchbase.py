@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
-import argparse
-import json
 import logging
-import sys
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from typing import Any, TypeVar
 
 import requests
 
-import cmk.utils.password_store
-
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -125,15 +123,14 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 #
 
 
-def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
+def parse_arguments(argv: Sequence[str] | None) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
-        "-v", "--verbose", default=0, action="count", help="Enable verbose logging."
-    )
-    parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
-    parser.add_argument(
-        "-t", "--timeout", default=10, help="Timeout for API-calls in seconds. Default: 10"
+        "-t",
+        "--timeout",
+        type=int,
+        default=10,
+        help="Timeout for API-calls in seconds. Default: 10",
     )
     parser.add_argument(
         "-b",
@@ -143,7 +140,7 @@ def parse_arguments(argv):
         help="Gives a bucket to monitor. Can be used multiple times.",
     )
     parser.add_argument(
-        "-P", "--port", default=8091, help="Gives the port for API-calls. Default: 8091"
+        "-P", "--port", type=int, default=8091, help="Gives the port for API-calls. Default: 8091"
     )
     parser.add_argument(
         "-u", "--username", default=None, help="The username for authentication at the API."
@@ -156,7 +153,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def set_up_logging(verbosity):
+def set_up_logging(verbosity: int) -> None:
     fmt = "%(levelname)s: %(message)s"
     if verbosity >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
@@ -168,14 +165,21 @@ def set_up_logging(verbosity):
 
 
 class CouchbaseClient:
-    def __init__(self, host, port, timeout, user, password) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self,
+        *,
+        host: str,
+        port: int,
+        timeout: int,
+        credentials: tuple[str, str] | None,
+    ) -> None:
         self._session = requests.Session()
         self._timeout = timeout
-        if None not in (user, password):
-            self._session.auth = (user, password)
+        if credentials:
+            self._session.auth = credentials
         self._base = f"http://{host}:{port}/pools/default"
 
-    def _get_suburi(self, suburi):
+    def _get_suburi(self, suburi: str) -> Any:
         uri = self._base + suburi
         LOGGER.debug("request GET %r", uri)
 
@@ -192,69 +196,108 @@ class CouchbaseClient:
             LOGGER.warning("Invalid response: %r", response)
             raise
 
-    def get_pool(self):
+    def get_pool(self) -> Mapping[str, Any]:
         """Gets the pools response"""
+        # https://docs.couchbase.com/server/current/rest-api/rest-cluster-details.html#response
         return self._get_suburi("")
 
-    def get_bucket(self, bucket):
+    def get_bucket(self, bucket: str) -> Mapping[str, Any]:
+        # See https://docs.couchbase.com/server/current/rest-api/rest-bucket-stats.html#response-2
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-def _get_dump(node_name, raw_data, filter_keys, process=lambda x: x):
-    data = {"name": node_name}
+_TRawData = TypeVar("_TRawData")
+
+
+def _get_dump(
+    node_name: str,
+    raw_data: Mapping[str, _TRawData],
+    filter_keys: Iterable[str],
+    process: Callable[[_TRawData], object] = lambda x: x,
+) -> dict[str, object]:
+    data: dict[str, object] = {"name": node_name}
     for key in filter_keys:
         if key in raw_data:
             data[key] = process(raw_data[key])
-    return json.dumps(data)
+    return data
 
 
-def sections_node(client):
-    pool = client.get_pool()
-    node_list = [(node["hostname"].split(":")[0], node) for node in pool.get("nodes", ())]
+def sections_node(client: CouchbaseClient) -> None:
+    node_list = [
+        (
+            node["hostname"].split(":")[0],
+            node,
+        )
+        for node in client.get_pool().get("nodes", ())
+    ]
 
-    sections = {
-        "couchbase_nodes_uptime": [
-            "{} {}".format(node["uptime"], name) for name, node in node_list
-        ],
-        "couchbase_nodes_info:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
-        ],
-        "couchbase_nodes_services:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list
-        ],
-        "couchbase_nodes_ports:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_PORTS) for name, node in node_list
-        ],
-        "couchbase_nodes_stats:sep(0)": [
-            _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_cache:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_CACHE)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_operations": [
-            "{} {}".format(node.get("interestingStats", {}).get("ops"), name)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_items:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_ITEMS)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_size:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_SIZE)
-            for name, node in node_list
-        ],
-    }
+    for section_name, section_generator_str in [
+        (
+            "couchbase_nodes_uptime",
+            ("{} {}".format(node["uptime"], name) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_operations",
+            (
+                "{} {}".format(node.get("interestingStats", {}).get("ops"), name)
+                for name, node in node_list
+            ),
+        ),
+    ]:
+        with SectionWriter(section_name, separator=None) as section_writer:
+            section_writer.append(section_generator_str)
 
-    output = []
-    for section_name, section_content in sections.items():
-        output.append("<<<%s>>>" % section_name)
-        output.extend(section_content)
-    return output
+    for section_name, section_generator_dict in [
+        (
+            "couchbase_nodes_info",
+            (_get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_services",
+            (_get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_ports",
+            (_get_dump(name, node, SECTION_KEYS_PORTS) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_stats",
+            (
+                _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_cache",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_CACHE)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_items",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_ITEMS)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_size",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_SIZE)
+                for name, node in node_list
+            ),
+        ),
+    ]:
+        with SectionWriter(section_name) as section_writer:
+            section_writer.append_json(section_generator_dict)
 
 
-def fetch_bucket_data(client, buckets, debug):
+def fetch_bucket_data(
+    client: CouchbaseClient,
+    buckets: Iterable[str],
+    debug: bool,
+) -> Iterator[tuple[str, Mapping[str, Sequence[float]]]]:
     for bucket in buckets:
         try:
             response = client.get_bucket(bucket)
@@ -265,64 +308,70 @@ def fetch_bucket_data(client, buckets, debug):
         yield bucket, response.get("op", {}).get("samples", {})
 
 
-def _average(value_list):
+def _average(value_list: Sequence[float]) -> float | None:
     if value_list:
         return sum(value_list) / float(len(value_list))
     return None
 
 
-def sections_buckets(bucket_list):
+def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]]) -> None:
+    for section_name, filter_keys in [
+        (
+            "couchbase_buckets_mem",
+            SECTION_KEYS_B_MEM,
+        ),
+        (
+            "couchbase_buckets_operations",
+            SECTION_KEYS_B_OPERATIONS,
+        ),
+        (
+            "couchbase_buckets_cache",
+            SECTION_KEYS_B_CACHE,
+        ),
+        (
+            "couchbase_buckets_vbuckets",
+            SECTION_KEYS_B_VBUCKET,
+        ),
+        (
+            "couchbase_buckets_fragmentation",
+            SECTION_KEYS_B_FRAGMENTATION,
+        ),
+        (
+            "couchbase_buckets_items",
+            SECTION_KEYS_B_ITEMS,
+        ),
+    ]:
+        with SectionWriter(section_name) as section_writer:
+            for name, data in bucket_list:
+                section_writer.append_json(_get_dump(name, data, filter_keys, _average))
 
-    sections = {
-        "couchbase_buckets_mem:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_MEM, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_operations:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_OPERATIONS, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_cache:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_vbuckets:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_VBUCKET, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_fragmentation:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_FRAGMENTATION, _average)
-            for name, data in bucket_list
-        ],
-        "couchbase_buckets_items:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_ITEMS, _average) for name, data in bucket_list
-        ],
-    }
 
-    output = []
-    for section_name, section_content in sections.items():
-        output.append("<<<%s>>>" % section_name)
-        output.extend(section_content)
-    return output
-
-
-def main(argv=None):
-
-    if argv is None:
-        cmk.utils.password_store.replace_passwords()
-        argv = sys.argv[1:]
-
-    args = parse_arguments(argv)
+def couchbase_main(args: Args) -> int:
     set_up_logging(args.verbose)
 
-    client = CouchbaseClient(args.hostname, args.port, args.timeout, args.username, args.password)
+    client = CouchbaseClient(
+        host=args.hostname,
+        port=args.port,
+        timeout=args.timeout,
+        credentials=(
+            args.username,
+            args.password,
+        )
+        if args.username and args.password
+        else None,
+    )
 
     try:
-        output = sections_node(client)
+        sections_node(client)
     except (ValueError, requests.ConnectionError, requests.HTTPError):
         if args.debug:
             raise
         return 1
 
-    bucket_list = list(fetch_bucket_data(client, args.buckets, args.debug))
-    output += sections_buckets(bucket_list)
+    sections_buckets(list(fetch_bucket_data(client, args.buckets, args.debug)))
 
-    output.append("")
-    sys.stdout.write("\n".join(output))
     return 0
+
+
+def main() -> int:
+    return special_agent_main(parse_arguments, couchbase_main)

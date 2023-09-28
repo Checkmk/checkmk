@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 import itertools
+import time
 from typing import Any, NamedTuple
 
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib import on_time
+from tests.testlib import set_timezone
 
+import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 
@@ -152,7 +153,7 @@ PS_DISCOVERY_WATO_RULES = [
             "resident_levels": (1024**3, 2 * 1024**3),
             "icon": "emacs.png",
         },
-        "descr": "emacs %u",
+        "descr": "emacs %u - include_ram_map",
         "match": "emacs",
         "user": False,
     },
@@ -196,12 +197,117 @@ PS_DISCOVERY_WATO_RULES = [
         "descr": "Checkhelpers Overall",
         "user": None,
     },
+    {
+        "default_params": {
+            "cpulevels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "CPU levels total only",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "virtual_levels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Virtual memory levels total only",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_levels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident memory levels total only",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_levels_perc": (30.0, 50.0),
+            "cpu_rescale_max": True,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident percent memory levels total only - include_ram_map",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "cpulevels": (90.0, 98.0),
+            "cpu_average": 15,
+            "cpu_rescale_max": True,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "CPU levels average",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "virtual_levels": (90.0, 98.0),
+            "virtual_average": 15,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Virtual memory levels average",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_levels": (90.0, 98.0),
+            "resident_average": 15,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident memory levels average",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_levels_perc": (30.0, 40.0),
+            "resident_perc_average": 15,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident percent memory levels average - include_ram_map",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_perc_average": 15,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident percent memory levels average only - include_ram_map",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "resident_levels_perc": (90.0, 98.0),
+            "resident_perc_average": 15,
+        },
+        "match": "~.*(fire)fox",
+        "descr": "Resident percent memory levels no ram map",
+        "user": None,
+    },
+    {
+        "default_params": {
+            "single_resident_levels": (10 * 1024**2, 15 * 1024**2),
+        },
+        "descr": "Resident memory levels single process",
+        "match": "svchost.exe",
+    },
+    {
+        "default_params": {
+            "resident_levels": (30.0, 40.0),
+            "resident_average": 0,
+        },
+        "descr": "Resident memory levels zero average",
+        "match": "svchost.exe",
+    },
     {},
 ]
 
 PS_DISCOVERED_ITEMS = [
     Service(
-        item="emacs on",
+        item="emacs on - include_ram_map",
         parameters={
             "cpu_average": 15,
             "cpu_rescale_max": True,
@@ -308,6 +414,137 @@ PS_DISCOVERED_ITEMS = [
             "cgroup": (None, False),
         },
     ),
+    Service(
+        item="CPU levels total only",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "cpulevels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Virtual memory levels total only",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "virtual_levels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident memory levels total only",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_levels": (90.0, 98.0),
+            "cpu_rescale_max": True,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident percent memory levels total only - include_ram_map",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_levels_perc": (30.0, 50.0),
+            "cpu_rescale_max": True,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="CPU levels average",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "cpulevels": (90.0, 98.0),
+            "cpu_average": 15,
+            "cpu_rescale_max": True,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Virtual memory levels average",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "virtual_levels": (90.0, 98.0),
+            "virtual_average": 15,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident memory levels average",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_levels": (90.0, 98.0),
+            "resident_average": 15,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident percent memory levels average - include_ram_map",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_levels_perc": (30.0, 40.0),
+            "resident_perc_average": 15,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident percent memory levels average only - include_ram_map",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_perc_average": 15,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident percent memory levels no ram map",
+        parameters={
+            "process": "~.*(fire)fox",
+            "user": None,
+            "resident_levels_perc": (90.0, 98.0),
+            "resident_perc_average": 15,
+            "match_groups": ("fire",),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident memory levels single process",
+        parameters={
+            "process": "svchost.exe",
+            "user": None,
+            "single_resident_levels": (10 * 1024**2, 15 * 1024**2),
+            "match_groups": (),
+            "cgroup": (None, False),
+        },
+    ),
+    Service(
+        item="Resident memory levels zero average",
+        parameters={
+            "process": "svchost.exe",
+            "user": None,
+            "resident_levels": (30.0, 40.0),
+            "resident_average": 0,
+            "match_groups": (),
+            "cgroup": (None, False),
+        },
+    ),
 ]
 
 
@@ -318,7 +555,7 @@ def test_inventory_common() -> None:
             s.item: s
             for s in ps_utils.discover_ps(
                 PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
-                ps_section.parse_ps(info),
+                ps_section._parse_ps(int(time.time()), info),
                 None,
                 None,
                 None,
@@ -339,20 +576,20 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=State.WARN,
-            summary="virtual: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
+            summary="Virtual memory: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
         ),
         Metric("vsz", 1050360, levels=(1073741824, 2147483648)),
         Result(
             state=State.OK,
-            summary="physical: 296 MiB",
+            summary="Resident memory: 296 MiB",
         ),
         Metric("rss", 303252, levels=(1073741824, 2147483648)),
         Result(
             state=State.WARN,
-            summary="Percentage of total RAM: 28.92% (warn/crit at 25.00%/50.00%)",
+            summary="Percentage of resident memory: 28.92% (warn/crit at 25.00%/50.00%)",
         ),
         Metric("pcpu", 0.0),
-        Metric("pcpuavg", 0.0, boundaries=(0, 15)),
+        Metric("pcpuavg", 0.0),
         Result(
             state=State.OK,
             summary="CPU: 0%, 15 min average: 0%",
@@ -361,6 +598,8 @@ check_results = [
             state=State.OK,
             summary="Running for: 1 day 3 hours",
         ),
+        Metric("age_youngest", 100779.0),
+        Metric("age_oldest", 100779.0),
         Result(
             state=State.OK,
             notice=(
@@ -379,17 +618,19 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=State.OK,
-            summary="virtual: 2.79 GiB",
+            summary="Virtual memory: 2.79 GiB",
         ),
         Metric("vsz", 2924232),
         Result(
             state=State.OK,
-            summary="physical: 461 MiB",
+            summary="Resident memory: 461 MiB",
         ),
         Metric("rss", 472252),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
         Result(
             state=State.OK,
             notice=(
@@ -402,13 +643,15 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=State.OK, summary="physical: 1.12 MiB"),
+        Result(state=State.OK, summary="Resident memory: 1.12 MiB"),
         Metric("rss", 1144),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 3 hours 54 minutes"),
+        Metric("age_youngest", 14050.0),
+        Metric("age_oldest", 14050.0),
         Result(
             state=State.OK,
             notice=(
@@ -421,9 +664,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 21.8 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 21.8 MiB"),
         Metric("vsz", 22360),
-        Result(state=State.OK, summary="physical: 2.33 MiB"),
+        Result(state=State.OK, summary="Resident memory: 2.33 MiB"),
         Metric("rss", 2388),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -445,13 +688,15 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=State.OK, summary="physical: 1.21 MiB"),
+        Result(state=State.OK, summary="Resident memory: 1.21 MiB"),
         Metric("rss", 1244),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 2 hours 37 minutes"),
+        Metric("age_youngest", 9459.0),
+        Metric("age_oldest", 9459.0),
         Result(
             state=State.OK,
             notice=(
@@ -464,13 +709,15 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 20.7 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 20.7 MiB"),
         Metric("vsz", 21232),
-        Result(state=State.OK, summary="physical: 18.6 MiB"),
+        Result(state=State.OK, summary="Resident memory: 18.6 MiB"),
         Metric("rss", 19052),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 52 days 4 hours"),
+        Metric("age_youngest", 4510565.0),
+        Metric("age_oldest", 4510565.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -478,13 +725,15 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 0 seconds"),
+        Metric("age_youngest", 0.0),
+        Metric("age_oldest", 0.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 3"),
         Metric("count", 3, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 136 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 136 MiB"),
         Metric("vsz", 139532, levels=(1073741824000, 2147483648000)),
-        Result(state=State.OK, summary="physical: 38.6 MiB"),
+        Result(state=State.OK, summary="Resident memory: 38.6 MiB"),
         Metric("rss", 39516, levels=(104857600, 209715200)),
         Result(
             state=State.UNKNOWN,
@@ -511,43 +760,248 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 4.47 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 4.47 MiB"),
         Metric("vsz", 4576),
-        Result(state=State.OK, summary="physical: 316 KiB"),
+        Result(state=State.OK, summary="Resident memory: 316 KiB"),
         Metric("rss", 316),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Process handles: 53"),
         Metric("process_handles", 53),
     ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Metric("pcpu", 0.0, levels=(90.0, 98.0)),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.CRIT, summary="Virtual memory: 2.79 GiB (warn/crit at 90 B/98 B)"),
+        Metric("vsz", 2924232.0, levels=(90.0, 98.0)),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.CRIT, summary="Resident memory: 461 MiB (warn/crit at 90 B/98 B)"),
+        Metric("rss", 472252.0, levels=(90.0, 98.0)),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Result(
+            state=State.WARN,
+            summary="Percentage of resident memory: 45.04% (warn/crit at 30.00%/50.00%)",
+        ),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Metric("pcpu", 0.0, levels=(90.0, 98.0)),
+        Metric("pcpuavg", 0.0, levels=(90.0, 98.0)),
+        Result(state=State.OK, summary="CPU: 0%, 15 min average: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Metric("vszavg", 2994413568.0, levels=(90.0, 98.0)),
+        Result(
+            state=State.CRIT,
+            summary="Virtual memory: 2.79 GiB, 15 min average: 2.79 GiB (warn/crit at 90 B/98 B)",
+        ),
+        Metric("vsz", 2924232.0, levels=(90.0, 98.0)),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Metric("rssavg", 483586048.0, levels=(90.0, 98.0)),
+        Result(
+            state=State.CRIT,
+            summary="Resident memory: 461 MiB, 15 min average: 461 MiB (warn/crit at 90 B/98 B)",
+        ),
+        Metric("rss", 472252.0, levels=(90.0, 98.0)),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Result(
+            state=State.CRIT,
+            summary=(
+                "Percentage of resident memory: 45.04%, 15 min average: 45.04% (warn/crit at"
+                " 30.00%/40.00%)"
+            ),
+        ),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Result(
+            state=State.OK, summary="Percentage of resident memory: 45.04%, 15 min average: 45.04%"
+        ),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
+        Metric("vsz", 2924232.0),
+        Result(state=State.OK, summary="Resident memory: 461 MiB"),
+        Metric("rss", 472252.0),
+        Result(
+            state=State.UNKNOWN,
+            summary="Percentual RAM levels configured, but total RAM is unknown",
+        ),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 3"),
+        Metric("count", 3.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 136 MiB"),
+        Metric("vsz", 139532.0),
+        Result(state=State.OK, summary="Resident memory: 38.6 MiB"),
+        Metric("rss", 39516.0),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(
+            state=State.WARN,
+            summary="svchost.exe with PID 600 resident memory: 10.4 MiB (warn/crit at 10.0 MiB/15.0 MiB)",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="svchost.exe with PID 764 resident memory: 18.4 MiB (warn/crit at 10.0 MiB/15.0 MiB)",
+        ),
+        Result(state=State.OK, summary="Process handles: 1204"),
+        Metric("process_handles", 1204.0),
+        Result(state=State.OK, summary="Youngest running for: 12 seconds"),
+        Metric("age_youngest", 12.0),
+        Result(state=State.OK, summary="Oldest running for: 1 hour 11 minutes"),
+        Metric("age_oldest", 4300.0),
+    ],
+    [
+        Result(state=State.OK, summary="Processes: 3"),
+        Metric("count", 3.0, levels=(100000, 100000), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 136 MiB"),
+        Metric("vsz", 139532.0),
+        Result(
+            state=State.CRIT,
+            summary="Resident memory: 38.6 MiB (warn/crit at 30 B/40 B)",
+        ),
+        Metric("rss", 39516.0, levels=(30.0, 40.0)),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Process handles: 1204"),
+        Metric("process_handles", 1204.0),
+        Result(state=State.OK, summary="Youngest running for: 12 seconds"),
+        Metric("age_youngest", 12.0),
+        Result(state=State.OK, summary="Oldest running for: 1 hour 11 minutes"),
+        Metric("age_oldest", 4300.0),
+    ],
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "inv_item, reference",
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(inv_item, reference) -> None:  # type:ignore[no-untyped-def]
+def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) -> None:
     parsed: list = []
-    for info in generate_inputs():
-        _cpu_cores, data = ps_section.parse_ps(info)
-        parsed.extend((None, ps_info, cmd_line) for (ps_info, cmd_line) in data)
 
-    with on_time(1540375342, "CET"):
-        factory_defaults = {"levels": (1, 1, 99999, 99999)}
-        factory_defaults.update(inv_item.parameters)
-        test_result = list(
+    now = 1540375342
+    for info in generate_inputs():
+        _cpu_cores, data, _ = ps_section._parse_ps(now, info)
+        parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
+
+    factory_defaults = {"levels": (1, 1, 99999, 99999)}
+    factory_defaults.update(inv_item.parameters)
+    item = inv_item.item
+    assert item is not None
+    with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
+        test_result: type_defs.CheckResult = list(
             ps_utils.check_ps_common(
                 label="Processes",
-                item=inv_item.item,
+                item=item,
                 params=factory_defaults,
                 process_lines=parsed,
                 cpu_cores=1,
-                total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
+                total_ram_map={"": 1024**3} if "include_ram_map" in item else {},
             )
         )
-        assert test_result == reference
+    assert test_result == reference
 
 
 class cpu_config(NamedTuple):
@@ -646,25 +1100,27 @@ cpu_util_data = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data) -> None:  # type:ignore[no-untyped-def]
+def test_check_ps_common_cpu(data: cpu_config) -> None:
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
-        with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
-            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
-            ]
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+            check_time, splitter(agent_info.format(cputime))
+        )
+        lines_with_node_name = [
+            (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+        ]
 
-            return list(
-                ps_utils.check_ps_common(
-                    label="Processes",
-                    item=service.item,
-                    params=service.parameters,
-                    process_lines=lines_with_node_name,
-                    cpu_cores=cpu_cores,
-                    total_ram_map={},
-                )
+        return list(
+            ps_utils.check_ps_common(
+                label="Processes",
+                item=service.item,
+                params=service.parameters,
+                process_lines=lines_with_node_name,
+                cpu_cores=cpu_cores,
+                total_ram_map={},
             )
+        )
 
     rescale_params = (
         {"cpu_rescale_max": data.cpu_rescale_max} if data.cpu_rescale_max is not None else {}
@@ -687,16 +1143,15 @@ def test_check_ps_common_cpu(data) -> None:  # type:ignore[no-untyped-def]
     assert output[:6] == [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 105 KiB"),
+        Result(state=State.OK, summary="Virtual memory: 105 KiB"),
         Metric("vsz", 105),
-        Result(state=State.OK, summary="physical: 30.0 KiB"),
+        Result(state=State.OK, summary="Resident memory: 30.0 KiB"),
         Metric("rss", 30),
     ]
-    assert output[8:] == [
-        Result(state=State.OK, summary="Running for: 3 hours 59 minutes"),
-    ]
+    assert output[8] == Result(state=State.OK, summary="Running for: 3 hours 59 minutes")
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "levels, reference",
     [
@@ -716,11 +1171,15 @@ def test_check_ps_common_cpu(data) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_ps_common_count(levels, reference) -> None:  # type:ignore[no-untyped-def]
-    _cpu_info, parsed_lines = ps_section.parse_ps(
-        splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
+def test_check_ps_common_count(
+    levels: tuple[int, int, int, int], reference: type_defs.CheckResult
+) -> None:
+    _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+        int(time.time()), splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
-    lines_with_node_name = [(None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
+    lines_with_node_name = [
+        (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+    ]
 
     params = {
         "process": "~test",
@@ -728,7 +1187,7 @@ def test_check_ps_common_count(levels, reference) -> None:  # type:ignore[no-unt
         "levels": levels,
     }
 
-    output = list(
+    output: type_defs.CheckResult = list(
         ps_utils.check_ps_common(
             label="Processes",
             item="empty",
@@ -741,15 +1200,16 @@ def test_check_ps_common_count(levels, reference) -> None:  # type:ignore[no-unt
     assert output == reference
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_subset_patterns() -> None:
-
-    section_ps = ps_section.parse_ps(
+    section_ps = ps_section._parse_ps(
+        int(time.time()),
         splitter(
             """(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
 (user,0,0,0.5) main_test"""
-        )
+        ),
     )
 
     # Boundary in match is necessary otherwise main instance accumulates all
@@ -801,6 +1261,7 @@ def test_subset_patterns() -> None:
     test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}
 
+    _, data, ps_time = section_ps
     for service, count in zip(discovered, [1, 2, 1]):
         assert isinstance(service.item, str)
         output = list(
@@ -808,7 +1269,7 @@ def test_subset_patterns() -> None:
                 label="Processes",
                 item=service.item,
                 params=service.parameters,
-                process_lines=[(None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
+                process_lines=[(None, psi, cmd_line, ps_time) for (psi, cmd_line) in data],
                 cpu_cores=1,
                 total_ram_map={},
             )
@@ -816,8 +1277,9 @@ def test_subset_patterns() -> None:
         assert output[0] == Result(state=State.OK, summary="Processes: %s" % count)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-untyped-def]
+def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -831,16 +1293,18 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-un
     }
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
-        with on_time(check_time, "CET"):
-            agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
+        agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
-            ]
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+            check_time, splitter(agent_info.format(cputime))
+        )
+        lines_with_node_name = [
+            (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+        ]
 
+        with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
             return list(
                 ps_utils.check_ps_common(
                     label="Processes",
@@ -858,14 +1322,14 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-un
     output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
-    cpu_util_s = ps_utils.render.percent(cpu_util)
+    cpu_util_s = render.percent(cpu_util)
     single_msg = "firefox with PID 25898 CPU: %s (warn/crit at 45.00%%/80.00%%)" % cpu_util_s
     reference = [
         Result(state=State.OK, summary="Processes: 4"),
         Metric("count", 4, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 13.0 GiB"),
+        Result(state=State.OK, summary="Virtual memory: 13.0 GiB"),
         Metric("vsz", 13631104),
-        Result(state=State.OK, summary="physical: 1.06 GiB"),
+        Result(state=State.OK, summary="Resident memory: 1.06 GiB"),
         Metric("rss", 1106568),
         Metric("pcpu", cpu_util),
         Result(state=State.OK, summary="CPU: %s" % cpu_util_s),
@@ -903,12 +1367,14 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-un
     assert output == reference
 
 
-def test_parse_ps_windows(mocker: MockerFixture):  # type:ignore[no-untyped-def]
-    section_ps = ps_section.parse_ps(
+@pytest.mark.usefixtures("initialised_item_state")
+def test_parse_ps_windows(mocker: MockerFixture) -> None:
+    section_ps = ps_section._parse_ps(
+        int(time.time()),
         splitter(
-            """(\\LS\0tribe29,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
+            """(\\LS\0Checkmk,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
             "\t",
-        )
+        ),
     )
 
     section_mem = None
@@ -953,3 +1419,92 @@ def test_parse_ps_windows(mocker: MockerFixture):  # type:ignore[no-untyped-def]
         state=State.CRIT,
         summary="CPUSTRES64.EXE with PID 2080 CPU: 20.00% (warn/crit at 0%/0%)",
     )
+
+
+# SUP-13009
+_SECTION_EMPTY_CMD_LINE: ps_utils.Section = (
+    1,
+    [
+        (
+            ps_utils.PsInfo(
+                user="root",
+                virtual=96112,
+                physical=3448,
+                cputime="00:00:00/1-05:33:16",
+                process_id="4515",
+                pagefile=None,
+                usermode_time=None,
+                kernelmode_time=None,
+                handles=None,
+                threads=None,
+                uptime=None,
+                cgroup="12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+            ),
+            [],
+        ),
+    ],
+    int(time.time()),
+)
+
+
+def test_discover_empty_command_line() -> None:
+    assert list(
+        ps_utils.discover_ps(
+            [
+                {
+                    "descr": "my_proc",
+                    "match": "~^$",
+                    "default_params": {"cpu_rescale_max": True},
+                },
+                {},
+            ],
+            _SECTION_EMPTY_CMD_LINE,
+            None,
+            None,
+            None,
+        )
+    ) == [
+        Service(
+            item="my_proc",
+            parameters={
+                "process": "~^$",
+                "match_groups": (),
+                "user": None,
+                "cgroup": (None, False),
+                "cpu_rescale_max": True,
+            },
+        )
+    ]
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_check_empty_command_line() -> None:
+    assert list(
+        ps_check.check_ps(
+            "my_proc",
+            {
+                "process": "~^$",
+                "match_groups": (),
+                "user": None,
+                "cgroup": (None, False),
+                "cpu_rescale_max": True,
+                "levels": (1, 1, 99999, 99999),
+            },
+            _SECTION_EMPTY_CMD_LINE,
+            None,
+            None,
+            None,
+        )
+    ) == [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000.0, 100000.0), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Virtual memory: 93.9 MiB"),
+        Metric("vsz", 96112.0),
+        Result(state=State.OK, summary="Resident memory: 3.37 MiB"),
+        Metric("rss", 3448.0),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 1 day 5 hours"),
+        Metric("age_youngest", 106396.0),
+        Metric("age_oldest", 106396.0),
+    ]

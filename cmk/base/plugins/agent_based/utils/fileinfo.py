@@ -1,26 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
 import re
 import time
+from collections.abc import Callable, Iterable, Mapping
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Match,
-    NamedTuple,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from re import Match
+from typing import Any, NamedTuple
 
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -40,25 +29,27 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .interfaces import saveint
 
+DiscoveryParams = Iterable[Mapping[str, list[tuple[str, str | tuple[str, str]]]]]
+
 
 class FileinfoItem(NamedTuple):
     name: str
     missing: bool
     failed: bool
-    size: Optional[int]
-    time: Optional[int]
+    size: int | None
+    time: int | None
 
 
 class Fileinfo(NamedTuple):
-    reftime: Optional[int] = None
-    files: Dict[str, FileinfoItem] = {}
+    reftime: int | None = None
+    files: dict[str, FileinfoItem] = {}
 
 
 class FileStats(NamedTuple):
     name: str
     status: str
-    size: Optional[int] = None
-    time: Optional[int] = None
+    size: int | None = None
+    time: int | None = None
 
 
 class CheckType(Enum):
@@ -69,7 +60,7 @@ class CheckType(Enum):
 class MetricInfo(NamedTuple):
     title: str
     key: str
-    value: Optional[int]
+    value: int | None
     verbose_func: Callable
 
 
@@ -80,14 +71,14 @@ def _cast_value(value: Any, data_type: type) -> Any:
         return None
 
 
-def _get_field(row: List[Any], index: int) -> Any:
+def _get_field(row: list[Any], index: int) -> Any:
     try:
         return row[index]
     except IndexError:
         return None
 
 
-def _parse_single_legacy_row(row: List[str]) -> Optional[FileStats]:
+def _parse_single_legacy_row(row: list[str]) -> FileStats | None:
     name = _cast_value(row[0], str)
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
@@ -109,7 +100,7 @@ def _parse_single_legacy_row(row: List[str]) -> Optional[FileStats]:
     )
 
 
-def _parse_single_row(row: List[str], header: Iterable[str]) -> Optional[FileStats]:
+def _parse_single_row(row: list[str], header: Iterable[str]) -> FileStats | None:
     file_data = dict(zip(header, row))
 
     name = _cast_value(file_data.get("name"), str)
@@ -126,7 +117,7 @@ def _parse_single_row(row: List[str], header: Iterable[str]) -> Optional[FileSta
     )
 
 
-def _construct_fileinfo_item(file_stats: FileStats):  # type:ignore[no-untyped-def]
+def _construct_fileinfo_item(file_stats: FileStats):  # type: ignore[no-untyped-def]
     return FileinfoItem(
         file_stats.name,
         "missing" in file_stats.status,
@@ -179,7 +170,7 @@ def parse_fileinfo(string_table: StringTable) -> Fileinfo:
     return Fileinfo(reftime=reftime, files=files)
 
 
-def _match(name: str, pattern: str) -> Union[bool, Match, None]:
+def _match(name: str, pattern: str) -> bool | Match | None:
     return (
         regex(pattern[1:]).match(name)
         if pattern.startswith("~")
@@ -201,11 +192,11 @@ def fileinfo_process_date(pattern: str, reftime: int) -> str:
 
 
 def fileinfo_groups_get_group_name(
-    group_patterns: List[Tuple[str, Union[str, Tuple[str, str]]]],
+    group_patterns: list[tuple[str, str | tuple[str, str]]],
     filename: str,
     reftime: int,
-) -> Dict[str, List[Union[str, Tuple[str, str]]]]:
-    found_these_groups: Dict[str, Set] = {}
+) -> dict[str, list[str | tuple[str, str]]]:
+    found_these_groups: dict[str, set] = {}
 
     for group_name, pattern in group_patterns:
         if isinstance(pattern, str):  # support old format
@@ -240,7 +231,7 @@ def fileinfo_groups_get_group_name(
                     % (group_name, num_perc_s, inclusion, len(matches))
                 )
 
-        this_pattern: Union[str, Tuple[str, str]] = ""
+        this_pattern: str | tuple[str, str] = ""
         if matches:
             for nr, group in enumerate(matches):
                 inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
@@ -261,11 +252,10 @@ def fileinfo_groups_get_group_name(
 
 
 def discovery_fileinfo_common(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
     check_type: CheckType,
 ) -> DiscoveryResult:
-
     reftime = section.reftime
     if reftime is None:
         return
@@ -285,36 +275,44 @@ def discovery_fileinfo_common(
 
 
 def discovery_fileinfo(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.SINGLE)
 
 
 def discovery_fileinfo_groups(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.GROUP)
 
 
 def _fileinfo_check_function(
-    check_definition: List[MetricInfo],
+    check_definition: list[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     for metric in check_definition:
         if metric.value is None:
             continue
 
-        if "age" in metric.title.lower() and metric.value < 0:
-            age = metric.verbose_func(abs(metric.value))
+        # if the age of the file is negative but falls within the negative_age_tolerance
+        # period, set the age to 0
+        tolerance = params.get("negative_age_tolerance", 0)
+        adjusted_metric_value = (
+            0
+            if "age" in metric.title.lower() and metric.value < 0 and abs(metric.value) <= tolerance
+            else metric.value
+        )
+
+        if "age" in metric.title.lower() and adjusted_metric_value < 0:
+            age = metric.verbose_func(abs(adjusted_metric_value))
             message = (
                 "The timestamp of the file is in the future. Please investigate your host times"
             )
 
             yield Result(state=State.UNKNOWN, summary=f"{metric.title}: -{age}, {message}")
-            yield Metric(metric.key, metric.value)
+            yield Metric(metric.key, adjusted_metric_value)
 
             continue
 
@@ -322,7 +320,7 @@ def _fileinfo_check_function(
         min_levels = params.get("min" + metric.key, (None, None))
 
         yield from check_levels(
-            metric.value,
+            adjusted_metric_value,
             levels_upper=max_levels,
             levels_lower=min_levels,
             metric_name=metric.key,
@@ -332,7 +330,7 @@ def _fileinfo_check_function(
 
 
 def check_fileinfo_data(
-    file_info: Optional[FileinfoItem],
+    file_info: FileinfoItem | None,
     reftime: int,
     params: Mapping[str, Any],
 ) -> CheckResult:
@@ -346,7 +344,7 @@ def check_fileinfo_data(
         else:
             age = reftime - file_info.time
             check_definition = [
-                MetricInfo("Size", "size", file_info.size, render.filesize),
+                MetricInfo("Size", "size", file_info.size, render.bytes),
                 MetricInfo("Age", "age", age, render.timespan),
             ]
             yield from _fileinfo_check_function(check_definition, params)
@@ -362,7 +360,7 @@ def _filename_matches(
     reftime: int,
     inclusion: str,
     exclusion: str,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     date_inclusion = ""
     inclusion_is_regex = False
     exclusion_is_regex = False
@@ -379,13 +377,13 @@ def _filename_matches(
         inclusion = inclusion_tmp
         date_inclusion = inclusion_tmp
 
-    incl_match: Union[bool, Match, None] = None
+    incl_match: bool | Match | None = None
     if inclusion_is_regex:
         incl_match = regex(inclusion).match(filename)
     else:
         incl_match = fnmatch.fnmatch(filename, inclusion)
 
-    excl_match: Union[bool, Match, None] = None
+    excl_match: bool | Match | None = None
     if exclusion_is_regex:
         excl_match = regex(exclusion).match(filename)
     else:
@@ -398,9 +396,8 @@ def _filename_matches(
 
 def _update_minmax(
     new_value: int,
-    current_minmax: Optional[Tuple[int, int]],
-) -> Tuple[int, int]:
-
+    current_minmax: tuple[int, int] | None,
+) -> tuple[int, int]:
     if not current_minmax:
         return new_value, new_value
 
@@ -421,9 +418,14 @@ def _check_individual_files(
     This is done to generate information for the long output.
     """
 
+    # if the age of the file is negative but falls within the negative_age_tolerance
+    # period, set the age to 0
+    tolerance = params.get("negative_age_tolerance", 0)
+    adjusted_file_age = 0 if file_age < 0 and abs(file_age) <= tolerance else file_age
+
     for key, value in [
-        ("age_oldest", file_age),
-        ("age_newest", file_age),
+        ("age_oldest", adjusted_file_age),
+        ("age_newest", adjusted_file_age),
         ("size_smallest", file_size),
         ("size_largest", file_size),
     ]:
@@ -440,10 +442,10 @@ def _check_individual_files(
     if skip_ok_files and State(overall_state) == State.OK:
         return
 
-    size = render.filesize(file_size)
-    age = render.timespan(abs(file_age))
+    size = render.bytes(file_size)
+    age = render.timespan(abs(adjusted_file_age))
 
-    if file_age < 0:
+    if adjusted_file_age < 0:
         message = "The timestamp of the file is in the future. Please investigate your host times"
         yield Result(
             state=State.UNKNOWN, summary=f"[{file_name}] Age: -{age}, Size: {size}, {message}"
@@ -457,25 +459,24 @@ def _check_individual_files(
 
 
 def _define_fileinfo_group_check(
-    files_matching: Dict[str, Any],
-) -> List[MetricInfo]:
+    files_matching: dict[str, Any],
+) -> list[MetricInfo]:
     size_smallest, size_largest = files_matching["size_minmax"] or (None, None)
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
         MetricInfo("Count", "count", files_matching["count_all"], saveint),
-        MetricInfo("Size", "size", files_matching["size_all"], render.filesize),
-        MetricInfo("Largest size", "size_largest", size_largest, render.filesize),
-        MetricInfo("Smallest size", "size_smallest", size_smallest, render.filesize),
+        MetricInfo("Size", "size", files_matching["size_all"], render.bytes),
+        MetricInfo("Largest size", "size_largest", size_largest, render.bytes),
+        MetricInfo("Smallest size", "size_smallest", size_smallest, render.bytes),
         MetricInfo("Oldest age", "age_oldest", age_oldest, render.timespan),
         MetricInfo("Newest age", "age_newest", age_newest, render.timespan),
     ]
 
 
 def _fileinfo_check_conjunctions(
-    check_definition: List[MetricInfo],
+    check_definition: list[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     conjunctions = params.get("conjunctions", [])
     for conjunction_state, levels in conjunctions:
         levels = dict(levels)
@@ -484,12 +485,12 @@ def _fileinfo_check_conjunctions(
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
             if level is not None and value and value is not None and value >= level:
-                match_texts.append("%s at %s" % (title.lower(), readable_f(level)))
+                match_texts.append(f"{title.lower()} at {readable_f(level)}")
                 matches += 1
 
             level_lower = levels.get("%s_lower" % key)
             if level_lower is not None and value is not None and value < level_lower:
-                match_texts.append("%s below %s" % (title.lower(), readable_f(level_lower)))
+                match_texts.append(f"{title.lower()} below {readable_f(level_lower)}")
                 matches += 1
 
         if matches == len(levels):
@@ -505,10 +506,9 @@ def check_fileinfo_groups_data(
     section: Fileinfo,
     reftime: int,
 ) -> CheckResult:
-
     date_inclusion = None
     files_stat_failed = set()
-    files_matching: Dict[str, Any] = {
+    files_matching: dict[str, Any] = {
         "count_all": 0,
         "size_all": 0,
         "size_minmax": None,
@@ -523,7 +523,7 @@ def check_fileinfo_groups_data(
         yield Result(state=State.UNKNOWN, summary="No group pattern found.")
         return
 
-    group_patterns = set((p, "") if isinstance(p, str) else p for p in raw_group_patterns)
+    group_patterns = {(p, "") if isinstance(p, str) else p for p in raw_group_patterns}
 
     include_patterns = [i for i, _e in group_patterns]
     exclude_patterns = [e for _i, e in group_patterns if e != ""]
@@ -539,7 +539,6 @@ def check_fileinfo_groups_data(
             continue
 
         for inclusion, exclusion in group_patterns:
-
             filename_matches, date_inclusion = _filename_matches(
                 file_stat.name, reftime, inclusion, exclusion
             )

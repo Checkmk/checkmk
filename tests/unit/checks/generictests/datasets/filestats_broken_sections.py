@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
-checkname = 'filestats'
+checkname = "filestats"
 
 info = [
     ["some garbage in the first line (should be ignored)"],
@@ -22,17 +22,25 @@ info = [
 ]
 
 discovery = {
-    '': [('ok subsection', {}), ('missing count', {}), ('complete mess', {}),
-         ('empty subsection', {})]
+    "": [
+        ("ok subsection", {}),
+        ("missing count", {}),
+        ("complete mess", {}),
+        ("empty subsection", {}),
+    ]
 }
 
 checks = {
-    '': [
-        ('broken subsection', {}, []),
-        ('complete mess', {}, []),
-        ('empty subsection', {}, []),
-        ('ok subsection', {}, [
-            (0, 'Files in total: 23', [('file_count', 23, None, None, None, None)]),
-        ]),
+    "": [
+        ("broken subsection", {}, []),
+        ("complete mess", {}, []),
+        ("empty subsection", {}, []),
+        (
+            "ok subsection",
+            {},
+            [
+                (0, "Files in total: 23", [("file_count", 23, None, None, None, None)]),
+            ],
+        ),
     ]
 }

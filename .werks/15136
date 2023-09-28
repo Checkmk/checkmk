@@ -3,10 +3,10 @@ Class: feature
 Compatible: compat
 Component: checks
 Date: 1672753574
-Edition: cpe
+Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to monitor AWS ElastiCache in Checkmk.
 Six new checks have been added:

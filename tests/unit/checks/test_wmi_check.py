@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,10 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-from .checktestlib import assertDiscoveryResultsEqual, CheckResult, DiscoveryResult
+from .checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
 
@@ -105,62 +106,37 @@ info_msx_info_store_1 = [
 
 
 @pytest.mark.parametrize(
-    "check_name,info,expected",
+    "check_name,info",
     [
-        ("wmi_webservices", info_wmi_timeout, []),
-        ("dotnet_clrmemory", [["WMItimeout"]], []),
+        ("wmi_webservices", info_wmi_timeout),
+        ("dotnet_clrmemory", [["WMItimeout"]]),
     ],
 )
-def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
+def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
-    discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
-    discovery_expected = DiscoveryResult(expected)
-    assertDiscoveryResultsEqual(check, discovery_result, discovery_expected)
+    assert not list(check.run_discovery(check.run_parse(info)))
 
 
 @pytest.mark.parametrize(
-    "check_name,info,expected",
+    "check_name,info",
     [
-        ("wmi_webservices", info_wmi_timeout, None),
+        ("wmi_webservices", info_wmi_timeout),
     ],
 )
-def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
+def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
 
 
-@pytest.mark.parametrize(
-    "check_name, expected",
-    [
-        (
-            "msexch_isclienttype",
-            [
-                (
-                    0,
-                    "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 40.0, 50.0)],
-                ),
-                (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
-            ],
-        ),
-        (
-            "msexch_isstore",
-            [
-                (
-                    0,
-                    "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 41.0, 51.0)],
-                ),
-            ],
-        ),
-    ],
-)
-def test_wmi_msexch_isclienttype_wato_params(  # type:ignore[no-untyped-def]
-    check_name, expected
-) -> None:
-    check = Check(check_name)
-    result = list(
+@pytest.mark.usefixtures("initialised_item_state")
+def test_wmi_msexch_isclienttype_wato_params() -> None:
+    check = Check("msexch_isclienttype")
+
+    # prepare the state (scoped to this function by the fixture)
+    get_value_store().update({"RPCRequests_": (0.0, 1145789)})
+
+    assert list(
         check.run_check(
             item="_total",
             params={
@@ -170,5 +146,33 @@ def test_wmi_msexch_isclienttype_wato_params(  # type:ignore[no-untyped-def]
             },
             info=check.run_parse(info_msx_info_store_1),
         )
-    )
-    assert result == expected
+    ) == [
+        (
+            0,
+            "Average latency: 0.49 ms",
+            [("average_latency", 0.48712422193702626, 40.0, 50.0)],
+        ),
+        (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
+    ]
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_wmi_msexch_isstore_wato_params() -> None:
+    check = Check("msexch_isstore")
+    assert list(
+        check.run_check(
+            item="_total",
+            params={
+                "store_latency": (41.0, 51.0),
+                "clienttype_latency": (40.0, 50.0),
+                "clienttype_requests": (60, 70),
+            },
+            info=check.run_parse(info_msx_info_store_1),
+        )
+    ) == [
+        (
+            0,
+            "Average latency: 0.49 ms",
+            [("average_latency", 0.48712422193702626, 41.0, 51.0)],
+        ),
+    ]

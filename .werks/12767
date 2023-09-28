@@ -1,0 +1,13 @@
+Title: added tags and labels to cmcdump exported and imported data
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1676640525
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+It's now possible to use searching or filtering for tags and labels in hosts/services resulting from cmcdump ex- and import.
+Microcore configuration generation takes into account that tags and/or labels could be missing because export has been done with former versions.
+

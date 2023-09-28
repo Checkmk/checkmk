@@ -1,0 +1,21 @@
+Title: cisco_fru_power: Changed behavior for PSUs without power
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684356417
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When a PSU monitored by the plugin <i>"Cisco Nexus Switches: State of FRU Power Supplies"</i> had no power, the service went to UNKNOWN.
+It now goes CRITICAL.
+
+In addition we changed the conditions under which a service is discovered.
+Powered off FRUs in the following state have not been discovered before, but are now (quoted from the MIB):
+
+<tt>offEnvPower(5)</tt>: FRU is powered off because of power problem in the FRU. For example, the FRU's power translation (DC-DC converter) or distribution failed.
+
+FRUs disabled administratively are no longer discovered:
+
+<tt>offAdmin(3)</tt>: Administratively off.

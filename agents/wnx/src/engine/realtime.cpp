@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "realtime.h"
+#include "wnx/realtime.h"
 
 #include <fmt/format.h>
 
@@ -10,15 +10,15 @@
 #include <string>
 #include <string_view>
 
-#include "asio.h"
-#include "cfg.h"
-#include "encryption.h"
-#include "logger.h"
 #include "providers/df.h"
 #include "providers/mem.h"
 #include "providers/p_perf_counters.h"
-#include "service_processor.h"
 #include "tools/_misc.h"
+#include "wnx/asio.h"
+#include "wnx/cfg.h"
+#include "wnx/encryption.h"
+#include "wnx/logger.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
 using namespace std::chrono_literals;
@@ -212,11 +212,11 @@ std::string Device::generateData() const {
 
 // #TODO overcomplicated function, to be re-factored
 void Device::mainThread() noexcept {
-    std::unique_lock lk(lock_);
+    std::unique_lock lk_init(lock_);
     auto port = port_;
     auto ip_address = ""s;  // set to invalid value, prevents race
     auto passphrase = passphrase_;
-    lk.unlock();
+    lk_init.unlock();
 
     // on exit from thread we should drop/clear resources
     ON_OUT_OF_SCOPE({

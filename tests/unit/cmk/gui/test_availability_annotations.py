@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib import on_time
 
@@ -259,7 +259,7 @@ def test_get_annotation_date_render_function(
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
     with on_time(1572253746, "CET"):
         assert (
-            availability.get_annotation_date_render_function(  # pylint:disable=comparison-with-callable
+            availability.get_annotation_date_render_function(  # pylint: disable=comparison-with-callable
                 annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}
             )
             == result

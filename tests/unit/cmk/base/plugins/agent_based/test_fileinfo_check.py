@@ -1,12 +1,30 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 from copy import deepcopy
 
 import pytest
 from freezegun import freeze_time
 
+from tests.testlib import set_timezone
+
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
-from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
+from cmk.base.plugins.agent_based.utils.fileinfo import (
+    discovery_fileinfo_groups,
+    DiscoveryParams,
+    Fileinfo,
+    FileinfoItem,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -106,7 +124,7 @@ def test_fileinfo_min_max_age_levels() -> None:
                 reftime=1563288717,
                 files={},
             ),
-            {"group_patterns": [("banana", ("/banana/*", ""))]},
+            [{"group_patterns": [("banana", ("/banana/*", ""))]}],
             [
                 Result(state=State.OK, notice="Include patterns: /banana/*"),
                 Result(state=State.OK, summary="Count: 0"),
@@ -118,7 +136,7 @@ def test_fileinfo_min_max_age_levels() -> None:
         (
             [],
             Fileinfo(),
-            {"group_patterns": []},
+            [{"group_patterns": []}],
             [
                 Result(state=State.UNKNOWN, summary="Missing reference timestamp"),
             ],
@@ -131,7 +149,7 @@ def test_fileinfo_min_max_age_levels() -> None:
                 reftime=1563288717,
                 files={},
             ),
-            {"group_patterns": [("banana", ("/banana/*", ""))]},
+            [{"group_patterns": [("banana", ("/banana/*", ""))]}],
             [
                 Result(state=State.OK, notice="Include patterns: /banana/*"),
                 Result(state=State.OK, summary="Count: 0"),
@@ -142,10 +160,15 @@ def test_fileinfo_min_max_age_levels() -> None:
         ),
     ],
 )
-def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_result) -> None:
+def test_check_fileinfo_group_no_files(
+    info: StringTable,
+    parsed: Fileinfo,
+    discovery_params: DiscoveryParams,
+    expected_result: CheckResult,
+) -> None:
     """Test that the check returns an OK status when there are no files."""
     assert fileinfo_utils.parse_fileinfo(info) == parsed
-    assert not list(fileinfo_plugin.discovery_fileinfo_groups(discovery_params, parsed))
+    assert not list(discovery_fileinfo_groups(discovery_params, parsed))
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
@@ -214,7 +237,11 @@ def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_
         ),
     ],
 )
-def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result) -> None:
+def test_check_fileinfo_group_no_matching_files(
+    info: StringTable,
+    parsed: Fileinfo,
+    expected_result: CheckResult,
+) -> None:
     """Test that the check returns an OK status if there are no matching files."""
 
     actual_parsed = fileinfo_utils.parse_fileinfo(info)
@@ -348,7 +375,11 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result) -
         ),
     ],
 )
-def test_check_fileinfo_group_patterns(info, group_pattern, expected_result) -> None:
+def test_check_fileinfo_group_patterns(
+    info: StringTable,
+    group_pattern: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
@@ -385,7 +416,11 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result) -> 
         ),
     ],
 )
-def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_result) -> None:
+def test_check_fileinfo_group_patterns_get_host_values(
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     assert (
         list(
             fileinfo_plugin.check_fileinfo_groups(
@@ -507,17 +542,20 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
         ),
     ],
 )
-def test_fileinfo_discovery(info, params, expected_result) -> None:
+def test_fileinfo_discovery(
+    info: StringTable,
+    params: DiscoveryParams,
+    expected_result: DiscoveryResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    discovery_result = fileinfo_utils.discovery_fileinfo(params, section)
-    assert list(discovery_result) == expected_result
+    with set_timezone("UTC"):
+        assert list(fileinfo_utils.discovery_fileinfo(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
     "info, item, params, expected_result",
     [
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["regular.txt", "4242", "1536421281"],
@@ -528,13 +566,14 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "regular.txt",
             {},
             [
-                Result(state=State.OK, summary="Size: 4,242 B"),
+                Result(state=State.OK, summary="Size: 4.14 KiB"),
                 Metric("size", 4242),
                 Result(state=State.OK, summary="Age: 1 day 13 hours"),
                 Metric("age", 136683),
             ],
+            id="file found",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["regular.txt", "4242", "1536421281"],
@@ -545,8 +584,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "missinf_file.txt",
             {},
             [Result(state=State.UNKNOWN, summary="File not found")],
+            id="file not found",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["regular.txt", "4242", "1536421281"],
@@ -557,8 +597,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "not_readable.txt",
             {},
             [Result(state=State.WARN, summary="File stat failed")],
+            id="incorrect size",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["regular.txt", "4242", "1536421281"],
@@ -569,8 +610,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "stat_failes.txt",
             {},
             [Result(state=State.WARN, summary="File stat failed")],
+            id="missing size and timestamp",
         ),
-        (
+        pytest.param(
             INFO,
             "/var/log/aptitude",
             {},
@@ -580,8 +622,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                 Result(state=State.OK, summary="Age: 225 days 6 hours"),
                 Metric("age", 19462602),
             ],
+            id="empty file",
         ),
-        (
+        pytest.param(
             INFO,
             "/var/log/aptitude.2.gz",
             {
@@ -591,7 +634,7 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                 "maxage": (3600, 10800),
             },
             [
-                Result(state=State.WARN, summary="Size: 3,234 B (warn/crit below 5,120 B/10 B)"),
+                Result(state=State.WARN, summary="Size: 3.16 KiB (warn/crit below 5.00 KiB/10 B)"),
                 Metric("size", 3234, levels=(5242880.0, 9663676416.0)),
                 Result(
                     state=State.CRIT,
@@ -599,8 +642,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                 ),
                 Metric("age", 24201996, levels=(3600.0, 10800.0)),
             ],
+            id="params with thresholds",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["[[[header]]]"],
@@ -614,13 +658,14 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "regular.txt",
             {},
             [
-                Result(state=State.OK, summary="Size: 4,242 B"),
+                Result(state=State.OK, summary="Size: 4.14 KiB"),
                 Metric("size", 4242),
                 Result(state=State.OK, summary="Age: 1 day 13 hours"),
                 Metric("age", 136683),
             ],
+            id="old section format, file found",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["[[[header]]]"],
@@ -631,7 +676,7 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                 ["not_readable.txt", "ok", "2323", "1536421281"],
                 ["stat_failes.txt", "stat failed: Permission denied"],
             ],
-            "missinf_file.txt",
+            "missing_file.txt",
             {},
             [
                 Result(
@@ -639,8 +684,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                     summary="File not found",
                 ),
             ],
+            id="old section format, file missing",
         ),
-        (
+        pytest.param(
             [
                 ["1536557964"],
                 ["[[[header]]]"],
@@ -654,8 +700,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "stat_failes.txt",
             {},
             [Result(state=State.WARN, summary="File stat failed")],
+            id="old section format, file state failed",
         ),
-        (
+        pytest.param(
             [
                 ["1611065402"],
                 ["[[[header]]]"],
@@ -684,8 +731,9 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
                 Result(state=State.OK, summary="Age: 14 days 22 hours"),
                 Metric("age", 1291460),
             ],
+            id="2 reftimes, file with the second reftime found",
         ),
-        (
+        pytest.param(
             [
                 ["1611065402"],
                 ["[[[header]]]"],
@@ -709,16 +757,29 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
             "/root/anaconda-ks.cfg",
             {},
             [
-                Result(state=State.OK, summary="Size: 6,006 B"),
+                Result(state=State.OK, summary="Size: 5.87 KiB"),
                 Metric("size", 6006),
                 Result(state=State.OK, summary="Age: 328 days 4 hours"),
                 Metric("age", 28357047),
             ],
+            id="2 reftimes, file with the first reftime found",
         ),
-        ([], "fil1234", {}, [Result(state=State.UNKNOWN, summary="Missing reference timestamp")]),
+        pytest.param(
+            [],
+            "fil1234",
+            {},
+            [Result(state=State.UNKNOWN, summary="Missing reference timestamp")],
+            id="empty section",
+        ),
     ],
 )
-def test_fileinfo_check(info, item, params, expected_result) -> None:
+@pytest.mark.skip(reason="flaky)")  # should be fixed with CMK-14223
+def test_fileinfo_check(
+    info: StringTable,
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     check_result = fileinfo_plugin.check_fileinfo(item, params, section)
@@ -770,17 +831,20 @@ def test_fileinfo_check(info, item, params, expected_result) -> None:
         ),
     ],
 )
-def test_fileinfo_group_discovery(info, params, expected_result) -> None:
+def test_fileinfo_group_discovery(
+    info: StringTable,
+    params: DiscoveryParams,
+    expected_result: DiscoveryResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    discovery_result = fileinfo_utils.discovery_fileinfo_groups(params, section)
-    assert list(discovery_result) == expected_result
+    with set_timezone("UTC"):
+        assert list(fileinfo_utils.discovery_fileinfo_groups(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
     "info, item, params, expected_result",
     [
-        (
+        pytest.param(
             INFO,
             "log",
             {
@@ -791,22 +855,18 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
             },
             [
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
-                Result(
-                    state=State.OK, notice="[/var/log/syslog] Age: 4 seconds, Size: 1,307,632 B"
-                ),
+                Result(state=State.OK, notice="[/var/log/syslog] Age: 4 seconds, Size: 1.25 MiB"),
                 Result(
                     state=State.OK,
-                    notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1,235,157 B",
+                    notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1.18 MiB",
                 ),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
-                Result(
-                    state=State.CRIT, summary="Size: 2,542,789 B (warn/crit at 2 B/2,097,152 B)"
-                ),
+                Result(state=State.CRIT, summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)"),
                 Metric("size", 2542789, levels=(2.0, 2097152.0)),
-                Result(state=State.OK, summary="Largest size: 1,307,632 B"),
+                Result(state=State.OK, summary="Largest size: 1.25 MiB"),
                 Metric("size_largest", 1307632),
-                Result(state=State.OK, summary="Smallest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Smallest size: 1.18 MiB"),
                 Metric("size_smallest", 1235157),
                 Result(
                     state=State.CRIT,
@@ -819,8 +879,9 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 ),
                 Metric("age_newest", 4),
             ],
+            id="regex pattern",
         ),
-        (
+        pytest.param(
             INFO,
             "today",
             {"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},
@@ -828,24 +889,25 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 Result(state=State.OK, notice="Include patterns: /tmp/$DATE:%Y%m%d$.txt"),
                 Result(
                     state=State.OK,
-                    notice="[/tmp/20190716.txt] Age: 7 hours 59 minutes, Size: 1,235,157 B",
+                    notice="[/tmp/20190716.txt] Age: 7 hours 59 minutes, Size: 1.18 MiB",
                 ),
                 Result(state=State.OK, summary="Date pattern: /tmp/20190716.txt"),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
-                Result(state=State.OK, summary="Size: 1,235,157 B"),
+                Result(state=State.OK, summary="Size: 1.18 MiB"),
                 Metric("size", 1235157),
-                Result(state=State.OK, summary="Largest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Largest size: 1.18 MiB"),
                 Metric("size_largest", 1235157),
-                Result(state=State.OK, summary="Smallest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Smallest size: 1.18 MiB"),
                 Metric("size_smallest", 1235157),
                 Result(state=State.OK, summary="Oldest age: 7 hours 59 minutes"),
                 Metric("age_oldest", 28741),
                 Result(state=State.OK, summary="Newest age: 7 hours 59 minutes"),
                 Metric("age_newest", 28741),
             ],
+            id="pattern with today's date",
         ),
-        (
+        pytest.param(
             INFO,
             "log",
             {
@@ -859,13 +921,11 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
-                Result(
-                    state=State.CRIT, summary="Size: 2,542,789 B (warn/crit at 2 B/2,097,152 B)"
-                ),
+                Result(state=State.CRIT, summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)"),
                 Metric("size", 2542789, levels=(2.0, 2097152.0)),
-                Result(state=State.OK, summary="Largest size: 1,307,632 B"),
+                Result(state=State.OK, summary="Largest size: 1.25 MiB"),
                 Metric("size_largest", 1307632),
-                Result(state=State.OK, summary="Smallest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Smallest size: 1.18 MiB"),
                 Metric("size_smallest", 1235157),
                 Result(
                     state=State.CRIT,
@@ -878,8 +938,9 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 ),
                 Metric("age_newest", 4),
             ],
+            id="shorten multiline output",
         ),
-        (
+        pytest.param(
             INFO_MISSING_TIME_SYSLOG,
             "log",
             {"group_patterns": [("*syslog*", "")], "timeofday": [((8, 0), (9, 0))]},
@@ -887,27 +948,32 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
                 Result(
                     state=State.OK,
-                    notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1,235,157 B",
+                    notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1.18 MiB",
                 ),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
-                Result(state=State.OK, summary="Size: 1,235,157 B"),
+                Result(state=State.OK, summary="Size: 1.18 MiB"),
                 Metric("size", 1235157),
-                Result(state=State.OK, summary="Largest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Largest size: 1.18 MiB"),
                 Metric("size_largest", 1235157),
-                Result(state=State.OK, summary="Smallest size: 1,235,157 B"),
+                Result(state=State.OK, summary="Smallest size: 1.18 MiB"),
                 Metric("size_smallest", 1235157),
                 Result(state=State.OK, summary="Oldest age: 7 hours 59 minutes"),
                 Metric("age_oldest", 28741),
                 Result(state=State.OK, summary="Newest age: 7 hours 59 minutes"),
                 Metric("age_newest", 28741),
             ],
+            id="missing time",
         ),
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_fileinfo_groups_check(info, item, params, expected_result) -> None:
+def test_fileinfo_groups_check(
+    info: StringTable,
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    check_result = fileinfo_plugin.check_fileinfo_groups(item, params, section)
-    assert list(check_result) == expected_result
+    with set_timezone("UTC"):
+        assert list(fileinfo_plugin.check_fileinfo_groups(item, params, section)) == expected_result

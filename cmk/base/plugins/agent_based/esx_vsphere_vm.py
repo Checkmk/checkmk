@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils.esx_vsphere import (
     ESXCpu,
     ESXDataStore,
@@ -19,7 +19,7 @@ from .utils.esx_vsphere import (
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
-    grouped_values: Dict[str, List[str]] = {}
+    grouped_values: dict[str, list[str]] = {}
     for line in string_table:
         # Do not monitor VM templates
         if line[0] == "config.template" and line[1] == "true":
@@ -27,6 +27,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         grouped_values[line[0]] = line[1:]
 
     return ESXVm(
+        mounted_devices=grouped_values.get("config.hardware.device", []),
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
         heartbeat=_parse_esx_vm_heartbeat_status(grouped_values),
@@ -80,23 +81,34 @@ def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None
 
 def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemory | None:
     """Parse memory specific values from ESX VSphere VM agent output"""
-    memory_mapping = {
+    entries_mandatory = {
         "hostMemoryUsage": "host_usage",
         "guestMemoryUsage": "guest_usage",
         "balloonedMemory": "ballooned",
         "sharedMemory": "shared",
-        "privateMemory": "private",
     }
+    entries_optional = {"privateMemory": "private"}
 
-    memory_values = {}
-    for memory_type in memory_mapping:
+    memory_values: dict[str, float | None] = {}
+    for memory_type, parsed_name in entries_mandatory.items():
         try:
-            value = float(vm_values[f"summary.quickStats.{memory_type}"][0])
+            value_mandatory = float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
         except (KeyError, TypeError, ValueError):
             return None
 
-        memory_values[memory_mapping[memory_type]] = value * 1024**2
-    return ESXMemory(**memory_values)
+        memory_values[parsed_name] = value_mandatory
+
+    for memory_type, parsed_name in entries_optional.items():
+        try:
+            value_optional: float | None = (
+                float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
+            )
+        except (KeyError, TypeError, ValueError):
+            value_optional = None
+
+        memory_values[parsed_name] = value_optional
+
+    return ESXMemory.parse_obj(memory_values)
 
 
 def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:
@@ -113,7 +125,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
 
 def _parse_esx_datastore_section(
     vm_values: Mapping[str, Sequence[str]]
-) -> List[ESXDataStore] | None:
+) -> list[ESXDataStore] | None:
     """Parse datastores specific values
 
     # datastore_entries looks like:
@@ -143,18 +155,17 @@ def _parse_esx_datastore_section(
     return stores
 
 
-def host_label_esx_vshpere_vm(section):
+def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
     """Host label function
 
     Labels:
 
         cmk/vsphere_object:
-            This label is set to "vcenter" if the corresponding host is a
-            VMware vCenter, to "server" if the host is an ESXi hostsystem
+            This label is set to "server" if the host is an ESXi hostsystem
             and to "vm" if the host is a virtual machine.
 
     """
-    if "runtime.host" in section:
+    if section and section.host is not None:
         yield HostLabel("cmk/vsphere_object", "vm")
 
 

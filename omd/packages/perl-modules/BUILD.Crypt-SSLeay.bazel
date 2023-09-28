@@ -1,0 +1,12 @@
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "Crypt-SSLeay-0.72",
+    srcs = glob([
+        "**/*",
+    ]),
+    extension = "tar.gz",
+    package_dir = "Crypt-SSLeay-0.72",
+    strip_prefix = "external/Crypt-SSLeay",
+    visibility = ["//visibility:public"],
+)

@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -43,9 +43,11 @@ $font-color-orange: $orange-2;
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: rgb(247, 247, 247);
+$default-button-border-color: rgb(183, 180, 180);
 $default-submit-button-border-color: $success-dimmed;
 
 $input-background-color: $ux-theme-5;
+$input-hover-bg-color: $ux-theme-4;
 $input-nested-background-color: $ux-theme-3;
 $input-dropdown-border-color: $ux-theme-6;
 
@@ -62,6 +64,7 @@ $color-state-7-background: rgb(233, 128, 110);
 $color-state-8-background: rgb(241, 174, 162);
 $color-state-9-background: rgb(191, 90, 191);
 $color-state-success-background: $success; // green
+$color-state-running-background: $hostdown;
 
 // -----------------------------------------------------------------------------
 // Tables
@@ -107,8 +110,6 @@ $input-error-bg-color: $red-1;
 
 $hot-bg-color: $orange-1;
 
-$input-hover-bg-color: $ux-theme-4;
-
 $data-th-sort-hover-bg-color: inherit;
 
 $h3-margin-bottom: 1px;
@@ -152,7 +153,7 @@ $agent-config-inner-title-bg-color: $grey-1;
 
 $matches-search-bg-color: $green;
 
-$help-bg-color: $input-background-color;
+$help-bg-color: rgb(223, 239, 251);
 $help-icon-bg-color: rgb(12, 129, 238);
 $help-tt-font-color: $font-color-blue-2;
 
@@ -210,3 +211,4 @@ $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $darkgrey;
+$label-filter-last-row-opacity: 0.7;

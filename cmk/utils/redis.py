@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from enum import Enum
 from typing import Any, TypeVar
 
+from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis.client import Pipeline
 
@@ -18,12 +21,22 @@ QueryData = TypeVar("QueryData")
 
 
 def get_redis_client() -> Redis[str]:
+    if not redis_enabled():
+        raise RuntimeError("Redis currently explicitly disabled")
     return Redis.from_url(
         f"unix://{omd_root}/tmp/run/redis",
         db=0,
         encoding="utf-8",
         decode_responses=True,
     )
+
+
+def redis_server_reachable(client: Redis) -> bool:
+    try:
+        client.ping()
+    except RedisConnectionError:
+        return False
+    return True
 
 
 class IntegrityCheckResponse(Enum):
@@ -47,8 +60,8 @@ def query_redis(
     ttl_query_lock: int = 5,
     ttl_update_lock: int = 10,
 ) -> QueryData:
-    query_lock = client.lock("%s.query_lock" % data_key, timeout=ttl_query_lock)
-    update_lock = client.lock("%s.update_lock" % data_key, timeout=ttl_update_lock)
+    query_lock = client.lock(f"{data_key}.query_lock", timeout=ttl_query_lock)
+    update_lock = client.lock(f"{data_key}.update_lock", timeout=ttl_update_lock)
     try:
         query_lock.acquire()
         integrity_result = integrity_callback()
@@ -82,3 +95,21 @@ def query_redis(
             query_lock.release()
         if update_lock.owned():
             update_lock.release()
+
+
+_ENABLED = True
+
+
+@contextmanager
+def disable_redis() -> Iterator[None]:
+    global _ENABLED
+    last_value = _ENABLED
+    _ENABLED = False
+    try:
+        yield
+    finally:
+        _ENABLED = last_value
+
+
+def redis_enabled() -> bool:
+    return _ENABLED

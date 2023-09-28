@@ -1,0 +1,14 @@
+Title: Remove Favorites feature
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1677581645
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The Favorites feature is removed as announced in the
+<a href="https://forum.checkmk.com/t/deprecation-of-the-favorites-feature/36072">forum</a>
+
+

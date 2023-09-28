@@ -1,0 +1,16 @@
+Title: kube_cron_job_status: introduction of execution duration metric
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1681396998
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the check only displayed the total duration of the job
+which included the pending time duration alongside the actual running
+duration. This werk introduces the 'Execution duration' metric which is solely
+based upon the actual running duration. To avoid confusion the previous graph
+'Duration' is renamed to 'Total Duration'.
+

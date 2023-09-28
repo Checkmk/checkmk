@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,7 +33,8 @@
 #                           NULL = No witness exists, the database is not online or the
 #                                  database is not mirrored.
 
-from typing import Mapping, NamedTuple, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -143,7 +144,6 @@ def check_mssql_mirroring(
     params: Mapping[str, int],  # the int is actually a Checkmk state
     section: MirroringSection,
 ) -> CheckResult:
-
     mirroring_config = section.get(item)
     if not mirroring_config:
         return
@@ -181,9 +181,8 @@ def check_mssql_mirroring(
 def cluster_check_mssql_mirroring(
     item: str,
     params: Mapping[str, int],  # the int is actually a Checkmk state
-    section: Mapping[str, Optional[MirroringSection]],
+    section: Mapping[str, MirroringSection | None],
 ) -> CheckResult:
-
     node_results = {
         node_name: list(check_mssql_mirroring(item, params, node_section))
         for node_name, node_section in section.items()

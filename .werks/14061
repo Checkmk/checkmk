@@ -6,7 +6,7 @@ Date: 1656676358
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 ibm_svc_systemstats would crash during discovery for stats with
 decimal values. Now, we cast those values to floats.

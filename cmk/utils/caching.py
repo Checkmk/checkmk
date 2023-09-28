@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing in-memory caches through the execution time of cmk"""
@@ -48,7 +48,8 @@ class CacheManager:
     def __contains__(self, name: str) -> bool:
         return name in self._caches
 
-    def get(self, name: str) -> DictCache:
+    def obtain_cache(self, name: str) -> DictCache:
+        """get or create cache with provided name"""
         return self._caches[name]
 
     def clear(self) -> None:
@@ -59,10 +60,7 @@ class CacheManager:
             cache.clear()
 
     def dump_sizes(self) -> dict[str, int]:
-        sizes = {}
-        for name, cache in self._caches.items():
-            sizes[name] = cmk.utils.misc.total_size(cache)
-        return sizes
+        return {name: cmk.utils.misc.total_size(cache) for name, cache in self._caches.items()}
 
 
 class DictCache(dict):
@@ -92,9 +90,5 @@ class DictCache(dict):
 # This cache manager holds all caches that rely on the configuration
 # and have to be flushed once the configuration is reloaded in the
 # keepalive mode
-config_cache = CacheManager()
-
-# These caches are not automatically cleared during the whole execution
-# time of the current Checkmk process. Single cached may be cleaned
-# manually during execution.
-runtime_cache = CacheManager()
+# TODO(sk): Fix it(mutable global implicitly used)
+cache_manager = CacheManager()

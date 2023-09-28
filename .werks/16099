@@ -1,0 +1,45 @@
+Title: create_host: creating a host with a custom attribute now returns expected attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1694670257
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue when creating a host with custom attributes.  For
+example, when you added a new tag to a tag group and then created a host with
+that tag group: tag value, the created host would have this new attribute but
+it wouldn't have any other attributes.
+
+So sending this in your request, after creating the new tag 'tag1',
+
+C+:
+{
+    "folder": "~",
+    "host_name": "api_created_host2",
+    "attributes": {
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "no-agent",
+        "tag_snmp_ds": "no-snmp",
+        "tag_networking": "tag1"
+        }
+}
+C-:
+
+before this would create a host with the only the tag networking attribute
+and ignore all others, like so
+
+C+:
+{
+    ...
+    "attributes" {
+	"tag_networking": "tag1"
+	}
+
+C-:
+
+Now, we return all the expected attributes.
+
+

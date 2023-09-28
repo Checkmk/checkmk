@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.utils.aws import (
     check_aws_limits,
-    CheckResult,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
+    GenericAWSSection,
     LambdaFunctionConfiguration,
     LambdaInsightMetrics,
     LambdaSummarySection,
@@ -469,7 +470,7 @@ from cmk.base.plugins.agent_based.utils.aws import (
         ),
     ],
 )
-def test_parse_aws(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_aws(string_table: StringTable, expected_result: GenericAWSSection) -> None:
     assert parse_aws(string_table) == expected_result
 
 
@@ -861,24 +862,24 @@ def test_extract_aws_metrics_by_labels(
 
 
 SECTION_AWS_LAMBDA_SUMMARY: LambdaSummarySection = {
-    "eu-central-1 calling_other_lambda_concurrently": LambdaFunctionConfiguration(
+    "calling_other_lambda_concurrently [eu-central-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=483.0
     ),
-    "eu-central-1 my_python_test_function": LambdaFunctionConfiguration(
+    "my_python_test_function [eu-central-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=483.0
     ),
-    "eu-north-1 myLambdaTestFunction": LambdaFunctionConfiguration(
+    "myLambdaTestFunction [eu-north-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=299.0
     ),
 }
 
 SECTION_AWS_LAMBDA_CLOUDWATCH_INSIGHTS: CloudwatchInsightsSection = {
-    "eu-central-1 calling_other_lambda_concurrently": LambdaInsightMetrics(
+    "calling_other_lambda_concurrently [eu-central-1]": LambdaInsightMetrics(
         max_memory_used_bytes=128000000.0,
         count_cold_starts_in_percent=50.0,
         max_init_duration_seconds=0.33964999999999995,
     ),
-    "eu-central-1 my_python_test_function": LambdaInsightMetrics(
+    "my_python_test_function [eu-central-1]": LambdaInsightMetrics(
         max_memory_used_bytes=52000000.0,
         count_cold_starts_in_percent=50.0,
         max_init_duration_seconds=1.62853,

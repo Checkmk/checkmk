@@ -1,0 +1,17 @@
+Title: Random automation secret is now copied to clipboard on creation
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1682505755
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you created a new automation secret for an automation user via "Create
+random secret", there was no possibility to save the generated secret for
+future use.
+Therefore, the generated secret is now also copied to clipboard.
+
+

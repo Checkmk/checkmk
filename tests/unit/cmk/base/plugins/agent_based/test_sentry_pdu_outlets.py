@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,11 +8,13 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.sentry_pdu_outlets import (
     check_sentry_pdu_outlets,
     check_sentry_pdu_outlets_v4,
     discovery_sentry_pdu_outlets,
     parse_sentry_pdu_outlets,
+    Section,
 )
 
 
@@ -26,9 +28,7 @@ from cmk.base.plugins.agent_based.sentry_pdu_outlets import (
         )
     ],
 )
-def test_parse_sentry_pdu_outlets(  # type:ignore[no-untyped-def]
-    string_table, expected_section
-) -> None:
+def test_parse_sentry_pdu_outlets(string_table: StringTable, expected_section: Section) -> None:
     section = parse_sentry_pdu_outlets(string_table)
     assert section == expected_section
 

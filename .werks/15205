@@ -1,0 +1,15 @@
+Title: Host labels for AWS EC2 and Azure VM hosts, account label for all AWS hosts
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1675668036
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Hosts representing Azure Virtual Machines/AWS EC2 instances will now be labelled as such, specifically:
+LI: AWS EC2s: "cmk/aws/ec2:instance"
+LI: Azure Virtual Machines: "cmk/azure/vm:instance"
+
+Additionally, all AWS hosts will receive a label with the account they belong to: `cmk/aws/account:<account>`.

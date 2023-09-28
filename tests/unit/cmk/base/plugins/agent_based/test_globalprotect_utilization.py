@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,9 +22,9 @@ from cmk.base.plugins.agent_based.globalprotect_utilization import (
     "string_table, expected_result",
     [([[3, 250, 8]], Section(utilization=3, max_tunnels=250, active_tunnels=8)), ([[]], None)],
 )
-def test_parse_globalprotect_utilization(  # type:ignore[no-untyped-def]
+def test_parse_globalprotect_utilization(
     string_table: StringTable, expected_result: Section | None
-):
+) -> None:
     section = parse_globalprotect_utilization(string_table)
     assert section == expected_result
 
@@ -56,8 +56,8 @@ def test_discover_globalprotect_utilization(
         )
     ],
 )
-def test_check_globalprotect_utilization(  # type:ignore[no-untyped-def]
+def test_check_globalprotect_utilization(
     params: Mapping[str, Any], section: Section, expected_result: list[Metric | Result]
-):
+) -> None:
     result = list(check_globalprotect_utilization(params, section))
     assert result == expected_result

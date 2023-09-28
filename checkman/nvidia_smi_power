@@ -11,7 +11,7 @@ description:
  You can configure upper levels for power usage.
 
 item:
- PCI bus ID of the graphics card without the leading zeroes
+ PCI bus ID of the graphics card
 
 discovery:
  One service is created for each available graphics card if power

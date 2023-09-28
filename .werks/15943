@@ -1,0 +1,13 @@
+Title: Fix gauge dashlet showing always positive values
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1694174122
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If e.g. the metric "Time offset" had negative values, the gauge dashlet always
+showed a positive one.
+

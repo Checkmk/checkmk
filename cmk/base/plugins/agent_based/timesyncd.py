@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, NotRequired
 
-import pytz
 from dateutil import parser as date_parser
-from typing_extensions import NotRequired
+from dateutil import tz
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -25,10 +26,10 @@ from .utils.timesync import tolerance_check
 
 class CheckParams(TypedDict):
     stratum_level: int
-    quality_levels: Tuple[float, float]
-    alert_delay: Tuple[int, int]
-    last_synchronized: NotRequired[Tuple[int, int]]
-    last_ntp_message: Tuple[int, int]
+    quality_levels: tuple[float, float]
+    alert_delay: tuple[int, int]
+    last_synchronized: NotRequired[tuple[int, int]]
+    last_ntp_message: tuple[int, int]
 
 
 default_check_parameters = CheckParams(
@@ -75,7 +76,7 @@ class NTPMessageSection:
     receivetimestamp: float
 
 
-def _strip_sign(time_string: str) -> Tuple[str, int]:
+def _strip_sign(time_string: str) -> tuple[str, int]:
     match time_string[0]:
         case "-":
             return time_string[1:], -1
@@ -138,16 +139,16 @@ def parse_timesyncd(string_table: StringTable) -> Section:
 
 def _parse_ntp_message_timestamp(ntp_message_raw: str, timezone_raw: str) -> float:
     ntp_message = ntp_message_raw.removeprefix("NTPMessage={ ").removesuffix(" }")
-    ntp_message_parsed = dict((m.split("=", maxsplit=1) for m in ntp_message.split(", ")))
+    ntp_message_parsed = dict(m.split("=", maxsplit=1) for m in ntp_message.split(", "))
 
     receive_timestamp_raw = ntp_message_parsed["ReceiveTimestamp"]
-    tz_info = pytz.timezone(timezone_raw.removeprefix("Timezone="))
-    receive_datetime = date_parser.parse(receive_timestamp_raw)
-    if receive_datetime.tzinfo is None:  # parsing e.g. "CEST" does not always work
-        receive_datetime = tz_info.localize(receive_datetime)
+    tz_abbr = receive_timestamp_raw.split(" ")[-1]
+    tz_iana_id = timezone_raw.removeprefix("Timezone=")
+    receive_datetime = date_parser.parse(
+        receive_timestamp_raw, tzinfos={tz_abbr: tz.gettz(tz_iana_id)}
+    )
 
-    receive_timestamp = receive_datetime.astimezone(pytz.utc).timestamp()
-    return receive_timestamp
+    return receive_datetime.timestamp()
 
 
 def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection | None:
@@ -157,21 +158,24 @@ def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection |
     if len(ntp_message_lines) == 0:
         return None
     [ntp_message_line] = ntp_message_lines
-    [timezone_line] = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    timezone_lines = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    if len(timezone_lines) == 0:
+        return None
+    [timezone_line] = timezone_lines
     section = NTPMessageSection(
         receivetimestamp=_parse_ntp_message_timestamp(ntp_message_line, timezone_line)
     )
     return section
 
 
-def _get_levels_seconds(params: Mapping[str, Any]) -> Tuple[float, float]:
+def _get_levels_seconds(params: Mapping[str, Any]) -> tuple[float, float]:
     warn_milli, crit_milli = params["quality_levels"]
     return warn_milli / 1000.0, crit_milli / 1000.0
 
 
 def discover_timesyncd(
-    section_timesyncd: Optional[Section],
-    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+    section_timesyncd: Section | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,
 ) -> DiscoveryResult:
     if section_timesyncd:
         yield Service()
@@ -179,8 +183,8 @@ def discover_timesyncd(
 
 def check_timesyncd(
     params: Mapping[str, Any],
-    section_timesyncd: Optional[Section],
-    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+    section_timesyncd: Section | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,
 ) -> CheckResult:
     if section_timesyncd is None:
         return

@@ -6,7 +6,7 @@ Date: 1655737242
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When magic factor was used in combination with absolute filesystem levels (in
 MB), the check summary of the <tt>df</tt> check would show percentage

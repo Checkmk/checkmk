@@ -1,0 +1,17 @@
+Title: Improve rendering of small values in percentage Perf-O-Meters
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1685458984
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Values smaller than 0.0001% were displayed in scientific notation by Perf-O-Meters. Since this
+notation is of limited use to most users, we instead display values using two decimal places at most
+as of this werk. Hence, values smaller than 0.01% will be displayed as `<0.01%`, except for exactly
+0%, which will be shown as `0%`.
+
+The actual value of the metric can be looked up in the <i>Service Metrics</i> field of the service
+details.

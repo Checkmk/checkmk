@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The WATO folders network scan for new hosts"""
+"""The Setup folders network scan for new hosts"""
 
 import re
 import socket
@@ -10,15 +10,17 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Any, NamedTuple
+from collections.abc import Sequence
+from typing import Literal, NamedTuple, TypeGuard
 
 from cmk.utils import store
-from cmk.utils.translations import translate_hostname
-from cmk.utils.type_defs import HostAddress, HostName, UserId
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.translations import translate_hostname, TranslationOptions
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import userdb
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -26,10 +28,15 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, update_metadata
+from cmk.gui.watolib.host_attributes import (
+    ExcludeIPRange,
+    HostAttributes,
+    IPRange,
+    NetworkScanResult,
+)
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
-NetworkScanResult = dict[str, Any]
 
 
 class NetworkScanRequest(NamedTuple):
@@ -47,7 +54,7 @@ def execute_network_scan_job() -> None:
     if not folder:
         return  # Nothing to do.
 
-    run_as = UserId(folder.attribute("network_scan")["run_as"])
+    run_as = UserId(folder.attributes["network_scan"]["run_as"])
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
             _("The user %s used by the network scan of the folder %s does not exist.")
@@ -71,9 +78,11 @@ def execute_network_scan_job() -> None:
             if site_is_local(folder.site_id()):
                 found = _do_network_scan(folder)
             else:
-                found = do_remote_automation(
+                raw_response = do_remote_automation(
                     get_site_config(folder.site_id()), "network-scan", [("folder", folder.path())]
                 )
+                assert isinstance(raw_response, list)
+                found = raw_response
 
             if not isinstance(found, list):
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
@@ -100,10 +109,10 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
 
-def _find_folder_to_scan() -> CREFolder | None:
+def _find_folder_to_scan() -> Folder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
-    for folder in Folder.all_folders().values():
+    for folder in folder_tree().all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:
@@ -113,16 +122,28 @@ def _find_folder_to_scan() -> CREFolder | None:
     return folder_to_scan
 
 
-def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts) -> None:
-    network_scan_properties = folder.attribute("network_scan")
+def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -> None:
+    if (network_scan_properties := folder.attributes.get("network_scan")) is None:
+        return
 
-    translation = network_scan_properties.get("translate_names", {})
+    translate_names = network_scan_properties.get("translate_names")
+    if translate_names is None:
+        translation = TranslationOptions({})
+    else:
+        translation = TranslationOptions(
+            {
+                "case": translate_names["case"],
+                "mapping": translate_names["mapping"],
+                "drop_domain": translate_names.get("drop_domain", False),
+                "regex": translate_names["regex"],
+            }
+        )
 
     entries = []
     for host_name, ipaddr in found:
         host_name = translate_hostname(translation, host_name)
 
-        attrs = update_metadata({}, created_by=_("Network scan"))
+        attrs = update_metadata(HostAttributes(), created_by=UserId(_("Network scan")))
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
@@ -140,19 +161,19 @@ def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
 
 
-def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> None:
-    # Reload the folder, lock WATO before to protect against concurrency problems.
+def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:
+    # Reload the folder, lock Setup before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
-        write_folder = Folder.folder(folder.path())
-        write_folder.set_attribute("network_scan_result", result)
+        write_folder = folder_tree().folder(folder.path())
+        write_folder.attributes["network_scan_result"] = result
         write_folder.save()
 
 
 @automation_command_registry.register
 class AutomationNetworkScan(AutomationCommand):
-    def command_name(self):
+    def command_name(self) -> str:
         return "network-scan"
 
     def get_request(self) -> NetworkScanRequest:
@@ -161,22 +182,20 @@ class AutomationNetworkScan(AutomationCommand):
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)
 
-    def execute(self, api_request):
-        folder = Folder.folder(api_request.folder_path)
+    def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
+        folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
 
 
 # This is executed in the site the host is assigned to.
-# A list of tuples is returned where each tuple represents a new found host:
-# [(hostname, ipaddress), ...]
-def _do_network_scan(folder):
+def _do_network_scan(folder: Folder) -> list[tuple[HostName, HostAddress]]:
     ip_addresses = _ip_addresses_to_scan(folder)
     return _scan_ip_addresses(folder, ip_addresses)
 
 
-def _ip_addresses_to_scan(folder):
-    ip_range_specs = folder.attribute("network_scan")["ip_ranges"]
-    exclude_specs = folder.attribute("network_scan")["exclude_ranges"]
+def _ip_addresses_to_scan(folder: Folder) -> set[HostAddress]:
+    ip_range_specs = folder.attributes["network_scan"]["ip_ranges"]
+    exclude_specs = folder.attributes["network_scan"]["exclude_ranges"]
 
     to_scan = _ip_addresses_of_ranges(ip_range_specs)
     exclude = _ip_addresses_of_ranges(exclude_specs)
@@ -194,26 +213,45 @@ def _ip_addresses_to_scan(folder):
     return to_scan
 
 
-def _ip_addresses_of_ranges(ip_ranges):
+def _ip_addresses_of_ranges(ip_ranges: list[IPRange] | list[ExcludeIPRange]) -> set[HostAddress]:
     addresses = set()
 
-    for ty, spec in ip_ranges:
-        if ty == "ip_range":
-            addresses.update(_ip_addresses_of_range(spec))
+    for ip_range in ip_ranges:
+        # Silently skip unhandled type ip_regex_list for excludes
+        if _type_guard_ip_range(ip_range):
+            addresses.update(_ip_addresses_of_range(ip_range[1]))
 
-        elif ty == "ip_network":
-            addresses.update(_ip_addresses_of_network(spec))
+        elif _type_guard_ip_network(ip_range):
+            addresses.update(_ip_addresses_of_network(ip_range[1]))
 
-        elif ty == "ip_list":
-            addresses.update(spec)
+        elif _type_guard_ip_list(ip_range):
+            addresses.update(ip_range[1])
 
     return addresses
+
+
+def _type_guard_ip_range(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_range"], tuple[str, str]]]:
+    return spec[0] == "ip_range"
+
+
+def _type_guard_ip_network(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_network"], tuple[str, int]]]:
+    return spec[0] == "ip_network"
+
+
+def _type_guard_ip_list(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_list"], Sequence[HostAddress]]]:
+    return spec[0] == "ip_list"
 
 
 _FULL_IPV4 = (2**32) - 1
 
 
-def _ip_addresses_of_range(spec):
+def _ip_addresses_of_range(spec: tuple[str, str]) -> list[HostAddress]:
     first_int, last_int = map(_ip_int_from_string, spec)
 
     addresses: list[HostAddress] = []
@@ -243,10 +281,10 @@ def _string_from_ip_int(ip_int: int) -> HostAddress:
     for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
-    return ".".join(octets)
+    return HostAddress(".".join(octets))
 
 
-def _ip_addresses_of_network(spec):
+def _ip_addresses_of_network(spec: tuple[str, int]) -> list[HostAddress]:
     net_addr, net_bits = spec
 
     ip_int = _ip_int_from_string(net_addr)
@@ -257,16 +295,16 @@ def _ip_addresses_of_network(spec):
     return [_string_from_ip_int(i) for i in range(first + 1, last - 1)]
 
 
-def _mask_bits_to_int(n):
+def _mask_bits_to_int(n: int) -> int:
     return (1 << (32 - n)) - 1
 
 
 # This will not scale well. Do you have a better idea?
-def _known_ip_addresses():
+def _known_ip_addresses() -> set[HostAddress]:
     addresses = set()
 
     for host in Host.all().values():
-        attributes = host.attributes()
+        attributes = host.attributes
 
         address = attributes.get("ipaddress")
         if address:
@@ -277,11 +315,15 @@ def _known_ip_addresses():
     return addresses
 
 
-def _excludes_by_regexes(addresses, exclude_specs):
+def _excludes_by_regexes(
+    addresses: set[HostAddress],
+    exclude_specs: list[IPRange | tuple[Literal["ip_regex_list"], Sequence[str]]],
+) -> list[HostAddress]:
     patterns = []
     for ty, spec in exclude_specs:
         if ty == "ip_regex_list":
             for p in spec:
+                assert isinstance(p, str)
                 patterns.append(re.compile(p))
 
     if not patterns:
@@ -299,12 +341,14 @@ def _excludes_by_regexes(addresses, exclude_specs):
 
 # Start ping threads till max parallel pings let threads do their work till all are done.
 # let threds also do name resolution. Return list of tuples (hostname, address).
-def _scan_ip_addresses(folder, ip_addresses):
+def _scan_ip_addresses(
+    folder: Folder, ip_addresses: set[HostAddress]
+) -> list[tuple[HostName, HostAddress]]:
     num_addresses = len(ip_addresses)
 
     # dont start more threads than needed
     parallel_pings = min(
-        folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses
+        folder.attributes["network_scan"].get("max_parallel_pings", 100), num_addresses
     )
 
     # Initalize all workers
@@ -323,7 +367,9 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostAddress]]) -> None:
+def _ping_worker(
+    addresses: list[HostAddress], hosts: list[tuple[HostName | HostAddress, HostAddress]]
+) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -332,7 +378,7 @@ def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostA
 
         if _ping(ipaddress):
             try:
-                host_name = socket.gethostbyaddr(ipaddress)[0]
+                host_name: HostName | HostAddress = HostName(socket.gethostbyaddr(ipaddress)[0])
             except OSError:
                 host_name = ipaddress
 

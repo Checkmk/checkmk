@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "windows_service_api.h"  // windows api abstracted
+#include "wnx/windows_service_api.h"  // windows api abstracted
 
 #include <shlobj_core.h>
 
@@ -9,22 +9,22 @@
 #include <iostream>  // test commands
 #include <numeric>
 
-#include "cap.h"
-#include "cfg.h"
-#include "commander.h"
 #include "common/version.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
-#include "cvt.h"
-#include "external_port.h"  // windows api abstracted
-#include "firewall.h"
-#include "install_api.h"  // install
-#include "modules.h"
-#include "realtime.h"
-#include "service_processor.h"  // cmk service implementation class
 #include "tools/_kbd.h"
 #include "tools/_process.h"
-#include "upgrade.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/commander.h"
+#include "wnx/cvt.h"
+#include "wnx/external_port.h"  // windows api abstracted
+#include "wnx/firewall.h"
+#include "wnx/install_api.h"  // install
+#include "wnx/modules.h"
+#include "wnx/realtime.h"
+#include "wnx/service_processor.h"  // cmk service implementation class
+#include "wnx/upgrade.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -73,7 +73,7 @@ int RemoveMainService() {
 }
 
 // #POC: to be deleted
-static bool execMsi() {
+static bool ExecMsi() {
     wchar_t *str = nullptr;
     if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, nullptr, &str) !=
         S_OK) {
@@ -114,8 +114,8 @@ static bool execMsi() {
 
 // #POC This is part of poc, testing command which finds an update file and
 // execute it
-static void CheckForCommand(std::string &Command) {
-    Command = "";
+static void CheckForCommand(std::string &command) {
+    command.clear();
     std::error_code ec;
     auto dir = fs::current_path(ec);
     std::cout << wtools::ToStr(dir) << ": tick\n";
@@ -161,9 +161,9 @@ static void CheckForCommand(std::string &Command) {
         buffer[length] = 0;
         command_file.close();
         if (::MoveFileA(command_file_name.c_str(), done_file_name.c_str())) {
-            Command = buffer;
-            xlog::l("To exec %s", Command.c_str());
-            execMsi();
+            command = buffer;
+            xlog::l("To exec %s", command.c_str());
+            ExecMsi();
             return;
         }
 
@@ -184,7 +184,7 @@ int TestMainServiceSelf(int interval) {
     }
     // not a best method to call thread, but this is only for VISUAL testing
     std::thread kick_and_print([&stop, interval] {
-        auto port = static_cast<uint16_t>(cfg::groups::global.port());
+        auto port = static_cast<uint16_t>(cfg::groups::g_global.port());
 
         using namespace asio;
 
@@ -201,8 +201,8 @@ int TestMainServiceSelf(int interval) {
         tools::sleep(1000);
 
         while (!stop) {
-            auto enc = cfg::groups::global.globalEncrypt();
-            auto password = enc ? cfg::groups::global.password() : "";
+            auto enc = cfg::groups::g_global.globalEncrypt();
+            auto password = enc ? cfg::groups::g_global.password() : "";
             socket.connect(endpoint, ec);
             if (ec) {
                 XLOG::l("Can't connect to {}:{}, waiting for 5 seconds",
@@ -338,7 +338,7 @@ int TestLegacy() {
     return 0;
 }
 
-int RestoreWATOConfig() {
+int RestoreWatoConfig() {
     try {
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);
@@ -454,15 +454,14 @@ int ExecCvtIniYaml(const fs::path &ini_file_name,
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
     }
-    fs::path file = ini_file_name;
     std::error_code ec;
-    if (!fs::exists(file, ec)) {
+    if (!fs::exists(ini_file_name, ec)) {
         XLOG::l(flag)("File not found '{}'", ini_file_name);
         return 3;
     }
     cma::cfg::cvt::Parser parser_converter;
     parser_converter.prepare();
-    if (!parser_converter.readIni(file, false)) {
+    if (!parser_converter.readIni(ini_file_name, false)) {
         XLOG::l(flag)("Failed Load '{}'", fs::absolute(ini_file_name));
         return 2;
     }
@@ -666,7 +665,8 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     cma::cfg::SetupPluginEnvironment();
 
     ModifyStdio(false);
-    auto proc_id = cma::tools::RunStdCommand(command_to_run, true);
+    auto proc_id =
+        cma::tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
     ModifyStdio(true);
 
     if (proc_id > 0) {
@@ -968,7 +968,7 @@ private:
 void RunTestingUdpServer(asio::io_context *io_context, int port_num,
                          bool print) {
     try {
-        UdpServer s(*io_context, port_num, print);
+        UdpServer s(*io_context, static_cast<short>(port_num), print);
 
         io_context->run();  // blocking call till the context stopped
     } catch (std::exception &e) {

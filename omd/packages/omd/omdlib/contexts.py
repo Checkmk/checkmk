@@ -36,6 +36,7 @@ from omdlib.type_defs import Config, Replacements
 from omdlib.utils import is_containerized
 
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.version import edition
 
 
 class AbstractSiteContext(abc.ABC):
@@ -148,6 +149,7 @@ class SiteContext(AbstractSiteContext):
         return {
             "###SITE###": self.name,
             "###ROOT###": self.dir,
+            "###EDITION###": edition().long,
         }
 
     def load_config(self, defaults: dict[str, str]) -> None:

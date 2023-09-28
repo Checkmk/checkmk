@@ -1,0 +1,44 @@
+Title: New option to share views, dashboards and report definitions
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1678432421
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.3.0b1
+
+This feature was requested via the feature portal:
+https://features.checkmk.com/suggestions/297892/make-dashboards-also-mkpable
+
+You now have the option to export views, dashboards and reports (so called
+visuals). They can be downloaded, versioned, and shared with other Checkmk
+installations.
+
+The following example describes the new feature for views (it works the same
+way for all types):
+
+Users with permission "Manage Extension Packages (MKPs)" will see a new icon
+for exporting the related view within "Customize" - "Views" for any none builtin
+view.
+
+If you use this icon, a new view will appear within the new section
+"Extensions" and a file will be created within
+'~/local/lib/check_mk/gui/plugins/views'.
+
+Local files for dashboards will be stored in
+'~/local/lib/check_mk/gui/plugins/view/dashboard', for reports they will be
+stored in '~/local/lib/check_mk/gui/plugins/view/reports'.
+
+With the 2 icons in the section "Extensions" you can go to the extension
+package module and create an extension package or remove the related view from
+the extension package page. The later will remove the file in the mentioned
+local directory and the view from the "Extensions" section.
+
+The "Extension" section also shows the state for each exported view, like "This
+view can be packaged with the extension packages module." if the view was
+exported and "This view is provided via the MKP 'MY_MKP'." if the view is part
+of an installed extension package.
+
+If the view is part of an extension package, you have the option to clone and
+customize it.

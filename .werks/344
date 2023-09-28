@@ -9,6 +9,6 @@ Targetversion: future
 
 In the tables <tt>hosts</tt> and <tt>servicegroups</tt> the columns
 <tt>num_services_hard_warn</tt>, <tt>num_services_hard_crit</tt> and
-<tt>num_services_hard_unknown<tt> did not correctly reflect the
+<tt>num_services_hard_unknown</tt> did not correctly reflect the
 hard status but in most cases just the soft status - effectively
 ignoring the <tt>_hard_</tt>. This has now been fixed.

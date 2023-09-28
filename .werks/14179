@@ -1,0 +1,14 @@
+Title: BI configuration: Fixed incomplete rule cycle detection
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1673877344
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+The user was able to save a BI configuration with a cycle in a rule.
+This was only true for unused rules that were not referenced by an aggregation or other rules.
+

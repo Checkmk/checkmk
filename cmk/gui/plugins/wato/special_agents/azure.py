@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Final
+
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.utils import HTTPProxyReference
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -19,16 +20,20 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
-ALL_AZURE_SERVICES: list[tuple[str, str]] = [
+RAW_AZURE_SERVICES: Final = [
     ("users_count", _("Users in the Active Directory")),
     ("ad_connect", _("AD Connect Sync")),
+    ("app_registrations", _("App Registrations")),
     ("usage_details", _("Usage Details")),
     ("Microsoft.Compute/virtualMachines", _("Virtual Machines")),
     ("Microsoft.Network/virtualNetworkGateways", _("vNet Gateway")),
@@ -40,6 +45,18 @@ ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("Microsoft.Network/trafficmanagerprofiles", _("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", _("Load Balancer")),
 ]
+
+CCE_AZURE_SERVICES: Final = [
+    ("Microsoft.RecoveryServices/vaults", _("Recovery Services Vault")),
+    ("Microsoft.Network/applicationGateways", _("Application Gateway")),
+]
+
+
+def get_azure_services() -> list[tuple[str, str]]:
+    if edition() is Edition.CCE:
+        return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
+
+    return RAW_AZURE_SERVICES
 
 
 def _special_agents_azure_azure_explicit_config():
@@ -94,10 +111,12 @@ def _special_agents_azure_azure_tag_based_config():
 
 
 def _migrate_services(data):
+    if "authority" not in data:
+        data["authority"] = "global"
     if "services" not in data:
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
-        data["services"] = [service_id for service_id, _service_name in ALL_AZURE_SERVICES]
+        data["services"] = [service_id for service_id, _service_name in get_azure_services()]
     return data
 
 
@@ -114,6 +133,26 @@ def _valuespec_special_agents_azure():
             ),
             # element names starting with "--" will be passed do cmd line w/o parsing!
             elements=[
+                (
+                    "authority",
+                    DropdownChoice(
+                        title=_("Authority"),
+                        choices=[
+                            ("global", _("Global")),
+                            ("china", _("China")),
+                        ],
+                        default="global",
+                        help=_(
+                            "Specify the authority you want to connect to:"
+                            "<ul>"
+                            "<li>Global: Login into 'https://login.microsoftonline.com',"
+                            " get data from 'https://graph.microsoft.com'</li>"
+                            "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
+                            " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
+                            "</ul>"
+                        ),
+                    ),
+                ),
                 (
                     "subscription",
                     TextInput(
@@ -145,6 +184,10 @@ def _valuespec_special_agents_azure():
                         allow_empty=False,
                         size=45,
                     ),
+                ),
+                (
+                    "proxy",
+                    HTTPProxyReference(),
                 ),
                 get_services_vs(),
                 (
@@ -204,7 +247,7 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
             ],
-            optional_keys=["subscription", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
         ),
         migrate=_migrate_services,
     )
@@ -213,29 +256,37 @@ def _valuespec_special_agents_azure():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:azure",
+        name=RuleGroup.SpecialAgents("azure"),
         valuespec=_valuespec_special_agents_azure,
+        doc_references={DocReference.AZURE: _("Monitoring Microsoft Azure")},
     )
 )
 
 
 def get_services_vs() -> tuple[str, ValueSpec]:
+    valid_choices = {s[0] for s in get_azure_services()}
     return (
         "services",
-        ListChoice(
-            title=_("Azure services to monitor"),
-            choices=ALL_AZURE_SERVICES,
-            # users_count and ad_connect are disabled by default because they require special
-            # permissions on the Azure app (Graph API permissions + admin consent).
-            default_value=[
-                s[0] for s in ALL_AZURE_SERVICES if s[0] not in {"users_count", "ad_connect"}
-            ],
-            allow_empty=True,
-            help=_(
-                "Select which Azure services to monitor.\n"
-                "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
-                " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
-                " and to grant admin consent to it."
+        MigrateNotUpdated(
+            valuespec=ListChoice(
+                title=_("Azure services to monitor"),
+                choices=get_azure_services(),
+                # users_count, ad_connect and app_registration are disabled by default because they
+                # require special permissions on the Azure app (Graph API permissions + admin consent).
+                default_value=[
+                    s[0]
+                    for s in get_azure_services()
+                    if s[0] not in {"users_count", "ad_connect", "app_registrations"}
+                ],
+                allow_empty=True,
+                help=_(
+                    "Select which Azure services to monitor.\n"
+                    "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
+                    " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
+                    " and to grant admin consent to it."
+                ),
             ),
+            # silently drop values that are only valid in CCE if we're CEE now.
+            migrate=lambda slist: [s for s in slist if s in valid_choices],
         ),
     )

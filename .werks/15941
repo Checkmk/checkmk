@@ -1,0 +1,13 @@
+Title: Fix possible failed notifications on appliances
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1692627604
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If one of multiple recipients had no Email address configured, sending of the
+mail failed with an unhandled exception.
+

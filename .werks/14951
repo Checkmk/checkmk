@@ -1,0 +1,13 @@
+Title: Windows agent drops support for Windows older than Windows 7/Server 2008 R2
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1678725132
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+If such systems must be monitored then, please, use a legacy Windows agent: i.e. 2.1 or earlier.
+
+

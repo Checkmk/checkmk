@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -41,12 +41,11 @@ def discover(
     for item, share in assets[ASSET_TYPE].items():
         data = share.resource_data
         labels = [
-            ServiceLabel("gcp/location", share.location),
-            ServiceLabel("gcp/filestore/name", item),
-            ServiceLabel("gcp/projectId", assets.project),
+            ServiceLabel("cmk/gcp/location", share.location),
+            ServiceLabel("cmk/gcp/filestore/name", item),
         ]
         labels.extend(
-            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+            [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
         )
         yield Service(item=item, labels=labels)
 
@@ -57,24 +56,25 @@ def check(
     section_gcp_service_filestore: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
-
     if section_gcp_service_filestore is None or not gcp.item_in_section(
         item, ASSET_TYPE, section_gcp_assets
     ):
         return
 
     metrics = {
-        "utilization": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes_percent", "", str),
-        "read_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/read_ops_count", "", str),
-        "write_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/write_ops_count", "", str),
-        "average_read_wait": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/average_read_latency", "", str
+        "utilization": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/used_bytes_percent"
         ),
-        "average_write_wait": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/average_write_latency", "", str
+        "read_ios": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/read_ops_count"),
+        "write_ios": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/write_ops_count"),
+        "average_read_wait": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/average_read_latency"
         ),
-        "free_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/free_bytes", "", str),
-        "used_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes", "", str),
+        "average_write_wait": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/average_write_latency"
+        ),
+        "free_capacity": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/free_bytes"),
+        "used_capacity": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/used_bytes"),
     }
 
     timeseries = section_gcp_service_filestore.get(item, gcp.SectionItem(rows=[])).rows

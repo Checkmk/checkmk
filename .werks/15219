@@ -1,0 +1,14 @@
+Title: time_period: disallow builtin timeperiod in timeperiod exclude
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675848214
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk fixes an issue where the user could via the REST-API
+select the builtin time period 24X7 as the timeperiod to exclude
+in a custom time period. This is no longer possible.
+

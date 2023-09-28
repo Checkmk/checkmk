@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,7 +23,7 @@ class Section(NamedTuple):
     current: int
 
 
-def parse_checkpoint_connections(string_table: StringTable) -> Optional[Section]:
+def parse_checkpoint_connections(string_table: StringTable) -> Section | None:
     """
     >>> parse_checkpoint_connections([["19190"]])
     Section(current=19190)
@@ -48,7 +48,7 @@ def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_checkpoint_connections(  # type:ignore[no-untyped-def]
+def check_checkpoint_connections(  # type: ignore[no-untyped-def]
     params,
     section: Section,
 ) -> CheckResult:

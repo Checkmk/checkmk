@@ -8,8 +8,8 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
 #include "common/mailslot_transport.h"
+#include "wnx/cfg.h"
 
 using namespace std::chrono_literals;
 
@@ -84,7 +84,7 @@ std::string Basic::generateContent(std::string_view section_name,
     auto real_name =
         section_name == section::kUseEmbeddedName ? uniq_name_ : section_name;
 
-    if (!force_generation && !cfg::groups::global.allowedSection(real_name)) {
+    if (!force_generation && !cfg::groups::g_global.allowedSection(real_name)) {
         XLOG::t("The section \"{}\" is disabled in config", real_name);
         return {};
     }
@@ -107,7 +107,7 @@ std::string Basic::generateContent(std::string_view section_name,
 }
 
 bool Basic::isAllowedByCurrentConfig() const {
-    return cfg::groups::global.allowedSection(getUniqName());
+    return cfg::groups::g_global.allowedSection(getUniqName());
 }
 
 bool Basic::isAllowedByTime() const noexcept {

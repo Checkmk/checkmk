@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,17 +7,18 @@
 
 from livestatus import SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import Row
 
-from ..painter.v0.helpers import replace_action_url_macros, transform_action_url
 from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
 
 

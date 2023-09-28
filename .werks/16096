@@ -1,0 +1,19 @@
+Title: authentication: allow REST API access when gui access is restricted
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1693552208
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue with regards to REST API access. When the
+distributed monitoring config option
+
+"Users are allowed to directly login into the Web GUI"
+
+was disabled, we inadvertently blocked access to the REST API as well.
+We now allow REST API access while still blocking access to the Web
+GUI in this scenario.
+

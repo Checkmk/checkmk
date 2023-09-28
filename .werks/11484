@@ -18,5 +18,5 @@ needed any more.
 Note:
 If you use local checks that use plugin sections that have an equivalent
 Management Board section, changes on that checks also affect the processing of
-the Management Board plugin section, e.g. <<<snmp_info>>> on
-<<<mgmt_snmp_info>>>.
+the Management Board plugin section, e.g. `<<<snmp_info>>>` on
+`<<<mgmt_snmp_info>>>`.

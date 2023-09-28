@@ -1,0 +1,14 @@
+Title: Improved performance when processing clusters and cluster rules
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1674721837
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Even in configurations with a small number of clusters, you may have experienced performance issues with
+<tt>Activate changes</tt> and general checking because cluster service rules were not processed properly.
+

@@ -13,16 +13,15 @@ RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
     && yum -y --enablerepo=powertools --allowerasing install \
     bison \
-    curl \
     enchant \
     gcc \
     gcc-c++ \
     git \
+    graphviz-gd \
     krb5-devel \
     make \
     openldap-devel \
     postfix \
-    graphviz-gd \
     rrdtool-devel \
     strace \
     sudo \
@@ -39,8 +38,6 @@ RUN yum -y makecache \
     flex \
     flex-devel \
     freeradius-devel \
-    gcc \
-    gcc-c++ \
     gd-devel \
     gettext \
     gtk-doc \
@@ -88,7 +85,6 @@ RUN yum -y makecache \
     texinfo \
     tk-devel \
     wget \
-    which \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
     && yum clean all
@@ -146,6 +142,7 @@ RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
@@ -171,6 +168,7 @@ RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
+RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh
@@ -193,5 +191,6 @@ RUN mkdir -p /home/jenkins/.cache/ \
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
 
+ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.tribe29.image_type="build-image"

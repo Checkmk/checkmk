@@ -4,9 +4,11 @@ catalog: app/postgresql
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the instances of a PostgreSQL database.
+ This check monitors the instances of a PostgreSQL database as well as their PostgreSQL versions.
 
  If instance is running, service status is OK, otherwise CRIT.
+
+ This check needs the Checkmk mk_postgres plugin installed in the agent.
 
 item:
  Name of the database in upper case letters

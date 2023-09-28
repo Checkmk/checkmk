@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_mem import (
     _idem_check_cisco_mem,
     discovery_cisco_mem,
     parse_cisco_mem,
+    Section,
 )
 
 
@@ -51,8 +56,8 @@ from cmk.base.plugins.agent_based.cisco_mem import (
         ),
     ],
 )
-def test_parse_cisco_mem_asa(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_cisco_mem_asa(
+    string_table: list[StringTable], expected_parsed_data: Section | None
 ) -> None:
     assert parse_cisco_mem(string_table) == expected_parsed_data
 
@@ -75,32 +80,28 @@ def test_parse_cisco_mem_asa(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discovery_cisco_mem(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
-) -> None:
+def test_discovery_cisco_mem(string_table: Section, expected_parsed_data: Iterable[str]) -> None:
     assert list(discovery_cisco_mem(string_table)) == list(
         Service(item=item) for item in expected_parsed_data
     )
 
 
 @pytest.mark.parametrize(
-    "check_args,expected_result",
+    "item,params,section,expected_result",
     [
         (
+            "MEMPOOL_DMA",
             {
-                "item": "MEMPOOL_DMA",
-                "params": {
-                    "trend_perfdata": True,
-                    "trend_range": 24,
-                    "trend_showtimeleft": True,
-                    "trend_timeleft": (12, 6),
-                },
-                "section": {
-                    "System memory": ["3848263744", "8765044672"],
-                    "MEMPOOL_MSGLYR": ["123040", "8265568"],
-                    "MEMPOOL_DMA": ["429262192", "378092176"],
-                    "MEMPOOL_GLOBAL_SHARED": ["1092814800", "95541296"],
-                },
+                "trend_perfdata": True,
+                "trend_range": 24,
+                "trend_showtimeleft": True,
+                "trend_timeleft": (12, 6),
+            },
+            {
+                "System memory": ["3848263744", "8765044672"],
+                "MEMPOOL_MSGLYR": ["123040", "8265568"],
+                "MEMPOOL_DMA": ["429262192", "378092176"],
+                "MEMPOOL_GLOBAL_SHARED": ["1092814800", "95541296"],
             },
             (
                 Result(state=State.OK, summary="Usage: 53.17% - 409 MiB of 770 MiB"),
@@ -108,12 +109,10 @@ def test_discovery_cisco_mem(  # type:ignore[no-untyped-def]
             ),
         ),
         (
+            "Processor",
+            {"levels": (80.0, 90.0)},
             {
-                "item": "Processor",
-                "params": {"levels": (80.0, 90.0)},
-                "section": {
-                    "Processor": ["27086628", "46835412", "29817596"],
-                },
+                "Processor": ["27086628", "46835412", "29817596"],
             },
             (
                 Result(state=State.OK, summary="Usage: 36.64% - 25.8 MiB of 70.5 MiB"),
@@ -126,12 +125,10 @@ def test_discovery_cisco_mem(  # type:ignore[no-untyped-def]
             ),
         ),
         (
+            "I/O",
+            {"levels": (80.0, 90.0)},
             {
-                "item": "I/O",
-                "params": {"levels": (80.0, 90.0)},
-                "section": {
-                    "I/O": ["12409052", "2271012", "2086880"],
-                },
+                "I/O": ["12409052", "2271012", "2086880"],
             },
             (
                 Result(
@@ -148,8 +145,15 @@ def test_discovery_cisco_mem(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_cisco_mem(check_args, expected_result) -> None:  # type:ignore[no-untyped-def]
-    assert list(_idem_check_cisco_mem(value_store={}, **check_args)) == list(expected_result)
+def test_check_cisco_mem(
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    expected_result: CheckResult,
+) -> None:
+    assert list(
+        _idem_check_cisco_mem(value_store={}, item=item, params=params, section=section)
+    ) == list(expected_result)
 
 
 if __name__ == "__main__":

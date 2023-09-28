@@ -1,0 +1,15 @@
+Title: "Site/Host overview" dashlet can now be forced to show either a site or a host overview
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1686307866
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Up until now the "Site/Host overview" dashlet was showing either an overview of
+sites or of hosts, depending on the context of a dashboard.
+It now can be configured to always show a overview of hosts or one of sites in
+addition to the context depending behaviour.
+

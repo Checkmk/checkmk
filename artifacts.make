@@ -1,8 +1,15 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 CHECK_MK_RAW_PRECOMPILED_WERKS := $(REPO_PATH)/.werks/werks
+
+CHECK_MK_ANNOUNCE_VERSION=$(VERSION)-$(shell git rev-parse --short=12 HEAD)
+CHECK_MK_ANNOUNCE_TAR_FILE := announce-$(CHECK_MK_ANNOUNCE_VERSION).tar.gz
+CHECK_MK_ANNOUNCE_TAR := $(REPO_PATH)/$(CHECK_MK_ANNOUNCE_TAR_FILE)
+CHECK_MK_ANNOUNCE_FOLDER := $(REPO_PATH)/announce
+CHECK_MK_ANNOUNCE_MD := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).md
+CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).txt
 
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
 
@@ -32,6 +39,7 @@ endif
 SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
+SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe 
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.4.cab \
@@ -41,4 +49,16 @@ SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
 	$(SOURCE_BUILT_AGENT_UPDATER) \
 	$(SOURCE_BUILT_OHM) \
+	$(SOURCE_BUILT_EXT) \
 	$(SOURCE_BUILT_WINDOWS)
+
+ifeq ($(ENTERPRISE),yes)
+PROTO_PYTHON_OUT := $(REPO_PATH)/enterprise/cmc_proto
+CMC_PROTO_MODULES := \
+    $(PROTO_PYTHON_OUT)/config/v1/types_pb2.py \
+    $(PROTO_PYTHON_OUT)/cycletime/v1/types_pb2.py \
+    $(PROTO_PYTHON_OUT)/state/v1/types_pb2.py
+else
+PROTO_PYTHON_OUT :=
+CMC_PROTO_MODULES :=
+endif

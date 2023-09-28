@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
+USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 import io
 import os
 import socket
 import sys
+import urllib.parse
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
@@ -25,14 +25,10 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+    from collections.abc import Callable  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
-
-if sys.version_info[0] >= 3:
-    from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
-else:
-    from urllib2 import quote  # pylint: disable=import-error
 
 try:
     try:
@@ -76,7 +72,7 @@ MBEAN_SECTIONS = {
     "jvm_garbagecollectors": (
         "java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",
     ),
-}  # type: Dict[str, Tuple[str, ...]]
+}  # type: dict[str, tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
     "tomcat": {
@@ -227,7 +223,7 @@ QUERY_SPECS_LEGACY = [
         [],
         True,
     ),
-]  # type: List[Tuple[str, str, str, List, bool]]
+]  # type: list[tuple[str, str, str, list, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -291,7 +287,7 @@ DEFAULT_CONFIG_TUPLES = (
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
     ("instances", [{}]),
-)  # type: Tuple[Tuple[Union[Optional[str], float, List[Any]], ...], ...]
+)  # type: tuple[tuple[str | None | float | list[Any], ...], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -313,7 +309,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}  # type: Dict[str, Callable]
+    cache = {}  # type: dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)
@@ -325,7 +321,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
+class JolokiaInstance:
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {"filter_headers": [("authorization", "****")]}
 
@@ -377,8 +373,9 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
 
         return config
 
-    def __init__(self, config):
-        super(JolokiaInstance, self).__init__()
+    def __init__(self, config, user_agent):
+        # type: (object, str) -> None
+        super().__init__()
         self._config = self._sanitize_config(config)
 
         self.name = self._config["instance"]
@@ -388,7 +385,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         self.base_url = self._get_base_url()
         self.target = self._get_target()
         self.post_config = {"ignoreErrors": "true"}
-        self._session = self._initialize_http_session()
+        self._session = self._initialize_http_session(user_agent)
 
     def _get_base_url(self):
         return "%s://%s:%d/%s/" % (
@@ -411,7 +408,8 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
             "password": self._config["service_password"],
         }
 
-    def _initialize_http_session(self):
+    def _initialize_http_session(self, user_agent):
+        # type: (str) -> requests.Session
         session = requests.Session()
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
@@ -419,6 +417,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
+        session.headers["User-Agent"] = user_agent
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -557,7 +556,7 @@ def extract_item(key, itemspec):
     components = path.split(",")
     comp_dict = dict(c.split("=") for c in components if c.count("=") == 1)
 
-    item = ()  # type: Tuple[Any, ...]
+    item = ()  # type: tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
@@ -615,7 +614,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
+    return [
+        ("%s/%s" % (urllib.parse.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths
+    ]
 
 
 def _process_queries(inst, queries):
@@ -720,7 +721,7 @@ def load_config(custom_config):
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
         with open(conffile) as conf:
-            exec(conf.read(), {}, custom_config)
+            exec(conf.read(), {}, custom_config)  # nosec B102 # BNS:a29406
     return custom_config
 
 
@@ -729,7 +730,7 @@ def main(configs_iterable=None):
         configs_iterable = yield_configured_instances()
 
     for config in configs_iterable:
-        instance = JolokiaInstance(config)
+        instance = JolokiaInstance(config, USER_AGENT)
         try:
             query_instance(instance)
         except SkipInstance:

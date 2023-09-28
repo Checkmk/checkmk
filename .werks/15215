@@ -1,0 +1,14 @@
+Title: user_config: Error when creating a user with an idle timeout duration via the rest-api
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675356241
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+This werk fixes an issue when creating a user via the REST-API
+with an idle_timeout duration that was causing a 500 internal
+server error.
+

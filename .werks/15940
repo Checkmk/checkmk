@@ -1,0 +1,16 @@
+Title: Fix result view of host and service label search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1692261826
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you searched for host or service labels in the Monitor search or Quicksearch
+snapin, the results were listed correctly but on enter, the view showed all
+hosts or services.
+
+

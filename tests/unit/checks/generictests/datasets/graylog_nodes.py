@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
-checkname = 'graylog_nodes'
+checkname = "graylog_nodes"
 
 info = [
     [
@@ -14,48 +14,44 @@ info = [
     ]
 ]
 
-discovery = {'': [('a56db164-78a6-4dc8-bec9-418b9edf9067', {})]}
+discovery = {"": [("a56db164-78a6-4dc8-bec9-418b9edf9067", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            'a56db164-78a6-4dc8-bec9-418b9edf9067', {
-                'lc_uninitialized': 1,
-                'lb_dead': 2,
-                'ps_true': 0,
-                'input_state': 1,
-                'lc_running': 0,
-                'lc_throttled': 2,
-                'lc_halting': 1,
-                'lb_alive': 0,
-                'lc_override_lb_throttled': 1,
-                'lb_throttled': 2,
-                'lc_failed': 2,
-                'lc_override_lb_alive': 0,
-                'lc_paused': 1,
-                'ps_false': 2,
-                'lc_starting': 1,
-                'lc_override_lb_dead': 1
-            }, [
-                (0, 'Load balancer state: alive', []),
-                (0, 'Lifecycle is: running', []),
-                (0, 'Is processing: yes', []),
-                (0, 'Inputs: 3', [('num_input', 3, None, None, None, None)]),
+            "a56db164-78a6-4dc8-bec9-418b9edf9067",
+            {
+                "lc_uninitialized": 1,
+                "lb_dead": 2,
+                "ps_true": 0,
+                "input_state": 1,
+                "lc_running": 0,
+                "lc_throttled": 2,
+                "lc_halting": 1,
+                "lb_alive": 0,
+                "lc_override_lb_throttled": 1,
+                "lb_throttled": 2,
+                "lc_failed": 2,
+                "lc_override_lb_alive": 0,
+                "lc_paused": 1,
+                "ps_false": 2,
+                "lc_starting": 1,
+                "lc_override_lb_dead": 1,
+            },
+            [
+                (0, "Load balancer state: alive", []),
+                (0, "Lifecycle is: running", []),
+                (0, "Is processing: yes", []),
+                (0, "Inputs: 3", [("num_input", 3, None, None, None, None)]),
                 (
                     1,
-                    'One or more inputs not in state running, see long output for more details',
-                    []
-                ), (0, '\nName: Beats, Title: Test, Status: RUNNING', []),
-                (
-                    1,
-                    '\nName: Syslog TCP, Title: Syslog Test, Status: FAILED',
-                    []
+                    "One or more inputs not in state running, see long output for more details",
+                    [],
                 ),
-                (
-                    1, '\nName: Syslog UDP, Title: Test Udp, Status: FAILED',
-                    []
-                )
-            ]
+                (0, "\nName: Beats, Title: Test, Status: RUNNING", []),
+                (1, "\nName: Syslog TCP, Title: Syslog Test, Status: FAILED", []),
+                (1, "\nName: Syslog UDP, Title: Test Udp, Status: FAILED", []),
+            ],
         )
     ]
 }

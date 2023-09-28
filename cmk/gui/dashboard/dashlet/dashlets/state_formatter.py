@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable
 
+from cmk.gui.painter.v0.painters import host_state_short, service_state_short
 from cmk.gui.type_defs import Row
-from cmk.gui.views.painter.v0.painters import host_state_short, service_state_short
 
 
 @dataclass
@@ -33,9 +33,7 @@ class ServiceStateFormatter(StateFormatter):
         self.message_template = message_template
 
 
-def state_map(  # type:ignore[no-untyped-def]
-    conf: tuple[str, str] | None, row: Row, formatter: StateFormatter
-):
+def state_map(conf: tuple[str, str] | None, row: Row, formatter: StateFormatter) -> dict[str, str]:
     style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
     state, status_name = formatter.state_names(row)
     return {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -33,8 +34,10 @@ def _edition_short_from_pkg_path(package_path: str) -> str:
         return "cme"
     if file_name.startswith("check-mk-free-"):
         return "cfe"
-    if file_name.startswith("check-mk-plus-"):
-        return "cpe"
+    if file_name.startswith("check-mk-cloud-"):
+        return "cce"
+    if file_name.startswith("check-mk-saas-"):
+        return "cse"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -140,15 +143,15 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed|plus)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
         ] + version_allowed_patterns
 
         paths = []
@@ -225,14 +228,32 @@ def test_src_only_contains_relative_version_paths(
         assert path.startswith(prefix + "/")
 
 
+def test_src_does_not_contain_dev_files(
+    package_path: str,
+) -> None:
+    """test that there are no dev files (currently only .f12 files) are packed"""
+
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    for line in subprocess.check_output(
+        ["tar", "tvf", package_path], encoding="utf-8"
+    ).splitlines():
+        path = Path(line.split()[5])
+        assert path.name != ".f12"
+
+
 def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
-    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    # package_path may indicate that we're having a release candidate but all files inside
+    # the package paths should not contain a rc information anymore.
+    prefix = os.path.basename(package_path).replace(".tar.gz", "").split("-rc")[0]
     enterprise_files = []
     managed_files = []
-    plus_files = []
+    cloud_files = []
+    saas_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -242,12 +263,15 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
             enterprise_files.append(path)
         if path != "%s/managed/" % prefix and path.startswith("%s/managed/" % prefix):
             managed_files.append(path)
-        if path != "%s/plus/" % prefix and path.startswith("%s/plus/" % prefix):
-            plus_files.append(path)
+        if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
+            cloud_files.append(path)
+        if path != "%s/saas/" % prefix and path.startswith("%s/saas/" % prefix):
+            saas_files.append(path)
 
-    assert enterprise_files == []
-    assert managed_files == []
-    assert plus_files == []
+    assert not enterprise_files
+    assert not managed_files
+    assert not cloud_files
+    assert not saas_files
 
 
 def test_demo_modifications(package_path: str, cmk_version: str) -> None:

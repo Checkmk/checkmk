@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
@@ -13,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 
 def get_parsed_section() -> oracle_rman.SectionOracleRman:
@@ -179,7 +181,12 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(item, params, section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check(
+    item: str,
+    params: Mapping[str, object],
+    section: oracle_rman.SectionOracleRman,
+    results: CheckResult,
+) -> None:
     yielded_results = list(oracle_rman.check_oracle_rman(item, params, section))
     assert yielded_results == results
 
@@ -253,5 +260,7 @@ def test_cluster_check() -> None:
         ),
     ],
 )
-def test_parse_oracle_rman(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_oracle_rman(
+    string_table: StringTable, section: oracle_rman.SectionOracleRman
+) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == section

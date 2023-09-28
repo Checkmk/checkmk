@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,6 +14,7 @@ from cmk.special_agents.agent_aws import (
     Glacier,
     GlacierLimits,
     GlacierSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -52,7 +53,7 @@ def get_glacier_sections() -> GlacierSections:
         names: object | None, tags: OverallTags
     ) -> tuple[GlacierLimits, GlacierSummary, Glacier]:
         region = "eu-central-1"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)
 
@@ -61,9 +62,10 @@ def get_glacier_sections() -> GlacierSections:
 
         distributor = ResultDistributor()
 
-        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)
-        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)
-        glacier = Glacier(fake_cloudwatch_client, region, config)
+        # TODO: FakeGlacierClient shoud actually subclass GlacierClient, etc.
+        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
+        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
+        glacier = Glacier(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(glacier_limits.name, glacier_summary)
         distributor.add(glacier_summary.name, glacier)

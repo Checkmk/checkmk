@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ from typing import NamedTuple, TypeVar
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_solaris_psrinfo import (
     inventory_solaris_cpus,
     parse_solaris_psrinfo_physical,
@@ -24,9 +24,9 @@ T = TypeVar("T")
 
 
 class PsrInfo(NamedTuple):
-    psrinfo: str
+    psrinfo: str | None
     psrinfo_pv: str
-    psrinfo_p: str
+    psrinfo_p: str | None
     psrinfo_t: str | None
 
 
@@ -137,8 +137,8 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
                         "cpus": 2,
                         "cores": 4,
                         "threads": 32,
-                        "Model": "SPARC-S7",
-                        "Maximum Speed": "4267 MHz",
+                        "model": "SPARC-S7",
+                        "max_speed": "4267 MHz",
                     },
                 ),
             ],
@@ -157,8 +157,8 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
                         "cpus": 2,
                         "cores": 4,
                         "threads": 32,
-                        "Model": "SPARC-S7",
-                        "Maximum Speed": "4267 MHz",
+                        "model": "SPARC-S7",
+                        "max_speed": "4267 MHz",
                     },
                 ),
             ],
@@ -172,15 +172,43 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
                         "cpus": 2,
                         "cores": 2,
                         "threads": 16,
-                        "Model": "SPARC-T5",
-                        "Maximum Speed": "3600 MHz",
+                        "model": "SPARC-T5",
+                        "max_speed": "3600 MHz",
+                    },
+                ),
+            ],
+        ),
+        (
+            PsrInfo(
+                psrinfo=None,
+                psrinfo_pv=(
+                    "The physical processor has 5 cores and 40 virtual processors (0-39)\n"
+                    "  The core has 8 virtual processors (0-7)\n"
+                    "  The core has 8 virtual processors (8-15)\n"
+                    "  The core has 8 virtual processors (16-23)\n"
+                    "  The core has 8 virtual processors (24-31)\n"
+                    "  The core has 8 virtual processors (32-39)\n"
+                    "    SPARC-T5 (chipid 0, clock 3600 MHz)\n"
+                ),
+                psrinfo_p=None,
+                psrinfo_t=None,
+            ),
+            [
+                Attributes(
+                    path=["hardware", "cpu"],
+                    inventory_attributes={
+                        "model": "SPARC-T5",
+                        "max_speed": "3600 MHz",
+                        "cpus": 1,
+                        "threads": 40,
+                        "cores": 5,
                     },
                 ),
             ],
         ),
     ],
 )
-def test_inventory_solaris_cpus(test_set, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_solaris_cpus(test_set: PsrInfo, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_solaris_cpus(
             _section(parse_solaris_psrinfo_physical, test_set.psrinfo_p),

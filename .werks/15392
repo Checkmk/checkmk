@@ -1,0 +1,12 @@
+Title: Cisco Meraki: Use device name instead of lan IP as the piggybacked host name
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682517426
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

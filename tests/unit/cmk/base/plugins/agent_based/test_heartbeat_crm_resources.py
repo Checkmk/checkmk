@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -300,7 +300,6 @@ def test_check_heartbeat_crm_resources_started(section_2: Section) -> None:
 
 
 def test_discover_heartbeat_crm_resources_pacemaker_v2(section_pacemaker_v2: Section) -> None:
-
     discovered_services = list(discover_heartbeat_crm_resources({}, section_pacemaker_v2))
     expected_services = [Service(item="rhevfence"), Service(item="QPID"), Service(item="BRIDGE")]
 

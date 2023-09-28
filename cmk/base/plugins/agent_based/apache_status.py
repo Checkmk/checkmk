@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
 import time
-from typing import Any, Callable, Dict, Final, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any, Final
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -21,7 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, Dict[str, float]]
+Section = dict[str, dict[str, float]]
 
 _FIELD_CASTER_MAP: Final = {
     "Uptime": int,
@@ -94,7 +95,7 @@ def apache_status_parse_legacy(info: StringTable) -> Section:
         if port == "None":
             item = address
         else:
-            item = "%s:%s" % (address, port)
+            item = f"{address}:{port}"
 
         if item not in data:
             data[item] = {}
@@ -140,11 +141,11 @@ def apache_status_parse(string_table: StringTable) -> Section:
         value = caster(status)
 
         if instance and port != "None":
-            item = "%s:%s" % (instance, port)
+            item = f"{instance}:{port}"
         elif instance:
             item = instance
         elif port != "None":
-            item = "%s:%s" % (address, port)
+            item = f"{address}:{port}"
         else:
             item = address
 
@@ -227,7 +228,7 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
     yield from _scoreboard_results(data)
 
 
-def _scoreboard_results(data: Dict[str, float]) -> CheckResult:
+def _scoreboard_results(data: dict[str, float]) -> CheckResult:
     # Don't process the scoreboard data directly. Print states instead
     states = []
     for key in _SCOREBOARD_LABEL_MAP:

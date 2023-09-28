@@ -1,14 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// TODO(sp): IWYU claims to need this for "tuple_element<>::type", but the
-// headers <tuple>, <array>, <utility>, and <ranges> are *all* official ways to
-// get this. So we should have a symbol mapping for this in our IWYU mapping
-// files, but I simply can't figure out how to make that work with the template
-// symbol. IWYU bug?
-// IWYU pragma: no_include <utility>
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
@@ -18,6 +13,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 
 using namespace std::string_literals;
@@ -80,9 +76,9 @@ info_table notification_state_types(const table<T> &states) {
         }
     }
     for (const auto &[code_name, code, info] : exit_codes) {
-        result.push_back({parens("ALERTHANDLER", code_name),  //
-                          code,                               //
-                          parens("EXIT_CODE", info)});
+        result.emplace_back(parens("ALERTHANDLER", code_name),  //
+                            code,                               //
+                            parens("EXIT_CODE", info));
     }
     return result;
 }
@@ -97,7 +93,7 @@ TEST(LogEntry, InitialHostState) {
                     .append(";")
                     .append(state_type)
                     .append(";7;Krasser Output;Laaang");
-            LogEntry e{42, line};
+            const LogEntry e{42, line};
             EXPECT_EQ(size_t{42}, e.lineno());
             EXPECT_EQ(tp(1551424305), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -127,7 +123,7 @@ TEST(LogEntry, InitialHostState) {
 TEST(LogEntry, InitialHostStateWithoutLongOutput) {
     auto line =
         "[1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -151,7 +147,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
 TEST(LogEntry, InitialHostStateWithMultiLine) {
     const auto *line =
         R"([1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output;Laaanger\nLong\nOutput)";
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -182,7 +178,7 @@ TEST(LogEntry, CurrentHostState) {
                     .append(";")
                     .append(state_type)
                     .append(";8;Voll krasser Output;long");
-            LogEntry e{43, line};
+            const LogEntry e{43, line};
             EXPECT_EQ(size_t{43}, e.lineno());
             EXPECT_EQ(tp(1551424315), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -217,7 +213,7 @@ TEST(LogEntry, HostAlert) {
                             .append(";")
                             .append(state_type)
                             .append(";1234;Komisch...;Lalalang");
-            LogEntry e{123456, line};
+            const LogEntry e{123456, line};
             EXPECT_EQ(size_t{123456}, e.lineno());
             EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -248,7 +244,7 @@ TEST(LogEntry, HostDowntimeAlert) {
     for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] HOST DOWNTIME ALERT: huey;" + state_type +
                     ";Komisch...";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -274,7 +270,7 @@ TEST(LogEntry, HostAcknowledgeAlert) {
     for (const auto &state_type : acknowledge_state_types) {
         auto line = "[1551424323] HOST ACKNOWLEDGE ALERT: huey;" + state_type +
                     ";King Kong;foo bar";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -300,7 +296,7 @@ TEST(LogEntry, HostFlappingAlert) {
     for (const auto &state_type : downtime_flapping_state_types) {
         auto line =
             "[1551424323] HOST FLAPPING ALERT: huey;" + state_type + ";foo bar";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -331,7 +327,7 @@ TEST(LogEntry, InitialServiceState) {
                             .append(";")
                             .append(state_type)
                             .append(";1;Langweiliger Output;long");
-            LogEntry e{1234567, line};
+            const LogEntry e{1234567, line};
             EXPECT_EQ(size_t{1234567}, e.lineno());
             EXPECT_EQ(tp(1551424325), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -367,7 +363,7 @@ TEST(LogEntry, CurrentServiceState) {
                             .append(";")
                             .append(state_type)
                             .append(";2;Irgendein Output;lang");
-            LogEntry e{1234567, line};
+            const LogEntry e{1234567, line};
             EXPECT_EQ(size_t{1234567}, e.lineno());
             EXPECT_EQ(tp(1551424335), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -403,7 +399,7 @@ TEST(LogEntry, ServiceAlert) {
                     .append(";")
                     .append(state_type)
                     .append(+";1234;Komisch...;lang");
-            LogEntry e{123456, line};
+            const LogEntry e{123456, line};
             EXPECT_EQ(size_t{123456}, e.lineno());
             EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -434,7 +430,7 @@ TEST(LogEntry, ServiceDowntimeAlert) {
     for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] SERVICE DOWNTIME ALERT: huey;hi, ho!;" +
                     state_type + ";Komisch...";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -460,7 +456,7 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
     for (const auto &state_type : acknowledge_state_types) {
         auto line = "[1551424323] SERVICE ACKNOWLEDGE ALERT: huey;hi!;" +
                     state_type + ";King Kong;foo bar";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -486,7 +482,7 @@ TEST(LogEntry, ServiceFlappingAlert) {
     for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] SERVICE FLAPPING ALERT: huey;hi!;" +
                     state_type + ";foo bar";
-        LogEntry e{123456, line};
+        const LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
@@ -510,7 +506,7 @@ TEST(LogEntry, ServiceFlappingAlert) {
 
 TEST(LogEntry, TimeperiodTransition) {
     auto line = "[1551424323] TIMEPERIOD TRANSITION: denominazione;-1;1"s;
-    LogEntry e{123456, line};
+    const LogEntry e{123456, line};
     EXPECT_EQ(size_t{123456}, e.lineno());
     EXPECT_EQ(tp(1551424323), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
@@ -537,7 +533,7 @@ TEST(LogEntry, HostNotification) {
         auto line = "[1551424305] HOST NOTIFICATION: King Kong;donald;"s +
                     state_name +
                     ";commando;viel output...;Tolkien;The Hobbit;lalala"s;
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -567,7 +563,7 @@ TEST(LogEntry, ServiceNotification) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;"s +
             state_name + ";commando;viel output...;Tolkien;The Hobbit;lalala"s;
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -597,7 +593,7 @@ TEST(LogEntry, HostNotificationResult) {
     for (const auto &[code_name, code, info] : exit_codes) {
         auto line = "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;" +
                     code_name + ";commando;viel output...;blah blubb";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -628,7 +624,7 @@ TEST(LogEntry, ServiceNotificationResult) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;" +
             code_name + ";commando;viel output...;blah blubb";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -659,7 +655,7 @@ TEST(LogEntry, HostNotificationProgress) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;" +
             code_name + ";commando;viel output...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -689,7 +685,7 @@ TEST(LogEntry, ServiceNotificationProgress) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;" +
             code_name + ";commando;viel output...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -715,7 +711,7 @@ TEST(LogEntry, ServiceNotificationProgress) {
 
 TEST(LogEntry, HostAlertHandlerStarted) {
     auto line = "[1551424305] HOST ALERT HANDLER STARTED: donald;commando"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
@@ -738,7 +734,7 @@ TEST(LogEntry, HostAlertHandlerStarted) {
 TEST(LogEntry, ServiceAlertHandlerStarted) {
     auto line =
         "[1551424305] SERVICE ALERT HANDLER STARTED: donald;duck;commando"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
@@ -765,7 +761,7 @@ TEST(LogEntry, HostAlertHandlerStopped) {
         auto line =
             "[1551424305] HOST ALERT HANDLER STOPPED: donald;commando;"s +
             code_name + ";es war einmal...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
@@ -795,7 +791,7 @@ TEST(LogEntry, ServiceAlertHandlerStopped) {
         auto line =
             "[1551424305] SERVICE ALERT HANDLER STOPPED: donald;duck;commando;"s +
             code_name + ";once upon a time...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
@@ -824,7 +820,7 @@ TEST(LogEntry, PassiveServiceCheck) {
         auto line = "[1551424305] PASSIVE SERVICE CHECK: donald;duck;" +
                     std::to_string(static_cast<int>(state)) +
                     ";Isch hab Ruecken!";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::passivecheck, e.log_class());
@@ -853,7 +849,7 @@ TEST(LogEntry, PassiveHostCheck) {
         auto line = "[1551424305] PASSIVE HOST CHECK: donald;" +
                     std::to_string(static_cast<int>(state)) +
                     ";Isch hab Ruecken!";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::passivecheck, e.log_class());
@@ -878,7 +874,7 @@ TEST(LogEntry, PassiveHostCheck) {
 
 TEST(LogEntry, ExternalCommand) {
     auto line = "[1551424305] EXTERNAL COMMAND: commando"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::ext_command, e.log_class());
@@ -900,7 +896,7 @@ TEST(LogEntry, ExternalCommand) {
 
 TEST(LogEntry, LogVersion) {
     auto line = "[1551424305] LOG VERSION: 2.0"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -922,7 +918,7 @@ TEST(LogEntry, LogVersion) {
 
 TEST(LogEntry, LogInitialStates) {
     auto line = "[1551424305] logging initial states"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -944,7 +940,7 @@ TEST(LogEntry, LogInitialStates) {
 
 TEST(LogEntry, CoreStarting1) {
     auto line = "[1551424305] starting..."s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -966,7 +962,7 @@ TEST(LogEntry, CoreStarting1) {
 
 TEST(LogEntry, CoreStarting2) {
     auto line = "[1551424305] active mode..."s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -988,7 +984,7 @@ TEST(LogEntry, CoreStarting2) {
 
 TEST(LogEntry, CoreStopping1) {
     auto line = "[1551424305] shutting down..."s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -1010,7 +1006,7 @@ TEST(LogEntry, CoreStopping1) {
 
 TEST(LogEntry, CoreStopping2) {
     auto line = "[1551424305] Bailing out"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -1032,7 +1028,7 @@ TEST(LogEntry, CoreStopping2) {
 
 TEST(LogEntry, CoreStopping3) {
     auto line = "[1551424305] standby mode..."s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
@@ -1054,18 +1050,18 @@ TEST(LogEntry, CoreStopping3) {
 
 TEST(LogEntry, ShortMessage) {
     auto line = "[oh no..."s;
-    EXPECT_THROW(LogEntry e(42, line), std::invalid_argument);
+    EXPECT_THROW(LogEntry(42, line), std::invalid_argument);
 }
 
 TEST(LogEntry, InvalidTimeStamp) {
     auto line = "[nonsense!!] this is total;nonsense"s;
     // NOLINTNEXTLINE(hicpp-avoid-goto)
-    EXPECT_THROW(LogEntry e(42, line), std::invalid_argument);
+    EXPECT_THROW(LogEntry(42, line), std::invalid_argument);
 }
 
 TEST(LogEntry, NoColon) {
     auto line = "[1551424305] this is total;nonsense"s;
-    LogEntry e{42, line};
+    const LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::info, e.log_class());
@@ -1093,7 +1089,7 @@ TEST(LogEntry, HostNotificationSwapped) {
         auto line =
             "[1551424305] HOST NOTIFICATION: King Kong;donald;check-mk-notify;"s +
             state_name + ";viel output...;Tolkien;The Hobbit;lalala"s;
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -1125,7 +1121,7 @@ TEST(LogEntry, ServiceNotificationSwapped) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;check-mk-notify;"s +
             state_name + ";viel output...;Tolkien;The Hobbit;lalala"s;
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -1156,7 +1152,7 @@ TEST(LogEntry, HostNotificationResultSwapped) {
         auto line =
             "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -1187,7 +1183,7 @@ TEST(LogEntry, ServiceNotificationResultSwapped) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -1218,7 +1214,7 @@ TEST(LogEntry, HostNotificationProgressSwapped) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
@@ -1249,7 +1245,7 @@ TEST(LogEntry, ServiceNotificationProgressSwapped) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...";
-        LogEntry e{42, line};
+        const LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
         EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());

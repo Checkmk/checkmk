@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,10 +10,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.valuespec import Dictionary, DictionaryEntry, Integer, ListOfStrings, TextInput, Tuple
 
 
-def __levels(key, title_upper, title_lower):
+def __levels(key: str, title_upper: str | None, title_lower: str | None) -> list[DictionaryEntry]:
     return [
         (
             key + "_levels_upper",
@@ -42,9 +42,27 @@ def __levels(key, title_upper, title_lower):
     ]
 
 
-def _parameter_valuespec_kube_node_count():
+def __control_plane_roles() -> list[DictionaryEntry]:
+    return [
+        (
+            "control_plane_roles",
+            ListOfStrings(
+                title=_("Specify roles of a control plane node"),
+                valuespec=TextInput(size=80),
+                default_value=["master", "control_plane"],
+                help=_(
+                    "If a node has any of these roles, then it is considered a control plane "
+                    "node by Checkmk. Otherwise, it is considered a worker node."
+                ),
+            ),
+        ),
+    ]
+
+
+def _parameter_valuespec_kube_node_count() -> Dictionary:
     return Dictionary(
-        elements=__levels(
+        elements=__control_plane_roles()
+        + __levels(
             "worker",
             _("Maximum number of ready worker nodes"),
             _("Minimum number of ready worker nodes"),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Searches a tree for binaries and libraries to strip and strips them.
@@ -140,17 +140,23 @@ def strip_static_library(file: Path) -> None:
     )
 
 
-# We can't strip stuff which is currently executing, otherwise we might get "Text file is busy"
 DONT_STRIP = {
-    "strip",
+    # We can't strip stuff which is currently executing, otherwise we might get "Text file is busy".
     f"python{sys.version_info.major}.{sys.version_info.minor}",
     f"libpython{sys.version_info.major}.{sys.version_info.minor}.so.1.0",
     f"libpython{sys.version_info.major}.so",
+    # To make our debugging life easier, don't strip our Livestatus library.
+    "liblivestatus.so*",
+    "strip",
+    # When the library libLLVM-${llvm_version}-rust-${rust_version}-${rust_channel}.so is stripped, rustc (and other
+    # binaries which link against this library) will segfault.
+    # https://github.com/rust-lang/rust/issues/112286
+    r"libLLVM-*-rust-*.so",
 }
 
 
 def strip(args: list[str], file: Path) -> None:
-    if file.name not in DONT_STRIP:
+    if all(not file.match(p) for p in DONT_STRIP):
         subprocess.run(["/usr/bin/strip"] + args + [str(file)], check=True)
 
 

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 class Section(NamedTuple):
-    latest_service_pack: Optional[str]
-    service_packs: List[str]
+    latest_service_pack: str | None
+    service_packs: list[str]
 
 
 def parse_aix_service_packs(string_table: StringTable) -> Section:
     latest_service_pack = None
-    service_packs: List[str] = []
+    service_packs: list[str] = []
     for line in string_table:
         if line[0].startswith("----") or line[0].startswith("Known"):
             continue
@@ -43,10 +43,9 @@ def inventory_aix_service_packs(section: Section) -> InventoryResult:
         inventory_attributes={"service_pack": section.latest_service_pack},
     )
 
-    path = ["software", "os", "service_packs"]
     for service_pack in section.service_packs:
         yield TableRow(
-            path=path,
+            path=["software", "os", "service_packs"],
             key_columns={"name": service_pack},
         )
 

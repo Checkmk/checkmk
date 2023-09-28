@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -27,7 +27,6 @@ from dateutil import parser as dateutil_parser
 
 from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
@@ -249,11 +248,11 @@ class ImplDatadogAPI:
         params: Mapping[str, str | int],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.get(
+        return requests.get(  # nosec B113ü
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
-            proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
+            proxies=self._proxy.to_requests_proxies(),
         )
 
     def post_request(
@@ -262,11 +261,11 @@ class ImplDatadogAPI:
         body: Mapping[str, Any],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.post(
+        return requests.post(  # nosec B113
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             json=body,
-            proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
+            proxies=self._proxy.to_requests_proxies(),
         )
 
 
@@ -360,7 +359,7 @@ class Event(pydantic.BaseModel, frozen=True):
     text: str
     date_happened: int
     # None should not happen according to docs, but reality says something different ...
-    host: str | None
+    host: str | None = None
     title: str
     source: str
 
@@ -374,7 +373,7 @@ class EventsQuerier:
     ) -> None:
         self.datadog_api: Final = datadog_api
         self.id_store: Final = IDStore[int](
-            Path(paths.tmp_dir) / "agents" / "agent_datadog" / (host_name + ".json")
+            paths.tmp_dir / "agents" / "agent_datadog" / f"{host_name}.json"
         )
         self.max_age: Final = max_age
 
@@ -405,7 +404,7 @@ class EventsQuerier:
                 current_page,
                 tags,
             ):
-                yield from (Event.parse_obj(raw_event) for raw_event in raw_events_in_page)
+                yield from (Event.model_validate(raw_event) for raw_event in raw_events_in_page)
                 current_page += 1
                 continue
 
@@ -498,7 +497,7 @@ class LogAttributes(pydantic.BaseModel, frozen=True):
     # It was observed to be missing when setting log_query to the empty string.
     attributes: Mapping[str, Any] = pydantic.Field(default={})
     host: str
-    message: str
+    message: str | None = None
     service: str
     status: str
     tags: Sequence[str]
@@ -522,7 +521,7 @@ class LogsQuerier:
     ) -> None:
         self.datadog_api: Final = datadog_api
         self.id_store: Final = IDStore[str](
-            Path(paths.tmp_dir) / "agents" / "agent_datadog" / f"{hostname}_logs.json"
+            paths.tmp_dir / "agents" / "agent_datadog" / f"{hostname}_logs.json"
         )
         self.max_age: Final = max_age
         self.indexes: Final = indexes
@@ -555,13 +554,16 @@ class LogsQuerier:
                 self.indexes,
                 cursor,
             )
-            yield from (Log.parse_obj(raw_log) for raw_log in response["data"])
+            yield from (Log.model_validate(raw_log) for raw_log in response["data"])
             if (meta := response.get("meta")) is None:
+                break
+
+            if "page" not in meta:
                 break
             cursor = meta["page"].get("after")
 
     def _query_time_range(self) -> tuple[datetime.datetime, datetime.datetime]:
-        now = datetime.datetime.fromtimestamp(time.time())
+        now = datetime.datetime.now()
         return now - datetime.timedelta(seconds=self.max_age), now
 
     def _query_logs_page_in_time_window(
@@ -574,8 +576,8 @@ class LogsQuerier:
     ) -> Mapping[str, Any]:
         body: dict[str, Any] = {
             "filter": {
-                "from": start.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
-                "to": end.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "from": self._datetime_to_api_compliant_str(start),
+                "to": self._datetime_to_api_compliant_str(end),
                 "query": query,
                 "indexes": indexes,
             },
@@ -596,6 +598,10 @@ class LogsQuerier:
             resp = self.datadog_api.post_request("logs/events/search", body, version="v2")
         resp.raise_for_status()
         return resp.json()
+
+    @staticmethod
+    def _datetime_to_api_compliant_str(d: datetime.datetime) -> str:
+        return d.astimezone().isoformat(timespec="seconds")
 
 
 _SEVERITY_MAPPER: Mapping[str, int] = {

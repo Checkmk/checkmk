@@ -1,0 +1,26 @@
+Title: Show explanation message instead of KeyError: 'extensions'
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1682585492
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, if a folder is moved or deleted, which is in use by a DCD connection, the following
+error was shown.
+C+:
+09:37:31 ERROR An exception occured
+Traceback (most recent call last):
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/connectors/piggyback.py", line 260, in _execute_phase2
+    created_host_names = self._create_new_hosts(hosts_to_create)
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/connectors/piggyback.py", line 479, in _create_new_hosts
+    created_host_names = self._create_piggyback_hosts(hosts_to_create)
+  File "/omd/sites/heute/lib/python3/cmk/cee/dcd/connectors/piggyback.py", line 504, in _create_piggyback_hosts
+    assert_never(result)
+  File "/omd/sites/heute/lib/python3.11/typing.py", line 2462, in assert_never
+    raise AssertionError(f"Expected code to be unreachable, but got: {value}")
+AssertionError: Expected code to be unreachable, but got: None
+C-:
+With this Werk, a debugging message will be shown instead.

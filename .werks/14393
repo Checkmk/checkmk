@@ -1,0 +1,26 @@
+Title: Warn about User IDs that become incompatible in 2.2.0
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1672763052
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Beginning with Checkmk version 2.2.0, the use of certain special characters in user IDs will no longer be allowed.
+As a result, some user IDs that were previously valid in Checkmk version 2.1.0 will become invalid in version 2.2.0.
+
+Local users created in the user management UI (Setup > Users) will remain valid, as restrictions had already been enforced here.
+Hence, only users from external connections such as LDAP will be affected.
+
+With this Werk you will be warned about users that will become incompatible in the future.
+When you run the <tt>omd update</tt> command, it will display a warning message including the list of affected users.
+Moreover, the user management page (Setup > Users) in WATO it will also display a warning message if incompatible user IDs are found.
+
+To be compatible with Checkmk version 2.2.0 please ensure that all user IDs adhere to the following restrictions:
+The first character of a user ID must be a digit, a letter, an underscore (<tt>_</tt>), or a dollar sign (<tt>$</tt>).
+The rest of the user ID may additionally contain dash (<tt>-</tt>), at (<tt>@</tt>), and dot (<tt>.</tt>).
+
+If you require certain characters that would no longer be allowed and changing user IDs is not feasible in your system, please contact Checkmk support for assistance.

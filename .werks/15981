@@ -1,0 +1,12 @@
+Title: dcd: create, retrieve and delete dynamic host configurations
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1690532534
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this werk, the REST API supports the creation of piggyback dynamic host configurations as well as the retrieval and deletion of dynamic host configurations.
+

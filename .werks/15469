@@ -1,0 +1,17 @@
+Title: aws_elb: Fix crash in AWS/ELB Statistics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683122876
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+AWS/ELB Statistics check crashed during checking with error:
+C+:
+TypeError (invalid character(s) in metric name: ' ')
+C-:
+
+

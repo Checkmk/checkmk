@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.azure import (
-    check_azure_metrics,
+    create_check_metrics_function,
     iter_resource_attributes,
     MetricData,
     parse_azure_datetime,
@@ -21,15 +21,15 @@ from .utils.azure import (
 
 
 class PeeringAddresses(BaseModel):
-    defaultBgpIpAddresses: Sequence[str]
-    customBgpIpAddresses: Sequence[str]
-    tunnelIpAddresses: Sequence[str]
+    defaultBgpIpAddresses: Sequence[str] = []
+    customBgpIpAddresses: Sequence[str] = []
+    tunnelIpAddresses: Sequence[str] = []
 
 
 class BgpSettings(BaseModel):
     asn: int
     peerWeight: int
-    bgpPeeringAddresses: Sequence[PeeringAddresses]
+    bgpPeeringAddresses: Sequence[PeeringAddresses] = []
 
 
 class RemoteVnetPeering(BaseModel):
@@ -106,7 +106,7 @@ def check_azure_virtual_network_gateway(
     if (vn_gateway := section.get(item)) is None:
         return
 
-    yield from check_azure_metrics(
+    yield from create_check_metrics_function(
         [
             MetricData(
                 "maximum_P2SConnectionCount",

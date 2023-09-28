@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The rule export page of the Setup is needed to help users working with the new
 rule related REST API endpoints.

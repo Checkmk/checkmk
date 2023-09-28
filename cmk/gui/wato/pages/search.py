@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for searching hosts"""
@@ -12,16 +12,20 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import configure_attributes, mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+
+from ._host_attributes import configure_attributes
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeSearch)
+
+
 class ModeSearch(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -37,7 +41,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = Folder.current()
+        self._folder = folder_from_request()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -92,6 +96,17 @@ class ModeSearch(WatoMode):
         return list(search_vars.items())
 
     def page(self) -> None:
+        html.help(
+            _(
+                "For the Hostname field, a partial word search (infix search) is used "
+                "— the entered text is searched, at any position, in the host name. "
+                "Furthermore, you can limit the search using other host attributes. Please note "
+                "that you can search for the attributes configured in the hosts and folders and "
+                "not the final settings applied to the monitoring once it's activated. For "
+                "in the labels field you are only searching for the explicitly configured labels "
+                "and not the effective labels of a host."
+            )
+        )
         # Show search form
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()

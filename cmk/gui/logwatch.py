@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,9 +11,9 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -22,7 +22,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -38,11 +38,12 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
@@ -57,7 +58,10 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("logwatch")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("logwatch", page_show)
+
+
 def page_show():
     site = request.var("site")  # optional site hint
     host_name = request.var("host", "")
@@ -263,7 +267,6 @@ def _host_log_list_page_menu(
 # Displays a table of logfiles
 def list_logs(site, host_name, logfile_names):
     with table_element(empty_text=_("No logs found for this host.")) as table:
-
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)
@@ -371,7 +374,6 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
 def _show_file_page_menu(
     breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName, int_filename: str
 ) -> PageMenu:
-
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -445,7 +447,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
             title=_("Context"),
             entries=[
                 PageMenuEntry(
-                    title=_("Show context") if context_hidden else _("Hide context"),
+                    title=_("Show context"),
                     icon_name="toggle_off" if context_hidden else "toggle_on",
                     item=make_simple_link(
                         makeactionuri(
@@ -500,13 +502,11 @@ def _page_menu_entry_acknowledge(
         title=label,
         icon_name="delete",
         item=make_simple_link(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=makeactionuri(request, transactions, urivars),
-                message=_(
-                    "Do you really want to acknowledge %s "
-                    "by <b>deleting</b> all stored messages?"
-                )
-                % ack_msg,
+                title=_("Clear logs by deleting all stored messages"),
+                message=_("This affects %s") % ack_msg,
+                confirm_button=_("Clear & Delete"),
             )
         ),
         is_shortcut=True,
@@ -564,13 +564,14 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
             return
 
     html.show_message(
-        "<b>%s</b><p>%s</p>"
-        % (_("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg)
+        "<b>{}</b><p>{}</p>".format(
+            _("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg
+        )
     )
     html.footer()
 
 
-def _get_ack_msg(host_name, file_name) -> str:  # type:ignore[no-untyped-def]
+def _get_ack_msg(host_name, file_name) -> str:  # type: ignore[no-untyped-def]
     if not host_name and not file_name:  # all logs on all hosts
         return _("all logfiles on all hosts")
 
@@ -717,10 +718,19 @@ def get_last_chunk(log_chunks):
 #   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Definition of various constants - also used by WATO                  |
+#   | Definition of various constants - also used by Setup                  |
 #   '----------------------------------------------------------------------'
 
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,()="
+
+
+def logwatch_level_name(level):
+    return {
+        "O": "OK",
+        "W": "WARN",
+        "C": "CRIT",
+        "I": "IGNORE",
+    }[level]
 
 
 def level_name(level):

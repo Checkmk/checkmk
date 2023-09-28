@@ -1,53 +1,46 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
-import shutil
 import subprocess
-import tarfile
-import time
-from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
-from io import BytesIO
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
-from typing import Final, TypedDict
+from stat import filemode
+from typing import Final
+
+from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.tty as tty
-import cmk.utils.version as cmk_version
-from cmk.utils.i18n import _
-from cmk.utils.log import VERBOSE
+from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from ._installed import Installer as Installer
+from ._mkp import create_mkp as create_mkp
+from ._mkp import extract_manifest as extract_manifest
+from ._mkp import extract_manifest_optionally as extract_manifest_optionally
+from ._mkp import extract_manifests as extract_manifests
+from ._mkp import extract_mkp as extract_mkp
+from ._mkp import Manifest as Manifest
+from ._mkp import manifest_template as manifest_template
+from ._mkp import PackagePart as PackagePart
+from ._mkp import read_manifest_optionally as read_manifest_optionally
+from ._parts import CONFIG_PARTS as CONFIG_PARTS
+from ._parts import PackageOperationCallbacks as PackageOperationCallbacks
+from ._parts import PathConfig as PathConfig
+from ._parts import permissions as permissions
+from ._parts import ui_title as ui_title
+from ._reporter import all_local_files as all_local_files
+from ._reporter import all_rule_pack_files as all_rule_pack_files
+from ._type_defs import PackageError as PackageError
+from ._type_defs import PackageID as PackageID
+from ._type_defs import PackageName as PackageName
+from ._type_defs import PackageVersion as PackageVersion
 
-from ._installed import (
-    add_installed_manifest,
-    get_installed_manifest,
-    get_installed_manifests,
-    get_packaged_files,
-    is_installed,
-    PACKAGES_DIR,
-    remove_installed_manifest,
-)
-from ._manifest import (
-    extract_manifest,
-    extract_manifest_optionally,
-    Manifest,
-    manifest_template,
-    read_manifest_optionally,
-)
-from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
-from ._reporter import all_local_files, all_rule_pack_files
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
-
-g_logger = logging.getLogger("cmk.utils.packaging")
+_logger = logging.getLogger(__name__)
 
 
 def _get_permissions(part: PackagePart, rel_path: Path) -> int:
@@ -57,18 +50,7 @@ def _get_permissions(part: PackagePart, rel_path: Path) -> int:
     # For now I prefer to stay compatible.
     if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
         return 0o755
-    return part.permission
-
-
-class PackagePartInfoElement(TypedDict):
-    # Whatch out! This is used in diagnostics (only) and must remain JSON dumpable!
-    title: str
-    permissions: Sequence[int]
-    path: str
-    files: Sequence[str]
-
-
-PackagePartInfo = dict[PartName, PackagePartInfoElement]
+    return permissions(part)
 
 
 def format_file_name(package_id: PackageID) -> str:
@@ -85,111 +67,39 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
-def release(pacname: PackageName, logger: logging.Logger) -> None:
-    if (manifest := get_installed_manifest(pacname)) is None:
-        raise PackageException(f"Package {pacname} not installed or corrupt.")
+def release(
+    installer: Installer,
+    pacname: PackageName,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+) -> None:
+    if (manifest := installer.get_installed_manifest(pacname)) is None:
+        raise PackageError(f"Package {pacname} not installed or corrupt.")
 
-    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part, [])):
-            continue
+    _logger.info("Releasing files of package %s into freedom...", pacname)
+    for part, files in manifest.files.items():
+        _logger.info("  Part '%s':", part.ident)
+        for f in files:
+            _logger.info("    %s", f)
 
-        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-        for f in filenames:
-            logger.log(VERBOSE, "    %s", f)
-        if part is PackagePart.EC_RULE_PACKS:
-            ec.release_packaged_rule_packs([str(f) for f in filenames])
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].release(manifest.files[part])
 
-    remove_installed_manifest(pacname)
-
-
-def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
-    info = tarfile.TarInfo()
-    info.mtime = int(time.time())
-    info.uid = 0
-    info.gid = 0
-    info.size = size
-    info.mode = 0o644
-    info.type = tarfile.REGTYPE
-    info.name = filename
-    return info
+    installer.remove_installed_manifest(pacname)
 
 
-def create_mkp_object(manifest: Manifest) -> bytes:
+def _uninstall(
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    manifest: Manifest,
+) -> None:
+    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+        raise PackageError(", ".join(err))
 
-    manifest = Manifest(
-        title=manifest.title,
-        name=manifest.name,
-        description=manifest.description,
-        version=manifest.version,
-        version_packaged=cmk_version.__version__,
-        version_min_required=manifest.version_min_required,
-        version_usable_until=manifest.version_usable_until,
-        author=manifest.author,
-        download_url=manifest.download_url,
-        files=manifest.files,
-    )
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].uninstall(manifest.files[part])
 
-    buffer = BytesIO()
-    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
-
-        def add_file(filename: str, data: bytes) -> None:
-            info = _create_tar_info(filename, len(data))
-            tar.addfile(info, BytesIO(data))
-
-        # add the regular info file (Python format)
-        add_file("info", manifest.file_content().encode())
-
-        # add the info file a second time (JSON format) for external tools
-        add_file("info.json", manifest.json_file_content().encode())
-
-        # Now pack the actual files into sub tars
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part, [])):
-                continue
-
-            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-            for f in filenames:
-                g_logger.log(VERBOSE, "    %s", f)
-            subdata = subprocess.check_output(
-                [
-                    "tar",
-                    "cf",
-                    "-",
-                    "--dereference",
-                    "--force-local",
-                    "-C",
-                    str(part.path),
-                    *(str(f) for f in filenames),
-                ]
-            )
-            add_file(part.ident + ".tar", subdata)
-
-    return buffer.getvalue()
-
-
-def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part, [])):
-            continue
-
-        g_logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
-        if part is PackagePart.EC_RULE_PACKS:
-            _remove_packaged_rule_packs(filenames)
-            continue
-        for fn in filenames:
-            g_logger.log(VERBOSE, "    %s", fn)
-            try:
-                (part.path / fn).unlink(missing_ok=True)
-            except Exception as exc:
-                raise PackageException(
-                    f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
-                ) from exc
-
-    remove_installed_manifest(manifest.name)
-
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
+    installer.remove_installed_manifest(manifest.name)
 
 
 class PackageStore:
@@ -198,20 +108,20 @@ class PackageStore:
     This should become the single source of truth regarding package contents.
     """
 
-    def __init__(self) -> None:
-        self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
-        self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
+    def __init__(self, *, shipped_dir: Path, local_dir: Path, enabled_dir: Path) -> None:
+        self.shipped_packages: Final = shipped_dir
+        self.local_packages: Final = local_dir
+        self.enabled_packages: Final = enabled_dir
 
-    def store(self, file_content: bytes) -> Manifest:
-
+    def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
         package = extract_manifest(file_content)
 
         base_name = format_file_name(package.id)
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
-        if local_package_path.exists() or shipped_package_path.exists():
-            raise PackageException("Package '%s' already exists on the site!" % base_name)
+        if shipped_package_path.exists() or (not overwrite and local_package_path.exists()):
+            raise PackageError(f"Package {package.name} {package.version} exists on the site!")
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_bytes_to_file(str(local_package_path), file_content)
@@ -234,343 +144,335 @@ class PackageStore:
         except FileNotFoundError:
             return []
 
-    def get_existing_package_path(self, package_id: PackageID) -> Path:
+    def read_bytes(self, package_id: PackageID) -> bytes:
+        return self._get_existing_package_path(package_id).read_bytes()
+
+    def _get_existing_package_path(self, package_id: PackageID) -> Path:
         """Return the path of an existing package
 
         (not to confuse with the path of a package file that is to be created!)
         """
-        # TODO: can we drop this, and just hand out the bytes or create the "enabled link"?
         base_name = format_file_name(package_id)
+
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
-        if not (shipped_package_path := self.shipped_packages / base_name).exists():
-            # yes, this is a race condition. But we want to make the intention clear.
-            raise PackageException(f"no such package: {package_id.name} {package_id.version}")
-        return shipped_package_path
+
+        # if we're on the remote site, we have to consider this one:
+        if (enabled_package_path := self.enabled_packages / base_name).exists():
+            return enabled_package_path
+
+        if (shipped_package_path := self.shipped_packages / base_name).exists():
+            return shipped_package_path
+
+        raise PackageError(f"No such package: {package_id.name} {package_id.version}")
+
+    def _enabled_path(self, package_id: PackageID) -> Path:
+        return self.enabled_packages / format_file_name(package_id)
+
+    def mark_as_enabled(self, package_id: PackageID) -> None:
+        """Mark the package as one of the enabled ones
+
+        Copying the packages into the local hierarchy is the easiest way to get them to
+        be synchronized with the remote sites.
+        """
+        package_path = self._get_existing_package_path(package_id)
+        destination = self._enabled_path(package_id)
+        if package_path == destination:
+            return
+
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        # We create a copy of the file in the local directory.
+        # That way it'll be synced to the remote sites.
+        # This creates redundant data on the system, but what are our options?
+        #  a) extend the syncing mechanism: complex and makes the code more entangled
+        #  b) move the file: also requires adjustments in a lot of places
+        #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
+        #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
+        destination.write_bytes(package_path.read_bytes())
+
+    def remove_enabled_mark(self, package_id: PackageID) -> None:
+        # should never be missing, but don't crash in messed up state
+        self._enabled_path(package_id).unlink(missing_ok=True)
+
+    def get_enabled_manifests(self) -> Mapping[PackageID, Manifest]:
+        try:
+            enabled_paths = list(self.enabled_packages.iterdir())
+        except FileNotFoundError:
+            return {}
+        return {m.id: m for m in extract_manifests(enabled_paths)}
 
 
-def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
-    package_path, manifest = _find_path_and_package_info(package_name, package_version)
-
-    if (installed := get_installed_manifest(package_name)) is not None:
-        if package_version is None or installed.version == package_version:
-            uninstall(manifest)
-
-    package_path.unlink()
-
-
-def _find_path_and_package_info(
-    package_name: PackageName, package_version: PackageVersion | None
-) -> tuple[Path, Manifest]:
-
-    # not sure if we need this, but better safe than sorry.
-    def filename_matches(manifest: Manifest, name: str) -> bool:
-        return format_file_name(manifest.id) == name
-
-    def package_matches(
-        manifest: Manifest, package_name: PackageName, package_version: PackageVersion | None
-    ) -> bool:
-        return manifest.name == package_name and (
-            package_version is None or manifest.version == package_version
-        )
-
-    matching_packages = [
-        (package_path, manifest)
-        for package_path in _get_enabled_package_paths()
-        if (manifest := extract_manifest_optionally(package_path, g_logger)) is not None
-        and (
-            package_matches(manifest, package_name, package_version)
-            or filename_matches(manifest, package_name)
-        )
-    ]
-
-    package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
-    if not matching_packages:
-        raise PackageException(f"Package {package_str} is not enabled")
-    if len(matching_packages) > 1:
-        raise PackageException(f"Package not unique: {package_str}")
-
-    return matching_packages[0]
+def disable(
+    installer: Installer,
+    package_store: PackageStore,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    package_id: PackageID,
+) -> Manifest | None:
+    if (
+        installed := installer.get_installed_manifest(package_id.name)
+    ) is not None and installed.version == package_id.version:
+        _uninstall(installer, path_config, callbacks, installed)
+    package_store.remove_enabled_mark(package_id)
+    return installed
 
 
-def create(manifest: Manifest) -> None:
-    if is_installed(manifest.name):
-        raise PackageException("Packet already exists.")
+def create(
+    installer: Installer, manifest: Manifest, path_config: PathConfig, *, version_packaged: str
+) -> None:
+    if installer.is_installed(manifest.name):
+        raise PackageError("Package already exists.")
 
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
-    manifest.raise_for_nonexisting_files()
-    _validate_package_files(manifest)
-    add_installed_manifest(manifest)
-    _create_enabled_mkp_from_installed_package(package_store, manifest)
+    _raise_for_nonexisting_files(manifest, path_config)
+    _validate_package_files(manifest, installer)
+    installer.add_installed_manifest(manifest)
+    _create_enabled_mkp_from_installed_package(
+        package_store, manifest, path_config, version_packaged=version_packaged
+    )
 
 
-def edit(pacname: PackageName, new_manifest: Manifest) -> None:
-    if not is_installed(pacname):
-        raise PackageException("No such package")
+def edit(
+    installer: Installer,
+    pacname: PackageName,
+    new_manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
+) -> None:
+    if not installer.is_installed(pacname):
+        raise PackageError(f"No such package installed: {pacname}")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:
-        if is_installed(new_manifest.name):
-            raise PackageException(
-                "Cannot rename package: a package with that name already exists."
-            )
-    package_store = PackageStore()
+        if installer.is_installed(new_manifest.name):
+            raise PackageError("Cannot rename package: a package with that name already exists.")
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
-    new_manifest.raise_for_nonexisting_files()
-    _validate_package_files(new_manifest)
+    _raise_for_nonexisting_files(new_manifest, path_config)
+    _validate_package_files(new_manifest, installer)
 
-    _create_enabled_mkp_from_installed_package(package_store, new_manifest)
-    remove_installed_manifest(pacname)
-    add_installed_manifest(new_manifest)
+    _create_enabled_mkp_from_installed_package(
+        package_store, new_manifest, path_config, version_packaged=version_packaged
+    )
+    installer.remove_installed_manifest(pacname)
+    installer.add_installed_manifest(new_manifest)
+
+
+def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) -> None:
+    for part, rel_path in manifest.files.items():
+        for rp in rel_path:
+            if not (fp := (path_config.get_path(part) / rp).exists()):
+                raise PackageError(f"File {fp} does not exist.")
 
 
 def _create_enabled_mkp_from_installed_package(
-    package_store: PackageStore, manifest: Manifest
+    package_store: PackageStore,
+    manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
 ) -> None:
     """Creates an MKP, saves it on disk and enables it
 
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(manifest.id)
-    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
-
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    mkp = create_mkp_object(manifest)
-    file_path.write_bytes(mkp)
-
-    mark_as_enabled(package_store, manifest.id)
-
-
-def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
-    """Mark the package as one of the enabled ones
-
-    Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
-    be synchronized with the remote sites.
-    """
-    package_path = package_store.get_existing_package_path(package_id)
-    destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-
-    # linking fails if the destination exists
-    destination.unlink(missing_ok=True)
-
-    try:
-        os.link(str(package_path), str(destination))
-    except OSError:
-        # if the source belongs to root (as the shipped packages do) we may not be allowed
-        # to hardlink them. We fall back to copying.
-        shutil.copy(str(package_path), str(destination))
-
-
-def remove_enabled_mark(manifest: Manifest) -> None:
-    base_name = format_file_name(manifest.id)
-    (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
-        missing_ok=True
-    )  # should never be missing, but don't crash in messed up state
+    mkp = create_mkp(manifest, path_config.get_path, version_packaged)
+    package_store.store(mkp, overwrite=True)
+    package_store.mark_as_enabled(manifest.id)
 
 
 def install(
+    installer: Installer,
     package_store: PackageStore,
     package_id: PackageID,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
     allow_outdated: bool = True,
-    post_package_change_actions: bool = True,
 ) -> Manifest:
     try:
         return _install(
-            package_store.get_existing_package_path(package_id).read_bytes(),
+            installer,
+            package_store,
+            package_store.read_bytes(package_id),
+            path_config,
+            callbacks,
+            site_version=site_version,
             allow_outdated=allow_outdated,
-            post_package_change_actions=post_package_change_actions,
         )
     finally:
         # it is enabled, even if installing failed
-        mark_as_enabled(package_store, package_id)
+        package_store.mark_as_enabled(package_id)
 
 
-def _install(  # pylint: disable=too-many-branches
+def _install(
+    installer: Installer,
+    package_store: PackageStore,
     mkp: bytes,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
     # Reconsider!
-    *,
     allow_outdated: bool,
-    post_package_change_actions: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
-    if old_manifest := get_installed_manifest(manifest.name):
-        g_logger.log(
-            VERBOSE,
-            "Updating %s from version %s to %s.",
+    if old_manifest := installer.get_installed_manifest(manifest.name):
+        _logger.info(
+            "[%s %s]: Updating from %s",
             manifest.name,
-            old_manifest.version,
             manifest.version,
+            old_manifest.version,
         )
     else:
-        g_logger.log(VERBOSE, "Installing %s version %s.", manifest.name, manifest.version)
+        _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
-    _raise_for_installability(manifest, old_manifest, cmk_version.__version__, allow_outdated)
+    _raise_for_installability(
+        installer, path_config, manifest, old_manifest, site_version, allow_outdated
+    )
 
-    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
-        # Now install files, but only unpack files explicitely listed
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part, [])):
-                continue
+    extract_mkp(manifest, mkp, path_config.get_path)
 
-            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-            for fn in filenames:
-                g_logger.log(VERBOSE, "    %s", fn)
+    _fix_files_permissions(manifest, path_config)
 
-            # make sure target directory exists
-            if not part.path.exists():
-                g_logger.log(VERBOSE, "    Creating directory %s", part.path)
-                part.path.mkdir(parents=True, exist_ok=True)
-
-            tarsource = tar.extractfile(part.ident + ".tar")
-            if tarsource is None:
-                raise PackageException("Failed to open %s.tar" % part.ident)
-
-            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-            # been installed for cache invalidation.
-            with subprocess.Popen(
-                ["tar", "xf", "-", "--touch", "-C", part.path, *(str(f) for f in filenames)],
-                stdin=subprocess.PIPE,
-                shell=False,
-                close_fds=True,
-            ) as tardest:
-                if tardest.stdin is None:
-                    raise PackageException("Failed to open stdin")
-
-                while True:
-                    data = tarsource.read(4096)
-                    if not data:
-                        break
-                    tardest.stdin.write(data)
-
-            # Fix permissions of extracted files
-            for filename in filenames:
-                path = part.path / filename
-                desired_perm = _get_permissions(part, filename)
-                has_perm = path.stat().st_mode & 0o7777
-                if has_perm != desired_perm:
-                    g_logger.log(
-                        VERBOSE,
-                        "    Fixing permissions of %s: %04o -> %04o",
-                        path,
-                        has_perm,
-                        desired_perm,
-                    )
-                    path.chmod(desired_perm)
-
-            if part is PackagePart.EC_RULE_PACKS:
-                ec.add_rule_pack_proxies((str(f) for f in filenames))
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
+        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+            _logger.error(err)
+
+        for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
-            old_files = set(old_manifest.files.get(part, []))
-            remove_files = old_files - new_files
-            for fn in remove_files:
-                path = part.path / fn
-                g_logger.log(VERBOSE, "Removing outdated file %s.", path)
-                try:
-                    path.unlink(missing_ok=True)
-                except OSError as e:
-                    g_logger.error("Error removing %s: %s", path, e)
+            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
-            if part is PackagePart.EC_RULE_PACKS:
-                _remove_packaged_rule_packs(list(remove_files), delete_export=False)
-
-        remove_enabled_mark(old_manifest)
+        package_store.remove_enabled_mark(old_manifest.id)
 
     # Last but not least install package file
-    add_installed_manifest(manifest)
-
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
+    installer.add_installed_manifest(manifest)
 
     return manifest
 
 
+def _remove_files(
+    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+) -> Iterator[str]:
+    for part, files in manifest.files.items():
+        _logger.debug("  Part '%s':", part.ident)
+        remove_files = set(files) - set(keep_files.get(part, []))
+        for fn in remove_files:
+            path = path_config.get_path(part) / fn
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as e:
+                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+            else:
+                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
+
+
 def _raise_for_installability(
+    installer: Installer,
+    path_config: PathConfig,
     package: Manifest,
     old_package: Manifest | None,
     site_version: str,
     allow_outdated: bool,
 ) -> None:
-    """Raise a `PackageException` if we should not install this package.
-
-    Note: this currently ignores the packages "max version".
-    """
+    """Raise a `PackageException` if we should not install this package"""
     _raise_for_too_old_cmk_version(package.version_min_required, site_version)
     if not allow_outdated:
         _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
-    _raise_for_conflicts(package, old_package)
+    _raise_for_conflicts(package, old_package, installer, path_config)
 
 
 def _raise_for_conflicts(
     package: Manifest,
     old_package: Manifest | None,
+    installer: Installer,
+    path_config: PathConfig,
 ) -> None:
-    for file_path, type_of_collision in _conflicting_files(package, old_package):
-        raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
+    for file_path, type_of_collision in _conflicting_files(
+        package, old_package, installer, path_config
+    ):
+        raise PackageError(f"File conflict: {file_path} ({type_of_collision})")
 
 
 def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
+    installer: Installer,
+    path_config: PathConfig,
 ) -> Iterable[tuple[Path, str]]:
-    packaged_files = get_packaged_files()
+    packaged_files = installer.get_packaged_files()
     # Before installing check for conflicts
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        packaged = packaged_files.get(part, ())
+    for part, files in package.files.items():
+        packaged = packaged_files.get(part, {})
 
         old_files = set(old_package.files.get(part, [])) if old_package else set()
 
-        for fn in package.files.get(part, []):
+        for fn in files:
             if fn in old_files:
                 continue
-            path = part.path / fn
-            if fn in packaged:
-                yield path, "part of another package"
+            path = path_config.get_path(part) / fn
+            if (collision := packaged.get(fn)) is not None:
+                yield path, f"already part of {collision.name} {collision.version}"
             elif path.exists():
                 yield path, "already existing"
 
 
-def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool = True) -> None:
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    if not file_names:
-        return
-
-    rule_packs = list(ec.load_rule_packs())
-    rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [fn.stem for fn in file_names]
-
-    for id_ in affected_ids:
-        index = rule_pack_ids.index(id_)
-        del rule_packs[index]
-        if delete_export:
-            ec.remove_exported_rule_pack(id_)
-        rule_pack_ids.remove(id_)
-
-    ec.save_rule_packs(rule_packs)
+def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
+    for part, filenames in manifest.files.items():
+        for filename in filenames:
+            path = path_config.get_path(part) / filename
+            desired_perm = _get_permissions(part, filename)
+            has_perm = path.stat().st_mode & 0o7777
+            if has_perm != desired_perm:
+                _logger.debug(
+                    "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
+                )
+                path.chmod(desired_perm)
 
 
-def _validate_package_files(manifest: Manifest) -> None:
+def _validate_package_files(manifest: Manifest, installer: Installer) -> None:
     """Packaged files must not already belong to another package"""
-    for other_manifest in get_installed_manifests():
+    for other_manifest in installer.get_installed_manifests():
         if manifest.name == other_manifest.name:
             continue
-        manifest.raise_for_collision(other_manifest)
+        _raise_for_collision(manifest, other_manifest)
+
+
+def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
+    """Packaged files must not already belong to another package"""
+    if collisions := {
+        (part, fn)
+        for part in PackagePart
+        for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
+    }:
+        raise PackageError(
+            "Files already belong to %s %s: %s"
+            % (
+                other_manifest.name,
+                other_manifest.version,
+                ", ".join(f"{fn} ({part})" for part, fn in collisions),
+            )
+        )
 
 
 def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
@@ -588,7 +490,7 @@ def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
         return
 
     if too_old:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version {min_version} (this is {site_version})"
         )
 
@@ -612,158 +514,190 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
         return
 
     if too_new:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version below {until_version} (this is {site_version})"
         )
 
 
-def get_optional_manifests(
+class StoredManifests(BaseModel):
+    local: list[Manifest]
+    shipped: list[Manifest]
+
+
+def get_stored_manifests(
     package_store: PackageStore,
-) -> Mapping[PackageID, tuple[Manifest, bool]]:
-    local_packages = package_store.list_local_packages()
-    local_names = {p.name for p in local_packages}
-    shipped_packages = (
-        p for p in package_store.list_shipped_packages() if p.name not in local_names
+) -> StoredManifests:
+    return StoredManifests(
+        local=extract_manifests(package_store.list_local_packages()),
+        shipped=extract_manifests(package_store.list_shipped_packages()),
     )
-    return {
-        **{k: (v, True) for k, v in _get_manifests(local_packages).items()},
-        **{k: (v, False) for k, v in _get_manifests(shipped_packages).items()},
-    }
 
 
-def get_enabled_manifests(log: logging.Logger | None = None) -> Mapping[PackageID, Manifest]:
-    return _get_manifests(_get_enabled_package_paths(), log)
+class ClassifiedManifests(BaseModel):
+    stored: StoredManifests
+    installed: list[Manifest]
+    inactive: list[Manifest]
+
+    @property
+    def enabled(self) -> list[Manifest]:
+        return [*self.installed, *self.inactive]
 
 
-def _get_manifests(
-    paths: Iterable[Path], log: logging.Logger | None = None
-) -> Mapping[PackageID, Manifest]:
-    return {
-        manifest.id: manifest
-        for pkg_path in paths
-        if (manifest := extract_manifest_optionally(pkg_path, g_logger if log is None else log))
-        is not None
-    }
+def get_classified_manifests(
+    package_store: PackageStore, installer: Installer
+) -> ClassifiedManifests:
+    installed = installer.get_installed_manifests()
+    installed_ids = {m.id for m in installed}
+    return ClassifiedManifests(
+        stored=get_stored_manifests(package_store),
+        installed=list(installed),
+        inactive=[
+            m
+            for id_, m in package_store.get_enabled_manifests().items()
+            if id_ not in installed_ids
+        ],
+    )
 
 
-def _get_enabled_package_paths() -> list[Path]:
-    try:
-        return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
-    except FileNotFoundError:
-        return []
-
-
-def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
-    packaged = get_packaged_files()
-    present = all_local_files()
-    return {
-        **{
-            part: sorted(present[part] - (packaged.get(part) or set()))
-            for part in PackagePart
-            if part is not None
-        },
-        PackagePart.EC_RULE_PACKS: sorted(
-            all_rule_pack_files() - packaged[PackagePart.EC_RULE_PACKS]
+def get_unpackaged_files(
+    installer: Installer, path_config: PathConfig
+) -> dict[PackagePart, list[Path]]:
+    packaged = installer.get_packaged_files()
+    present: dict[PackagePart | None, set[Path]] = {
+        **all_local_files(path_config),
+        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
+            path_config.get_path(PackagePart.EC_RULE_PACKS)
         ),
     }
-
-
-def package_part_info() -> PackagePartInfo:
-    # this is broken:
-    # * It does not decend into subfolders :-(
-    # * It reports (for diagnostics!) the *desired* permissions
-    #   instead of the actual ones!
-    part_info: PackagePartInfo = {}
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        try:
-            files = [f.relative_to(part.path) for f in part.path.iterdir()]
-        except FileNotFoundError:
-            files = []
-
-        part_info[part.ident] = {
-            "title": part.ui_title,
-            "permissions": [_get_permissions(part, f) for f in files],
-            "path": str(part.path),
-            "files": [str(f) for f in files],
-        }
-
-    return part_info
-
-
-def package_num_files(package: Manifest) -> int:
-    return sum(len(fl) for fl in package.files.values())
-
-
-def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
-    """
-    Returns a dictionary of rule pack ID to MKP package for a given manifest.
-    Every rule pack is contained exactly once in this mapping. If no corresponding
-    MKP exists, the value of that mapping is None.
-    """
-    package_map = {
-        file: manifest.name
-        for manifest in get_installed_manifests()
-        for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
+    return {
+        part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
+        for part in PackagePart
     }
 
-    return {f.stem: package_map.get(f) for f in all_rule_pack_files()}
+
+def id_to_mkp(
+    installer: Installer,
+    rule_pack_files: Iterable[Path],
+    package_part: PackagePart,
+) -> dict[str, PackageName | None]:
+    """
+    Returns a dictionary of ID to MKP package for a given manifest.
+    Every ID is contained exactly once in this mapping. If no corresponding
+    MKP exists, the value of that mapping is None.
+    """
+    package_map = installer.get_packaged_files()[package_part]
+    return {
+        f.stem: package_id.name
+        for f in rule_pack_files
+        if (package_id := package_map.get(f)) is not None
+    }
 
 
-def update_active_packages(log: logging.Logger) -> None:
+def update_active_packages(
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    site_version: str,
+) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
-    package_store = PackageStore()
-    _deinstall_inapplicable_active_packages(log, post_package_change_actions=False)
-    _install_applicable_inactive_packages(package_store, log, post_package_change_actions=False)
-    _execute_post_package_change_actions(None)
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
+    # order matters here (deinstall, then install)!
+    return (
+        _deinstall_inapplicable_active_packages(
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
+        _install_applicable_inactive_packages(
+            package_store,
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
+    )
 
 
 def _deinstall_inapplicable_active_packages(
-    log: logging.Logger, *, post_package_change_actions: bool
-) -> None:
-    for manifest in get_installed_manifests(log):
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
+) -> Sequence[Manifest]:
+    uninstalled = []
+    for manifest in installer.get_installed_manifests():
         try:
             _raise_for_installability(
+                installer,
+                path_config,
                 manifest,
                 manifest,
-                cmk_version.__version__,
+                site_version,
                 allow_outdated=False,
             )
-        except PackageException as exc:
-            log.log(VERBOSE, "[%s %s]: Uninstalling (%s)", manifest.name, manifest.version, exc)
-            uninstall(manifest, post_package_change_actions=post_package_change_actions)
+        except PackageError as exc:
+            _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
+            _uninstall(
+                installer,
+                path_config,
+                callbacks,
+                manifest,
+            )
+            uninstalled.append(manifest)
         else:
-            log.log(VERBOSE, "[%s %s]: Kept", manifest.name, manifest.version)
+            _logger.info("[%s %s]: Not uninstalling", manifest.name, manifest.version)
+    return uninstalled
 
 
 def _install_applicable_inactive_packages(
-    package_store: PackageStore, log: logging.Logger, *, post_package_change_actions: bool
-) -> None:
-    for name, manifests in _sort_enabled_packages_for_installation(log):
+    package_store: PackageStore,
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
+) -> Sequence[Manifest]:
+    installed = []
+    for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
-                install(
-                    package_store,
-                    manifest.id,
-                    allow_outdated=False,
-                    post_package_change_actions=post_package_change_actions,
+                installed.append(
+                    install(
+                        installer,
+                        package_store,
+                        manifest.id,
+                        path_config,
+                        callbacks,
+                        allow_outdated=False,
+                        site_version=site_version,
+                    )
                 )
-            except PackageException as exc:
-                log.log(VERBOSE, "[%s]: Version %s not installed (%s)", name, manifest.version, exc)
+            except PackageError as exc:
+                _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:
-                log.log(VERBOSE, "[%s]: Version %s installed", name, manifest.version)
+                _logger.info("[%s %s]: Installed", name, manifest.version)
                 # We're done with this package.
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
                 break
+    return installed
 
 
 def _sort_enabled_packages_for_installation(
-    log: logging.Logger,
+    package_store: PackageStore,
 ) -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
     return groupby(
         sorted(
             sorted(
-                get_enabled_manifests(log).values(), key=lambda m: m.version.sort_key, reverse=True
+                package_store.get_enabled_manifests().values(),
+                key=lambda m: m.version.sort_key,
+                reverse=True,
             ),
             key=lambda m: m.name,
         ),
@@ -771,54 +705,65 @@ def _sort_enabled_packages_for_installation(
     )
 
 
-def disable_outdated() -> None:
+def disable_outdated(
+    installer: Installer,
+    package_store: PackageStore,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
+) -> Sequence[Manifest]:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
-    for manifest in get_installed_manifests(g_logger):
-        g_logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
-
+    disabled = []
+    for manifest in installer.get_installed_manifests():
         try:
-            _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
-        except PackageException as exc:
-            g_logger.log(
-                VERBOSE,
-                "[%s %s]: Disable outdated package: %s",
+            _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
+        except PackageError as exc:
+            _logger.info(
+                "[%s %s]: Disabling: %s",
                 manifest.name,
                 manifest.version,
                 exc,
             )
-            disable(manifest.name, manifest.version)
+            if (
+                disabled_manifest := disable(
+                    installer,
+                    package_store,
+                    path_config,
+                    callbacks,
+                    manifest.id,
+                )
+            ) is not None:
+                disabled.append(disabled_manifest)
         else:
-            g_logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
+            _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
+    return disabled
 
 
-def _execute_post_package_change_actions(package: Manifest | None) -> None:
-    _build_setup_search_index_background()
-
-    if package is None or _package_contains_gui_files(package):
+def execute_post_package_change_actions(packages: Sequence[Manifest]) -> None:
+    if any("gui" in package.files or "web" in package.files for package in packages):
+        _invalidate_visuals_cache()
         _reload_apache()
+    request_index_rebuild()
 
 
-def _build_setup_search_index_background() -> None:
-    subprocess.run(
-        ["init-redis"],
-        check=False,
-    )
-
-
-def _package_contains_gui_files(package: Manifest) -> bool:
-    return "gui" in package.files or "web" in package.files
+def _invalidate_visuals_cache():
+    """Invalidate visuals cache to use the current data"""
+    for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
+        file.unlink(missing_ok=True)
 
 
 def _reload_apache() -> None:
     try:
-        subprocess.run(
-            ["omd", "reload", "apache"],
-            capture_output=True,
-            check=True,
-        )
+        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
     except subprocess.CalledProcessError:
-        g_logger.error("Error reloading apache", exc_info=True)
+        return
+
+    try:
+        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
+    except subprocess.CalledProcessError:
+        _logger.error("Error reloading apache", exc_info=True)

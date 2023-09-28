@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 from contextlib import suppress
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from .agent_based_api.v1 import all_of, Attributes, exists, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -14,14 +14,14 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 class Section(NamedTuple):
     serial: str
     expresscode: str
-    bios_date: Optional[float]
+    bios_date: float | None
     bios_version: str
     bios_vendor: str
     raid_name: str
     raid_version: str
 
 
-def parse_dell_hw_info(string_table: StringTable) -> Optional[Section]:
+def parse_dell_hw_info(string_table: StringTable) -> Section | None:
     for line in string_table:
         return Section(
             serial=line[0],
@@ -35,13 +35,13 @@ def parse_dell_hw_info(string_table: StringTable) -> Optional[Section]:
     return None
 
 
-def _format_date(raw_date: str) -> Optional[float]:
+def _format_date(raw_date: str) -> float | None:
     if fmt := _get_date_format(raw_date):
         return time.mktime(time.strptime(raw_date, fmt))
     return None
 
 
-def _get_date_format(date: str) -> Optional[str]:
+def _get_date_format(date: str) -> str | None:
     # Beware: Dell's actual definition of the format supposed
     # to be here is yyyymmddHHMMSS.uuuuuu+ooo. This has *never*
     # been observed in the wild. More accurate appears to be
@@ -83,7 +83,6 @@ register.snmp_section(
 
 
 def inventory_dell_hw_info(section: Section) -> InventoryResult:
-
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={

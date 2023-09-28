@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@
 # XE|processes|100|TRUE
 # XE|sessions|172|FALSE
 
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -17,7 +17,7 @@ Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 def parse_oracle_systemparameter(string_table: StringTable) -> Section:
-    parsed: Dict[str, List[Mapping[str, str]]] = {}
+    parsed: dict[str, list[Mapping[str, str]]] = {}
 
     for line in string_table:
         if len(line) != 4:
@@ -41,7 +41,6 @@ register.agent_section(
 
 
 def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
-    path = ["software", "applications", "oracle", "systemparameter"]
     for inst, data in section.items():
         for param in data:
             param_name = param["param_name"]
@@ -53,7 +52,7 @@ def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
                 continue
 
             yield TableRow(
-                path=path,
+                path=["software", "applications", "oracle", "systemparameter"],
                 key_columns={
                     "sid": inst,
                     "name": param_name,

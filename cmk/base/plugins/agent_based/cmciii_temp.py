@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
 
-from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State, type_defs
 from .utils.cmciii import (
     discovery_default_parameters,
     DiscoveryParams,
@@ -13,7 +12,6 @@ from .utils.cmciii import (
     get_sensor,
     Section,
     Sensor,
-    Service,
 )
 from .utils.temperature import check_temperature, TempParamDict
 
@@ -27,7 +25,7 @@ def discover_cmciii_temp(params: DiscoveryParams, section: Section) -> type_defs
             yield Service(item=get_item(id_, params, entry), parameters={"_item_key": id_})
 
 
-def _device_levels(entry: Sensor, key_warn: str, key_crit: str) -> Optional[Tuple[float, float]]:
+def _device_levels(entry: Sensor, key_warn: str, key_crit: str) -> tuple[float, float] | None:
     warn, crit = entry.get(key_warn), entry.get(key_crit)
     if warn and crit:
         return (warn, crit)

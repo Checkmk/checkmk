@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -25,7 +26,7 @@ def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSectio
             if len(line) < 3:
                 continue
             inst = section.setdefault(
-                "%s - %s" % (sid_instance, line[0]),
+                f"{sid_instance} - {line[0]}",
                 {
                     "state_name": line[1],
                 },
@@ -40,9 +41,9 @@ register.agent_section(
 )
 
 
-def _extract_size_and_used_from_line(line: str) -> Dict[str, float]:
+def _extract_size_and_used_from_line(line: Sequence[str]) -> dict[str, float]:
     # Values are measured in GB. Are other factors possible? (Query)
-    inst_values: Dict[str, float] = {}
+    inst_values: dict[str, float] = {}
     splitted_line = line[-1].split()
     for key, index in [
         ("size", 1),

@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import re
 import time
-from dataclasses import dataclass
-from typing import (
-    Any,
-    Dict,
+from collections.abc import (
+    Callable,
     Generator,
     Iterable,
     Iterator,
-    List,
-    Literal,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
-    Tuple,
-    Union,
 )
+from dataclasses import dataclass
+from html import escape
+from typing import Any, Literal
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -40,25 +36,25 @@ from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLab
 from . import cpu, memory
 
 # typing: nothing intentional, just adapt to sad reality
-_ProcessValue = Tuple[Union[str, float], str]
-_Process = List[Tuple[str, _ProcessValue]]
+_ProcessValue = tuple[str | float, str]
+_Process = list[tuple[str, _ProcessValue]]
 
 
 @dataclass(frozen=True)
 class PsInfo:
-    user: Optional[str] = None
-    virtual: Optional[int] = None
-    physical: Optional[int] = None
+    user: str | None = None
+    virtual: int | None = None
+    physical: int | None = None
     # TODO: not all of these should be strings, I guess.
-    cputime: Optional[str] = None
-    process_id: Optional[str] = None
-    pagefile: Optional[str] = None
-    usermode_time: Optional[str] = None
-    kernelmode_time: Optional[str] = None
-    handles: Optional[str] = None
-    threads: Optional[str] = None
-    uptime: Optional[str] = None
-    cgroup: Optional[str] = None
+    cputime: str | None = None
+    process_id: str | None = None
+    pagefile: str | None = None
+    usermode_time: str | None = None
+    kernelmode_time: str | None = None
+    handles: str | None = None
+    threads: str | None = None
+    uptime: str | None = None
+    cgroup: str | None = None
 
     _FIELDS = (
         "user",
@@ -92,16 +88,19 @@ class PsInfo:
         )
 
 
-Section = Tuple[int, Sequence[Tuple[PsInfo, Sequence[str]]]]
+Section = tuple[int, Sequence[tuple[PsInfo, Sequence[str]]], int]
 
-_InventorySpec = Tuple[
+_InventorySpec = tuple[
     str,
-    Optional[str],
-    Optional[Union[str, Literal[False]]],
-    Tuple[Optional[str], bool],
+    str | None,
+    str | Literal[False] | None,
+    tuple[str | None, bool],
     Mapping[str, str],
     Mapping[str, Any],
 ]
+
+# process_lines: (Node, PsInfo, cmd_line, time)
+ProcessLine = tuple[str | None, PsInfo, Sequence[str], int]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
@@ -159,7 +158,6 @@ def maxx(a, b):
 
 
 def replace_service_description(service_description, match_groups, pattern):
-
     # New in 1.2.2b4: All %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
     # replace all %1:
@@ -197,7 +195,6 @@ def match_attribute(attribute, pattern):
 
 
 def process_attributes_match(process_info, userspec, cgroupspec):
-
     cgroup_pattern, invert = cgroupspec
     if process_info.cgroup and (match_attribute(process_info.cgroup, cgroup_pattern) is invert):
         return False
@@ -208,10 +205,11 @@ def process_attributes_match(process_info, userspec, cgroupspec):
     return True
 
 
-def process_matches(  # type:ignore[no-untyped-def]
-    command_line: Sequence[str], process_pattern, match_groups=None
-):
-
+def process_matches(
+    command_line: Sequence[str],
+    process_pattern: str | None,
+    match_groups: Sequence[str | None] | None = None,
+) -> bool | re.Match[str]:
     if not process_pattern:
         # Process name not relevant
         return True
@@ -228,7 +226,7 @@ def process_matches(  # type:ignore[no-untyped-def]
         return m
 
     # Exact match on name of executable
-    return command_line[0] == process_pattern
+    return bool(command_line) and command_line[0] == process_pattern
 
 
 # produce text or html output intended for the long output field of a check
@@ -237,14 +235,17 @@ def process_matches(  # type:ignore[no-untyped-def]
 # value is again a 2-field tuple, first is the value, second is the unit.
 # This function is actually fairly generic so it could be used for other
 # data structured the same way
-def format_process_list(processes: "ProcessAggregator", html_output):  # type:ignore[no-untyped-def]
+def format_process_list(processes: Iterable[_Process], html_output: bool) -> str:
     def format_value(pvalue: _ProcessValue) -> str:
         value, unit = pvalue
         if unit == "kB":
             return render.bytes(float(value) * 1024)
         if isinstance(value, float):
-            return "%.1f%s" % (value, unit)
-        return "%s%s" % (value, unit)
+            return f"{value:.1f}{unit}"
+        unescaped = f"{value}{unit}"
+        # Handling of backslash-n vs newline is fundamentally broken when talking to the core.
+        # If we're creating HTML anyway, we can circumnavigate that...
+        return escape(unescaped).replace("\\", "&bsol;") if html_output else unescaped
 
     # keys to output and default values:
     headers: Mapping[str, _ProcessValue] = {
@@ -324,16 +325,16 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cpu_cores, params) -> None:  # type: ignore[no-untyped-def]
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
         self.resident_size = 0
         self.handle_count = 0
         self.percent_cpu = 0.0
-        self.max_elapsed: Optional[float] = None
-        self.min_elapsed: Optional[float] = None
-        self.processes: List[_Process] = []
+        self.max_elapsed: float | None = None
+        self.min_elapsed: float | None = None
+        self.processes: list[_Process] = []
         self.running_on_nodes: set = set()
 
     def __getitem__(self, item: int) -> _Process:
@@ -367,7 +368,9 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(self, process_info, process: _Process):  # type:ignore[no-untyped-def]
+    def lifetimes(  # type: ignore[no-untyped-def]
+        self, process_info, process: _Process, ps_time: int
+    ):
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
@@ -387,8 +390,7 @@ class ProcessAggregator:
             self.min_elapsed = minn(self.min_elapsed or elapsed, elapsed)
             self.max_elapsed = maxx(self.max_elapsed, elapsed)
 
-            now = time.time()
-            creation_time_unix = int(now - elapsed)
+            creation_time_unix = int(ps_time - elapsed)
             if creation_time_unix != 0:
                 process.append(
                     (
@@ -397,18 +399,15 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(  # type:ignore[no-untyped-def]
-        self, value_store, process_info, process: _Process
+    def cpu_usage(  # type: ignore[no-untyped-def]
+        self, value_store, process_info, process: _Process, ps_time: int
     ):
-
-        now = time.time()
-
         pcpu_text = process_info.cputime.split("/")[0]
 
         if ":" in pcpu_text:  # In linux is a time
             total_seconds = parse_ps_time(pcpu_text)
             pid = process_info.process_id
-            cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, now, total_seconds)
+            cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, ps_time, total_seconds)
 
             pcpu = cputime * 100 * self.core_weight(is_win=False)
             process.append(("pid", (pid, "")))
@@ -418,10 +417,10 @@ class ProcessAggregator:
             pid = process_info.process_id
 
             user_per_sec = cpu_rate(
-                value_store, "user.%s" % pid, now, int(process_info.usermode_time)
+                value_store, "user.%s" % pid, ps_time, int(process_info.usermode_time)
             )
             kernel_per_sec = cpu_rate(
-                value_store, "kernel.%s" % pid, now, int(process_info.kernelmode_time)
+                value_store, "kernel.%s" % pid, ps_time, int(process_info.kernelmode_time)
             )
 
             if not all([user_per_sec, kernel_per_sec]):
@@ -440,6 +439,8 @@ class ProcessAggregator:
             if pcpu_text == "-":  # Solaris defunct
                 pcpu_text = 0.0
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
+            if (pid := process_info.process_id) is not None:
+                process.append(("pid", (pid, "")))
 
         self.percent_cpu += pcpu
         process.append(("cpu usage", (pcpu, "%")))
@@ -453,20 +454,17 @@ class ProcessAggregator:
 
 
 def process_capture(
-    # process_lines: (Node, PsInfo, cmd_line)
-    process_lines: Iterable[Tuple[Optional[str], PsInfo, Sequence[str]]],
+    process_lines: Iterable[ProcessLine],
     params: Mapping[str, Any],
     cpu_cores: int,
     value_store: MutableMapping[str, Any],
 ) -> ProcessAggregator:
-
     ps_aggregator = ProcessAggregator(cpu_cores, params)
 
     userspec = params.get("user")
     cgroupspec = params.get("cgroup", (None, False))
 
-    for node_name, process_info, command_line in process_lines:
-
+    for node_name, process_info, command_line, ps_time in process_lines:
         if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
 
@@ -481,22 +479,19 @@ def process_capture(
         if command_line:
             process.append(("name", (command_line[0], "")))
 
-        # extended performance data: virtualsize, residentsize, %cpu
-        if (
-            process_info.user is not None
-            and process_info.virtual is not None
-            and process_info.physical is not None
-        ):
-
+        if process_info.user is not None and params.get("process_usernames", True):
             process.append(("user", (process_info.user, "")))
+
+        # extended performance data: virtualsize, residentsize, %cpu
+        if process_info.virtual is not None and process_info.physical is not None:
             process.append(("virtual size", (process_info.virtual, "kB")))
             process.append(("resident size", (process_info.physical, "kB")))
 
             ps_aggregator.virtual_size += process_info.virtual  # kB
             ps_aggregator.resident_size += process_info.physical  # kB
 
-            ps_aggregator.lifetimes(process_info, process)
-            ps_aggregator.cpu_usage(value_store, process_info, process)
+            ps_aggregator.lifetimes(process_info, process, ps_time)
+            ps_aggregator.cpu_usage(value_store, process_info, process, ps_time)
 
         include_args = params.get("process_info_arguments", 0)
         if include_args:
@@ -509,10 +504,10 @@ def process_capture(
 
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
-    section_ps: Optional[Section],
-    section_mem: Optional[memory.SectionMem],
-    section_mem_used: Optional[Dict[str, memory.SectionMem]],
-    section_cpu: Optional[cpu.Section],
+    section_ps: Section | None,
+    section_mem: memory.SectionMem | None,
+    section_mem_used: dict[str, memory.SectionMem] | None,
+    section_cpu: cpu.Section | None,
 ) -> DiscoveryResult:
     if not section_ps:
         return
@@ -529,14 +524,14 @@ def discover_ps(
 
             # User capturing on rule
             if userspec is False:
-                i_userspec: Union[None, str] = process_info.user
+                i_userspec: None | str = process_info.user
             else:
                 i_userspec = userspec
 
             i_servicedesc = servicedesc.replace("%u", i_userspec or "")
 
             # Process capture
-            match_groups = matches.groups() if hasattr(matches, "groups") else ()
+            match_groups = () if isinstance(matches, bool) else matches.groups()
 
             i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
 
@@ -560,7 +555,7 @@ def discover_ps(
 def unused_value_remover(
     value_store: MutableMapping[str, Any],
     key: str,
-) -> Generator[Dict[str, Tuple[float, float]], None, None]:
+) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
     This plugin uses the process IDs in the keys to persist values.
@@ -569,10 +564,10 @@ def unused_value_remover(
     """
     values = value_store.setdefault(key, {})
     old_values = values.copy()
-
-    yield values
-
-    value_store[key] = {k: v for k, v in values.items() if v != old_values.get(k)}
+    try:
+        yield values
+    finally:
+        value_store[key] = {k: v for k, v in values.items() if v != old_values.get(k)}
 
 
 def check_ps_common(
@@ -580,7 +575,7 @@ def check_ps_common(
     label: str,
     item: str,
     params: Mapping[str, Any],
-    process_lines: Iterable[Tuple[Optional[str], PsInfo, Sequence[str]]],
+    process_lines: Iterable[ProcessLine],
     cpu_cores: int,
     total_ram_map: Mapping[str, float],
 ) -> CheckResult:
@@ -597,8 +592,7 @@ def check_ps_common(
     if processes.count:
         yield from cpu_check(processes.percent_cpu, params)
 
-    if "single_cpulevels" in params:
-        yield from individual_process_check(processes, params)
+    yield from individual_process_check(processes, params, total_ram_map)
 
     # only check handle_count if provided by wmic counters
     if processes.handle_count:
@@ -640,21 +634,34 @@ def memory_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    """Check levels for virtual and physical used memory"""
-    for size, label, levels, metric in [
-        (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
-        (processes.resident_size, "physical", "resident_levels", "rss"),
-    ]:
+    """Check levels for virtual and resident used memory"""
+    for size, metric_name, memory_type, metric_id in (
+        (processes.virtual_size, "Virtual memory", "virtual", "vsz"),
+        (processes.resident_size, "Resident memory", "resident", "rss"),
+    ):
         if size == 0:
             continue
+        levels = params.get(f"{memory_type}_levels")
 
-        yield from check_levels(
-            size * 1024,
-            levels_upper=params.get(levels),
-            render_func=render.bytes,
-            label=label,
+        yield from check_averageable_metric(
+            metric_id=metric_id,
+            avg_metric_id=f"{metric_id}avg",
+            metric_name=metric_name,
+            metric_value=size * 1024,
+            levels=levels,
+            average_mins=params.get(f"{memory_type}_average"),
+            render_fn=render.bytes,
+            produce_avg_metric=True,
         )
-        yield Metric(metric, size, levels=params.get(levels))
+        yield Metric(metric_id, size, levels=levels)
+
+
+def get_total_resident_mem_size(
+    processes: ProcessAggregator, total_ram_map: Mapping[str, float]
+) -> float:
+    """Return the total RAM size or raise KeyError if the size can't be calculated"""
+    nodes = processes.running_on_nodes or ("",)
+    return sum(total_ram_map[node] for node in nodes)
 
 
 def memory_perc_check(
@@ -663,13 +670,13 @@ def memory_perc_check(
     total_ram_map: Mapping[str, float],
 ) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
-    if not processes.resident_size or "resident_levels_perc" not in params:
+    if not processes.resident_size or (
+        "resident_levels_perc" not in params and "resident_perc_average" not in params
+    ):
         return
 
-    nodes = processes.running_on_nodes or ("",)
-
     try:
-        total_ram = sum(total_ram_map[node] for node in nodes)
+        total_ram = get_total_resident_mem_size(processes, total_ram_map)
     except KeyError:
         yield Result(
             state=State.UNKNOWN,
@@ -678,76 +685,139 @@ def memory_perc_check(
         return
 
     resident_perc = 100.0 * processes.resident_size * 1024.0 / total_ram
+
+    yield from check_averageable_metric(
+        metric_id="res_perc",
+        avg_metric_id="res_percavg",
+        metric_name="Percentage of resident memory",
+        metric_value=resident_perc,
+        levels=params.get("resident_levels_perc"),
+        average_mins=params.get("resident_perc_average"),
+        render_fn=render.percent,
+        produce_avg_metric=False,
+    )
+
+
+def check_averageable_metric(
+    metric_id: str,
+    avg_metric_id: str,
+    metric_name: str,
+    metric_value: float | int,
+    levels: tuple[float, float] | None,
+    average_mins: int | None,
+    render_fn: Callable,
+    produce_avg_metric: bool,
+) -> CheckResult:
+    if average_mins:
+        avg_metric_value = get_average(
+            get_value_store(), metric_id, time.time(), metric_value, average_mins
+        )
+        infotext = "%s: %s, %d min average" % (
+            metric_name,
+            render_fn(metric_value),
+            average_mins,
+        )
+        if produce_avg_metric:
+            yield Metric(avg_metric_id, avg_metric_value, levels=levels)
+        metric_value = avg_metric_value  # use this for level comparison
+    else:
+        infotext = metric_name
+
     yield from check_levels(
-        resident_perc,
-        levels_upper=params["resident_levels_perc"],
-        render_func=render.percent,
-        label="Percentage of total RAM",
+        metric_value,
+        levels_upper=levels,
+        render_func=render_fn,
+        label=infotext,
     )
 
 
 def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
     """Check levels for cpu utilization from given process"""
 
-    warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
-    yield Metric("pcpu", percent_cpu, levels=(warn_cpu, crit_cpu))
+    cpu_levels = params.get("cpulevels", (None, None, None))[:2]
+    yield Metric("pcpu", percent_cpu, levels=cpu_levels)
 
-    # CPU might come with previous
-    if "cpu_average" in params:
-        avg_cpu = get_average(
-            get_value_store(),
-            "cpu",
-            time.time(),
-            percent_cpu,
-            params["cpu_average"],
-        )
-        infotext = "CPU: %s, %d min average" % (render.percent(percent_cpu), params["cpu_average"])
-        yield Metric(
-            "pcpuavg", avg_cpu, levels=(warn_cpu, crit_cpu), boundaries=(0, params["cpu_average"])
-        )  # wat?
-        percent_cpu = avg_cpu  # use this for level comparison
-    else:
-        infotext = "CPU"
-
-    yield from check_levels(
-        percent_cpu,
-        levels_upper=(warn_cpu, crit_cpu),
-        render_func=render.percent,
-        label=infotext,
+    yield from check_averageable_metric(
+        metric_id="cpu",
+        avg_metric_id="pcpuavg",
+        metric_name="CPU",
+        metric_value=percent_cpu,
+        levels=cpu_levels,
+        average_mins=params.get("cpu_average"),
+        render_fn=render.percent,
+        produce_avg_metric=True,
     )
+
+
+def extract_process_data(process: _Process) -> tuple[str | None, str | None, float, float, float]:
+    name, pid, cpu_usage, virt_usage, res_usage = None, None, 0.0, 0.0, 0.0
+    for the_item, (value, _unit) in process:
+        if the_item == "name":
+            name = str(value)
+        elif the_item == "pid":
+            pid = str(value)
+        elif the_item == "cpu usage":
+            cpu_usage += float(value)  # float conversion fo mypy
+        elif the_item == "virtual size":
+            virt_usage = float(value) * 1024  # memory is reported in kB
+        elif the_item == "resident size":
+            res_usage = float(value) * 1024  # memory is reported in kB
+    return name, pid, cpu_usage, virt_usage, res_usage
 
 
 def individual_process_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
+    total_ram_map: Mapping[str, float],
 ) -> CheckResult:
-    levels = params["single_cpulevels"]
-    for p in processes.processes:
-        cpu_usage, name, pid = 0.0, None, None
+    cpu_levels = params.get("single_cpulevels")
+    virt_levels = params.get("single_virtual_levels")
+    res_levels = params.get("single_resident_levels")
+    res_levels_perc = params.get("single_resident_levels_perc")
+    if (
+        cpu_levels is None
+        and virt_levels is None
+        and res_levels is None
+        and res_levels_perc is None
+    ):
+        return  # Let's skip calculations if we don't have anything to check
 
-        for the_item, (value, _unit) in p:
-            if the_item == "name":
-                name = value
-            if the_item == "pid":
-                pid = value
-            elif the_item == "cpu usage":
-                cpu_usage += float(value)
-
-        result, *_ = check_levels(
-            cpu_usage,
-            levels_upper=levels,
-            render_func=render.percent,
-            label=str(name) + (" with PID %s CPU" % pid if pid else ""),
-        )
-        # To avoid listing of all processes regardless of level setting we
-        # only generate output in case WARN level has been reached.
-        # In case a full list of processes is desired, one should enable
-        # `process_info`, i.E."Enable per-process details in long-output"
-        if result.state is not State.OK:
+    total_res_memory = None
+    if res_levels_perc is not None:
+        try:
+            total_res_memory = get_total_resident_mem_size(processes, total_ram_map)
+        except KeyError:
             yield Result(
-                state=result.state,
-                notice=result.summary,
+                state=State.UNKNOWN,
+                summary="Percentual RAM levels configured, but total RAM is unknown",
             )
+
+    for p in processes.processes:
+        name, pid, cpu_usage, virt_usage, res_usage = extract_process_data(p)
+        res_usage_pct = res_usage * 100 / total_res_memory if total_res_memory is not None else None
+        label_prefix = str(name) + (" with PID %s" % pid if pid else "")
+
+        for levels, metric_name, metric_value, render_fn in (
+            (cpu_levels, "CPU", cpu_usage, render.percent),
+            (virt_levels, "virtual memory", virt_usage, render.bytes),
+            (res_levels, "resident memory", res_usage, render.bytes),
+            (res_levels_perc, "percentage of resident memory", res_usage_pct, render.percent),
+        ):
+            if levels is None or metric_value is None:
+                continue
+
+            check_result, *_ = check_levels(
+                metric_value,
+                levels_upper=levels,
+                render_func=render_fn,
+                label=label_prefix + " " + metric_name,
+            )
+            # To avoid listing of all processes regardless of level setting we
+            # only generate output in case WARN level has been reached.
+            # In case a full list of processes is desired, one should enable
+            # `process_info`, i.E."Enable per-process details in long-output"
+            if check_result.state is not State.OK:
+                yield Result(state=check_result.state, notice=check_result.summary)
 
 
 def uptime_check(
@@ -763,6 +833,15 @@ def uptime_check(
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Running for",
+        )
+        yield Metric(
+            name="age_youngest",
+            value=min_elapsed,
+        )
+        yield Metric(
+            name="age_oldest",
+            value=max_elapsed,
+            levels=params.get("max_age"),
         )
     else:
         yield from check_levels(

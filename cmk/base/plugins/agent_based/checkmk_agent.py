@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
 import time
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any
 
-from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
-    is_daily_build_version,
-    normalize_ip_addresses,
+from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation
+    HostAddress,
+    HostName,
 )
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
@@ -29,6 +31,9 @@ from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.checkmk import (
+    CachedPlugin,
+    CachedPluginsSection,
+    CachedPluginType,
     CheckmkSection,
     CMKAgentUpdateSection,
     ControllerSection,
@@ -37,15 +42,41 @@ from .utils.checkmk import (
 )
 
 
-def _get_configured_only_from() -> Union[None, str, list[str]]:
-    return get_config_cache().only_from(host_name())
+def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if isinstance(ip_addresses, str):
+        ip_addresses = ip_addresses.split()
+
+    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
+    for word in ip_addresses:
+        if word in expanded:
+            continue
+
+        try:
+            prefix, tmp = word.split("{")
+            curly, suffix = tmp.split("}")
+        except ValueError:
+            raise MKGeneralException(f"could not expand {word!r}")
+        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
+
+    return expanded
+
+
+# Works with Checkmk version (without tailing .cee and/or .demo)
+def _is_daily_build_version(v: str) -> bool:
+    return len(v) == 10 or "-" in v
+
+
+def _get_configured_only_from() -> None | str | list[str]:
+    return get_config_cache().only_from(HostName(host_name()))
 
 
 def discover_checkmk_agent(
-    section_check_mk: Optional[CheckmkSection],
-    section_checkmk_agent_plugins: Optional[PluginSection],
-    section_cmk_agent_ctl_status: Optional[ControllerSection],
-    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
+    section_check_mk: CheckmkSection | None,
+    section_checkmk_agent_plugins: PluginSection | None,
+    section_cmk_agent_ctl_status: ControllerSection | None,
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
+    section_checkmk_cached_plugins: CachedPluginsSection | None,
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
@@ -54,9 +85,8 @@ def discover_checkmk_agent(
 def _check_cmk_agent_installation(
     params: Mapping[str, Any],
     agent_info: CheckmkSection,
-    controller_info: Optional[ControllerSection],
+    controller_info: ControllerSection | None,
 ) -> CheckResult:
-
     yield from _check_version(
         agent_info.get("version"),
         __version__,
@@ -82,10 +112,11 @@ def _check_cmk_agent_installation(
     yield from _check_python_plugins(
         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
     )
+    yield from _check_encryption_panic(agent_info.get("encryptionpanic"))
 
 
 def _check_version(
-    agent_version: Optional[str],
+    agent_version: str | None,
     site_version: str,
     expected_version: tuple[str, dict[str, str]],
     fail_state: State,
@@ -116,7 +147,7 @@ def _render_agent_version_mismatch(
         return "" if literal == agent_version else f" (expected {literal})"
 
     # spec_type == "at_least"
-    if is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
+    if _is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
         if int(agent_version.split("-")[-1].replace(".", "")) < int(at_least.replace(".", "")):
             return f" (expected at least {at_least})"
 
@@ -125,23 +156,23 @@ def _render_agent_version_mismatch(
 
     return (
         f" (expected at least {at_least})"
-        if is_daily_build_version(agent_version)
+        if _is_daily_build_version(agent_version)
         or (parse_check_mk_version(agent_version) < parse_check_mk_version(at_least))
         else ""
     )
 
 
 def _check_only_from(
-    agent_only_from: Union[None, str, Sequence[str]],
-    config_only_from: Union[None, str, list[str]],
+    agent_only_from: None | str | Sequence[str],
+    config_only_from: None | str | list[str],
     fail_state: State,
 ) -> CheckResult:
     if agent_only_from is None or config_only_from is None:
         return
 
-    # do we really need 'normalize_ip_addresses'? It deals with '{' expansion.
-    allowed_nets = set(normalize_ip_addresses(agent_only_from))
-    expected_nets = set(normalize_ip_addresses(config_only_from))
+    # do we really need '_normalize_ip_addresses'? It deals with '{' expansion.
+    allowed_nets = set(_normalize_ip_addresses(agent_only_from))
+    expected_nets = set(_normalize_ip_addresses(config_only_from))
     if allowed_nets == expected_nets:
         yield Result(
             state=State.OK,
@@ -165,8 +196,8 @@ def _check_only_from(
 
 
 def _check_python_plugins(
-    agent_failed_plugins: Optional[str],
-    agent_fail_reason: Optional[str],
+    agent_failed_plugins: str | None,
+    agent_fail_reason: str | None,
 ) -> CheckResult:
     if agent_failed_plugins:
         yield Result(
@@ -176,9 +207,19 @@ def _check_python_plugins(
         )
 
 
+def _check_encryption_panic(
+    panic: str | None,
+) -> CheckResult:
+    if panic:
+        yield Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
+        )
+
+
 def _check_agent_update(
-    update_fail_reason: Optional[str],
-    on_update_fail_action: Optional[str],
+    update_fail_reason: str | None,
+    on_update_fail_action: str | None,
 ) -> CheckResult:
     if update_fail_reason and on_update_fail_action:
         yield Result(state=State.WARN, summary=f"{update_fail_reason} {on_update_fail_action}")
@@ -186,7 +227,7 @@ def _check_agent_update(
 
 def _check_transport(
     ssh_transport: bool,
-    controller_info: Optional[ControllerSection],
+    controller_info: ControllerSection | None,
     fail_state: State,
 ) -> CheckResult:
     if ssh_transport:
@@ -196,7 +237,7 @@ def _check_transport(
     if (
         not controller_info
         or not controller_info.allow_legacy_pull
-        or not controller_info.socket_ready
+        or not controller_info.agent_socket_operational
     ):
         return
 
@@ -227,13 +268,26 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
         return
 
     default_state = State.WARN
-    if "deployment is currently globally disabled" in error:
+    summary = first_line if (first_line := error.split("\n")[0].strip()) else "See details"
+    details = None if summary == error else error  # drop details if same as the summary
+    if "deployment is currently globally disabled" in error.lower():
         yield Result(
             state=State(params.get("error_deployment_globally_disabled", default_state)),
-            summary=error,
+            summary=summary,
+            details=details,
+        )
+    elif "agent updates are disabled for hostname" in error.lower():
+        yield Result(
+            state=State(params.get("error_deployment_disabled_for_hostname", default_state)),
+            summary=summary,
+            details=details,
         )
     else:
-        yield Result(state=default_state, summary=f"Update error: {error}")
+        yield Result(
+            state=default_state,
+            summary=f"Update error: {summary}",
+            details=details,
+        )
 
 
 def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:
@@ -294,7 +348,6 @@ def _check_cmk_agent_update(
     section_check_mk: CheckmkSection | None,
     section_cmk_update_agent_status: CMKAgentUpdateSection | None,
 ) -> CheckResult:
-
     if (
         section := (
             section_cmk_update_agent_status
@@ -378,8 +431,8 @@ def _check_plugins(
 
 def _check_versions_and_duplicates(
     plugins: Iterable[Plugin],
-    version_params: Optional[Mapping[str, Any]],
-    exclude_pattern: Optional[str],
+    version_params: Mapping[str, Any] | None,
+    exclude_pattern: str | None,
     type_: str,
 ) -> CheckResult:
     if exclude_pattern is None:
@@ -450,23 +503,79 @@ def _check_duplicates(
             )
 
 
-def _check_controller_cert_validity(section: ControllerSection) -> CheckResult:
+def _check_controller_cert_validity(section: ControllerSection, now: float) -> CheckResult:
     for connection in section.connections:
         yield from check_levels(
-            connection.valid_for_seconds,
+            connection.local.cert_info.to.timestamp() - now,
             levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
             render_func=render.timespan,
-            label=f"Time until controller certificate for '{connection.site_id}' expires",
+            label=(
+                f"Time until controller certificate for `{site_id}`, "
+                f"issued by `{connection.local.cert_info.issuer}`, expires"
+            )
+            if (site_id := connection.get_site_id())
+            else (
+                "Time until controller certificate issued by "
+                f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+            ),
             notice_only=True,
+        )
+
+
+def _format_cached_plugin(plugin: CachedPlugin) -> str:
+    plugin_info = f"Timeout: {plugin.timeout}s, PID: {plugin.pid}"
+
+    if plugin.plugin_type is None:
+        return f"{plugin.plugin_name} ({plugin_info})"
+
+    name_mapping = {
+        CachedPluginType.PLUGIN: "Agent plugin",
+        CachedPluginType.LOCAL: "Local check",
+        CachedPluginType.ORACLE: "mk_oracle plugin",
+    }
+
+    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
+
+
+def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:
+    return (
+        ", ".join(_format_cached_plugin(plugin) for plugin in plugins),
+        ", ".join(plugin.plugin_name for plugin in plugins),
+    )
+
+
+def _check_cached_plugins(section_checkmk_cached_plugins: CachedPluginsSection) -> CheckResult:
+    if section_checkmk_cached_plugins.timeout is not None:
+        timeout_plugins_long, timeout_plugins_short = _plugin_strings(
+            section_checkmk_cached_plugins.timeout
+        )
+        yield Result(
+            state=State.WARN,
+            summary=f"Timed out plugin(s): {timeout_plugins_short}",
+            details=f"Cached plugins(s) that reached timeout: {timeout_plugins_long} - "
+            "Corresponding output is outdated and/or dropped.",
+        )
+
+    if section_checkmk_cached_plugins.killfailed is not None:
+        killfailed_plugins_long, killfailed_plugins_short = _plugin_strings(
+            section_checkmk_cached_plugins.killfailed
+        )
+        yield Result(
+            state=State.WARN,
+            summary=f"Termination failed: {killfailed_plugins_short}",
+            details="Cached plugins(s) that failed to be terminated after timeout: "
+            f"{killfailed_plugins_long} - "
+            "Dysfunctional until successful termination.",
         )
 
 
 def check_checkmk_agent(
     params: Mapping[str, Any],
-    section_check_mk: Optional[CheckmkSection],
-    section_checkmk_agent_plugins: Optional[PluginSection],
-    section_cmk_agent_ctl_status: Optional[ControllerSection],
-    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
+    section_check_mk: CheckmkSection | None,
+    section_checkmk_agent_plugins: PluginSection | None,
+    section_cmk_agent_ctl_status: ControllerSection | None,
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
+    section_checkmk_cached_plugins: CachedPluginsSection | None,
 ) -> CheckResult:
     if section_check_mk is not None:
         yield from _check_cmk_agent_installation(
@@ -478,7 +587,10 @@ def check_checkmk_agent(
         yield from _check_plugins(params, section_checkmk_agent_plugins)
 
     if section_cmk_agent_ctl_status:
-        yield from _check_controller_cert_validity(section_cmk_agent_ctl_status)
+        yield from _check_controller_cert_validity(section_cmk_agent_ctl_status, time.time())
+
+    if section_checkmk_cached_plugins:
+        yield from _check_cached_plugins(section_checkmk_cached_plugins)
 
 
 register.check_plugin(
@@ -489,6 +601,7 @@ register.check_plugin(
         "checkmk_agent_plugins",
         "cmk_agent_ctl_status",
         "cmk_update_agent_status",
+        "checkmk_cached_plugins",
     ],
     discovery_function=discover_checkmk_agent,
     check_function=check_checkmk_agent,

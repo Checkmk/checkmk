@@ -1,0 +1,19 @@
+Title: azure_agent_info: Stop suppressing Graph client errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680697607
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With the werk 14533 we started suppressing Graph client errors.
+
+This was needed in the version 2.1 because Graph client errors couldn't
+be avoided in case the app used to call the Azure API didn't have the
+"Directory.Read.All" Graph permission.
+
+These errors can now be avoided by un-selecting "Users in the Active Directory",
+"AD Connect Sync" and "App Registrations" services in the agent configuration,
+which makes error suppression no longer necessary.

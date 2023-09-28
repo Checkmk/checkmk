@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -29,7 +29,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 
 
 @permission_section_registry.register
@@ -235,22 +235,28 @@ class JobRenderer:
         html.open_td()
         if may_stop:
             html.icon_button(
-                make_confirm_link(
+                make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [(ActionHandler.stop_job_var, job_id)]
                     ),
-                    message=_("Stop job %s%s?") % (job_id, cls._get_extra_info(job_status)),
+                    title=_("Stop job"),
+                    suffix=job_status.title,
+                    message=_("ID: %s") % job_id,
+                    confirm_button=_("Stop"),
+                    cancel_button=_("Cancel"),
                 ),
                 _("Stop this job"),
                 "disable_test",
             )
         if may_delete:
             html.icon_button(
-                make_confirm_link(
+                make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [(ActionHandler.delete_job_var, job_id)]
                     ),
-                    message=_("Delete job %s%s?") % (job_id, cls._get_extra_info(job_status)),
+                    title=_("Delete job"),
+                    suffix=job_status.title,
+                    message=_("ID: %s") % job_id,
                 ),
                 _("Delete this job"),
                 "delete",
@@ -437,7 +443,7 @@ class JobRenderer:
         html.td(cmk.utils.render.date_and_time(job_status.started), css="job_started")
 
         # Owner
-        html.td(job_status.user or _("Unknown user"), css="job_owner")
+        html.td(job_status.user or _("Internal user"), css="job_owner")
 
         # PID
         html.td(job_status.pid or "", css="job_pid")
@@ -467,7 +473,7 @@ class JobRenderer:
             background_job.JobStatusStates.INITIALIZED: "state statep",
             background_job.JobStatusStates.RUNNING: "state job_running",
             background_job.JobStatusStates.EXCEPTION: "state state2",
-            background_job.JobStatusStates.STOPPED: "state state2",  # same css as exception
+            background_job.JobStatusStates.STOPPED: "state state1",  # same css as warn
             background_job.JobStatusStates.FINISHED: "state state0",
         }
         return job_css_map.get(job_state, "")

@@ -1,0 +1,12 @@
+Title: veeam_jobs: Treat "Starting" jobs as OK, not UNKNOWN
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695811440
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

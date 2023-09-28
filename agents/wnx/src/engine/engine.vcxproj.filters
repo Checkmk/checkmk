@@ -24,114 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_raii.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_xdbg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_xlog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="external_port.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="async_answer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\cfg_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="read_file.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="service_processor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="windows_service_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\wtools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\mailslot_transport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_kbd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_misc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cfg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx_defines.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\tools\_tgt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\p_perf_counters.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cfg_details.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\df.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\system_time.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\check_mk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\mem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\services.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\version.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\wmi.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="carrier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\plugins.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\ps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\fileinfo_details.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="eventlog\eventlogstd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="eventlog\eventlogbase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lwa\stringutil.h">
       <Filter>lwa</Filter>
     </ClInclude>
@@ -147,109 +39,235 @@
     <ClInclude Include="..\lwa\types.h">
       <Filter>lwa</Filter>
     </ClInclude>
-    <ClInclude Include="providers\fileinfo.h">
+    <ClInclude Include="..\..\include\wnx\agent_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\ohm.h">
+    <ClInclude Include="..\..\include\wnx\asio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\mrpe.h">
+    <ClInclude Include="..\..\include\wnx\async_answer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="onlyfrom.h">
+    <ClInclude Include="..\..\include\wnx\cap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\perf_counters_cl.h">
+    <ClInclude Include="..\..\include\wnx\carrier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\spool.h">
+    <ClInclude Include="..\..\include\wnx\cfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="upgrade.h">
+    <ClInclude Include="..\..\include\wnx\cfg_details.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\logwatch_event_details.h">
+    <ClInclude Include="..\..\include\wnx\cfg_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\logwatch_event.h">
+    <ClInclude Include="..\..\include\wnx\cma_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="install_api.h">
+    <ClInclude Include="..\..\include\wnx\commander.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="eventlog\eventlogvista.h">
+    <ClInclude Include="..\..\include\wnx\cvt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="encryption.h">
+    <ClInclude Include="..\..\include\wnx\encryption.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cvt.h">
+    <ClInclude Include="..\..\include\wnx\extensions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cap.h">
+    <ClInclude Include="..\..\include\wnx\external_port.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="realtime.h">
+    <ClInclude Include="..\..\include\wnx\firewall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="section_header.h">
+    <ClInclude Include="..\..\include\wnx\glob_match.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cma_core.h">
+    <ClInclude Include="..\..\include\wnx\install_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\wnx_version.h">
+    <ClInclude Include="..\..\include\wnx\logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\cfg_yaml.h">
+    <ClInclude Include="..\..\include\wnx\modules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="commander.h">
+    <ClInclude Include="..\..\include\wnx\on_start.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\stop_watch.h">
+    <ClInclude Include="..\..\include\wnx\onlyfrom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="on_start.h">
+    <ClInclude Include="..\..\include\wnx\read_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cfg_engine.h">
+    <ClInclude Include="..\..\include\wnx\realtime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="firewall.h">
+    <ClInclude Include="..\..\include\wnx\section_header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\cma_yml.h">
+    <ClInclude Include="..\..\include\wnx\service_processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\object_repo.h">
+    <ClInclude Include="..\..\include\wnx\stdafx_defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\wtools_user_control.h">
+    <ClInclude Include="..\..\include\wnx\upgrade.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\yaml.h">
+    <ClInclude Include="..\..\include\wnx\windows_service_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="modules.h">
+    <ClInclude Include="..\..\include\wnx\zip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="zip.h">
+    <ClInclude Include="..\..\include\tools\_kbd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_raii.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_tgt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\tools\_win.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\fmt_ext.h">
+    <ClInclude Include="..\..\include\tools\_xdbg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="agent_controller.h">
+    <ClInclude Include="..\..\include\tools\_xlog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\agent_plugins.h">
+    <ClInclude Include="..\..\include\common\cfg_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="asio.h">
+    <ClInclude Include="..\..\include\common\cfg_yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\cma_yml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\cmdline_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\datablock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\fmt_ext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\mailslot_transport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\object_repo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\stop_watch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\wnx_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\wtools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\wtools_runas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\wtools_service.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\wtools_user_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common\yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\eventlog\eventlogbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\eventlog\eventlogstd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\eventlog\eventlogvista.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\agent_plugins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\check_mk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\df.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\fileinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\fileinfo_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\logwatch_event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\logwatch_event_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\mrpe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\ohm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\p_perf_counters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\perf_counters_cl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\perf_cpuload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\plugins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\ps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\services.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\skype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\spool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\system_time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\wmi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -278,88 +296,88 @@
     <ClCompile Include="carrier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\binary.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\binary.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\convert.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\convert.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\directives.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\directives.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emit.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emit.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitfromevents.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitfromevents.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitter.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitter.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterstate.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitterstate.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterutils.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitterutils.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exceptions.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\exceptions.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exp.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\exp.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\memory.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\memory.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\node.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node_data.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\node_data.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodebuilder.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\nodebuilder.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodeevents.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\nodeevents.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\null.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\null.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\ostream_wrapper.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\ostream_wrapper.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parse.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\parse.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parser.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\parser.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\regex_yaml.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\regex_yaml.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanner.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scanner.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanscalar.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scanscalar.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantag.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scantag.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantoken.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scantoken.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\simplekey.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\simplekey.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\singledocparser.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\singledocparser.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\stream.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\stream.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\tag.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\tag.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
     <ClCompile Include="cfg.cpp">
@@ -507,6 +525,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\mailslot_transport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extensions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

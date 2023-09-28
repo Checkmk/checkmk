@@ -6,7 +6,7 @@
 #include <chrono>
 #include <filesystem>
 
-#include "cfg_details.h"
+#include "wnx/cfg_details.h"
 #include "common/object_repo.h"
 #pragma warning(disable : 4996)  // have to test deprectaed API too
 

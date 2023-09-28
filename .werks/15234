@@ -1,0 +1,22 @@
+Title: Periodic service discovery: Vanished clustered services can now be removed automatically
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675348187
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+Up to this Werk vanished clustered services could never be removed using the periodic service discovery.
+We have now added a configuration option that allows users to achieve just that, but beware:
+
+By default we keep a record of vanished services on the node if they are assigned to a cluster.
+When a clustered service switches from one node to another, it might not be seen on either node for one check cycle.
+Keeping clustered services indefinitely keeps us from loosing them in this case.
+However this means that truly vanished clustered services will never be removed from the cluster.
+If you choose to include clustered service in the removal operation, vanished services will be removed from clusters, at the risk of loosing services due to the described race condition.
+
+If you have specific needs, you can always adapt the services according to your needs manually using the service discovery page.
+

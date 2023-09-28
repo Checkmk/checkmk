@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ from cmk.special_agents.agent_aws import (
     ELBv2Limits,
     ELBv2Network,
     ELBv2TargetGroups,
+    NamingConvention,
     ResultDistributor,
 )
 
@@ -95,7 +96,7 @@ class FakeELBv2Client:
 def get_elbv2_sections():
     def _create_elbv2_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("elbv2_names", names)
         config.add_service_tags("elbv2_tags", tags)
 
@@ -104,20 +105,21 @@ def get_elbv2_sections():
 
         distributor = ResultDistributor()
 
-        elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, distributor)
+        # TODO: FakeELBv2Client shoud actually subclass ELBv2Client, etc.
+        elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, distributor)  # type: ignore[arg-type]
         elbv2_summary = ELBSummaryGeneric(
-            fake_elbv2_client, region, config, distributor, resource="elbv2"
+            fake_elbv2_client, region, config, distributor, resource="elbv2"  # type: ignore[arg-type]
         )
-        elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource="elbv2")
-        elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)
-        elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)
+        elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource="elbv2")  # type: ignore[arg-type]
+        elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)  # type: ignore[arg-type]
+        elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
         elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
-            fake_cloudwatch_client, region, config
+            fake_cloudwatch_client, region, config  # type: ignore[arg-type]
         )
         elbv2_application_target_groups_lambda = ELBv2ApplicationTargetGroupsLambda(
-            fake_cloudwatch_client, region, config
+            fake_cloudwatch_client, region, config  # type: ignore[arg-type]
         )
-        elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)
+        elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(elbv2_limits.name, elbv2_summary)
         distributor.add(elbv2_summary.name, elbv2_labels)
@@ -145,7 +147,6 @@ def get_elbv2_sections():
 def check_target_groups_results(
     piggyback_hostname, target_group_name, target_groups_results, expected_length
 ):
-
     for result in target_groups_results:
         entry_found = result.piggyback_hostname == piggyback_hostname
 
@@ -163,7 +164,6 @@ def check_target_group_errors_results(
     elbv2_application_target_groups_http_results,
     elbv2_application_target_groups_lambda_results,
 ):
-
     n_elbv2_application = 0
     n_tg_lambda = 0
     n_tg_instance_ip = 0

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Final
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -18,8 +19,8 @@ _MAP_NODE_STATES: Final = {
 Section = Mapping[str, Sequence[Mapping]]
 
 
-def parse_jenkins_nodes(string_table) -> Section:  # type:ignore[no-untyped-def]
-    parsed: Dict[str, List[Mapping]] = {}
+def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
+    parsed: dict[str, list[Mapping]] = {}
 
     for line in string_table:
         node_detail = json.loads(line[0])
@@ -56,8 +57,8 @@ def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
 
 
 def _get_optional_value(
-    mon_data: Mapping[str, Optional[Mapping[str, Union[float, int]]]], key: str, *, value: str
-) -> Optional[Union[float, int]]:
+    mon_data: Mapping[str, Mapping[str, float | int] | None], key: str, *, value: str
+) -> float | int | None:
     k = mon_data.get(key)
     if k is not None:
         return k.get(value)
@@ -75,7 +76,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
         return
 
     for node in item_data:
-
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
             yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
@@ -111,7 +111,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             ("busyExecutors", "Number of busy executors"),
             ("idleExecutors", "Number of idle executors"),
         ]:
-
             exec_label_data = node.get("assignedLabels")
 
             if exec_label_data is None:

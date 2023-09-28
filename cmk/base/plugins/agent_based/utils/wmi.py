@@ -1,19 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Iterable,
-    Mapping,
-    MutableMapping,
-    MutableSequence,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-)
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
 from ..agent_based_api.v1 import regex
 from ..agent_based_api.v1.type_defs import StringTable
@@ -62,10 +52,10 @@ class WMITable:
         self,
         name: str,
         headers: Iterable[str],
-        key_field: Optional[str],
-        timestamp: Optional[int],
-        frequency: Optional[int],
-        rows: Optional[Iterable[Sequence[str]]] = None,
+        key_field: str | None,
+        timestamp: int | None,
+        frequency: int | None,
+        rows: Iterable[Sequence[str]] | None = None,
     ) -> None:
         self.__name = name
         self.__headers: MutableMapping[str, int] = {}
@@ -89,8 +79,8 @@ class WMITable:
             except KeyError as e:
                 raise KeyError(str(e) + " missing, valid keys: " + ", ".join(self.__headers))
 
-        self.__row_lookup: MutableMapping[Optional[str], int] = {}
-        self.__rows: MutableSequence[Sequence[Optional[str]]] = []
+        self.__row_lookup: MutableMapping[str | None, int] = {}
+        self.__rows: MutableSequence[Sequence[str | None]] = []
         self.timed_out = False
         if rows:
             for row in rows:
@@ -105,7 +95,7 @@ class WMITable:
 
         headers = [name for name, index in sorted(iter(self.__headers.items()), key=lambda x: x[1])]
 
-        return "%s(%r, %r, %r, %r, %r, %r)" % (
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.__name,
             headers,
@@ -124,9 +114,9 @@ class WMITable:
         return not self == other
 
     def add_row(self, row: Sequence[str]) -> None:
-        row_mutable: MutableSequence[Optional[str]] = [*row]
+        row_mutable: MutableSequence[str | None] = [*row]
         if self.__key_index is not None:
-            key: Optional[str] = row[self.__key_index].strip('"')
+            key: str | None = row[self.__key_index].strip('"')
             # there are multiple names to denote the "total" line, normalize that
             if key in WMITable.TOTAL_NAMES:
                 key = row_mutable[self.__key_index] = None
@@ -158,19 +148,19 @@ class WMITable:
 
     def get(
         self,
-        row: Union[str, int],
-        column: Union[str, int],
+        row: str | int,
+        column: str | int,
         silently_skip_timed_out: bool = False,
-    ) -> Optional[str]:
+    ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
             raise WMIQueryTimeoutError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
     def _get_row_col_value(
         self,
-        row: Union[str, int],
-        column: Union[str, int],
-    ) -> Optional[str]:
+        row: str | int,
+        column: str | int,
+    ) -> str | None:
         if isinstance(row, int):
             row_index = row
         else:
@@ -186,7 +176,7 @@ class WMITable:
         return self.__rows[row_index][col_index]
 
     @property
-    def row_labels(self) -> Iterable[Optional[str]]:
+    def row_labels(self) -> Iterable[str | None]:
         return list(self.__row_lookup)
 
     @property
@@ -198,11 +188,11 @@ class WMITable:
         return self.__name
 
     @property
-    def timestamp(self) -> Optional[int]:
+    def timestamp(self) -> int | None:
         return self.__timestamp
 
     @property
-    def frequency(self) -> Optional[int]:
+    def frequency(self) -> int | None:
         return self.__frequency
 
     @staticmethod
@@ -223,7 +213,7 @@ def parse_wmi_table(
     string_table: StringTable,
     key: str = "Name",
     # Needed in check_legacy_includes/wmi.py
-    table_type: Type[WMITable] = WMITable,
+    table_type: type[WMITable] = WMITable,
 ) -> WMISection:
     parsed: MutableMapping[str, WMITable] = {}
     info_iter = iter(string_table)
@@ -277,12 +267,12 @@ def _prepare_wmi_table(
     parsed: MutableMapping[str, WMITable],
     tablename: str,
     line: Sequence[str],
-    key: Optional[str],
-    timestamp: Optional[int],
-    frequency: Optional[int],
+    key: str | None,
+    timestamp: int | None,
+    frequency: int | None,
     # Needed in check_legacy_includes/wmi.py
-    table_type: Type[WMITable],
-) -> Tuple[bool, WMITable]:
+    table_type: type[WMITable],
+) -> tuple[bool, WMITable]:
     # Possibilities:
     # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
     # <<<SEC>>>
@@ -344,7 +334,7 @@ def required_tables_missing(
     return not set(required_tables).issubset(set(tables))
 
 
-def get_wmi_time(table: WMITable, row: Union[str, int]) -> float:
+def get_wmi_time(table: WMITable, row: str | int) -> float:
     timestamp = table.timestamp or table.get(row, "Timestamp_PerfTime")
     frequency = table.frequency or table.get(row, "Frequency_PerfTime")
     assert timestamp is not None

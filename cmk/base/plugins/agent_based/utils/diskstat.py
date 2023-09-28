@@ -1,26 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 from collections import defaultdict
-from typing import (
-    Any,
+from collections.abc import (
     Callable,
-    DefaultDict,
-    Dict,
     Generator,
     Iterable,
     Iterator,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
-    Tuple,
-    TypedDict,
-    Union,
 )
+from typing import Any, DefaultDict, TypedDict
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -142,7 +136,6 @@ _METRICS_TO_BE_AVERAGED = {
 
 
 def combine_disks(disks: Iterable[Disk]) -> Disk:
-
     # In summary mode we add up the throughput values, but
     # we average the other values for disks that have a throughput
     # > 0. Note: This is not very precise. Strictly spoken
@@ -183,7 +176,7 @@ def combine_disks(disks: Iterable[Disk]) -> Disk:
     return combined_disk
 
 
-def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
+def summarize_disks(disks: Iterable[tuple[str, Disk]]) -> Disk:
     # we do not use a dictionary as input because we want to be able to have the same disk name
     # multiple times (cluster mode)
     # skip LVM devices for summary
@@ -191,10 +184,10 @@ def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
 
 
 def _scale_levels_predictive(
-    levels: Dict[str, Any],
-    factor: Union[int, float],
-) -> Dict[str, Any]:
-    def generator() -> Iterator[Tuple[str, Any]]:
+    levels: dict[str, Any],
+    factor: int | float,
+) -> dict[str, Any]:
+    def generator() -> Iterator[tuple[str, Any]]:
         for key, value in levels.items():
             if key in ("levels_upper", "levels_lower"):
                 mode, prediction_levels = value
@@ -214,9 +207,9 @@ def _scale_levels_predictive(
 
 
 def _scale_levels(
-    levels: Optional[Tuple[float, float]],
-    factor: Union[int, float],
-) -> Optional[Tuple[float, float]]:
+    levels: tuple[float, float] | None,
+    factor: int | float,
+) -> tuple[float, float] | None:
     if levels is None:
         return None
     return (levels[0] * factor, levels[1] * factor)
@@ -231,7 +224,7 @@ class MetricSpecs(TypedDict, total=False):
     in_service_output: bool
 
 
-_METRICS: Tuple[Tuple[str, MetricSpecs], ...] = (
+_METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "utilization",
         {

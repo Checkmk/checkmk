@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -139,13 +139,7 @@ class BIAggregationFunctionWorstSchema(Schema):
     count = ReqInteger(dump_default=1, example=2)
     restrict_state = ReqInteger(
         dump_default=2,
-        validate=validate.OneOf(
-            [
-                0,
-                1,
-                2,
-            ]
-        ),
+        validate=validate.OneOf([0, 1, 2]),
     )
 
 
@@ -228,6 +222,4 @@ class BIAggregationFunctionSchema(OneOfSchema):
     # }
 
     def get_obj_type(self, obj: ABCBIAggregationFunction | dict) -> str:
-        if isinstance(obj, dict):
-            return obj["type"]
-        return obj.kind()
+        return obj["type"] if isinstance(obj, dict) else obj.kind()

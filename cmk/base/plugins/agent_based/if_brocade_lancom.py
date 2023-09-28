@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Mapping, Union
+from collections.abc import Iterable, Mapping
 
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
 from .utils import if64, interfaces
 
-StringByteLine = List[Union[str, List[int]]]
+StringByteLine = list[str | list[int]]
 
 IF64_BASE_TREE = SNMPTree(
     base=if64.BASE_OID,
@@ -104,7 +104,7 @@ def parse_if_brocade_lancom(
     name_map: Mapping[str, str],
     port_map: Mapping[str, str],
     ignore_descriptions: Iterable[str],
-) -> interfaces.Section:
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     """
     >>> for result in parse_if_brocade_lancom([
     ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -129,7 +129,9 @@ def parse_if_brocade_lancom(
     )
 
 
-def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
+def parse_if_brocade(
+    string_table: StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return parse_if_brocade_lancom(
         if_table=string_table,
         name_map={},
@@ -138,7 +140,9 @@ def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
     )
 
 
-def parse_if_lancom(string_table: List[StringByteTable]) -> interfaces.Section:
+def parse_if_lancom(
+    string_table: list[StringByteTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
     return parse_if_brocade_lancom(
         if_table,

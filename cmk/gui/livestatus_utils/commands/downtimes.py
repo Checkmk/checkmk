@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
 import datetime as dt
 from typing import Literal
 
-from livestatus import SiteId
+from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
@@ -14,8 +14,9 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
@@ -40,7 +41,7 @@ class QueryException(Exception):
     pass
 
 
-def _del_host_downtime(  # type:ignore[no-untyped-def]
+def _del_host_downtime(  # type: ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -73,7 +74,7 @@ def _del_host_downtime(  # type:ignore[no-untyped-def]
     return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
 
 
-def _del_service_downtime(  # type:ignore[no-untyped-def]
+def _del_service_downtime(  # type: ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -106,38 +107,27 @@ def _del_service_downtime(  # type:ignore[no-untyped-def]
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id], site_id)
 
 
-def delete_downtime_with_query(connection, query):
-    """Delete scheduled downtimes based upon a query"""
+def delete_downtime(
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId,
+) -> None:
+    """Delete a scheduled downtime"""
     _user.need_permission("action.downtimes")
 
-    q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
+    downtimes = Query(
+        [Downtimes.id, Downtimes.is_service],
+        query,
+    ).fetchall(connection, True, [site_id])
 
-    with detailed_connection(connection) as conn:
-        downtimes = [(row["site"], row["id"], row["is_service"]) for row in q.iterate(conn)]
-
-    for site_id, downtime_id, is_service in downtimes:
-        if is_service:
-            _del_service_downtime(connection, downtime_id, site_id)
+    for downtime in downtimes:
+        if downtime["is_service"]:
+            _del_service_downtime(connection, downtime["id"], downtime["site"])
         else:
-            _del_host_downtime(connection, downtime_id, site_id)
+            _del_host_downtime(connection, downtime["id"], downtime["site"])
 
 
-def delete_downtime(connection, downtime_id):
-    """Delete a scheduled downtime based upon the downtime id"""
-    _user.need_permission("action.downtimes")
-
-    with detailed_connection(connection) as conn:
-        entry = Query(
-            [Downtimes.is_service],
-            Downtimes.id == downtime_id,
-        ).fetchone(conn)
-    if entry["is_service"]:
-        _del_service_downtime(connection, downtime_id, entry["site"])
-    else:
-        _del_host_downtime(connection, downtime_id, entry["site"])
-
-
-def schedule_services_downtimes_with_query(  # type:ignore[no-untyped-def]
+def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]
     connection,
     query: QueryExpression,
     start_time: dt.datetime,
@@ -179,9 +169,9 @@ def schedule_services_downtimes_with_query(  # type:ignore[no-untyped-def]
         )
 
 
-def schedule_service_downtime(  # type:ignore[no-untyped-def]
+def schedule_service_downtime(  # type: ignore[no-untyped-def]
     connection,
-    site_id: SiteId,
+    site_id: SiteId | None,
     host_name: str,
     service_description: list[str] | str,
     start_time: dt.datetime,
@@ -229,7 +219,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the service. Consequencely, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -239,7 +229,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
             A comment which will be added to the downtime.
 
         site_id:
-            Site which is targeted by command
+            An optional Site which is targeted by the command. Defaults to the local site if 'None'.
 
     See Also:
         https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=119
@@ -265,7 +255,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
         ...             _start_time,
         ...             _end_time,
         ...             recur="day_of_month",
-        ...             duration=120,
+        ...             duration=2,
         ...             comment="Boom")
 
     """
@@ -291,7 +281,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
         )
 
 
-def schedule_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
+def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
     connection,
     servicegroup_name: str,
     start_time: dt.datetime,
@@ -342,7 +332,7 @@ def schedule_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequently, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -393,7 +383,7 @@ def schedule_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
         )
 
 
-def schedule_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
+def schedule_hostgroup_host_downtime(  # type: ignore[no-untyped-def]
     connection,
     hostgroup_name: str,
     start_time: dt.datetime,
@@ -443,7 +433,7 @@ def schedule_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequently, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -477,7 +467,7 @@ def schedule_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
     )
 
 
-def schedule_hosts_downtimes_with_query(  # type:ignore[no-untyped-def]
+def schedule_hosts_downtimes_with_query(  # type: ignore[no-untyped-def]
     connection,
     query: QueryExpression,
     start_time: dt.datetime,
@@ -513,7 +503,7 @@ def schedule_hosts_downtimes_with_query(  # type:ignore[no-untyped-def]
     )
 
 
-def schedule_host_downtime(  # type:ignore[no-untyped-def]
+def schedule_host_downtime(  # type: ignore[no-untyped-def]
     connection,
     host_entry: str | list[str],
     start_time: dt.datetime,
@@ -568,7 +558,7 @@ def schedule_host_downtime(  # type:ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequencely, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -600,7 +590,7 @@ def schedule_host_downtime(  # type:ignore[no-untyped-def]
         ...             _start_time,
         ...             _end_time,
         ...             recur="day_of_month",
-        ...             duration=120,
+        ...             duration=2,
         ...             comment="Boom")
 
     """
@@ -663,10 +653,34 @@ def schedule_host_downtime(  # type:ignore[no-untyped-def]
             )
 
 
-def _schedule_downtime(  # type:ignore[no-untyped-def]
+def assert_object_is_visible_to_user(
+    live: MultiSiteConnection, host: str, service: str | None, user: UserId
+) -> None:
+    if service is None:
+        query = Query.from_string(
+            "\n".join(
+                [
+                    "GET hosts",
+                    "Columns: host_name",
+                    f"Filter: host_name = {host}",
+                    f"AuthUser: {user}",
+                ]
+            )
+        )
+        fail_msg = f"Host {host}"
+    else:
+        query = Query.from_string(
+            f"GET services\nColumns: service_description\nFilter: service_description = {service}\nFilter: host_name = {host}\nAuthUser: {user}"
+        )
+        fail_msg = f"Service '{service}' of {host}"
+    if not len(query.fetch_values(live)) != 0:
+        raise MKAuthException(f"Cannot find the requested resource: {fail_msg}")
+
+
+def _schedule_downtime(  # type: ignore[no-untyped-def]
     sites,
     command: LivestatusCommand,
-    site_id,
+    site_id: SiteId | None,
     host_or_group: str,
     service_description: str | None,
     start_time: dt.datetime,
@@ -685,6 +699,8 @@ def _schedule_downtime(  # type:ignore[no-untyped-def]
     """
     # TODO: provide reference documents for recurring magic numbers
     _user.need_permission("action.downtimes")
+    if _user.id is not None:
+        assert_object_is_visible_to_user(sites, host_or_group, service_description, _user.id)
 
     recur_mode = _recur_mode(recur, duration)
 
@@ -706,7 +722,7 @@ def _schedule_downtime(  # type:ignore[no-untyped-def]
             to_timestamp(end_time),
             recur_mode,
             trigger_id,
-            duration,
+            60 * duration,  # duration is in minutes but livestatus is expecting seconds.,
             user_id,
             comment.replace("\n", ""),
         ],

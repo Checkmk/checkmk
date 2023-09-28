@@ -1,0 +1,15 @@
+Title: 'list hosts' will now only show hosts a user can see
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1682674270
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The 'list hosts' endpoint (GET on '/domain-types/host_config/collections/all') will now
+only list hosts a user can see.
+If you e.g. assign hosts to contact groups, a user will only get hosts listed they share a contact group with.
+The permission to access the root folder is therefore no longer needed to this endpoint.
+

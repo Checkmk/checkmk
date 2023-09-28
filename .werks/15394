@@ -1,0 +1,12 @@
+Title: cisco_meraki_org_licenses_overview: Fix discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683283470
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The services {{Cisco Meraki Licenses}} were not discovered due to missing
+information about the related organisation.

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest
 
 from tests.testlib import compare_html
 
@@ -14,7 +16,8 @@ from cmk.gui.htmllib.foldable_container import (
 from cmk.gui.utils.output_funnel import output_funnel
 
 
-def test_foldable_container(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_foldable_container() -> None:
     with output_funnel.plugged():
         with foldable_container(treename="name", id_="id", isopen=False, title="Title") as is_open:
             assert is_open is False

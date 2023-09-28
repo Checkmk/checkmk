@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,7 +16,7 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -27,10 +27,10 @@ Section = Sequence[Mapping]
 def parse_win_networkadapter(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    adapters: List[Mapping] = []
+    adapters: list[Mapping] = []
     first_varname = None
-    array: Dict = {}
-    addrtypes: Dict = {}
+    array: dict = {}
+    addrtypes: dict = {}
 
     for line in string_table:
         # return 'lost' double-colons back
@@ -92,11 +92,10 @@ register.agent_section(
 
 
 def inventory_win_networkadapter(section: Section) -> InventoryResult:
-    path = ["hardware", "nwadapter"]
     for adapter in sorted(section, key=lambda a: a.get("name", "")):
         if "name" in adapter:
             yield TableRow(
-                path=path,
+                path=["hardware", "nwadapter"],
                 key_columns={
                     "name": adapter["name"],
                 },

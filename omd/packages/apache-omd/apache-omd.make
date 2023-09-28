@@ -63,8 +63,8 @@ $(APACHE_OMD_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	$(LN) -sf $(HTPASSWD_BIN) $(DESTDIR)$(OMD_ROOT)/bin/htpasswd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
-	install -m 775 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_ADDR $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 775 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_ADDR $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
 	# This file is loaded by php-wrapper on RedHat/CentOS < 7
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \

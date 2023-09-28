@@ -1,0 +1,23 @@
+Title: OMD configuration: Avoid duplicate port allocations
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1683017832
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When creating a new site or when changing the port configurations of an existing site via <tt>omd
+config</tt>, Checkmk was supposed to check for duplicate port allocations (also across multiple
+sites). This mechanism was broken, which means that ports could be allocated multiple times.
+Specifically, the following port settings were affected:
+
+LI: <tt>APACHE_TCP_PORT</tt>
+LI: <tt>AGENT_RECEIVER_PORT</tt>
+LI: <tt>LIVESTATUS_TCP_PORT</tt>
+
+As of this werk, when attempting to configure an already allocated port, Checkmk will increment the
+port number until a free port is found.
+

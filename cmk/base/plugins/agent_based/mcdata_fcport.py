@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Sequence, Union
+from collections.abc import Iterable, Sequence
 
 from .agent_based_api.v1 import OIDBytes, register, SNMPTree, startswith, type_defs
 from .utils import if64, interfaces
@@ -12,7 +12,7 @@ mcdata_fcport_speedbits = {"2": 1000000000, "3": 2000000000}
 mcdata_fcport_opstatus = {"1": "1", "2": "2", "3": "testing", "4": "faulty"}
 
 
-def _bin_to_64(bin_: Union[str, Sequence[int]]) -> int:
+def _bin_to_64(bin_: str | Sequence[int]) -> int:
     """
     >>> _bin_to_64([1])
     1
@@ -22,9 +22,7 @@ def _bin_to_64(bin_: Union[str, Sequence[int]]) -> int:
     return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
-def _line_to_interface(
-    line: Iterable[Union[str, Sequence[int]]]
-) -> interfaces.InterfaceWithCounters:
+def _line_to_interface(line: Iterable[str | Sequence[int]]) -> interfaces.InterfaceWithCounters:
     index, opStatus, speed, txWords64, rxWords64, txFrames64, rxFrames64, c3Discards64, crcs = line
     index = "%02d" % int(str(index))
     return interfaces.InterfaceWithCounters(
@@ -47,7 +45,9 @@ def _line_to_interface(
     )
 
 
-def parse_mcdata_fcport(string_table: type_defs.StringByteTable) -> interfaces.Section:
+def parse_mcdata_fcport(
+    string_table: type_defs.StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [_line_to_interface(line) for line in string_table]
 
 

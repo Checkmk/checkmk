@@ -1,7 +1,7 @@
 Package: check-mk-agent
 Version:
 Architecture: all
-Maintainer: tribe29 GmbH
+Maintainer: Checkmk GmbH
 Installed-Size:
 Section: System/Monitoring
 Priority: extra

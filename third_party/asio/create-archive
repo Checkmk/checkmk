@@ -2,16 +2,17 @@
 set -e
 
 VERSION=1.24.0
+PACKAGE=asio-${VERSION}
 
-rm -rf asio-${VERSION}.tar.gz asio-${VERSION} asio-${VERSION}-patched
+rm -rf ${PACKAGE}.tar.gz ${PACKAGE} ${PACKAGE}-patched
 curl --silent \
     --show-error \
     --fail \
     --location \
-    -o asio-${VERSION}.tar.gz \
-    "https://downloads.sourceforge.net/project/asio/asio/${VERSION}%20%28Stable%29/asio-${VERSION}.tar.gz"
-tar xzf asio-${VERSION}.tar.gz
+    --output ${PACKAGE}.tar.gz \
+    "https://downloads.sourceforge.net/project/asio/asio/${VERSION}%20%28Stable%29/${PACKAGE}.tar.gz"
+tar xzf ${PACKAGE}.tar.gz
 patch -p0 <asio.diff
-mv asio-${VERSION} asio-${VERSION}-patched
-GZIP=-9 tar czf asio-${VERSION}-patched.tar.gz asio-${VERSION}-patched
-rm -rf asio-${VERSION}.tar.gz asio-${VERSION} asio-${VERSION}-patched
+mv ${PACKAGE} ${PACKAGE}-patched
+tar cf - ${PACKAGE}-patched | gzip -9 >${PACKAGE}-patched.tar.gz
+rm -rf ${PACKAGE}.tar.gz ${PACKAGE} ${PACKAGE}-patched

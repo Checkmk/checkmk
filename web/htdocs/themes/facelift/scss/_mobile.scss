@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -133,6 +133,41 @@ body.mobile {
 
   #loginhead {
     margin: 1em;
+  }
+
+  input#_saml2_login_button {
+    margin-left: 0;
+    background-color: $success;
+  }
+
+  #login_error,
+  #login_error_saml2 {
+    div.error {
+      margin-left: auto;
+      margin-right: auto;
+      color: $white;
+    }
+  }
+
+  #login_error_saml2 div.error {
+    font-weight: $font-weight-bold;
+
+    p {
+      margin: 0;
+      font-weight: $font-weight-default;
+    }
+  }
+
+  h2.login_separator {
+    margin: 26px 0;
+    text-align: center;
+    border-bottom: 1px solid $black;
+    line-height: 0.1em;
+
+    span {
+      background-color: $mobile-background-color;
+      padding: 0 $spacing;
+    }
   }
 
   input {

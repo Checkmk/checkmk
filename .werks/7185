@@ -22,8 +22,8 @@ In general, you should keep the number of rules low. To support you in this,
 the rule is structured so that you can select several custom attributes for
 each rule.
 
-The custom service attribute will be named <tt>_[ID]</tt> in the core
+The custom service attribute will be named `_[ID]` in the core
 configuration and can be gathered using the Livestatus column
 <tt>custom_variables</tt> using the <tt>[ID]</tt>. The custom service
 attributes are available to notification scripts as environment variable
-named <tt>SERVICE_[ID]</tt>.
+named `SERVICE_[ID]`.

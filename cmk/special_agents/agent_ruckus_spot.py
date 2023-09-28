@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -96,7 +96,7 @@ def main(sys_argv=None):
                 venueid=venueid,
                 url_end=url_end,
             )
-            response = requests.get(url, auth=(api_key, "X"))
+            response = requests.get(url, auth=(api_key, "X"))  # nosec B113
 
             sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)
             sys.stdout.write(response.text + "\n")

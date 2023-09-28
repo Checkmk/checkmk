@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ from tests.testlib import SpecialAgent
                     "proxy_user": "banana",
                     "proxy_password": ("password", "banana123"),
                 },
-                "assume_role": {},
+                "access": {},
                 "global_services": {
                     "ce": None,
                 },
@@ -40,6 +40,7 @@ from tests.testlib import SpecialAgent
                     },
                     "cloudfront": None,
                 },
+                "piggyback_naming_convention": "checkmk_mix",
             },
             [
                 "--access-key-id",
@@ -64,6 +65,8 @@ from tests.testlib import SpecialAgent
                 "--ebs-limits",
                 "--hostname",
                 "testhost",
+                "--piggyback-naming-convention",
+                "checkmk_mix",
             ],
             id="explicit_passwords",
         ),
@@ -76,10 +79,11 @@ from tests.testlib import SpecialAgent
                     "proxy_user": "banana",
                     "proxy_password": ("store", "banana123"),
                 },
-                "assume_role": {},
+                "access": {},
                 "global_services": {},
                 "regions": [],
                 "services": {},
+                "piggyback_naming_convention": "checkmk_mix",
             },
             [
                 "--access-key-id",
@@ -94,6 +98,8 @@ from tests.testlib import SpecialAgent
                 ("store", "banana123", "%s"),
                 "--hostname",
                 "testhost",
+                "--piggyback-naming-convention",
+                "checkmk_mix",
             ],
             id="passwords_from_store",
         ),

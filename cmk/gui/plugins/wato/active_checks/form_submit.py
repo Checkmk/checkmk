@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
@@ -11,6 +13,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     ListOfStrings,
+    NetworkPort,
     RegExp,
     TextInput,
     Tuple,
@@ -22,7 +25,7 @@ def _valuespec_active_checks_form_submit() -> Tuple:
         title=_("Check HTML Form Submit"),
         help=_(
             "Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
-            "provided with Check_MK. This plugin provides more functionality than <tt>check_http</tt>, "
+            "provided with Checkmk. This plugin provides more functionality than <tt>check_http</tt>, "
             "as it automatically follows HTTP redirect, accepts and uses cookies, parses forms "
             "from the requested pages, changes vars and submits them to check the response "
             "afterwards."
@@ -59,7 +62,7 @@ def _valuespec_active_checks_form_submit() -> Tuple:
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("TCP Port"),
                             minvalue=1,
                             maxvalue=65535,
@@ -150,7 +153,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:form_submit",
+        name=RuleGroup.ActiveChecks("form_submit"),
         valuespec=_valuespec_active_checks_form_submit,
     )
 )

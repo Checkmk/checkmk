@@ -6,7 +6,7 @@ Date: 1657111508
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 There was a regression in 2.1 which broke the magic prefixing of column
 names for the statehist table with "current_".  This in turn broke various

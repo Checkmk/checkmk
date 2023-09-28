@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Starts a docker container and executes tests in it
@@ -48,7 +48,7 @@ def main(raw_args):
         "Version: %s (%s), Edition: %s, Branch: %s",
         version.version,
         version.version_spec,
-        version.edition.name,
+        version.edition.long,
         version.branch,
     )
 

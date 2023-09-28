@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,24 +7,26 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.tags import TagGroupID, TagID
+
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 import cmk.base.config as config
-from cmk.base import autochecks
 from cmk.base.config import ConfigCache
 
 
-class _AutochecksMocker(autochecks.AutochecksManager):
+class _AutochecksMocker(AutochecksManager):
     def __init__(self) -> None:
         super().__init__()
-        self.raw_autochecks: dict[HostName, Sequence[autochecks.AutocheckEntry]] = {}
+        self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[autochecks.AutocheckEntry]:
+    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
         return self.raw_autochecks.get(hostname, [])
 
 
@@ -33,7 +35,7 @@ class Scenario:
 
     @staticmethod
     def _get_config_cache() -> ConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, ConfigCache)
         return cc
 
@@ -59,7 +61,7 @@ class Scenario:
     def add_host(
         self,
         hostname: HostName,
-        tags: dict[str, str] | None = None,
+        tags: dict[TagGroupID, TagID] | None = None,
         host_path: str = "/wato/hosts.mk",
         labels: dict[str, str] | None = None,
         ipaddress: HostAddress | None = None,
@@ -101,7 +103,7 @@ class Scenario:
     def add_cluster(
         self,
         hostname: HostName,
-        tags: dict[str, str] | None = None,
+        tags: dict[TagGroupID, TagID] | None = None,
         host_path: str = "/wato/hosts.mk",
         nodes: Sequence[HostName] | None = None,
     ) -> None:
@@ -116,10 +118,12 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
 
-    # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+    # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-    def _get_effective_tag_config(self, tags: Mapping[str, str]) -> Mapping[str, str]:
+    def _get_effective_tag_config(
+        self, tags: Mapping[TagGroupID, TagID]
+    ) -> Mapping[TagGroupID, TagID]:
         """Returns a full set of tag groups
 
         It contains the merged default tag groups and their default values
@@ -130,19 +134,19 @@ class Scenario:
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": self.site_id,
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID(self.site_id),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
         }
         tag_config.update(tags)
 
         # NOTE: tag_config is modified within loop!
         for tg_id, tag_id in list(tag_config.items()):
-            if tg_id == "site":
+            if tg_id == TagGroupID("site"):
                 continue
 
             tag_group = self.tags.get_tag_group(tg_id)
@@ -163,22 +167,15 @@ class Scenario:
         """Warning: This is used in more cases than setting rule sets."""
         self.config[varname] = ruleset
 
-    def set_autochecks(
-        self, hostname: HostName, entries: Sequence[autochecks.AutocheckEntry]
-    ) -> None:
+    def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
     def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
-        check_vars: dict = {}
         for key, value in self.config.items():
-            if key in config._check_variables:
-                check_vars.setdefault(key, value)
-                continue
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = self._get_config_cache()
         self.config_cache.initialize()
-        config.set_check_variables(check_vars)
 
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
@@ -196,7 +193,7 @@ class CEEScenario(Scenario):
 
     @staticmethod
     def _get_config_cache() -> config.CEEConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, config.CEEConfigCache)
         return cc
 

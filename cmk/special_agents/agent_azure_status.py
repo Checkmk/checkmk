@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ from collections.abc import Iterable, Iterator, Sequence
 import feedparser  # type: ignore[import]
 import requests
 from feedparser.util import FeedParserDict  # type: ignore[import]
+from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
 from cmk.utils.azure_constants import AZURE_REGIONS
@@ -51,6 +52,7 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
     """
     affected_regions = set()
     title, summary = entry.title, entry.summary
+    tags = entry.get("tags")
 
     for region in all_regions:
         if region in title:
@@ -60,6 +62,10 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
         if region in summary:
             affected_regions.add(region)
             summary = summary.replace(region, "")
+
+        if tags is not None:
+            if any(t for t in tags if t["term"] == region):
+                affected_regions.add(region)
 
     return affected_regions
 
@@ -71,17 +77,21 @@ def get_azure_issues(
 
     for entry in entries:
         affected_regions = get_affected_regions(all_regions, entry)
+        parsed_html = fromstring(entry.summary)
+        summary = (
+            parsed_html.text_content() if isinstance(parsed_html, HtmlElement) else entry.summary
+        )
 
         if not affected_regions:
-            yield AzureIssue(region="Global", title=entry.title, description=entry.summary)
+            yield AzureIssue(region="Global", title=entry.title, description=summary)
 
         for region in affected_regions:
             if region in selected_regions:
-                yield AzureIssue(region=region, title=entry.title, description=entry.summary)
+                yield AzureIssue(region=region, title=entry.title, description=summary)
 
 
 def write_section(args: Args) -> int:
-    response = requests.get("https://status.azure.com/en-us/status/feed/")
+    response = requests.get("https://status.azure.com/en-us/status/feed/")  # nosec B113
     feed = feedparser.parse(response.text)
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]

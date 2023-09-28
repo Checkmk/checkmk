@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -52,12 +52,14 @@ def parse_arguments(argv):
 
 
 class ZertoRequest:
-    def __init__(self, connection_url, session_id) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, connection_url, session_id) -> None:  # type: ignore[no-untyped-def]
         self._endpoint = "%s/vms" % connection_url
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
     def get_vms_data(self):
-        response = requests.get(self._endpoint, headers=self._headers, verify=False)  # nosec
+        response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085
+            self._endpoint, headers=self._headers, verify=False
+        )
 
         if response.status_code != 200:
             LOGGER.debug("response status code: %s", response.status_code)
@@ -73,7 +75,7 @@ class ZertoRequest:
 
 
 class ZertoConnection:
-    def __init__(self, hostaddress, username, password) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, hostaddress, username, password) -> None:  # type: ignore[no-untyped-def]
         self._credentials = username, password
         self._host = hostaddress
         self.base_url = "https://%s:9669/v1" % self._host
@@ -81,10 +83,12 @@ class ZertoConnection:
     def get_session_id(self, authentication):
         url = "%s/session/add" % self.base_url
         if authentication == "windows":
-            response = requests.post(url, auth=self._credentials, verify=False)  # nosec
+            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:77308
+                url, auth=self._credentials, verify=False
+            )
         else:
             headers = {"content-type": "application/json"}
-            response = requests.post(  # nosec
+            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:773085
                 url, auth=self._credentials, headers=headers, verify=False
             )
 

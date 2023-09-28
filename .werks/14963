@@ -1,0 +1,21 @@
+Title: Check_MK Agent service: State if host is exluded from agent updates
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674658903
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+Within the ruleset "Checkmk agent installation auditing", it's possible for some time
+to configiure the state that is reported if the host queried the server for an agent update,
+but agent updates are globally disabled.
+
+With this Werk, it's also possible to configure the state for hosts that are rejected by the
+setting "Selection of hosts to activate agent updates for".
+
+Please note that this new setting will only apply if agent updates are globally enabled, as
+the agent bakery will not check the abovementioned host selection otherwise, hence no error
+will be reported for the host being rejected.
+

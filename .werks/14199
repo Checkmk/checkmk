@@ -1,0 +1,15 @@
+Title: Rule evaluation: Fixed unnecessary reloading of host labels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683719153
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Every rule that used labels resulted in a complete reload of all host labels from the hard disk.
+So if you had 10 rules using labels and 1000 hosts, 10000 files were opened during rule evaluation.
+
+

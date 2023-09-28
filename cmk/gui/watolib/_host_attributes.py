@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.watolib.host_attributes import (
     _clear_config_based_host_attributes,
@@ -5,7 +10,7 @@ from cmk.gui.watolib.host_attributes import (
     declare_custom_host_attrs,
     transform_pre_16_host_topics,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 _update_config_based_host_attributes_config_hash: str | None = None
 
@@ -31,7 +36,7 @@ def _update_config_based_host_attributes() -> None:
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
 
-    Folder.invalidate_caches()
+    folder_tree().invalidate_caches()
 
     _update_config_based_host_attributes_config_hash = _compute_config_hash()
 

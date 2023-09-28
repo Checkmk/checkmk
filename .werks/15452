@@ -1,0 +1,13 @@
+Title: Custom graph, forecast graph and graph collection: Sidebar integration option link fix
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1686125316
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Custom graphs, forecast graphs and graph collections have the option "Sidebar Integration".
+If this option was set, the save buttons did not correctly redirect.
+Additionally, this option prevented the title from being clickable in the list overview of the graphs.

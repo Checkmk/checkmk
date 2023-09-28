@@ -6,7 +6,7 @@ Date: 1662465284
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The endpoints to show a user like /objects/user_config/{userid} can now return set
 custom attributes.

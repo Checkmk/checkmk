@@ -1,0 +1,17 @@
+Title: Fix proxmox agent crash with shutdown nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1675068998
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The proxmox agent would fail with a KeyError when a proxmox VE node was shutdown.
+
+The error occured because a we do not get information for the timezone of shutdown
+nodes. The timezone information is used to convert timestamps for backups to utc.
+When no timezone information is found for a node we use the timezone of the first
+node we process.
+

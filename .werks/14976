@@ -1,0 +1,22 @@
+Title: Add SAML authentication to Checkmk UI
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1675160410
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+SAML authentication is now integrated with the Checkmk UI.
+
+The initial feature set includes the following:
+
+LI: Single sign-on (HTTP POST binding/front channel communication)
+LI: Setup page to configure one or more SAML connections: Setup -> Users -> SAML authentication
+LI: Automatic user creation and user attribute synchronization at login time
+LI: Signing of requests and signature verification of responses. Supported algorithms: SHA256, SHA384, SHA512
+LI: Logging to $OMD_ROOT/var/log/web.log for administrative and debugging purposes
+LI: Option to log in with username and password for non-SAML users (htpasswd/LDAP)
+
+With this change, we also deprecate the previous SAML integration approach on Apache level based on mod_auth_mellon. Support will be dropped with Checkmk version 2.3.0. If you would still like to use this approach in version 2.3.0 and beyond, mod_auth_mellon will need to be installed.

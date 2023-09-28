@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=protected-access
 
 from typing import Any
 
@@ -57,7 +55,6 @@ def test_check_cpu_util() -> None:
 
 
 def test_check_cpu_util_unix() -> None:
-
     assert list(
         cpu_util.check_cpu_util_unix(
             cpu_info=cpu_util.CPUInfo("cpu-name", 10, 4, 6, 8, 5, 8, 3, 6, 2, 4),
@@ -84,7 +81,6 @@ def test_check_cpu_util_unix() -> None:
 
 
 def test_cpu_util_time() -> None:
-
     value_store: dict[str, Any] = {}
 
     # over threshold for the first time
@@ -129,7 +125,6 @@ def test_cpu_util_time() -> None:
 
 
 def test__util_counter() -> None:
-
     cpu = cpu_util.CPUInfo("cpu-name", 100, 40, 60, 80, 50, 80, 30, 60, 20, 40)
 
     assert cpu_util._util_counter(cpu, {}) == cpu

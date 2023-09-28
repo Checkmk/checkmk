@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,21 +11,12 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupSiteManagement, ReplicationPath
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-    SerializedSettings,
-    wato_fileheader,
-)
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -33,13 +24,21 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Filesize,
     Integer,
-    ListChoice,
     Optional,
     Tuple,
     ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_domain_registry,
+    config_variable_registry,
+    ConfigDomainName,
+    ConfigVariable,
+    ConfigVariableGroup,
+    SerializedSettings,
+    wato_fileheader,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
@@ -72,7 +71,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
             title=_("Start during system boot"),
             help=_(
                 "Whether or not this site should be started during startup of "
-                "the Check_MK server."
+                "the Checkmk server."
             ),
         )
 
@@ -102,7 +101,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
     def _monitoring_core_choices(self):
         cores = []
-        if not cmk_version.is_raw_edition():
+        if edition() is not Edition.CRE:
             cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
@@ -135,42 +134,6 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
             ),
             label=_("Enable Livestatus access via network (TCP)"),
             none_label=_("Livestatus is available locally"),
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableSiteEventConsole(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
-
-    def ident(self) -> str:
-        return "site_mkeventd"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=ListChoice(
-                choices=[
-                    ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
-                    ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
-                    ("SYSLOG_TCP", _("Receive Syslog messages (TCP/514)")),
-                ],
-                title=_("Listen for incoming messages via"),
-                empty_text=_("Locally enabled"),
-            ),
-            title=_("Event Console"),
-            help=_(
-                "This option enables the Event Console - The event processing and "
-                "classification daemon of Check_MK. You can also configure whether "
-                "or not the Event Console shal listen for incoming SNMP traps or "
-                "syslog messages. Please note that only a single Check_MK site per "
-                "Check_MK server can listen for such messages."
-            ),
-            label=_("Event Console enabled"),
-            none_label=_("Event Console disabled"),
-            indent=False,
         )
 
 
@@ -208,7 +171,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return self.load()
 
     def load(self, site_specific=False, custom_site_path=None):
-        cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
+        cleanup_settings = {**store.load_mk_file(self.diskspace_config, default={})}
         if not cleanup_settings:
             return {}
 
@@ -257,7 +220,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), "exec")
-            exec(code, {}, diskspace_context)
+            exec(code, {}, diskspace_context)  # nosec B102 # BNS:aee528
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }

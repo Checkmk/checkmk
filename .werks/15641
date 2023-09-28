@@ -1,0 +1,20 @@
+Title: Prometheus: Properly Encode PromQL Queries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1694340058
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p10
+
+The Prometheus agent allows specifying PromQL queries via the option <tt>Service creation using
+PromQL queries</tt>. In 2.2.0, any query containing a '+' would not be encoded properly. For
+example, the query
+C+:
+up{container=".+"}
+C-:
+would result in a HTTP request, which is interpreted by Prometheus as
+C+:
+up{container=". "}
+C-:

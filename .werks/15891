@@ -1,0 +1,13 @@
+Title: ical_import: .ical files are now imported using the icalendar package
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1686913859
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+When importing .ical files, the icalendar package is now responsible for
+parsing the contents.

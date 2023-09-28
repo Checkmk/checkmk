@@ -6,7 +6,7 @@ Date: 1672613558
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 We recently added new features to the <i>extension packages</i> (a.k.a. <i>MKPs</i>) manager.
 
@@ -23,12 +23,22 @@ To get a list of all local files, for instance, use "<tt>mkp find --json --all |
 This is a new command to show the contents of an MKP file as listed in its manifest file (a.k.a. "info").
 The <tt>show</tt> and <tt>list</tt> commands no longer accept paths as argument.
 
-<tt>store PATH_TO_FILE</tt>:
+<tt>show-all</tt>
+This is a new command to show the contents of all MKPs known to the sites extension package manager.
+
+<tt>files NAME [VERSION]</tt>
+This is a new command that replaces <tt>list NAME</tt>.
+
+<tt>list</tt>
+This command no longer accepts an argument.
+It will print a table of packages, similar to what the WATO setup page shows.
+
+<tt>add PATH_TO_FILE</tt>:
 This is a new command to add an MKP to the collection of MKPs managed by this tool.
 This command corresponds to the "<i>upload</i>" action in the GUI.
 
 <tt>install</tt>:
-This command is replaced by the commands <tt>store</tt> and <tt>enable</tt>, to reflect the GUI actions.
+This command is replaced by the commands <tt>add</tt> and <tt>enable</tt>, to reflect the GUI actions.
 
 <tt>update-active-packages</tt> is renamed to <tt>update-active</tt>.
 

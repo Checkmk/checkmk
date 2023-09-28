@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ juniper_mem_default_levels = (80.0, 90.0)
 
 
 def inventory_juniper_mem_generic(info):
-    return [(None, "juniper_mem_default_levels")]
+    return [(None, juniper_mem_default_levels)]
 
 
 def check_juniper_mem_generic(_no_item, params, info):

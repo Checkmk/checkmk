@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -27,7 +27,7 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 
-import paho.mqtt.client as mqtt  # type: ignore[import]
+import paho.mqtt.client as mqtt
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser

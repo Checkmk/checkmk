@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,6 +6,7 @@
 #include "livestatus/global_counters.h"
 
 #include <chrono>
+#include <compare>
 #include <mutex>
 #include <optional>
 #include <ratio>
@@ -42,7 +43,7 @@ double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
 
 void counterReset(Counter which) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     c.value = 0.0;
     c.last_value = 0.0;
     c.rate = 0.0;
@@ -50,31 +51,31 @@ void counterReset(Counter which) {
 
 void counterSet(Counter which, double value) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     c.value = value;
 }
 
 void counterIncrement(Counter which) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     c.value++;
 }
 
 void counterIncrementBy(Counter which, std::size_t value) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     c.value += value;
 }
 
 double counterValue(Counter which) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     return c.value;
 }
 
 double counterRate(Counter which) {
     auto &c = counter(which);
-    std::lock_guard<std::mutex> lg(c.mutex);
+    const std::lock_guard<std::mutex> lg(c.mutex);
     return c.rate;
 }
 
@@ -90,10 +91,10 @@ void do_statistics() {
     }
     last_statistics_update = now;
     for (auto &c : counters) {
-        std::lock_guard<std::mutex> lg(c.mutex);
+        const std::lock_guard<std::mutex> lg(c.mutex);
         auto age_secs = mk::ticks<std::chrono::seconds>(age);
-        double old_rate = c.rate;
-        double new_rate = (c.value - c.last_value) / age_secs;
+        const double old_rate = c.rate;
+        const double new_rate = (c.value - c.last_value) / age_secs;
         c.rate = lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);
         c.last_value = c.value;
     }

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -34,7 +35,7 @@ class Chassis(NamedTuple):
     max_temp: float
     min_temp: float
     threshold_temp: float
-    avg_temp: Optional[float]
+    avg_temp: float | None
     dev_unit: str
 
 
@@ -111,18 +112,18 @@ def check_aruba_chassis_temp(
 
     yield Result(
         state=State.OK,
-        summary=f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+        summary=f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+        summary=f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
     )
 
     if chassis.avg_temp:
         yield Result(
             state=State.OK,
-            summary=f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+            summary=f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
         )
 
 

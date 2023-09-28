@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import asyncio
 import os
+from collections.abc import Iterable
 
 import pytest
 
-from tests.testlib.crawler import Crawler, Iterable, mutate_url_with_xss_payload, Url
+from tests.testlib.crawler import Crawler, mutate_url_with_xss_payload, Url
 
 
 def test_crawl(test_crawler: Crawler) -> None:
-    asyncio.run(test_crawler.crawl(max_tasks=int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10))))
+    asyncio.run(test_crawler.crawl(max_tasks=int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 5))))
 
 
 @pytest.mark.type("unit")

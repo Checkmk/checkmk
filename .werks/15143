@@ -1,0 +1,13 @@
+Title: azure_load_balancer: Inventory for Azure Load Balancer added
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1674116261
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+A HW/SW inventory plugin has been added for Azure Load Balancer.
+It shows the information about inbound NAT and outbound rules of
+a load balancer.

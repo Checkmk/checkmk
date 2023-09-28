@@ -1,15 +1,23 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
-import * as utils from "utils";
 import * as ajax from "ajax";
 import * as foldable_container from "foldable_container";
+import * as utils from "utils";
 
-export function toggle_grouped_rows(tree, id, cell, num_rows) {
-    var group_title_row = cell.parentNode;
+export function toggle_grouped_rows(
+    tree: string,
+    id: string,
+    cell: HTMLTableCellElement,
+    num_rows: number
+) {
+    const group_title_row = cell.parentNode as HTMLElement;
 
-    var display, toggle_img_open, state;
+    let display, toggle_img_open;
+    let state: "on" | "off";
     if (utils.has_class(group_title_row, "closed")) {
         utils.remove_class(group_title_row, "closed");
         display = "";
@@ -22,22 +30,31 @@ export function toggle_grouped_rows(tree, id, cell, num_rows) {
         state = "off";
     }
 
-    utils.toggle_folding(cell.getElementsByTagName("IMG")[0], toggle_img_open);
+    utils.toggle_folding(
+        cell.getElementsByTagName("IMG")[0] as HTMLImageElement,
+        toggle_img_open
+    );
     foldable_container.persist_tree_state(tree, id, state);
 
-    var row = group_title_row;
-    for (var i = 0; i < num_rows; i++) {
-        row = row.nextElementSibling;
+    let row = group_title_row;
+    for (let i = 0; i < num_rows; i++) {
+        row = row.nextElementSibling as HTMLElement;
         row.style.display = display;
     }
 }
 
-export function reschedule_check(oLink, site, host, service, wait_svc) {
-    var img = oLink.getElementsByTagName("IMG")[0];
+export function reschedule_check(
+    oLink: HTMLElement,
+    site: any,
+    host: any,
+    service: string,
+    wait_svc: string
+) {
+    const img = oLink.getElementsByTagName("IMG")[0] as HTMLImageElement;
     utils.remove_class(img, "reload_failed");
     utils.add_class(img, "reloading");
 
-    var post_data =
+    const post_data =
         "request=" +
         encodeURIComponent(
             JSON.stringify({
@@ -58,11 +75,14 @@ export function reschedule_check(oLink, site, host, service, wait_svc) {
     });
 }
 
-function reschedule_check_response_handler(handler_data, ajax_response) {
-    var img = handler_data.img;
+function reschedule_check_response_handler(
+    handler_data: {img: HTMLImageElement},
+    ajax_response: string
+) {
+    const img = handler_data.img;
     utils.remove_class(img, "reloading");
 
-    var response = JSON.parse(ajax_response);
+    const response = JSON.parse(ajax_response);
     if (response.result_code != 0) {
         utils.add_class(img, "reload_failed");
         img.title = "Error [" + response.result_code + "]: " + response.result; // eslint-disable-line

@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.utils.aws_constants import AWSEC2InstFamilies, AWSEC2InstTypes
 
+from cmk.gui.graphing._color import indexed_color
+from cmk.gui.graphing._type_defs import LineType
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -1004,13 +1008,19 @@ metric_info["aws_elasticache_subnet_groups"] = {
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info["aws_ec2_running_ondemand_instances"] = {
-    "title": _l("Total running On-Demand Instances"),
-    "metrics": [("aws_ec2_running_ondemand_instances_total", "line")]
-    + [
+
+def _aws_ec2_running_ondemand_instances_metrics() -> Sequence[tuple[str, LineType]]:
+    metrics: list[tuple[str, LineType]] = [("aws_ec2_running_ondemand_instances_total", "line")]
+    metrics += [
         ("aws_ec2_running_ondemand_instances_%s" % inst_type, "stack")
         for inst_type in AWSEC2InstTypes
-    ],
+    ]
+    return metrics
+
+
+graph_info["aws_ec2_running_ondemand_instances"] = {
+    "title": _l("Total running On-Demand Instances"),
+    "metrics": _aws_ec2_running_ondemand_instances_metrics(),
     "optional_metrics": [
         "aws_ec2_running_ondemand_instances_%s" % inst_type for inst_type in AWSEC2InstTypes
     ],
@@ -1110,5 +1120,27 @@ graph_info["aws_cloudfront_errors_rate"] = {
         ("aws_cloudfront_total_error_rate", "stack"),
         ("aws_cloudfront_4xx_error_rate", "stack"),
         ("aws_cloudfront_5xx_error_rate", "stack"),
+    ],
+}
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["bucket_size"] = {
+    "title": _l("Bucket size"),
+    "metrics": [
+        ("aws_bucket_size", "line"),
+    ],
+}
+
+graph_info["num_objects"] = {
+    "title": _l("Number of bucket objects"),
+    "metrics": [
+        ("aws_num_objects", "line"),
+    ],
+}
+
+graph_info["buckets"] = {
+    "title": _l("Buckets"),
+    "metrics": [
+        ("aws_s3_buckets", "line"),
     ],
 }

@@ -1,0 +1,13 @@
+Title: VMware ESXi [Filesystems]: Show Servers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686573788
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The built-in view <tt>VMware ESXi [Filesystems]</tt> would previously only show
+servers with the label <tt>cmk/os_family:VMware ESXi</tt>. This would cause it
+to erroneously filter out hosts in specific agent configurations.

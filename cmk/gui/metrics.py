@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,29 +23,32 @@ from typing import Any
 import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.html_render import (
+from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.graphing import _color as graphing_color
+from cmk.gui.graphing import _unit_info as graphing_unit_info
+from cmk.gui.graphing import _utils as graphing_utils
+from cmk.gui.graphing._expression import parse_conditional_expression, parse_expression
+from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
+from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
-from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
-    evaluate,
-    graph_info,
+from cmk.gui.graphing._unit_info import unit_info
+from cmk.gui.graphing._utils import (
+    CombinedSingleMetricSpec,
     LegacyPerfometer,
     parse_perf_data,
     perfometer_info,
     translate_metrics,
-    TranslatedMetrics,
-    unit_info,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, PerfometerSpec
+from cmk.gui.http import request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -68,72 +71,77 @@ def load_plugins() -> None:
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
 
-    fixup_graph_info()
-    fixup_unit_info()
     fixup_perfometer_info()
 
 
 def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plugin API"
 
-    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
     In the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.metrics as api_module
-    import cmk.gui.plugins.metrics.utils as plugin_utils
+    import cmk.gui.plugins.metrics as legacy_api_module
+    import cmk.gui.plugins.metrics.utils as legacy_plugin_utils
 
     for name in (
         "check_metrics",
-        "darken_color",
         "G",
         "GB",
         "graph_info",
         "GraphTemplate",
-        "indexed_color",
         "K",
         "KB",
-        "lighten_color",
         "m",
         "M",
         "MAX_CORES",
         "MAX_NUMBER_HOPS",
         "MB",
         "metric_info",
-        "MONITORING_STATUS_COLORS",
         "P",
-        "parse_color",
-        "parse_color_into_hexrgb",
         "PB",
         "perfometer_info",
-        "render_color",
-        "scalar_colors",
         "scale_symbols",
         "skype_mobile_devices",
         "T",
         "TB",
         "time_series_expression_registry",
-        "unit_info",
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
+        legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
+        legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
 
+    legacy_api_module.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
+    legacy_plugin_utils.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
 
-def fixup_graph_info() -> None:
-    # create back link from each graph to its id.
-    for graph_id, graph in graph_info.items():
-        graph["id"] = graph_id
+    for name in (
+        "darken_color",
+        "indexed_color",
+        "lighten_color",
+        "MONITORING_STATUS_COLORS",
+        "parse_color",
+        "parse_color_into_hexrgb",
+        "render_color",
+        "scalar_colors",
+    ):
+        legacy_api_module.__dict__[name] = graphing_color.__dict__[name]
+        legacy_plugin_utils.__dict__[name] = graphing_color.__dict__[name]
 
-
-def fixup_unit_info() -> None:
-    # create back link from each unit to its id.
-    for unit_id, unit in unit_info.items():
-        unit["id"] = unit_id
-        unit.setdefault("description", unit["title"])
+    # Avoid needed imports, see CMK-12147
+    globals().update(
+        {
+            "indexed_color": graphing_color.indexed_color,
+            "metric_info": graphing_utils.metric_info,
+            "check_metrics": graphing_utils.check_metrics,
+            "graph_info": graphing_utils.graph_info,
+        }
+    )
 
 
 def fixup_perfometer_info() -> None:
@@ -156,7 +164,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
         # Convert legacy tuple based perfometer
         perfometer_type, perfometer_args = perfometer[0], perfometer[1]
         if perfometer_type in ("dual", "stacked"):
-
             sub_performeters = perfometer_args[:]
             _convert_legacy_tuple_perfometers(sub_performeters)
 
@@ -185,7 +192,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
 def _lookup_required_expressions(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> list[PerfometerExpression]:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
@@ -201,7 +207,6 @@ def _lookup_required_expressions(
 def _lookup_required_names(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> RequiredMetricNames | None:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
@@ -353,15 +358,15 @@ class Perfometers:
 
         for req in _lookup_required_expressions(perfometer):
             try:
-                evaluate(req, translated_metrics)
+                parse_expression(req, translated_metrics).evaluate(translated_metrics)
             except Exception:
                 return False
 
         if "condition" in perfometer:
             try:
-                value, _color, _unit = evaluate(perfometer["condition"], translated_metrics)
-                if value == 0.0:
-                    return False
+                return parse_conditional_expression(
+                    perfometer["condition"], translated_metrics
+                ).evaluate(translated_metrics)
             except Exception:
                 return False
 
@@ -446,10 +451,17 @@ class MetricometerRenderer(abc.ABC):
                 return ""
 
             expr, unit_name = self._perfometer["label"]
-            value, unit, _color = evaluate(expr, self._translated_metrics)
-            if unit_name:
-                unit = unit_info[unit_name]
-            return unit["render"](value)
+            result = parse_expression(expr, self._translated_metrics).evaluate(
+                self._translated_metrics
+            )
+            unit_info_ = unit_info[unit_name] if unit_name else result.unit_info
+
+            if isinstance(expr, int | float):
+                value = unit_info_.get("conversion", lambda v: v)(expr)
+            else:
+                value = result.value
+
+            return self._render_value(unit_info_, value)
 
         return self._get_type_label()
 
@@ -463,6 +475,10 @@ class MetricometerRenderer(abc.ABC):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
+
+    @staticmethod
+    def _render_value(unit: UnitInfo, value: float) -> str:
+        return unit.get("perfometer_render", unit["render"])(value)
 
 
 class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[type[MetricometerRenderer]]):
@@ -494,22 +510,36 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             )
 
     def get_stack(self) -> MetricRendererStack:
-        value, _unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
+            self._translated_metrics
+        )
         return [
             self.get_stack_from_values(
-                value, self._perfometer["half_value"], self._perfometer["exponent"], color
+                result.value,
+                *self.estimate_parameters_for_converted_units(
+                    result.unit_info.get(
+                        "conversion",
+                        lambda v: v,
+                    )
+                ),
+                result.color,
             )
         ]
 
     def _get_type_label(self) -> str:
-        value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return unit["render"](value)
+        result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
+            self._translated_metrics
+        )
+        return self._render_value(result.unit_info, result.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return value
+        return (
+            parse_expression(self._perfometer["metric"], self._translated_metrics)
+            .evaluate(self._translated_metrics)
+            .value
+        )
 
     @staticmethod
     def get_stack_from_values(
@@ -518,6 +548,11 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         base: int | float,
         color: str,
     ) -> list[tuple[int | float, str]]:
+        """
+        half_value: if value == half_value, the perfometer is filled by 50%
+        base: if we multiply value by base, the perfometer is filled by another 10%, unless we hit
+        the min/max cutoffs
+        """
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
@@ -529,6 +564,38 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             pos = min(max(2, pos), 98)
 
         return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
+
+    def estimate_parameters_for_converted_units(
+        self, conversion: Callable[[float], float]
+    ) -> tuple[float, float]:
+        """
+        Estimate a new half_value (50%-value) and a new exponent (10%-factor) for converted units.
+
+        Regarding the 50%-value, we can simply apply the conversion. However, regarding the 10%-
+        factor, it's certainly wrong to simply directly apply the conversion. For example, doing
+        that for the conversion degree celsius -> degree fahrenheit would yield a 10%-factor of 28.5
+        for degree fahrenheit (compared to 1.2 for degree celsius).
+
+        Instead, we estimate a new factor as follows:
+        h_50: 50%-value for original units
+        f_10: 10%-factor for original units
+        c: conversion function
+        h_50_c = c(h_50): 50%-value for converted units aka. converted 50%-value
+        f_10_c: 10%-factor for converted units
+
+        f_10_c = c(h_50 * f_10) / h_50_c
+                 --------------
+                 converted 60%-value
+                 -----------------------
+                 ratio of converted 60%- to converted 50%-value
+        """
+        h_50 = self._perfometer["half_value"]
+        f_10 = self._perfometer["exponent"]
+        h_50_c = conversion(self._perfometer["half_value"])
+        return (
+            h_50_c,
+            conversion(h_50 * f_10) / h_50_c,
+        )
 
 
 @renderer_registry.register
@@ -542,18 +609,21 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         summed = self._get_summed_values()
 
-        if "total" in self._perfometer:
-            total, _unit, _color = evaluate(self._perfometer["total"], self._translated_metrics)
-        else:
-            total = summed
-
-        if total == 0:
+        if (
+            total := (
+                summed
+                if (total_expression := self._perfometer.get("total")) is None
+                else self._evaluate_total(total_expression)
+            )
+        ) == 0:
             entry.append((100.0, get_themed_perfometer_bg_color()))
 
         else:
             for ex in self._perfometer["segments"]:
-                value, _unit, color = evaluate(ex, self._translated_metrics)
-                entry.append((100.0 * value / total, color))
+                result = parse_expression(ex, self._translated_metrics).evaluate(
+                    self._translated_metrics
+                )
+                entry.append((100.0 * result.value / total, result.color))
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
@@ -561,23 +631,39 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
+    def _evaluate_total(self, total_expression: str | int | float) -> float:
+        if isinstance(total_expression, float | int):
+            return self._unit().get("conversion", lambda v: v)(total_expression)
+        return (
+            parse_expression(total_expression, self._translated_metrics)
+            .evaluate(self._translated_metrics)
+            .value
+        )
+
+    def _unit(self) -> UnitInfo:
+        # We assume that all expressions across all segments have the same unit
+        return (
+            parse_expression(self._perfometer["segments"][0], self._translated_metrics)
+            .evaluate(self._translated_metrics)
+            .unit_info
+        )
+
     def _get_type_label(self) -> str:
-        # Use unit of first metrics for output of sum. We assume that all
-        # stackes metrics have the same unit anyway
-        _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return unit["render"](self._get_summed_values())
+        return self._render_value(self._unit(), self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
-        value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return value
+        return (
+            parse_expression(self._perfometer["segments"][0], self._translated_metrics)
+            .evaluate(self._translated_metrics)
+            .value
+        )
 
     def _get_summed_values(self):
-        summed = 0.0
-        for ex in self._perfometer["segments"]:
-            value, _unit, _color = evaluate(ex, self._translated_metrics)
-            summed += value
-        return summed
+        return sum(
+            parse_expression(ex, self._translated_metrics).evaluate(self._translated_metrics).value
+            for ex in self._perfometer["segments"]
+        )
 
 
 @renderer_registry.register
@@ -623,7 +709,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def type_name(cls) -> str:
         return "dual"
 
-    def __init__(self, perfometer, translated_metrics) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, perfometer, translated_metrics) -> None:  # type: ignore[no-untyped-def]
         super().__init__(perfometer, translated_metrics)
 
         if len(perfometer["perfometers"]) != 2:
@@ -692,7 +778,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 def page_host_service_graph_popup(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `host_service_graph_popup`."""
@@ -722,14 +808,16 @@ def page_host_service_graph_popup(
 
 def page_graph_dashlet(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
     """Registered as `graph_dashlet`."""
     spec = request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_identification = json.loads(request.get_str_input_mandatory("spec"))
+    graph_specification = parse_raw_graph_specification(
+        json.loads(request.get_str_input_mandatory("spec"))
+    )
 
     render = request.var("render")
     if not render:
@@ -737,7 +825,8 @@ def page_graph_dashlet(
     custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
 
     host_service_graph_dashlet_cmk(
-        graph_identification,
+        graph_specification,
         custom_graph_render_options,
         resolve_combined_single_metric_spec,
+        graph_display_id=request.get_str_input_mandatory("id"),
     )

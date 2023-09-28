@@ -1,0 +1,15 @@
+Title: Backups: AWS S3 buckets can now be used as backup targets
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1674468624
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+AWS S3 buckets can now be selected as destination when configuring <a href="https://docs.checkmk.com/latest/en/backup.html">backup</a> targets.
+
+When selecting this option, users need to enter AWS credentials, the name of the bucket and a
+local directory used for temporary storage before uploading to and after downloading from the
+bucket.

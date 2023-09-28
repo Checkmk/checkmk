@@ -6,7 +6,7 @@ Date: 1662108244
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Only for docker and podman we could reliably detect if OMD is running in a container.
 The official docker image now sets a CMK_CONTAINERIZED=TRUE environment variable that

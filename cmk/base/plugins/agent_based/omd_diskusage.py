@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Iterator, Mapping, NewType, Sequence
+from typing import Final, LiteralString
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, render, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -15,45 +16,66 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 
 @dataclass(frozen=True)
-class Site:
-    site: int
-    logs: int
-    rrds: int
+class Spec:
+    metric_name: LiteralString
+    label: LiteralString
 
 
-Section = NewType("Section", Mapping[str, Site])
+@dataclass(frozen=True)
+class Directory:
+    value: int
+    spec: Spec
 
 
-def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequence[str]]]:
-    sub_section: list[str] = []
+Section = Mapping[str, Sequence[Directory]]
+
+
+SPECS: Final = {
+    "": Spec(metric_name="omd_size", label="Total"),
+    "/var/log": Spec(metric_name="omd_log_size", label="Logs"),
+    "/var/check_mk/rrd": Spec(metric_name="omd_rrd_size", label="RRDs"),
+    "/tmp": Spec(metric_name="omd_tmp_size", label="Tmp"),
+    "/local": Spec(metric_name="omd_local_size", label="Local"),
+    "/var/check_mk/agents": Spec(metric_name="omd_agents_size", label="Agents"),
+    "/var/mkeventd/history": Spec(metric_name="omd_history_size", label="History"),
+    "/var/check_mk/core": Spec(metric_name="omd_core_size", label="Core"),
+    "/var/pnp4nagios": Spec(metric_name="omd_pnp4nagios_size", label="PNP4Nagios"),
+    "/var/check_mk/inventory_archive": Spec(
+        metric_name="omd_inventory_size",
+        label="Inventory",
+    ),
+}
+
+
+def sub_section_parser(
+    string_table: StringTable,
+) -> Iterator[tuple[str, Sequence[tuple[int, str]]]]:
+    sub_section: list[tuple[int, str]] = []
     name = ""
     for line in string_table:
         if line[0].startswith("[") and line[0].endswith("]"):
             if len(sub_section) == 0:
-                name = line[0][1:-1]
+                name = line[0].removeprefix("[site ")[:-1]
                 continue
             yield name, sub_section
-            name = line[0][1:-1]
+            name = line[0].removeprefix("[site ")[:-1]
             sub_section = []
         elif line[0] != "":
-            sub_section.append(line[0])
+            raw_value, dir_name = line[0].split()
+            sub_section.append((int(raw_value), dir_name.rstrip("/")))
     if len(sub_section) != 0:
         yield name, sub_section
 
 
 def parse(string_table: StringTable) -> Section:
-    sites: dict[str, Site] = {}
-    for section_name, lines in sub_section_parser(string_table):
-        log = rrd = site = 0
-        for line in lines:
-            if "log" in line:
-                log = int(line.split()[0])
-            elif "rrd" in line:
-                rrd = int(line.split()[0])
-            else:
-                site = int(line.split()[0])
-            sites[section_name.split()[1]] = Site(site, log, rrd)
-    return Section(sites)
+    return {
+        site_name: [
+            Directory(spec=spec, value=size)
+            for size, dir_name in lines
+            if (spec := SPECS.get(dir_name.removeprefix(f"/omd/sites/{site_name}")))
+        ]
+        for site_name, lines in sub_section_parser(string_table)
+    }
 
 
 register.agent_section(
@@ -68,16 +90,16 @@ def discovery(section: Section) -> DiscoveryResult:
 
 
 def check(item: str, section: Section) -> CheckResult:
-    site = section[item]
-    yield from check_levels(
-        site.site, metric_name="omd_size", label="Total", render_func=render.bytes
-    )
-    yield from check_levels(
-        site.logs, metric_name="omd_log_size", label="Logs", render_func=render.bytes
-    )
-    yield from check_levels(
-        site.rrds, metric_name="omd_rrd_size", label="RRDs", render_func=render.bytes
-    )
+    if (directories := section.get(item)) is None:
+        return
+
+    for entry in sorted(directories, key=lambda d: (d.spec.label != "Total", d.spec.label)):
+        yield from check_levels(
+            entry.value,
+            metric_name=entry.spec.metric_name,
+            label=entry.spec.label,
+            render_func=render.bytes,
+        )
 
 
 register.check_plugin(

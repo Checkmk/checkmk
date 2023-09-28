@@ -1,0 +1,14 @@
+Title: REST API: utils: remove enum in host response for TagGroup choices
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1673626041
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The TagGroup choices allowed are set at runtime but they can be modified which
+was causing a 500 internal error in the REST API.  This fix removes the enum
+and now allows any string in REST API responses for the TagGroup choices.
+

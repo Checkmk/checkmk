@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,6 +6,25 @@ const path = require("path");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
+const {VueLoaderPlugin} = require("vue-loader");
+
+class WarningsToErrors {
+    apply(compiler) {
+        compiler.hooks.shouldEmit.tap("WarningsToErrors", compilation => {
+            if (compilation.warnings.length > 0) {
+                compilation.errors = compilation.errors.concat(compilation.warnings);
+                compilation.warnings = [];
+            }
+
+            compilation.children.forEach(child => {
+                if (child.warnings.length > 0) {
+                    child.errors = child.errors.concat(child.warnings);
+                    child.warnings = [];
+                }
+            });
+        });
+    }
+}
 
 module.exports = {
     mode: "production",
@@ -45,7 +64,7 @@ module.exports = {
             "node_modules",
             path.resolve(__dirname, "web/htdocs/js/modules"),
             path.resolve(__dirname, "web/htdocs/js/modules/figures"),
-            path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
+            path.resolve(__dirname, "web/htdocs/js/modules/nodevis"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
@@ -111,11 +130,17 @@ module.exports = {
                     },
                 ],
             },
+            {
+                test: /\.vue$/,
+                use: [{loader: "vue-loader"}],
+            },
         ],
     },
     plugins: [
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
+        new WarningsToErrors(),
+        new VueLoaderPlugin(),
     ],
 };
 
@@ -141,6 +166,10 @@ let babel_loader = {
                 "@babel/plugin-transform-parameters",
                 "@babel/proposal-class-properties",
                 "@babel/proposal-object-rest-spread",
+                // @babel/transform-typescript is required because babel is unable
+                // to identify/process typescript generated from *.vue files
+                // An alternative approach would be the preset babel-preset-typescript-vue
+                "@babel/plugin-transform-typescript",
             ],
         },
     },
@@ -161,4 +190,5 @@ if (process.env.WEBPACK_MODE === "quick") {
         },
     ]);
 }
+
 module.exports.module.rules.unshift(babel_loader);

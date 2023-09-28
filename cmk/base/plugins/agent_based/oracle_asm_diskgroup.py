@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -65,13 +66,13 @@ class Failgroup(NamedTuple):
 
 class Diskgroup(NamedTuple):
     dgstate: str
-    dgtype: Optional[str]
-    total_mb: Optional[int]
-    free_mb: Optional[int]
+    dgtype: str | None
+    total_mb: int | None
+    free_mb: int | None
     req_mir_free_mb: int
     offline_disks: int
     voting_files: str
-    fail_groups: List[Failgroup]
+    fail_groups: list[Failgroup]
 
 
 class Section(NamedTuple):
@@ -89,7 +90,7 @@ def _is_deprecated_oracle_asm_plugin_from_1_2_6(repair_time: str, num_disks: str
     return not num_disks.isnumeric() or repair_time == "N"
 
 
-def _try_parse_int(value: Any) -> Optional[int]:
+def _try_parse_int(value: Any) -> int | None:
     try:
         return int(value)
     except ValueError:
@@ -99,7 +100,7 @@ def _try_parse_int(value: Any) -> Optional[int]:
 def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    tmp_section: Dict[str, Diskgroup] = {}
+    tmp_section: dict[str, Diskgroup] = {}
     found_deprecated_agent_output = False
 
     for line in string_table:
@@ -117,7 +118,6 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             index = 1
 
             if len(line) == 14:
-
                 # work arround for new format with '|'
                 # => we get a clean output from agent. no need to correct it with index
                 index = 2
@@ -193,7 +193,6 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
 
         dgname = dgname.rstrip("/")
         if len(stripped_line) != 12:
-
             # old format without fg data
             tmp_section.setdefault(
                 dgname,
@@ -210,8 +209,7 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             )
 
         else:
-
-            failgroups: List[Failgroup] = []
+            failgroups: list[Failgroup] = []
             if dgstate == "MOUNTED":
                 this_failgroup = Failgroup(
                     fg_name=fg_name,
@@ -224,7 +222,6 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 )
 
                 if dgname in tmp_section:
-
                     # append entry to failgroups
                     tmp = tmp_section[dgname].fail_groups
                     failgroups = tmp
@@ -300,7 +297,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
     add_text = ""
 
     if data.fail_groups:
-
         # => New agentformat!
 
         fg_count = len(data.fail_groups)
@@ -311,9 +307,7 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             dg_sizefactor = 1
 
         elif dgtype == "NORMAL":
-
             if fg_count == 1:
-
                 # we miss the 2nd required fg.
                 # => factor is down from 2 to 1
                 dg_sizefactor = 1
@@ -322,9 +316,7 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 dg_sizefactor = 2
 
         elif dgtype == "HIGH":
-
             if fg_count <= 3:
-
                 # we are under the minimum required fgs for the dg.
                 dg_sizefactor = fg_count
 
@@ -345,7 +337,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
 
         # check for some details against the failure groups
         for fgitem in data.fail_groups:
-
             # count number of disks over all fgs
             dg_disks += fgitem.fg_disks
 
@@ -373,7 +364,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 fg_uniform_size = False
 
     else:
-
         # work on old agentformat
 
         # We're in state MOUNTED so we *should* have those values
@@ -387,7 +377,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             dg_sizefactor = 1
 
         elif dgtype in ("NORMAL", "HIGH"):
-
             # old plugin format has limitations when NORMAL or HIGH redundancy is found
             add_text += ", old plugin data, possible wrong used and free space"
 
@@ -436,24 +425,20 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
         infotext += "%s redundancy" % dgtype.lower()
 
         if data.fail_groups:
-
             # => New agentformat!
 
             infotext += ", %i disks" % dg_disks
 
             if dgtype != "EXTERN":
-
                 # EXTERN Redundancy has only 1 FG. => useless information
                 infotext += " in %i failgroups" % fg_count
 
             if not fg_uniform_size:
-
                 infotext += ", failgroups with unequal size"
 
             if dg_votecount > 0:
                 votemarker = ""
                 if dgtype == "HIGH" and dg_votecount < 5:
-
                     # HIGH redundancy allows a loss of 2 votes. => 1 is only a WARN
                     aggregated_state = State.best(aggregated_state, State.WARN)
                     votemarker = ", not enough votings, 5 expected (!)"
@@ -461,7 +446,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 elif (dgtype == "NORMAL" and dg_votecount < 3) or (
                     dgtype == "HIGH" and dg_votecount < 4
                 ):
-
                     aggregated_state = State.CRIT
                     votemarker = ", not enough votings, 3 expected (!!)"
 
@@ -469,7 +453,6 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 infotext += votemarker
 
             if dg_min_repair < 8640000:
-
                 # no need to set a state due to offline disks
                 infotext += ", disk repair timer for offline disks at %s (!)" % render.timespan(
                     dg_min_repair
@@ -485,9 +468,8 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
 
 
 def cluster_check_oracle_asm_diskgroup(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[Section]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Section | None]
 ) -> CheckResult:
-
     # only use data from 1. node in agent output
     # => later calculation of DG size is much easier
 

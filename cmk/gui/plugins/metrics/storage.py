@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -1835,4 +1835,20 @@ graph_info["files_notification_spool"] = {
         ("corrupted_files", "area"),
     ],
     "optional_metrics": ["deferred_files", "corrupted_files"],
+}
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["used_space"] = {
+    "title": _("Used storage space"),
+    "metrics": [
+        ("used_space", "line"),
+    ],
+}
+
+graph_info["io_flow"] = {
+    "title": "IO flow",
+    "metrics": [
+        ("egress", "-area"),
+        ("ingress", "area"),
+    ],
 }

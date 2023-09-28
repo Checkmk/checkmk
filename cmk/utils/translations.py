@@ -1,39 +1,53 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ipaddress
 from collections.abc import Iterable
-from typing import cast, Literal, TypedDict
+from typing import cast, Literal, NotRequired
 
+from typing_extensions import TypedDict
+
+from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 
-class TranslationOptions(TypedDict):
+# This can probably improved further by making it total and removing the None,
+# but that would need some tweaking of "interesting" code. :-/
+class TranslationOptions(TypedDict, total=False):
     case: Literal["lower", "upper"] | None
     drop_domain: bool
     mapping: Iterable[tuple[str, str]]
     regex: Iterable[tuple[str, str]]
 
 
-def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
-    return _translate(translation, hostname)
+# Similar to TranslationOptions, but not the same. This aims to
+# cover exactly the structure that is configured with the valuespec.
+class TranslationOptionsSpec(TypedDict):
+    case: Literal["lower", "upper"] | None
+    drop_domain: NotRequired[bool]
+    mapping: list[tuple[str, str]]
+    regex: list[tuple[str, str]]
+
+
+def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
+    return HostName(_translate(translation, hostname))
 
 
 def translate_service_description(
-    translation: TranslationOptions, service_description: ServiceName
+    translation: TranslationOptions, service_description: str
 ) -> ServiceName:
-    if service_description.strip() in [
+    if service_description.strip() in {
         "Check_MK",
         "Check_MK Agent",
         "Check_MK Discovery",
         "Check_MK inventory",
         "Check_MK HW/SW Inventory",
-    ]:
+    }:
         return service_description.strip()
-    return _translate(translation, service_description)
+    return ServiceName(_translate(translation, service_description))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:
@@ -61,9 +75,7 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         if not expr.endswith("$"):
             expr += "$"
         rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(name)
-        if mo:
+        if mo := rcomp.match(name):
             name = subst
             for nr, text in enumerate(mo.groups("")):
                 name = name.replace("\\%d" % (nr + 1), text)

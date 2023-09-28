@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,8 +10,7 @@
 # each_dict_entry_on_separate_line=False
 
 from cmk.gui.i18n import _l
-from cmk.gui.num_split import cmp_version
-from cmk.gui.plugins.visuals.inventory import (
+from cmk.gui.inventory.filters import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
     FilterInvtableIDRange,
@@ -20,6 +19,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
 )
+from cmk.gui.num_split import cmp_version
 
 from .registry import InventoryHintRegistry
 
@@ -129,6 +129,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "partition_name",
                 "expresscode",
                 "pki_appliance_version",
+                "device_number",
+                "description",
+                "mac_address",
             ],
         },
         ".hardware.system.product": {"title": _l("Product"), "is_show_more": False},
@@ -139,6 +142,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.node_name": {"title": _l("Node Name")},
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
+        ".hardware.system.device_number": {"title": _l("Device Number")},
+        ".hardware.system.description": {"title": _l("Description")},
+        ".hardware.system.mac_address": {"title": _l("MAC Address")},
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
@@ -383,6 +389,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.storage.disks:*.": {"title": _l("Block Device %d")},
         ".hardware.storage.disks:*.fsnode": {"title": _l("Filesystem Node")},
         ".hardware.storage.disks:*.controller": {"title": _l("Controller")},
+        ".hardware.storage.disks:*.drive_index": {"title": _l("Drive")},
         ".hardware.storage.disks:*.signature": {"title": _l("Disk ID")},
         ".hardware.storage.disks:*.vendor": {"title": _l("Vendor")},
         ".hardware.storage.disks:*.local": {"title": _l("Local")},
@@ -512,19 +519,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts")},
         ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services")},
         ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
-            "title": _l("CMK helper usage")
+            "title": _l("CMK helper usage"),
+            "short": _l("CMK helper")
         },
         ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
-            "title": _l("Fetcher helper usage")
+            "title": _l("Fetcher helper usage"),
+            "short": _l("Fetcher helper")
         },
         ".software.applications.check_mk.sites:*.checker_helper_usage": {
-            "title": _l("Checker helper usage")
+            "title": _l("Checker helper usage"),
+            "short": _l("Checker helper")
         },
         ".software.applications.check_mk.sites:*.livestatus_usage": {
-            "title": _l("Lice helper usage")
+            "title": _l("Live helper usage"),
+            "short": _l("Live helper")
         },
         ".software.applications.check_mk.sites:*.check_helper_usage": {
-            "title": _l("Actual helper usage")
+            "title": _l("Actual helper usage"),
+            "short": _l("Act. helper")
         },
         ".software.applications.check_mk.sites:*.autostart": {
             "title": _l("Autostart"),
@@ -532,50 +544,62 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.check_mk.sites:*.apache": {
             "title": _l("Apache status"),
+            "short": _l("Apache"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.cmc": {
             "title": _l("CMC status"),
+            "short": _l("CMC"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.crontab": {
             "title": _l("Crontab status"),
+            "short": _l("Crontab"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.dcd": {
             "title": _l("DCD status"),
+            "short": _l("DCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.liveproxyd": {
             "title": _l("Liveproxyd status"),
+            "short": _l("Liveproxyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mkeventd": {
             "title": _l("MKEventd status"),
+            "short": _l("MKEventd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mknotifyd": {
             "title": _l("MKNotifyd status"),
+            "short": _l("MKNotifyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.rrdcached": {
             "title": _l("RRDCached status"),
+            "short": _l("RRDCached"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.stunnel": {
             "title": _l("STunnel status"),
+            "short": _l("STunnel"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.xinetd": {
             "title": _l("XInetd status"),
+            "short": _l("XInetd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.nagios": {
             "title": _l("Nagios status"),
+            "short": _l("Nagios"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.npcd": {
             "title": _l("NPCD status"),
+            "short": _l("NPCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.cluster.": {
@@ -605,7 +629,25 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.host_labels:*.plugin_name": {
             "title": _l("Discovered by plugin"),
         },
-        ".software.applications.checkmk-agent.": {"title": _l("Checkmk Agent")},
+        ".software.applications.checkmk-agent.": {
+            "title": _l("Checkmk Agent"),
+            "keyorder": [
+                "version",
+                "agentdirectory",
+                "datadirectory",
+                "spooldirectory",
+                "pluginsdirectory",
+                "localdirectory",
+                "agentcontroller",
+            ],
+        },
+        ".software.applications.checkmk-agent.version": {"title": _l("Version")},
+        ".software.applications.checkmk-agent.agentdirectory": {"title": _l("Agent directory")},
+        ".software.applications.checkmk-agent.datadirectory": {"title": _l("Data directory")},
+        ".software.applications.checkmk-agent.spooldirectory": {"title": _l("Spool directory")},
+        ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plugins directory")},
+        ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
+        ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
         ".software.applications.checkmk-agent.plugins:": {
             "title": _l("Agent plugins"),
             "keyorder": ["name", "version", "cache_interval"],
@@ -1308,6 +1350,182 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.ibm_mq.queues:*.created": {"title": _l("Created")},
         ".software.applications.ibm_mq.queues:*.altered": {"title": _l("Altered")},
         ".software.applications.ibm_mq.queues:*.monq": {"title": _l("Monitoring")},
+        ".software.applications.azure.": {"title": _l("Azure")},
+        ".software.applications.azure.application_gateways.": {"title": _l("Application Gateways")},
+        ".software.applications.azure.application_gateways.rules.": {"title": _l("Rules")},
+        ".software.applications.azure.application_gateways.rules.listeners:": {
+            "title": _l("Listeners"),
+            "keyorder": [
+                "application_gateway",
+                "rule",
+                "listener",
+                "protocol",
+                "port",
+                "host_names",
+            ],
+        },
+        ".software.applications.azure.application_gateways.rules.listeners:*.application_gateway": {"title": _l("Application Gateway")},
+        ".software.applications.azure.application_gateways.rules.listeners:*.rule": {"title": _l("Rule")},
+        ".software.applications.azure.application_gateways.rules.listeners:*.listener": {"title": _l("Listener")},
+        ".software.applications.azure.application_gateways.rules.listeners:*.protocol": {"title": _l("Protocol")},
+        ".software.applications.azure.application_gateways.rules.listeners:*.port": {"title": _l("Port")},
+        ".software.applications.azure.application_gateways.rules.listeners:*.host_names": {"title": _l("Hosts")},
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:": {
+            "title": _l("Private IPs"),
+            "keyorder": [
+                "application_gateway",
+                "rule",
+                "listener",
+                "ip_address",
+                "allocation_method"
+            ],
+        },
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.application_gateway": {"title": _l("Application Gateway")},
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.rule": {"title": _l("Rule")},
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.listener": {"title": _l("Listener")},
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.allocation_method": {"title": _l("Allocation Method")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:": {
+            "title": _l("Public IPs"),
+            "keyorder": [
+                "application_gateway",
+                "rule",
+                "listener",
+                "name",
+                "location",
+                "ip_address",
+                "allocation_method",
+                "dns_fqdn"
+            ],
+        },
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.application_gateway": {"title": _l("Application Gateway")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.rule": {"title": _l("Rule")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.listener": {"title": _l("Listener")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.name": {"title": _l("Name")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.location": {"title": _l("Location")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.allocation_method": {"title": _l("Allocation Method")},
+        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
+        ".software.applications.azure.application_gateways.rules.backends:": {
+            "title": _l("Backends"),
+            "keyorder": [
+                "application_gateway",
+                "rule",
+                "address_pool_name",
+                "protocol",
+                "port"
+            ],
+        },
+        ".software.applications.azure.application_gateways.rules.backends:*.application_gateway": {"title": _l("Application Gateway")},
+        ".software.applications.azure.application_gateways.rules.backends:*.rule": {"title": _l("Rule")},
+        ".software.applications.azure.application_gateways.rules.backends:*.address_pool_name": {"title": _l("Address Pool Name")},
+        ".software.applications.azure.application_gateways.rules.backends:*.protocol": {"title": _l("Protocol")},
+        ".software.applications.azure.application_gateways.rules.backends:*.port": {"title": _l("Port")},
+        ".software.applications.azure.load_balancers.": {"title": _l("Load Balancers")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules:": {
+            "title": _l("Inbound NAT Rules"),
+            "keyorder": [
+                "load_balancer",
+                "inbound_nat_rule",
+                "frontend_port",
+                "backend_port",
+            ],
+        },
+        ".software.applications.azure.load_balancers.inbound_nat_rules:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules:*.inbound_nat_rule": {"title": _l("Inbound NAT Rule")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules:*.frontend_port": {"title": _l("Frontend Port")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules:*.backend_port": {"title": _l("Backend Port")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:": {
+            "title": _l("Public IPs"),
+            "keyorder": [
+                "load_balancer",
+                "inbound_nat_rule",
+                "location",
+                "public_ip_name",
+                "ip_address",
+                "ip_allocation_method",
+                "dns_fqdn",
+            ],
+        },
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.inbound_nat_rule": {"title": _l("Inbound NAT Rule")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.location": {"title": _l("Location")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.public_ip_name": {"title": _l("Name")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.ip_allocation_method": {"title": _l("Allocation Method")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:": {
+            "title": _l("Private IPs"),
+            "keyorder": [
+                "load_balancer",
+                "inbound_nat_rule",
+                "ip_address",
+                "ip_allocation_method",
+            ],
+        },
+        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.inbound_nat_rule": {"title": _l("Inbound NAT Rule")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_allocation_method": {"title": _l("Allocation Method")},
+
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:": {
+            "title": _l("Public IPs"),
+            "keyorder": [
+                "load_balancer",
+                "inbound_nat_rule",
+                "backend_ip_config",
+                "ip_address",
+                "ip_allocation_method",
+            ],
+        },
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.inbound_nat_rule": {"title": _l("Inbound NAT Rule")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.backend_ip_config": {"title": _l("Backend IP Config")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_allocation_method": {"title": _l("Allocation Method")},
+        ".software.applications.azure.load_balancers.outbound_rules:": {
+            "title": _l("Outbound Rules"),
+            "keyorder": [
+                "load_balancer",
+                "outbound_rule",
+                "protocol",
+                "idle_timeout",
+            ],
+        },
+        ".software.applications.azure.load_balancers.outbound_rules:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.outbound_rules:*.outbound_rule": {"title": _l("Outbound Rule")},
+        ".software.applications.azure.load_balancers.outbound_rules:*.protocol": {"title": _l("Protocol")},
+        ".software.applications.azure.load_balancers.outbound_rules:*.idle_timeout": {"title": _l("Idle Timeout")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:": {
+            "title": _l("Backend Pools"),
+            "keyorder": [
+                "load_balancer",
+                "outbound_rule",
+                "backend_pool",
+            ],
+        },
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.outbound_rule": {"title": _l("Outbound Rule")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.backend_pool": {"title": _l("Backend Pool")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:": {
+            "title": _l("Addresses"),
+            "keyorder": [
+                "load_balancer",
+                "outbound_rule",
+                "backend_pool",
+                "address_name",
+                "ip_address",
+                "ip_allocation_method",
+                "primary"
+            ],
+        },
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.load_balancer": {"title": _l("Load Balancer")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.outbound_rule": {"title": _l("Outbound Rule")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.backend_pool": {"title": _l("Backend Pool")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.address_name": {"title": _l("Address Name")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_address": {"title": _l("IP Address")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_allocation_method": {"title": _l("Allocation Method")},
+        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.primary": {"title": _l("Primary")},
         ".software.bios.": {
             "title": _l("BIOS"),
             "keyorder": [
@@ -1334,6 +1552,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "is_show_more": False,
         },
         ".software.configuration.snmp_info.name": {"title": _l("System name")},
+        ".software.configuration.organisation.": {
+            "title": _l("Organisation"),
+            "keyorder": [
+                "organisation_id",
+                "organisation_name",
+                "network_id",
+                "address",
+            ],
+        },
+        ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
+        ".software.configuration.organisation.organisation_name": {"title": _l("Organisation Name")},
+        ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
+        ".software.configuration.organisation.address": {"title": _l("Address")},
         ".software.firmware.": {
             "title": _l("Firmware"),
             "keyorder": [
@@ -1365,7 +1596,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "service_pack",
             ],
         },
-        ".software.os.name": {"title": _l("Operatin system"), "is_show_more": False},
+        ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
         ".software.os.version": {"title": _l("Version")},
         ".software.os.vendor": {"title": _l("Vendor")},
         ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"

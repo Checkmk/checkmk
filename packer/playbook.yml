@@ -3,13 +3,23 @@
   hosts: 127.0.0.1
   connection: local
 
-  vars:
-    checkmk_server_sites:
-      - name: test
-        version: "{{ checkmk_server_version }}"
-        state: started
-        admin_pw: test
-
-
   roles:
-    - tribe29.checkmk.server
+    - role: checkmk
+      vars:
+        state: absent
+        checkmk_server_edition: cce
+    - "change-motd"
+    - configure-apache
+
+  tasks:
+   - name: Disallow SSH password authentication
+     lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp="^PasswordAuthentication"
+        line="PasswordAuthentication no"
+        state=present
+     become: yes
+   - name: updates all packages
+     ansible.builtin.apt:
+       upgrade: dist
+     become: true

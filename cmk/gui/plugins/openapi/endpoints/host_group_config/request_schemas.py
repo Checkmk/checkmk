@@ -79,7 +79,10 @@ class UpdateHostGroup(BaseSchema):
     """Updating a host group"""
 
     name = EXISTING_HOST_GROUP_NAME
-    attributes = fields.Nested(UpdateGroup)
+    attributes = fields.Nested(
+        UpdateGroup,
+        required=True,
+    )
 
 
 class BulkUpdateHostGroup(BaseSchema):

@@ -76,7 +76,10 @@ class UpdateContactGroup(BaseSchema):
         required=True,
         should_exist=True,
     )
-    attributes = fields.Nested(UpdateGroup)
+    attributes = fields.Nested(
+        UpdateGroup,
+        required=True,
+    )
 
 
 class BulkUpdateContactGroup(BaseSchema):

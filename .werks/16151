@@ -1,0 +1,22 @@
+Title: group_config: bulk updating requires the attributes field
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1695918830
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+This werk addressses an issue discovered by our QA team.  When doing a bulk
+update on any of the following REST-API domains, this caused an error
+when you didn't provide the attributes field.
+
+host_group_config
+service_group_config
+contact_group_config
+
+This fix means that the attribute for bulk updating is now a required field.
+
+

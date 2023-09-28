@@ -13,6 +13,7 @@ from pytest import FixtureRequest
 from tests.testlib.rest_api_client import (
     ClientRegistry,
     ContactGroupClient,
+    GroupConfig,
     HostGroupClient,
     ServiceGroupClient,
 )
@@ -500,3 +501,22 @@ def test_service_group_id_with_newline(
         resp.json["fields"]["name"][0]
         == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
     )
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "service", "contact"])
+def test_group_attributes_required(
+    request: FixtureRequest,
+    group_type: str,
+) -> None:
+    client: GroupConfig = request.getfixturevalue(group_type)
+    group_name = "test_name"
+    client.create(name=group_name, alias="test_alias")
+    resp = client.bulk_edit(
+        groups=({"name": group_name},),
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["entries"]["0"] == {
+        "attributes": ["Missing data for required field."]
+    }

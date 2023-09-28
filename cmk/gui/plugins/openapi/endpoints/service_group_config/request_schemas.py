@@ -79,7 +79,10 @@ class UpdateServiceGroup(BaseSchema):
     """Updating a service group"""
 
     name = EXISTING_SERVICE_GROUP_NAME
-    attributes = fields.Nested(UpdateGroup)
+    attributes = fields.Nested(
+        UpdateGroup,
+        required=True,
+    )
 
 
 class BulkUpdateServiceGroup(BaseSchema):

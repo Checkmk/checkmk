@@ -558,7 +558,10 @@ class NetworkScanResultState(String):
 
 
 class NetworkScanResult(BaseSchema):
-    start = Timestamp(description="When the scan started")
+    start = Timestamp(
+        description="When the scan started",
+        allow_none=True,
+    )
     end = Timestamp(
         description="When the scan finished. Will be Null if not yet run.",
         allow_none=True,
@@ -571,7 +574,9 @@ class NetworkScanResult(BaseSchema):
             "failed",
         ],
     )
-    output = String(description="Short human readable description of what is happening.")
+    output = String(
+        description="Short human readable description of what is happening.",
+    )
 
 
 class LockedBy(BaseSchema, CheckmkTuple):

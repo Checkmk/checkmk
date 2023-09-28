@@ -97,6 +97,9 @@ ARG DISTRO
 ARG BRANCH_VERSION
 ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 
+# used by install scripts
+COPY scripts/build_lib.sh /opt/
+
 COPY scripts/install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 

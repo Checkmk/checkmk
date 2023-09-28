@@ -45,7 +45,8 @@ from exchangelib import (  # type: ignore[import]
     IMPERSONATION,
 )
 from exchangelib import Message as EWSMessage
-from exchangelib import OAUTH2, OAuth2Credentials, protocol  # type: ignore[import]
+from exchangelib import OAUTH2, OAuth2Credentials  # type: ignore[import]
+from exchangelib import protocol as ews_protocol
 
 import cmk.utils.password_store
 
@@ -352,7 +353,9 @@ class Mailbox:
             )
 
             if self._args.fetch_no_cert_check:
-                self._connection._account.protocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
+                self._connection._account.protocol.HTTP_ADAPTER_CLS = (
+                    ews_protocol.NoVerifyHTTPAdapter
+                )
             self._connection._account.protocol.TIMEOUT = self._args.connect_timeout
 
         assert self._connection is None
@@ -365,7 +368,7 @@ class Mailbox:
         except Exception as exc:
             raise ConnectError(f"Failed to connect to {self._args.fetch_server}: {exc}")
 
-    def inbox_protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
+    def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
             return "POP3"
         if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
@@ -377,11 +380,11 @@ class Mailbox:
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
         assert self._connection
-        if self.inbox_protocol() == "IMAP":
+        if self.protocol() == "IMAP":
             return extract_folder_names(
                 e for e in verified_result(self._connection.list()) if isinstance(e, bytes)
             )
-        if self.inbox_protocol() == "EWS":
+        if self.protocol() == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.folders()
         raise AssertionError("connection must be IMAP4[_SSL] or EWS")
@@ -426,26 +429,26 @@ class Mailbox:
 
         pattern = re.compile(subject_pattern) if subject_pattern else None
         try:
-            inbox_protocol = self.inbox_protocol()
-            if inbox_protocol == "POP3":
+            protocol = self.protocol()
+            if protocol == "POP3":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_pop3().items()
                     if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
                 }
-            if inbox_protocol == "IMAP":
+            if protocol == "IMAP":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_imap().items()
                     if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
                 }
-            if inbox_protocol == "EWS":
+            if protocol == "EWS":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_ews().items()
                     if pattern is None or pattern.match(msg.subject)
                 }
-            raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
+            raise NotImplementedError(f"Fetching mails is not implemented for {protocol}")
         except Exception as exc:
             raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
 
@@ -453,13 +456,13 @@ class Mailbox:
         """Select folder @folder_name and return the number of mails contained"""
         assert self._connection
         try:
-            if self.inbox_protocol() == "IMAP":
+            if self.protocol() == "IMAP":
                 encoded_number = verified_result(
                     self._connection.select(_mutf_7_encode(f'"{folder_name}"'))
                 )[0]
                 assert isinstance(encoded_number, bytes)
                 return int(encoded_number.decode())
-            if self.inbox_protocol() == "EWS":
+            if self.protocol() == "EWS":
                 assert isinstance(self._connection, EWS)
                 return self._connection.select_folder(folder_name)
             raise AssertionError("connection must be IMAP4[_SSL] or EWS")
@@ -496,7 +499,7 @@ class Mailbox:
             assert time_tuple is not None
             return int(time.mktime(time_tuple))
 
-        if self.inbox_protocol() == "EWS":
+        if self.protocol() == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.mail_ids_by_date(before=before, after=after)
 
@@ -538,38 +541,38 @@ class Mailbox:
     def delete_mails(self, mails: MailMessages) -> None:
         assert self._connection is not None
         try:
-            inbox_protocol = self.inbox_protocol()
-            if inbox_protocol == "POP3":
+            protocol = self.protocol()
+            if protocol == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
-            elif inbox_protocol == "IMAP":
+            elif protocol == "IMAP":
                 for mail_index in mails:
                     verified_result(self._connection.store(mail_index, "+FLAGS", "\\Deleted"))
                 self._connection.expunge()
-            elif inbox_protocol == "EWS":
+            elif protocol == "EWS":
                 self._connection._account.bulk_delete(mails.values(), delete_type="SoftDelete")
             else:
-                raise NotImplementedError(f"Deleting mails is not implemented for {inbox_protocol}")
+                raise NotImplementedError(f"Deleting mails is not implemented for {protocol}")
 
         except Exception as exc:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy_mails(self, mails: MailMessages, folder: str) -> None:
-        inbox_protocol = self.inbox_protocol()
-        assert self._connection and inbox_protocol in {"IMAP", "EWS"}
+        protocol = self.protocol()
+        assert self._connection and protocol in {"IMAP", "EWS"}
         # The user wants the message to be moved to the folder
         # refered by the string stored in "cleanup_messages"
         folder = folder.strip("/")
         try:
             # Create maybe missing folder hierarchy and copy the mails
-            if inbox_protocol == "IMAP":
+            if protocol == "IMAP":
                 for mail_index in mails:
                     target = ""
                     for level in folder.split("/"):
                         target += f"{level}/"
                         self._connection.create(target)
                     verified_result(self._connection.copy(str(mail_index), folder))
-            elif inbox_protocol == "EWS":
+            elif protocol == "EWS":
                 folder_obj = self._connection.add_folder(folder)
                 self._connection._account.bulk_copy(mails.values(), folder_obj)
 
@@ -579,13 +582,13 @@ class Mailbox:
     def _close_mailbox(self) -> None:
         if not self._connection:
             return
-        if self.inbox_protocol() == "POP3":
+        if self.protocol() == "POP3":
             verified_result(self._connection.quit())
-        elif self.inbox_protocol() == "IMAP":
+        elif self.protocol() == "IMAP":
             with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
                 verified_result(self._connection.close())
             verified_result(self._connection.logout())
-        elif self.inbox_protocol() == "EWS":
+        elif self.protocol() == "EWS":
             self._connection.close()
 
 

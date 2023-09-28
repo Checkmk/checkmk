@@ -21,12 +21,13 @@ import itertools
 from pathlib import Path
 from typing import IO, Protocol, TypeVar
 
-from pydantic import RootModel, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter
 
 import cmk.utils.paths
 
 from .convert import werkv1_to_werkv2
 from .werk import Class, Compatibility, sort_by_version_and_component, Werk, WerkTranslator
+from .werkv1 import parse_werk_v1
 from .werkv2 import load_werk_v2, parse_werk_v2, WerkV2ParseResult
 
 Werks = RootModel[dict[int, Werk]]
@@ -59,6 +60,54 @@ def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     adapter = TypeAdapter(dict[int, Werk])
     with path.open("r", encoding="utf-8") as f:
         return adapter.validate_json(f.read())
+
+
+# THIS IS A TEMPORARY FIX FOR THE OLD WORKFLOW
+
+
+class OldWerk(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+    class_: str = Field(alias="class")
+    component: str
+    date: int
+    level: int
+    title: str
+    version: str
+    compatible: str
+    edition: str
+    knowledge: str | None = (
+        None  # this field is currently not used, but kept so parsing still works
+    )
+    # it will be removed after the transfer to markdown werks was completed.
+    state: str | None = None
+    id: int
+    targetversion: str | None = None
+    description: list[str]
+
+    def to_json_dict(self) -> dict[str, object]:
+        return self.model_dump(by_alias=True)
+
+
+def load_raw_files_old(werks_dir: Path) -> list[OldWerk]:
+    if werks_dir is None:
+        werks_dir = _compiled_werks_dir()
+    werks: list[OldWerk] = []
+    for file_name in werks_dir.glob("[0-9]*"):
+        try:
+            parsed = parse_werk_v1(file_name.read_text(), int(file_name.name))
+            werk: dict[str, str | int | list[str]] = {}
+            werk.update(parsed.metadata)
+            werk["description"] = parsed.description
+            werks.append(OldWerk.model_validate(werk))
+        except Exception as e:
+            raise RuntimeError(f"Could not parse werk {file_name.absolute()}") from e
+    return werks
+
+
+# TEMPORARY FIX END!
 
 
 def load_raw_files(werks_dir: Path) -> list[Werk]:

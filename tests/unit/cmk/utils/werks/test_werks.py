@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.werks import load_werk
+from cmk.utils.werks import load_raw_files_old, load_werk
 from cmk.utils.werks.werk import Werk, WerkError
 from cmk.utils.werks.werkv2 import load_werk_v2, parse_werk_v2
 
@@ -327,3 +327,11 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
         assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
+
+
+def test_website_essentials_workaround():
+    werks = load_raw_files_old(Path(".werks"))
+
+    for w in werks:
+        werk_dict = w.to_json_dict()
+        assert werk_dict.get("__version__") is None

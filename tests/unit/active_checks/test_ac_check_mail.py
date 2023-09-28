@@ -57,7 +57,7 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
 
 
 @pytest.mark.parametrize(
-    "mails, expected_messages, inbox_protocol",
+    "mails, expected_messages, protocol",
     [
         ({}, [], "POP3"),
         (
@@ -106,7 +106,7 @@ def test_ac_check_mail_prepare_messages_for_ec(
     check_mail: ModuleType,
     mails: MailMessages,
     expected_messages: Sequence[tuple[str, str]],
-    inbox_protocol: str,
+    protocol: str,
 ) -> None:
     args = Args(
         body_limit=1000,
@@ -115,7 +115,7 @@ def test_ac_check_mail_prepare_messages_for_ec(
         fetch_server=None,
         forward_facility=2,
     )
-    messages = check_mail.prepare_messages_for_ec(args, mails, inbox_protocol)
+    messages = check_mail.prepare_messages_for_ec(args, mails, protocol)
     for message, (expected_priority, expected_message) in zip(messages, expected_messages):
         assert message.startswith(expected_priority)
         assert message.endswith(expected_message)

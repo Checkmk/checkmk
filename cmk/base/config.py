@@ -557,7 +557,7 @@ class SetFolderPathAbstract:
     def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
         if self._current_path is None:
             return
-        for hostname in strip_tags(list(new_hosts)):
+        for hostname in strip_tags(new_hosts):
             host_paths[hostname] = self._current_path
 
 
@@ -927,7 +927,7 @@ def set_use_core_config(
 #   '----------------------------------------------------------------------'
 
 
-def strip_tags(tagged_hostlist: list[str]) -> list[HostName]:
+def strip_tags(tagged_hostlist: Iterable[str]) -> list[HostName]:
     cache = cache_manager.obtain_cache("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
@@ -2113,7 +2113,7 @@ class ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_clusters = set(strip_tags(list(clusters)))
+        self._all_configured_clusters = set(strip_tags(clusters))
         self._all_configured_realhosts = set(strip_tags(all_hosts))
         self._all_configured_hosts = (
             self._all_configured_realhosts | self._all_configured_clusters | set(get_shadow_hosts())

@@ -19,7 +19,7 @@ the custom attribute 'attr_1' exists.
 
 POST check_mk/api/v1/domain-types/user_config/collections/all
 
-```
+C+:
 {
         "username": "user_1",
         "fullname": "user_1",
@@ -44,21 +44,21 @@ POST check_mk/api/v1/domain-types/user_config/collections/all
         }
         "attr_1": "some_text",
 }
-```
+C-:
 
 However, attempting to modify this user with the edit user endpoint
 
 PUT check_mk/api/v1/objects/user_config/user_1
 
-```
+C+:
 {
     "attr1": "edited_text"
 }
-```
+C-:
 
 would fail and return a response like so
 
-```
+C+:
 {
     "title": "Bad Request",
     "status": 400,
@@ -69,7 +69,7 @@ would fail and return a response like so
         ]
     }
 }
-```
+C-:
 
 We now check for custom user attributes on the update endpoint and allow them
 if they exist, just like the create user endpoint.

@@ -97,6 +97,9 @@ ARG DISTRO
 ARG BRANCH_VERSION
 ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 
+
+COPY scripts/.bazelversion /opt/
+
 # used by lots of scripts (has to be copied to `scripts/` before)
 COPY scripts/defines.make /opt/
 

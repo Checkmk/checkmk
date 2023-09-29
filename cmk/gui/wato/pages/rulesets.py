@@ -1482,6 +1482,7 @@ class ModeRuleSearchForm(WatoMode):
             self.search_options: SearchOptions = {}
             return
 
+        forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         value = self._valuespec().from_html_vars("search")
         self._valuespec().validate_value(value, "search")
 

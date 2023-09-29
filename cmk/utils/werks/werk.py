@@ -65,7 +65,7 @@ class WerkV2Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     werk_version: Literal["2"] = Field(default="2", alias="__version__")
     id: int
@@ -80,6 +80,8 @@ class WerkV2Base(BaseModel):
 
     @field_validator("level", mode="before")
     def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
+        if isinstance(v, Level):
+            return v
         try:
             return Level(int(v))
         except ValueError:

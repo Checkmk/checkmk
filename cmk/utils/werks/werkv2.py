@@ -70,6 +70,14 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     return WerkV2ParseResult(metadata, md_description)
 
 
+def markdown_to_html(text: str) -> str:
+    return markdown.markdown(
+        text,
+        extensions=["tables", "fenced_code"],
+        output_format="html",
+    )
+
+
 def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
     werk = parsed.metadata
     werk["__version__"] = "2"
@@ -87,11 +95,7 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
     #         "Markdown formatting in title detected, this is not allowed."
     #     ) from e
 
-    werk["description"] = markdown.markdown(
-        parsed.description,
-        extensions=["tables", "fenced_code"],
-        output_format="html",
-    )
+    werk["description"] = markdown_to_html(parsed.description)
     _check_html(werk["description"])
 
     try:

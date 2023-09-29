@@ -3515,6 +3515,7 @@ builtin_views.update(
                 "aggr_group": {},
                 "aggr_group_tree": {},
                 "aggr_hosts": {},
+                "aggr_name": {},
                 "aggr_name_regex": {"aggr_name_regex": ""},
                 "aggr_state": {
                     "birs-1": "on",

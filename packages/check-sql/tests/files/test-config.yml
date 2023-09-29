@@ -2,10 +2,10 @@
 mssql:
   defaults: # to be used if no specific config
     authentication: # mandatory
-      username: "foo" # has no default
-      password: "bar" # has no default
-      type: "system" # default
-      access_token: "baz" # has no default
+      username: "foo" # mandatory: has no default
+      password: "bar" # optional: has no default
+      type: "system" # optional: default
+      access_token: "baz" # optional: has no default
     connection: # optional
       hostname: "localhost" # default
       failoverpartner: "localhost2" # has no default

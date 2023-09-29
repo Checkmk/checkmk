@@ -437,7 +437,6 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
         ("Ineffective rules", "disable", "rule_ineffective"),
         ("Deprecated rules", "warning", "ruleset_deprecated"),
     ]:
-
         uri_params: List[_Tuple[str, Union[None, int, str]]] = [
             ("mode", "rule_search"),
             ("search_p_%s" % search_term, DropdownChoice.option_id(True)),
@@ -1401,6 +1400,7 @@ class ModeRuleSearchForm(WatoMode):
             self.search_options: SearchOptions = {}
             return
 
+        forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         value = self._valuespec().from_html_vars("search")
         self._valuespec().validate_value(value, "search")
 

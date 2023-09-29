@@ -296,7 +296,7 @@ msgstr "% de conexiones inactivas máximas"
 msgid "% of port speed"
 msgstr "% de velocidad del puerto"
 
-#, python-format
+#, no-python-format
 msgid "% of the specified time via GET request"
 msgstr ""
 
@@ -16181,6 +16181,10 @@ msgstr "Implementar el complemento del contenedor docker"
 msgid "Deploy the docker plugin"
 msgstr "Implementar el complemento docker"
 
+#, fuzzy
+msgid "Deploy the mk_filehandler plugin"
+msgstr "Implementar el complemento docker"
+
 msgid "Deploy the netstat plugin"
 msgstr "Implementar el complemento netstat"
 
@@ -17590,6 +17594,10 @@ msgid "Do not deploy the docker container plugin"
 msgstr "No desplegar el plugin de contenedor Docker"
 
 msgid "Do not deploy the docker plugin"
+msgstr "No desplegar el plugin docker"
+
+#, fuzzy
+msgid "Do not deploy the mk_filehandler plugin"
 msgstr "No desplegar el plugin docker"
 
 msgid "Do not deploy the netstat plugin"
@@ -25412,6 +25420,14 @@ msgstr ""
 "Los hosts configurados a través de esta regla obtienen el plugin "
 "<tt>lnx_quota</tt> desplegado. Esto sólo es útil si tiene cuotas de sistema "
 "de archivos configuradas en el host."
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the <tt>mk_filehandler</tt> plugin "
+"deployed."
+msgstr ""
+"Los hosts configurados a través de esta regla obtienen el plugin "
+"<tt>mk_iptables</tt> desplegado."
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plugin deployed."
@@ -35144,6 +35160,10 @@ msgstr "Controlar los costes y el uso"
 
 msgid "Monitor disabled services"
 msgstr "Supervisar los servicios para deshabilitados"
+
+#, fuzzy
+msgid "Monitor file handles (Linux)"
+msgstr "Gestores de alertas remotas (Linux)"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Supervisar las operaciones de archivo con Inotify (Linux)"
@@ -54564,14 +54584,6 @@ msgstr "El número previsto de nodos en el clúster"
 msgid "The expected number of resources in the cluster"
 msgstr "El número previsto de recursos en el clúster"
 
-#, python-format
-msgid ""
-"The expression \"%s\" uses a different consolidation function as the graph "
-"(%s). This is not allowed."
-msgstr ""
-"La expresión \"%s\" utiliza una función de consolidación diferente a la del "
-"gráfico (%s). Esto no está permitido."
-
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -58138,18 +58150,19 @@ msgstr ""
 "Esta comprobación devuelve CRIT si la conexión con el sitio remoto ha "
 "fallado."
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
 "address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
-"b> is configured and differs from default state <b>WARN</b>. With the above "
-"setting you can overwrite the default service state. This will help you to "
-"reduce above warnings during the update process of your Checkmk sites and "
-"agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 2.0. After updating them, you "
-"should change this setting back to it's original value. Background: With IP "
-"access lists you can control which servers are allowed to talk to these "
-"agents. Thus it's a security issue and should not be disabled or set to "
-"<b>OK</b> permanently."
+"b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</"
+"b>. With the above setting you can overwrite the default service state. This "
+"will help you to reduce above warnings during the update process of your "
+"Checkmk sites and agents. We recommend to set this option only for the "
+"affected hosts as long as you monitor agents older than Checkmk 2.0. After "
+"updating them, you should change this setting back to it's original value. "
+"Background: With IP access lists you can control which servers are allowed "
+"to talk to these agents. Thus it's a security issue and should not be "
+"disabled or set to <b>OK</b> permanently."
 msgstr ""
 "Esta comprobación devuelve CRIT si el parámetro <b>Estado en caso de "
 "desajuste de dirección restringida</b> en el conjunto de reglas <b>Auditoría "
@@ -73359,6 +73372,14 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Fallo al cargar el trabajo \"%s\": %s"
+
+#, python-format
+#~ msgid ""
+#~ "The expression \"%s\" uses a different consolidation function as the "
+#~ "graph (%s). This is not allowed."
+#~ msgstr ""
+#~ "La expresión \"%s\" utiliza una función de consolidación diferente a la "
+#~ "del gráfico (%s). Esto no está permitido."
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "El archivo no parece ser un archivo válido de iCalendar.BBB"

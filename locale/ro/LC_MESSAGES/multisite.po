@@ -295,7 +295,7 @@ msgstr "% din numărul maxim de conexiuni inactive"
 msgid "% of port speed"
 msgstr "% din viteza portului"
 
-#, python-format
+#, no-python-format
 msgid "% of the specified time via GET request"
 msgstr ""
 
@@ -16195,6 +16195,10 @@ msgstr "Implementați plugin-ul containerului docker"
 msgid "Deploy the docker plugin"
 msgstr "Implementați plugin-ul docker"
 
+#, fuzzy
+msgid "Deploy the mk_filehandler plugin"
+msgstr "Implementați plugin-ul docker"
+
 msgid "Deploy the netstat plugin"
 msgstr "Implementați plugin-ul netstat"
 
@@ -17598,6 +17602,10 @@ msgid "Do not deploy the docker container plugin"
 msgstr "Nu implementați plugin-ul pentru containere docker"
 
 msgid "Do not deploy the docker plugin"
+msgstr "Nu implementați plugin-ul docker"
+
+#, fuzzy
+msgid "Do not deploy the mk_filehandler plugin"
 msgstr "Nu implementați plugin-ul docker"
 
 msgid "Do not deploy the netstat plugin"
@@ -25431,6 +25439,14 @@ msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>lnxx_quota</tt> "
 "implementat. Acest lucru este util numai dacă aveți configurate cote de "
 "sistem de fișiere pe gazdă."
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the <tt>mk_filehandler</tt> plugin "
+"deployed."
+msgstr ""
+"Gazdele configurate prin această regulă primesc pluginul <tt>mk_iptables</"
+"tt> implementat."
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plugin deployed."
@@ -35161,6 +35177,10 @@ msgstr "Monitorizarea costurilor și a utilizării"
 
 msgid "Monitor disabled services"
 msgstr "Monitorizarea serviciilor pentru persoanele cu handicap"
+
+#, fuzzy
+msgid "Monitor file handles (Linux)"
+msgstr "Gestionatori de alerte la distanță (Linux)"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Monitorizarea operațiunilor cu fișiere cu Inotify (Linux)"
@@ -54626,14 +54646,6 @@ msgstr "Numărul preconizat de noduri din cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Numărul preconizat de resurse din cluster"
 
-#, python-format
-msgid ""
-"The expression \"%s\" uses a different consolidation function as the graph "
-"(%s). This is not allowed."
-msgstr ""
-"Expresia \"%s\" utilizează o funcție de consolidare diferită de cea din "
-"grafic (%s). Acest lucru nu este permis."
-
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -58197,18 +58209,19 @@ msgstr ""
 "Această verificare returnează CRIT în cazul în care conexiunea cu site-ul la "
 "distanță a eșuat."
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
 "address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
-"b> is configured and differs from default state <b>WARN</b>. With the above "
-"setting you can overwrite the default service state. This will help you to "
-"reduce above warnings during the update process of your Checkmk sites and "
-"agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 2.0. After updating them, you "
-"should change this setting back to it's original value. Background: With IP "
-"access lists you can control which servers are allowed to talk to these "
-"agents. Thus it's a security issue and should not be disabled or set to "
-"<b>OK</b> permanently."
+"b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</"
+"b>. With the above setting you can overwrite the default service state. This "
+"will help you to reduce above warnings during the update process of your "
+"Checkmk sites and agents. We recommend to set this option only for the "
+"affected hosts as long as you monitor agents older than Checkmk 2.0. After "
+"updating them, you should change this setting back to it's original value. "
+"Background: With IP access lists you can control which servers are allowed "
+"to talk to these agents. Thus it's a security issue and should not be "
+"disabled or set to <b>OK</b> permanently."
 msgstr ""
 "Această verificare returnează CRIT dacă parametrul <b>Stare în caz de "
 "neconcordanță de adresă restricționată</b> din setul de reguli <b>Checkmk "
@@ -73457,6 +73470,14 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Nu a reușit să încarce werk \"%s\": %s."
+
+#, python-format
+#~ msgid ""
+#~ "The expression \"%s\" uses a different consolidation function as the "
+#~ "graph (%s). This is not allowed."
+#~ msgstr ""
+#~ "Expresia \"%s\" utilizează o funcție de consolidare diferită de cea din "
+#~ "grafic (%s). Acest lucru nu este permis."
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "Fișierul nu pare a fi un fișier iCalendar valid.BBB"

@@ -311,7 +311,7 @@ msgstr "% 最大アイドル接続"
 msgid "% of port speed"
 msgstr "ポート速度の%"
 
-#, python-format
+#, no-python-format
 msgid "% of the specified time via GET request"
 msgstr ""
 
@@ -15809,6 +15809,10 @@ msgstr "Dockerコンテナプラグインをデプロイします"
 msgid "Deploy the docker plugin"
 msgstr "Dockerプラグインをデプロイします"
 
+#, fuzzy
+msgid "Deploy the mk_filehandler plugin"
+msgstr "Dockerプラグインをデプロイします"
+
 msgid "Deploy the netstat plugin"
 msgstr "netstatプラグインをデプロイします"
 
@@ -17189,6 +17193,10 @@ msgid "Do not deploy the docker container plugin"
 msgstr "Dockerコンテナプラグインをデプロイしないでください"
 
 msgid "Do not deploy the docker plugin"
+msgstr "Dockerプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy the mk_filehandler plugin"
 msgstr "Dockerプラグインをデプロイしないでください"
 
 msgid "Do not deploy the netstat plugin"
@@ -24890,6 +24898,14 @@ msgstr ""
 "このルールを介して構成されたホストは、<tt> lnx_quota </tt>プラグインをデプロ"
 "イします。これは、ホストにファイルシステムクォータが設定されている場合にのみ"
 "役立ちます。"
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the <tt>mk_filehandler</tt> plugin "
+"deployed."
+msgstr ""
+"このルールを介して構成されたホストは、<tt> mk_iptables </tt>プラグインをデプ"
+"ロイします。"
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plugin deployed."
@@ -34403,6 +34419,10 @@ msgstr "コストと使用状況を監視する"
 
 msgid "Monitor disabled services"
 msgstr "無効になっているサービスを監視する"
+
+#, fuzzy
+msgid "Monitor file handles (Linux)"
+msgstr "リモートアラートハンドラー(Linux)"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Inotify(Linux)でファイル操作を監視する"
@@ -53370,14 +53390,6 @@ msgstr "クラスター内の予想されるノード数"
 msgid "The expected number of resources in the cluster"
 msgstr "クラスター内の予想されるリソース数"
 
-#, python-format
-msgid ""
-"The expression \"%s\" uses a different consolidation function as the graph "
-"(%s). This is not allowed."
-msgstr ""
-"式 \"%s\" は、グラフ (%s) と異なる連結関数を使用しています。これは許可できま"
-"せん。"
-
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -56736,18 +56748,19 @@ msgstr "このチェックは、PostgreSQLデータベースのサイズとア�
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "このチェックは、リモートサイトへの接続が失敗した場合にCRITを返します。"
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
 "address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
-"b> is configured and differs from default state <b>WARN</b>. With the above "
-"setting you can overwrite the default service state. This will help you to "
-"reduce above warnings during the update process of your Checkmk sites and "
-"agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 2.0. After updating them, you "
-"should change this setting back to it's original value. Background: With IP "
-"access lists you can control which servers are allowed to talk to these "
-"agents. Thus it's a security issue and should not be disabled or set to "
-"<b>OK</b> permanently."
+"b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</"
+"b>. With the above setting you can overwrite the default service state. This "
+"will help you to reduce above warnings during the update process of your "
+"Checkmk sites and agents. We recommend to set this option only for the "
+"affected hosts as long as you monitor agents older than Checkmk 2.0. After "
+"updating them, you should change this setting back to it's original value. "
+"Background: With IP access lists you can control which servers are allowed "
+"to talk to these agents. Thus it's a security issue and should not be "
+"disabled or set to <b>OK</b> permanently."
 msgstr ""
 "このチェックでは、ルールセット<b>Checkmkエージェントのインストール監査</b>の"
 "パラメータ<b>制限されたアドレスの不一致の場合の状態</b>が設定されており、デ"
@@ -71316,6 +71329,14 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "\"%s\"の読み込みに失敗しました: %s"
+
+#, python-format
+#~ msgid ""
+#~ "The expression \"%s\" uses a different consolidation function as the "
+#~ "graph (%s). This is not allowed."
+#~ msgstr ""
+#~ "式 \"%s\" は、グラフ (%s) と異なる連結関数を使用しています。これは許可でき"
+#~ "ません。"
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "このファイルは有効なiCalendarファイルBBBではないようです"

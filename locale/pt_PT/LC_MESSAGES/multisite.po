@@ -295,7 +295,7 @@ msgstr "% máxima de conexões idle"
 msgid "% of port speed"
 msgstr "% velocidade da porta"
 
-#, python-format
+#, no-python-format
 msgid "% of the specified time via GET request"
 msgstr ""
 
@@ -16093,6 +16093,10 @@ msgstr "Implantar o plugin do container portuário"
 msgid "Deploy the docker plugin"
 msgstr "Implantar o plugin da doca"
 
+#, fuzzy
+msgid "Deploy the mk_filehandler plugin"
+msgstr "Implantar o plugin da doca"
+
 msgid "Deploy the netstat plugin"
 msgstr "Implementar o plugin netstat"
 
@@ -17484,6 +17488,10 @@ msgid "Do not deploy the docker container plugin"
 msgstr "Não utilize o plug-in do contentor do cais"
 
 msgid "Do not deploy the docker plugin"
+msgstr "Não utilize o plug-in da doca"
+
+#, fuzzy
+msgid "Do not deploy the mk_filehandler plugin"
 msgstr "Não utilize o plug-in da doca"
 
 msgid "Do not deploy the netstat plugin"
@@ -25270,6 +25278,14 @@ msgstr ""
 "Hosts configurados através desta regra obtêm o plugin <tt>lnx_quota</tt> "
 "implantado. Isto só é útil se você tiver as quotas do sistema de arquivos "
 "configuradas no host."
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the <tt>mk_filehandler</tt> plugin "
+"deployed."
+msgstr ""
+"Os hosts configurados através desta regra obtêm o plugin <tt>mk_iptables</"
+"tt> implantado."
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plugin deployed."
@@ -34936,6 +34952,10 @@ msgstr "Monitorar custos e uso"
 
 msgid "Monitor disabled services"
 msgstr "Monitorar serviços desativados"
+
+#, fuzzy
+msgid "Monitor file handles (Linux)"
+msgstr "Manipuladores de alerta remoto (Linux)"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Monitorar operações de arquivo com o Inotifique (Linux)"
@@ -54225,14 +54245,6 @@ msgstr "O número esperado de nós no cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "O número esperado de recursos no cluster"
 
-#, python-format
-msgid ""
-"The expression \"%s\" uses a different consolidation function as the graph "
-"(%s). This is not allowed."
-msgstr ""
-"A expressão \"%s\" usa uma função de consolidação diferente como o gráfico "
-"(%s). Isto não é permitido."
-
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -57760,18 +57772,19 @@ msgstr ""
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "Esta verificação devolve o CRIT se a ligação ao local remoto falhar."
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
 "address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
-"b> is configured and differs from default state <b>WARN</b>. With the above "
-"setting you can overwrite the default service state. This will help you to "
-"reduce above warnings during the update process of your Checkmk sites and "
-"agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 2.0. After updating them, you "
-"should change this setting back to it's original value. Background: With IP "
-"access lists you can control which servers are allowed to talk to these "
-"agents. Thus it's a security issue and should not be disabled or set to "
-"<b>OK</b> permanently."
+"b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</"
+"b>. With the above setting you can overwrite the default service state. This "
+"will help you to reduce above warnings during the update process of your "
+"Checkmk sites and agents. We recommend to set this option only for the "
+"affected hosts as long as you monitor agents older than Checkmk 2.0. After "
+"updating them, you should change this setting back to it's original value. "
+"Background: With IP access lists you can control which servers are allowed "
+"to talk to these agents. Thus it's a security issue and should not be "
+"disabled or set to <b>OK</b> permanently."
 msgstr ""
 "Esta verificação devolve CRIT se o parâmetro <b>Estado em caso de "
 "incompatibilidade de endereços restritos</b> no conjunto de regras "
@@ -72844,6 +72857,14 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Falha no carregamento não foi \"%s\": %s"
+
+#, python-format
+#~ msgid ""
+#~ "The expression \"%s\" uses a different consolidation function as the "
+#~ "graph (%s). This is not allowed."
+#~ msgstr ""
+#~ "A expressão \"%s\" usa uma função de consolidação diferente como o "
+#~ "gráfico (%s). Isto não é permitido."
 
 #~ msgid "The file does not seem to be a valid iCalendar file.BBB"
 #~ msgstr "O ficheiro não parece ser um ficheiro iCalendar válido.BBB"

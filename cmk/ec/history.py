@@ -110,16 +110,17 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    from pymongo import DESCENDING
-    from pymongo.connection import Connection  # type: ignore[import]
+    import pymongo
     from pymongo.errors import OperationFailure
+
+    pymongo_available = True
 except ImportError:
-    Connection = None
+    pymongo_available = False
 
 
 class MongoDB:
     def __init__(self) -> None:
-        self.connection: Connection = None
+        self.connection: pymongo.MongoClient | None = None
         self.db: Any = None
 
 
@@ -134,9 +135,9 @@ def _housekeeping_mongodb(history: History) -> None:
 
 
 def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
-    if Connection is None:
+    if not pymongo_available:
         raise Exception("Could not initialize MongoDB (Python-Modules are missing)")
-    mongodb.connection = Connection(*_mongodb_local_connection_opts(settings))
+    mongodb.connection = pymongo.MongoClient(*_mongodb_local_connection_opts(settings))
     mongodb.db = mongodb.connection[os.environ["OMD_SITE"]]
 
 
@@ -168,7 +169,7 @@ def _update_mongodb_indexes(settings: Settings, mongodb: MongoDB) -> None:
     result = mongodb.db.ec_archive.index_information()
 
     if "time_-1" not in result:
-        mongodb.db.ec_archive.ensure_index([("time", DESCENDING)])
+        mongodb.db.ec_archive.create_index([("time", pymongo.DESCENDING)])
 
 
 def _update_mongodb_history_lifetime(settings: Settings, config: Config, mongodb: MongoDB) -> None:
@@ -182,19 +183,21 @@ def _update_mongodb_history_lifetime(settings: Settings, config: Config, mongodb
         mongodb.db.ec_archive.drop_index("dt_-1")
 
     # Delete messages after x days
-    mongodb.db.ec_archive.ensure_index(
-        [("dt", DESCENDING)], expireAfterSeconds=config["history_lifetime"] * 86400, unique=False
+    mongodb.db.ec_archive.create_index(
+        [("dt", pymongo.DESCENDING)],
+        expireAfterSeconds=config["history_lifetime"] * 86400,
+        unique=False,
     )
 
 
 def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
-    ret = mongodb.db.counters.find_and_modify(
-        query={"_id": name}, update={"$inc": {"seq": 1}}, new=True
+    ret = mongodb.db.counters.find_one_and_update(
+        filter={"_id": name}, update={"$inc": {"seq": 1}}, new=True
     )
 
     if not ret:
         # Initialize the index!
-        mongodb.db.counters.insert({"_id": name, "seq": first_id})
+        mongodb.db.counters.insert_one({"_id": name, "seq": first_id})
         return first_id
     return ret["seq"]
 
@@ -208,7 +211,7 @@ def _add_mongodb(history: History, event: Event, what: HistoryWhat, who: str, ad
     # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
     # for the first step, we use the integer index for simplicity
     now = time.time()
-    history._mongodb.db.ec_archive.insert(
+    history._mongodb.db.ec_archive.insert_one(
         {
             "_id": _mongodb_next_id(history._mongodb, "ec_archive_id"),
             "dt": datetime.datetime.fromtimestamp(now),

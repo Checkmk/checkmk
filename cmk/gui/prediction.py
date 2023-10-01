@@ -8,7 +8,7 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from livestatus import lqencode, MKLivestatusNotFoundError, SiteId
+from livestatus import get_rrd_data, lqencode, MKLivestatusNotFoundError, SiteId
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -16,7 +16,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     estimate_levels,
-    get_rrd_data,
     PredictionData,
     PredictionParameters,
     PredictionQuerier,

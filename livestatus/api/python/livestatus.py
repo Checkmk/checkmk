@@ -1392,3 +1392,88 @@ def is_socket_readable(sock: socket.socket, select_timeout: float = 1.0) -> bool
         return True
     fd_sets = select.select([sock], [], [], select_timeout)
     return sock in fd_sets[0]
+
+
+@dataclass(frozen=True)
+class RRDResponse:
+    window: range
+    values: Sequence[float | None]
+
+
+def lq_logic(filter_condition: str, values: Sequence[str], join: str) -> str:
+    """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
+    conditions = "".join(f"{filter_condition} {lqencode(x)}\n" for x in values)
+    connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
+    return conditions + connective
+
+
+def livestatus_lql(
+    host_names: Sequence[str],
+    columns: list[str],
+    service_description: str | None = None,
+) -> str:
+    query_filter = "Columns: %s\n" % " ".join(columns)
+    query_filter += lq_logic(
+        "Filter: host_name =",
+        host_names,
+        "Or",
+    )
+    if service_description == "_HOST_" or service_description is None:
+        what = "host"
+    else:
+        what = "service"
+        query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
+    return f"GET {what}s\n{query_filter}"
+
+
+def get_rrd_data(
+    connection: SingleSiteConnection,
+    host_name: str,
+    service_description: str,
+    rpn: str,
+    fromtime: int,
+    untiltime: int,
+    max_entries: int = 400,
+) -> RRDResponse | None:
+    """Fetch RRD historic metrics data of a specific service, within the specified time range
+
+    returns a TimeSeries object holding interval and data information
+
+    Query to livestatus always returns if database is found, thus:
+    - Values can be None when there is no data for a given timestamp
+    - Reply from livestatus/rrdtool is always enough to describe the
+      queried interval. That means, the returned bounds are always outside
+      the queried interval.
+
+    LEGEND
+    O timestamps of measurements
+    | query values, fromtime and untiltime
+    x returned start, no data contained
+    v returned data rows, includes end y
+
+    --O---O---O---O---O---O---O---O
+            |---------------|
+          x---v---v---v---v---y
+
+    """
+
+    step = 1
+    point_range = ":".join(lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
+    column = f"rrddata:m1:{rpn}:{point_range}"
+
+    lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
+
+    if (response := connection.query_value(lql)) is None:
+        # I think we should rather raise something here, but I am not sure what.
+        return None
+
+    raw_start, raw_end, raw_step, *values = response
+
+    return (
+        # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
+        # However, it is zero for empty responses (non existing metrics, for instance).
+        # Not sure if we shouldn't rather raise.
+        RRDResponse(range(0), [])
+        if (step := int(raw_step)) == 0
+        else RRDResponse(range(int(raw_start), int(raw_end), step), values)
+    )

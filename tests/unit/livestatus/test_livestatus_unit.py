@@ -8,6 +8,7 @@
 import errno
 import socket
 import ssl
+from collections.abc import Sequence
 from contextlib import closing
 from pathlib import Path
 
@@ -274,3 +275,60 @@ def test_set_auth_user(
             return
 
         livestatus.LocalConnection().set_auth_user("mydomain", user_id)
+
+
+@pytest.mark.parametrize(
+    "filter_condition, values, join, result",
+    [
+        ("Filter: metrics =", [], "And", ""),
+        ("Filter: description =", ["CPU load"], "And", "Filter: description = CPU load\n"),
+        (
+            "Filter: host_name =",
+            ["heute", "beta"],
+            "Or",
+            "Filter: host_name = heute\nFilter: host_name = beta\nOr: 2\n",
+        ),
+    ],
+)
+def test_lq_logic(filter_condition: str, values: list[str], join: str, result: str) -> None:
+    assert livestatus.lq_logic(filter_condition, values, join) == result
+
+
+@pytest.mark.parametrize(
+    "args, result",
+    [
+        (
+            (["heute"], ["util", "user"], "CPU"),
+            """GET services
+Columns: util user
+Filter: host_name = heute
+Filter: service_description = CPU\n""",
+        ),
+        (
+            (["gestern"], ["check_command"], None),
+            """GET hosts
+Columns: check_command
+Filter: host_name = gestern\n""",
+        ),
+        (
+            (["fire", "water"], ["description", "metrics"], "cpu"),
+            """GET services
+Columns: description metrics
+Filter: host_name = fire
+Filter: host_name = water
+Or: 2
+Filter: service_description = cpu\n""",
+        ),
+        (
+            ([], ["test"], "invent"),
+            """GET services
+Columns: test
+Filter: service_description = invent\n""",
+        ),
+    ],
+)
+def test_livestatus_lql(
+    args: tuple[Sequence[str], list[str], str | None],
+    result: str,
+) -> None:
+    assert livestatus.livestatus_lql(*args) == result

@@ -8,9 +8,6 @@ from ._paths import PREDICTION_DIR
 from ._plugin_interface import estimate_levels, get_predictive_levels
 from ._prediction import (
     DataStat,
-    get_rrd_data,
-    livestatus_lql,
-    lq_logic,
     PredictionData,
     PredictionInfo,
     PredictionParameters,
@@ -30,9 +27,6 @@ __all__ = [
     "get_predictive_levels",
     "DataStat",
     "estimate_levels",
-    "get_rrd_data",
-    "livestatus_lql",
-    "lq_logic",
     "PredictionData",
     "PredictionInfo",
     "PredictionQuerier",

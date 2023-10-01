@@ -12,7 +12,7 @@ import time
 from collections.abc import Callable, Iterator
 from typing import Any, Literal, NamedTuple
 
-from livestatus import LivestatusOutputFormat, OnlySites, SiteId
+from livestatus import LivestatusOutputFormat, lq_logic, OnlySites, SiteId
 
 import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
@@ -20,7 +20,6 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import lq_logic
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites

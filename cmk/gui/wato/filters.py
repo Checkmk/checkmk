@@ -6,7 +6,7 @@
 import time
 from collections.abc import Iterator
 
-from cmk.utils.prediction import lq_logic
+from livestatus import lq_logic
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites

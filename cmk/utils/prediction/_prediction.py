@@ -8,7 +8,6 @@ import math
 import time
 import typing
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
 from typing import Final, Literal, NamedTuple, NewType
@@ -63,12 +62,6 @@ class DataStat(typing.NamedTuple):
 _TimeSlices = list[tuple[Timestamp, Timestamp]]
 
 _GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
-
-
-@dataclass(frozen=True)
-class _RRDResponse:
-    window: range
-    values: Sequence[float | None]
 
 
 class _PeriodInfo(NamedTuple):
@@ -256,87 +249,6 @@ class TimeSeries:
         return self.values.count(v)
 
 
-def lq_logic(filter_condition: str, values: Sequence[str], join: str) -> str:
-    """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
-    conditions = "".join(f"{filter_condition} {livestatus.lqencode(x)}\n" for x in values)
-    connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
-    return conditions + connective
-
-
-def livestatus_lql(
-    host_names: Sequence[HostName],
-    columns: list[str],
-    service_description: ServiceName | None = None,
-) -> str:
-    query_filter = "Columns: %s\n" % " ".join(columns)
-    query_filter += lq_logic(
-        "Filter: host_name =",
-        host_names,
-        "Or",
-    )
-    if service_description == "_HOST_" or service_description is None:
-        what = "host"
-    else:
-        what = "service"
-        query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
-    return f"GET {what}s\n{query_filter}"
-
-
-def get_rrd_data(
-    connection: livestatus.SingleSiteConnection,
-    host_name: HostName,
-    service_description: ServiceName,
-    rpn: str,
-    fromtime: Timestamp,
-    untiltime: Timestamp,
-    max_entries: int = 400,
-) -> _RRDResponse | None:
-    """Fetch RRD historic metrics data of a specific service, within the specified time range
-
-    returns a TimeSeries object holding interval and data information
-
-    Query to livestatus always returns if database is found, thus:
-    - Values can be None when there is no data for a given timestamp
-    - Reply from livestatus/rrdtool is always enough to describe the
-      queried interval. That means, the returned bounds are always outside
-      the queried interval.
-
-    LEGEND
-    O timestamps of measurements
-    | query values, fromtime and untiltime
-    x returned start, no data contained
-    v returned data rows, includes end y
-
-    --O---O---O---O---O---O---O---O
-            |---------------|
-          x---v---v---v---v---y
-
-    """
-
-    step = 1
-    point_range = ":".join(
-        livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries)
-    )
-    column = f"rrddata:m1:{rpn}:{point_range}"
-
-    lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
-
-    if (response := connection.query_value(lql)) is None:
-        # I think we should rather raise something here, but I am not sure what.
-        return None
-
-    raw_start, raw_end, raw_step, *values = response
-
-    return (
-        # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
-        # However, it is zero for empty responses (non existing metrics, for instance).
-        # Not sure if we shouldn't rather raise.
-        _RRDResponse(range(0), [])
-        if (step := int(raw_step)) == 0
-        else _RRDResponse(range(int(raw_start), int(raw_end), step), values)
-    )
-
-
 def get_rrd_data_with_mk_general_exception(
     host_name: HostName,
     service_description: str,
@@ -344,10 +256,10 @@ def get_rrd_data_with_mk_general_exception(
     cf: ConsolidationFunctionName,
     fromtime: Timestamp,
     untiltime: Timestamp,
-) -> _RRDResponse:
+) -> livestatus.RRDResponse:
     """Wrapper to raise MKGeneralException."""
     try:
-        response = get_rrd_data(
+        response = livestatus.get_rrd_data(
             livestatus.LocalConnection(),
             host_name,
             service_description,

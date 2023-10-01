@@ -125,8 +125,8 @@ def test_get_rrd_data(
             int(timestamp), _prediction.PREDICTION_PERIODS[period]
         )
 
-    rrd_respose = _prediction.get_rrd_data(
-        site.live, HostName("test-prediction"), "CPU load", "load15.max", from_time, until_time
+    rrd_respose = livestatus.get_rrd_data(
+        site.live, "test-prediction", "CPU load", "load15.max", from_time, until_time
     )
     assert rrd_respose is not None
     assert rrd_respose.window.start <= from_time
@@ -144,9 +144,9 @@ def test_get_rrd_data(
 )
 def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int, int]) -> None:
     from_time, until_time = 1543430040, 1543502040
-    rrd_response = _prediction.get_rrd_data(
+    rrd_response = livestatus.get_rrd_data(
         site.live,
-        HostName("test-prediction"),
+        "test-prediction",
         "CPU load",
         "load15.max",
         from_time,
@@ -425,11 +425,11 @@ def test_retieve_grouped_data_from_rrd(
         timegroup = period_info.groupby(now)[0]
         time_windows = _prediction._time_slices(now, params.horizon * 86400, period_info, timegroup)
 
-    hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
+    hostname, service_description, dsname = "test-prediction", "CPU load", "load15"
     from_time = time_windows[0][0]
     rrd_responses = [
         (
-            _prediction.get_rrd_data(
+            livestatus.get_rrd_data(
                 site.live, hostname, service_description, f"{dsname}.max", start, end
             ),
             from_time - start,
@@ -511,7 +511,7 @@ def test_calculate_data_for_prediction(
         )
         for rrd_response, offset in (
             (
-                _prediction.get_rrd_data(
+                livestatus.get_rrd_data(
                     site.live, hostname, service_description, f"{dsname}.max", start, end
                 ),
                 from_time - start,
@@ -562,7 +562,7 @@ def test_get_rrd_data_incomplete(
     site: Site, timerange: tuple[int, int], result: tuple[int, Sequence[float | None]]
 ) -> None:
     from_time, until_time = timerange
-    rrd_response = _prediction.get_rrd_data(
+    rrd_response = livestatus.get_rrd_data(
         site.live, HostName("test-prediction"), "CPU load", "load15.max", from_time, until_time
     )
 
@@ -581,7 +581,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
 
     # Fail to get data, because non-existent check
     with pytest.raises(livestatus.MKLivestatusNotFoundError):
-        _prediction.get_rrd_data(
+        livestatus.get_rrd_data(
             site.live,
             HostName("test-prediction"),
             "Nonexistent check",
@@ -591,7 +591,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
         )
 
     # Empty response, because non-existent perf_data variable
-    rrd_response = _prediction.get_rrd_data(
+    rrd_response = livestatus.get_rrd_data(
         site.live,
         HostName("test-prediction"),
         "CPU load",
@@ -600,7 +600,7 @@ def test_get_rrd_data_fails(site: Site) -> None:
         until_time,
     )
 
-    assert rrd_response == _prediction._RRDResponse(
+    assert rrd_response == livestatus.RRDResponse(
         window=range(0),
         values=[],
     )

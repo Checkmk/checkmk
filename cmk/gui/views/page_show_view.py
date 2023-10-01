@@ -8,13 +8,17 @@
 from __future__ import annotations
 
 import functools
+import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from typing import Any
+from urllib.parse import quote_plus
 
 import livestatus
+from livestatus import SiteId
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -188,11 +192,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: ignore[no-untyped-def]
-    from cmk.utils.livestatus_helpers.queries import Query
-
-    from cmk.gui.plugins.openapi.utils import create_url
-
+def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str]) -> None:
     entries: list[PageMenuEntry] = []
     for text_query in set(queries):
         if "\nStats:" in text_query:
@@ -202,7 +202,7 @@ def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: igno
         except ValueError:
             continue
         try:
-            url = create_url(omd_site(), query)
+            url = _create_url(omd_site(), query)
         except ValueError:
             continue
         table = query.table.__tablename__
@@ -220,6 +220,46 @@ def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: igno
             entries=entries,
         ),
     )
+
+
+def _create_url(site: SiteId, query: Query) -> str:
+    """Create a REST-API query URL.
+
+    Examples:
+
+        >>> _create_url('heute',
+        ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
+        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
+
+    Args:
+        site:
+            A valid site-name.
+
+        query:
+            The Query() instance which the endpoint shall create again.
+
+    Returns:
+        The URL.
+
+    Raises:
+        A ValueError when no URL could be created.
+
+    """
+    table = query.table.__tablename__
+    try:
+        domain_type = {
+            "hosts": "host",
+            "services": "service",
+        }[table]
+    except KeyError:
+        raise ValueError(f"Could not find a domain-type for table {table}.")
+    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
+    query_dict = query.dict_repr()
+    if query_dict:
+        query_string_value = quote_plus(json.dumps(query_dict))
+        url += f"?query={query_string_value}"
+
+    return url
 
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:

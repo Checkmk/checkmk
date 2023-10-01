@@ -18,7 +18,7 @@ from cmk.utils.site import url_prefix
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HTTPProxyReference, notification_macro_help
+from cmk.gui.plugins.wato.utils import notification_macro_help
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -40,6 +40,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato import (
+    HTTPProxyReference,
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
     notification_parameter_registry,

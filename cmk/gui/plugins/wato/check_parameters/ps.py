@@ -15,7 +15,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupEnforcedServicesApplications,
-    UserIconOrAction,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -38,6 +37,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato import UserIconOrAction
 
 # This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
 # be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use

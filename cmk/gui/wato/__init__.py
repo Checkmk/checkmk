@@ -87,10 +87,14 @@ from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
 
+from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help
+from ._check_mk_configuration import PluginCommandLine as PluginCommandLine
+from ._check_mk_configuration import UserIconOrAction as UserIconOrAction
 from ._check_plugin_selection import CheckPluginSelection as CheckPluginSelection
 from ._group_selection import ContactGroupSelection as ContactGroupSelection
 from ._group_selection import HostGroupSelection as HostGroupSelection
 from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
+from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
 from ._notification_parameter import (

@@ -9,7 +9,6 @@
 import abc
 import json
 import re
-import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast, Literal
 
@@ -31,7 +30,6 @@ import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -104,9 +102,6 @@ from cmk.gui.wato import (
 )
 from cmk.gui.watolib.attributes import IPMIParameters as IPMIParameters
 from cmk.gui.watolib.attributes import SNMPCredentials as SNMPCredentials
-from cmk.gui.watolib.check_mk_automations import (
-    get_section_information as get_section_information_automation,
-)
 from cmk.gui.watolib.config_domains import ConfigDomainCore as _ConfigDomainCore
 from cmk.gui.watolib.config_hostname import ConfigHostname as ConfigHostname
 from cmk.gui.watolib.config_sync import ReplicationPath as ReplicationPath
@@ -231,45 +226,6 @@ from cmk.gui.watolib.translation import (
 from cmk.gui.watolib.translation import translation_elements as translation_elements
 
 
-def PluginCommandLine() -> ValueSpec:
-    def _validate_custom_check_command_line(value, varprefix):
-        if "--pwstore=" in value:
-            raise MKUserError(
-                varprefix, _("You are not allowed to use passwords from the password store here.")
-            )
-
-    return TextInput(
-        title=_("Command line"),
-        help=_(
-            "Please enter the complete shell command including path name and arguments to execute. "
-            "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
-            "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-            "just configure the plugin file name as command <tt>check_foobar</tt>."
-        )
-        + monitoring_macro_help(),
-        size="max",
-        validate=_validate_custom_check_command_line,
-    )
-
-
-def monitoring_macro_help() -> str:
-    return " " + _(
-        "You can use monitoring macros here. The most important are: "
-        "<ul>"
-        "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
-        "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
-        "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
-        "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
-        "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
-        "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
-        "</ul>"
-        "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
-        "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
-        "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
-        "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> "
-    )
-
-
 def notification_macro_help() -> str:
     return _(
         "Here you are allowed to use all macros that are defined in the "
@@ -285,110 +241,6 @@ def notification_macro_help() -> str:
         "<li><tt>$EVENT_TXT$</li>"
         "</ul>"
     )
-
-
-def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
-    empty_text = (
-        _(
-            "In order to be able to choose actions here, you need to "
-            '<a href="%s">define your own actions</a>.'
-        )
-        % "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
-    )
-
-    return DropdownChoice(
-        title=title,
-        choices=_list_user_icons_and_actions,
-        empty_text=empty_text,
-        help=help + " " + empty_text,
-    )
-
-
-def _list_user_icons_and_actions() -> DropdownChoiceEntries:
-    choices = []
-    for key, action in active_config.user_icons_and_actions.items():
-        label = key
-        if "title" in action:
-            label += " - " + action["title"]
-        if "url" in action:
-            label += " (" + action["url"][0] + ")"
-
-        choices.append((key, label))
-    return sorted(choices, key=lambda x: x[1])
-
-
-_allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
-
-
-def HTTPProxyReference(  # type: ignore[no-untyped-def]
-    allowed_schemes=_allowed_schemes,
-) -> ValueSpec:
-    """Use this valuespec in case you want the user to configure a HTTP proxy
-    The configured value is is used for preparing requests to work in a proxied environment."""
-
-    def _global_proxy_choices() -> DropdownChoiceEntries:
-        settings = _ConfigDomainCore().load()
-        return [
-            (p["ident"], p["title"])
-            for p in settings.get("http_proxies", {}).values()
-            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemes
-        ]
-
-    return CascadingDropdown(
-        title=_("HTTP proxy"),
-        default_value=("environment", "environment"),
-        choices=[
-            (
-                "environment",
-                _("Use from environment"),
-                FixedValue(
-                    value="environment",
-                    help=_(
-                        "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                        "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                        "Have a look at the python requests module documentation for further information. Note "
-                        "that these variables must be defined as a site-user in ~/etc/environment and that "
-                        "this might affect other notification methods which also use the requests module."
-                    ),
-                    totext=_(
-                        "Use proxy settings from the process environment. This is the default."
-                    ),
-                ),
-            ),
-            (
-                "no_proxy",
-                _("Connect without proxy"),
-                FixedValue(
-                    value=None,
-                    totext=_("Connect directly to the destination instead of using a proxy."),
-                ),
-            ),
-            (
-                "global",
-                _("Use globally configured proxy"),
-                DropdownChoice(
-                    choices=_global_proxy_choices,
-                    sorted=True,
-                ),
-            ),
-            ("url", _("Use explicit proxy settings"), HTTPProxyInput(allowed_schemes)),
-        ],
-        sorted=False,
-    )
-
-
-def HTTPProxyInput(allowed_schemes=_allowed_schemes):
-    """Use this valuespec in case you want the user to input a HTTP proxy setting"""
-    return Url(
-        title=_("Proxy URL"),
-        default_scheme="http",
-        allowed_schemes=allowed_schemes,
-    )
-
-
-@request_memoize()
-def get_section_information() -> Mapping[str, Mapping[str, str]]:
-    return get_section_information_automation().section_infos
 
 
 def check_icmp_params() -> list[DictionaryEntry]:

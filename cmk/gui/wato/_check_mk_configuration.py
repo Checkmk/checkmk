@@ -19,27 +19,10 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import load_contact_group_information
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    ConfigVariableGroupSiteManagement,
-    ConfigVariableGroupUserInterface,
-    ConfigVariableGroupWATO,
-    get_section_information,
-    HTTPProxyInput,
-    PluginCommandLine,
-    RulespecGroupAgentSNMP,
-    RulespecGroupDiscoveryCheckParameters,
-    RulespecGroupHostsMonitoringRulesHostChecks,
-    RulespecGroupHostsMonitoringRulesNotifications,
-    RulespecGroupHostsMonitoringRulesVarious,
-    RulespecGroupMonitoringAgentsGenericOptions,
-    RulespecGroupMonitoringConfigurationNotifications,
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    RulespecGroupMonitoringConfigurationVarious,
-    UserIconOrAction,
-)
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
@@ -52,6 +35,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     DualListChoice,
     FixedValue,
     Float,
@@ -79,14 +63,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.wato import (
-    CheckPluginSelection,
-    ContactGroupSelection,
-    HostGroupSelection,
-    ServiceGroupSelection,
-)
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.check_mk_automations import (
+    get_section_information as get_section_information_automation,
+)
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigVariable,
@@ -101,6 +82,21 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainOMD,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
+from cmk.gui.watolib.config_variable_groups import (
+    ConfigVariableGroupSiteManagement,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupAgentSNMP,
+    RulespecGroupHostsMonitoringRulesHostChecks,
+    RulespecGroupHostsMonitoringRulesNotifications,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringAgentsGenericOptions,
+    RulespecGroupMonitoringConfigurationNotifications,
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupMonitoringConfigurationVarious,
+)
 from cmk.gui.watolib.rulespecs import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
@@ -115,6 +111,11 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
+
+from ._check_plugin_selection import CheckPluginSelection
+from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._http_proxy import HTTPProxyInput
+from ._rulespec_groups import RulespecGroupDiscoveryCheckParameters
 
 
 def register(
@@ -3653,6 +3654,45 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
     return choices
 
 
+def PluginCommandLine() -> ValueSpec:
+    def _validate_custom_check_command_line(value, varprefix):
+        if "--pwstore=" in value:
+            raise MKUserError(
+                varprefix, _("You are not allowed to use passwords from the password store here.")
+            )
+
+    return TextInput(
+        title=_("Command line"),
+        help=_(
+            "Please enter the complete shell command including path name and arguments to execute. "
+            "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+            "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
+            "just configure the plugin file name as command <tt>check_foobar</tt>."
+        )
+        + monitoring_macro_help(),
+        size="max",
+        validate=_validate_custom_check_command_line,
+    )
+
+
+def monitoring_macro_help() -> str:
+    return " " + _(
+        "You can use monitoring macros here. The most important are: "
+        "<ul>"
+        "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
+        "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
+        "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
+        "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
+        "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
+        "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
+        "</ul>"
+        "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
+        "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
+        "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
+        "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> "
+    )
+
+
 def _valuespec_host_check_commands():
     return CascadingDropdown(
         title=_("Host Check Command"),
@@ -4828,6 +4868,36 @@ ExtraServiceConfIconImage = ServiceRulespec(
 )
 
 
+def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
+    empty_text = (
+        _(
+            "In order to be able to choose actions here, you need to "
+            '<a href="%s">define your own actions</a>.'
+        )
+        % "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
+    )
+
+    return DropdownChoice(
+        title=title,
+        choices=_list_user_icons_and_actions,
+        empty_text=empty_text,
+        help=help + " " + empty_text,
+    )
+
+
+def _list_user_icons_and_actions() -> DropdownChoiceEntries:
+    choices = []
+    for key, action in active_config.user_icons_and_actions.items():
+        label = key
+        if "title" in action:
+            label += " - " + action["title"]
+        if "url" in action:
+            label += " (" + action["url"][0] + ")"
+
+        choices.append((key, label))
+    return sorted(choices, key=lambda x: x[1])
+
+
 def _valuespec_host_icons_and_actions():
     return UserIconOrAction(
         title=_("Custom icons or actions for hosts in status GUI"),
@@ -5711,6 +5781,11 @@ ServiceDescriptionTranslationRulespec = HostRulespec(
     name="service_description_translation",
     valuespec=_valuespec_service_description_translation,
 )
+
+
+@request_memoize()
+def get_section_information() -> Mapping[str, Mapping[str, str]]:
+    return get_section_information_automation().section_infos
 
 
 def get_snmp_section_names():

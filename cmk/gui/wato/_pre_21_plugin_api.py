@@ -68,7 +68,9 @@ from cmk.gui.wato._main_module_topics import (
     MainModuleTopicUsers,
 )
 
+from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._http_proxy import HTTPProxyInput, HTTPProxyReference
 from ._notification_parameter import (
     notification_parameter_registry,
     NotificationParameter,
@@ -119,6 +121,11 @@ def register() -> None:  # pylint: disable=too-many-branches
         ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
         ("register_rule", register_rule),
         ("register_hook", register_hook),
+        ("UserIconOrAction", UserIconOrAction),
+        ("PluginCommandLine", PluginCommandLine),
+        ("monitoring_macro_help", monitoring_macro_help),
+        ("HTTPProxyInput", HTTPProxyInput),
+        ("HTTPProxyReference", HTTPProxyReference),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
@@ -131,8 +138,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
         "HostRulespec",
-        "HTTPProxyInput",
-        "HTTPProxyReference",
         "is_wato_slave_site",
         "Levels",
         "main_module_registry",
@@ -140,8 +145,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "make_confirm_link",
         "ManualCheckParameterRulespec",
         "MenuItem",
-        "monitoring_macro_help",
-        "PluginCommandLine",
         "PredictiveLevels",
         "ReplicationPath",
         "RulespecGroup",
@@ -163,7 +166,6 @@ def register() -> None:  # pylint: disable=too-many-branches
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
         "ServiceRulespec",
-        "UserIconOrAction",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name, value in (

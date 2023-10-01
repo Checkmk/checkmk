@@ -10,7 +10,6 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    UserIconOrAction,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -21,6 +20,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import UserIconOrAction
 
 
 def _valuespec_inventory_services_rules():

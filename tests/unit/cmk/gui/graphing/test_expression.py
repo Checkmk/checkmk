@@ -425,6 +425,93 @@ def test_parse_and_evaluate(
             False,
             id="conditional greater than nested",
         ),
+        pytest.param(
+            [
+                PerfDataTuple("delivered_notifications", 0, "", 0, 0, 0, 0),
+                PerfDataTuple("failed_notifications", 0, "", 0, 0, 0, 0),
+            ],
+            "check_mk-foo",
+            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+            GreaterEqualThan(
+                left=Sum(
+                    summands=[
+                        Metric(name="delivered_notifications"),
+                        Metric(name="failed_notifications"),
+                    ]
+                ),
+                right=Product(
+                    factors=[
+                        Sum(
+                            summands=[
+                                Metric(name="delivered_notifications"),
+                                Metric(name="failed_notifications"),
+                            ]
+                        ),
+                        ConstantInt(value=2),
+                    ]
+                ),
+            ),
+            True,
+            id="conditional notifications greater than 1",
+        ),
+        pytest.param(
+            [
+                PerfDataTuple("delivered_notifications", 1, "", 0, 0, 0, 0),
+                PerfDataTuple("failed_notifications", 0, "", 0, 0, 0, 0),
+            ],
+            "check_mk-foo",
+            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+            GreaterEqualThan(
+                left=Sum(
+                    summands=[
+                        Metric(name="delivered_notifications"),
+                        Metric(name="failed_notifications"),
+                    ]
+                ),
+                right=Product(
+                    factors=[
+                        Sum(
+                            summands=[
+                                Metric(name="delivered_notifications"),
+                                Metric(name="failed_notifications"),
+                            ]
+                        ),
+                        ConstantInt(value=2),
+                    ]
+                ),
+            ),
+            False,
+            id="conditional notifications greater than 2",
+        ),
+        pytest.param(
+            [
+                PerfDataTuple("delivered_notifications", 0, "", 0, 0, 0, 0),
+                PerfDataTuple("failed_notifications", 1, "", 0, 0, 0, 0),
+            ],
+            "check_mk-foo",
+            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+            GreaterEqualThan(
+                left=Sum(
+                    summands=[
+                        Metric(name="delivered_notifications"),
+                        Metric(name="failed_notifications"),
+                    ]
+                ),
+                right=Product(
+                    factors=[
+                        Sum(
+                            summands=[
+                                Metric(name="delivered_notifications"),
+                                Metric(name="failed_notifications"),
+                            ]
+                        ),
+                        ConstantInt(value=2),
+                    ]
+                ),
+            ),
+            False,
+            id="conditional notifications greater than 3",
+        ),
     ],
 )
 def test_parse_and_evaluate_conditional(

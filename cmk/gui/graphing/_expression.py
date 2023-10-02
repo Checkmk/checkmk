@@ -37,9 +37,6 @@ def _choose_operator_color(a: str, b: str) -> str:
     return render_color(mix_colors(parse_color(a), parse_color(b)))
 
 
-RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
-
-
 @dataclass(frozen=True)
 class MetricExpressionResult:
     value: float
@@ -357,45 +354,58 @@ class Merge(MetricDeclaration):
         yield from (m for o in self.operands for m in o.metrics())
 
 
-def _apply_operators(
-    raw_operators: list[RPNOperators], operands: list[MetricDeclaration]
-) -> MetricDeclaration:
-    def _apply_operator(
-        raw_operator: RPNOperators, left: MetricDeclaration, right: MetricDeclaration
-    ) -> MetricDeclaration:
-        # TODO: Do real unit computation, detect non-matching units
-        match raw_operator:
-            case "+":
-                return Sum([left, right])
-            case "-":
-                return Difference(minuend=left, subtrahend=right)
-            case "*":
-                return Product([left, right])
-            case "/":
-                # Handle zero division by always adding a tiny bit to the divisor
-                return Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)]))
-            case "MIN":
-                return Minimum([left, right])
-            case "MAX":
-                return Maximum([left, right])
-            case "AVERAGE":
-                return Average([left, right])
-            case "MERGE":
-                return Merge([left, right])
-        raise ValueError(raw_operator)
+class ConditionalMetricDeclaration(abc.ABC):
+    @abc.abstractmethod
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+        raise NotImplementedError()
 
-    operand = _apply_operator(
-        raw_operators.pop(0),
-        operands.pop(0),
-        operands.pop(0),
-    )
-    while operands:
-        operand = _apply_operator(
-            raw_operators.pop(0),
-            operand,
-            operands.pop(0),
+
+@dataclass(frozen=True, kw_only=True)
+class GreaterThan(ConditionalMetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+        return (
+            self.left.evaluate(translated_metrics).value
+            > self.right.evaluate(translated_metrics).value
         )
-    return operand
+
+
+@dataclass(frozen=True, kw_only=True)
+class GreaterEqualThan(ConditionalMetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+        return (
+            self.left.evaluate(translated_metrics).value
+            >= self.right.evaluate(translated_metrics).value
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LessThan(ConditionalMetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+        return (
+            self.left.evaluate(translated_metrics).value
+            < self.right.evaluate(translated_metrics).value
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LessEqualThan(ConditionalMetricDeclaration):
+    left: MetricDeclaration
+    right: MetricDeclaration
+
+    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+        return (
+            self.left.evaluate(translated_metrics).value
+            <= self.right.evaluate(translated_metrics).value
+        )
 
 
 def _extract_consolidation_func_name(
@@ -455,21 +465,25 @@ def _parse_single_expression(
     return Percent(reference=metric, metric=metric) if percent else metric
 
 
-# Evaluates an expression, returns a triple of value, unit and color.
-# e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
-# e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
-# e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
-# e.g. 123.4            -> 123.4,  "",  "#000000"
-# e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
-# Note:
-# "fs_growth.max" is the same as fs_growth. The .max is just
-# relevant when fetching RRD data and is used for selecting
-# the consolidation function MAX.
+RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
+
+
 def _parse_expression(
     expression: str,
     translated_metrics: TranslatedMetrics,
     enforced_consolidation_func_name: GraphConsoldiationFunction | None,
-) -> tuple[list[RPNOperators], list[MetricDeclaration], str, str]:
+) -> tuple[Sequence[MetricDeclaration | RPNOperators], str, str]:
+    # Evaluates an expression, returns a triple of value, unit and color.
+    # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
+    # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
+    # e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
+    # e.g. 123.4            -> 123.4,  "",  "#000000"
+    # e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
+    # Note:
+    # "fs_growth.max" is the same as fs_growth. The .max is just
+    # relevant when fetching RRD data and is used for selecting
+    # the consolidation function MAX.
+
     explicit_color = ""
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -478,54 +492,88 @@ def _parse_expression(
     if "@" in expression:
         expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
 
-    raw_operators: list[RPNOperators] = []
-    raw_operands = []
+    stack: list[MetricDeclaration | RPNOperators] = []
     for p in expression.split(","):
         match p:
             case "+":
-                raw_operators.append("+")
+                stack.append("+")
             case "-":
-                raw_operators.append("-")
+                stack.append("-")
             case "*":
-                raw_operators.append("*")
+                stack.append("*")
             case "/":
-                raw_operators.append("/")
+                stack.append("/")
             case "MIN":
-                raw_operators.append("MIN")
+                stack.append("MIN")
             case "MAX":
-                raw_operators.append("MAX")
+                stack.append("MAX")
             case "AVERAGE":
-                raw_operators.append("AVERAGE")
+                stack.append("AVERAGE")
             case "MERGE":
-                raw_operators.append("MERGE")
+                stack.append("MERGE")
             case ">":
-                raw_operators.append(">")
+                stack.append(">")
             case ">=":
-                raw_operators.append(">=")
+                stack.append(">=")
             case "<":
-                raw_operators.append("<")
+                stack.append("<")
             case "<=":
-                raw_operators.append("<=")
+                stack.append("<=")
             case _:
-                raw_operands.append(p)
+                stack.append(
+                    _parse_single_expression(
+                        p,
+                        translated_metrics,
+                        enforced_consolidation_func_name,
+                    )
+                )
 
-    if len(raw_operators) != (len(raw_operands) - 1):
-        # "a,b,+,c,-,..." -> raw_operators = ["+", "-", ...], raw_operands = ["a", "b", "c", ...]
-        raise ValueError(f"Too few or many operators {raw_operators!r} for {raw_operands!r}")
+    return stack, explicit_unit_name, explicit_color
 
-    return (
-        raw_operators,
-        [
-            _parse_single_expression(
-                ro,
-                translated_metrics,
-                enforced_consolidation_func_name,
-            )
-            for ro in raw_operands
-        ],
-        explicit_unit_name,
-        explicit_color,
-    )
+
+def _resolve_stack(
+    stack: Sequence[MetricDeclaration | RPNOperators],
+) -> MetricDeclaration | ConditionalMetricDeclaration:
+    resolved: list[MetricDeclaration | ConditionalMetricDeclaration] = []
+    for element in stack:
+        if isinstance(element, MetricDeclaration):
+            resolved.append(element)
+            continue
+
+        if not isinstance(right := resolved.pop(), MetricDeclaration):
+            raise TypeError(right)
+
+        if not isinstance(left := resolved.pop(), MetricDeclaration):
+            raise TypeError(left)
+
+        match element:
+            case "+":
+                resolved.append(Sum([left, right]))
+            case "-":
+                resolved.append(Difference(minuend=left, subtrahend=right))
+            case "*":
+                resolved.append(Product([left, right]))
+            case "/":
+                # Handle zero division by always adding a tiny bit to the divisor
+                resolved.append(Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)])))
+            case "MIN":
+                resolved.append(Minimum([left, right]))
+            case "MAX":
+                resolved.append(Maximum([left, right]))
+            case "AVERAGE":
+                resolved.append(Average([left, right]))
+            case "MERGE":
+                resolved.append(Merge([left, right]))
+            case ">=":
+                resolved.append(GreaterEqualThan(left=left, right=right))
+            case ">":
+                resolved.append(GreaterThan(left=left, right=right))
+            case "<=":
+                resolved.append(LessEqualThan(left=left, right=right))
+            case "<":
+                resolved.append(LessThan(left=left, right=right))
+
+    return resolved[0]
 
 
 @dataclass(frozen=True)
@@ -558,8 +606,7 @@ def parse_expression(
         return MetricExpression(ConstantFloat(expression))
 
     (
-        raw_operators,
-        operands,
+        stack,
         explicit_unit_name,
         explicit_color,
     ) = _parse_expression(
@@ -567,84 +614,9 @@ def parse_expression(
         translated_metrics,
         enforced_consolidation_func_name,
     )
-
-    if len(operands) == 1:
-        return MetricExpression(operands[0], explicit_unit_name, explicit_color)
-
-    return MetricExpression(
-        _apply_operators(raw_operators, operands),
-        explicit_unit_name,
-        explicit_color,
-    )
-
-
-class ConditionalMetricDeclaration(abc.ABC):
-    @abc.abstractmethod
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
-        raise NotImplementedError()
-
-
-@dataclass(frozen=True, kw_only=True)
-class GreaterThan(ConditionalMetricDeclaration):
-    left: MetricDeclaration
-    right: MetricDeclaration
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            > self.right.evaluate(translated_metrics).value
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class GreaterEqualThan(ConditionalMetricDeclaration):
-    left: MetricDeclaration
-    right: MetricDeclaration
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            >= self.right.evaluate(translated_metrics).value
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class LessThan(ConditionalMetricDeclaration):
-    left: MetricDeclaration
-    right: MetricDeclaration
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            < self.right.evaluate(translated_metrics).value
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class LessEqualThan(ConditionalMetricDeclaration):
-    left: MetricDeclaration
-    right: MetricDeclaration
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            <= self.right.evaluate(translated_metrics).value
-        )
-
-
-def _apply_conditional_operator(
-    raw_operator: RPNOperators, left: MetricDeclaration, right: MetricDeclaration
-) -> ConditionalMetricDeclaration:
-    match raw_operator:
-        case ">":
-            return GreaterThan(left=left, right=right)
-        case ">=":
-            return GreaterEqualThan(left=left, right=right)
-        case "<":
-            return LessThan(left=left, right=right)
-        case "<=":
-            return LessEqualThan(left=left, right=right)
-    raise ValueError(raw_operator)
+    if isinstance(resolved := _resolve_stack(stack), MetricDeclaration):
+        return MetricExpression(resolved, explicit_unit_name, explicit_color)
+    raise TypeError(resolved)
 
 
 def parse_conditional_expression(
@@ -653,8 +625,7 @@ def parse_conditional_expression(
     enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> ConditionalMetricDeclaration:
     (
-        raw_operators,
-        operands,
+        stack,
         _explicit_unit_name,
         _explicit_color,
     ) = _parse_expression(
@@ -662,12 +633,6 @@ def parse_conditional_expression(
         translated_metrics,
         enforced_consolidation_func_name,
     )
-
-    if len(raw_operators) == 1:
-        return _apply_conditional_operator(raw_operators[0], operands[0], operands[1])
-
-    return _apply_conditional_operator(
-        raw_operators[-1],
-        _apply_operators(raw_operators[:-1], operands[:-1]),
-        operands[-1],
-    )
+    if isinstance(resolved := _resolve_stack(stack), ConditionalMetricDeclaration):
+        return resolved
+    raise TypeError(resolved)

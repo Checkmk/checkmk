@@ -9,8 +9,9 @@ import numpy as np
 import pytest
 
 import cmk.gui.metrics as metrics
+from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._utils import perfometer_info
-from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
+from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 
 
 def test_registered_renderers() -> None:

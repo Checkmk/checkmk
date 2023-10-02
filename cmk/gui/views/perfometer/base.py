@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.metrics as metrics
+from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, Row, TranslatedMetrics
+from cmk.gui.type_defs import Perfdata, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 
 from .legacy_perfometers import perfometers, render_metricometer

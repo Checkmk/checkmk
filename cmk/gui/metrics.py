@@ -31,6 +31,14 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
+from cmk.gui.graphing import (
+    DualPerfometerSpec,
+    LegacyPerfometer,
+    LinearPerfometerSpec,
+    LogarithmicPerfometerSpec,
+    PerfometerSpec,
+    StackedPerfometerSpec,
+)
 from cmk.gui.graphing._expression import parse_conditional_expression, parse_expression
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
@@ -40,7 +48,6 @@ from cmk.gui.graphing._html_render import (
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import (
     CombinedSingleMetricSpec,
-    LegacyPerfometer,
     parse_perf_data,
     perfometer_info,
     translate_metrics,
@@ -48,7 +55,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
+from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -163,20 +170,26 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
 
         # Convert legacy tuple based perfometer
         perfometer_type, perfometer_args = perfometer[0], perfometer[1]
-        if perfometer_type in ("dual", "stacked"):
+        if perfometer_type == "dual":
             sub_performeters = perfometer_args[:]
             _convert_legacy_tuple_perfometers(sub_performeters)
-
             perfometers[index] = {
-                "type": perfometer_type,
+                "type": "dual",
+                "perfometers": sub_performeters,
+            }
+
+        elif perfometer_type == "stacked":
+            sub_performeters = perfometer_args[:]
+            _convert_legacy_tuple_perfometers(sub_performeters)
+            perfometers[index] = {
+                "type": "stacked",
                 "perfometers": sub_performeters,
             }
 
         elif perfometer_type == "linear" and len(perfometer_args) == 3:
             required, total, label = perfometer_args
-
             perfometers[index] = {
-                "type": perfometer_type,
+                "type": "linear",
                 "segments": required,
                 "total": total,
                 "label": label,
@@ -354,11 +367,6 @@ class MetricometerRenderer(abc.ABC):
     def type_name(cls) -> str:
         raise NotImplementedError()
 
-    def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
-        super().__init__()
-        self._perfometer = perfometer
-        self._translated_metrics = translated_metrics
-
     @abc.abstractmethod
     def get_stack(self) -> MetricRendererStack:
         """Return a list of perfometer elements
@@ -394,8 +402,15 @@ class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[type[Metri
     def get_renderer(
         self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
     ) -> MetricometerRenderer:
-        subclass = self[perfometer["type"]]
-        return subclass(perfometer, translated_metrics)
+        if perfometer["type"] == "logarithmic":
+            return MetricometerRendererLogarithmic(perfometer, translated_metrics)
+        if perfometer["type"] == "linear":
+            return MetricometerRendererLinear(perfometer, translated_metrics)
+        if perfometer["type"] == "dual":
+            return MetricometerRendererDual(perfometer, translated_metrics)
+        if perfometer["type"] == "stacked":
+            return MetricometerRendererStacked(perfometer, translated_metrics)
+        raise ValueError(perfometer["type"])
 
 
 renderer_registry = MetricometerRendererRegistry()
@@ -403,17 +418,22 @@ renderer_registry = MetricometerRendererRegistry()
 
 @renderer_registry.register
 class MetricometerRendererLogarithmic(MetricometerRenderer):
+    def __init__(
+        self,
+        perfometer: LogarithmicPerfometerSpec,
+        translated_metrics: TranslatedMetrics,
+    ) -> None:
+        if "metric" not in perfometer:
+            raise MKGeneralException(
+                _('Missing key "metric" in logarithmic perfometer: %r') % perfometer
+            )
+
+        self._perfometer = perfometer
+        self._translated_metrics = translated_metrics
+
     @classmethod
     def type_name(cls) -> str:
         return "logarithmic"
-
-    def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
-        super().__init__(perfometer, translated_metrics)
-
-        if self._perfometer is not None and "metric" not in self._perfometer:
-            raise MKGeneralException(
-                _('Missing key "metric" in logarithmic perfometer: %r') % self._perfometer
-            )
 
     def get_stack(self) -> MetricRendererStack:
         result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
@@ -506,6 +526,14 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
 @renderer_registry.register
 class MetricometerRendererLinear(MetricometerRenderer):
+    def __init__(
+        self,
+        perfometer: LinearPerfometerSpec,
+        translated_metrics: TranslatedMetrics,
+    ) -> None:
+        self._perfometer = perfometer
+        self._translated_metrics = translated_metrics
+
     @classmethod
     def type_name(cls) -> str:
         return "linear"
@@ -592,6 +620,19 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
 @renderer_registry.register
 class MetricometerRendererStacked(MetricometerRenderer):
+    def __init__(
+        self,
+        perfometer: StackedPerfometerSpec,
+        translated_metrics: TranslatedMetrics,
+    ) -> None:
+        if len(perfometer["perfometers"]) != 2:
+            raise MKInternalError(
+                _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
+                % len(perfometer["perfometers"])
+            )
+        self._perfometer = perfometer
+        self._translated_metrics = translated_metrics
+
     @classmethod
     def type_name(cls) -> str:
         return "stacked"
@@ -629,18 +670,22 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
 @renderer_registry.register
 class MetricometerRendererDual(MetricometerRenderer):
-    @classmethod
-    def type_name(cls) -> str:
-        return "dual"
-
-    def __init__(self, perfometer, translated_metrics) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(perfometer, translated_metrics)
-
+    def __init__(
+        self,
+        perfometer: DualPerfometerSpec,
+        translated_metrics: TranslatedMetrics,
+    ) -> None:
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(
                 _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
+        self._perfometer = perfometer
+        self._translated_metrics = translated_metrics
+
+    @classmethod
+    def type_name(cls) -> str:
+        return "dual"
 
     def get_stack(self) -> MetricRendererStack:
         content: list[tuple[int | float, str]] = []

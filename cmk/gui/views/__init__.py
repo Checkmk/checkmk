@@ -9,6 +9,7 @@ from typing import Any
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters
@@ -20,7 +21,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
+from cmk.gui.type_defs import Perfdata, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.visuals.type import VisualTypeRegistry
 

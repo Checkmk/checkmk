@@ -39,7 +39,6 @@ from cmk.gui.type_defs import (
     GraphRenderOptions,
     Perfdata,
     PerfDataTuple,
-    PerfometerSpec,
     Row,
     ScalarBounds,
     TranslatedMetric,
@@ -66,10 +65,9 @@ from ._graph_specification import (
     MetricOperation,
     MetricOpRRDChoice,
 )
+from ._perfometer import LegacyPerfometer, PerfometerSpec
 from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType
 from ._unit_info import unit_info
-
-LegacyPerfometer = tuple[str, Any]
 
 ScalarDefinition = str | tuple[str, str | LazyString]
 

@@ -8,6 +8,14 @@ from cmk.gui.pages import PageRegistry
 from ._explicit_graphs import ExplicitGraphRecipeBuilder
 from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_templates import TemplateGraphRecipeBuilder
+from ._perfometer import (
+    DualPerfometerSpec,
+    LegacyPerfometer,
+    LinearPerfometerSpec,
+    LogarithmicPerfometerSpec,
+    PerfometerSpec,
+    StackedPerfometerSpec,
+)
 from ._timeseries import register_time_series_expressions
 from ._utils import time_series_expression_registry
 from ._valuespecs import PageVsAutocomplete
@@ -20,4 +28,12 @@ def register(page_registry: PageRegistry) -> None:
     register_time_series_expressions(time_series_expression_registry)
 
 
-__all__ = ["register"]
+__all__ = [
+    "register",
+    "DualPerfometerSpec",
+    "LegacyPerfometer",
+    "LinearPerfometerSpec",
+    "LogarithmicPerfometerSpec",
+    "PerfometerSpec",
+    "StackedPerfometerSpec",
+]

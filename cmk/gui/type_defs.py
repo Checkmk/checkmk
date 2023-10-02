@@ -634,8 +634,6 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
 
 TranslatedMetrics = dict[str, TranslatedMetric]
 
-PerfometerSpec = dict[str, Any]
-
 
 class PerfDataTuple(NamedTuple):
     metric_name: MetricName

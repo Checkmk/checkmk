@@ -21,9 +21,18 @@ import tty
 from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
-from typing import NoReturn
+from typing import NamedTuple, NoReturn
 
-Werk = dict[str, str]
+from ..parse import WerkV2ParseResult
+
+
+class Werk(NamedTuple):
+    path: Path
+    content: WerkV2ParseResult
+
+
+WerkMetadata = dict[str, str]
+
 
 RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
 
@@ -327,7 +336,7 @@ def werk_exists(werkid: int) -> bool:
 
 
 def load_werk(werkid: int) -> Werk:
-    werk: Werk = {
+    metadata: WerkMetadata = {
         "id": str(werkid),
         "state": "unknown",
         "title": "unknown",
@@ -336,15 +345,18 @@ def load_werk(werkid: int) -> Werk:
         "edition": "cre",
     }
 
-    with open(str(werkid)) as f:
+    werk_path = Path(str(werkid))
+    with werk_path.open() as f:
         for line in f:
             line = line.strip()
             if line == "":
                 break
             header, value = line.split(":", 1)
-            werk[header.strip().lower()] = value.strip()
+            metadata[header.strip().lower()] = value.strip()
 
-        werk["description"] = f.read()
+        werk = Werk(
+            path=werk_path, content=WerkV2ParseResult(metadata=metadata, description=f.read())
+        )
 
     validate_werk(werk)
 
@@ -353,42 +365,42 @@ def load_werk(werkid: int) -> Werk:
 
 def validate_werk(werk: Werk) -> None:
     for key, choices in valid_choices.items():
-        if werk[key] not in choices:
-            raise ValueError(f"Invalid value {werk[key]!r} for '{key}'")
+        if (value := werk.content.metadata[key]) not in choices:
+            raise ValueError(f"Invalid value {value!r} for '{key}'")
 
 
 def save_werk(werk: Werk) -> None:
-    with open(werk["id"], "w") as f:
-        f.write("Title: %s\n" % werk["title"])
-        for key, val in sorted(werk.items()):
+    with werk.path.open("w") as f:
+        f.write("Title: %s\n" % werk.content.metadata["title"])
+        for key, val in sorted(werk.content.metadata.items()):
             if key not in ["title", "description", "id"]:
                 f.write(f"{key[0].upper()}{key[1:]}: {val}\n")
         f.write("\n")
-        f.write(werk["description"])
+        f.write(werk.content.description)
         f.write("\n")
     git_add(werk)
-    save_last_werkid(int(werk["id"]))
+    save_last_werkid(int(werk.content.metadata["id"]))
 
 
 def change_werk_version(werk_id: int, new_version: str) -> None:
     werk = load_werk(werk_id)
-    werk["version"] = new_version
+    werk.content.metadata["version"] = new_version
     save_werk(werk)
     git_add(werk)
 
 
 def git_add(werk: Werk) -> None:
-    os.system("git add %s" % werk["id"])  # nosec
+    os.system("git add %s" % werk.content.metadata["id"])  # nosec
 
 
 def git_commit(werk: Werk, custom_files: list[str]) -> None:
-    title = werk["title"]
+    title = werk.content.metadata["title"]
     for classid, _classname, prefix in classes:
-        if werk["class"] == classid:
+        if werk.content.metadata["class"] == classid:
             if prefix:
                 title = f"{prefix} {title}"
 
-    title = "{} {}".format(werk["id"].rjust(5, "0"), title)
+    title = "{} {}".format(werk.content.metadata["id"].rjust(5, "0"), title)
 
     if custom_files:
         files_to_commit = custom_files
@@ -399,7 +411,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
         os.chdir(g_base_dir)
         cmd = "git commit {} -m {}".format(
             " ".join(files_to_commit),
-            shlex.quote(title + "\n\n" + werk["description"]),
+            shlex.quote(title + "\n\n" + werk.content.description),
         )
         os.system(cmd)  # nosec
 
@@ -412,7 +424,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
 
         cmd = "git commit {} -m {}".format(
             dash_a,
-            shlex.quote(title + "\n\n" + werk["description"]),
+            shlex.quote(title + "\n\n" + werk.content.description),
         )
         os.system(cmd)  # nosec
 
@@ -439,7 +451,7 @@ def next_werk_id() -> int:
 
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk[
+    werk.content.metadata[
         "description"
     ] += """
 {}: {}
@@ -451,25 +463,25 @@ def add_comment(werk: Werk, title: str, comment: str) -> None:
 
 
 def list_werk(werk: Werk) -> None:
-    if werk_is_modified(int(werk["id"])):
+    if werk_is_modified(int(werk.content.metadata["id"])):
         bold = TTY_BOLD + TTY_CYAN + "(*) "
     else:
         bold = ""
     _lines, cols = get_tty_size()
-    title = werk["title"][: cols - 45]
+    title = werk.content.metadata["title"][: cols - 45]
     sys.stdout.write(
         "%s %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
         % (
-            format_werk_id(werk["id"]),
-            time.strftime("%F", time.localtime(int(werk["date"]))),
-            colored_class(werk["class"], 8),
-            werk["edition"],
-            werk["component"],
-            werk["compatible"],
+            format_werk_id(werk.content.metadata["id"]),
+            time.strftime("%F", time.localtime(int(werk.content.metadata["date"]))),
+            colored_class(werk.content.metadata["class"], 8),
+            werk.content.metadata["edition"],
+            werk.content.metadata["component"],
+            werk.content.metadata["compatible"],
             TTY_BOLD,
-            werk["level"],
+            werk.content.metadata["level"],
             TTY_NORMAL,
-            werk["version"],
+            werk.content.metadata["version"],
             bold,
             title,
             TTY_NORMAL,
@@ -489,15 +501,15 @@ def colored_class(classname: str, digits: int) -> str:
 
 def show_werk(werk: Werk) -> None:
     list_werk(werk)
-    sys.stdout.write("\n%s\n" % werk["description"])
+    sys.stdout.write("\n%s\n" % werk.content.description)
 
 
 def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
-    werks = list(load_werks().values())
-    versions = set(werk["version"] for werk in werks)
+    werks: list[Werk] = list(load_werks().values())
+    versions = set(werk.content.metadata["version"] for werk in werks)
 
     filters: dict[str, list[str]] = {}
 
@@ -536,13 +548,13 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
     for werk in werks:
         skip = False
         for tp, entries in filters.items():
-            if werk[tp] not in entries:
+            if werk.content.metadata[tp] not in entries:
                 skip = True
                 break
         if not skip:
             newwerks.append(werk)
 
-    werks = sorted(newwerks, key=lambda w: int(w["date"]), reverse=args.reverse)
+    werks = sorted(newwerks, key=lambda w: int(w.content.metadata["date"]), reverse=args.reverse)
 
     # Output
     if fmt == "console":
@@ -571,19 +583,29 @@ def output_csv(werks: list[Werk]) -> None:
 
         total_effort = 0
         for werk in werks:
-            if werk["component"] == name:
+            if werk.content.metadata["component"] == name:
                 total_effort += werk_effort(werk)
         line("", "%d. %s" % (nr, alias), "", total_effort)
         nr += 1
 
         for werk in werks:
-            if werk["component"] == name:
-                line(werk["id"], werk["title"], werk_class(werk), werk_effort(werk))
-                line("", werk["description"].replace("\n", " ").replace('"', "'"), "", "")
+            if werk.content.metadata["component"] == name:
+                line(
+                    werk.content.metadata["id"],
+                    werk.content.metadata["title"],
+                    werk_class(werk),
+                    werk_effort(werk),
+                )
+                line(
+                    "",
+                    werk.content.description.replace("\n", " ").replace('"', "'"),
+                    "",
+                    "",
+                )
 
 
 def werk_class(werk: Werk) -> str:
-    cl = werk["class"]
+    cl = werk.content.metadata["class"]
     for entry in classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
         if entry == cl:  # type: ignore[comparison-overlap]
@@ -595,7 +617,7 @@ def werk_class(werk: Werk) -> str:
 
 
 def werk_effort(werk: Werk) -> int:
-    return int(werk.get("effort", "0"))
+    return int(werk.content.metadata.get("effort", "0"))
 
 
 def main_show(args: argparse.Namespace) -> None:
@@ -703,27 +725,33 @@ werk_notes = """
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + werk_notes + TTY_NORMAL)
 
-    werk: Werk = {}
-    werk["id"] = str(next_werk_id())
-    werk["date"] = str(int(time.time()))
+    metadata: WerkMetadata = {}
+    metadata["date"] = str(int(time.time()))
     assert g_current_version
-    werk["version"] = g_current_version
-    werk["title"] = get_input("Title")
-    if werk["title"] == "":
+    metadata["version"] = g_current_version
+    metadata["title"] = get_input("Title")
+    if metadata["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    werk["class"] = input_choice("Class", classes)
-    werk["edition"] = input_choice("Edition", editions)
-    werk["component"] = input_choice("Component", get_edition_components(werk["edition"]))
-    werk["level"] = input_choice("Level", levels)
-    werk["compatible"] = input_choice("Compatible", compatible)
-    werk["description"] = "\n"
+    metadata["class"] = input_choice("Class", classes)
+    metadata["edition"] = input_choice("Edition", editions)
+    metadata["component"] = input_choice("Component", get_edition_components(metadata["edition"]))
+    metadata["level"] = input_choice("Level", levels)
+    metadata["compatible"] = input_choice("Compatible", compatible)
+
+    werk_id = next_werk_id()
+    metadata["id"] = str(werk_id)
+
+    werk = Werk(
+        path=Path(str(werk_id)),
+        content=WerkV2ParseResult(metadata=metadata, description="\n"),
+    )
 
     save_werk(werk)
-    invalidate_my_werkid(int(werk["id"]))
-    edit_werk(int(werk["id"]), args.custom_files)
+    invalidate_my_werkid(werk_id)
+    edit_werk(werk_id, args.custom_files)
 
-    sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk["id"]))
+    sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk_id))
 
 
 def get_werk_arg(arg: str | int | None) -> int:
@@ -753,7 +781,7 @@ def main_delete(args: argparse.Namespace) -> None:
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
 
-        werk_to_be_removed_title = load_werk(int(werk_id))["title"]
+        werk_to_be_removed_title = load_werk(int(werk_id)).content.metadata["title"]
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
                 "Deleted werk {} ({}).\n".format(format_werk_id(werk_id), werk_to_be_removed_title)
@@ -778,8 +806,8 @@ def grep(line: str, kw: str, n: int) -> str | None:
 def main_grep(args: argparse.Namespace) -> None:
     for werk in load_werks().values():
         one_kw_didnt_match = False
-        title = werk["title"]
-        lines = werk["description"].split("\n")
+        title = werk.content.metadata["title"]
+        lines = werk.content.description.split("\n")
         bodylines = set()
 
         # *all* of the keywords must match in order for the
@@ -792,7 +820,7 @@ def main_grep(args: argparse.Namespace) -> None:
             # look for keyword in title
             match = grep(title, kw, i)
             if match:
-                werk["title"] = match
+                werk.content.metadata["title"] = match
                 title = match
                 this_kw_matched = True
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any
 
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.openapi.utils import ProblemException
 
 
 class ProblemKeyError(ProblemException, KeyError):  # pylint: disable=too-many-ancestors

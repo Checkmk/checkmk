@@ -48,6 +48,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
@@ -249,6 +250,7 @@ def register() -> None:
     graphing.register(page_registry, config_variable_registry)
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
+    openapi_registration.register()
 
 
 register()

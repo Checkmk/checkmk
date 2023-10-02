@@ -10,10 +10,10 @@ from openapi_spec_validator import validate_spec
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.plugins.openapi.restful_objects import SPEC
-from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
-from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
-from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
+from cmk.gui.openapi.restful_objects import SPEC
+from cmk.gui.openapi.restful_objects.decorators import Endpoint
+from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 # TODO
 #   Eventually move all of SPEC stuff in here, so we have nothing statically defined.

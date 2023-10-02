@@ -1005,7 +1005,7 @@ edition_components: dict[str, list[tuple[str, str]]] = {}
 classes: list[tuple[str, str, str]] = []
 levels: list[tuple[str, str]] = []
 compatible: list[tuple[str, str]] = []
-valid_choices: dict[str, set[str]]
+valid_choices: dict[str, set[str]] = {}
 online_url = ""
 current_version = None
 

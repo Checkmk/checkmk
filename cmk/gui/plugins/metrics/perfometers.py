@@ -3,14 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import (
-    GB,
-    MAX_NUMBER_HOPS,
-    MB,
-    perfometer_info,
-    skype_mobile_devices,
-    TB,
-)
+from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, perfometer_info, TB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -679,6 +672,7 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
         "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
+        "total": "mem_total",
     }
 )
 
@@ -752,17 +746,13 @@ perfometer_info.append(
     }
 )
 
-# TODO total : None?
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["shared_locks", "exclusive_locks"],
-        "total": None,
+        "type": "logarithmic",
+        "metric": "connections",
+        "half_value": 50,
+        "exponent": 2,
     }
-)
-
-perfometer_info.append(
-    {"type": "logarithmic", "metric": "connections", "half_value": 50, "exponent": 2}
 )
 
 perfometer_info.append(
@@ -895,7 +885,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "running_sessions", "half_value": 10, "exponent": 2}
+    {
+        "type": "logarithmic",
+        "metric": "running_sessions",
+        "half_value": 10,
+        "exponent": 2,
+    }
 )
 
 perfometer_info.append(
@@ -918,11 +913,11 @@ perfometer_info.append(
     }
 )
 
-# TODO: max fehlt
 perfometer_info.append(
     {
         "type": "linear",
         "segments": ["sort_overflow"],
+        "total": 100.0,
     }
 )
 
@@ -1641,20 +1636,6 @@ perfometer_info.append(
     }
 )
 
-
-def get_skype_mobile_perfometer_segments():
-    return ["active_sessions_%s" % device for device, _name, _color in skype_mobile_devices]
-
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": get_skype_mobile_perfometer_segments(),
-        # there is no limit and no way to determine the max so far for
-        # all segments
-    }
-)
-
 perfometer_info.append(
     {
         "type": "linear",
@@ -1949,13 +1930,6 @@ perfometer_info.append(
         "metric": "nimble_write_latency_total",
         "half_value": 10,
         "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["fragmentation"],
     }
 )
 

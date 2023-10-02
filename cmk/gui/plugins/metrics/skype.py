@@ -48,7 +48,7 @@ register_skype_mobile_metrics()
 
 def get_skype_mobile_metrics():
     return [
-        ("active_sessions_%s" % device, idx == 0 and "area" or "stack")
+        ("ucwa_active_sessions_%s" % device, idx == 0 and "area" or "stack")
         for idx, (device, _name, _color) in enumerate(skype_mobile_devices[::-1])
     ]
 

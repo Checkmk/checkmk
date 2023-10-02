@@ -189,46 +189,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
             perfometers.pop(index)
 
 
-def _get_metric_names(
-    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-) -> list[MetricName]:
-    """Returns all metric names which are used within a perfometer.
-    This is used for checking which perfometer can be displayed for a given service later.
-    """
-    if perfometer["type"] == "linear":
-        metric_names = [
-            m.name
-            for s in perfometer["segments"]
-            for m in parse_expression(s, translated_metrics).metrics()
-        ]
-    elif perfometer["type"] == "logarithmic":
-        metric_names = [
-            m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
-        ]
-    elif perfometer["type"] in ("stacked", "dual"):
-        if "perfometers" not in perfometer:
-            raise MKGeneralException(
-                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
-                % perfometer
-            )
-
-        metric_names = [
-            metric_name
-            for sub_perfometer in perfometer["perfometers"]
-            for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
-        ]
-    else:
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-    if (total := perfometer.get("total")) is not None:
-        metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
-
-    if (label := perfometer.get("label")) is not None:
-        metric_names += [m.name for m in parse_expression(label[0], translated_metrics).metrics()]
-
-    return metric_names
-
-
 # .
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -284,6 +244,46 @@ def translate_perf_data(
 #   +----------------------------------------------------------------------+
 #   |  Implementation of Perf-O-Meters                                     |
 #   '----------------------------------------------------------------------'
+
+
+def _get_metric_names(
+    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
+) -> Sequence[MetricName]:
+    """Returns all metric names which are used within a perfometer.
+    This is used for checking which perfometer can be displayed for a given service later.
+    """
+    if perfometer["type"] == "linear":
+        metric_names = [
+            m.name
+            for s in perfometer["segments"]
+            for m in parse_expression(s, translated_metrics).metrics()
+        ]
+    elif perfometer["type"] == "logarithmic":
+        metric_names = [
+            m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
+        ]
+    elif perfometer["type"] in ("stacked", "dual"):
+        if "perfometers" not in perfometer:
+            raise MKGeneralException(
+                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
+                % perfometer
+            )
+
+        metric_names = [
+            metric_name
+            for sub_perfometer in perfometer["perfometers"]
+            for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
+        ]
+    else:
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+
+    if (total := perfometer.get("total")) is not None:
+        metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
+
+    if (label := perfometer.get("label")) is not None:
+        metric_names += [m.name for m in parse_expression(label[0], translated_metrics).metrics()]
+
+    return metric_names
 
 
 class Perfometers:

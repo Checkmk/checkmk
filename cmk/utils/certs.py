@@ -70,12 +70,16 @@ class RootCA(NamedTuple):
 
     @classmethod
     def load_or_create(
-        cls, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
+        cls,
+        path: Path,
+        name: str,
+        validity: relativedelta = _DEFAULT_VALIDITY,
+        key_size: int = _DEFAULT_KEY_SIZE,
     ) -> RootCA:
         try:
             return cls.load(path)
         except FileNotFoundError:
-            cert, rsa = _generate_root_cert(name, validity, _DEFAULT_KEY_SIZE)
+            cert, rsa = _generate_root_cert(name, validity, key_size)
             _save_cert_chain(path, [cert], rsa)
         return cls(cert, rsa)
 
@@ -86,11 +90,9 @@ class RootCA(NamedTuple):
     ) -> Certificate:
         return _sign_csr(csr, validity, self.cert, self.rsa)
 
-    def new_signed_cert(
-        self,
-        name: str,
-        validity: relativedelta = _DEFAULT_VALIDITY,
-    ) -> tuple[Certificate, RSAPrivateKey]:
+    def save_new_signed_cert(
+        self, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
+    ) -> None:
         private_key = RsaPrivateKey.generate(_DEFAULT_KEY_SIZE)._key
         cert = _sign_csr(
             _make_csr(
@@ -101,12 +103,7 @@ class RootCA(NamedTuple):
             self.cert,
             self.rsa,
         )
-        return cert, private_key
 
-    def save_new_signed_cert(
-        self, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
-    ) -> None:
-        cert, private_key = self.new_signed_cert(name, validity)
         _save_cert_chain(path, [cert, self.cert], private_key)
 
 

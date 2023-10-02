@@ -205,11 +205,9 @@ def test_load_cert_and_private_key(
 def test_create_root_ca_and_key(tmp_path: Path) -> None:
     filename = tmp_path / "test_certs_testCA"
     with on_time(100, "UTC"):
-        ca = RootCA.load_or_create(filename, "peter")
+        ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
-    # TODO: this will take too long, reduce key length for the test
-    assert ca.rsa.key_size == 4096
-
+    assert ca.rsa.key_size == 1024
     assert check_cn(ca.cert, "peter")
     assert str(ca.cert.not_valid_before) == "1970-01-01 00:01:40", "creation time is respected"
     assert str(ca.cert.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"

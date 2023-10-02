@@ -252,12 +252,7 @@ def _to_api_format(
     """
     time_period_readable: Dict[str, Any] = {"alias": time_period["alias"]}
     if not builtin_period:
-        time_period_readable["exclude"] = []
-        all_time_periods = load_timeperiods()
-        time_period_readable["exclude"] = [
-            _time_period_alias_from_name(time_period_name, all_time_periods)  # type: ignore
-            for time_period_name in time_period.get("exclude", [])  # type: ignore
-        ]
+        time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
         {key: time_period[key] for key in defines.weekday_ids()}
@@ -441,41 +436,12 @@ def _mk_date_format(exception_date: dt.date) -> str:
 
 def _to_checkmk_format(
     alias: str,
-    periods: Dict[str, Any],
-    exceptions: Dict[str, Any],
-    exclude: List[str],
+    periods: dict[str, Any],
+    exceptions: dict[str, Any],
+    exclude: Union[list[str], None] = None,
 ) -> TimeperiodSpec:
-    time_period: dict[str, Any] = {"alias": alias, "exclude": []}
+    time_period: dict[str, Any] = {"alias": alias, "exclude": [] if exclude is None else exclude}
     time_period.update(exceptions)
     time_period.update(periods)
 
-    if exclude:
-        time_periods_by_alias: dict[str, str] = {
-            time_period["alias"]: name for name, time_period in load_timeperiods().items()  # type: ignore
-        }
-
-        time_period["exclude"] = [
-            _time_period_name_from_alias(time_period_alias, time_periods_by_alias)
-            for time_period_alias in exclude
-        ]
-
     return time_period
-
-
-def _time_period_name_from_alias(alias: str, time_periods_by_alias: Mapping[str, str]) -> str:
-    if alias not in time_periods_by_alias:
-        raise TimePeriodNotFoundError(alias)
-
-    return time_periods_by_alias[alias]
-
-
-def _time_period_alias_from_name(name: str, time_periods: TimeperiodSpecs) -> str:
-    if name not in time_periods:
-        raise TimePeriodNotFoundError(name)
-
-    alias = time_periods[name]["alias"]
-
-    if isinstance(alias, list):
-        raise ValueError("Alias is not a string")
-
-    return alias

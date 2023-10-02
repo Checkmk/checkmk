@@ -20,6 +20,7 @@ import termios
 import time
 import tty
 from collections.abc import Sequence
+from functools import cache
 from pathlib import Path
 from typing import NoReturn
 
@@ -290,7 +291,6 @@ def load_config() -> None:
 
 def load_werks() -> dict[int, Werk]:
     werks = {}
-    check_modified()
     for entry in os.listdir("."):
         try:
             werkid = int(entry)
@@ -321,23 +321,23 @@ def load_current_version() -> str:
     bail_out("Failed to read VERSION from defines.make")
 
 
-g_modified: set[int] = set()
-
-
-def check_modified() -> None:
-    global g_modified
-    g_modified = set()
+@cache
+def git_modified_files() -> set[int]:
+    # this is called from `werk list` via werk_is_modified
+    # so we can assume, that this won't change during runtime of this script
+    modified = set()
     for line in os.popen("git status --porcelain"):
         if line[0] in "AM" and ".werks/" in line:
             try:
                 wid = line.rsplit("/", 1)[-1].strip()
-                g_modified.add(int(wid))
+                modified.add(int(wid))
             except Exception:
                 pass
+    return modified
 
 
 def werk_is_modified(werkid: int) -> bool:
-    return werkid in g_modified
+    return werkid in git_modified_files()
 
 
 def werk_exists(werkid: int) -> bool:

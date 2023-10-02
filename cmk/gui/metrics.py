@@ -258,32 +258,33 @@ def _get_metric_names(
             for s in perfometer["segments"]
             for m in parse_expression(s, translated_metrics).metrics()
         ]
-    elif perfometer["type"] == "logarithmic":
-        metric_names = [
+        if (total := perfometer.get("total")) is not None:
+            metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
+
+        if (label := perfometer.get("label")) is not None:
+            metric_names += [
+                m.name for m in parse_expression(label[0], translated_metrics).metrics()
+            ]
+        return metric_names
+
+    if perfometer["type"] == "logarithmic":
+        return [
             m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
         ]
-    elif perfometer["type"] in ("stacked", "dual"):
+
+    if perfometer["type"] in ("stacked", "dual"):
         if "perfometers" not in perfometer:
             raise MKGeneralException(
                 _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
                 % perfometer
             )
 
-        metric_names = [
+        return [
             metric_name
             for sub_perfometer in perfometer["perfometers"]
             for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
         ]
-    else:
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-    if (total := perfometer.get("total")) is not None:
-        metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
-
-    if (label := perfometer.get("label")) is not None:
-        metric_names += [m.name for m in parse_expression(label[0], translated_metrics).metrics()]
-
-    return metric_names
+    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
 class Perfometers:
@@ -306,16 +307,17 @@ class Perfometers:
         if self._skip_perfometer_by_metric_names(perfometer, translated_metrics):
             return False
 
-        if "condition" in perfometer:
-            try:
-                return parse_conditional_expression(
-                    perfometer["condition"], translated_metrics
-                ).evaluate(translated_metrics)
-            except Exception:
-                return False
+        if perfometer["type"] == "linear":
+            if "condition" in perfometer:
+                try:
+                    return parse_conditional_expression(
+                        perfometer["condition"], translated_metrics
+                    ).evaluate(translated_metrics)
+                except Exception:
+                    return False
 
-        if "total" in perfometer:
-            return self._total_values_exists(perfometer["total"], translated_metrics)
+            if "total" in perfometer:
+                return self._total_values_exists(perfometer["total"], translated_metrics)
 
         return True
 

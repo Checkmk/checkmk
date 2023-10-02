@@ -84,7 +84,7 @@ def inventory_siemens_plc_flag(info):
 
 
 def check_siemens_plc_flag(item, params, info):
-    expected_state = params
+    expected_state = params["expected_state"]
     for line in info:
         if line[1] == "flag" and line[0] + " " + line[2] == item:
             flag_state = line[-1] == "True"
@@ -103,6 +103,7 @@ check_info["siemens_plc.flag"] = LegacyCheckDefinition(
     discovery_function=inventory_siemens_plc_flag,
     check_function=check_siemens_plc_flag,
     check_ruleset_name="siemens_plc_flag",
+    check_default_parameters={"expected_state": False},
 )
 
 # .

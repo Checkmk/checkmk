@@ -909,11 +909,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "siemens_plc_flag",
-            RuleGroup.CheckgroupParameters("siemens_plc_flag"),
-        ),
-        (
-            "check",
             "skype_conferencing",
             RuleGroup.CheckgroupParameters("skype_conferencing"),
         ),

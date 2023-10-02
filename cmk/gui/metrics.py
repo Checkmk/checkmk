@@ -372,36 +372,12 @@ class MetricometerRenderer(abc.ABC):
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_label(self) -> str:
         """Returns the label to be shown on top of the rendered stack
 
         When the perfometer type definition has a "label" element, this will be used.
-        Otherwise the perfometer type specific label of _get_type_label() will be used.
         """
-
-        # "label" option in all Perf-O-Meters overrides automatic label
-        if "label" in self._perfometer:
-            if self._perfometer["label"] is None:
-                return ""
-
-            expr, unit_name = self._perfometer["label"]
-            result = parse_expression(expr, self._translated_metrics).evaluate(
-                self._translated_metrics
-            )
-            unit_info_ = unit_info[unit_name] if unit_name else result.unit_info
-
-            if isinstance(expr, int | float):
-                value = unit_info_.get("conversion", lambda v: v)(expr)
-            else:
-                value = result.value
-
-            return self._render_value(unit_info_, value)
-
-        return self._get_type_label()
-
-    @abc.abstractmethod
-    def _get_type_label(self) -> str:
-        """Returns the label for this perfometer type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -460,7 +436,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             )
         ]
 
-    def _get_type_label(self) -> str:
+    def get_label(self) -> str:
         result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
             self._translated_metrics
         )
@@ -565,6 +541,27 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
+    def get_label(self) -> str:
+        # "label" option in all Perf-O-Meters overrides automatic label
+        if "label" in self._perfometer:
+            if self._perfometer["label"] is None:
+                return ""
+
+            expr, unit_name = self._perfometer["label"]
+            result = parse_expression(expr, self._translated_metrics).evaluate(
+                self._translated_metrics
+            )
+            unit_info_ = unit_info[unit_name] if unit_name else result.unit_info
+
+            if isinstance(expr, int | float):
+                value = unit_info_.get("conversion", lambda v: v)(expr)
+            else:
+                value = result.value
+
+            return self._render_value(unit_info_, value)
+
+        return self._render_value(self._unit(), self._get_summed_values())
+
     def _evaluate_total(self, total_expression: str | int | float) -> float:
         if isinstance(total_expression, float | int):
             return self._unit().get("conversion", lambda v: v)(total_expression)
@@ -581,9 +578,6 @@ class MetricometerRendererLinear(MetricometerRenderer):
             .evaluate(self._translated_metrics)
             .unit_info
         )
-
-    def _get_type_label(self) -> str:
-        return self._render_value(self._unit(), self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
@@ -616,7 +610,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return stack
 
-    def _get_type_label(self) -> str:
+    def get_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -670,7 +664,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         return [content]
 
-    def _get_type_label(self) -> str:
+    def get_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)

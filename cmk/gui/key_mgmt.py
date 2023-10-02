@@ -230,6 +230,7 @@ class PageKeyManagement:
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
                 table.cell(_("By"), key.owner)
                 table.cell(_("Digest (MD5)"), key.fingerprint(HashAlgorithm.MD5))
+                table.cell(_("Key ID"), key_id)
 
 
 class PageEditKey:

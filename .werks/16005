@@ -1,0 +1,12 @@
+Title: ups_power: Fix crash if power value does not contain an integer
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696242574
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

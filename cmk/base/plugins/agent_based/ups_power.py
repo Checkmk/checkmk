@@ -18,7 +18,10 @@ def parse_ups_power(
         if not voltage_str or not int(voltage_str):
             continue
 
-        power = int(power_str)
+        try:
+            power = int(power_str)
+        except ValueError:
+            continue
         # Some "RPS SpA" systems are not RFC conform in this value.
         # The values can get negative but should never be.
         if power < 0:

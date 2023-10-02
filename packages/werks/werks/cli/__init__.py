@@ -47,9 +47,6 @@ if sys.stdout.isatty():
     TTY_UNDERLINE = "\033[4m"
     TTY_NORMAL = "\033[0m"
 
-    def tty_colors(codes: list[int]) -> str:
-        return "\033[%sm" % (";".join([str(c) for c in codes]))
-
 else:
     TTY_RED = ""
     TTY_GREEN = ""
@@ -67,10 +64,6 @@ else:
     TTY_BOLD = ""
     TTY_UNDERLINE = ""
     TTY_NORMAL = ""
-    TTY_OK = "OK"
-
-    def tty_colors(codes: list[int]) -> str:
-        return ""
 
 
 grep_colors = [
@@ -457,16 +450,6 @@ def add_comment(werk: Werk, title: str, comment: str) -> None:
     )
 
 
-def num_color(n: int, colors: list[int], inverse: bool) -> str:
-    if inverse:
-        b = 40
-    else:
-        b = 30
-
-    c = colors[n - 1]
-    return tty_colors([b + c, 1])
-
-
 def list_werk(werk: Werk) -> None:
     if werk_is_modified(int(werk["id"])):
         bold = TTY_BOLD + TTY_CYAN + "(*) "
@@ -640,17 +623,6 @@ def get_input(what: str, default: str = "") -> str:
     if value == "":
         return default
     return value
-
-
-def get_long_input(what: str) -> str:
-    sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
-    usertext = sys.stdin.read()
-    # remove leading and trailing empty lines
-    while usertext.startswith("\n"):
-        usertext = usertext[1:]
-    while usertext.endswith("\n\n"):
-        usertext = usertext[:-1]
-    return usertext
 
 
 def getch() -> str:

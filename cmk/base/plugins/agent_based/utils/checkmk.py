@@ -10,6 +10,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import NamedTuple
 
+from pyasn1.error import PyAsn1Error
 from pyasn1.type.useful import GeneralizedTime
 from pydantic import BaseModel, Field, validator
 
@@ -105,10 +106,48 @@ class CertInfo(BaseModel):
 
     @validator("not_after", pre=True)
     @classmethod
-    def _asn1_generalizedtime_to_datetime(cls, value: str | datetime | None) -> datetime | None:
+    def _validate_not_after(cls, value: str | datetime | None) -> datetime | None:
+        """convert not_after from str to datetime
+
+        the datetime might be encoded in isoformat or ASN.1 GENERALIZEDTIME
+        >>> CertInfo._validate_not_after(None)
+        >>> CertInfo._validate_not_after("20521211091126Z").isoformat()
+        '2052-12-11T09:11:26+00:00'
+
+        # fromisoformat is also "able" to parse that without error, but wrong...
+        # This will ensure it is parsed correctly
+        >>> CertInfo._validate_not_after("20010601111300Z").isoformat()
+        '2001-06-01T11:13:00+00:00'
+
+        # This is naive, so we set the local timezone. Testing is in whatever
+        # timezone so elipsis it is
+        >>> CertInfo._validate_not_after("2023-12-20T09:22:17").isoformat()
+        '2023-12-20T09:22:17...'
+        """
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+
+        # Order matters, fromisoformat will parse "20010601111300Z" to 11:30 o'clock which is wrong...
+        try:
+            dt = CertInfo._asn1_generalizedtime_to_datetime(value)
+        except PyAsn1Error:
+            dt = datetime.fromisoformat(value)
+
+        # We __might__ get an aware or naive datetime object. That makes it
+        # hard to compare later on, so lets make all aware. We probably only
+        # get aware datetime objects, but who knows for sure? So in the
+        # unlikely event of no timezone information, we use the local timezone.
+
+        if dt.tzinfo is None:
+            return dt.astimezone()
+        return dt
+
+    @classmethod
+    def _asn1_generalizedtime_to_datetime(cls, value: str) -> datetime:
         """convert not_after from ASN.1 GENERALIZEDTIME to datetime
 
-        >>> CertInfo._asn1_generalizedtime_to_datetime(None)
         >>> CertInfo._asn1_generalizedtime_to_datetime("20521211091126Z").isoformat()
         '2052-12-11T09:11:26+00:00'
         >>> CertInfo._asn1_generalizedtime_to_datetime("20150131143554.230Z").isoformat()
@@ -116,20 +155,8 @@ class CertInfo(BaseModel):
         >>> CertInfo._asn1_generalizedtime_to_datetime("2015013114-0130").isoformat()
         '2015-01-31T14:00:00-01:30'
         """
-        if value is None:
-            return None
-        if isinstance(value, datetime):
-            return value
 
-        asn_time = GeneralizedTime(value).asDateTime
-        # We __might__ get an aware or naive datetime object. That makes it
-        # hard to compare later on, so lets make all aware. We probably only
-        # get aware datetime objects, but who knows for sure? So in the
-        # unlikely event of no timezone information, we use the local timezone.
-
-        if asn_time.tzinfo is None:
-            return asn_time.astimezone()
-        return asn_time
+        return GeneralizedTime(value).asDateTime
 
 
 class CMKAgentUpdateSection(BaseModel):

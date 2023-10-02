@@ -16,7 +16,6 @@
 import abc
 import json
 import math
-import string
 from collections.abc import Callable, Sequence
 from typing import Any
 
@@ -24,6 +23,7 @@ import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.metrics import MetricName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -189,52 +189,22 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
             perfometers.pop(index)
 
 
-def _lookup_required_expressions(
-    perfometer: LegacyPerfometer | PerfometerSpec,
-) -> list[PerfometerExpression]:
-    if not isinstance(perfometer, dict):
-        raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
-
-    try:
-        return perfometer["_required"]
-    except KeyError:
-        pass
-
-    # calculate the list of metric expressions of the perfometers
-    return perfometer.setdefault("_required", _perfometer_expressions(perfometer))
-
-
-def _lookup_required_names(
-    perfometer: LegacyPerfometer | PerfometerSpec,
-) -> RequiredMetricNames | None:
-    if not isinstance(perfometer, dict):
-        raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
-
-    try:
-        return perfometer["_required_names"]
-    except KeyError:
-        pass
-
-    # calculate the trivial metric names that can later be used to filter
-    # perfometers without the need to evaluate the expressions.
-    return perfometer.setdefault(
-        "_required_names",
-        _required_trivial_metric_names(_lookup_required_expressions(perfometer)),
-    )
-
-
-def _perfometer_expressions(perfometer: PerfometerSpec) -> list[PerfometerExpression]:
-    """Returns all metric expressions of a perfometer
+def _get_metric_names(
+    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
+) -> list[MetricName]:
+    """Returns all metric names which are used within a perfometer.
     This is used for checking which perfometer can be displayed for a given service later.
     """
-    required: list[PerfometerExpression] = []
-
     if perfometer["type"] == "linear":
-        required += perfometer["segments"][:]
-
+        metric_names = [
+            m.name
+            for s in perfometer["segments"]
+            for m in parse_expression(s, translated_metrics).metrics()
+        ]
     elif perfometer["type"] == "logarithmic":
-        required.append(perfometer["metric"])
-
+        metric_names = [
+            m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
+        ]
     elif perfometer["type"] in ("stacked", "dual"):
         if "perfometers" not in perfometer:
             raise MKGeneralException(
@@ -242,40 +212,21 @@ def _perfometer_expressions(perfometer: PerfometerSpec) -> list[PerfometerExpres
                 % perfometer
             )
 
-        for sub_perfometer in perfometer["perfometers"]:
-            required += _perfometer_expressions(sub_perfometer)
-
+        metric_names = [
+            metric_name
+            for sub_perfometer in perfometer["perfometers"]
+            for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
+        ]
     else:
         raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
-    if "label" in perfometer and perfometer["label"] is not None:
-        required.append(perfometer["label"][0])
-    if "total" in perfometer:
-        required.append(perfometer["total"])
+    if (total := perfometer.get("total")) is not None:
+        metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
 
-    return required
+    if (label := perfometer.get("label")) is not None:
+        metric_names += [m.name for m in parse_expression(label[0], translated_metrics).metrics()]
 
-
-def _required_trivial_metric_names(
-    required_expressions: list[PerfometerExpression],
-) -> RequiredMetricNames | None:
-    """Extract the trivial metric names from a list of expressions.
-    Ignores numeric parts. Returns None in case there is a non trivial
-    metric found. This means the trivial filtering can not be used.
-    """
-    required_metric_names = set()
-
-    allowed_chars = string.ascii_letters + string.digits + "_"
-
-    for entry in required_expressions:
-        if isinstance(entry, str):
-            if any(char not in allowed_chars for char in entry):
-                # Found a non trivial metric expression. Totally skip this mechanism
-                return None
-
-            required_metric_names.add(entry)
-
-    return required_metric_names
+    return metric_names
 
 
 # .
@@ -352,15 +303,8 @@ class Perfometers:
         if not translated_metrics:
             return False
 
-        required_names = _lookup_required_names(perfometer)
-        if self._skip_perfometer_by_trivial_metrics(required_names, translated_metrics):
+        if self._skip_perfometer_by_metric_names(perfometer, translated_metrics):
             return False
-
-        for req in _lookup_required_expressions(perfometer):
-            try:
-                parse_expression(req, translated_metrics).evaluate(translated_metrics)
-            except Exception:
-                return False
 
         if "condition" in perfometer:
             try:
@@ -375,24 +319,12 @@ class Perfometers:
 
         return True
 
-    def _skip_perfometer_by_trivial_metrics(
-        self,
-        required_metric_names: RequiredMetricNames | None,
-        translated_metrics: TranslatedMetrics,
+    def _skip_perfometer_by_metric_names(
+        self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
     ) -> bool:
-        """Whether or not a perfometer can be skipped by simple metric name matching instead of expression evaluation
-
-        Performance optimization: Try to reduce the amount of perfometers to evaluate by
-        comparing the strings in the "required" metrics with the translated metrics.
-        We only look at the simple "requried expressions" that don't make use of formulas.
-        In case there is a formula, we can not skip the perfometer and have to evaluate
-        it.
-        """
-        if required_metric_names is None:
-            return False
-
+        metric_names = set(_get_metric_names(perfometer, translated_metrics))
         available_metric_names = set(translated_metrics.keys())
-        return not required_metric_names.issubset(available_metric_names)
+        return not metric_names.issubset(available_metric_names)
 
     def _total_values_exists(
         self, value: str | int | float, translated_metrics: TranslatedMetrics

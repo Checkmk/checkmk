@@ -5,6 +5,7 @@
 use crate::args::Args;
 use crate::config::CheckConfig;
 use crate::constants;
+use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, FileSpec, LogSpecification};
 use std::env::ArgsOs;
@@ -16,7 +17,7 @@ pub enum SendTo {
     Stdout,
 }
 
-pub fn init(args: ArgsOs) -> anyhow::Result<()> {
+pub fn init(args: ArgsOs) -> Result<()> {
     let args = Args::parse_from(args);
 
     init_logging(
@@ -40,7 +41,7 @@ fn init_logging(
     level: &str,
     log_dir: Option<&Path>,
     send_to: SendTo,
-) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
+) -> Result<flexi_logger::LoggerHandle> {
     let spec = LogSpecification::parse(level)?;
     let mut logger = flexi_logger::Logger::with(spec);
 
@@ -65,7 +66,7 @@ fn init_logging(
         SendTo::Stdout => logger.log_to_stdout(),
     };
 
-    logger.format(flexi_logger::detailed_format).start()
+    Ok(logger.format(flexi_logger::detailed_format).start()?)
 }
 
 fn make_log_file_spec(log_dir: &Path) -> FileSpec {

@@ -2,11 +2,20 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use anyhow::Result;
 use tiberius::{AuthMethod, Client, Config};
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
-pub async fn check_connect(host: &str, port: u16, user: &str, pwd: &str) -> anyhow::Result<()> {
+/// Check connection to MS SQL
+///
+/// # Arguments
+///
+/// * `host` - Hostname of MS SQL server
+/// * `port` - Port of MS SQL server
+/// * `user` - Username for MS SQL server
+/// * `pwd` - Password for MS SQL server
+pub async fn check_connect(host: &str, port: u16, user: &str, pwd: &str) -> Result<()> {
     let mut config = Config::new();
 
     config.host(host);

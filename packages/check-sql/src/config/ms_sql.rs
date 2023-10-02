@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 use yaml_rust::Yaml;
 
@@ -94,18 +95,18 @@ impl Default for Authentication {
     }
 }
 impl Authentication {
-    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self, String> {
+    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
         let auth = &yaml[0][keys::AUTHENTICATION];
         Ok(Self {
             username: auth[keys::USERNAME]
                 .as_str()
-                .ok_or("bad/absent username")?
+                .context("bad/absent username")?
                 .to_owned(),
             password: auth[keys::PASSWORD].as_str().map(str::to_string),
             auth_type: match auth[keys::TYPE].as_str().unwrap_or(keys::SYSTEM) {
                 keys::SYSTEM => AuthType::System,
                 keys::WINDOWS => AuthType::Windows,
-                _ => return Err("unknown auth type".to_owned()),
+                _ => bail!("unknown auth type"),
             },
             access_token: auth[keys::ACCESS_TOKEN].as_str().map(str::to_string),
         })
@@ -129,7 +130,7 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self, String> {
+    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
         let conn = &yaml[0][keys::CONNECTION];
         Ok(Self {
             hostname: conn[keys::HOSTNAME]
@@ -189,7 +190,7 @@ pub struct ConnectionTls {
 }
 
 impl ConnectionTls {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>, String> {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let tls = &yaml[keys::TLS];
         if tls.is_badvalue() {
             return Ok(None);
@@ -198,11 +199,11 @@ impl ConnectionTls {
             ca: tls[keys::CA]
                 .as_str()
                 .map(PathBuf::from)
-                .ok_or("Bad/Missing CA")?,
+                .context("Bad/Missing CA")?,
             client_certificate: tls[keys::CLIENT_CERTIFICATE]
                 .as_str()
                 .map(PathBuf::from)
-                .ok_or("bad/Missing CLIENT_CERTIFICATE")?,
+                .context("bad/Missing CLIENT_CERTIFICATE")?,
         }))
     }
     pub fn ca(&self) -> &Path {

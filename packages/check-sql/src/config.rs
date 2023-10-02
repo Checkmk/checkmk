@@ -4,6 +4,7 @@
 
 pub mod ms_sql;
 mod yaml;
+use anyhow::Result;
 use ms_sql::Config as MsSqlConfig;
 use std::path::Path;
 
@@ -13,7 +14,7 @@ pub struct CheckConfig {
 }
 
 impl CheckConfig {
-    pub fn load_file(file: &Path) -> anyhow::Result<Self> {
+    pub fn load_file(file: &Path) -> Result<Self> {
         let _ = yaml::load_from_file(file);
         Ok(CheckConfig {
             _ms_sql: Some(MsSqlConfig::default()),

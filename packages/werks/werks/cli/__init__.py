@@ -29,54 +29,54 @@ RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
-    tty_red = "\033[31m"
-    tty_green = "\033[32m"
-    tty_yellow = "\033[33m"
-    tty_blue = "\033[34m"
-    tty_magenta = "\033[35m"
-    tty_cyan = "\033[36m"
-    tty_white = "\033[37m"
-    tty_bgred = "\033[41m"
-    tty_bggreen = "\033[42m"
-    tty_bgyellow = "\033[43m"
-    tty_bgblue = "\033[44m"
-    tty_bgmagenta = "\033[45m"
-    tty_bgcyan = "\033[46m"
-    tty_bgwhite = "\033[47m"
-    tty_bold = "\033[1m"
-    tty_underline = "\033[4m"
-    tty_normal = "\033[0m"
+    TTY_RED = "\033[31m"
+    TTY_GREEN = "\033[32m"
+    TTY_YELLOW = "\033[33m"
+    TTY_BLUE = "\033[34m"
+    TTY_MAGENTA = "\033[35m"
+    TTY_CYAN = "\033[36m"
+    TTY_WHITE = "\033[37m"
+    TTY_BG_RED = "\033[41m"
+    TTY_BG_GREEN = "\033[42m"
+    TTY_BG_YELLOW = "\033[43m"
+    TTY_BG_BLUE = "\033[44m"
+    TTY_BG_MAGENTA = "\033[45m"
+    TTY_BG_CYAN = "\033[46m"
+    TTY_BG_WHITE = "\033[47m"
+    TTY_BOLD = "\033[1m"
+    TTY_UNDERLINE = "\033[4m"
+    TTY_NORMAL = "\033[0m"
 
     def tty_colors(codes: list[int]) -> str:
         return "\033[%sm" % (";".join([str(c) for c in codes]))
 
 else:
-    tty_red = ""
-    tty_green = ""
-    tty_yellow = ""
-    tty_blue = ""
-    tty_magenta = ""
-    tty_cyan = ""
-    tty_white = ""
-    tty_bgred = ""
-    tty_bggreen = ""
-    tty_bgblue = ""
-    tty_bgmagenta = ""
-    tty_bgcyan = ""
-    tty_bgwhite = ""
-    tty_bold = ""
-    tty_underline = ""
-    tty_normal = ""
-    tty_ok = "OK"
+    TTY_RED = ""
+    TTY_GREEN = ""
+    TTY_YELLOW = ""
+    TTY_BLUE = ""
+    TTY_MAGENTA = ""
+    TTY_CYAN = ""
+    TTY_WHITE = ""
+    TTY_BG_RED = ""
+    TTY_BG_GREEN = ""
+    TTY_BG_BLUE = ""
+    TTY_BG_MAGENTA = ""
+    TTY_BG_CYAN = ""
+    TTY_BG_WHITE = ""
+    TTY_BOLD = ""
+    TTY_UNDERLINE = ""
+    TTY_NORMAL = ""
+    TTY_OK = "OK"
 
     def tty_colors(codes: list[int]) -> str:
         return ""
 
 
 grep_colors = [
-    tty_bold + tty_magenta,
-    tty_bold + tty_cyan,
-    tty_bold + tty_green,
+    TTY_BOLD + TTY_MAGENTA,
+    TTY_BOLD + TTY_CYAN,
+    TTY_BOLD + TTY_GREEN,
 ]
 
 
@@ -469,7 +469,7 @@ def num_color(n: int, colors: list[int], inverse: bool) -> str:
 
 def list_werk(werk: Werk) -> None:
     if werk_is_modified(int(werk["id"])):
-        bold = tty_bold + tty_cyan + "(*) "
+        bold = TTY_BOLD + TTY_CYAN + "(*) "
     else:
         bold = ""
     _lines, cols = get_tty_size()
@@ -483,24 +483,24 @@ def list_werk(werk: Werk) -> None:
             werk["edition"],
             werk["component"],
             werk["compatible"],
-            tty_bold,
+            TTY_BOLD,
             werk["level"],
-            tty_normal,
+            TTY_NORMAL,
             werk["version"],
             bold,
             title,
-            tty_normal,
+            TTY_NORMAL,
         )
     )
 
 
 def format_werk_id(werk_id: int | str) -> str:
-    return tty_bgwhite + tty_blue + ("#%05d" % int(werk_id)) + tty_normal
+    return TTY_BG_WHITE + TTY_BLUE + ("#%05d" % int(werk_id)) + TTY_NORMAL
 
 
 def colored_class(classname: str, digits: int) -> str:
     if classname == "fix":
-        return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
+        return TTY_BOLD + TTY_RED + ("%-" + str(digits) + "s") % classname + TTY_NORMAL
     return ("%-" + str(digits) + "s") % classname
 
 
@@ -683,13 +683,13 @@ def input_choice(
         for c in str(choice):
             if c not in ".-_/" and c not in ctc:
                 ctc[c] = choice
-                texts.append(str(choice).replace(c, tty_bold + c + tty_normal, 1))
+                texts.append(str(choice).replace(c, TTY_BOLD + c + TTY_NORMAL, 1))
                 added = True
                 break
 
         if not added:
             ctc["%s" % next_index] = choice
-            texts.append("{}:{}".format("%s%d%s" % (tty_bold, next_index, tty_normal), choice))
+            texts.append("{}:{}".format("%s%d%s" % (TTY_BOLD, next_index, TTY_NORMAL), choice))
             next_index += 1
 
     while True:
@@ -697,7 +697,7 @@ def input_choice(
         sys.stdout.flush()
         c = getch()
         if c in ctc:
-            sys.stdout.write(f" {tty_bold}{ctc[c]}{tty_normal}\n")
+            sys.stdout.write(f" {TTY_BOLD}{ctc[c]}{TTY_NORMAL}\n")
             return ctc[c]
 
         sys.stdout.write("\n")
@@ -729,7 +729,7 @@ werk_notes = """
 
 
 def main_new(args: argparse.Namespace) -> None:
-    sys.stdout.write(tty_green + werk_notes + tty_normal)
+    sys.stdout.write(TTY_GREEN + werk_notes + TTY_NORMAL)
 
     werk: Werk = {}
     werk["id"] = str(next_werk_id())
@@ -800,7 +800,7 @@ def grep(line: str, kw: str, n: int) -> str | None:
     if i == -1:
         return None
     col = grep_colors[n % len(grep_colors)]
-    return line[0:i] + col + line[i : i + len(kw)] + tty_normal + line[i + len(kw) :]
+    return line[0:i] + col + line[i : i + len(kw)] + TTY_NORMAL + line[i + len(kw) :]
 
 
 def main_grep(args: argparse.Namespace) -> None:
@@ -938,7 +938,7 @@ def invalidate_my_werkid(wid: int) -> None:
     ids.remove(wid)
     store_werk_ids(ids)
     if not ids:
-        sys.stdout.write(f"\n{tty_red}This was your last reserved ID.{tty_normal}\n\n")
+        sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID.{TTY_NORMAL}\n\n")
 
 
 def store_werk_ids(l: list[int]) -> None:

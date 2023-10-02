@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::path::{Path, PathBuf};
 use yaml_rust::Yaml;
 
 mod keys {
@@ -12,12 +13,28 @@ mod keys {
     pub const ACCESS_TOKEN: &str = "access_token";
     pub const SYSTEM: &str = "system";
     pub const WINDOWS: &str = "windows";
+
+    pub const CONNECTION: &str = "connection";
+    pub const HOSTNAME: &str = "hostname";
+    pub const FAIL_OVER_PARTNER: &str = "failoverpartner";
+    pub const TLS: &str = "tls";
+    pub const PORT: &str = "port";
+    pub const SOCKET: &str = "socket";
+    pub const TIMEOUT: &str = "timeout";
+    pub const CA: &str = "ca";
+    pub const CLIENT_CERTIFICATE: &str = "client_certificate";
+}
+
+mod defaults {
+    pub const CONNECTION_HOST_NAME: &str = "localhost";
+    pub const CONNECTION_PORT: u16 = 1433;
+    pub const CONNECTION_TIMEOUT: u32 = 5;
 }
 
 #[derive(PartialEq, Debug)]
 pub struct Config {
     auth: Authentication,
-    conn: Option<Connection>,
+    conn: Connection,
     sqls: Option<Sqls>,
     instance_filter: Option<InstanceFilter>,
     mode: Mode,
@@ -28,7 +45,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             auth: Authentication::default(),
-            conn: None,
+            conn: Connection::default(),
             sqls: None,
             instance_filter: None,
             mode: Mode::Port,
@@ -41,8 +58,8 @@ impl Config {
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
-    pub fn conn(&self) -> Option<&Connection> {
-        self.conn.as_ref()
+    pub fn conn(&self) -> &Connection {
+        &self.conn
     }
     pub fn sqls(&self) -> Option<&Sqls> {
         self.sqls.as_ref()
@@ -102,7 +119,99 @@ pub enum AuthType {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Connection {}
+pub struct Connection {
+    hostname: String,
+    fail_over_partner: Option<String>,
+    port: u16,
+    socket: Option<PathBuf>,
+    tls: Option<ConnectionTls>,
+    timeout: u32,
+}
+
+impl Connection {
+    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self, String> {
+        let conn = &yaml[0][keys::CONNECTION];
+        Ok(Self {
+            hostname: conn[keys::HOSTNAME]
+                .as_str()
+                .unwrap_or(defaults::CONNECTION_HOST_NAME)
+                .to_owned(),
+            fail_over_partner: conn[keys::FAIL_OVER_PARTNER].as_str().map(str::to_string),
+            port: conn[keys::PORT]
+                .as_i64()
+                .map(|v| v as u16)
+                .unwrap_or(defaults::CONNECTION_PORT),
+            socket: conn[keys::SOCKET].as_str().map(PathBuf::from),
+            tls: ConnectionTls::from_yaml(conn)?,
+            timeout: conn[keys::TIMEOUT]
+                .as_i64()
+                .map(|v| v as u32)
+                .unwrap_or(defaults::CONNECTION_TIMEOUT),
+        })
+    }
+    pub fn hostname(&self) -> &str {
+        self.hostname.as_ref()
+    }
+    pub fn fail_over_partner(&self) -> Option<&String> {
+        self.fail_over_partner.as_ref()
+    }
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+    pub fn socket(&self) -> Option<&PathBuf> {
+        self.socket.as_ref()
+    }
+    pub fn tls(&self) -> Option<&ConnectionTls> {
+        self.tls.as_ref()
+    }
+    pub fn timeout(&self) -> u32 {
+        self.timeout
+    }
+}
+
+impl Default for Connection {
+    fn default() -> Self {
+        Self {
+            hostname: defaults::CONNECTION_HOST_NAME.to_owned(),
+            fail_over_partner: None,
+            port: defaults::CONNECTION_PORT,
+            socket: None,
+            tls: None,
+            timeout: defaults::CONNECTION_TIMEOUT,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct ConnectionTls {
+    ca: PathBuf,
+    client_certificate: PathBuf,
+}
+
+impl ConnectionTls {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>, String> {
+        let tls = &yaml[keys::TLS];
+        if tls.is_badvalue() {
+            return Ok(None);
+        }
+        Ok(Some(Self {
+            ca: tls[keys::CA]
+                .as_str()
+                .map(PathBuf::from)
+                .ok_or("Bad/Missing CA")?,
+            client_certificate: tls[keys::CLIENT_CERTIFICATE]
+                .as_str()
+                .map(PathBuf::from)
+                .ok_or("bad/Missing CLIENT_CERTIFICATE")?,
+        }))
+    }
+    pub fn ca(&self) -> &Path {
+        &self.ca
+    }
+    pub fn client_certificate(&self) -> &Path {
+        &self.client_certificate
+    }
+}
 
 #[derive(PartialEq, Debug)]
 pub struct Sqls {}
@@ -165,13 +274,17 @@ mod tests {
     use super::*;
     use yaml_rust::YamlLoader;
 
+    fn create_yaml(source: &str) -> Vec<Yaml> {
+        YamlLoader::load_from_str(source).expect("fix test string!")
+    }
+
     #[test]
     fn test_config_default() {
         assert_eq!(
             Config::default(),
             Config {
                 auth: Authentication::default(),
-                conn: None,
+                conn: Connection::default(),
                 sqls: None,
                 instance_filter: None,
                 mode: Mode::Port,
@@ -193,10 +306,6 @@ mod tests {
         );
     }
 
-    fn create_yaml(source: &str) -> Vec<Yaml> {
-        YamlLoader::load_from_str(source).expect("fix test string!")
-    }
-
     fn create_authentication_yaml_full() -> Vec<Yaml> {
         const SOURCE: &str = r#"
 authentication:
@@ -206,6 +315,35 @@ authentication:
   access_token: "baz"
 "#;
         create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_authentication_from_yaml_empty() {
+        assert!(Authentication::from_yaml(&create_yaml(r"authentication:")).is_err());
+    }
+
+    #[test]
+    fn test_authentication_from_yaml_no_username() {
+        assert!(Authentication::from_yaml(&create_yaml(
+            r#"
+authentication:
+  _username: 'aa'
+"#
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn test_authentication_from_yaml_mini() {
+        assert_eq!(
+            Authentication::from_yaml(&create_authentication_yaml_mini()).unwrap(),
+            Authentication {
+                username: "foo".to_owned(),
+                password: None,
+                auth_type: AuthType::System,
+                access_token: None
+            }
+        );
     }
 
     fn create_authentication_yaml_mini() -> Vec<Yaml> {
@@ -220,15 +358,54 @@ authentication:
     }
 
     #[test]
-    fn test_authentication_from_yaml_mini() {
+    fn test_connection_from_yaml() {
         assert_eq!(
-            Authentication::from_yaml(&create_authentication_yaml_mini()).unwrap(),
-            Authentication {
-                username: "foo".to_owned(),
-                password: None,
-                auth_type: AuthType::System,
-                access_token: None
+            Connection::from_yaml(&create_connection_yaml_full()).unwrap(),
+            Connection {
+                hostname: "alice".to_owned(),
+                fail_over_partner: Some("bob".to_owned()),
+                port: 9999,
+                socket: Some(PathBuf::from(r"C:\path\to\file_socket")),
+                tls: Some(ConnectionTls {
+                    ca: PathBuf::from(r"C:\path\to\file_ca"),
+                    client_certificate: PathBuf::from(r"C:\path\to\file_client"),
+                }),
+                timeout: 341,
             }
         );
+    }
+
+    fn create_connection_yaml_full() -> Vec<Yaml> {
+        const SOURCE: &str = r#"
+connection:
+  hostname: "alice"
+  failoverpartner: "bob"
+  port: 9999
+  socket: 'C:\path\to\file_socket'
+  tls:
+    ca: 'C:\path\to\file_ca'
+    client_certificate: 'C:\path\to\file_client'
+  timeout: 341
+"#;
+        create_yaml(SOURCE)
+    }
+    #[test]
+    fn test_connection_from_yaml_default() {
+        assert_eq!(
+            Connection::from_yaml(&create_connection_yaml_default()).unwrap(),
+            Connection::default()
+        );
+        assert_eq!(
+            Connection::from_yaml(&create_yaml("nothing: ")).unwrap(),
+            Connection::default()
+        );
+    }
+
+    fn create_connection_yaml_default() -> Vec<Yaml> {
+        const SOURCE: &str = r#"
+connection:
+  _nothing: "nothing"
+"#;
+        create_yaml(SOURCE)
     }
 }

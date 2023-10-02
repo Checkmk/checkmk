@@ -1,27 +1,22 @@
 ---
 mssql:
-  defaults: # to be used if no specific config
+  defaults: # mandatory, to be used if no specific config
     authentication: # mandatory
-      username: "foo" # mandatory: has no default
-      password: "bar" # optional: has no default
-      type: "system" # optional: default
-      access_token: "baz" # optional: has no default
+      username: "foo" # mandatory
+      password: "bar" # optional
+      type: "system" # optional(default: "system")
+      access_token: "baz" # optional
     connection: # optional
-      hostname: "localhost" # default
-      failoverpartner: "localhost2" # has no default
-      port: 1433 # default for mssql
-      paths:
-        TNSNAMES: # has no default
-          file: 'C:\path\to\file'
-          prefix: "myprod"
-          postfix: "mycustomer"
-      socket: 'C:\path\to\file' # has no default
-      tls: # has no default
-        ca: 'C:\path\to\file'
-        client_certificate: 'C:\path\to\file'
-      timeout: 5 # default
-    sqls: # always and cached is also the default; optional
-      always:
+      hostname: "localhost" # optional(default: "localhost")
+      failoverpartner: "localhost2" # optional
+      port: 1433 # optional(default: 1433)
+      socket: 'C:\path\to\file' # optional
+      tls: # optional
+        ca: 'C:\path\to\file' # mandatory
+        client_certificate: 'C:\path\to\file' # mandatory
+      timeout: 5 # optional(default: 5)
+    sqls: # optional
+      always: # optional(default)
         - "instance"
         - "databases"
         - "counters"
@@ -31,25 +26,25 @@ mssql:
         - "mirroring"
         - "availability_groups"
         - "connections"
-      cached:
+      cached: # optional(default)
         - "tablespaces"
         - "datafiles"
         - "backup"
         - "jobs"
-      disabled:
+      disabled: # optional
         - "someOtherSQL"
-      cache_age: 600 # in seconds; default
+      cache_age: 600 # optional(default:600)
     instances: # optional
-      detect: yes # default
-      all: no # prio 1; ignore include/exclude if yes
-      include: ["foo", "bar"] # prio 2; use instance even if excluded
-      exclude: ["baz"] # prio 3
-    mode: "port" # default; can be "socket", "port" or "special"
+      detect: yes # optional(default:yes)
+      all: no # optional(default:no) prio 1; ignore include/exclude if yes
+      include: ["foo", "bar"] # optional prio 2; use instance even if excluded
+      exclude: ["baz"] # optional, prio 3
+    mode: "port" # optional(default:"port") - "socket", "port" or "special"
   instances: # optional
     - instance: "INST1" # mandatory
-      authentication: # same as above
-      connection: # same as above
-      alias: "someApplicationName" # has no default
-      piggyback: # has no default, optional
-        hostname: "myPiggybackHost"
-        sqls: # same as above
+      authentication: # optional, same as above
+      connection: # optional,  same as above
+      alias: "someApplicationName" # optional
+      piggyback: # optional
+        hostname: "myPiggybackHost" # mandatory
+        sqls: # mandatory, same as above

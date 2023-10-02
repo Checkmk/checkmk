@@ -162,9 +162,7 @@ class Perfometer:
 
         Returns None in case there is no matching definition found.
         """
-        perfometer_definition = metrics.Perfometers().get_first_matching_perfometer(
-            translated_metrics
-        )
+        perfometer_definition = metrics.get_first_matching_perfometer(translated_metrics)
         if not perfometer_definition:
             return None
 

@@ -287,65 +287,61 @@ def _get_metric_names(
     raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
-class Perfometers:
-    def get_first_matching_perfometer(
-        self, translated_metrics: TranslatedMetrics
-    ) -> PerfometerSpec | None:
-        for perfometer in perfometer_info:
-            if not isinstance(perfometer, dict):
-                continue
-            if self._perfometer_possible(perfometer, translated_metrics):
-                return perfometer
-        return None
+def _skip_perfometer_by_metric_names(
+    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
+) -> bool:
+    metric_names = set(_get_metric_names(perfometer, translated_metrics))
+    available_metric_names = set(translated_metrics.keys())
+    return not metric_names.issubset(available_metric_names)
 
-    def _perfometer_possible(
-        self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-    ) -> bool:
-        if not translated_metrics:
-            return False
 
-        if self._skip_perfometer_by_metric_names(perfometer, translated_metrics):
-            return False
-
-        if perfometer["type"] == "linear":
-            if "condition" in perfometer:
-                try:
-                    return parse_conditional_expression(
-                        perfometer["condition"], translated_metrics
-                    ).evaluate(translated_metrics)
-                except Exception:
-                    return False
-
-            if "total" in perfometer:
-                return self._total_values_exists(perfometer["total"], translated_metrics)
-
+def _total_values_exists(value: str | int | float, translated_metrics: TranslatedMetrics) -> bool:
+    """
+    Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
+    The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
+    """
+    if not isinstance(value, str):
         return True
 
-    def _skip_perfometer_by_metric_names(
-        self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-    ) -> bool:
-        metric_names = set(_get_metric_names(perfometer, translated_metrics))
-        available_metric_names = set(translated_metrics.keys())
-        return not metric_names.issubset(available_metric_names)
-
-    def _total_values_exists(
-        self, value: str | int | float, translated_metrics: TranslatedMetrics
-    ) -> bool:
-        """
-        Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
-        The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
-        """
-        if not isinstance(value, str):
-            return True
-
-        if ":" not in value:
-            return True
-
-        perf_name, perf_param = value.split(":", 1)
-        if perf_param not in translated_metrics[perf_name]["scalar"].keys():
-            return False
-
+    if ":" not in value:
         return True
+
+    perf_name, perf_param = value.split(":", 1)
+    if perf_param not in translated_metrics[perf_name]["scalar"].keys():
+        return False
+
+    return True
+
+
+def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> bool:
+    if not translated_metrics:
+        return False
+
+    if _skip_perfometer_by_metric_names(perfometer, translated_metrics):
+        return False
+
+    if perfometer["type"] == "linear":
+        if "condition" in perfometer:
+            try:
+                return parse_conditional_expression(
+                    perfometer["condition"], translated_metrics
+                ).evaluate(translated_metrics)
+            except Exception:
+                return False
+
+        if "total" in perfometer:
+            return _total_values_exists(perfometer["total"], translated_metrics)
+
+    return True
+
+
+def get_first_matching_perfometer(translated_metrics: TranslatedMetrics) -> PerfometerSpec | None:
+    for perfometer in perfometer_info:
+        if not isinstance(perfometer, dict):
+            continue
+        if _perfometer_possible(perfometer, translated_metrics):
+            return perfometer
+    return None
 
 
 MetricRendererStack = list[list[tuple[int | float, str]]]

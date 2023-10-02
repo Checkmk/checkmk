@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 import cmk.gui.metrics as metrics
+from cmk.gui.graphing._utils import perfometer_info
 from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
 
 
@@ -298,4 +299,44 @@ def test__perfometer_possible(
     perfometer: PerfometerSpec,
     translated_metrics: TranslatedMetrics,
 ) -> None:
-    assert metrics.Perfometers()._perfometer_possible(perfometer, translated_metrics)
+    assert metrics._perfometer_possible(perfometer, translated_metrics)
+
+
+@pytest.mark.parametrize(
+    "translated_metrics, perfometer_index",
+    [
+        pytest.param(
+            {"active_connections": {}},
+            0,
+            id="very first perfometer",
+        ),
+        pytest.param(
+            {
+                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
+                "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
+            },
+            -3,
+            id="third from last",
+        ),
+        pytest.param(
+            {
+                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
+                "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
+            },
+            -2,
+            id="second from last",
+        ),
+        pytest.param(
+            {"test_runtime": {}},
+            -1,
+            id="very last perfometer",
+        ),
+    ],
+)
+def test_get_first_matching_perfometer(
+    translated_metrics: TranslatedMetrics, perfometer_index: int
+) -> None:
+    assert (
+        metrics.get_first_matching_perfometer(translated_metrics)
+        == perfometer_info[perfometer_index]
+    )

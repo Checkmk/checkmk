@@ -51,6 +51,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
+from cmk.base.plugins.commands import get_active_check
+
+from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -378,19 +381,27 @@ class ActiveCheck(BaseCheck):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
-        assert self.name.startswith(
-            "check_"
-        ), "Specify the full name of the active check, e.g. check_http"
-        self.info = config.active_check_info[self.name[len("check_") :]]
+        self.info = config.active_check_info.get(self.name[len("check_") :])
+        self.command = get_active_check(self.name)
 
     def run_argument_function(self, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["argument_function"](params)
 
     def run_service_description(self, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["service_description"](params)
 
     def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         yield from self.info["service_generator"](host_config, params)
+
+    def run_service_function(
+        self, host_config: HostConfig, env_config: EnvironmentConfig, params: Mapping[str, object]
+    ) -> Iterator[ActiveService]:
+        assert self.command, "Active check has to be implemented in the new API"
+        parsed_params = self.command.parameter_parser(params)
+        yield from self.command.service_function(parsed_params, host_config, env_config)
 
 
 class SpecialAgent:

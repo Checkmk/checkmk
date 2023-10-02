@@ -35,10 +35,10 @@ def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
     return "\n".join(generator())
 
 
-def format_as_werk_v2(werk: WerkV2ParseResult) -> tuple[str, str]:
+def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
     metadata = werk.metadata.copy()
 
-    werk_id = metadata.pop("id")
+    metadata.pop("id")
     title = metadata.pop("title")
 
     len_key = max(len(key) for key in metadata.keys())
@@ -54,4 +54,4 @@ def format_as_werk_v2(werk: WerkV2ParseResult) -> tuple[str, str]:
         yield ""
         yield werk.description
 
-    return "\n".join(_content()), werk_id
+    return "\n".join(_content())

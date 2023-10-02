@@ -29,8 +29,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
     # change version and expect another version in result
     parsed.metadata["version"] = "99.99.99p99"
-    content, werk_id = format_as_werk_v2(parsed)
-    assert werk_id == "123"
+    content = format_as_werk_v2(parsed)
     assert (
         content
         == """[//]: # (werk v2)
@@ -52,7 +51,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
     # change version back, expect exactly the same result as the input
     parsed.metadata["version"] = "2.0.0p7"
-    assert format_as_werk_v2(parsed)[0] == md
+    assert format_as_werk_v2(parsed) == md
 
 
 def test_nowiki_parse_roundtrip() -> None:

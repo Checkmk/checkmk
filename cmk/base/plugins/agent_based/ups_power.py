@@ -11,15 +11,25 @@ from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 
 
+def _parse_value(value: str) -> int | None:
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
 def parse_ups_power(
     string_table: List[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
     for idx, voltage_str, power_str in string_table[0]:
-        if not voltage_str or not int(voltage_str):
+        if (voltage := _parse_value(voltage_str)) is None or not voltage:
+            # TODO Fix unused voltage
             continue
 
-        power = int(power_str)
+        if (power := _parse_value(power_str)) is None:
+            continue
+
         # Some "RPS SpA" systems are not RFC conform in this value.
         # The values can get negative but should never be.
         if power < 0:

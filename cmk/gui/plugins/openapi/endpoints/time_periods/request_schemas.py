@@ -22,17 +22,24 @@ class TimePeriodName(fields.String):
     default_error_messages = {
         "should_exist": "Name missing: {name!r}",
         "should_not_exist": "Name {name!r} already exists.",
+        "should_not_be_builtin": "Time period alias {name!r} can't be a built-in",
     }
 
     def __init__(  # type:ignore[no-untyped-def]
         self,
         example,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "should_exist_and_should_not_be_builtin",
+        ] = "should_exist",
         required=True,
         validate=None,
         should_exist: bool = True,
         **kwargs,
     ):
         self._should_exist = should_exist
+        self._presence = presence
         super().__init__(
             example=example,
             pattern=TIMEPERIOD_ID_PATTERN,
@@ -45,10 +52,18 @@ class TimePeriodName(fields.String):
         super()._validate(value)
 
         _exists = verify_timeperiod_name_exists(value)
-        if self._should_exist and not _exists:
+
+        if self._presence == "should_exist" and not _exists:
             raise self.make_error("should_exist", name=value)
-        if not self._should_exist and _exists:
+
+        if self._presence == "should_not_exist" and _exists:
             raise self.make_error("should_not_exist", name=value)
+
+        if self._presence == "should_exist_and_should_not_be_builtin":
+            if not _exists:
+                raise self.make_error("should_exist", name=value)
+            if value == "24X7":
+                raise self.make_error("should_not_be_builtin", name=value)
 
 
 class TimePeriodAlias(fields.String):
@@ -191,7 +206,7 @@ class CreateTimePeriod(BaseSchema):
         example="first",
         description="A unique name for the time period.",
         required=True,
-        should_exist=False,
+        presence="should_not_exist",
     )
     alias = TimePeriodAlias(
         example="alias",
@@ -212,14 +227,14 @@ class CreateTimePeriod(BaseSchema):
         description="A list of additional time ranges to be added.",
     )
     exclude = fields.List(  # type: ignore[assignment]
-        TimePeriodAlias(
-            example="alias",
-            description="The alias for a time period.",
+        TimePeriodName(
+            example="time_name",
+            description="A unique name for the time period.",
             required=True,
-            presence="should_exist_and_should_not_be_builtin",
+            presence="should_exist",
         ),
-        example=["alias"],
-        description="A list of time period aliases whose periods are excluded.",
+        example=["name"],
+        description="A list of time period names whose periods are excluded.",
         required=False,
     )
 
@@ -250,13 +265,13 @@ class UpdateTimePeriod(BaseSchema):
     )
 
     exclude = fields.List(  # type: ignore[assignment]
-        TimePeriodAlias(
-            example="alias",
-            description="The alias for a time period.",
+        TimePeriodName(
+            example="time_name",
+            description="A unique name for the time period.",
             required=True,
             presence="should_exist_and_should_not_be_builtin",
         ),
-        example=["alias"],
-        description="A list of time period aliases whose periods are excluded.",
+        example=["time_name"],
+        description="A list of time period names whose periods are excluded.",
         required=False,
     )

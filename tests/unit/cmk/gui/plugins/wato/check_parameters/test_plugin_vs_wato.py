@@ -899,11 +899,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "safenet_ntls_clients",
-            RuleGroup.CheckgroupParameters("safenet_ntls_clients"),
-        ),
-        (
-            "check",
             "skype_conferencing",
             RuleGroup.CheckgroupParameters("skype_conferencing"),
         ),

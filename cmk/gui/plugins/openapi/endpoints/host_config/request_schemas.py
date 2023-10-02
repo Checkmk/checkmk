@@ -193,4 +193,5 @@ class BulkDeleteHost(BaseSchema):
         required=True,
         example=["example", "sample"],
         description="A list of host names.",
+        minLength=1,
     )

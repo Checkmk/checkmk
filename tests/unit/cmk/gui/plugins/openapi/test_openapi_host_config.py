@@ -1449,3 +1449,10 @@ def test_create_host_with_newline_in_the_name(
         resp.json["fields"]["host_name"][0]
         == f"{host_name!r} does not match pattern '^[-0-9a-zA-Z_.]+\\\\Z'."
     )
+
+
+@managedtest
+def test_bulk_delete_no_entries(clients: ClientRegistry) -> None:
+    r = clients.HostConfig.bulk_delete(entries=[], expect_ok=False)
+    r.assert_status_code(400)
+    assert r.json["fields"] == {"entries": ["At least one entry is required"]}

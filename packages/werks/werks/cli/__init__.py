@@ -12,7 +12,6 @@ import ast
 import fcntl
 import os
 import shlex
-import shutil
 import struct
 import subprocess
 import sys
@@ -216,16 +215,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_url.set_defaults(func=main_url)
 
     return parser.parse_args(argv)
-
-
-def try_migrate_werk_ids() -> None:
-    if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
-        try:
-            # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
-            shutil.move(".my_ids", RESERVED_IDS_FILE_PATH)
-            sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
-        except Exception:
-            sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 
 def get_tty_size() -> tuple[int, int]:
@@ -1053,7 +1042,6 @@ g_current_version = None
 
 def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
-    try_migrate_werk_ids()
     load_config()
     global g_current_version
     g_current_version = current_version or load_current_version()

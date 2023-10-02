@@ -114,13 +114,13 @@ check_info["safenet_ntls.expiration"] = LegacyCheckDefinition(
 
 def inventory_safenet_ntls_links(parsed):
     if parsed:
-        return [(None, None)]
-    return []
+        yield None, {}
 
 
 def check_safenet_ntls_links(_no_item, params, parsed):
+    # NOTE: these can be predictive levels!
     return check_levels(
-        parsed["links"], "connections", params, unit="links", infoname="Connections"
+        parsed["links"], "connections", params["levels"], unit="links", infoname="Connections"
     )
 
 
@@ -130,6 +130,7 @@ check_info["safenet_ntls.links"] = LegacyCheckDefinition(
     discovery_function=inventory_safenet_ntls_links,
     check_function=check_safenet_ntls_links,
     check_ruleset_name="safenet_ntls_links",
+    check_default_parameters={"levels": None},
 )
 
 # .

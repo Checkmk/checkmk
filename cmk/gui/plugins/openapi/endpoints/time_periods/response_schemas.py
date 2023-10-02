@@ -65,9 +65,9 @@ class TimePeriodAttrsResponse(BaseSchema):
     )
     exclude = fields.List(  # type: ignore[assignment]
         fields.String(
-            description="Alias of excluding time period",
+            description="Name of excluding time period",
         ),
-        description="The collection of time period aliases whose periods are excluded",
+        description="The collection of time period names whose periods are excluded",
         example=["time_period_1", "time_period_2", "time_period_3"],
     )
 

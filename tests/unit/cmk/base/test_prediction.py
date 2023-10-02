@@ -12,24 +12,24 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import _prediction, DataStat
+from cmk.utils.prediction import _grouping, _prediction, _time_series, DataStat
 
 
 @pytest.mark.parametrize(
     "group_by, timestamp, result",
     [
-        (_prediction._group_by_wday, 1543402800, ("wednesday", 43200)),
-        (_prediction._group_by_day, 1543402800, ("everyday", 43200)),
-        (_prediction._group_by_day_of_month, 1543402800, ("28", 43200)),
-        (_prediction._group_by_everyhour, 1543402820, ("everyhour", 20)),
+        (_grouping._group_by_wday, 1543402800, ("wednesday", 43200)),
+        (_grouping._group_by_day, 1543402800, ("everyday", 43200)),
+        (_grouping._group_by_day_of_month, 1543402800, ("28", 43200)),
+        (_grouping._group_by_everyhour, 1543402820, ("everyhour", 20)),
     ],
 )
 def test_group_by(
     group_by: Callable[
-        [_prediction.Timestamp], tuple[_prediction.Timegroup, _prediction.Timestamp]
+        [_time_series.Timestamp], tuple[_grouping.Timegroup, _time_series.Timestamp]
     ],
-    timestamp: _prediction.Timestamp,
-    result: tuple[_prediction.Timegroup, _prediction.Timestamp],
+    timestamp: _time_series.Timestamp,
+    result: tuple[_grouping.Timegroup, _time_series.Timestamp],
 ) -> None:
     with on_time(timestamp, "CET"):
         assert group_by(timestamp) == result
@@ -44,7 +44,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "UTC",
             86400 * 3,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)],
         ),
@@ -53,7 +53,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "Europe/Berlin",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1531000800, 1531087200), (1530914400, 1531000800)],
         ),
@@ -62,7 +62,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "America/New_York",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1530936000, 1531022400), (1530849600, 1530936000)],
         ),
@@ -71,7 +71,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "UTC",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540684800, 1540771200), (1540598400, 1540684800)],
         ),
@@ -80,7 +80,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "Europe/Berlin",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540681200, 1540767600), (1540591200, 1540677600)],
         ),
@@ -89,7 +89,7 @@ def test_group_by(
             "2018-10-28 0:00",
             "Europe/Berlin",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1540677600, 1540764000), (1540591200, 1540677600)],
         ),
@@ -98,7 +98,7 @@ def test_group_by(
             "2018-11-04 7:00",
             "America/New_York",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1541307600, 1541394000), (1541217600, 1541304000)],
         ),
@@ -107,7 +107,7 @@ def test_group_by(
             "2018-11-04 5:00",
             "America/New_York",
             86400 * 2,
-            _prediction.PREDICTION_PERIODS["hour"],
+            _grouping.PREDICTION_PERIODS["hour"],
             "everyday",
             [(1541304000, 1541390400), (1541217600, 1541304000)],
         ),
@@ -116,7 +116,7 @@ def test_group_by(
             "2019-04-02 10:00",
             "Europe/Berlin",
             86400 * 12,
-            _prediction.PREDICTION_PERIODS["wday"],
+            _grouping.PREDICTION_PERIODS["wday"],
             "tuesday",
             [(1554156000, 1554242400), (1553554800, 1553641200)],
         ),
@@ -125,10 +125,10 @@ def test_group_by(
 def test_time_slices(
     utcdate: str,
     timezone: str,
-    horizon: _prediction.Seconds,
-    period_info: _prediction._PeriodInfo,
-    timegroup: _prediction.Timegroup,
-    result: Sequence[tuple[_prediction.Timestamp, _prediction.Timestamp]],
+    horizon: int,
+    period_info: _grouping.PeriodInfo,
+    timegroup: _grouping.Timegroup,
+    result: Sequence[tuple[_time_series.Timestamp, _time_series.Timestamp]],
 ) -> None:
     """Find period slices for predictive levels
 
@@ -139,7 +139,7 @@ def test_time_slices(
         timestamp = time.time()
         print(timestamp)
 
-        slices = _prediction._time_slices(int(timestamp), horizon, period_info, timegroup)
+        slices = _grouping.time_slices(int(timestamp), horizon, period_info, timegroup)
         pprint([("ontz", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     pprint([("sys", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result
@@ -209,6 +209,6 @@ def approx(value_in: float) -> float:
     ],
 )
 def test_data_stats(
-    slices: list[_prediction.TimeSeriesValues], result: list[DataStat | None]
+    slices: list[_time_series.TimeSeriesValues], result: list[DataStat | None]
 ) -> None:
     assert _prediction._data_stats(slices) == result

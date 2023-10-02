@@ -12,18 +12,16 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
+from ._grouping import get_timegroup_relative_time, PREDICTION_PERIODS, Timegroup
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
     ConsolidationFunctionName,
-    get_timegroup_relative_time,
     LevelsSpec,
-    PREDICTION_PERIODS,
     PredictionData,
     PredictionInfo,
     PredictionParameters,
     PredictionStore,
-    Timegroup,
 )
 
 EstimatedLevels = tuple[float | None, float | None, float | None, float | None]

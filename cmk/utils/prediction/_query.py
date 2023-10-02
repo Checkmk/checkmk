@@ -14,8 +14,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
+from ._grouping import Timegroup
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
-from ._prediction import PredictionData, PredictionInfo, Timegroup
+from ._prediction import PredictionData, PredictionInfo
 
 
 @dataclass(frozen=True, kw_only=True)

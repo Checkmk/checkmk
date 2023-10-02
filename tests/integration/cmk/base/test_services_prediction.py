@@ -16,7 +16,7 @@ from tests.testlib.site import Site
 import livestatus
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import _prediction
+from cmk.utils.prediction import _grouping, _prediction, _time_series
 
 
 @pytest.fixture(name="cfg_setup", scope="module")
@@ -121,8 +121,8 @@ def test_get_rrd_data(
 ) -> None:
     with on_time(utcdate, timezone):
         timestamp = time.time()
-        _, from_time, until_time, _ = _prediction.get_timegroup_relative_time(
-            int(timestamp), _prediction.PREDICTION_PERIODS[period]
+        _, from_time, until_time, _ = _grouping.get_timegroup_relative_time(
+            int(timestamp), _grouping.PREDICTION_PERIODS[period]
         )
 
     rrd_respose = livestatus.get_rrd_data(
@@ -414,16 +414,16 @@ def test_retieve_grouped_data_from_rrd(
     utcdate: str,
     timezone: str,
     params: _prediction.PredictionParameters,
-    reference: tuple[_prediction.TimeWindow, Sequence[_prediction.TimeSeriesValues]],
+    reference: tuple[_time_series.TimeWindow, Sequence[_time_series.TimeSeriesValues]],
 ) -> None:
     "This mostly verifies the up-sampling"
 
-    period_info = _prediction.PREDICTION_PERIODS[params.period]
+    period_info = _grouping.PREDICTION_PERIODS[params.period]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
         timegroup = period_info.groupby(now)[0]
-        time_windows = _prediction._time_slices(now, params.horizon * 86400, period_info, timegroup)
+        time_windows = _grouping.time_slices(now, params.horizon * 86400, period_info, timegroup)
 
     hostname, service_description, dsname = "test-prediction", "CPU load", "load15"
     from_time = time_windows[0][0]
@@ -438,7 +438,7 @@ def test_retieve_grouped_data_from_rrd(
     ]
     slices = [
         (
-            _prediction.TimeSeries(
+            _time_series.TimeSeries(
                 list(rrd_response.values),
                 (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
             ),
@@ -490,20 +490,20 @@ def test_retieve_grouped_data_from_rrd(
 def test_calculate_data_for_prediction(
     site: Site, utcdate: str, timezone: str, params: _prediction.PredictionParameters
 ) -> None:
-    period_info = _prediction.PREDICTION_PERIODS[params.period]
+    period_info = _grouping.PREDICTION_PERIODS[params.period]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
         timegroup = period_info.groupby(now)[0]
 
-        time_windows = _prediction._time_slices(now, params.horizon * 86400, period_info, timegroup)
+        time_windows = _grouping.time_slices(now, params.horizon * 86400, period_info, timegroup)
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
 
     from_time = time_windows[0][0]
     raw_slices = [
         (
-            _prediction.TimeSeries(
+            _time_series.TimeSeries(
                 list(rrd_response.values),
                 (rrd_response.window.start, rrd_response.window.stop, rrd_response.window.step),
             ),
@@ -575,8 +575,8 @@ def test_get_rrd_data_incomplete(
 @pytest.mark.usefixtures("cfg_setup")
 def test_get_rrd_data_fails(site: Site) -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
-    _, from_time, until_time, _ = _prediction.get_timegroup_relative_time(
-        int(timestamp), _prediction.PREDICTION_PERIODS["hour"]
+    _, from_time, until_time, _ = _grouping.get_timegroup_relative_time(
+        int(timestamp), _grouping.PREDICTION_PERIODS["hour"]
     )
 
     # Fail to get data, because non-existent check

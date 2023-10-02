@@ -6,14 +6,19 @@
 
 import pytest
 
-from cmk.utils.prediction import _prediction
+from cmk.utils.prediction._time_series import (
+    rrd_timestamps,
+    TimeSeries,
+    TimeSeriesValues,
+    TimeWindow,
+)
 
 
 @pytest.mark.parametrize(
     "twindow, result", [((0, 0, 0), []), ((100, 200, 25), [125, 150, 175, 200])]
 )
-def test_rrdtimestamps(twindow: _prediction.TimeWindow, result: list[int]) -> None:
-    assert _prediction.rrd_timestamps(twindow) == result
+def test_rrdtimestamps(twindow: TimeWindow, result: list[int]) -> None:
+    assert rrd_timestamps(twindow) == result
 
 
 @pytest.mark.parametrize(
@@ -35,11 +40,11 @@ def test_rrdtimestamps(twindow: _prediction.TimeWindow, result: list[int]) -> No
     ],
 )
 def test_time_series_upsampling(
-    rrddata: _prediction.TimeSeriesValues,
-    twindow: _prediction.TimeWindow,
-    upsampled: _prediction.TimeSeriesValues,
+    rrddata: TimeSeriesValues,
+    twindow: TimeWindow,
+    upsampled: TimeSeriesValues,
 ) -> None:
-    ts = _prediction.TimeSeries(rrddata)
+    ts = TimeSeries(rrddata)
     assert ts.bfill_upsample(twindow) == upsampled
 
 
@@ -62,18 +67,18 @@ def test_time_series_upsampling(
     ],
 )
 def test_time_series_downsampling(
-    rrddata: _prediction.TimeSeriesValues,
-    twindow: _prediction.TimeWindow,
-    cf: _prediction.ConsolidationFunctionName,
-    downsampled: _prediction.TimeSeriesValues,
+    rrddata: TimeSeriesValues,
+    twindow: TimeWindow,
+    cf: str,
+    downsampled: TimeSeriesValues,
 ) -> None:
-    ts = _prediction.TimeSeries(rrddata)
+    ts = TimeSeries(rrddata)
     assert ts.downsample(twindow, cf) == downsampled
 
 
 class TestTimeseries:
     def test_conversion(self) -> None:
-        assert _prediction.TimeSeries(
+        assert TimeSeries(
             [1, 2, 3, 4, None, 5],
             conversion=lambda v: 2 * v - 3,
         ).values == [
@@ -83,11 +88,11 @@ class TestTimeseries:
         ]
 
     def test_conversion_noop_default(self) -> None:
-        assert _prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
+        assert TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
 
     def test_count(self) -> None:
         assert (
-            _prediction.TimeSeries(
+            TimeSeries(
                 [1, 2, None, 4, None, 5],
                 time_window=(7, 8, 9),
             ).count(None)

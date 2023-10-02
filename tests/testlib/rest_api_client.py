@@ -567,7 +567,6 @@ class UserClient(RestApiClient):
                 "contactgroups": contactgroups,
                 "authorized_sites": authorized_sites,
                 "idle_timeout": idle_timeout,
-                "customer": customer,
                 "roles": roles,
                 "interface_options": interface_options,
                 "auth_option": auth_option,
@@ -578,6 +577,9 @@ class UserClient(RestApiClient):
             }.items()
             if v is not None
         }
+
+        if version.is_managed_edition():
+            body["customer"] = customer
 
         return self.request(
             "put",

@@ -27,11 +27,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, perfometer_info, TB
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
-# Optional keys:
-# "sort_group" -> When sorting perfometer the first criteria used is either this optional performeter
-#                 group or the perfometer ID. The sort_group can be used to group different perfometers
-#                 which show equal data for sorting them together in a single sort domain.
-
 perfometer_info.append(
     {
         "type": "logarithmic",

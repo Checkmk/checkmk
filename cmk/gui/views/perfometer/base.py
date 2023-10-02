@@ -117,7 +117,7 @@ class Perfometer:
         # The perfometer definitions had no ID until implementation of this sorting. We need to
         # care about this here. Since it is only for grouping perfometers of the same type, we
         # can use the id() of the perfometer_definition here.
-        return perfometer_definition.get("sort_group", id(perfometer_definition))
+        return id(perfometer_definition)
 
     def _get_sort_value(self) -> float | None:
         """Calculate the sort value for this perfometer

@@ -100,10 +100,13 @@ if "%worker_arg_build%" == "1" (
 :: Test
 if "%worker_arg_test%" == "1" (
 rem Validate elevation, because full testing is possible only in elevated mode!
-    net session > nul 2>&1
-    IF ERRORLEVEL 1 (
-        echo You must be elevated. Exiting...
-        exit /B 21
+  
+    if "%worker_need_elevation%" == "1" (
+        net session > nul 2>&1
+        IF ERRORLEVEL 1 (
+            echo You must be elevated. Exiting...
+            exit /B 21
+        )
     )
     powershell Write-Host "Testing Rust executables" -Foreground White
     cargo test --release --target %worker_target% -- --test-threads=4 2>&1

@@ -39,7 +39,7 @@ from cmk.gui.graphing import (
     PerfometerSpec,
     StackedPerfometerSpec,
 )
-from cmk.gui.graphing._expression import parse_expression
+from cmk.gui.graphing._expression import ConstantFloat, ConstantInt, parse_expression
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
@@ -424,7 +424,14 @@ class MetricometerRendererLinear(MetricometerRenderer):
         perfometer: LinearPerfometerSpec,
         translated_metrics: TranslatedMetrics,
     ) -> None:
-        self._perfometer = perfometer
+        self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
+        self._total = parse_expression(perfometer["total"], translated_metrics)
+        if (label := perfometer.get("label")) is None:
+            self._label_expression = None
+            self._label_unit_name = None
+        else:
+            self._label_expression = parse_expression(label[0], translated_metrics)
+            self._label_unit_name = label[1]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -436,20 +443,11 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         summed = self._get_summed_values()
 
-        if (
-            total := (
-                summed
-                if (total_expression := self._perfometer.get("total")) is None
-                else self._evaluate_total(total_expression)
-            )
-        ) == 0:
+        if (total := self._evaluate_total()) == 0:
             entry.append((100.0, get_themed_perfometer_bg_color()))
-
         else:
-            for ex in self._perfometer["segments"]:
-                result = parse_expression(ex, self._translated_metrics).evaluate(
-                    self._translated_metrics
-                )
+            for segment in self._segments:
+                result = segment.evaluate(self._translated_metrics)
                 entry.append((100.0 * result.value / total, result.color))
 
             # Paint rest only, if it is positive and larger than one promille
@@ -460,55 +458,34 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
     def get_label(self) -> str:
         # "label" option in all Perf-O-Meters overrides automatic label
-        if "label" in self._perfometer:
-            if self._perfometer["label"] is None:
-                return ""
+        if self._label_expression is None:
+            return self._render_value(self._unit(), self._get_summed_values())
 
-            expr, unit_name = self._perfometer["label"]
-            result = parse_expression(expr, self._translated_metrics).evaluate(
-                self._translated_metrics
-            )
-            unit_info_ = unit_info[unit_name] if unit_name else result.unit_info
+        result = self._label_expression.evaluate(self._translated_metrics)
+        unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
 
-            if isinstance(expr, int | float):
-                value = unit_info_.get("conversion", lambda v: v)(expr)
-            else:
-                value = result.value
+        if isinstance(self._label_expression, (ConstantInt, ConstantFloat)):
+            value = unit_info_.get("conversion", lambda v: v)(self._label_expression.value)
+        else:
+            value = result.value
 
-            return self._render_value(unit_info_, value)
+        return self._render_value(unit_info_, value)
 
-        return self._render_value(self._unit(), self._get_summed_values())
-
-    def _evaluate_total(self, total_expression: str | int | float) -> float:
-        if isinstance(total_expression, float | int):
-            return self._unit().get("conversion", lambda v: v)(total_expression)
-        return (
-            parse_expression(total_expression, self._translated_metrics)
-            .evaluate(self._translated_metrics)
-            .value
-        )
+    def _evaluate_total(self) -> float:
+        if isinstance(self._total.declaration, (ConstantInt, ConstantFloat)):
+            return self._unit().get("conversion", lambda v: v)(self._total.declaration.value)
+        return self._total.evaluate(self._translated_metrics).value
 
     def _unit(self) -> UnitInfo:
         # We assume that all expressions across all segments have the same unit
-        return (
-            parse_expression(self._perfometer["segments"][0], self._translated_metrics)
-            .evaluate(self._translated_metrics)
-            .unit_info
-        )
+        return self._segments[0].evaluate(self._translated_metrics).unit_info
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
-        return (
-            parse_expression(self._perfometer["segments"][0], self._translated_metrics)
-            .evaluate(self._translated_metrics)
-            .value
-        )
+        return self._segments[0].evaluate(self._translated_metrics).value
 
     def _get_summed_values(self):
-        return sum(
-            parse_expression(ex, self._translated_metrics).evaluate(self._translated_metrics).value
-            for ex in self._perfometer["segments"]
-        )
+        return sum(segment.evaluate(self._translated_metrics).value for segment in self._segments)
 
 
 @renderer_registry.register

@@ -14,7 +14,7 @@ def parse_ups_power(
     string_table: list[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
-    for idx, voltage_str, power_str in string_table[0]: # pylint: disable=unused-variable
+    for idx, voltage_str, power_str in string_table[0]:  # pylint: disable=unused-variable
         try:
             power = int(power_str)
         except ValueError:

@@ -18,6 +18,7 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
 
 from ._grouping import PeriodInfo, PeriodName, time_slices, Timegroup
@@ -98,12 +99,7 @@ class PredictionStore:
         service_description: ServiceName,
         dsname: str,
     ) -> None:
-        self._dir = (
-            basedir
-            / host_name
-            / cmk.utils.pnp_cleanup(service_description)
-            / cmk.utils.pnp_cleanup(dsname)
-        )
+        self._dir = basedir / host_name / pnp_cleanup(service_description) / pnp_cleanup(dsname)
 
     def _data_file(self, timegroup: Timegroup) -> Path:
         return self._dir / Path(timegroup).with_suffix(DATA_FILE_SUFFIX)

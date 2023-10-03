@@ -30,11 +30,11 @@ discovery = {
     "": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "io": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "readhits": [
-        ("1", ddn_s2a_readhits_default_levels),
-        ("2", ddn_s2a_readhits_default_levels),
-        ("3", ddn_s2a_readhits_default_levels),
-        ("4", ddn_s2a_readhits_default_levels),
-        ("Total", ddn_s2a_readhits_default_levels),
+        ("1", {}),
+        ("2", {}),
+        ("3", {}),
+        ("4", {}),
+        ("Total", {}),
     ],
 }
 
@@ -175,10 +175,10 @@ checks = {
         ),
     ],
     "readhits": [
-        ("1", (85.0, 70.0), [(0, "99.3%", [("read_hits", 99.3, 85.0, 70.0, None, None)])]),
-        ("2", (85.0, 70.0), [(0, "99.6%", [("read_hits", 99.6, 85.0, 70.0, None, None)])]),
-        ("3", (85.0, 70.0), [(0, "99.6%", [("read_hits", 99.6, 85.0, 70.0, None, None)])]),
-        ("4", (85.0, 70.0), [(0, "99.2%", [("read_hits", 99.2, 85.0, 70.0, None, None)])]),
-        ("Total", (85.0, 70.0), [(0, "99.4%", [("read_hits", 99.4, 85.0, 70.0, None, None)])]),
+        ("1", {"levels_lower": (85.0, 70.0)}, [(0, "99.30%", [("read_hits", 99.3)])]),
+        ("2", {"levels_lower": (85.0, 70.0)}, [(0, "99.60%", [("read_hits", 99.6)])]),
+        ("3", {"levels_lower": (85.0, 70.0)}, [(0, "99.60%", [("read_hits", 99.6)])]),
+        ("4", {"levels_lower": (85.0, 70.0)}, [(0, "99.20%", [("read_hits", 99.2)])]),
+        ("Total", {"levels_lower": (85.0, 70.0)}, [(0, "99.40%", [("read_hits", 99.4)])]),
     ],
 }

@@ -522,11 +522,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "ddn_s2a_stats_readhits",
-            RuleGroup.CheckgroupParameters("read_hits"),
-        ),
-        (
-            "check",
             "dell_idrac_fans",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),

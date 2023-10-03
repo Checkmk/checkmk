@@ -523,7 +523,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
                 _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
-        self._perfometer = perfometer
+        self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -532,7 +532,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
     def get_stack(self) -> MetricRendererStack:
         stack = []
-        for sub_perfometer in self._perfometer["perfometers"]:
+        for sub_perfometer in self._perfometers:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
@@ -542,7 +542,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
     def get_label(self) -> str:
         sub_labels = []
-        for sub_perfometer in self._perfometer["perfometers"]:
+        for sub_perfometer in self._perfometers:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
@@ -556,7 +556,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
     def get_sort_value(self) -> float:
         """Use the number of the first stack element."""
-        sub_perfometer = self._perfometer["perfometers"][0]
+        sub_perfometer = self._perfometers[0]
         renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
         return renderer.get_sort_value()
 
@@ -573,7 +573,7 @@ class MetricometerRendererDual(MetricometerRenderer):
                 _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
-        self._perfometer = perfometer
+        self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -582,7 +582,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
     def get_stack(self) -> MetricRendererStack:
         content: list[tuple[int | float, str]] = []
-        for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
+        for nr, sub_perfometer in enumerate(self._perfometers):
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
@@ -600,7 +600,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
     def get_label(self) -> str:
         sub_labels = []
-        for sub_perfometer in self._perfometer["perfometers"]:
+        for sub_perfometer in self._perfometers:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
@@ -619,7 +619,7 @@ class MetricometerRendererDual(MetricometerRenderer):
         make it sort by the maximum traffic independent of the direction.
         """
         sub_sort_values = []
-        for sub_perfometer in self._perfometer["perfometers"]:
+        for sub_perfometer in self._perfometers:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
             sub_sort_values.append(renderer.get_sort_value())
 

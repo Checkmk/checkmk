@@ -661,11 +661,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "icom_repeater_ps_volt",
-            RuleGroup.CheckgroupParameters("ps_voltage"),
-        ),
-        (
-            "check",
             "innovaphone_mem",
             RuleGroup.CheckgroupParameters("innovaphone_mem"),
         ),

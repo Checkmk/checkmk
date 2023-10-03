@@ -14,14 +14,11 @@ def parse_ups_power(
     string_table: list[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
-    for idx, voltage_str, power_str in string_table[0]:
+    for idx, voltage_str, power_str in string_table[0]: # pylint: disable=unused-variable
         try:
             power = int(power_str)
         except ValueError:
             continue
-        # just to keep pylint happy, Unused variable 'voltage_str' (unused-variable)
-        # voltage_str could be completely removed
-        voltage_str = voltage_str
 
         # Some "RPS SpA" systems are not RFC conform in this value.
         # The values can get negative but should never be.

@@ -327,7 +327,9 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
                 _('Missing key "metric" in logarithmic perfometer: %r') % perfometer
             )
 
-        self._perfometer = perfometer
+        self._metric = parse_expression(perfometer["metric"], translated_metrics)
+        self._half_value = perfometer["half_value"]
+        self._exponent = perfometer["exponent"]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -335,9 +337,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         return "logarithmic"
 
     def get_stack(self) -> MetricRendererStack:
-        result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
-            self._translated_metrics
-        )
+        result = self._metric.evaluate(self._translated_metrics)
         return [
             self.get_stack_from_values(
                 result.value,
@@ -352,19 +352,13 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         ]
 
     def get_label(self) -> str:
-        result = parse_expression(self._perfometer["metric"], self._translated_metrics).evaluate(
-            self._translated_metrics
-        )
+        result = self._metric.evaluate(self._translated_metrics)
         return self._render_value(result.unit_info, result.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        return (
-            parse_expression(self._perfometer["metric"], self._translated_metrics)
-            .evaluate(self._translated_metrics)
-            .value
-        )
+        return self._metric.evaluate(self._translated_metrics).value
 
     @staticmethod
     def get_stack_from_values(
@@ -414,9 +408,9 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
                  -----------------------
                  ratio of converted 60%- to converted 50%-value
         """
-        h_50 = self._perfometer["half_value"]
-        f_10 = self._perfometer["exponent"]
-        h_50_c = conversion(self._perfometer["half_value"])
+        h_50 = self._half_value
+        f_10 = self._exponent
+        h_50_c = conversion(self._half_value)
         return (
             h_50_c,
             conversion(h_50 * f_10) / h_50_c,

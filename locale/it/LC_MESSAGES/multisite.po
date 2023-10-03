@@ -29879,6 +29879,9 @@ msgstr "Versione del kernel"
 msgid "Key"
 msgstr "Chiave"
 
+msgid "Key ID"
+msgstr ""
+
 msgid "Key from password store"
 msgstr "Chiave dal negozio di password"
 
@@ -53429,10 +53432,12 @@ msgstr ""
 "modalità legacy pull. Nota bene: nella modalità legacy pull i dati "
 "trasportati non sono criptati."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
-"configured section. Also a single file can be monitored."
+"configured section. Also a single file can be monitored. If no sections are "
+"specified, the plugin does not produce output."
 msgstr ""
 "Il plugin agente <tt>mk_filestats</tt> monitora un insieme configurato di "
 "file per il loro numero, dimensione ed età. I file sono raggruppati secondo "
@@ -55329,6 +55334,11 @@ msgstr ""
 
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "Il nome dell'ingresso, per esempio <tt>Fase 1</tt>"
+
+msgid ""
+"The name of the instance to be monitored. If not specified, then the plugin "
+"will attempt to determine the instance name based on the .env file."
+msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr "Il nome dell'interfaccia (Public/Private IPv4/IPv6 Network Interface)"

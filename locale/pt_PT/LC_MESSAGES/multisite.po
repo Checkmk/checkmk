@@ -29827,6 +29827,9 @@ msgstr "Versão Kernel"
 msgid "Key"
 msgstr "Chave"
 
+msgid "Key ID"
+msgstr ""
+
 msgid "Key from password store"
 msgstr "Chave da loja de senhas"
 
@@ -53351,10 +53354,12 @@ msgstr ""
 "Neste caso, o agente funcionará no modo de extracção antigo. Nota: no modo "
 "de extracção tradicional, os dados transportados não são encriptados."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
-"configured section. Also a single file can be monitored."
+"configured section. Also a single file can be monitored. If no sections are "
+"specified, the plugin does not produce output."
 msgstr ""
 "O plugin de agente <tt>mk_filestats</tt> monitora um conjunto configurado de "
 "arquivos para o seu número, tamanho e idade. Os arquivos são agrupados de "
@@ -55251,6 +55256,11 @@ msgstr ""
 
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "O nome da entrada, por exemplo, <tt>Fase 1</tt>"
+
+msgid ""
+"The name of the instance to be monitored. If not specified, then the plugin "
+"will attempt to determine the instance name based on the .env file."
+msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr "O nome da interface (Interface de Rede IPv4/IPv6 Pública/Privada)"

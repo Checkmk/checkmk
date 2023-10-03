@@ -29291,6 +29291,9 @@ msgstr "カーネルバージョン"
 msgid "Key"
 msgstr "キー"
 
+msgid "Key ID"
+msgstr ""
+
 msgid "Key from password store"
 msgstr "パスワードストアからのキー"
 
@@ -52558,10 +52561,12 @@ msgstr ""
 "場合、エージェントはレガシー・プルモードで動作します。注意:レガシー・プルモー"
 "ドでは、転送されるデータは暗号化されません。"
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
-"configured section. Also a single file can be monitored."
+"configured section. Also a single file can be monitored. If no sections are "
+"specified, the plugin does not produce output."
 msgstr ""
 "エージェントプラグイン<tt>mk_filestats</tt>は、構成されたファイルのセットの"
 "数、サイズ、および経過時間を監視します。ファイルは、構成されたセクションに"
@@ -54332,6 +54337,11 @@ msgstr ""
 
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "入力の名前(例:<tt>フェーズ1 </tt>)"
+
+msgid ""
+"The name of the instance to be monitored. If not specified, then the plugin "
+"will attempt to determine the instance name based on the .env file."
+msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr ""

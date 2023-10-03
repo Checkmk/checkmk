@@ -29781,6 +29781,9 @@ msgstr "Kernel Versie"
 msgid "Key"
 msgstr "Key"
 
+msgid "Key ID"
+msgstr ""
+
 msgid "Key from password store"
 msgstr "Sleutel van wachtwoord opslag"
 
@@ -53211,10 +53214,12 @@ msgstr ""
 "Let op: In de legacy pull-modus worden de getransporteerde gegevens niet "
 "gecodeerd."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
-"configured section. Also a single file can be monitored."
+"configured section. Also a single file can be monitored. If no sections are "
+"specified, the plugin does not produce output."
 msgstr ""
 "De agent plugin <tt>mk_filestats</tt> controleert een geconfigureerde set "
 "van bestanden op hun aantal, grootte en leeftijd. Bestanden worden "
@@ -55117,6 +55122,11 @@ msgstr ""
 
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "De naam van de ingang, bijv. <tt>Fase 1</tt>"
+
+msgid ""
+"The name of the instance to be monitored. If not specified, then the plugin "
+"will attempt to determine the instance name based on the .env file."
+msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr ""

@@ -25,12 +25,6 @@ from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
 
 logger = logging.getLogger("cmk.prediction")
 
-Seconds = int
-Timestamp = int
-
-ConsolidationFunctionName = str
-EstimatedLevel = float | None
-EstimatedLevels = tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
 
@@ -53,22 +47,22 @@ class DataStat(NamedTuple):
 class PredictionInfo(BaseModel, frozen=True):
     name: Timegroup
     time: int
-    range: tuple[Timestamp, Timestamp]
+    range: tuple[int, int]
     dsname: str
     params: PredictionParameters
 
 
 class PredictionData(BaseModel, frozen=True):
     points: list[DataStat | None]
-    data_twindow: list[Timestamp]
-    step: Seconds
+    data_twindow: list[int]
+    step: int
 
     @property
     def num_points(self) -> int:
         return len(self.points)
 
 
-def get_rrd_data_with_mk_general_exception(
+def _get_rrd_data_with_mk_general_exception(
     host_name: HostName,
     service_description: str,
     metric_name: str,
@@ -169,7 +163,7 @@ def compute_prediction(
         )
         for start, end in time_windows
         if (
-            response := get_rrd_data_with_mk_general_exception(
+            response := _get_rrd_data_with_mk_general_exception(
                 host_name,
                 service_description,
                 info.dsname,

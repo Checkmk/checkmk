@@ -9,9 +9,6 @@ from typing import Final, Literal, NamedTuple, NewType
 
 from cmk.utils import dateutils
 
-Seconds = int
-Timestamp = int
-
 Timegroup = NewType("Timegroup", str)
 
 PeriodName = Literal["wday", "day", "hour", "minute"]
@@ -19,7 +16,7 @@ PeriodName = Literal["wday", "day", "hour", "minute"]
 
 class PeriodInfo(NamedTuple):
     slice: int
-    groupby: Callable[[Timestamp], tuple[Timegroup, Timestamp]]
+    groupby: Callable[[int], tuple[Timegroup, int]]
     valid: int
 
 
@@ -41,23 +38,23 @@ def _second_of_day(t: time.struct_time) -> int:
     return t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
 
 
-def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    st = time.localtime(t)
+def _group_by_wday(timestamp: int) -> tuple[Timegroup, int]:
+    st = time.localtime(timestamp)
     return Timegroup(dateutils.weekday_ids()[st.tm_wday]), _second_of_day(st)
 
 
-def _group_by_day(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    st = time.localtime(t)
+def _group_by_day(timestamp: int) -> tuple[Timegroup, int]:
+    st = time.localtime(timestamp)
     return Timegroup("everyday"), _second_of_day(st)
 
 
-def _group_by_day_of_month(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    st = time.localtime(t)
+def _group_by_day_of_month(timestamp: int) -> tuple[Timegroup, int]:
+    st = time.localtime(timestamp)
     return Timegroup(str(st.tm_mday)), _second_of_day(st)
 
 
-def _group_by_everyhour(t: Timestamp) -> tuple[Timegroup, Timestamp]:
-    st = time.localtime(t)
+def _group_by_everyhour(timestamp: int) -> tuple[Timegroup, int]:
+    st = time.localtime(timestamp)
     return Timegroup("everyhour"), _second_of_hour(st)
 
 
@@ -86,14 +83,14 @@ PREDICTION_PERIODS: Final[Mapping[PeriodName, PeriodInfo]] = {
 
 
 def time_slices(
-    timestamp: Timestamp,
-    horizon: Seconds,
+    timestamp: int,
+    horizon_seconds: int,
     period_info: PeriodInfo,
     timegroup: Timegroup,
 ) -> Sequence[tuple[int, int]]:
     "Collect all slices back into the past until time horizon is reached"
     timestamp = int(timestamp)
-    abs_begin = timestamp - horizon
+    abs_begin = timestamp - horizon_seconds
     slices = []
 
     # Note: due to the f**king DST, we can have several shifts between DST
@@ -113,9 +110,9 @@ def time_slices(
 
 
 def get_timegroup_relative_time(
-    t: Timestamp,
+    timestamp: int,
     period_info: PeriodInfo,
-) -> tuple[Timegroup, Timestamp, Timestamp, Seconds]:
+) -> tuple[Timegroup, int, int, int]:
     """
     Return:
     timegroup: name of the group, like 'monday' or '12'
@@ -125,7 +122,7 @@ def get_timegroup_relative_time(
     rel_time: seconds offset of now in the current slice
     """
     # Convert to local timezone
-    timegroup, rel_time = period_info.groupby(t)
-    from_time = t - rel_time
+    timegroup, rel_time = period_info.groupby(timestamp)
+    from_time = timestamp - rel_time
     until_time = from_time + period_info.slice
     return timegroup, from_time, until_time, rel_time

@@ -15,10 +15,10 @@ def parse_ups_power(
 ) -> dict[str, int]:
     section: dict[str, int] = {}
     for idx, voltage_str, power_str in string_table[0]:
-        if not voltage_str or not int(voltage_str):
+        try:
+            power = int(power_str)
+        except ValueError:
             continue
-
-        power = int(power_str)
         # Some "RPS SpA" systems are not RFC conform in this value.
         # The values can get negative but should never be.
         if power < 0:

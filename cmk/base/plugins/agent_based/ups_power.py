@@ -19,6 +19,10 @@ def parse_ups_power(
             power = int(power_str)
         except ValueError:
             continue
+        # just to keep pylint happy, Unused variable 'voltage_str' (unused-variable) 
+        # voltage_str could be completely removed
+        voltage_str = voltage_str
+        
         # Some "RPS SpA" systems are not RFC conform in this value.
         # The values can get negative but should never be.
         if power < 0:

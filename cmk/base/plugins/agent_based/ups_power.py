@@ -19,7 +19,7 @@ def parse_ups_power(
             power = int(power_str)
         except ValueError:
             continue
-        # just to keep pylint happy, Unused variable 'voltage_str' (unused-variable) 
+        # just to keep pylint happy, Unused variable 'voltage_str' (unused-variable)
         # voltage_str could be completely removed
         voltage_str = voltage_str
 

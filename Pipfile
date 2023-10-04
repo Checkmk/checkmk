@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-astroid = "*"  # used by testlib.pylint_checker_localization
+astroid = "~=2.15"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
@@ -16,6 +16,7 @@ freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 pylint = "*"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
+hypothesis-jsonschema = "==0.22.1"  # pinned for: AttributeError: module 'jsonschema.exceptions' has no attribute '_RefResolutionError'. Did you mean: 'RefResolutionError'?
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 twine = "*" # used to upload packages to internal PyPi mirror
 playwright = "*"  # used for in-browser testing
